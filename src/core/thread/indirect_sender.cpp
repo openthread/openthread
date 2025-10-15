@@ -89,67 +89,71 @@ exit:
 }
 
 #if OPENTHREAD_FTD
+uint16_t IndirectSender::GetChildIndex(const CslNeighbor &aNeighbor) const
+{
+    return Get<ChildTable>().GetChildIndex(static_cast<const Child &>(aNeighbor));
+}
 
-void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
+void IndirectSender::AddMessageForSleepyNeighbor(Message &aMessage, CslNeighbor &aCslNeighbor)
 {
     uint16_t childIndex;
 
-    OT_ASSERT(!aChild.IsRxOnWhenIdle());
+    OT_ASSERT(!aCslNeighbor.IsRxOnWhenIdle());
 
-    childIndex = Get<ChildTable>().GetChildIndex(aChild);
+    childIndex = GetChildIndex(aCslNeighbor);
     VerifyOrExit(!aMessage.GetIndirectTxChildMask().Has(childIndex));
 
     aMessage.GetIndirectTxChildMask().Add(childIndex);
-    mSourceMatchController.IncrementMessageCount(aChild);
+    mSourceMatchController.IncrementMessageCount(static_cast<Child &>(aCslNeighbor));
 
-    if ((aMessage.GetType() != Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
+    if ((aMessage.GetType() != Message::kTypeSupervision) && (aCslNeighbor.GetIndirectMessageCount() > 1))
     {
-        Message *supervisionMessage = FindQueuedMessageForSleepyChild(aChild, AcceptSupervisionMessage);
+        Message *supervisionMessage = FindQueuedMessageForSleepyNeighbor(aCslNeighbor, AcceptSupervisionMessage);
 
         if (supervisionMessage != nullptr)
         {
-            IgnoreError(RemoveMessageFromSleepyChild(*supervisionMessage, aChild));
+            IgnoreError(RemoveMessageFromSleepyNeighbor(*supervisionMessage, aCslNeighbor));
             Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*supervisionMessage);
         }
     }
 
-    RequestMessageUpdate(aChild);
+    RequestMessageUpdate(aCslNeighbor);
 
 exit:
     return;
 }
 
-Error IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
+Error IndirectSender::RemoveMessageFromSleepyNeighbor(Message &aMessage, CslNeighbor &aCslNeighbor)
 {
     Error    error      = kErrorNone;
-    uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
+    uint16_t childIndex = GetChildIndex(aCslNeighbor);
 
     VerifyOrExit(aMessage.GetIndirectTxChildMask().Has(childIndex), error = kErrorNotFound);
 
     aMessage.GetIndirectTxChildMask().Remove(childIndex);
-    mSourceMatchController.DecrementMessageCount(aChild);
+    mSourceMatchController.DecrementMessageCount(static_cast<Child &>(aCslNeighbor));
 
-    RequestMessageUpdate(aChild);
+    RequestMessageUpdate(aCslNeighbor);
 
 exit:
     return error;
 }
 
-void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
+void IndirectSender::ClearAllMessagesForSleepyNeighbor(CslNeighbor &aCslNeighbor)
 {
-    VerifyOrExit(aChild.GetIndirectMessageCount() > 0);
+    VerifyOrExit(aCslNeighbor.GetIndirectMessageCount() > 0);
 
     for (Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        message.GetIndirectTxChildMask().Remove(Get<ChildTable>().GetChildIndex(aChild));
+        message.GetIndirectTxChildMask().Remove(GetChildIndex(aCslNeighbor));
 
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(message);
     }
 
-    aChild.SetIndirectMessage(nullptr);
-    mSourceMatchController.ResetMessageCount(aChild);
+    aCslNeighbor.SetIndirectMessage(nullptr);
+    mSourceMatchController.ResetMessageCount(static_cast<Child &>(aCslNeighbor));
 
-    mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, aChild);
+    mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, static_cast<Child &>(aCslNeighbor));
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Update();
 #endif
@@ -158,10 +162,11 @@ exit:
     return;
 }
 
-const Message *IndirectSender::FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
+const Message *IndirectSender::FindQueuedMessageForSleepyNeighbor(const CslNeighbor &aCslNeighbor,
+                                                                  MessageChecker     aChecker) const
 {
     const Message *match      = nullptr;
-    uint16_t       childIndex = Get<ChildTable>().GetChildIndex(aChild);
+    uint16_t       childIndex = GetChildIndex(aCslNeighbor);
 
     for (const Message &message : Get<MeshForwarder>().mSendQueue)
     {
@@ -221,27 +226,27 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     // Since the queuing delays for direct transmissions are expected to
     // be relatively small especially when compared to indirect, for a
     // non-sleepy to sleepy mode change, we allow any direct message
-    // (for the child) already in the send queue to remain as is. This
+    // (for the sleepy neighbor) already in the send queue to remain as is. This
     // is equivalent to dropping the already queued messages in this
     // case.
 }
 
-void IndirectSender::RequestMessageUpdate(Child &aChild)
+void IndirectSender::RequestMessageUpdate(CslNeighbor &aCslNeighbor)
 {
-    Message *curMessage = aChild.GetIndirectMessage();
+    Message *curMessage = aCslNeighbor.GetIndirectMessage();
     Message *newMessage;
 
     // Purge the frame if the current message is no longer destined
-    // for the child. This check needs to be done first to cover the
+    // for the sleepy neighbor. This check needs to be done first to cover the
     // case where we have a pending "replace frame" request and while
     // waiting for the callback, the current message is removed.
 
-    if ((curMessage != nullptr) && !curMessage->GetIndirectTxChildMask().Has(Get<ChildTable>().GetChildIndex(aChild)))
+    if ((curMessage != nullptr) && !curMessage->GetIndirectTxChildMask().Has(GetChildIndex(aCslNeighbor)))
     {
-        // Set the indirect message for this child to `nullptr` to ensure
-        // it is not processed on `HandleSentFrameToChild()` callback.
+        // Set the indirect message for this neighbor to `nullptr` to ensure
+        // it is not processed on `HandleSentFrameToCslNeighbor()` callback.
 
-        aChild.SetIndirectMessage(nullptr);
+        aCslNeighbor.SetIndirectMessage(nullptr);
 
         // Request a "frame purge" using `RequestFrameChange()` and
         // wait for `HandleFrameChangeDone()` callback for completion
@@ -249,8 +254,8 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
         // called from the `RequestFrameChange()` itself when the
         // request can be handled immediately.
 
-        aChild.SetWaitingForMessageUpdate(true);
-        mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, aChild);
+        aCslNeighbor.SetWaitingForMessageUpdate(true);
+        mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, static_cast<Child &>(aCslNeighbor));
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif
@@ -258,9 +263,9 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
         ExitNow();
     }
 
-    VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
+    VerifyOrExit(!aCslNeighbor.IsWaitingForMessageUpdate());
 
-    newMessage = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
+    newMessage = FindQueuedMessageForSleepyNeighbor(aCslNeighbor, AcceptAnyMessage);
 
     VerifyOrExit(curMessage != newMessage);
 
@@ -269,7 +274,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
         // Current message is `nullptr`, but new message is not.
         // We have a new indirect message.
 
-        UpdateIndirectMessage(aChild);
+        UpdateIndirectMessage(aCslNeighbor);
         ExitNow();
     }
 
@@ -280,10 +285,10 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     // already prepared, we wait for the entire message to be
     // delivered.
 
-    VerifyOrExit(aChild.GetIndirectFragmentOffset() == 0);
+    VerifyOrExit(aCslNeighbor.GetIndirectFragmentOffset() == 0);
 
-    aChild.SetWaitingForMessageUpdate(true);
-    mDataPollHandler.RequestFrameChange(DataPollHandler::kReplaceFrame, aChild);
+    aCslNeighbor.SetWaitingForMessageUpdate(true);
+    mDataPollHandler.RequestFrameChange(DataPollHandler::kReplaceFrame, static_cast<Child &>(aCslNeighbor));
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Update();
 #endif
@@ -301,14 +306,14 @@ exit:
     return;
 }
 
-void IndirectSender::UpdateIndirectMessage(Child &aChild)
+void IndirectSender::UpdateIndirectMessage(CslNeighbor &aCslNeighbor)
 {
-    Message *message = FindQueuedMessageForSleepyChild(aChild, AcceptAnyMessage);
+    Message *message = FindQueuedMessageForSleepyNeighbor(aCslNeighbor, AcceptAnyMessage);
 
-    aChild.SetWaitingForMessageUpdate(false);
-    aChild.SetIndirectMessage(message);
-    aChild.SetIndirectFragmentOffset(0);
-    aChild.SetIndirectTxSuccess(true);
+    aCslNeighbor.SetWaitingForMessageUpdate(false);
+    aCslNeighbor.SetIndirectMessage(message);
+    aCslNeighbor.SetIndirectFragmentOffset(0);
+    aCslNeighbor.SetIndirectTxSuccess(true);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mCslTxScheduler.Update();
@@ -318,12 +323,14 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
     {
         Mac::Address childAddress;
 
-        aChild.GetMacAddress(childAddress);
+        aCslNeighbor.GetMacAddress(childAddress);
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, kErrorNone, &childAddress);
     }
 }
 
-Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild)
+Error IndirectSender::PrepareFrameForSleepyNeighbor(Mac::TxFrame &aFrame,
+                                                    FrameContext &aContext,
+                                                    CslNeighbor  &aCslNeighbor)
 {
     Error          error = kErrorNone;
     Message       *message;
@@ -333,9 +340,9 @@ Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &a
 
     VerifyOrExit(mEnabled, error = kErrorAbort);
 
-    aChild.GetMacAddress(macAddrs.mDestination);
+    aCslNeighbor.GetMacAddress(macAddrs.mDestination);
 
-    message = aChild.GetIndirectMessage();
+    message = aCslNeighbor.GetIndirectMessage();
 
     if ((message == nullptr) || (message->GetType() == Message::kTypeSupervision))
     {
@@ -358,21 +365,21 @@ Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &a
         macAddrs.mDestination.SetExtendedFromIid(ip6Header.GetDestination().GetIid());
     }
 
-    // Prepare the data frame from previous child's indirect offset.
+    // Prepare the data frame from previous sleepy neighbor's indirect offset.
 
     directTxOffset = message->GetOffset();
-    message->SetOffset(aChild.GetIndirectFragmentOffset());
+    message->SetOffset(aCslNeighbor.GetIndirectFragmentOffset());
 
     aContext.mMessageNextOffset = Get<MessageFramer>().PrepareFrame(aFrame, *message, macAddrs);
 
     message->SetOffset(directTxOffset);
 
     // Set `FramePending` if there are more queued messages (excluding
-    // the current one being sent out) for the child (note `> 1` check).
+    // the current one being sent out) for the sleepy neighbor (note `> 1` check).
     // The case where the current message itself requires fragmentation
     // is already checked and handled in the above `PrepareFrame` call.
 
-    if (aChild.GetIndirectMessageCount() > 1)
+    if (aCslNeighbor.GetIndirectMessageCount() > 1)
     {
         aFrame.SetFramePending(true);
     }
@@ -381,29 +388,29 @@ exit:
     return error;
 }
 
-void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                            const FrameContext &aContext,
-                                            Error               aError,
-                                            Child              &aChild)
+void IndirectSender::HandleSentFrameToSleepyNeighbor(const Mac::TxFrame &aFrame,
+                                                     const FrameContext &aContext,
+                                                     Error               aError,
+                                                     CslNeighbor        &aCslNeighbor)
 {
-    Message *message    = aChild.GetIndirectMessage();
+    Message *message    = aCslNeighbor.GetIndirectMessage();
     uint16_t nextOffset = aContext.mMessageNextOffset;
 
     VerifyOrExit(mEnabled);
 
     if (aError == kErrorNone)
     {
-        Get<ChildSupervisor>().UpdateOnSend(aChild);
+        Get<ChildSupervisor>().UpdateOnSend(static_cast<Child &>(aCslNeighbor));
     }
 
     // A zero `nextOffset` indicates that the sent frame is an empty
-    // frame generated by `PrepareFrameForChild()` when there was no
-    // indirect message in the send queue for the child. This can happen
+    // frame generated by `PrepareFrameForCslNeighbor()` when there was no
+    // indirect message in the send queue for the sleepy neighbor. This can happen
     // in the (not common) case where the radio platform does not
     // support the "source address match" feature and always includes
     // "frame pending" flag in acks to data poll frames. In such a case,
-    // `IndirectSender` prepares and sends an empty frame to the child
-    // after it sends a data poll. Here in `HandleSentFrameToChild()` we
+    // `IndirectSender` prepares and sends an empty frame to the sleepy child
+    // after it sends a data poll. Here in `HandleSentFrameToCslNeighbor()` we
     // exit quickly if we detect the "send done" is for the empty frame
     // to ensure we do not update any newly added indirect message after
     // preparing the empty frame.
@@ -419,11 +426,11 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     case kErrorChannelAccessFailure:
     case kErrorAbort:
 
-        aChild.SetIndirectTxSuccess(false);
+        aCslNeighbor.SetIndirectTxSuccess(false);
 
 #if OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
         // We set the nextOffset to end of message, since there is no need to
-        // send any remaining fragments in the message to the child, if all tx
+        // send any remaining fragments in the message to the sleepy neighbor, if all tx
         // attempts of current frame already failed.
 
         if (message != nullptr)
@@ -439,7 +446,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
     if ((message != nullptr) && (nextOffset < message->GetLength()))
     {
-        aChild.SetIndirectFragmentOffset(nextOffset);
+        aCslNeighbor.SetIndirectFragmentOffset(nextOffset);
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mCslTxScheduler.Update();
 #endif
@@ -448,14 +455,14 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
     if (message != nullptr)
     {
-        // The indirect tx of this message to the child is done.
+        // The indirect tx of this message to the sleepy neighbor is done.
 
         Error        txError    = aError;
-        uint16_t     childIndex = Get<ChildTable>().GetChildIndex(aChild);
+        uint16_t     childIndex = GetChildIndex(aCslNeighbor);
         Mac::Address macDest;
 
-        aChild.SetIndirectMessage(nullptr);
-        aChild.GetLinkInfo().AddMessageTxStatus(aChild.GetIndirectTxSuccess());
+        aCslNeighbor.SetIndirectMessage(nullptr);
+        aCslNeighbor.GetLinkInfo().AddMessageTxStatus(aCslNeighbor.GetIndirectTxSuccess());
 
         // Enable short source address matching after the first indirect
         // message transmission attempt to the child. We intentionally do
@@ -466,7 +473,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         // Request" which will cause the parent to switch to using long
         // address mode for source address matching.
 
-        mSourceMatchController.SetSrcMatchAsShort(aChild, true);
+        mSourceMatchController.SetSrcMatchAsShort(static_cast<Child &>(aCslNeighbor), true);
 
 #if !OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
 
@@ -474,11 +481,11 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         // disabled, all fragment frames of a larger message are
         // sent even if the transmission of an earlier fragment fail.
         // Note that `GetIndirectTxSuccess() tracks the tx success of
-        // the entire message to the child, while `txError = aError`
+        // the entire message to the sleepy neighbor child, while `txError = aError`
         // represents the error status of the last fragment frame
         // transmission.
 
-        if (!aChild.GetIndirectTxSuccess() && (txError == kErrorNone))
+        if (!aCslNeighbor.GetIndirectTxSuccess() && (txError == kErrorNone))
         {
             txError = kErrorFailed;
         }
@@ -490,12 +497,12 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
             Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError, &macDest);
         }
 
-        Get<MeshForwarder>().mCounters.UpdateOnTxDone(*message, aChild.GetIndirectTxSuccess());
+        Get<MeshForwarder>().mCounters.UpdateOnTxDone(*message, aCslNeighbor.GetIndirectTxSuccess());
 
         if (message->GetIndirectTxChildMask().Has(childIndex))
         {
             message->GetIndirectTxChildMask().Remove(childIndex);
-            mSourceMatchController.DecrementMessageCount(aChild);
+            mSourceMatchController.DecrementMessageCount(static_cast<Child &>(aCslNeighbor));
         }
 
         message->InvokeTxCallback(txError);
@@ -503,7 +510,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
         if (aFrame.IsEmpty())
         {
-            aChild.GetMacAddress(macDest);
+            aCslNeighbor.GetMacAddress(macDest);
         }
 
         Get<HistoryTracker::Local>().RecordTxMessage(*message, macDest, txError == kErrorNone);
@@ -511,16 +518,16 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*message);
     }
 
-    UpdateIndirectMessage(aChild);
+    UpdateIndirectMessage(aCslNeighbor);
 
 exit:
     if (mEnabled)
     {
-        ClearMessagesForRemovedChildren();
+        ClearMessagesForRemovedCslNeighbors();
     }
 }
 
-void IndirectSender::ClearMessagesForRemovedChildren(void)
+void IndirectSender::ClearMessagesForRemovedCslNeighbors(void)
 {
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptValidOrRestoring))
     {
@@ -529,7 +536,7 @@ void IndirectSender::ClearMessagesForRemovedChildren(void)
             continue;
         }
 
-        ClearAllMessagesForSleepyChild(child);
+        ClearAllMessagesForSleepyNeighbor(child);
     }
 }
 
@@ -556,8 +563,7 @@ Error IndirectSender::PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame,
     Error error = kErrorNotFound;
 
 #if OPENTHREAD_FTD
-    // `CslNeighbor` can only be a `Child` for now, but can be changed later.
-    error = PrepareFrameForChild(aFrame, aContext, static_cast<Child &>(aCslNeighbor));
+    error = PrepareFrameForSleepyNeighbor(aFrame, aContext, aCslNeighbor);
 #else
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aContext);
@@ -573,7 +579,7 @@ void IndirectSender::HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
                                                   CslNeighbor        &aCslNeighbor)
 {
 #if OPENTHREAD_FTD
-    HandleSentFrameToChild(aFrame, aContext, aError, static_cast<Child &>(aCslNeighbor));
+    HandleSentFrameToSleepyNeighbor(aFrame, aContext, aError, aCslNeighbor);
 #else
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aContext);

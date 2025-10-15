@@ -2956,7 +2956,7 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
         // to the sleepy child if there is one already
         // queued.
 
-        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyChild(aChild, IsMessageChildUpdateRequest));
+        VerifyOrExit(!Get<IndirectSender>().HasQueuedMessageForSleepyNeighbor(aChild, IsMessageChildUpdateRequest));
     }
 
     Get<MeshForwarder>().RemoveMessagesForChild(aChild, IsMessageChildUpdateRequest);
@@ -3230,7 +3230,7 @@ void Mle::RemoveNeighbor(Neighbor &aNeighbor)
             mNeighborTable.Signal(NeighborTable::kChildRemoved, aNeighbor);
         }
 
-        Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
+        Get<IndirectSender>().ClearAllMessagesForSleepyNeighbor(static_cast<CslNeighbor &>(aNeighbor));
 
         if (aNeighbor.IsFullThreadDevice())
         {
