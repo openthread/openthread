@@ -1,0 +1,96 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "simulation",
+      "displayName": "Simulation Configure",
+      "description": "Simulation platform build in 'build/simulation' folder",
+      "binaryDir": "${sourceDir}/build/simulation",
+      "inherits": "common",
+      "cacheVariables": {
+        "OT_DNS_CLIENT_OVER_TCP": "ON",
+        "OT_DNS_DSO": "ON",
+        "OT_LINK_RAW": "ON",
+        "OT_PLATFORM": "simulation",
+        "OT_UDP_FORWARD": "ON"
+      }
+    },
+    {
+      "name": "common",
+      "displayName": "Common Config",
+      "description": "Common configuration",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "OT_ANYCAST_LOCATOR": "ON",
+        "OT_BLE_TCAT": "ON",
+        "OT_BORDER_AGENT": "ON",
+        "OT_BORDER_AGENT_EPSKC": "ON",
+        "OT_BORDER_AGENT_ID": "ON",
+        "OT_BORDER_ROUTER": "ON",
+        "OT_CHANNEL_MANAGER": "ON",
+        "OT_CHANNEL_MONITOR": "ON",
+        "OT_COAP": "ON",
+        "OT_COAPS": "ON",
+        "OT_COAP_BLOCK": "ON",
+        "OT_COAP_OBSERVE": "ON",
+        "OT_COMMISSIONER": "ON",
+        "OT_COMPILE_WARNING_AS_ERROR": "ON",
+        "OT_COVERAGE": "ON",
+        "OT_DATASET_UPDATER": "ON",
+        "OT_DHCP6_CLIENT": "ON",
+        "OT_DHCP6_SERVER": "ON",
+        "OT_DIAGNOSTIC": "ON",
+        "OT_DNSSD_SERVER": "ON",
+        "OT_DNS_CLIENT": "ON",
+        "OT_ECDSA": "ON",
+        "OT_HISTORY_TRACKER": "ON",
+        "OT_IP6_FRAGM": "ON",
+        "OT_JAM_DETECTION": "ON",
+        "OT_JOINER": "ON",
+        "OT_LOG_LEVEL_DYNAMIC": "ON",
+        "OT_MAC_FILTER": "ON",
+        "OT_NEIGHBOR_DISCOVERY_AGENT": "ON",
+        "OT_NETDATA_PUBLISHER": "ON",
+        "OT_NETDIAG_CLIENT": "ON",
+        "OT_PING_SENDER": "ON",
+        "OT_RCP_RESTORATION_MAX_COUNT": "2",
+        "OT_RCP_TX_WAIT_TIME_SECS": "5",
+        "OT_REFERENCE_DEVICE": "ON",
+        "OT_SERVICE": "ON",
+        "OT_SLAAC": "ON",
+        "OT_SNTP_CLIENT": "ON",
+        "OT_SRP_CLIENT": "ON",
+        "OT_SRP_SERVER": "ON",
+        "OT_SRP_SERVER_FAST_START_MODE": "ON",
+        "OT_UPTIME": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "simulation",
+      "displayName": "Simulation Build",
+      "configurePreset": "simulation"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "simulation",
+      "displayName": "Simulation Test",
+      "configurePreset": "simulation",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    }
+  ]
+}
