@@ -277,6 +277,13 @@ The same holds for the associated algorithm:
 `[PSA_WANT|MBEDTLS_PSA_ACCEL]_ALG_FFDH` allow builds accelerating FFDH and
 removing builtin support (i.e. `MBEDTLS_DHM_C`).
 
+Note that the PSA API only supports FFDH with RFC 7919 groups, whereas the
+Mbed TLS legacy API supports custom groups. As a consequence, the TLS 1.2
+layer of Mbed TLS only supports DHE cipher suites if built-in FFDH
+(`MBEDTLS_DHM_C`) is present, even when `MBEDTLS_USE_PSA_CRYPTO` is enabled.
+(The TLS 1.3 layer uses PSA, and this is not a limitation because the
+protocol does not allow custom FFDH groups.)
+
 RSA
 ---
 
@@ -402,8 +409,6 @@ Note that the relationship between legacy (i.e. `MBEDTLS_xxx_C`) and PSA
   and `PSA_WANT_ALG_CCM`, respectively.
 
 ### Partial acceleration for CCM/GCM
-
-[This section depends on #8598 so it might be updated while that PR progresses.]
 
 In case legacy CCM/GCM algorithms are enabled, it is still possible to benefit
 from PSA acceleration of the underlying block cipher by enabling support for

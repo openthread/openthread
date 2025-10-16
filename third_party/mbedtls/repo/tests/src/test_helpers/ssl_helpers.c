@@ -28,9 +28,22 @@ void mbedtls_test_ssl_log_analyzer(void *ctx, int level,
 {
     mbedtls_test_ssl_log_pattern *p = (mbedtls_test_ssl_log_pattern *) ctx;
 
+/* Change 0 to 1 for debugging of test cases that use this function. */
+#if 0
+    const char *q, *basename;
+    /* Extract basename from file */
+    for (q = basename = file; *q != '\0'; q++) {
+        if (*q == '/' || *q == '\\') {
+            basename = q + 1;
+        }
+    }
+    printf("%s:%04d: |%d| %s",
+           basename, line, level, str);
+#else
     (void) level;
     (void) line;
     (void) file;
+#endif
 
     if (NULL != p &&
         NULL != p->pattern &&
@@ -551,7 +564,10 @@ int mbedtls_test_mock_tcp_recv_msg(void *ctx,
              * happen in test environment, unless forced manually. */
         }
     }
-    mbedtls_test_ssl_message_queue_pop_info(queue, buf_len);
+    ret = mbedtls_test_ssl_message_queue_pop_info(queue, buf_len);
+    if (ret < 0) {
+        return ret;
+    }
 
     return (msg_len > INT_MAX) ? INT_MAX : (int) msg_len;
 }
@@ -595,6 +611,7 @@ int mbedtls_test_ssl_endpoint_certificate_init(mbedtls_test_ssl_endpoint *ep,
 {
     int i = 0;
     int ret = -1;
+    int ok = 0;
     mbedtls_test_ssl_endpoint_certificate *cert = NULL;
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t key_slot = MBEDTLS_SVC_KEY_ID_INIT;
@@ -721,7 +738,13 @@ int mbedtls_test_ssl_endpoint_certificate_init(mbedtls_test_ssl_endpoint *ep,
                                     cert->pkey);
     TEST_ASSERT(ret == 0);
 
+    ok = 1;
+
 exit:
+    if (ret == 0 && !ok) {
+        /* Exiting due to a test assertion that isn't ret == 0 */
+        ret = -1;
+    }
     if (ret != 0) {
         test_ssl_endpoint_certificate_free(ep);
     }
@@ -852,6 +875,11 @@ int mbedtls_test_ssl_endpoint_init(
     ret = mbedtls_ssl_setup(&(ep->ssl), &(ep->conf));
     TEST_ASSERT(ret == 0);
 
+    if (MBEDTLS_SSL_IS_CLIENT == endpoint_type) {
+        ret = mbedtls_ssl_set_hostname(&(ep->ssl), "localhost");
+        TEST_EQUAL(ret, 0);
+    }
+
 #if defined(MBEDTLS_SSL_PROTO_DTLS) && defined(MBEDTLS_SSL_SRV_C)
     if (endpoint_type == MBEDTLS_SSL_IS_SERVER && dtls_context != NULL) {
         mbedtls_ssl_conf_dtls_cookies(&(ep->conf), NULL, NULL, NULL);
@@ -886,7 +914,13 @@ int mbedtls_test_ssl_endpoint_init(
     TEST_EQUAL(mbedtls_ssl_get_user_data_n(&ep->ssl), user_data_n);
     mbedtls_ssl_set_user_data_p(&ep->ssl, ep);
 
+    return 0;
+
 exit:
+    if (ret == 0) {
+        /* Exiting due to a test assertion that isn't ret == 0 */
+        ret = -1;
+    }
     return ret;
 }
 
@@ -947,10 +981,10 @@ int mbedtls_test_move_handshake_to_state(mbedtls_ssl_context *ssl,
 /*
  * Write application data. Increase write counter if necessary.
  */
-int mbedtls_ssl_write_fragment(mbedtls_ssl_context *ssl,
-                               unsigned char *buf, int buf_len,
-                               int *written,
-                               const int expected_fragments)
+static int mbedtls_ssl_write_fragment(mbedtls_ssl_context *ssl,
+                                      unsigned char *buf, int buf_len,
+                                      int *written,
+                                      const int expected_fragments)
 {
     int ret;
     /* Verify that calling mbedtls_ssl_write with a NULL buffer and zero length is
@@ -994,10 +1028,10 @@ exit:
  * Read application data and increase read counter and fragments counter
  * if necessary.
  */
-int mbedtls_ssl_read_fragment(mbedtls_ssl_context *ssl,
-                              unsigned char *buf, int buf_len,
-                              int *read, int *fragments,
-                              const int expected_fragments)
+static int mbedtls_ssl_read_fragment(mbedtls_ssl_context *ssl,
+                                     unsigned char *buf, int buf_len,
+                                     int *read, int *fragments,
+                                     const int expected_fragments)
 {
     int ret;
     /* Verify that calling mbedtls_ssl_write with a NULL buffer and zero length is
@@ -1791,30 +1825,33 @@ int mbedtls_test_ssl_tls13_populate_session(mbedtls_ssl_session *session,
     session->endpoint = endpoint_type == MBEDTLS_SSL_IS_CLIENT ?
                         MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER;
     session->ciphersuite = 0xabcd;
+
+#if defined(MBEDTLS_SSL_SESSION_TICKETS)
     session->ticket_age_add = 0x87654321;
     session->ticket_flags = 0x7;
-
     session->resumption_key_len = 32;
     memset(session->resumption_key, 0x99, sizeof(session->resumption_key));
-
-#if defined(MBEDTLS_SSL_EARLY_DATA)
-    session->max_early_data_size = 0x87654321;
-#if defined(MBEDTLS_SSL_ALPN) && defined(MBEDTLS_SSL_SRV_C)
-    int ret = mbedtls_ssl_session_set_ticket_alpn(session, "ALPNExample");
-    if (ret != 0) {
-        return -1;
-    }
-#endif /* MBEDTLS_SSL_ALPN && MBEDTLS_SSL_SRV_C */
-#endif /* MBEDTLS_SSL_EARLY_DATA */
-
-#if defined(MBEDTLS_HAVE_TIME) && defined(MBEDTLS_SSL_SRV_C)
-    if (session->endpoint == MBEDTLS_SSL_IS_SERVER) {
-        session->ticket_creation_time = mbedtls_ms_time() - 42;
-    }
 #endif
+
+#if defined(MBEDTLS_SSL_SRV_C)
+    if (session->endpoint == MBEDTLS_SSL_IS_SERVER) {
+#if defined(MBEDTLS_SSL_SESSION_TICKETS)
+#if defined(MBEDTLS_SSL_EARLY_DATA) && defined(MBEDTLS_SSL_ALPN)
+        int ret = mbedtls_ssl_session_set_ticket_alpn(session, "ALPNExample");
+        if (ret != 0) {
+            return -1;
+        }
+#endif
+#if defined(MBEDTLS_HAVE_TIME)
+        session->ticket_creation_time = mbedtls_ms_time() - 42;
+#endif
+#endif /* MBEDTLS_SSL_SESSION_TICKETS */
+    }
+#endif /* MBEDTLS_SSL_SRV_C */
 
 #if defined(MBEDTLS_SSL_CLI_C)
     if (session->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+#if defined(MBEDTLS_SSL_SESSION_TICKETS)
 #if defined(MBEDTLS_HAVE_TIME)
         session->ticket_reception_time = mbedtls_ms_time() - 40;
 #endif
@@ -1828,8 +1865,21 @@ int mbedtls_test_ssl_tls13_populate_session(mbedtls_ssl_session *session,
             }
             memset(session->ticket, 33, ticket_len);
         }
+#if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
+        char hostname[] = "hostname example";
+        session->hostname = mbedtls_calloc(1, sizeof(hostname));
+        if (session->hostname == NULL) {
+            return -1;
+        }
+        memcpy(session->hostname, hostname, sizeof(hostname));
+#endif
+#endif /* MBEDTLS_SSL_SESSION_TICKETS */
     }
 #endif /* MBEDTLS_SSL_CLI_C */
+
+#if defined(MBEDTLS_SSL_EARLY_DATA)
+    session->max_early_data_size = 0x87654321;
+#endif /* MBEDTLS_SSL_EARLY_DATA */
 
 #if defined(MBEDTLS_SSL_RECORD_SIZE_LIMIT)
     session->record_size_limit = 2048;
@@ -2000,6 +2050,63 @@ exit:
     return 0;
 }
 #endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
+
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
+int mbedtls_test_ssl_do_handshake_with_endpoints(
+    mbedtls_test_ssl_endpoint *server_ep,
+    mbedtls_test_ssl_endpoint *client_ep,
+    mbedtls_test_handshake_test_options *options,
+    mbedtls_ssl_protocol_version proto)
+{
+    enum { BUFFSIZE = 1024 };
+
+    int ret = -1;
+
+    mbedtls_platform_zeroize(server_ep, sizeof(mbedtls_test_ssl_endpoint));
+    mbedtls_platform_zeroize(client_ep, sizeof(mbedtls_test_ssl_endpoint));
+
+    mbedtls_test_init_handshake_options(options);
+    options->server_min_version = proto;
+    options->client_min_version = proto;
+    options->server_max_version = proto;
+    options->client_max_version = proto;
+
+    ret = mbedtls_test_ssl_endpoint_init(client_ep, MBEDTLS_SSL_IS_CLIENT, options,
+                                         NULL, NULL, NULL);
+    if (ret != 0) {
+        return ret;
+    }
+    ret = mbedtls_test_ssl_endpoint_init(server_ep, MBEDTLS_SSL_IS_SERVER, options,
+                                         NULL, NULL, NULL);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = mbedtls_test_mock_socket_connect(&client_ep->socket, &server_ep->socket, BUFFSIZE);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = mbedtls_test_move_handshake_to_state(&server_ep->ssl,
+                                               &client_ep->ssl,
+                                               MBEDTLS_SSL_HANDSHAKE_OVER);
+    if (ret != 0 && ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+        return ret;
+    }
+    ret = mbedtls_test_move_handshake_to_state(&client_ep->ssl,
+                                               &server_ep->ssl,
+                                               MBEDTLS_SSL_HANDSHAKE_OVER);
+    if (ret != 0 && ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+        return ret;
+    }
+    if (!mbedtls_ssl_is_handshake_over(&client_ep->ssl) ||
+        !mbedtls_ssl_is_handshake_over(&server_ep->ssl)) {
+        return -1;
+    }
+
+    return 0;
+}
+#endif /* defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED) */
 
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
 void mbedtls_test_ssl_perform_handshake(
@@ -2510,6 +2617,7 @@ int mbedtls_test_get_tls13_ticket(
     mbedtls_ssl_session *session)
 {
     int ret = -1;
+    int ok = 0;
     unsigned char buf[64];
     mbedtls_test_ssl_endpoint client_ep, server_ep;
 
@@ -2523,6 +2631,9 @@ int mbedtls_test_get_tls13_ticket(
     ret = mbedtls_test_ssl_endpoint_init(&server_ep, MBEDTLS_SSL_IS_SERVER,
                                          server_options, NULL, NULL, NULL);
     TEST_EQUAL(ret, 0);
+
+    mbedtls_ssl_conf_tls13_enable_signal_new_session_tickets(
+        &client_ep.conf, MBEDTLS_SSL_TLS1_3_SIGNAL_NEW_SESSION_TICKETS_ENABLED);
 
     mbedtls_ssl_conf_session_tickets_cb(&server_ep.conf,
                                         mbedtls_test_ticket_write,
@@ -2546,10 +2657,16 @@ int mbedtls_test_get_tls13_ticket(
     ret = mbedtls_ssl_get_session(&(client_ep.ssl), session);
     TEST_EQUAL(ret, 0);
 
+    ok = 1;
+
 exit:
     mbedtls_test_ssl_endpoint_free(&client_ep, NULL);
     mbedtls_test_ssl_endpoint_free(&server_ep, NULL);
 
+    if (ret == 0 && !ok) {
+        /* Exiting due to a test assertion that isn't ret == 0 */
+        ret = -1;
+    }
     return ret;
 }
 #endif /* MBEDTLS_SSL_CLI_C && MBEDTLS_SSL_SRV_C &&

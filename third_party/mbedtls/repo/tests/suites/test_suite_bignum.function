@@ -3,7 +3,9 @@
 #include "mbedtls/entropy.h"
 #include "constant_time_internal.h"
 #include "bignum_core.h"
+#include "bignum_internal.h"
 #include "test/constant_flow.h"
+#include "test/bignum_codepath_check.h"
 
 #if MBEDTLS_MPI_MAX_BITS > 792
 #define MPI_MAX_BITS_LARGER_THAN_792
@@ -32,6 +34,7 @@ static int sign_is_valid(const mbedtls_mpi *X)
     return 1;
 }
 
+#if defined(MBEDTLS_GENPRIME)
 typedef struct mbedtls_test_mpi_random {
     data_t *data;
     size_t  pos;
@@ -44,9 +47,9 @@ typedef struct mbedtls_test_mpi_random {
  * test) are stored in the data member of the state structure. Each number is in
  * the format that mbedtls_mpi_read_string understands and is chunk_len long.
  */
-int mbedtls_test_mpi_miller_rabin_determinizer(void *state,
-                                               unsigned char *buf,
-                                               size_t len)
+static int mbedtls_test_mpi_miller_rabin_determinizer(void *state,
+                                                      unsigned char *buf,
+                                                      size_t len)
 {
     mbedtls_test_mpi_random *random = (mbedtls_test_mpi_random *) state;
 
@@ -73,6 +76,7 @@ int mbedtls_test_mpi_miller_rabin_determinizer(void *state,
 
     return 0;
 }
+#endif /* MBEDTLS_GENPRIME */
 
 /* Random generator that is told how many bytes to return. */
 static int f_rng_bytes_left(void *state, unsigned char *buf, size_t len)
@@ -208,28 +212,22 @@ void mpi_write_binary(char *input_X, data_t *input_A,
                       int output_size, int result)
 {
     mbedtls_mpi X;
-    unsigned char buf[1000];
-    size_t buflen;
-
-    memset(buf, 0x00, 1000);
-
     mbedtls_mpi_init(&X);
+    unsigned char *buf = NULL;
 
-    TEST_ASSERT(mbedtls_test_read_mpi(&X, input_X) == 0);
+    TEST_EQUAL(mbedtls_test_read_mpi(&X, input_X), 0);
 
-    buflen = mbedtls_mpi_size(&X);
-    if (buflen > (size_t) output_size) {
-        buflen = (size_t) output_size;
-    }
+    TEST_CALLOC(buf, output_size);
 
-    TEST_ASSERT(mbedtls_mpi_write_binary(&X, buf, buflen) == result);
+    TEST_EQUAL(mbedtls_mpi_write_binary(&X, buf, output_size), result);
+
     if (result == 0) {
-
-        TEST_ASSERT(mbedtls_test_hexcmp(buf, input_A->x,
-                                        buflen, input_A->len) == 0);
+        TEST_EQUAL(mbedtls_test_hexcmp(buf, input_A->x,
+                                       output_size, input_A->len), 0);
     }
 
 exit:
+    mbedtls_free(buf);
     mbedtls_mpi_free(&X);
 }
 /* END_CASE */
@@ -239,28 +237,22 @@ void mpi_write_binary_le(char *input_X, data_t *input_A,
                          int output_size, int result)
 {
     mbedtls_mpi X;
-    unsigned char buf[1000];
-    size_t buflen;
-
-    memset(buf, 0x00, 1000);
-
     mbedtls_mpi_init(&X);
+    unsigned char *buf = NULL;
 
-    TEST_ASSERT(mbedtls_test_read_mpi(&X, input_X) == 0);
+    TEST_EQUAL(mbedtls_test_read_mpi(&X, input_X), 0);
 
-    buflen = mbedtls_mpi_size(&X);
-    if (buflen > (size_t) output_size) {
-        buflen = (size_t) output_size;
-    }
+    TEST_CALLOC(buf, output_size);
 
-    TEST_ASSERT(mbedtls_mpi_write_binary_le(&X, buf, buflen) == result);
+    TEST_EQUAL(mbedtls_mpi_write_binary_le(&X, buf, output_size), result);
+
     if (result == 0) {
-
-        TEST_ASSERT(mbedtls_test_hexcmp(buf, input_A->x,
-                                        buflen, input_A->len) == 0);
+        TEST_EQUAL(mbedtls_test_hexcmp(buf, input_A->x,
+                                       output_size, input_A->len), 0);
     }
 
 exit:
+    mbedtls_free(buf);
     mbedtls_mpi_free(&X);
 }
 /* END_CASE */
@@ -986,7 +978,13 @@ void mpi_exp_mod_min_RR(char *input_A, char *input_E,
      * against a smaller RR. */
     TEST_LE_U(RR.n, N.n - 1);
 
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
     res = mbedtls_mpi_exp_mod(&Z, &A, &E, &N, &RR);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_SECRET, res, E);
+#endif
     /* We know that exp_mod internally needs RR to be as large as N.
      * Validate that it is the case now, otherwise there was probably
      * a buffer overread. */
@@ -1019,7 +1017,26 @@ void mpi_exp_mod(char *input_A, char *input_E,
     TEST_ASSERT(mbedtls_test_read_mpi(&N, input_N) == 0);
     TEST_ASSERT(mbedtls_test_read_mpi(&X, input_X) == 0);
 
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
     res = mbedtls_mpi_exp_mod(&Z, &A, &E, &N, NULL);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_SECRET, res, E);
+#endif
+    TEST_ASSERT(res == exp_result);
+    if (res == 0) {
+        TEST_ASSERT(sign_is_valid(&Z));
+        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&Z, &X) == 0);
+    }
+
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
+    res = mbedtls_mpi_exp_mod_unsafe(&Z, &A, &E, &N, NULL);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_PUBLIC, res, E);
+#endif
     TEST_ASSERT(res == exp_result);
     if (res == 0) {
         TEST_ASSERT(sign_is_valid(&Z));
@@ -1027,7 +1044,13 @@ void mpi_exp_mod(char *input_A, char *input_E,
     }
 
     /* Now test again with the speed-up parameter supplied as an output. */
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
     res = mbedtls_mpi_exp_mod(&Z, &A, &E, &N, &RR);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_SECRET, res, E);
+#endif
     TEST_ASSERT(res == exp_result);
     if (res == 0) {
         TEST_ASSERT(sign_is_valid(&Z));
@@ -1035,7 +1058,13 @@ void mpi_exp_mod(char *input_A, char *input_E,
     }
 
     /* Now test again with the speed-up parameter supplied in calculated form. */
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
     res = mbedtls_mpi_exp_mod(&Z, &A, &E, &N, &RR);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_SECRET, res, E);
+#endif
     TEST_ASSERT(res == exp_result);
     if (res == 0) {
         TEST_ASSERT(sign_is_valid(&Z));
@@ -1075,7 +1104,21 @@ void mpi_exp_mod_size(int A_bytes, int E_bytes, int N_bytes,
         TEST_ASSERT(mbedtls_test_read_mpi(&RR, input_RR) == 0);
     }
 
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
     TEST_ASSERT(mbedtls_mpi_exp_mod(&Z, &A, &E, &N, &RR) == exp_result);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_SECRET, exp_result, E);
+#endif
+
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
+    TEST_ASSERT(mbedtls_mpi_exp_mod_unsafe(&Z, &A, &E, &N, &RR) == exp_result);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_BIGNUM_CODEPATH(MBEDTLS_MPI_IS_PUBLIC, exp_result, E);
+#endif
 
 exit:
     mbedtls_mpi_free(&A); mbedtls_mpi_free(&E); mbedtls_mpi_free(&N);

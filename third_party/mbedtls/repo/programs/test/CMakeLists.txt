@@ -8,12 +8,16 @@ set(executables_libs
     selftest
     udp_proxy
 )
+add_dependencies(${programs_target} ${executables_libs})
+add_dependencies(${ssl_opt_target} udp_proxy)
 
 set(executables_mbedcrypto
     benchmark
     query_compile_time_config
     zeroize
 )
+add_dependencies(${programs_target} ${executables_mbedcrypto})
+add_dependencies(${ssl_opt_target} query_compile_time_config)
 
 if(TEST_CPP)
     set(cpp_dummy_build_cpp "${CMAKE_CURRENT_BINARY_DIR}/cpp_dummy_build.cpp")
@@ -64,15 +68,22 @@ else()
 endif()
 
 foreach(exe IN LISTS executables_libs executables_mbedcrypto)
+    set(source ${exe}.c)
     set(extra_sources "")
+    if(NOT EXISTS ${source} AND
+       EXISTS ${MBEDTLS_FRAMEWORK_DIR}/tests/programs/${source})
+         set(source ${MBEDTLS_FRAMEWORK_DIR}/tests/programs/${source})
+    endif()
+
     if(exe STREQUAL "query_compile_time_config")
         list(APPEND extra_sources
-            ${CMAKE_CURRENT_SOURCE_DIR}/query_config.h
+            ${MBEDTLS_FRAMEWORK_DIR}/tests/programs/query_config.h
             ${CMAKE_CURRENT_BINARY_DIR}/query_config.c)
     endif()
-    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>
+    add_executable(${exe} ${source} $<TARGET_OBJECTS:mbedtls_test>
         ${extra_sources})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    target_include_directories(${exe} PRIVATE ${MBEDTLS_FRAMEWORK_DIR}/tests/include)
+    target_include_directories(${exe} PRIVATE ${MBEDTLS_FRAMEWORK_DIR}/tests/programs)
     target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../library)
     if(exe STREQUAL "query_compile_time_config")
         target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -16,6 +16,8 @@ set(executables
     ssl_server
     ssl_server2
 )
+add_dependencies(${programs_target} ${executables})
+add_dependencies(${ssl_opt_target} ${executables})
 
 if(GEN_FILES)
     # Inform CMake that the following file will be generated as part of the build
@@ -33,25 +35,26 @@ foreach(exe IN LISTS executables)
     if(exe STREQUAL "ssl_client2" OR exe STREQUAL "ssl_server2")
         list(APPEND extra_sources
             ssl_test_lib.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/../test/query_config.h
+            ${MBEDTLS_FRAMEWORK_DIR}/tests/programs/query_config.h
             ${CMAKE_CURRENT_BINARY_DIR}/../test/query_config.c)
     endif()
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>
         ${extra_sources})
     target_link_libraries(${exe} ${libs} ${CMAKE_THREAD_LIBS_INIT})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    target_include_directories(${exe} PRIVATE ${MBEDTLS_FRAMEWORK_DIR}/tests/programs
+                                              ${MBEDTLS_FRAMEWORK_DIR}/tests/include
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
     if(exe STREQUAL "ssl_client2" OR exe STREQUAL "ssl_server2")
         if(GEN_FILES)
             add_dependencies(${exe} generate_query_config_c)
         endif()
-        target_include_directories(${exe}
-            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../test)
     endif()
 endforeach()
 
 if(THREADS_FOUND)
     add_executable(ssl_pthread_server ssl_pthread_server.c $<TARGET_OBJECTS:mbedtls_test>)
-    target_include_directories(ssl_pthread_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    target_include_directories(ssl_pthread_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include
+                                                          ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
     target_link_libraries(ssl_pthread_server ${libs} ${CMAKE_THREAD_LIBS_INIT})
     list(APPEND executables ssl_pthread_server)
 endif(THREADS_FOUND)

@@ -28,12 +28,11 @@ EOF
 # Copyright The Mbed TLS Contributors
 # SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
+# This script must be invoked from the project's root.
+
 set -eu
 
-# Repository detection
-in_mbedtls_build_dir () {
-    test -d library
-}
+. framework/scripts/project_detection.sh
 
 # Collect stats and build a HTML report.
 lcov_library_report () {
@@ -68,7 +67,7 @@ if [ $# -gt 0 ] && [ "$1" = "--help" ]; then
     exit
 fi
 
-if in_mbedtls_build_dir; then
+if in_mbedtls_repo; then
     library_dir='library'
     title='Mbed TLS'
 else

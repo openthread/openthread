@@ -22,13 +22,7 @@ EOF
     exit
 fi
 
-in_mbedtls_repo () {
-    test -d include -a -d library -a -d programs -a -d tests
-}
-
-in_tf_psa_crypto_repo () {
-    test -d include -a -d core -a -d drivers -a -d programs -a -d tests
-}
+. framework/scripts/project_detection.sh
 
 if in_mbedtls_repo; then
     library_dir='library'
@@ -117,7 +111,7 @@ check()
 }
 
 # Note: if the format of calls to the "check" function changes, update
-# scripts/code_style.py accordingly. For generated C source files (*.h or *.c),
+# framework/scripts/code_style.py accordingly. For generated C source files (*.h or *.c),
 # the format must be "check SCRIPT FILENAME...". For other source files,
 # any shell syntax is permitted (including e.g. command substitution).
 
@@ -128,9 +122,11 @@ check()
 
 # These checks are common to Mbed TLS and TF-PSA-Crypto
 check scripts/generate_psa_constants.py programs/psa/psa_constant_names_generated.c
-check tests/scripts/generate_bignum_tests.py $(tests/scripts/generate_bignum_tests.py --list)
-check tests/scripts/generate_ecp_tests.py $(tests/scripts/generate_ecp_tests.py --list)
-check tests/scripts/generate_psa_tests.py $(tests/scripts/generate_psa_tests.py --list)
+check framework/scripts/generate_bignum_tests.py $(framework/scripts/generate_bignum_tests.py --list)
+check framework/scripts/generate_config_tests.py $(framework/scripts/generate_config_tests.py --list)
+check framework/scripts/generate_ecp_tests.py $(framework/scripts/generate_ecp_tests.py --list)
+check framework/scripts/generate_psa_tests.py $(framework/scripts/generate_psa_tests.py --list)
+check framework/scripts/generate_test_keys.py tests/include/test/test_keys.h
 check scripts/generate_driver_wrappers.py $library_dir/psa_crypto_driver_wrappers.h $library_dir/psa_crypto_driver_wrappers_no_static.c
 
 # Additional checks for Mbed TLS only
@@ -138,7 +134,10 @@ if in_mbedtls_repo; then
     check scripts/generate_errors.pl library/error.c
     check scripts/generate_query_config.pl programs/test/query_config.c
     check scripts/generate_features.pl library/version_features.c
-    check scripts/generate_ssl_debug_helpers.py library/ssl_debug_helpers_generated.c
+    check framework/scripts/generate_ssl_debug_helpers.py library/ssl_debug_helpers_generated.c
+    check framework/scripts/generate_tls_handshake_tests.py tests/opt-testcases/handshake-generated.sh
+    check framework/scripts/generate_tls13_compat_tests.py tests/opt-testcases/tls13-compat.sh
+    check framework/scripts/generate_test_cert_macros.py tests/include/test/test_certs.h
     # generate_visualc_files enumerates source files (library/*.c). It doesn't
     # care about their content, but the files must exist. So it must run after
     # the step that creates or updates these files.
@@ -148,4 +147,4 @@ fi
 # Generated files that are present in the repository even in the development
 # branch. (This is intended to be temporary, until the generator scripts are
 # fully reviewed and the build scripts support a generated header file.)
-check tests/scripts/generate_psa_wrappers.py tests/include/test/psa_test_wrappers.h tests/src/psa_test_wrappers.c
+check framework/scripts/generate_psa_wrappers.py tests/include/test/psa_test_wrappers.h tests/src/psa_test_wrappers.c

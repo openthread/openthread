@@ -96,6 +96,7 @@ FILTER=""
 EXCLUDE='NULL\|ARIA\|CHACHA20_POLY1305'
 VERBOSE=""
 MEMCHECK=0
+MIN_TESTS=1
 PRESERVE_LOGS=0
 PEERS="OpenSSL$PEER_GNUTLS mbedTLS"
 
@@ -116,6 +117,7 @@ print_usage() {
     printf "  -M|--memcheck\tCheck memory leaks and errors.\n"
     printf "  -v|--verbose\tSet verbose output.\n"
     printf "     --list-test-cases\tList all potential test cases (No Execution)\n"
+    printf "     --min      \tMinimum number of non-skipped tests (default 1)\n"
     printf "     --outcome-file\tFile where test outcomes are written\n"
     printf "                   \t(default: \$MBEDTLS_TEST_OUTCOME_FILE, none if empty)\n"
     printf "     --preserve-logs\tPreserve logs of successful tests as well\n"
@@ -131,22 +133,28 @@ print_test_case() {
 
 # list_test_cases lists all potential test cases in compat.sh without execution
 list_test_cases() {
-    reset_ciphersuites
     for TYPE in $TYPES; do
+        reset_ciphersuites
         add_common_ciphersuites
         add_openssl_ciphersuites
         add_gnutls_ciphersuites
         add_mbedtls_ciphersuites
-    done
 
-    for VERIFY in $VERIFIES; do
-        VERIF=$(echo $VERIFY | tr '[:upper:]' '[:lower:]')
-        for MODE in $MODES; do
-            print_test_case m O "$O_CIPHERS"
-            print_test_case O m "$O_CIPHERS"
-            print_test_case m G "$G_CIPHERS"
-            print_test_case G m "$G_CIPHERS"
-            print_test_case m m "$M_CIPHERS"
+        # PSK cipher suites do not allow client certificate verification.
+        SUB_VERIFIES=$VERIFIES
+        if [ "$TYPE" = "PSK" ]; then
+            SUB_VERIFIES="NO"
+        fi
+
+        for VERIFY in $SUB_VERIFIES; do
+            VERIF=$(echo $VERIFY | tr '[:upper:]' '[:lower:]')
+            for MODE in $MODES; do
+                print_test_case m O "$O_CIPHERS"
+                print_test_case O m "$O_CIPHERS"
+                print_test_case m G "$G_CIPHERS"
+                print_test_case G m "$G_CIPHERS"
+                print_test_case m m "$M_CIPHERS"
+            done
         done
     done
 }
@@ -183,6 +191,9 @@ get_options() {
             --list-test-cases)
                 list_test_cases
                 exit $?
+                ;;
+            --min)
+                shift; MIN_TESTS=$1
                 ;;
             --outcome-file)
                 shift; MBEDTLS_TEST_OUTCOME_FILE=$1
@@ -264,12 +275,6 @@ filter_ciphersuites()
         # Ciphersuite for GnuTLS
         G_CIPHERS=$( filter "$G_CIPHERS" )
     fi
-
-    # For GnuTLS client -> Mbed TLS server,
-    # we need to force IPv4 by connecting to 127.0.0.1 but then auth fails
-    if is_dtls "$MODE" && [ "X$VERIFY" = "XYES" ]; then
-        G_CIPHERS=""
-    fi
 }
 
 reset_ciphersuites()
@@ -285,7 +290,7 @@ reset_ciphersuites()
 # list of entries of the form "STANDARD_NAME=PROGRAM_NAME".
 translate_ciphers()
 {
-    ciphers=$(scripts/translate_ciphers.py "$@")
+    ciphers=$(../framework/scripts/translate_ciphers.py "$@")
     if [ $? -ne 0 ]; then
         echo "translate_ciphers.py failed with exit code $1" >&2
         echo "$2" >&2
@@ -588,7 +593,18 @@ add_mbedtls_ciphersuites()
 # o_check_ciphersuite STANDARD_CIPHER_SUITE
 o_check_ciphersuite()
 {
-    if [ "${O_SUPPORT_ECDH}" = "NO" ]; then
+    # skip DTLS when lack of support was declared
+    if test "$OSSL_NO_DTLS" -gt 0 && is_dtls "$MODE"; then
+        SKIP_NEXT_="YES"
+    fi
+
+    # skip DTLS 1.2 is support was not detected
+    if [ "$O_SUPPORT_DTLS12" = "NO" -a "$MODE" = "dtls12" ]; then
+        SKIP_NEXT="YES"
+    fi
+
+    # skip static ECDH when OpenSSL doesn't support it
+    if [ "${O_SUPPORT_STATIC_ECDH}" = "NO" ]; then
         case "$1" in
             *ECDH_*) SKIP_NEXT="YES"
         esac
@@ -597,6 +613,8 @@ o_check_ciphersuite()
 
 setup_arguments()
 {
+    DATA_FILES_PATH="../framework/data_files"
+
     O_MODE=""
     G_MODE=""
     case "$MODE" in
@@ -635,7 +653,7 @@ setup_arguments()
     # force it or not for intermediate versions.
     case $($OPENSSL version) in
         "OpenSSL 1.0"*)
-            O_SERVER_ARGS="$O_SERVER_ARGS -dhparam data_files/dhparams.pem"
+            O_SERVER_ARGS="$O_SERVER_ARGS -dhparam $DATA_FILES_PATH/dhparams.pem"
             ;;
     esac
 
@@ -665,19 +683,34 @@ setup_arguments()
     esac
 
     case $($OPENSSL ciphers ALL) in
-        *ECDH-ECDSA*|*ECDH-RSA*) O_SUPPORT_ECDH="YES";;
-        *) O_SUPPORT_ECDH="NO";;
+        *ECDH-ECDSA*|*ECDH-RSA*) O_SUPPORT_STATIC_ECDH="YES";;
+        *) O_SUPPORT_STATIC_ECDH="NO";;
     esac
+
+    case $($OPENSSL ciphers ALL) in
+        *DES-CBC-*) O_SUPPORT_SINGLE_DES="YES";;
+        *) O_SUPPORT_SINGLE_DES="NO";;
+    esac
+
+    # OpenSSL <1.0.2 doesn't support DTLS 1.2. Check if OpenSSL
+    # supports -dtls1_2 from the s_server help. (The s_client
+    # help isn't accurate as of 1.0.2g: it supports DTLS 1.2
+    # but doesn't list it. But the s_server help seems to be
+    # accurate.)
+    O_SUPPORT_DTLS12="NO"
+    if $OPENSSL s_server -help 2>&1 | grep -q "^ *-dtls1_2 "; then
+        O_SUPPORT_DTLS12="YES"
+    fi
 
     if [ "X$VERIFY" = "XYES" ];
     then
-        M_SERVER_ARGS="$M_SERVER_ARGS ca_file=data_files/test-ca_cat12.crt auth_mode=required"
-        O_SERVER_ARGS="$O_SERVER_ARGS -CAfile data_files/test-ca_cat12.crt -Verify 10"
-        G_SERVER_ARGS="$G_SERVER_ARGS --x509cafile data_files/test-ca_cat12.crt --require-client-cert"
+        M_SERVER_ARGS="$M_SERVER_ARGS ca_file=$DATA_FILES_PATH/test-ca_cat12.crt auth_mode=required"
+        O_SERVER_ARGS="$O_SERVER_ARGS -CAfile $DATA_FILES_PATH/test-ca_cat12.crt -Verify 10"
+        G_SERVER_ARGS="$G_SERVER_ARGS --x509cafile $DATA_FILES_PATH/test-ca_cat12.crt --require-client-cert"
 
-        M_CLIENT_ARGS="$M_CLIENT_ARGS ca_file=data_files/test-ca_cat12.crt auth_mode=required"
-        O_CLIENT_ARGS="$O_CLIENT_ARGS -CAfile data_files/test-ca_cat12.crt -verify 10"
-        G_CLIENT_ARGS="$G_CLIENT_ARGS --x509cafile data_files/test-ca_cat12.crt"
+        M_CLIENT_ARGS="$M_CLIENT_ARGS ca_file=$DATA_FILES_PATH/test-ca_cat12.crt auth_mode=required"
+        O_CLIENT_ARGS="$O_CLIENT_ARGS -CAfile $DATA_FILES_PATH/test-ca_cat12.crt -verify 10"
+        G_CLIENT_ARGS="$G_CLIENT_ARGS --x509cafile $DATA_FILES_PATH/test-ca_cat12.crt"
     else
         # don't request a client cert at all
         M_SERVER_ARGS="$M_SERVER_ARGS ca_file=none auth_mode=none"
@@ -690,28 +723,28 @@ setup_arguments()
 
     case $TYPE in
         "ECDSA")
-            M_SERVER_ARGS="$M_SERVER_ARGS crt_file=data_files/server5.crt key_file=data_files/server5.key"
-            O_SERVER_ARGS="$O_SERVER_ARGS -cert data_files/server5.crt -key data_files/server5.key"
-            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server5.crt --x509keyfile data_files/server5.key"
+            M_SERVER_ARGS="$M_SERVER_ARGS crt_file=$DATA_FILES_PATH/server5.crt key_file=$DATA_FILES_PATH/server5.key"
+            O_SERVER_ARGS="$O_SERVER_ARGS -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key"
+            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile $DATA_FILES_PATH/server5.crt --x509keyfile $DATA_FILES_PATH/server5.key"
 
             if [ "X$VERIFY" = "XYES" ]; then
-                M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=data_files/server6.crt key_file=data_files/server6.key"
-                O_CLIENT_ARGS="$O_CLIENT_ARGS -cert data_files/server6.crt -key data_files/server6.key"
-                G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile data_files/server6.crt --x509keyfile data_files/server6.key"
+                M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=$DATA_FILES_PATH/server6.crt key_file=$DATA_FILES_PATH/server6.key"
+                O_CLIENT_ARGS="$O_CLIENT_ARGS -cert $DATA_FILES_PATH/server6.crt -key $DATA_FILES_PATH/server6.key"
+                G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile $DATA_FILES_PATH/server6.crt --x509keyfile $DATA_FILES_PATH/server6.key"
             else
                 M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=none key_file=none"
             fi
             ;;
 
         "RSA")
-            M_SERVER_ARGS="$M_SERVER_ARGS crt_file=data_files/server2-sha256.crt key_file=data_files/server2.key"
-            O_SERVER_ARGS="$O_SERVER_ARGS -cert data_files/server2-sha256.crt -key data_files/server2.key"
-            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2-sha256.crt --x509keyfile data_files/server2.key"
+            M_SERVER_ARGS="$M_SERVER_ARGS crt_file=$DATA_FILES_PATH/server2-sha256.crt key_file=$DATA_FILES_PATH/server2.key"
+            O_SERVER_ARGS="$O_SERVER_ARGS -cert $DATA_FILES_PATH/server2-sha256.crt -key $DATA_FILES_PATH/server2.key"
+            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile $DATA_FILES_PATH/server2-sha256.crt --x509keyfile $DATA_FILES_PATH/server2.key"
 
             if [ "X$VERIFY" = "XYES" ]; then
-                M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=data_files/cert_sha256.crt key_file=data_files/server1.key"
-                O_CLIENT_ARGS="$O_CLIENT_ARGS -cert data_files/cert_sha256.crt -key data_files/server1.key"
-                G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile data_files/cert_sha256.crt --x509keyfile data_files/server1.key"
+                M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=$DATA_FILES_PATH/cert_sha256.crt key_file=$DATA_FILES_PATH/server1.key"
+                O_CLIENT_ARGS="$O_CLIENT_ARGS -cert $DATA_FILES_PATH/cert_sha256.crt -key $DATA_FILES_PATH/server1.key"
+                G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile $DATA_FILES_PATH/cert_sha256.crt --x509keyfile $DATA_FILES_PATH/server1.key"
             else
                 M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=none key_file=none"
             fi
@@ -720,9 +753,9 @@ setup_arguments()
         "PSK")
             # give RSA-PSK-capable server a RSA cert
             # (should be a separate type, but harder to close with openssl)
-            M_SERVER_ARGS="$M_SERVER_ARGS psk=6162636465666768696a6b6c6d6e6f70 ca_file=none crt_file=data_files/server2-sha256.crt key_file=data_files/server2.key"
+            M_SERVER_ARGS="$M_SERVER_ARGS psk=6162636465666768696a6b6c6d6e6f70 ca_file=none crt_file=$DATA_FILES_PATH/server2-sha256.crt key_file=$DATA_FILES_PATH/server2.key"
             O_SERVER_ARGS="$O_SERVER_ARGS -psk 6162636465666768696a6b6c6d6e6f70 -nocert"
-            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2-sha256.crt --x509keyfile data_files/server2.key --pskpasswd data_files/passwd.psk"
+            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile $DATA_FILES_PATH/server2-sha256.crt --x509keyfile $DATA_FILES_PATH/server2.key --pskpasswd $DATA_FILES_PATH/passwd.psk"
 
             M_CLIENT_ARGS="$M_CLIENT_ARGS psk=6162636465666768696a6b6c6d6e6f70 crt_file=none key_file=none"
             O_CLIENT_ARGS="$O_CLIENT_ARGS -psk 6162636465666768696a6b6c6d6e6f70"
@@ -939,13 +972,7 @@ run_client() {
             ;;
 
         [Gg]nu*)
-            # need to force IPv4 with UDP, but keep localhost for auth
-            if is_dtls "$MODE"; then
-                G_HOST="127.0.0.1"
-            else
-                G_HOST="localhost"
-            fi
-            CLIENT_CMD="$GNUTLS_CLI $G_CLIENT_ARGS --priority $G_PRIO_MODE:$3 $G_HOST"
+            CLIENT_CMD="$GNUTLS_CLI $G_CLIENT_ARGS --priority $G_PRIO_MODE:$3 localhost"
             log "$CLIENT_CMD"
             echo "$CLIENT_CMD" > $CLI_OUT
             printf 'GET HTTP/1.0\r\n\r\n' | $CLIENT_CMD >> $CLI_OUT 2>&1 &
@@ -1115,19 +1142,6 @@ for MODE in $MODES; do
 
                 [Oo]pen*)
 
-                    if test "$OSSL_NO_DTLS" -gt 0 && is_dtls "$MODE"; then
-                        continue;
-                    fi
-
-                    # OpenSSL <1.0.2 doesn't support DTLS 1.2. Check if OpenSSL
-                    # supports $O_MODE from the s_server help. (The s_client
-                    # help isn't accurate as of 1.0.2g: it supports DTLS 1.2
-                    # but doesn't list it. But the s_server help seems to be
-                    # accurate.)
-                    if ! $OPENSSL s_server -help 2>&1 | grep -q "^ *-$O_MODE "; then
-                        continue;
-                    fi
-
                     reset_ciphersuites
                     add_common_ciphersuites
                     add_openssl_ciphersuites
@@ -1230,6 +1244,16 @@ fi
 
 PASSED=$(( $TESTS - $FAILED ))
 echo " ($PASSED / $TESTS tests ($SKIPPED skipped$MEMREPORT))"
+
+if [ $((TESTS - SKIPPED)) -lt $MIN_TESTS ]; then
+    cat <<EOF
+Error: Expected to run at least $MIN_TESTS, but only ran $((TESTS - SKIPPED)).
+Maybe a bad filter ('$FILTER' excluding '$EXCLUDE') or a bad configuration?
+EOF
+    if [ $FAILED -eq 0 ]; then
+        FAILED=1
+    fi
+fi
 
 FAILED=$(( $FAILED + $SRVMEM ))
 if [ $FAILED -gt 255 ]; then

@@ -197,15 +197,13 @@ psa_status_t mbedtls_psa_rsa_export_public_key(
 
     status = mbedtls_psa_rsa_load_representation(
         attributes->type, key_buffer, key_buffer_size, &rsa);
-    if (status != PSA_SUCCESS) {
-        return status;
+    if (status == PSA_SUCCESS) {
+        status = mbedtls_psa_rsa_export_key(PSA_KEY_TYPE_RSA_PUBLIC_KEY,
+                                            rsa,
+                                            data,
+                                            data_size,
+                                            data_length);
     }
-
-    status = mbedtls_psa_rsa_export_key(PSA_KEY_TYPE_RSA_PUBLIC_KEY,
-                                        rsa,
-                                        data,
-                                        data_size,
-                                        data_length);
 
     mbedtls_rsa_free(rsa);
     mbedtls_free(rsa);
@@ -241,7 +239,7 @@ static psa_status_t psa_rsa_read_exponent(const uint8_t *e_bytes,
 
 psa_status_t mbedtls_psa_rsa_generate_key(
     const psa_key_attributes_t *attributes,
-    const psa_key_production_parameters_t *params, size_t params_data_length,
+    const uint8_t *custom_data, size_t custom_data_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
     psa_status_t status;
@@ -249,8 +247,8 @@ psa_status_t mbedtls_psa_rsa_generate_key(
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     int exponent = 65537;
 
-    if (params_data_length != 0) {
-        status = psa_rsa_read_exponent(params->data, params_data_length,
+    if (custom_data_length != 0) {
+        status = psa_rsa_read_exponent(custom_data, custom_data_length,
                                        &exponent);
         if (status != PSA_SUCCESS) {
             return status;
@@ -264,6 +262,7 @@ psa_status_t mbedtls_psa_rsa_generate_key(
                               (unsigned int) attributes->bits,
                               exponent);
     if (ret != 0) {
+        mbedtls_rsa_free(&rsa);
         return mbedtls_to_psa_error(ret);
     }
 
@@ -330,7 +329,7 @@ psa_status_t mbedtls_psa_rsa_sign_hash(
                                                  key_buffer_size,
                                                  &rsa);
     if (status != PSA_SUCCESS) {
-        return status;
+        goto exit;
     }
 
     status = psa_rsa_decode_md_type(alg, hash_length, &md_alg);
