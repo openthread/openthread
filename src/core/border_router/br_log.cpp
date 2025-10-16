@@ -71,7 +71,7 @@ void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePre
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 void LogNat64PrefixOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime)
 {
-    LogInfo("- NAT64-PIO %s (lifetime:%lu)", aPrefix.ToString().AsCString(), ToUlong(aLifetime));
+    LogInfo("- NAT64 Prefix %s (lifetime:%lu)", aPrefix.ToString().AsCString(), ToUlong(aLifetime));
 }
 #endif
 

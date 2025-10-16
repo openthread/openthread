@@ -156,7 +156,7 @@ void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaM
             break;
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        case Option::kTypeNat64PrefixInfo:
+        case Option::kTypeNat64Prefix:
             ProcessNat64PrefixOption(static_cast<const Nat64PrefixOption &>(option), *router);
             break;
 #endif

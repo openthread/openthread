@@ -188,7 +188,7 @@ void RaFlagsExtOption::Init(void)
 void Nat64PrefixOption::Init(void)
 {
     Clear();
-    SetType(kTypeNat64PrefixInfo);
+    SetType(kTypeNat64Prefix);
     SetSize(sizeof(Nat64PrefixOption));
 }
 
@@ -206,6 +206,19 @@ void Nat64PrefixOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
 {
     mPrefixAttr = BigEndian::HostSwap16((BigEndian::HostSwap16(mPrefixAttr) & ~kPrefixLengthCodeMask) |
                                         (aPrefixLengthCode & kPrefixLengthCodeMask));
+}
+
+Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
+{
+    Error   error            = kErrorNone;
+    uint8_t prefixLengthCode = GetPrefixLengthCode();
+
+    VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
+
+    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
+
+exit:
+    return error;
 }
 
 Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
@@ -227,21 +240,10 @@ Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
     return error;
 }
 
-Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
-{
-    Error   error            = kErrorNone;
-    uint8_t prefixLengthCode = GetPrefixLengthCode();
-
-    VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
-
-    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
-
-exit:
-    return error;
-}
-
 bool Nat64PrefixOption::IsValid(void) const
 {
+    // Per RFC 8781, the length of the NAT64 Prefix Option is 2 (in units of 8 octets). We use `>= 2` to be more robust
+    // and allow for potential future extensions where new fields might be appended to the option.
     return (GetLength() >= 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
 }
 

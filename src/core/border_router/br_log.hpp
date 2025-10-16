@@ -78,7 +78,7 @@ void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePre
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 /**
- * Logs a NAT64 Prefix Information Option (NAT64 PIO) at info log level.
+ * Logs a NAT64 Prefix Option at info log level.
  *
  * @param[in] aPrefix   The IPv6 prefix.
  * @param[in] aLifetime The NAT64 lifetime in seconds.

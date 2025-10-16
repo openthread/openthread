@@ -84,7 +84,7 @@ public:
         kTypeRouteInfo          = 24, ///< Route Information Option.
         kTypeRecursiveDnsServer = 25, ///< Recursive DNS Server (RDNSS) Option.
         kTypeRaFlagsExtension   = 26, ///< RA Flags Extension Option.
-        kTypeNat64PrefixInfo    = 38, ///< NAT64 Prefix Information Option.
+        kTypeNat64Prefix        = 38, ///< NAT64 Prefix Option.
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -280,18 +280,18 @@ public:
     uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
 
     /**
-     * Sets the prefix.
-     *
-     * @param[in]  aPrefix  The prefix contained in this option.
-     */
-    void SetPrefix(const Prefix &aPrefix);
-
-    /**
      * Gets the prefix in this option.
      *
      * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
      */
     void GetPrefix(Prefix &aPrefix) const;
+
+    /**
+     * Sets the prefix.
+     *
+     * @param[in]  aPrefix  The prefix contained in this option.
+     */
+    void SetPrefix(const Prefix &aPrefix);
 
     /**
      * Indicates whether or not the option is valid.
@@ -517,10 +517,10 @@ class Nat64PrefixOption : public Option, private Clearable<Nat64PrefixOption>
     friend class Clearable<Nat64PrefixOption>;
 
 public:
-    static constexpr Type kType = kTypeNat64PrefixInfo; ///< NAT64 Prefix Information Option Type.
+    static constexpr Type kType = kTypeNat64Prefix; ///< NAT64 Prefix Option Type.
 
     /**
-     * Initializes the Nat64 Prefix Info option with proper type and length and sets all other fields to zero.
+     * Initializes the Nat64 Prefix option with proper type and length and sets all other fields to zero.
      */
     void Init(void);
 
@@ -530,7 +530,6 @@ public:
      * The NAT64 prefix lifetime is encoded by scaled lifetime in units of 8 seconds.
      *
      * @returns The prefix lifetime in seconds.
-     *
      */
     uint32_t GetLifetime(void) const
     {
@@ -541,7 +540,6 @@ public:
      * Sets the NAT64 prefix lifetime.
      *
      * @param[in] aLifetime   The prefix lifetime in seconds.
-     *
      */
     void SetLifetime(uint32_t aLifetime);
 
@@ -573,7 +571,7 @@ public:
     Nat64PrefixOption(void) = delete;
 
 private:
-    // NAT64 Prefix Information Option
+    // NAT64 Prefix Option
     //
     //   0                   1                   2                   3
     //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -600,7 +598,6 @@ private:
      * bits, respectively.
      *
      * @returns The prefix code.
-     *
      */
     uint8_t GetPrefixLengthCode(void) const { return BigEndian::HostSwap16(mPrefixAttr) & kPrefixLengthCodeMask; }
 
@@ -608,7 +605,6 @@ private:
      * Sets the NAT64 prefix length code.
      *
      * @param[in] aPrefixLengthCode   The prefix length code.
-     *
      */
     void SetPrefixLengthCode(const uint8_t aPrefixLengthCode);
 
@@ -1054,7 +1050,7 @@ public:
         Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
 
         /**
-         * Appends a NAT64 Prefix Info Option to the RA message.
+         * Appends a NAT64 Prefix Option to the RA message.
          *
          * @param[in] aPrefix         The prefix.
          * @param[in] aLifetime       The lifetime in seconds.

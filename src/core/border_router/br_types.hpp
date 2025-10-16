@@ -72,7 +72,7 @@ typedef otBorderRoutingMultiAilCallback       MultiAilCallback;    ///< Multi AI
 typedef Ip6::Nd::PrefixInfoOption         PrefixInfoOption;         ///< Prefix Info Option (PIO).
 typedef Ip6::Nd::RouteInfoOption          RouteInfoOption;          ///< Route Info Option (RIO).
 typedef Ip6::Nd::RaFlagsExtOption         RaFlagsExtOption;         ///< RA Flags Extension Option.
-typedef Ip6::Nd::Nat64PrefixOption        Nat64PrefixOption;        ///< NAT64 Prefix Information Option.
+typedef Ip6::Nd::Nat64PrefixOption        Nat64PrefixOption;        ///< NAT64 Prefix Option.
 typedef Ip6::Nd::RecursiveDnsServerOption RecursiveDnsServerOption; ///< Recursive DNS Server (RDNSS) Option.
 typedef Ip6::Nd::RouterAdvert             RouterAdvert;             ///< Router Advertisement (RA).
 typedef Ip6::Nd::NeighborAdvertMessage    NeighborAdvertMessage;    ///< Neighbor Advertisement message.
@@ -357,7 +357,7 @@ public:
     void SetFrom(const Nat64PrefixOption &aNat64Prefix);
 
     /**
-     * Clears (sets to zero) the valid lifetime of the route prefix.
+     * Clears (sets to zero) the valid lifetime of the NAT64 prefix.
      */
     void ClearValidLifetime(void) { mValidLifetime = 0; }
 

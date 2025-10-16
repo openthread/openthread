@@ -612,6 +612,18 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
             break;
         }
 
+        case Ip6::Nd::Option::kTypeNat64Prefix:
+        {
+            const Ip6::Nd::Nat64PrefixOption &nat64Prefix = static_cast<const Ip6::Nd::Nat64PrefixOption &>(option);
+            Ip6::Prefix                       prefix;
+
+            VerifyOrQuit(nat64Prefix.IsValid());
+            SuccessOrQuit(nat64Prefix.GetPrefix(prefix));
+
+            Log("     NAT64 Prefix - %s, lifetime:%u", prefix.ToString().AsCString(), nat64Prefix.GetLifetime());
+            break;
+        }
+
         case Ip6::Nd::Option::kTypeRecursiveDnsServer:
         {
             const Ip6::Nd::RecursiveDnsServerOption &rdnss =
@@ -954,6 +966,13 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
     {
         SuccessOrQuit(aRaMsg.AppendRouteInfoOption(aRios->mPrefix, aRios->mValidLifetime, aRios->mPreference));
     }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    for (; aNumNat64Prefixes > 0; aNat64Prefixes++, aNumNat64Prefixes--)
+    {
+        SuccessOrQuit(aRaMsg.AppendNat64PrefixOption(aNat64Prefixes->mPrefix, aNat64Prefixes->mLifetime));
+    }
+#endif
 
     for (; aNumRdnsses > 0; aRdnsses++, aNumRdnsses--)
     {

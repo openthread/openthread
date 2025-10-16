@@ -134,8 +134,8 @@ typedef struct otBorderRoutingPrefixTableEntry
 /**
  * Represents an entry from the discovered NAT64 prefix table.
  *
- * The entries in the discovered table track the Nat64 Prefix Info Options in the received Router Advertisement messages
- * from other routers on the infrastructure link.
+ * The entries in the discovered table track the Nat64 Prefix Options in the received Router Advertisement messages from
+ * other routers on the infrastructure link.
  */
 typedef struct otBorderRoutingNat64PrefixEntry
 {
