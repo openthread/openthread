@@ -4253,7 +4253,7 @@ Error Mle::PrevRoleRestorer::Start(void)
 
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
         SetState(kRestoringRouterOrLeaderRole);
-        DetermineMaxLinkRequestAttempts();
+        mAttempts = kRouterLinkRequestAttempts;
         mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
         error = kErrorNone;
 #endif
@@ -4332,23 +4332,20 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 
 #if OPENTHREAD_FTD
 
-void Mle::PrevRoleRestorer::DetermineMaxLinkRequestAttempts(void)
-{
-    mAttempts = kMaxCriticalTxCount;
-
-    if ((Get<Mle>().mLastSavedRole == kRoleRouter) &&
-        (Get<Mle>().mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) < kMinCriticalChildrenCount))
-    {
-        mAttempts = kMaxTxCount;
-    }
-}
-
 void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
 {
     uint32_t delay;
+    uint32_t aRetxDelayMin = kMulticastRetxDelayMin;
+    uint32_t aRetxDelayMax = kMulticastRetxDelayMax;
+
+    if (Get<Mle>().mLastSavedRole == kRoleLeader)
+    {
+        aRetxDelayMin = kLeaderRetxDelayMin;
+        aRetxDelayMax = kLeaderRetxDelayMax;
+    }
 
     delay = (mAttempts == 0) ? kLinkRequestTimeout
-                             : Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax);
+                             : Random::NonCrypto::GetUint32InRange(aRetxDelayMin, aRetxDelayMax);
 
     mTimer.Start(delay);
 
