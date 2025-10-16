@@ -183,6 +183,69 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// Nat64PrefixInfoOption
+
+void Nat64PrefixInfoOption::Init(void)
+{
+    Clear();
+    SetType(kTypeNat64PrefixInfo);
+    SetSize(sizeof(Nat64PrefixInfoOption));
+}
+
+const uint8_t Nat64PrefixInfoOption::kPrefixLengths[] = {96, 64, 56, 48, 40, 32};
+
+void Nat64PrefixInfoOption::SetLifetime(uint32_t aLifetime)
+{
+    uint32_t scaledLifetime = DivideAndRoundUp(aLifetime, kLifetimeScalingUnit);
+
+    mPrefixAttr = BigEndian::HostSwap16((BigEndian::HostSwap16(mPrefixAttr) & kPrefixLengthCodeMask) |
+                                        ClampToUint16(scaledLifetime << kScaledLifetimeOffset));
+}
+
+void Nat64PrefixInfoOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
+{
+    mPrefixAttr = BigEndian::HostSwap16((BigEndian::HostSwap16(mPrefixAttr) & ~kPrefixLengthCodeMask) |
+                                        (aPrefixLengthCode & kPrefixLengthCodeMask));
+}
+
+Error Nat64PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
+{
+    Error error = kErrorInvalidArgs;
+
+    memcpy(mPrefixMsb, aPrefix.GetBytes(), sizeof(mPrefixMsb));
+
+    for (uint8_t code = 0; code < ClampToUint8(GetArrayLength(kPrefixLengths)); code++)
+    {
+        if (kPrefixLengths[code] == aPrefix.mLength)
+        {
+            SetPrefixLengthCode(code);
+            error = kErrorNone;
+            break;
+        }
+    }
+
+    return error;
+}
+
+Error Nat64PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
+{
+    Error   error            = kErrorNone;
+    uint8_t prefixLengthCode = GetPrefixLengthCode();
+
+    VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
+
+    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
+
+exit:
+    return error;
+}
+
+bool Nat64PrefixInfoOption::IsValid(void) const
+{
+    return (GetLength() >= 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // RecursiveDnsServerOption
 
 void RecursiveDnsServerOption::Init(void)
@@ -327,6 +390,27 @@ Error RouterAdvert::TxMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
     rio->SetRouteLifetime(aRouteLifetime);
     rio->SetPreference(aPreference);
     rio->SetPrefix(aPrefix);
+
+exit:
+    return error;
+}
+
+Error RouterAdvert::TxMessage::AppendNat64PrefixInfoOption(const Prefix &aPrefix, uint32_t aLifetime)
+{
+    Error                  error = kErrorNone;
+    Nat64PrefixInfoOption *pref64;
+
+    VerifyOrExit(aPrefix.IsValidNat64(), error = kErrorInvalidArgs);
+
+    pref64 = static_cast<Nat64PrefixInfoOption *>(AppendOption(sizeof(Nat64PrefixInfoOption)));
+    VerifyOrExit(pref64 != nullptr, error = kErrorNoBufs);
+
+    pref64->Init();
+    pref64->SetLifetime(aLifetime);
+
+    // `SetPrefix()` can fail if `aPrefix` has an unsupported length.
+    // `IsValidNat64()` check above ensures this will not happen.
+    IgnoreError(pref64->SetPrefix(aPrefix));
 
 exit:
     return error;

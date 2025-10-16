@@ -177,6 +177,43 @@ void RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
     aEntry.mRoutePreference     = static_cast<otRoutePreference>(GetRoutePreference());
 }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+//---------------------------------------------------------------------------------------------------------------------
+// Nat64Prefix
+
+void Nat64Prefix::SetFrom(const Nat64PrefixInfoOption &aNat64Pio)
+{
+    IgnoreError(aNat64Pio.GetPrefix(mPrefix));
+    mValidLifetime  = aNat64Pio.GetLifetime();
+    mLastUpdateTime = TimerMilli::GetNow();
+}
+
+void Nat64Prefix::CopyInfoTo(Nat64PrefixEntry &aEntry, TimeMilli aNow) const
+{
+    aEntry.mPrefix              = GetPrefix();
+    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
+    aEntry.mLifetime            = GetValidLifetime();
+}
+
+bool Nat64Prefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
+{
+    bool isFavored = false;
+
+    VerifyOrExit(mPrefix.GetLength() != 0);
+
+    if (aPrefix.GetLength() == 0)
+    {
+        isFavored = true;
+        ExitNow();
+    }
+
+    isFavored = GetPrefix() < aPrefix;
+
+exit:
+    return isFavored;
+}
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // RdnssAddress
 
