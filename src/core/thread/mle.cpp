@@ -4373,6 +4373,7 @@ Mle::Attacher::Attacher(Instance &aInstance)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mTimer(aInstance)
+    , mChildIdRequestsRemaining(kMaxChildIdRequests)
 {
     mParentCandidate.Init(aInstance);
     mParentCandidate.Clear();
@@ -4456,6 +4457,8 @@ void Mle::Attacher::Attach(AttachMode aMode)
     {
         mAttachCounter = 0;
     }
+
+    mChildIdRequestsRemaining = kMaxChildIdRequests;
 
     mParentCandidate.Clear();
     SetState(kStateStart);
@@ -4606,15 +4609,15 @@ bool Mle::Attacher::HasAcceptableParentCandidate(void) const
     bool              hasAcceptableParent = false;
     ParentRequestType parentReqType;
 
-    VerifyOrExit(mParentCandidate.IsStateParentResponse());
-
     switch (mState)
     {
     case kStateAnnounce:
+        VerifyOrExit(mParentCandidate.IsStateParentResponse());
         VerifyOrExit(!HasMoreChannelsToAnnounce());
         break;
 
     case kStateParentRequest:
+        VerifyOrExit(mParentCandidate.IsStateParentResponse());
         SuccessOrAssert(DetermineParentRequestType(parentReqType));
 
         if (parentReqType == kToRouters)
@@ -4626,6 +4629,11 @@ bool Mle::Attacher::HasAcceptableParentCandidate(void) const
             VerifyOrExit(mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3);
         }
 
+        break;
+
+    case kStateChildIdRequest:
+        VerifyOrExit(mParentCandidate.IsStateValid());
+        VerifyOrExit(mChildIdRequestsRemaining > 0);
         break;
 
     default:
@@ -4671,6 +4679,7 @@ void Mle::Attacher::HandleTimer(void)
     if (HasAcceptableParentCandidate() && (SendChildIdRequest() == kErrorNone))
     {
         SetState(kStateChildIdRequest);
+        mChildIdRequestsRemaining--;
         delay = kChildIdResponseTimeout;
         ExitNow();
     }
