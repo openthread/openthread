@@ -15,6 +15,7 @@ set(executables_no_common_c
     fuzz_x509csr
     fuzz_pkcs7
 )
+add_dependencies(${programs_target} ${executables_no_common_c})
 
 set(executables_with_common_c
     fuzz_privkey
@@ -23,6 +24,7 @@ set(executables_with_common_c
     fuzz_dtlsserver
     fuzz_server
 )
+add_dependencies(${programs_target} ${executables_with_common_c})
 
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
@@ -38,7 +40,8 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
     endif()
 
     add_executable(${exe} ${exe_sources})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 
     if (NOT FUZZINGENGINE_LIB)
         target_link_libraries(${exe} ${libs})

@@ -65,7 +65,7 @@ CONFIG_BAK="$CONFIG_H.bak"
 OPENSSL="$OPENSSL"                           \
     GNUTLS_CLI="$GNUTLS_CLI"                 \
     GNUTLS_SERV="$GNUTLS_SERV"               \
-    scripts/output_env.sh
+    framework/scripts/output_env.sh
 echo
 
 # Step 1 - Make and instrumented build for code coverage
@@ -103,11 +103,7 @@ echo
 echo '################ compat.sh ################'
 {
     echo '#### compat.sh: Default versions'
-    sh compat.sh
-    echo
-
-    echo '#### compat.sh: null cipher'
-    sh compat.sh -e '^$' -f 'NULL'
+    sh compat.sh -e 'ARIA\|CHACHA'
     echo
 
     echo '#### compat.sh: next (ARIA, ChaCha)'

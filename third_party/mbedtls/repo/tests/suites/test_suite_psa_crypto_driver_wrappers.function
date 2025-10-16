@@ -6,13 +6,14 @@
 size_t pake_expected_hit_count = 0;
 int pake_in_driver = 0;
 
+#if defined(PSA_WANT_ALG_JPAKE) && \
+    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && \
+    defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_ALG_SHA_256)
+
 /* The only two JPAKE user/peer identifiers supported for the time being. */
 static const uint8_t jpake_server_id[] = { 's', 'e', 'r', 'v', 'e', 'r' };
 static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
 
-#if defined(PSA_WANT_ALG_JPAKE) && \
-    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && \
-    defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_ALG_SHA_256)
 static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
                              psa_pake_operation_t *server,
                              psa_pake_operation_t *client,
@@ -437,6 +438,11 @@ static int sanity_check_rsa_encryption_result(
     mbedtls_mpi_init(&D);
     mbedtls_mpi_init(&C);
     mbedtls_mpi_init(&X);
+#else /* MBEDTLS_BIGNUM_C */
+    (void) alg;
+    (void) private_exponent;
+    (void) input_data;
+    (void) buf;
 #endif /* MBEDTLS_BIGNUM_C */
 
     int ok = 0;
@@ -488,6 +494,21 @@ exit:
  * depends_on:MBEDTLS_PSA_CRYPTO_C:PSA_CRYPTO_DRIVER_TEST
  * END_DEPENDENCIES
  */
+
+/* BEGIN_CASE */
+void builtin_key_id_stability()
+{
+    /* If the range of built-in keys is reduced, it's an API break, since
+     * it breaks user code that hard-codes the key id of built-in keys.
+     * It's ok to expand this range, but not to shrink it. That is, you
+     * may make the MIN smaller or the MAX larger at any time, but
+     * making the MIN larger or the MAX smaller can only be done in
+     * a new major version of the library.
+     */
+    TEST_EQUAL(MBEDTLS_PSA_KEY_ID_BUILTIN_MIN, 0x7fff0000);
+    TEST_EQUAL(MBEDTLS_PSA_KEY_ID_BUILTIN_MAX, 0x7fffefff);
+}
+/* END_CASE */
 
 /* BEGIN_CASE */
 void sign_hash(int key_type_arg,
@@ -748,7 +769,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:PSA_WANT_ALG_ECDSA:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE */
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_ECDSA:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE */
 void generate_ec_key(int force_status_arg,
                      data_t *fake_output,
                      int expected_status_arg)
@@ -782,13 +803,14 @@ void generate_ec_key(int force_status_arg,
                 fake_output->len;
     }
 
-    mbedtls_test_driver_key_management_hooks.hits = 0;
-    mbedtls_test_driver_key_management_hooks.forced_status = force_status;
-
     PSA_ASSERT(psa_crypto_init());
 
+    mbedtls_test_driver_key_management_hooks.hits = 0;
+    mbedtls_test_driver_key_management_hooks.hits_generate_key = 0;
+    mbedtls_test_driver_key_management_hooks.forced_status = force_status;
+
     actual_status = psa_generate_key(&attributes, &key);
-    TEST_EQUAL(mbedtls_test_driver_key_management_hooks.hits, 1);
+    TEST_EQUAL(mbedtls_test_driver_key_management_hooks.hits_generate_key, 1);
     TEST_EQUAL(actual_status, expected_status);
 
     if (actual_status == PSA_SUCCESS) {
@@ -827,7 +849,7 @@ void validate_key(int force_status_arg,
 {
     psa_key_lifetime_t lifetime =
         PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( \
-            PSA_KEY_PERSISTENCE_DEFAULT, location);
+            PSA_KEY_PERSISTENCE_VOLATILE, location);
     mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(owner_id_arg, id_arg);
     psa_status_t force_status = force_status_arg;
     psa_status_t expected_status = expected_status_arg;
@@ -1041,7 +1063,7 @@ void cipher_encrypt_validation(int alg_arg,
     size_t output2_buffer_size = 0;
     size_t output2_length = 0;
     size_t function_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 
@@ -1136,7 +1158,7 @@ void cipher_encrypt_multipart(int alg_arg,
     size_t output_buffer_size = 0;
     size_t function_output_length = 0;
     size_t total_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
     mbedtls_test_driver_cipher_hooks.forced_status = force_status;
@@ -1265,7 +1287,7 @@ void cipher_decrypt_multipart(int alg_arg,
     size_t output_buffer_size = 0;
     size_t function_output_length = 0;
     size_t total_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
     mbedtls_test_driver_cipher_hooks.forced_status = force_status;
@@ -1453,7 +1475,7 @@ void cipher_entry_points(int alg_arg, int key_type_arg,
     unsigned char *output = NULL;
     size_t output_buffer_size = 0;
     size_t function_output_length = 0;
-    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t operation = psa_cipher_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 
@@ -1788,7 +1810,7 @@ void mac_sign(int key_type_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *actual_mac = NULL;
     size_t mac_buffer_size =
@@ -1862,7 +1884,7 @@ void mac_sign_multipart(int key_type_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     uint8_t *actual_mac = NULL;
     size_t mac_buffer_size =
@@ -1979,7 +2001,7 @@ void mac_verify(int key_type_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t forced_status = forced_status_arg;
@@ -2034,7 +2056,7 @@ void mac_verify_multipart(int key_type_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation = psa_mac_operation_init_short();
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t forced_status = forced_status_arg;
@@ -2272,7 +2294,7 @@ void hash_multipart_setup(int alg_arg,
     psa_status_t forced_status = forced_status_arg;
     psa_status_t expected_status = expected_status_arg;
     unsigned char *output = NULL;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     size_t output_length;
 
 
@@ -2319,7 +2341,7 @@ void hash_multipart_update(int alg_arg,
     psa_algorithm_t alg = alg_arg;
     psa_status_t forced_status = forced_status_arg;
     unsigned char *output = NULL;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     size_t output_length;
 
 
@@ -2376,7 +2398,7 @@ void hash_multipart_finish(int alg_arg,
     psa_algorithm_t alg = alg_arg;
     psa_status_t forced_status = forced_status_arg;
     unsigned char *output = NULL;
-    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t operation = psa_hash_operation_init_short();
     size_t output_length;
 
     PSA_ASSERT(psa_crypto_init());
@@ -2430,8 +2452,8 @@ void hash_clone(int alg_arg,
     psa_algorithm_t alg = alg_arg;
     psa_status_t forced_status = forced_status_arg;
     unsigned char *output = NULL;
-    psa_hash_operation_t source_operation = PSA_HASH_OPERATION_INIT;
-    psa_hash_operation_t target_operation = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t source_operation = psa_hash_operation_init_short();
+    psa_hash_operation_t target_operation = psa_hash_operation_init_short();
     size_t output_length;
 
     PSA_ASSERT(psa_crypto_init());
@@ -2997,7 +3019,7 @@ void pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_st
     psa_pake_operation_t operation = psa_pake_operation_init();
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_key_derivation_operation_t implicit_key =
-        PSA_KEY_DERIVATION_OPERATION_INIT;
+        psa_key_derivation_operation_init_short();
     psa_pake_primitive_t primitive = PSA_PAKE_PRIMITIVE(
         PSA_PAKE_PRIMITIVE_TYPE_ECC,
         PSA_ECC_FAMILY_SECP_R1, 256);
@@ -3192,9 +3214,9 @@ void ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_derivation_operation_t server_derive =
-        PSA_KEY_DERIVATION_OPERATION_INIT;
+        psa_key_derivation_operation_init_short();
     psa_key_derivation_operation_t client_derive =
-        PSA_KEY_DERIVATION_OPERATION_INIT;
+        psa_key_derivation_operation_init_short();
     pake_in_driver = in_driver;
     /* driver setup is called indirectly through pake_output/pake_input */
     if (pake_in_driver) {

@@ -71,9 +71,6 @@ static psa_status_t mbedtls_cipher_validate_values(
 #if !defined(PSA_WANT_ALG_OFB)
     MBEDTLS_ASSUME(alg != PSA_ALG_OFB);
 #endif
-#if !defined(PSA_WANT_ALG_XTS)
-    MBEDTLS_ASSUME(alg != PSA_ALG_XTS);
-#endif
 #if !defined(PSA_WANT_ALG_ECB_NO_PADDING)
     MBEDTLS_ASSUME(alg != PSA_ALG_ECB_NO_PADDING);
 #endif
@@ -263,7 +260,7 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_psa(
 {
     mbedtls_cipher_mode_t mode;
     psa_status_t status;
-    mbedtls_cipher_id_t cipher_id_tmp;
+    mbedtls_cipher_id_t cipher_id_tmp = MBEDTLS_CIPHER_ID_NONE;
 
     status = mbedtls_cipher_values_from_psa(alg, key_type, &key_bits, &mode, &cipher_id_tmp);
     if (status != PSA_SUCCESS) {
