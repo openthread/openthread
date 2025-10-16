@@ -43,6 +43,73 @@ RegisterLogModule("NetworkData");
 //---------------------------------------------------------------------------------------------------------------------
 // NetworkData
 
+Error NetworkData::ValidateTlvs(void) const
+{
+    Error                 error = kErrorParse;
+    const NetworkDataTlv *end   = GetTlvsEnd();
+    const NetworkDataTlv *tlv;
+    const NetworkDataTlv *subTlv;
+    const NetworkDataTlv *tlvEnd;
+
+    for (tlv = GetTlvsStart(); tlv < end; tlv = tlv->GetNext())
+    {
+        VerifyOrExit(tlv + 1 <= end);
+        VerifyOrExit(tlv->GetNext() <= end);
+
+        tlvEnd = tlv->GetNext();
+        subTlv = nullptr;
+
+        switch (tlv->GetType())
+        {
+        case NetworkDataTlv::kTypePrefix:
+            VerifyOrExit(As<PrefixTlv>(tlv)->IsValid());
+            subTlv = As<PrefixTlv>(tlv)->GetSubTlvs();
+            break;
+        case NetworkDataTlv::kTypeService:
+            VerifyOrExit(As<ServiceTlv>(tlv)->IsValid());
+            subTlv = As<ServiceTlv>(tlv)->GetSubTlvs();
+            break;
+        case NetworkDataTlv::kTypeCommissioningData:
+        default:
+            break;
+        }
+
+        if (subTlv == nullptr)
+        {
+            continue;
+        }
+
+        for (; subTlv < tlvEnd; subTlv = subTlv->GetNext())
+        {
+            VerifyOrExit(subTlv + 1 <= tlvEnd);
+            VerifyOrExit(subTlv->GetNext() <= tlvEnd);
+
+            switch (subTlv->GetType())
+            {
+            case NetworkDataTlv::kTypeContext:
+                VerifyOrExit(As<ContextTlv>(subTlv)->IsValid());
+                break;
+            case NetworkDataTlv::kTypeServer:
+                VerifyOrExit(As<ServerTlv>(subTlv)->IsValid());
+                break;
+            case NetworkDataTlv::kTypeBorderRouter:
+                VerifyOrExit((As<BorderRouterTlv>(subTlv)->GetLength() % sizeof(BorderRouterEntry)) == 0);
+                break;
+            case NetworkDataTlv::kTypeHasRoute:
+                VerifyOrExit((As<HasRouteTlv>(subTlv)->GetLength() % sizeof(HasRouteEntry)) == 0);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
 Error NetworkData::CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const
 {
     Error              error;
