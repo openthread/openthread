@@ -927,7 +927,8 @@ void TestMacWakeupFrameGeneration(void)
     VerifyOrQuit(connectionIe->GetRetryInterval() == 1);
     VerifyOrQuit(connectionIe->GetRetryCount() == 12);
     SuccessOrQuit(connectionIe->GetWakeupId(wakeupId));
-    VerifyOrQuit(wakeupRequest.GetWakeupId() == wakeupId);
+    VerifyOrQuit(wakeupId == kWakeupId);
+    VerifyOrQuit(wakeupRequest.GetWakeupId() == kWakeupId);
     VerifyOrQuit(txFrame.GetLength() == sizeof(kWakeupPsdu2) + txFrame.GetFooterLength());
     VerifyOrQuit(memcmp(psdu, kWakeupPsdu2, sizeof(kWakeupPsdu2)) == 0);
 

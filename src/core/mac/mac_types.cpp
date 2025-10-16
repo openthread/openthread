@@ -410,7 +410,7 @@ uint8_t GetWakeupIdLength(WakeupId aWakeupId)
 {
     uint8_t zeroBytesCount = 0;
 
-    for (uint8_t i = sizeof(WakeupId) - 1; i >= 1; --i)
+    for (int i = static_cast<int>(sizeof(WakeupId)) - 1; i >= 1; --i)
     {
         if (((aWakeupId >> (i * kBitsPerByte)) & 0xFF) == 0)
         {
