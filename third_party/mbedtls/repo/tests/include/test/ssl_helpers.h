@@ -471,6 +471,18 @@ void mbedtls_test_ssl_endpoint_free(
  * /p second_ssl is used as second endpoint and their sockets have to be
  * connected before calling this function.
  *
+ * For example, to perform a full handshake:
+ * ```
+ * mbedtls_test_move_handshake_to_state(
+ *                       &server.ssl, &client.ssl,
+ *                       MBEDTLS_SSL_HANDSHAKE_OVER);
+ * mbedtls_test_move_handshake_to_state(
+ *                       &client.ssl, &server.ssl,
+ *                       MBEDTLS_SSL_HANDSHAKE_OVER);
+ * ```
+ * Note that you need both calls to reach the handshake-over state on
+ * both sides.
+ *
  * \retval  0 on success, otherwise error code.
  */
 int mbedtls_test_move_handshake_to_state(mbedtls_ssl_context *ssl,
@@ -583,6 +595,14 @@ int mbedtls_test_ssl_exchange_data(
     int msg_len_1, const int expected_fragments_1,
     mbedtls_ssl_context *ssl_2,
     int msg_len_2, const int expected_fragments_2);
+
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
+int mbedtls_test_ssl_do_handshake_with_endpoints(
+    mbedtls_test_ssl_endpoint *server_ep,
+    mbedtls_test_ssl_endpoint *client_ep,
+    mbedtls_test_handshake_test_options *options,
+    mbedtls_ssl_protocol_version proto);
+#endif /* defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED) */
 
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
 void mbedtls_test_ssl_perform_handshake(

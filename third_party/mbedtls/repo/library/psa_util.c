@@ -440,8 +440,14 @@ int mbedtls_ecdsa_raw_to_der(size_t bits, const unsigned char *raw, size_t raw_l
     unsigned char *p = der + der_size;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
+    if (bits == 0) {
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
     if (raw_len != (2 * coordinate_len)) {
         return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
+    if (coordinate_len > sizeof(r)) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
     }
 
     /* Since raw and der buffers might overlap, dump r and s before starting
@@ -556,9 +562,15 @@ int mbedtls_ecdsa_der_to_raw(size_t bits, const unsigned char *der, size_t der_l
     size_t coordinate_size = PSA_BITS_TO_BYTES(bits);
     int ret;
 
+    if (bits == 0) {
+        return MBEDTLS_ERR_ASN1_INVALID_DATA;
+    }
     /* The output raw buffer should be at least twice the size of a raw
      * coordinate in order to store r and s. */
     if (raw_size < coordinate_size * 2) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+    }
+    if (2 * coordinate_size > sizeof(raw_tmp)) {
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
     }
 
