@@ -120,7 +120,6 @@
  *
  * On FTD/MTD builds this feature is now mandatory and MUST be enabled. This config is therefore only applicable for
  * RADIO/RCP builds.
- *
  */
 #ifndef OPENTHREAD_CONFIG_UPTIME_ENABLE
 #define OPENTHREAD_CONFIG_UPTIME_ENABLE (OPENTHREAD_FTD || OPENTHREAD_MTD)

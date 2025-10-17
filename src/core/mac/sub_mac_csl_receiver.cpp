@@ -234,7 +234,6 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
      *    |           |            |           |           |            |            |                        |
      * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
      * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
-     *
      */
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
     uint32_t curTime, elapsed, semiWindow;
