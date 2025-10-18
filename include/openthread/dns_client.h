@@ -674,7 +674,6 @@ typedef struct otDnsRecordResponse otDnsRecordResponse;
  *  - OT_ERROR_NONE              A response was received successfully.
  *  - OT_ERROR_ABORT             A DNS transaction was aborted by the stack.
  *  - OT_ERROR_RESPONSE_TIMEOUT  No DNS response has been received within timeout.
- *
  */
 typedef void (*otDnsRecordCallback)(otError aError, const otDnsRecordResponse *aResponse, void *aContext);
 

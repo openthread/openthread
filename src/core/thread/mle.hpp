@@ -1042,7 +1042,6 @@ public:
      * Schedule tx of MLE Advertisement message (unicast) to the given neighboring router after a random delay.
      *
      * @param[in] aRouter  The router to send the Advertisement to.
-     *
      */
     void ScheduleUnicastAdvertisementTo(const Router &aRouter);
 

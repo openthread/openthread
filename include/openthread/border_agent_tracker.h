@@ -52,7 +52,6 @@ extern "C" {
  * `_meshcop._udp` mDNS service.
  *
  * @{
- *
  */
 
 /**
@@ -152,7 +151,6 @@ otError otBorderAgentTrackerGetNextAgent(otInstance                    *aInstanc
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

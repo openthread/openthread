@@ -188,7 +188,6 @@ public:
      *
      * @param[in] aCallback   The callback function pointer. Can be `nullptr` if no callback is required.
      * @param[in] aConext     An arbitrary context information (used when invoking the callback).
-     *
      */
     void SetRdnssAddrCallback(RdnssAddrCallback aCallback, void *aContext) { mRdnssCallback.Set(aCallback, aContext); }
 

@@ -198,7 +198,6 @@ otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstanc
  * @param[in] aInstance      The OpenThread instance.
  * @param[in] aEnable        A boolean to enable (`true`) or disable (`false`) listening.
  * @param[in] aInfraIfIndex  The index of the infrastructure interface to operate on.
- *
  */
 void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
 

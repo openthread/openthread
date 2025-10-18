@@ -1722,7 +1722,6 @@ public:
      * @retval kErrorNone     The (translated) record data was successfully appended to @p aMessage.
      * @retval kErrorNoBufs   Failed to allocate new buffers.
      * @retval kErrorParse    The given @p aData format is not valid.
-     *
      */
     static Error AppendTranslatedRecordDataTo(Message                       &aMessage,
                                               uint16_t                       aRecordType,
