@@ -208,6 +208,9 @@ void Client::TxJitter::Request(Reason aReason)
 
     mRequestedMax = Max(mRequestedMax, maxJitter);
     mRequestTime  = TimerMilli::GetNow();
+
+    mLastReason    = aReason;
+    mLastMaxJitter = maxJitter;
 }
 
 uint32_t Client::TxJitter::DetermineDelay(void)
@@ -234,6 +237,8 @@ uint32_t Client::TxJitter::DetermineDelay(void)
 
     delay = Random::NonCrypto::GetUint32InRange(kMinTxJitter, maxJitter);
     LogInfo("Use random tx jitter %lu from [%lu, %lu]", ToUlong(delay), ToUlong(kMinTxJitter), ToUlong(maxJitter));
+
+    mLastDelay = delay;
 
     return delay;
 }

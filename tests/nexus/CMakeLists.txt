@@ -119,3 +119,5 @@ ot_nexus_test(full_network_reset)
 ot_nexus_test(large_network)
 ot_nexus_test(nat64_translator)
 ot_nexus_test(trel)
+
+ot_nexus_test(simul_srp_registeration)
