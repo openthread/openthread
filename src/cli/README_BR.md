@@ -315,7 +315,7 @@ Done
 fd14:1078:b3d5:b0b0:0:0::/96 prf:low
 Done
 
-> br nat64prefix
+> br nat64prefix local
 fd14:1078:b3d5:b0b0:0:0::/96
 Done
 ```
