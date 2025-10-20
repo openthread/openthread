@@ -280,18 +280,18 @@ public:
     uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
 
     /**
-     * Gets the prefix in this option.
-     *
-     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
-     */
-    void GetPrefix(Prefix &aPrefix) const;
-
-    /**
      * Sets the prefix.
      *
      * @param[in]  aPrefix  The prefix contained in this option.
      */
     void SetPrefix(const Prefix &aPrefix);
+
+    /**
+     * Gets the prefix in this option.
+     *
+     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
+     */
+    void GetPrefix(Prefix &aPrefix) const;
 
     /**
      * Indicates whether or not the option is valid.
@@ -525,6 +525,13 @@ public:
     void Init(void);
 
     /**
+     * Sets the NAT64 prefix lifetime.
+     *
+     * @param[in] aLifetime   The prefix lifetime in seconds.
+     */
+    void SetLifetime(uint32_t aLifetime);
+
+    /**
      * Returns the NAT64 prefix lifetime in seconds.
      *
      * The NAT64 prefix lifetime is encoded by scaled lifetime in units of 8 seconds.
@@ -535,13 +542,6 @@ public:
     {
         return (BigEndian::HostSwap16(mPrefixAttr) >> kScaledLifetimeOffset) * kLifetimeScalingUnit;
     }
-
-    /**
-     * Sets the NAT64 prefix lifetime.
-     *
-     * @param[in] aLifetime   The prefix lifetime in seconds.
-     */
-    void SetLifetime(uint32_t aLifetime);
 
     /**
      * Sets the prefix.

@@ -200,19 +200,14 @@ bool Nat64Prefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
     bool isFavored = false;
 
     VerifyOrExit(mPrefix.GetLength() != 0);
-
-    if (aPrefix.GetLength() == 0)
-    {
-        isFavored = true;
-        ExitNow();
-    }
+    VerifyOrExit(aPrefix.GetLength() != 0, isFavored = true);
 
     isFavored = GetPrefix() < aPrefix;
 
 exit:
     return isFavored;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RdnssAddress

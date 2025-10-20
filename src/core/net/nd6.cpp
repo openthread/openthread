@@ -208,19 +208,6 @@ void Nat64PrefixOption::SetPrefixLengthCode(const uint8_t aPrefixLengthCode)
                                         (aPrefixLengthCode & kPrefixLengthCodeMask));
 }
 
-Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
-{
-    Error   error            = kErrorNone;
-    uint8_t prefixLengthCode = GetPrefixLengthCode();
-
-    VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
-
-    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
-
-exit:
-    return error;
-}
-
 Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
 {
     Error error = kErrorInvalidArgs;
@@ -237,6 +224,19 @@ Error Nat64PrefixOption::SetPrefix(const Prefix &aPrefix)
         }
     }
 
+    return error;
+}
+
+Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
+{
+    Error   error            = kErrorNone;
+    uint8_t prefixLengthCode = GetPrefixLengthCode();
+
+    VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
+
+    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
+
+exit:
     return error;
 }
 
