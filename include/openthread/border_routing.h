@@ -754,7 +754,6 @@ typedef void (*otBorderRoutingRdnssAddrCallback)(void *aContext);
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aCallback   The callback function pointer. Can be `NULL` if no callback is required.
  * @param[in] aConext     An arbitrary context information (used when invoking the callback).
- *
  */
 void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
                                          otBorderRoutingRdnssAddrCallback aCallback,

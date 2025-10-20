@@ -746,6 +746,69 @@ exit:
     return error;
 }
 
+Error Name::ValidateLabel(const char *aLabel)
+{
+    Error    error = kErrorInvalidArgs;
+    uint16_t length;
+
+    VerifyOrExit(aLabel != nullptr);
+
+    length = StringLength(aLabel, kMaxLabelSize);
+    VerifyOrExit((0 < length) && (length <= kMaxLabelLength));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Name::ValidateName(const char *aName)
+{
+    Error    error           = kErrorNone;
+    uint16_t index           = 0;
+    uint16_t labelStartIndex = 0;
+    char     ch;
+    uint16_t length;
+
+    VerifyOrExit(aName != nullptr, error = kErrorInvalidArgs);
+    length = StringLength(aName, kMaxNameSize);
+
+    VerifyOrExit(length > 0, error = kErrorInvalidArgs);
+    VerifyOrExit(length <= kMaxNameLength, error = kErrorInvalidArgs);
+
+    do
+    {
+        ch = aName[index];
+
+        if ((ch == kNullChar) || (ch == kLabelSeparatorChar))
+        {
+            length = index - labelStartIndex;
+
+            VerifyOrExit(length <= kMaxLabelLength, error = kErrorInvalidArgs);
+
+            if (length == 0)
+            {
+                // Empty label (e.g., consecutive dots) is invalid, but we
+                // allow for two cases: (1) where `aName` ends with a dot
+                // (`length` is zero but we are at end of `aName` string
+                // and `ch` is null char. (2) if `aName` is just "." (we
+                // see a dot at index 0, and index 1 is null char).
+
+                VerifyOrExit((ch == kNullChar) || ((index == 0) && (aName[1] == kNullChar)), error = kErrorInvalidArgs);
+                error = kErrorNone;
+                ExitNow();
+            }
+
+            labelStartIndex = index + 1;
+        }
+
+        index++;
+
+    } while (ch != kNullChar);
+
+exit:
+    return error;
+}
+
 bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
 {
     bool     match             = false;

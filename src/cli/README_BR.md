@@ -9,13 +9,18 @@ Usage : `br [command] ...`
 - [enable](#enable)
 - [help](#help)
 - [ifaddrs](#ifaddrs)
+- [infraif](#infraif)
 - [init](#init)
+- [multiail](#multiail)
 - [nat64prefix](#nat64prefix)
+- [omrconfig](#omrconfig)
 - [omrprefix](#omrprefix)
 - [onlinkprefix](#onlinkprefix)
 - [pd](#pd)
 - [peers](#peers)
 - [prefixtable](#prefixtable)
+- [raoptions](#raoptions)
+- [rdnsstable](#rdnsstable)
 - [rioprf](#rioprf)
 - [routeprf](#routeprf)
 - [routers](#routers)
@@ -34,7 +39,11 @@ Print BR command help menu.
 counters
 disable
 enable
+ifaddrs
+infraif
+init
 multiail
+nat64prefix
 omrconfig
 omrprefix
 onlinkprefix
