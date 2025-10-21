@@ -348,33 +348,6 @@ exit:
 }
 #endif
 
-void RoutingManager::HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
-{
-    const Ip6::Icmp::Header *icmp6Header;
-
-    VerifyOrExit(mIsRunning);
-
-    icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
-
-    switch (icmp6Header->GetType())
-    {
-    case Ip6::Icmp::Header::kTypeRouterAdvert:
-        HandleRouterAdvertisement(aPacket, aSrcAddress);
-        break;
-    case Ip6::Icmp::Header::kTypeRouterSolicit:
-        HandleRouterSolicit(aPacket, aSrcAddress);
-        break;
-    case Ip6::Icmp::Header::kTypeNeighborAdvert:
-        HandleNeighborAdvertisement(aPacket);
-        break;
-    default:
-        break;
-    }
-
-exit:
-    return;
-}
-
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -608,48 +581,12 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     OT_UNUSED_VARIABLE(aPacket);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
+    VerifyOrExit(mIsRunning);
+
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
     LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString());
 
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
-}
-
-void RoutingManager::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket)
-{
-    const NeighborAdvertMessage *naMsg;
-
-    VerifyOrExit(aPacket.GetLength() >= sizeof(NeighborAdvertMessage));
-    naMsg = reinterpret_cast<const NeighborAdvertMessage *>(aPacket.GetBytes());
-
-    Get<RxRaTracker>().ProcessNeighborAdvertMessage(*naMsg);
-
-exit:
-    return;
-}
-
-void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
-{
-    RouterAdvert::RxMessage      raMsg(aPacket);
-    RxRaTracker::RouterAdvOrigin raOrigin = RxRaTracker::kAnotherRouter;
-
-    OT_ASSERT(mIsRunning);
-
-    VerifyOrExit(raMsg.IsValid());
-
-    Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
-
-    if (Get<InfraIf>().HasAddress(aSrcAddress))
-    {
-        raOrigin =
-            mTxRaInfo.IsRaFromManager(raMsg) ? RxRaTracker::kThisBrRoutingManager : RxRaTracker::kThisBrOtherEntity;
-    }
-
-    LogInfo("Received RA from %s on %s %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString(),
-            RouterAdvOriginToString(raOrigin));
-
-    DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
-
-    Get<RxRaTracker>().ProcessRouterAdvertMessage(raMsg, aSrcAddress, raOrigin);
 
 exit:
     return;
@@ -766,29 +703,6 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-const char *RoutingManager::RouterAdvOriginToString(RxRaTracker::RouterAdvOrigin aRaOrigin)
-{
-    static const char *const kOriginStrings[] = {
-        "",                          // (0) kAnotherRouter
-        "(this BR routing-manager)", // (1) kThisBrRoutingManager
-        "(this BR other sw entity)", // (2) kThisBrOtherEntity
-    };
-
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(RxRaTracker::kAnotherRouter);
-        ValidateNextEnum(RxRaTracker::kThisBrRoutingManager);
-        ValidateNextEnum(RxRaTracker::kThisBrOtherEntity);
-    };
-
-    return kOriginStrings[aRaOrigin];
-}
-
-#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //---------------------------------------------------------------------------------------------------------------------
 // OmrPrefixManager
