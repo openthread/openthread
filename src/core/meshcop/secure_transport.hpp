@@ -787,7 +787,7 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
-#endif // defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000) ||
+#endif // (defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) ||
        // (MBEDTLS_VERSION_NUMBER >= 0x03010000)
 
     static void HandleUpdateTask(Tasklet &aTasklet);
