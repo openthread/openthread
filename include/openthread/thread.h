@@ -360,6 +360,10 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance);
 /**
  * Sets the IEEE 802.15.4 Extended PAN ID.
  *
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE`.
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
+ *
  * @note Can only be called while Thread protocols are disabled. A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
@@ -369,8 +373,6 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully set the Extended PAN ID.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
- *
- * @sa otThreadGetExtendedPanId
  */
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId);
 
@@ -414,8 +416,6 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
  *
  * @param[in]   aInstance     A pointer to an OpenThread instance.
  * @param[out]  aNetworkKey   A pointer to an `otNetworkKey` to return the Thread Network Key.
- *
- * @sa otThreadSetNetworkKey
  */
 void otThreadGetNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey);
 
@@ -427,13 +427,15 @@ void otThreadGetNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey);
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
  * @returns Reference to the Thread Network Key stored in memory.
- *
- * @sa otThreadSetNetworkKeyRef
  */
 otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance);
 
 /**
  * Set the Thread Network Key.
+ *
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE`.
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
  *
  * Succeeds only when Thread protocols are disabled.  A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
@@ -444,27 +446,25 @@ otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE            Successfully set the Thread Network Key.
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
- *
- * @sa otThreadGetNetworkKey
  */
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);
 
 /**
  * Set the Thread Network Key as a `otNetworkKeyRef`.
  *
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE` and `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE`
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
+ *
  * Succeeds only when Thread protocols are disabled.  A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
- *
- * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKeyRef     Reference to the Thread Network Key.
  *
  * @retval OT_ERROR_NONE            Successfully set the Thread Network Key.
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
- *
- * @sa otThreadGetNetworkKeyRef
  */
 otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef);
 
@@ -497,6 +497,10 @@ const otMeshLocalPrefix *otThreadGetMeshLocalPrefix(otInstance *aInstance);
 
 /**
  * Sets the Mesh Local Prefix.
+ *
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE`.
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
  *
  * Succeeds only when Thread protocols are disabled.  A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
@@ -571,13 +575,15 @@ otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6A
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the Thread Network Name.
- *
- * @sa otThreadSetNetworkName
  */
 const char *otThreadGetNetworkName(otInstance *aInstance);
 
 /**
  * Set the Thread Network Name.
+ *
+ * Requires `OPENTHREAD_CONFIG_LEGACY_API_ENABLE`.
+ *
+ * Use of this API is discouraged. The recommended approach is to use the `otDataset` APIs.
  *
  * Succeeds only when Thread protocols are disabled.  A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
@@ -588,8 +594,6 @@ const char *otThreadGetNetworkName(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully set the Thread Network Name.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
- *
- * @sa otThreadGetNetworkName
  */
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 

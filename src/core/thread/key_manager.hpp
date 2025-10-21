@@ -260,12 +260,14 @@ public:
      */
     NetworkKeyRef GetNetworkKeyRef(void) const { return mNetworkKeyRef; }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
     /**
      * Sets the Thread Network Key using Key Reference.
      *
      * @param[in]  aKeyRef        Reference to Thread Network Key.
      */
     void SetNetworkKeyRef(NetworkKeyRef aKeyRef);
+#endif
 #endif
 
     /**

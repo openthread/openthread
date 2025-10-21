@@ -3299,6 +3299,8 @@ template <> otError Interpreter::Process<Cmd("extpanid")>(Arg aArgs[])
     {
         OutputBytesLine(otThreadGetExtendedPanId(GetInstancePtr())->m8);
     }
+    else
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
     /**
      * @cli extpanid (set)
      * @code
@@ -3312,13 +3314,18 @@ template <> otError Interpreter::Process<Cmd("extpanid")>(Arg aArgs[])
      * @par api_copy
      * #otThreadSetExtendedPanId
      */
-    else
     {
         otExtendedPanId extPanId;
 
         SuccessOrExit(error = aArgs[0].ParseAsHexString(extPanId.m8));
         error = otThreadSetExtendedPanId(GetInstancePtr(), &extPanId);
     }
+#else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+        ExitNow();
+    }
+#endif
 
 exit:
     return error;
@@ -4209,7 +4216,7 @@ exit:
 #if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_INVALID_ARGS;
     otPskc  pskc;
 
     /**
@@ -4226,7 +4233,9 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
     {
         otThreadGetPskc(GetInstancePtr(), &pskc);
         OutputBytesLine(pskc.m8);
+        ExitNow(error = OT_ERROR_NONE);
     }
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
     else
     /**
      * @cli pskc (set)
@@ -4268,6 +4277,7 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
 
         error = otThreadSetPskc(GetInstancePtr(), &pskc);
     }
+#endif
 
 exit:
     return error;
@@ -4294,6 +4304,7 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
     }
     else
     {
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
         /**
          * @cli pskcref (set)
          * @code
@@ -4305,6 +4316,9 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
          * #otThreadSetPskcRef
          */
         error = ProcessSet(aArgs, otThreadSetPskcRef);
+#else
+        error = OT_ERROR_INVALID_ARGS;
+#endif
     }
 
     return error;
@@ -5046,6 +5060,8 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
         otThreadGetNetworkKey(GetInstancePtr(), &networkKey);
         OutputBytesLine(networkKey.m8);
     }
+    else
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
     /**
      * @cli networkkey (key)
      * @code
@@ -5056,13 +5072,18 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
      * #otThreadSetNetworkKey
      * @cparam networkkey @ca{key}
      */
-    else
     {
         otNetworkKey key;
 
         SuccessOrExit(error = aArgs[0].ParseAsHexString(key.m8));
         SuccessOrExit(error = otThreadSetNetworkKey(GetInstancePtr(), &key));
     }
+#else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+        ExitNow();
+    }
+#endif
 
 exit:
     return error;
@@ -5079,7 +5100,11 @@ template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
     }
     else
     {
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
         error = ProcessSet(aArgs, otThreadSetNetworkKeyRef);
+#else
+        error = OT_ERROR_INVALID_ARGS;
+#endif
     }
 
     return error;
@@ -5098,6 +5123,11 @@ template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
  */
 template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
 {
+    Error error;
+
+#if !OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+    error = ProcessGet(aArgs, otThreadGetNetworkName);
+#else
     /**
      * @cli networkname (name)
      * @code
@@ -5110,7 +5140,10 @@ template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
      * @par
      * Note: The current commissioning credential becomes stale after changing this value. Use `pskc` to reset.
      */
-    return ProcessGetSet(aArgs, otThreadGetNetworkName, otThreadSetNetworkName);
+    error = ProcessGetSet(aArgs, otThreadGetNetworkName, otThreadSetNetworkName);
+#endif
+
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -5705,12 +5738,16 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
         }
         else
         {
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
             otIp6Prefix prefix;
 
             SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(prefix));
             VerifyOrExit(prefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
             error =
                 otThreadSetMeshLocalPrefix(GetInstancePtr(), reinterpret_cast<otMeshLocalPrefix *>(&prefix.mPrefix));
+#else
+            error = OT_ERROR_INVALID_ARGS;
+#endif
         }
     }
     else

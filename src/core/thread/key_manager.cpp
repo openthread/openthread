@@ -671,6 +671,8 @@ exit:
     mIsPskcSet = true;
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_API_ENABLE
+
 void KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
 {
     VerifyOrExit(mNetworkKeyRef != aKeyRef, Get<Notifier>().SignalIfFirst(kEventNetworkKeyChanged));
@@ -687,6 +689,8 @@ void KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
 exit:
     return;
 }
+
+#endif // OPENTHREAD_CONFIG_LEGACY_API_ENABLE
 
 void KeyManager::DestroyTemporaryKeys(void)
 {
