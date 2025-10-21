@@ -1264,13 +1264,19 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
     bool       checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendSourceAddressTlv());
-    SuccessOrExit(error = message->AppendLeaderDataTlv());
 
     for (uint8_t tlvType : aTlvList)
     {
         switch (tlvType)
         {
+        case Tlv::kSourceAddress:
+            SuccessOrExit(error = message->AppendSourceAddressTlv());
+            break;
+
+        case Tlv::kLeaderData:
+            SuccessOrExit(error = message->AppendLeaderDataTlv());
+            break;
+
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
             break;
@@ -2219,6 +2225,9 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildUpdateRequestAsChild, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
+    tlvList.Add(Tlv::kSourceAddress);
+    tlvList.Add(Tlv::kLeaderData);
+
     switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
     {
     case kErrorNone:
@@ -2282,22 +2291,34 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             }
         }
 #endif
+
+        switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
+        {
+        case kErrorNone:
+            tlvList.AddElementsFrom(requestedTlvList);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
     else
     {
-        // This device is not a child of the Child Update Request source
-        tlvList.Add(Tlv::kStatus);
-    }
+        // This device is not a child of the Child Update Request source.
+        //
+        // Send a reject response which only includes a Source Address TLV,
+        // a Status TLV, and a Response TLV when request contained a
+        // Challenge TLV.
 
-    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
-    {
-    case kErrorNone:
-        tlvList.AddElementsFrom(requestedTlvList);
-        break;
-    case kErrorNotFound:
-        break;
-    default:
-        ExitNow(error = kErrorParse);
+        tlvList.Clear();
+        tlvList.Add(Tlv::kSourceAddress);
+        tlvList.Add(Tlv::kStatus);
+
+        if (!challenge.IsEmpty())
+        {
+            tlvList.Add(Tlv::kResponse);
+        }
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
