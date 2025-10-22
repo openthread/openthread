@@ -69,6 +69,19 @@
 #endif
 
 /**
+ * @def OT_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+ *
+ * Define to 1 to indicate that the `mbedtls_ssl_key_export_type` is defined.
+ */
+#ifdef OT_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+#error "OT_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT MUST NOT be defined directly. It is derived from other configs."
+#endif
+
+#define OT_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT                                    \
+    ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
+     (MBEDTLS_VERSION_NUMBER >= 0x03010000))
+
+/**
  * @}
  */
 

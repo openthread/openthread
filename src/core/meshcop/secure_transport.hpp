@@ -755,8 +755,7 @@ private:
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 
-#if (defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
-    (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+#if OT_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleMbedtlsExportKeys(void                       *aContext,
                                         mbedtls_ssl_key_export_type aType,
@@ -787,8 +786,7 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
-#endif // (defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) ||
-       // (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+#endif // OT_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleUpdateTask(Tasklet &aTasklet);
     void        HandleUpdateTask(void);
