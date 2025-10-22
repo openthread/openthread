@@ -48,6 +48,9 @@ RegisterLogModule("BorderRouting");
 
 RxRaTracker::RxRaTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mRoutingManagerEnabled(false)
+    , mMultiAilDetectorEnabled(false)
+    , mIsRunning(false)
     , mRsSender(aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
@@ -59,14 +62,50 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     mLocalRaHeader.Clear();
 }
 
+void RxRaTracker::SetEnabled(bool aEnable, Requester aRequester)
+{
+    switch (aRequester)
+    {
+    case kRequesterRoutingManager:
+        mRoutingManagerEnabled = aEnable;
+        break;
+    case kRequesterMultiAilDetector:
+        mMultiAilDetectorEnabled = aEnable;
+        break;
+    }
+
+    UpdateState();
+}
+
+void RxRaTracker::UpdateState(void)
+{
+    if ((mRoutingManagerEnabled || mMultiAilDetectorEnabled) && Get<InfraIf>().IsRunning())
+    {
+        Start();
+    }
+    else
+    {
+        Stop();
+    }
+}
+
 void RxRaTracker::Start(void)
 {
+    VerifyOrExit(!mIsRunning);
+    mIsRunning = true;
+
     mRsSender.Start();
     HandleNetDataChange();
+
+exit:
+    return;
 }
 
 void RxRaTracker::Stop(void)
 {
+    VerifyOrExit(mIsRunning);
+    mIsRunning = false;
+
     mRouters.Free();
     mIfAddresses.Free();
     mLocalRaHeader.Clear();
@@ -78,6 +117,9 @@ void RxRaTracker::Stop(void)
     mRdnssAddrTimer.Stop();
 
     mRsSender.Stop();
+
+exit:
+    return;
 }
 
 void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
@@ -95,15 +137,31 @@ void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(RoutingManager::kImmediately);
 }
 
-void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
-                                             const Ip6::Address            &aSrcAddress,
-                                             RouterAdvOrigin                aRaOrigin)
+void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
-    // Process a received RA message and update the prefix table.
+    RouterAdvert::RxMessage raMsg(aPacket);
+    RouterAdvOrigin         origin = kAnotherRouter;
+    Router                 *router;
 
-    Router *router;
+    VerifyOrExit(mIsRunning);
 
-    switch (aRaOrigin)
+    VerifyOrExit(raMsg.IsValid());
+
+    Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
+
+    if (Get<InfraIf>().HasAddress(aSrcAddress))
+    {
+        origin = Get<RoutingManager>().IsRouterAdvertFromManager(raMsg) ? kThisBrRoutingManager : kThisBrOtherEntity;
+    }
+
+    LogInfo("Received RA from %s on %s %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString(),
+            RouterAdvOriginToString(origin));
+
+    DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
+
+    // Process the received RA message.
+
+    switch (origin)
     {
     case kThisBrOtherEntity:
     case kThisBrRoutingManager:
@@ -113,7 +171,7 @@ void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaM
         break;
     }
 
-    VerifyOrExit(aRaOrigin != kThisBrRoutingManager);
+    VerifyOrExit(origin != kThisBrRoutingManager);
 
     router = mRouters.FindMatching(aSrcAddress);
 
@@ -141,9 +199,9 @@ void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaM
     // in a `::/0` RIO override the preference and lifetime values in
     // the RA header (per RFC 4191 section 3.1).
 
-    ProcessRaHeader(aRaMessage.GetHeader(), *router, aRaOrigin);
+    ProcessRaHeader(raMsg.GetHeader(), *router, origin);
 
-    for (const Option &option : aRaMessage)
+    for (const Option &option : raMsg)
     {
         switch (option.GetType())
         {
@@ -164,7 +222,7 @@ void RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaM
         }
     }
 
-    router->mIsLocalDevice = (aRaOrigin == kThisBrOtherEntity);
+    router->mIsLocalDevice = (origin == kThisBrOtherEntity);
 
     router->ResetReachabilityState();
 
@@ -838,13 +896,19 @@ void RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRxRaTrack
 
 void RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
 
-void RxRaTracker::ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage)
+void RxRaTracker::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket)
 {
-    Router *router;
+    const NeighborAdvertMessage *naMsg;
+    Router                      *router;
 
-    VerifyOrExit(aNaMessage.IsValid());
+    VerifyOrExit(mIsRunning);
 
-    router = mRouters.FindMatching(aNaMessage.GetTargetAddress());
+    VerifyOrExit(aPacket.GetLength() >= sizeof(NeighborAdvertMessage));
+    naMsg = reinterpret_cast<const NeighborAdvertMessage *>(aPacket.GetBytes());
+
+    VerifyOrExit(naMsg->IsValid());
+
+    router = mRouters.FindMatching(naMsg->GetTargetAddress());
     VerifyOrExit(router != nullptr);
 
     LogInfo("Received NA from router %s", router->mAddress.ToString().AsCString());
@@ -1141,6 +1205,29 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+const char *RxRaTracker::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
+{
+    static const char *const kOriginStrings[] = {
+        "",                          // (0) kAnotherRouter
+        "(this BR routing-manager)", // (1) kThisBrRoutingManager
+        "(this BR other sw entity)", // (2) kThisBrOtherEntity
+    };
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kAnotherRouter);
+        ValidateNextEnum(kThisBrRoutingManager);
+        ValidateNextEnum(kThisBrOtherEntity);
+    };
+
+    return kOriginStrings[aRaOrigin];
+}
+
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
