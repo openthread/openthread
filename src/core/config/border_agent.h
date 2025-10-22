@@ -135,6 +135,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+ *
+ * Define to 1 to enable the Border Agent TXT Data Parser feature.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
