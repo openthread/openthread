@@ -219,6 +219,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME
+ *
+ * This parameter sets the minimum preferred lifetime (in seconds) for the Border Router's built-in OpenThread
+ * DHCPv6 Prefix Delegation (PD) client feature. The default value is suggested based on:
+ * https://datatracker.ietf.org/doc/draft-ietf-snac-simple/.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME (30 * 60)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME
+ *
+ * This parameter sets the maximum preferred lifetime (in seconds) for the Border Router's built-in OpenThread
+ * DHCPv6 Prefix Delegation (PD) client feature.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME (4 * 60 * 60)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
  *
  * Define to 1 to enable testing related APIs to be provided by the `RoutingManager`.
