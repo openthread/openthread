@@ -33,13 +33,14 @@
 
 #include "border_agent_txt_data.hpp"
 
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
 namespace MeshCoP {
 namespace BorderAgent {
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
 const char TxtData::kRecordVersion[] = "1";
 
@@ -56,11 +57,17 @@ const char TxtData::Key::kBbrSeqNum[]       = "sq";
 const char TxtData::Key::kBbrPort[]         = "bb";
 const char TxtData::Key::kOmrPrefix[]       = "omr";
 const char TxtData::Key::kExtAddress[]      = "xa";
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+const char TxtData::Key::kVendorName[] = "vn";
+const char TxtData::Key::kModelName[]  = "mn";
+#endif
 
 TxtData::TxtData(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 Error TxtData::Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength)
 {
@@ -157,25 +164,25 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
 {
     uint32_t bitmap = 0;
 
-    bitmap |= (aInstance.Get<Manager>().IsRunning() ? kConnectionModePskc : kConnectionModeDisabled);
-    bitmap |= kAvailabilityHigh;
+    bitmap |= ((aInstance.Get<Manager>().IsRunning() ? kConnModePskc : kConnModeDisabled) << kOffsetConnMode);
+    bitmap |= (kAvailabilityHigh << kOffsetAvailability);
 
     switch (aInstance.Get<Mle::Mle>().GetRole())
     {
     case Mle::DeviceRole::kRoleDisabled:
-        bitmap |= (kThreadIfStatusNotInitialized | kThreadRoleDisabledOrDetached);
+        bitmap |= (kThreadIfNotInit << kOffsetIfState) | (kRoleDisabledDetached << kOffsetRole);
         break;
     case Mle::DeviceRole::kRoleDetached:
-        bitmap |= (kThreadIfStatusInitialized | kThreadRoleDisabledOrDetached);
+        bitmap |= (kThreadIfInit << kOffsetIfState) | (kRoleDisabledDetached << kOffsetRole);
         break;
     case Mle::DeviceRole::kRoleChild:
-        bitmap |= (kThreadIfStatusActive | kThreadRoleChild);
+        bitmap |= (kThreadIfActive << kOffsetIfState) | (kRoleChild << kOffsetRole);
         break;
     case Mle::DeviceRole::kRoleRouter:
-        bitmap |= (kThreadIfStatusActive | kThreadRoleRouter);
+        bitmap |= (kThreadIfActive << kOffsetIfState) | (kRoleRouter << kOffsetRole);
         break;
     case Mle::DeviceRole::kRoleLeader:
-        bitmap |= (kThreadIfStatusActive | kThreadRoleLeader);
+        bitmap |= (kThreadIfActive << kOffsetIfState) | (kRoleLeader << kOffsetRole);
         break;
     }
 
@@ -198,6 +205,175 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+
+Error TxtData::Info::ParseFrom(const uint8_t *aTxtData, uint16_t aTxtDataLength)
+{
+    Error                   error;
+    Dns::TxtEntry           entry;
+    Dns::TxtEntry::Iterator iterator;
+
+    Clear();
+
+    iterator.Init(aTxtData, aTxtDataLength);
+
+    while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
+    {
+        ProcessTxtEntry(entry);
+    }
+
+    if (error == kErrorNotFound)
+    {
+        error = kErrorNone;
+    }
+
+    return error;
+}
+
+void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
+{
+    if (aEntry.mKey == nullptr)
+    {
+        // If the TXT data happens to have entries with key longer
+        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
+        // entry would be placed in `mValue`. We skip over such
+        // entries.
+    }
+    else if (StringMatch(aEntry.mKey, Key::kRecordVersion))
+    {
+        ReadStringValue(aEntry, mRecordVersion);
+        mHasRecordVersion = true;
+    }
+    else if (StringMatch(aEntry.mKey, Key::kAgentId))
+    {
+        mHasAgentId = ReadValue(aEntry, mAgentId);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kThreadVersion))
+    {
+        ReadStringValue(aEntry, mThreadVersion);
+        mHasThreadVersion = true;
+    }
+    else if (StringMatch(aEntry.mKey, Key::kStateBitmap))
+    {
+        uint32_t bitmap;
+
+        if (ReadBigEndianUintValue(aEntry, bitmap))
+        {
+            StateBitmap::Parse(bitmap, mStateBitmap);
+            mHasStateBitmap = true;
+        }
+    }
+    else if (StringMatch(aEntry.mKey, Key::kNetworkName))
+    {
+        ReadStringValue(aEntry, mNetworkName.m8);
+        mHasNetworkName = true;
+    }
+    else if (StringMatch(aEntry.mKey, Key::kExtendedPanId))
+    {
+        mHasExtendedPanId = ReadValue(aEntry, mExtendedPanId);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kActiveTimestamp))
+    {
+        Timestamp timestamp;
+
+        if (ReadValue(aEntry, timestamp))
+        {
+            timestamp.ConvertTo(mActiveTimestamp);
+            mHasActiveTimestamp = true;
+        }
+    }
+    else if (StringMatch(aEntry.mKey, Key::kPartitionId))
+    {
+        mHasPartitionId = ReadBigEndianUintValue(aEntry, mPartitionId);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kDomainName))
+    {
+        ReadStringValue(aEntry, mDomainName.m8);
+        mHasDomainName = true;
+    }
+    else if (StringMatch(aEntry.mKey, Key::kBbrSeqNum))
+    {
+        mHasBbrSeqNum = ReadBigEndianUintValue(aEntry, mBbrSeqNum);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kBbrPort))
+    {
+        mHasBbrPort = ReadBigEndianUintValue(aEntry, mBbrPort);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kOmrPrefix))
+    {
+        mHasOmrPrefix = ReadOmrPrefix(aEntry, AsCoreType(&mOmrPrefix));
+    }
+    else if (StringMatch(aEntry.mKey, Key::kExtAddress))
+    {
+        mHasExtAddress = ReadValue(aEntry, mExtAddress);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kVendorName))
+    {
+        ReadStringValue(aEntry, mVendorName);
+        mHasVendorName = true;
+    }
+    else if (StringMatch(aEntry.mKey, Key::kModelName))
+    {
+        ReadStringValue(aEntry, mModelName);
+        mHasModelName = true;
+    }
+}
+
+bool TxtData::Info::ReadValue(const Dns::TxtEntry &aEntry, void *aBuffer, uint16_t aSize)
+{
+    bool didRead = false;
+
+    VerifyOrExit(aEntry.mValueLength >= aSize);
+    memcpy(aBuffer, aEntry.mValue, aSize);
+    didRead = true;
+
+exit:
+    return didRead;
+}
+
+void TxtData::Info::ReadStringValue(const Dns::TxtEntry &aEntry, char *aString, uint16_t aStringSize)
+{
+    uint16_t copyLength = Min<uint16_t>(aStringSize - 1, aEntry.mValueLength);
+
+    memcpy(aString, aEntry.mValue, copyLength);
+    aString[copyLength] = kNullChar;
+}
+
+bool TxtData::Info::ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPrefix)
+{
+    bool    didRead = false;
+    uint8_t length;
+
+    VerifyOrExit(aEntry.mValueLength >= sizeof(uint8_t));
+    length = aEntry.mValue[0];
+
+    VerifyOrExit(length <= Ip6::Prefix::kMaxLength);
+    VerifyOrExit(aEntry.mValueLength >= sizeof(uint8_t) + Ip6::Prefix::SizeForLength(length));
+
+    aPrefix.Set(&aEntry.mValue[1], length);
+    didRead = true;
+
+exit:
+    return didRead;
+}
+
+void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
+{
+    ClearAllBytes(aInfo);
+
+    aInfo.mConnMode       = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
+    aInfo.mThreadIfState  = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
+    aInfo.mAvailability   = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
+    aInfo.mThreadRole     = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
+    aInfo.mBbrIsActive    = aBitmap & kFlagBbrIsActive;
+    aInfo.mBbrIsPrimary   = aBitmap & kFlagBbrIsPrimary;
+    aInfo.mEpskcSupported = aBitmap & kFlagEpskcSupported;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
 } // namespace BorderAgent
 } // namespace MeshCoP

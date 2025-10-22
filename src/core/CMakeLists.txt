@@ -36,6 +36,7 @@ set(COMMON_SOURCES
     api/ble_secure_api.cpp
     api/border_agent_api.cpp
     api/border_agent_tracker_api.cpp
+    api/border_agent_txt_data_api.cpp
     api/border_router_api.cpp
     api/border_routing_api.cpp
     api/channel_manager_api.cpp
