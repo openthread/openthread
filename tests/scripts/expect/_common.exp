@@ -63,7 +63,7 @@ proc expect_line {line} {
     return $expect_out(1,string)
 }
 
-proc spawn_node {id {type ""} {radio_url ""}} {
+proc spawn_node {id {type ""} {args ""}} {
     global spawn_id
     global spawn_ids
     global argv0
@@ -88,10 +88,6 @@ proc spawn_node {id {type ""} {radio_url ""}} {
         set ot_simulation_apps "build/simulation/examples/apps"
     }
 
-    if {${radio_url} == ""} {
-        set radio_url "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"
-    }
-
     send_user "\n# ${id} ${type}\n"
 
     if {[info exists ::env(CC)] && $::env(CC) == "clang"} {
@@ -102,13 +98,22 @@ proc spawn_node {id {type ""} {radio_url ""}} {
 
     if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
         set ot_simulation_local_host $::env(OT_SIMULATION_LOCAL_HOST)
-        set radio_url "$radio_url&forkpty-arg=-L$ot_simulation_local_host"
     } else {
         set ot_simulation_local_host "127.0.0.1"
     }
 
     switch -regexp ${type} {
         {rcp|rcp-cli} {
+            if {${args} == ""} {
+                set radio_url "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"
+            } else {
+                set radio_url "$args"
+            }
+
+            if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
+                set radio_url "$args&forkpty-arg=-L$ot_simulation_local_host"
+            }
+
             # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
             # avoid the error: "bind(sTxFd): Address already in use"
             sleep 0.2
@@ -132,6 +137,23 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-mtd \
                 -L$ot_simulation_local_host $id
             send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect_line "Done"
+        }
+        adb {
+            if {${args} == ""} {
+                set serial_option ""
+            } else {
+                set serial_option "-s $args"
+            }
+
+            spawn /usr/bin/env adb $serial_option shell ot-ctl
+            send "factoryreset\n"
+            sleep 0.5
+
+            # The ot-ctl connection will be broken after run the factoryreset command.
+            # Here re-starts the ot-ctl.
+            spawn /usr/bin/env adb $serial_option shell ot-ctl
             wait_for "state" "disabled"
             expect_line "Done"
         }
