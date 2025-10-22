@@ -81,7 +81,7 @@ void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePre
  * Logs a NAT64 Prefix Option at info log level.
  *
  * @param[in] aPrefix   The IPv6 prefix.
- * @param[in] aLifetime The NAT64 lifetime in seconds.
+ * @param[in] aLifetime The NAT64 prefix lifetime in seconds.
  */
 void LogNat64PrefixOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime);
 #endif

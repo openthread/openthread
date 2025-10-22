@@ -1138,10 +1138,9 @@ Error RxRaTracker::GetNextNat64PrefixEntry(PrefixTableIterator &aIterator, Nat64
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
-    ClearAllBytes(aEntry);
-
     SuccessOrExit(error = iterator.AdvanceToNextNat64PrefixEntry());
 
+    ClearAllBytes(aEntry);
     iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
     iterator.GetEntry<Nat64Prefix>()->CopyInfoTo(aEntry, iterator.GetInitTime());
 
@@ -1464,11 +1463,9 @@ bool RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
 
     bool hasFlags = false;
 
-    // Router can be removed if it does not advertise M or O flags and
-    // also does not have any advertised prefix entries (RIO/PIO) or
-    // RDNSS address entries. If the router already failed to respond
-    // to max NS probe attempts, we consider it as offline and
-    // therefore do not consider its flags anymore.
+    // Router can be removed if it does not advertise M or O flags and also does not have any advertised prefix entries
+    // (RIO/PIO/NAT64) or RDNSS address entries. If the router already failed to respond to max NS probe attempts, we
+    // consider it as offline and therefore do not consider its flags anymore.
 
     if (IsReachable())
     {

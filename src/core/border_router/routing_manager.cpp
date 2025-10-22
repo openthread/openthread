@@ -2481,7 +2481,7 @@ const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePre
     else if (mInfraIfPrefix.IsValidNat64() &&
              Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
     {
-        // We have a valid NAT64 prefix from infrastructure and the network
+        // We have a valid NAT64 prefix from infrastructure using DNS-SD (RFC 7050) method and the network
         // is aligned with an infrastructure-provided OMR prefix.
         favoredPrefix = &mInfraIfPrefix;
         aPreference   = NetworkData::kRoutePreferenceMedium;

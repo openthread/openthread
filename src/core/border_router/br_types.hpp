@@ -58,7 +58,7 @@ typedef NetworkData::RoutePreference          RoutePreference;     ///< Route pr
 typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
 typedef otBorderRoutingPrefixTableEntry       PrefixTableEntry;    ///< Prefix Table Entry.
 typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
-typedef otBorderRoutingNat64PrefixEntry       Nat64PrefixEntry;    ///< NAT64 Prefix.
+typedef otBorderRoutingNat64PrefixEntry       Nat64PrefixEntry;    ///< NAT64 Prefix Entry.
 typedef otBorderRoutingRdnssAddrEntry         RdnssAddrEntry;      ///< RDNSS Address Entry.
 typedef otBorderRoutingRdnssAddrCallback      RdnssAddrCallback;   ///< RDNS Address changed callback.
 typedef otBorderRoutingIfAddrEntry            IfAddrEntry;         ///< Infra-if IPv6 Address Entry.
@@ -344,7 +344,7 @@ private:
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /**
- * Represents an Nat64 Prefix.
+ * Represents a Nat64 Prefix.
  */
 class Nat64Prefix : public LifetimedPrefix, public Clearable<Nat64Prefix>
 {

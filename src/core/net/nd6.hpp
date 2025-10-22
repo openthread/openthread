@@ -84,7 +84,7 @@ public:
         kTypeRouteInfo          = 24, ///< Route Information Option.
         kTypeRecursiveDnsServer = 25, ///< Recursive DNS Server (RDNSS) Option.
         kTypeRaFlagsExtension   = 26, ///< RA Flags Extension Option.
-        kTypeNat64Prefix        = 38, ///< NAT64 Prefix Option.
+        kTypeNat64Prefix        = 38, ///< NAT64 Prefix Option (aka PREF64 Option).
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -507,7 +507,7 @@ private:
 static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
 
 /**
- * Represents the NAT64 Prefix Option.
+ * Represents the NAT64 Prefix Option (aka PREF64 Option).
  *
  * See section 4 of RFC 8781 for definition of this option [https://tools.ietf.org/html/rfc8781#section-4]
  */
@@ -547,6 +547,10 @@ public:
      * Sets the prefix.
      *
      * @param[in]  aPrefix  The prefix contained in this option.
+     *
+     * @retval kErrorNone         Successfully set the prefix.
+     * @retval kErrorInvalidArgs  The prefix length in @p aPrefix is not a valid NAT64 prefix length (must be one of
+     *                            32, 40, 48, 56, 64, or 96).
      */
     Error SetPrefix(const Prefix &aPrefix);
 
@@ -597,7 +601,7 @@ private:
      * The prefix length code values 0, 1, 2, 3, 4, and 5 indicate the NAT64 prefix length of 96, 64, 56, 48, 40, and 32
      * bits, respectively.
      *
-     * @returns The prefix code.
+     * @returns The prefix length code.
      */
     uint8_t GetPrefixLengthCode(void) const { return BigEndian::HostSwap16(mPrefixAttr) & kPrefixLengthCodeMask; }
 
@@ -1052,6 +1056,9 @@ public:
         /**
          * Appends a NAT64 Prefix Option to the RA message.
          *
+         * @note This is intended for testing only. An OTBR should not advertise a NAT64 prefix option; it should only
+         * process received ones.
+         *
          * @param[in] aPrefix         The prefix.
          * @param[in] aLifetime       The lifetime in seconds.
          *
@@ -1063,6 +1070,9 @@ public:
 
         /**
          * Append a Recursive DNS Server Option to the RA message.
+         *
+         * @note This is intended for testing only. An OTBR should not advertise an RDNSS option; it should only
+         * process received ones.
          *
          * @param[in] aAddresses     A pointer to an array of IPv6 addresses.
          * @param[in] aNumAddresses  Number of addresses in @p aAddresses array.
