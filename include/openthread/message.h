@@ -109,6 +109,21 @@ typedef struct otThreadLinkInfo
 } otThreadLinkInfo;
 
 /**
+ * Allocates and returns a (generic) message buffer.
+ *
+ * For IPv6 messages use of `otIp6NewMessage()` is recommended over this function.
+ *
+ * @note If @p aSettings is NULL, the link layer security is enabled and the message priority is set to
+ * `OT_MESSAGE_PRIORITY_NORMAL` by default.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
+
+ * @returns The allocated message (ownership is passed to caller) if non-NULL, or NULL if fails to allocate.
+ */
+otMessage *otMessageAllocate(otInstance *aInstance, const otMessageSettings *aSettings);
+
+/**
  * Gets the `otInstance` associated with a given message.
  *
  * @param[in] aMessage  A message.

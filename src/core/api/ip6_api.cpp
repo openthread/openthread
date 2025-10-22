@@ -37,6 +37,8 @@
 
 using namespace ot;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
     Error     error    = kErrorNone;
@@ -166,6 +168,8 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
     return AsCoreType(aInstance).Get<Ip6::Filter>().GetUnsecurePorts(*aNumEntries);
 }
 
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
     return AsCoreType(aFirst) == AsCoreType(aSecond);
@@ -220,6 +224,8 @@ void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *
 }
 
 bool otIp6IsAddressUnspecified(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsUnspecified(); }
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
 {
@@ -286,3 +292,5 @@ void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
     AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
 }
 #endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD

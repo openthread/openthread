@@ -44,6 +44,13 @@ if(NOT DEFINED OT_PLATFORM_LIB_MTD)
     set(OT_PLATFORM_LIB_MTD ${OT_PLATFORM_LIB})
 endif()
 
+target_compile_definitions(ot-cli-mtd PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=1
+    OPENTHREAD_RADIO=0
+    OPENTHREAD_MDNS=0
+)
+
 target_link_libraries(ot-cli-mtd PRIVATE
     openthread-cli-mtd
     ${OT_PLATFORM_LIB_MTD}

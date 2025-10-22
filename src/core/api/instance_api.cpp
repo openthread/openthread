@@ -100,10 +100,14 @@ bool otInstanceIsInitialized(otInstance *aInstance)
 
 void otInstanceFinalize(otInstance *aInstance) { AsCoreType(aInstance).Finalize(); }
 
+#if !OPENTHREAD_MDNS
+
 void otInstanceReset(otInstance *aInstance) { AsCoreType(aInstance).Reset(); }
 
 #if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
 otError otInstanceResetToBootloader(otInstance *aInstance) { return AsCoreType(aInstance).ResetToBootloader(); }
+#endif
+
 #endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
@@ -192,7 +196,9 @@ const char *otGetVersionString(void)
     return sVersion;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
 const char *otGetRadioVersionString(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Radio>().GetVersionString();
 }
+#endif

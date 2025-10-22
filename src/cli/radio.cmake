@@ -34,6 +34,7 @@ target_compile_definitions(openthread-cli-radio
         OPENTHREAD_MTD=0
         OPENTHREAD_RADIO=1
         OPENTHREAD_RADIO_CLI=1
+        OPENTHREAD_MDNS=0
 )
 
 target_compile_options(openthread-cli-radio PRIVATE

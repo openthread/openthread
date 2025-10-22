@@ -358,4 +358,15 @@ OT_TOOL_WEAK void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
     DieNow(OT_EXIT_FAILURE);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+OT_TOOL_WEAK void otMessageFree(otMessage *aMessage)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    fprintf(stderr, "\n\r Weak otMessageFree is being used\n\r");
+    DieNow(OT_EXIT_FAILURE);
+}
+
+#endif
+
 #endif // OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

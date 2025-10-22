@@ -92,9 +92,6 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CLI_DNS_ENABLE
     , mDns(aInstance, *this)
 #endif
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
-    , mMdns(aInstance, *this)
-#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     , mBbr(aInstance, *this)
 #endif
@@ -141,11 +138,14 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mLocateInProgress(false)
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_CLI_MDNS_ENABLE
+    , mMdns(aInstance, *this)
+#endif
 {
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
 #endif
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_DIAG_ENABLE
     otDiagSetOutputCallback(GetInstancePtr(), &Interpreter::HandleDiagOutput, this);
 #endif
 
@@ -187,7 +187,8 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_DIAG_ENABLE
+
 template <> otError Interpreter::Process<Cmd("diag")>(Arg aArgs[])
 {
     char *args[kMaxArgs];
@@ -214,7 +215,8 @@ void Interpreter::HandleDiagOutput(const char *aFormat, va_list aArguments)
         OutputFormatV(aFormat, aArguments);
     }
 }
-#endif
+
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_DIAG_ENABLE
 
 template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 {
@@ -257,6 +259,8 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
     return error;
 }
 
+#if !OPENTHREAD_MDNS
+
 template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -288,6 +292,8 @@ template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 
     return error;
 }
+
+#endif // !OPENTHREAD_MDNS
 
 void Interpreter::ProcessLine(char *aLine)
 {
@@ -350,7 +356,7 @@ void Interpreter::ProcessLine(char *aLine)
 
     LogInput(args);
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD || OPENTHREAD_RADIO) && OPENTHREAD_CONFIG_DIAG_ENABLE
     if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != kCmdFactoryReset))
     {
         OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
@@ -8553,7 +8559,12 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
 void Interpreter::OutputPrompt(void)
 {
 #if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
-    static const char sPrompt[] = "> ";
+
+#if OPENTHREAD_MDNS
+    static const char kPrompt[] = "ot-mdns> ";
+#else
+    static const char kPrompt[] = "> ";
+#endif
 
     // The `OutputFormat()` below is adding the prompt which is not
     // part of any command output, so we set the `EmittingCommandOutput`
@@ -8561,9 +8572,9 @@ void Interpreter::OutputPrompt(void)
     // log (under `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE`).
 
     SetEmittingCommandOutput(false);
-    OutputFormat("%s", sPrompt);
+    OutputFormat("%s", kPrompt);
     SetEmittingCommandOutput(true);
-#endif // OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+#endif
 }
 
 void Interpreter::HandleTimer(Timer &aTimer)
@@ -8573,7 +8584,7 @@ void Interpreter::HandleTimer(Timer &aTimer)
 
 void Interpreter::HandleTimer(void)
 {
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     if (mLocateInProgress)
     {
         mLocateInProgress = false;
@@ -8591,6 +8602,8 @@ void Interpreter::SetCommandTimeout(uint32_t aTimeoutMilli)
     OT_ASSERT(mCommandIsPending);
     mTimer.Start(aTimeoutMilli);
 }
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
 
 otError Interpreter::ProcessCommand(Arg aArgs[])
 {
@@ -8892,6 +8905,22 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 
     return error;
 }
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO
+
+#if OPENTHREAD_MDNS
+otError Interpreter::ProcessCommand(Arg aArgs[])
+{
+    otError error = ProcessUserCommands(aArgs);
+
+    if (error == OT_ERROR_INVALID_COMMAND)
+    {
+        error = mMdns.Process(aArgs);
+    }
+
+    return error;
+}
+#endif
 
 extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
 {

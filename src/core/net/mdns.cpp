@@ -28,7 +28,7 @@
 
 #include "mdns.hpp"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#if ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #include "common/crc.hpp"
 #include "instance/instance.hpp"
@@ -87,8 +87,10 @@ const char Core::kServicesDnssdLabels[] = "_services._dns-sd._udp";
 
 Core::Core(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mIsEnabled(false)
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mAutoEnable(kDefaultAutoEnable)
+#endif
+    , mIsEnabled(false)
     , mIsQuestionUnicastAllowed(kDefaultQuAllowed)
     , mMaxMessageSize(kMaxMessageSize)
     , mInfraIfIndex(0)
@@ -125,10 +127,12 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequeste
 {
     Error error = kErrorNone;
 
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     if (aRequester == kRequesterUser)
     {
         mAutoEnable = false;
     }
+#endif
 
     VerifyOrExit(aEnable != mIsEnabled);
 
@@ -163,13 +167,16 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequeste
         mCacheTimer.Stop();
     }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Get<Dnssd>().HandleMdnsCoreStateChange();
+#endif
 
 exit:
+    OT_UNUSED_VARIABLE(aRequester);
     return error;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 void Core::SetAutoEnableMode(bool aEnable)
 {
@@ -207,7 +214,7 @@ exit:
     return;
 }
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 Error Core::ValidateHostName(const Host &aHost) const { return Name::ValidateName(aHost.mHostName); }
 
@@ -1730,10 +1737,21 @@ exit:
 
 void Core::LocalHost::GenerateName(void)
 {
+    static constexpr uint8_t kNumHexBytes = 8;
+
     Name::LabelBuffer name;
     StringWriter      writer(name, sizeof(name));
+    uint8_t           bytes[kNumHexBytes];
 
-    writer.Append("ot%s", Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+#if OPENTHREAD_MDNS
+    Random::NonCrypto::FillBuffer(bytes, kNumHexBytes);
+#elif OPENTHREAD_FTD || OPENTHREAD_MTD
+    static_assert(kNumHexBytes == sizeof(Mac::ExtAddress), "kNumHexBytes is not equal to `Mex::ExtAddress` size");
+    Get<Mac::Mac>().GetExtAddress().CopyTo(bytes);
+#endif
+
+    writer.Append("ot");
+    writer.AppendHexBytes(bytes, kNumHexBytes);
 
     SuccessOrAssert(mName.Set(name));
 }
@@ -8125,6 +8143,6 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
     OT_UNUSED_VARIABLE(aAddress);
 }
 
-#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_MOCK_PLAT_APIS_ENABLE
+#endif // ((OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE) || OPENTHREAD_MDNS
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE

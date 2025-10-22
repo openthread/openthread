@@ -62,6 +62,7 @@ cd "${top_builddir}" || die "cd failed"
 cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON \
     -DOT_MULTIPLE_INSTANCE=ON \
     -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+    -DOT_FTD=ON -DOT_MTD=OFF -DOT_RCP=OFF -DOT_MDNS_LIB=OFF \
     -DOT_15_4=${fifteenfour} -DOT_TREL=${trel} \
     -DOT_PROJECT_CONFIG=../tests/nexus/openthread-core-nexus-config.h \
     "${top_srcdir}" || die

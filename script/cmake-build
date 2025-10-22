@@ -67,7 +67,7 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET-}
 OT_SRCDIR="$(cd "$(dirname "$0")"/.. && pwd)"
 readonly OT_SRCDIR
 
-OT_PLATFORMS=(simulation posix android-ndk)
+OT_PLATFORMS=(simulation posix android-ndk posix_mdns)
 readonly OT_PLATFORMS
 
 OT_POSIX_SIM_COMMON_OPTIONS=(
@@ -218,6 +218,18 @@ Could not fild the Android NDK CMake toolchain file
                 "-DOT_POSIX_MAX_POWER_TABLE=ON"
             )
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
+            ;;
+        posix_mdns)
+            options+=(
+                "-DOT_APP_CLI=ON"
+                "-DOT_APP_NCP=OFF"
+                "-DOT_APP_RCP=OFF"
+                "-DOT_FTD=OFF"
+                "-DOT_MTD=OFF"
+                "-DOT_RCP=OFF"
+                "-DOT_MDNS_LIB=ON"
+                "-DOT_PROJECT_CONFIG=../examples/config/ot-core-config-mdns.h"
+            )
             ;;
         simulation)
             local_options+=(

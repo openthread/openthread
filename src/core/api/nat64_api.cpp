@@ -37,6 +37,8 @@
 
 using namespace ot;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
 // Note: We support the following scenarios:
 // - Using OpenThread's routing manager, while using external NAT64 translator (like tayga).
 // - Using OpenThread's NAT64 translator, while using external routing manager.
@@ -125,6 +127,22 @@ void otNat64SetEnabled(otInstance *aInstance, bool aEnabled)
 }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
+otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address)
+{
+    otError                          err = OT_ERROR_NONE;
+    NetworkData::ExternalRouteConfig nat64Prefix;
+
+    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) ==
+                     OT_ERROR_NONE,
+                 err = OT_ERROR_INVALID_STATE);
+    AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
+
+exit:
+    return err;
+}
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
 bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond)
 {
     return AsCoreType(aFirst) == AsCoreType(aSecond);
@@ -149,20 +167,6 @@ otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress)
 {
     AssertPointerIsNotNull(aString);
     return AsCoreType(aAddress).FromString(aString);
-}
-
-otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address)
-{
-    otError                          err = OT_ERROR_NONE;
-    NetworkData::ExternalRouteConfig nat64Prefix;
-
-    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) ==
-                     OT_ERROR_NONE,
-                 err = OT_ERROR_INVALID_STATE);
-    AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
-
-exit:
-    return err;
 }
 
 void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t aSize)
