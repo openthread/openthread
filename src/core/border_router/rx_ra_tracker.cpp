@@ -1004,10 +1004,9 @@ Error RxRaTracker::GetNextPrefixTableEntry(PrefixTableIterator &aIterator, Prefi
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
-    ClearAllBytes(aEntry);
-
     SuccessOrExit(error = iterator.AdvanceToNextPrefixEntry());
 
+    ClearAllBytes(aEntry);
     iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
 
     switch (iterator.GetPrefixType())
@@ -1029,9 +1028,9 @@ Error RxRaTracker::GetNextRouterEntry(PrefixTableIterator &aIterator, RouterEntr
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
-    ClearAllBytes(aEntry);
-
     SuccessOrExit(error = iterator.AdvanceToNextRouter(Iterator::kRouterIterator));
+
+    ClearAllBytes(aEntry);
     iterator.GetRouter()->CopyInfoTo(aEntry, iterator.GetInitTime(), iterator.GetInitUptime());
 
 exit:
@@ -1043,10 +1042,9 @@ Error RxRaTracker::GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAd
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
-    ClearAllBytes(aEntry);
-
     SuccessOrExit(error = iterator.AdvanceToNextRdnssAddrEntry());
 
+    ClearAllBytes(aEntry);
     iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
     iterator.GetEntry<RdnssAddress>()->CopyInfoTo(aEntry, iterator.GetInitTime());
 
@@ -1059,10 +1057,9 @@ Error RxRaTracker::GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntr
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
-    ClearAllBytes(aEntry);
-
     SuccessOrExit(error = iterator.AdvanceToNextIfAddrEntry(mIfAddresses.GetHead()));
 
+    ClearAllBytes(aEntry);
     iterator.GetEntry<IfAddress>()->CopyInfoTo(aEntry, iterator.GetInitUptime());
 
 exit:
