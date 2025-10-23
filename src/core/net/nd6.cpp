@@ -242,9 +242,8 @@ exit:
 
 bool Nat64PrefixOption::IsValid(void) const
 {
-    // Per RFC 8781, the length of the NAT64 Prefix Option is 2 (in units of 8 octets). We use `>= 2` to be more robust
-    // and allow for potential future extensions where new fields might be appended to the option.
-    return (GetLength() >= 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
+    // Per RFC 8781, the length of the NAT64 Prefix Option MUST be 2 (in units of 8 octets).
+    return (GetLength() == 2) && (GetPrefixLengthCode() < GetArrayLength(kPrefixLengths));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

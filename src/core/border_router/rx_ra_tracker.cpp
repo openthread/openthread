@@ -1138,9 +1138,10 @@ Error RxRaTracker::GetNextNat64PrefixEntry(PrefixTableIterator &aIterator, Nat64
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
+    ClearAllBytes(aEntry);
+
     SuccessOrExit(error = iterator.AdvanceToNextNat64PrefixEntry());
 
-    ClearAllBytes(aEntry);
     iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
     iterator.GetEntry<Nat64Prefix>()->CopyInfoTo(aEntry, iterator.GetInitTime());
 

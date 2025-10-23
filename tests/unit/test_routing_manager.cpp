@@ -4583,8 +4583,8 @@ void TestNat64PrefixSelection(void)
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // InfraIf NAT64 prefix (per RFC 7050 method) discovered. No infra-derived OMR prefix in Network Data.
-    // Check local NAT64 prefix in Network Data.
+    // InfraIf NAT64 prefix (e.g. using DNS - RFC 7050) discovered. No infra-derived OMR prefix in Network Data. Check
+    // local NAT64 prefix in Network Data.
 
     DiscoverNat64Prefix(infraIfNat64Prefix);
 
