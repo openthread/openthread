@@ -73,65 +73,26 @@ RoutingManager::RoutingManager(Instance &aInstance)
     mBrUlaPrefix.Clear();
 }
 
-Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
+void RoutingManager::Init(void)
 {
-    Error error;
+    VerifyOrExit(Get<InfraIf>().IsInitialized());
 
-    VerifyOrExit(GetState() == kStateUninitialized || GetState() == kStateDisabled, error = kErrorInvalidState);
-
-    if (!Get<InfraIf>().IsInitialized())
-    {
-        LogInfo("Initializing - InfraIfIndex:%lu", ToUlong(aInfraIfIndex));
-        SuccessOrExit(error = Get<InfraIf>().Init(aInfraIfIndex));
-        SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
-        mOmrPrefixManager.Init(mBrUlaPrefix);
+    LoadOrGenerateRandomBrUlaPrefix();
+    mOmrPrefixManager.Init(mBrUlaPrefix);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
+    mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
 #endif
-        mOnLinkPrefixManager.Init();
-    }
-    else if (aInfraIfIndex != Get<InfraIf>().GetIfIndex())
-    {
-        LogInfo("Reinitializing - InfraIfIndex:%lu -> %lu", ToUlong(Get<InfraIf>().GetIfIndex()),
-                ToUlong(aInfraIfIndex));
-
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
-        IgnoreError(Get<Dns::Multicast::Core>().SetEnabled(false, Get<InfraIf>().GetIfIndex()));
-#endif
-
-        Get<InfraIf>().SetIfIndex(aInfraIfIndex);
-    }
-
-    error = Get<InfraIf>().HandleStateChanged(Get<InfraIf>().GetIfIndex(), aInfraIfIsRunning);
+    mOnLinkPrefixManager.Init();
 
 exit:
-    if (error != kErrorNone)
-    {
-        Get<InfraIf>().Deinit();
-    }
-
-    return error;
-}
-
-bool RoutingManager::IsInitialized(void) const { return Get<InfraIf>().IsInitialized(); }
-
-Error RoutingManager::GetInfraIfInfo(uint32_t &aInfraIfIndex, bool &aInfraIfIsRunning) const
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aInfraIfIndex     = Get<InfraIf>().GetIfIndex();
-    aInfraIfIsRunning = Get<InfraIf>().IsRunning();
-
-exit:
-    return error;
+    return;
 }
 
 Error RoutingManager::SetEnabled(bool aEnabled)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
 
     VerifyOrExit(aEnabled != mIsEnabled);
 
@@ -147,7 +108,7 @@ RoutingManager::State RoutingManager::GetState(void) const
 {
     State state = kStateUninitialized;
 
-    VerifyOrExit(IsInitialized());
+    VerifyOrExit(Get<InfraIf>().IsInitialized());
     VerifyOrExit(IsEnabled(), state = kStateDisabled);
 
     state = IsRunning() ? kStateRunning : kStateStopped;
@@ -160,7 +121,7 @@ Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOmrPrefixManager.GetGeneratedPrefix();
 
 exit:
@@ -172,7 +133,7 @@ Error RoutingManager::GetDhcp6PdOmrPrefix(Dhcp6PdPrefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     error = mPdPrefixManager.GetPrefix(aPrefix);
 
 exit:
@@ -183,7 +144,7 @@ Error RoutingManager::GetDhcp6PdCounters(Dhcp6PdCounters &aCounters)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     error = mPdPrefixManager.GetCounters(aCounters);
 
 exit:
@@ -207,7 +168,7 @@ Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOnLinkPrefixManager.GetLocalPrefix();
 
 exit:
@@ -218,7 +179,7 @@ Error RoutingManager::GetFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOnLinkPrefixManager.GetFavoredPrefix();
 
 exit:
@@ -236,7 +197,7 @@ Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mNat64PrefixManager.GetLocalPrefix();
 
 exit:
@@ -247,7 +208,7 @@ Error RoutingManager::GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreferenc
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mNat64PrefixManager.GetFavoredPrefix(aRoutePreference);
 
 exit:
@@ -255,10 +216,9 @@ exit:
 }
 #endif
 
-Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
+void RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
 {
-    Error error     = kErrorNone;
-    bool  generated = false;
+    bool generated = false;
 
     if (Get<Settings>().Read<Settings::BrUlaPrefix>(mBrUlaPrefix) != kErrorNone || !IsValidBrUlaPrefix(mBrUlaPrefix))
     {
@@ -266,7 +226,7 @@ Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
 
         LogNote("No valid /48 BR ULA prefix found in settings, generating new one");
 
-        SuccessOrExit(error = randomUlaPrefix.GenerateRandomUla());
+        SuccessOrAssert(randomUlaPrefix.GenerateRandomUla());
 
         mBrUlaPrefix.Set(randomUlaPrefix);
         mBrUlaPrefix.SetSubnetId(0);
@@ -279,13 +239,6 @@ Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
     OT_UNUSED_VARIABLE(generated);
 
     LogNote("BR ULA prefix: %s (%s)", mBrUlaPrefix.ToString().AsCString(), generated ? "generated" : "loaded");
-
-exit:
-    if (error != kErrorNone)
-    {
-        LogCrit("Failed to generate random /48 BR ULA prefix");
-    }
-    return error;
 }
 
 void RoutingManager::EvaluateState(void)
@@ -435,7 +388,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     mRoutePublisher.HandleNotifierEvents(aEvents);
 
-    VerifyOrExit(IsInitialized() && IsEnabled());
+    VerifyOrExit(Get<InfraIf>().IsInitialized() && IsEnabled());
 
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
