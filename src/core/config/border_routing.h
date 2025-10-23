@@ -101,6 +101,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+ *
+ * Define to 1 to enable the Routing Manager to generate and publish a distinct on-link prefix for each Adjacent
+ * Infrastructure Link (AIL) in a multi-AIL deployment.
+ *
+ * This feature resolves routing issues in multi-AIL scenarios by ensuring each AIL has a unique on-mesh prefix,
+ * allowing Thread devices to correctly route traffic to the appropriate AIL.
+ *
+ * This feature requires `OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
  *
  * Define to 1 to allow Routing Manager to check for reachability of messages being forwarded by the BR and determine
