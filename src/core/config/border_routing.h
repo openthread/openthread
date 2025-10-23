@@ -184,6 +184,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES
+ *
+ * Specifies the maximum number of distinct AIL on-mesh prefixes that can be published in the Thread Network Data.
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES 4
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT
  *
  * Specifies the timeout in msec for a discovered router on infra link side.

@@ -782,6 +782,10 @@ private:
         void               HandleNetDataChange(void);
         void               HandleExtPanIdChange(void);
         void               HandleTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+        void UpdateLocalPrefixForMultiAil(void);
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TESTING_API_ENABLE
         void SetLocalPrefix(const Ip6::Prefix &aPrefix) { mLocalPrefix = aPrefix; }
 #endif
@@ -815,6 +819,9 @@ private:
         void  Deprecate(void);
         void  ResetExpireTime(TimeMilli aNow);
         Error AppendCurPrefix(RouterAdvert::TxMessage &aRaMessage);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+        Ip6::Prefix GenerateRandomStableUlaPrefix(void);
+#endif
         Error AppendOldPrefixes(RouterAdvert::TxMessage &aRaMessage);
         void  DeprecateOldPrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
         void  SavePrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
@@ -1130,12 +1137,18 @@ private:
     void HandleRxRaTrackerDecisionFactorChanged(void);
     void HandleLocalOnLinkPrefixChanged(void);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+    void UpdateDistinctAilPrefixPublication(void);
+#endif
+
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
 
     static const char *RouterAdvOriginToString(RxRaTracker::RouterAdvOrigin aRaOrigin);
 
     //------------------------------------------------------------------------------------------------------------------
     // Variables
+
+    static constexpr uint8_t kMaxDistinctAilPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES;
 
     using RoutingPolicyTimer = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
 
@@ -1176,6 +1189,11 @@ private:
     Heap::Data mExtraRaOptions;
 
     RoutingPolicyTimer mRoutingPolicyTimer;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+    bool        mIsDistinctAilPrefixPublished;
+    Ip6::Prefix mPublishedAilPrefix;
+#endif
 };
 
 } // namespace BorderRouter
