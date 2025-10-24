@@ -190,6 +190,11 @@ typedef TlvInfo<Tlv::kTlvRequest> TlvRequestTlv;
 typedef UintTlvInfo<Tlv::kLinkMargin, uint8_t> LinkMarginTlv;
 
 /**
+ * Defines Status TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kStatus, uint8_t> StatusTlv;
+
+/**
  * Defines Version TLV constants and types.
  */
 typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
@@ -880,20 +885,6 @@ private:
     uint16_t mSedBufferSize;
     uint8_t  mSedDatagramCount;
 } OT_TOOL_PACKED_END;
-
-/**
- * Specifies Status TLV status values.
- */
-struct StatusTlv : public UintTlvInfo<Tlv::kStatus, uint8_t>
-{
-    /**
-     * Status values.
-     */
-    enum Status : uint8_t
-    {
-        kError = 1, ///< Error.
-    };
-};
 
 /**
  * Provides constants and methods for generation and parsing of Address Registration TLV.
