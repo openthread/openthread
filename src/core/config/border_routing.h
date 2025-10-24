@@ -101,6 +101,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+ *
+ * Define to 1 to enable the Routing Manager to generate and publish a distinct on-link prefix for each Adjacent
+ * Infrastructure Link (AIL) in a multi-AIL deployment.
+ *
+ * This feature resolves routing issues in multi-AIL scenarios by ensuring each AIL has a unique on-mesh prefix,
+ * allowing Thread devices to correctly route traffic to the appropriate AIL.
+ *
+ * This feature requires `OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
  *
  * Define to 1 to allow Routing Manager to check for reachability of messages being forwarded by the BR and determine
@@ -165,6 +181,17 @@
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES
+ *
+ * Specifies the maximum number of distinct AIL on-mesh prefixes that can be published in the Thread Network Data.
+ *
+ * Applicable only when `OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISTINCT_AIL_PREFIXES 4
 #endif
 
 /**
