@@ -4548,12 +4548,16 @@ void TestAutoEnableOfSrpServer(void)
 void TestNat64PrefixSelection(void)
 {
     Ip6::Prefix                     localNat64;
-    Ip6::Prefix                     infraIfNat64Prefix   = PrefixFromString("2000:0:0:1:0:0::", 96);
-    Ip6::Prefix                     raTrackerNat64Prefix = PrefixFromString("2000:0:0:2:0:0::", 96);
     Ip6::Prefix                     localOmr;
-    Ip6::Prefix                     omrPrefix      = PrefixFromString("2000:0000:1111:4444::", 64);
-    Ip6::Address                    routerAddressA = AddressFromString("fd00::aaaa");
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    Ip6::Prefix                     omrPrefix             = PrefixFromString("2000:0000:1111:4444::", 64);
+    Ip6::Prefix                     infraIfNat64Prefix    = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     raTrackerNat64PrefixA = PrefixFromString("2000:0:0:2:0:f::", 96);
+    Ip6::Address                    routerAddressA        = AddressFromString("fd00::aaaa");
+    Ip6::Prefix                     raTrackerNat64PrefixB = PrefixFromString("2000:0:0:2:0:0::", 96);
+    Ip6::Address                    routerAddressB        = AddressFromString("fd00::bbbb");
+    Ip6::Prefix                     raTrackerNat64PrefixC = PrefixFromString("2000:0:0:2:0:8::", 96);
+    Ip6::Address                    routerAddressC        = AddressFromString("fd00::cccc");
     uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
@@ -4573,7 +4577,7 @@ void TestNat64PrefixSelection(void)
     Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Enable Nat64 Prefix Manager. Check local NAT64 prefix in Network Data.
+    // Enable NAT64 Prefix Manager. Check local NAT64 prefix in Network Data.
 
     sInstance->Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(true);
 
@@ -4617,18 +4621,42 @@ void TestNat64PrefixSelection(void)
     // Send an RA from a router advertising a NAT64 prefix.
     // Check that the RA-discovered NAT64 prefix is now favored and published.
 
-    SendRouterAdvert(routerAddressA, Nat64Prefix(raTrackerNat64Prefix, kValidLitime));
+    SendRouterAdvert(routerAddressA, Nat64Prefix(raTrackerNat64PrefixA, kValidLitime));
 
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(raTrackerNat64Prefix);
+    VerifyNat64PrefixInNetData(raTrackerNat64PrefixA);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Remove the RA-discovered NAT64 prefix.
+    // Send two RAs from routers B and C advertising two different NAT64 prefixes.
+    // Check that the numerically smallest prefix is now favored.
+
+    SendRouterAdvert(routerAddressB, Nat64Prefix(raTrackerNat64PrefixB, kValidLitime));
+    SendRouterAdvert(routerAddressC, Nat64Prefix(raTrackerNat64PrefixC, kValidLitime));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(raTrackerNat64PrefixB);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove RA-discovered NAT64 prefix A and B from router A and B.
+    // Check that the remained RA-discovered prefix C is now favored.
+
+    SendRouterAdvert(routerAddressA, Nat64Prefix(raTrackerNat64PrefixA, 0));
+    SendRouterAdvert(routerAddressB, Nat64Prefix(raTrackerNat64PrefixB, 0));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(raTrackerNat64PrefixC);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove RA-discovered NAT64 prefix C.
     // Check that the infra-if NAT64 prefix is published again.
 
-    SendRouterAdvert(routerAddressA, Nat64Prefix(raTrackerNat64Prefix, 0));
+    SendRouterAdvert(routerAddressC, Nat64Prefix(raTrackerNat64PrefixC, 0));
 
     AdvanceTime(20000);
 

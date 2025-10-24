@@ -407,7 +407,7 @@ void RxRaTracker::ProcessNat64PrefixOption(const Nat64PrefixOption &aNat64Prefix
             entry = AllocateEntry<Nat64Prefix>();
             if (entry == nullptr)
             {
-                LogWarn("Discovered too many entries, ignore Nat64 prefix %s", prefix.ToString().AsCString());
+                LogWarn("Discovered too many entries, ignore NAT64 prefix %s", prefix.ToString().AsCString());
                 ExitNow();
             }
 

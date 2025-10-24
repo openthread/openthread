@@ -134,12 +134,12 @@ typedef struct otBorderRoutingPrefixTableEntry
 /**
  * Represents an entry from the discovered NAT64 prefix table.
  *
- * The entries in the discovered table track the Nat64 Prefix Options in the received Router Advertisement messages from
+ * The entries in the discovered table track the NAT64 Prefix Options in the received Router Advertisement messages from
  * other routers on the infrastructure link.
  */
 typedef struct otBorderRoutingNat64PrefixEntry
 {
-    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this Nat64 prefix.
+    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this NAT64 prefix.
     otIp6Prefix                mPrefix;              ///< The discovered IPv6 prefix.
     uint32_t                   mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
     uint32_t                   mLifetime;            ///< Lifetime of the prefix (in seconds).
@@ -225,19 +225,18 @@ typedef enum
 /**
  * Initializes the Border Routing Manager on given infrastructure interface.
  *
- * @note  This method MUST be called before any other otBorderRouting* APIs.
- * @note  This method can be re-called to change the infrastructure interface, but the Border Routing Manager should be
- *        disabled first, and re-enabled after.
+ * This function MUST be called before any other otBorderRouting* APIs.
+ *
+ * This function can also be used to re-initialize and switch the infrastructure interface index to a new one.
+ * Switching the interface index will trigger all components running on the previous interface (Border Routing,
+ * mDNS, etc) to be stopped (as if the previous if-index is no longer running) before restarting operations on the
+ * new interface.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex      The infrastructure interface index.
  * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
- *                                interface is running.
  *
  * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is in a state other than disabled or uninitialized.
- * @retval  OT_ERROR_INVALID_ARGS   The index of the infrastructure interface is not valid.
- * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
  *
  * @sa otPlatInfraIfStateChanged.
  * @sa otBorderRoutingSetEnabled.

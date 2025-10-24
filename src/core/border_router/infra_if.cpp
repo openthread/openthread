@@ -50,28 +50,45 @@ InfraIf::InfraIf(Instance &aInstance)
 {
 }
 
-Error InfraIf::Init(uint32_t aIfIndex)
+void InfraIf::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
-    Error error = kErrorNone;
+    if (mInitialized)
+    {
+        VerifyOrExit(aInfraIfIndex != mIfIndex);
 
-    VerifyOrExit(!mInitialized, error = kErrorInvalidState);
+        LogInfo("Switching previously configured %s to %lu", ToString().AsCString(), ToUlong(aInfraIfIndex));
 
-    mIfIndex     = aIfIndex;
+        // When switching interface index, we `Deinit()` to signal
+        // that the previous `mIfIndex` is down so that all modules
+        // operating on this interface are stopped before restarting
+        // operation on the new interface.
+
+        Deinit();
+    }
+
+    mIfIndex     = aInfraIfIndex;
     mInitialized = true;
 
     LogInfo("Init %s", ToString().AsCString());
 
+    Get<RoutingManager>().Init();
+
 exit:
-    return error;
+    IgnoreError(HandleStateChanged(mIfIndex, aInfraIfIsRunning));
 }
 
 void InfraIf::Deinit(void)
 {
-    mInitialized = false;
-    mIsRunning   = false;
-    mIfIndex     = 0;
+    VerifyOrExit(mInitialized);
 
-    LogInfo("Deinit");
+    LogInfo("Deinit %s", ToString().AsCString());
+
+    IgnoreError(HandleStateChanged(mIfIndex, /* aIsRunning */ false));
+
+    mInitialized = false;
+
+exit:
+    return;
 }
 
 bool InfraIf::HasAddress(const Ip6::Address &aAddress) const

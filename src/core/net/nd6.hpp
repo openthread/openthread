@@ -520,7 +520,7 @@ public:
     static constexpr Type kType = kTypeNat64Prefix; ///< NAT64 Prefix Option Type.
 
     /**
-     * Initializes the Nat64 Prefix option with proper type and length and sets all other fields to zero.
+     * Initializes the NAT64 Prefix option with proper type and length and sets all other fields to zero.
      */
     void Init(void);
 
@@ -589,7 +589,7 @@ private:
     //  |                                                               |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    static constexpr uint32_t kLifetimeScalingUnit  = 8;    // Lifetime is scaled in units of 8 seconds
+    static constexpr uint32_t kLifetimeScalingUnit  = 8;    // Lifetime is scaled in units of 8 seconds.
     static constexpr uint16_t kScaledLifetimeOffset = 3;    // Scaled Lifetime offset in `mPrefixAttr`.
     static constexpr uint16_t kPrefixLengthCodeMask = 0x07; // Prefix Length Code mask in `mPrefixAttr`.
 

@@ -344,7 +344,7 @@ private:
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /**
- * Represents a Nat64 Prefix.
+ * Represents a NAT64 Prefix.
  */
 class Nat64Prefix : public LifetimedPrefix, public Clearable<Nat64Prefix>
 {
