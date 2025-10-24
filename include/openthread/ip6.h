@@ -577,6 +577,14 @@ bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress);
 void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress);
 
 /**
+ * Extracts the MAC Extended Address from the Interface Identifier of the given IPv6 address.
+ *
+ * @param[in]  aAddress     A pointer to the IPv6 address.
+ * @param[out] aExtAddress  A pointer to output the MAC Extended Address (generated from the IID).
+ */
+void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress);
+
+/**
  * Test if two IPv6 prefixes are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv6 prefix to compare.

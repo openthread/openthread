@@ -178,6 +178,11 @@ void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, ot
     AsCoreType(aAddress).SetToLinkLocalAddress(AsCoreType(aExtAddress));
 }
 
+void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress)
+{
+    AsCoreType(aExtAddress).SetFromIid(AsCoreType(aAddress).GetIid());
+}
+
 bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond)
 {
     return AsCoreType(aFirst) == AsCoreType(aSecond);
