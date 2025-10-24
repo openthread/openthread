@@ -156,27 +156,9 @@ public:
     explicit RoutingManager(Instance &aInstance);
 
     /**
-     * Initializes the routing manager on given infrastructure interface.
-     *
-     * @param[in]  aInfraIfIndex      An infrastructure network interface index.
-     * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
-     *                                interface is running.
-     *
-     * @retval  kErrorNone         Successfully started the routing manager.
-     * @retval  kErrorInvalidArgs  The index of the infra interface is not valid.
+     * Initializes the routing manager.
      */
-    Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
-
-    /**
-     * Gets the interface index of the currently configured infrastructure interface.
-     *
-     * @param[out] aInfraIfIndex      A reference to output the interface index.
-     * @param[out] aInfraIfIsRunning  A reference to output whether the interface is running.
-     *
-     * @retval kErrorNone           Successfully retrieved the interface information.
-     * @retval kErrorInvalidState   The Border Routing Manager is not initialized.
-     */
-    Error GetInfraIfInfo(uint32_t &aInfraIfIndex, bool &aInfraIfIsRunning) const;
+    void Init(void);
 
     /**
      * Enables/disables the Border Routing Manager.
@@ -1105,13 +1087,12 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Methods
 
-    void  EvaluateState(void);
-    void  Start(void);
-    void  Stop(void);
-    void  HandleNotifierEvents(Events aEvents);
-    bool  IsInitialized(void) const;
-    bool  IsEnabled(void) const { return mIsEnabled; }
-    Error LoadOrGenerateRandomBrUlaPrefix(void);
+    void EvaluateState(void);
+    void Start(void);
+    void Stop(void);
+    void HandleNotifierEvents(Events aEvents);
+    bool IsEnabled(void) const { return mIsEnabled; }
+    void LoadOrGenerateRandomBrUlaPrefix(void);
 
     void EvaluateRoutingPolicy(void);
     bool IsInitialPolicyEvaluationDone(void) const;
