@@ -6,6 +6,10 @@
 #include "mbedtls/gcm.h"
 #endif
 
+#include "cipher_invasive.h"
+
+#include "test/constant_flow.h"
+
 #if defined(MBEDTLS_CIPHER_HAVE_SOME_AEAD_VIA_LEGACY_OR_USE_PSA) || defined(MBEDTLS_NIST_KW_C)
 #define MBEDTLS_CIPHER_AUTH_CRYPT
 #endif
@@ -129,7 +133,7 @@ exit:
  * return   1 if it is,
  *          0 if it isn't.
  */
-int buffer_is_all_zero(const uint8_t *buf, size_t size)
+static int buffer_is_all_zero(const uint8_t *buf, size_t size)
 {
     for (size_t i = 0; i < size; i++) {
         if (buf[i] != 0) {
@@ -549,6 +553,10 @@ void enc_fail(int cipher_id, int pad_mode, int key_len, int length_val,
     /* encode length number of bytes from inbuf */
     TEST_ASSERT(0 == mbedtls_cipher_update(&ctx, inbuf, length, encbuf, &outlen));
     TEST_ASSERT(ret == mbedtls_cipher_finish(&ctx, encbuf + outlen, &outlen));
+    if (0 != ret) {
+        /* Check output parameter is set to the least-harmful value on error */
+        TEST_ASSERT(0 == outlen);
+    }
 
     /* done */
 exit:
@@ -826,6 +834,10 @@ void decrypt_test_vec(int cipher_id, int pad_mode, data_t *key,
     total_len += outlen;
     TEST_ASSERT(finish_result == mbedtls_cipher_finish(&ctx, output + outlen,
                                                        &outlen));
+    if (0 != finish_result) {
+        /* Check output parameter is set to the least-harmful value on error */
+        TEST_ASSERT(0 == outlen);
+    }
     total_len += outlen;
 #if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CHACHAPOLY_C)
     int tag_expected = (ctx.cipher_info->mode == MBEDTLS_MODE_GCM ||
@@ -1250,5 +1262,22 @@ void check_set_padding(int cipher_id)
 exit:
     mbedtls_cipher_free(&ctx);
     mbedtls_free(key);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void get_pkcs_padding(data_t *decrypted_block, int exp_ret, int exp_len)
+{
+    int ret;
+    size_t calculated_len;
+
+    TEST_CF_SECRET(decrypted_block->x, decrypted_block->len);
+    ret = mbedtls_get_pkcs_padding(decrypted_block->x, decrypted_block->len,
+                                   &calculated_len);
+
+    TEST_EQUAL(ret, exp_ret);
+    if (exp_ret == 0) {
+        TEST_EQUAL(calculated_len, exp_len);
+    }
 }
 /* END_CASE */
