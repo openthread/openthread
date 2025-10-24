@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,12 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
+from abc import ABC, abstractmethod
+
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
 from ble.ble_stream_secure import BleStreamSecure
-
-from abc import ABC, abstractmethod
+from utils import is_printable_ascii
 
 
 class CommandResult(ABC):
@@ -91,6 +92,8 @@ class CommandResultTLV(CommandResult):
             print(f'\tTYPE:\tunknown: {hex(tlv.type)} ({tlv.type})')
         print(f'\tLEN:\t{len(tlv.value)}')
         print(f'\tVALUE:\t0x{tlv.value.hex()}')
+        if is_printable_ascii(tlv.value):
+            print(f'\tSTRING:\t{tlv.value.decode("ascii")}')
 
 
 class CommandResultNone(CommandResult):
