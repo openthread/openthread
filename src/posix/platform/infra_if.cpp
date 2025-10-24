@@ -585,12 +585,45 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         // usually associated with interface state changes.
         case RTM_NEWADDR:
         case RTM_DELADDR:
-        case RTM_NEWLINK:
         case RTM_DELLINK:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
             SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
 #endif
             break;
+        case RTM_NEWLINK:
+        {
+            uint32_t newInfraIfIndex = if_nametoindex(mInfraIfName);
+
+            if (newInfraIfIndex == mInfraIfIndex || newInfraIfIndex == 0)
+            {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+                SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
+#endif
+            }
+            else
+            {
+                LogInfo("The infra interface index changed from %u to %u", mInfraIfIndex, newInfraIfIndex);
+
+                mInfraIfIndex = newInfraIfIndex;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+                otBorderRoutingState state = otBorderRoutingGetState(gInstance);
+                bool wasEnabled = (state == OT_BORDER_ROUTING_STATE_RUNNING || state == OT_BORDER_ROUTING_STATE_STOPPED);
+
+                if (wasEnabled)
+                {
+                    SuccessOrDie(otBorderRoutingSetEnabled(gInstance, false));
+                }
+
+                SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
+
+                if (wasEnabled)
+                {
+                    SuccessOrDie(otBorderRoutingSetEnabled(gInstance, true));
+                }
+#endif
+            }
+            break;
+        }
         case NLMSG_ERROR:
         {
             struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(header));
