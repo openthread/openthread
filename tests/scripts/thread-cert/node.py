@@ -951,7 +951,7 @@ class NodeImpl:
         PROMPT = 'spinel-cli > ' if self.node_type == 'ncp-sim' else '> '
         while True:
             self._expect(r"[^\n]+\n")
-            line = self.pexpect.match.group(0).decode('utf8').strip()
+            line = self.pexpect.match.group(0).decode('utf-8', errors='backslashreplace').strip()
             while line.startswith(PROMPT):
                 line = line[len(PROMPT):]
 
@@ -3268,6 +3268,14 @@ class NodeImpl:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
 
+    def tcat(self, cmd):
+        self.send_command(f'tcat {cmd}')
+        self._expect_done()
+
+    def udp_start_client(self):
+        self.send_command('udp open')
+        self._expect_done()
+
     def udp_start(self, local_ipaddr, local_port, bind_unspecified=False):
         cmd = 'udp open'
         self.send_command(cmd)
@@ -3282,8 +3290,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def udp_send(self, bytes, ipaddr, port, success=True):
-        cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes)
+    def udp_send(self, bytes_count, ipaddr, port, success=True, data_bytes: bytes = None):
+        if data_bytes is None:
+            cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes_count)
+        else:
+            cmd = 'udp send %s %d -x %s ' % (ipaddr, port, data_bytes.hex())
         self.send_command(cmd)
         if success:
             self._expect_done()
@@ -3292,6 +3303,20 @@ class NodeImpl:
 
     def udp_check_rx(self, bytes_should_rx):
         self._expect('%d bytes' % bytes_should_rx)
+
+    def udp_rx(self) -> bytes:
+        PROMPT = 'spinel-cli > ' if self.node_type == 'ncp-sim' else '> '
+        while True:
+            # match non-newline chars until EOL, such as prompts, whitespace, or UDP results '\d+ bytes from'
+            self._expect(r"[^\n]+$")
+            line = self.pexpect.match.group(0)
+            line_utf = line.decode('utf-8', errors='backslashreplace').lstrip()
+            if line_utf.startswith(PROMPT) or len(line_utf.rstrip()) == 0 or self.__is_logging_line(line_utf):
+                continue
+            else:
+                break
+
+        return line.strip()
 
     def set_routereligible(self, enable: bool):
         cmd = f'routereligible {"enable" if enable else "disable"}'
