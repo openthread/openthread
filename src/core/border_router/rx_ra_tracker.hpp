@@ -169,6 +169,20 @@ public:
      */
     Error GetNextRouterEntry(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    /**
+     * Iterates over the discovered NAT64 prefix entries.
+     *
+     * @param[in,out] aIterator    An iterator.
+     * @param[out]    aEntry       A reference to the entry to populate.
+     *
+     * @retval kErrorNone         Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+     * @retval kErrorNotFound     No more entries in the table.
+     * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
+     */
+    Error GetNextNat64PrefixEntry(PrefixTableIterator &aIterator, Nat64PrefixEntry &aEntry) const;
+#endif
+
     /**
      * Iterates over the discovered Recursive DNS Server (RDNSS) address entries.
      *
@@ -246,6 +260,15 @@ public:
      * @returns The favored on-link prefix.
      */
     const Ip6::Prefix &GetFavoredOnLinkPrefix(void) const { return mDecisionFactors.mFavoredOnLinkPrefix; }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    /**
+     * Gets the favored NAT64 prefix among all discovered NAT64 prefixes.
+     *
+     * @returns The favored NAT64 prefix.
+     */
+    const Ip6::Prefix &GetFavoredNat64Prefix(void) const { return mDecisionFactors.mFavoredNat64Prefix; }
+#endif
 
     /**
      * Sets the Managed Address Configuration (M) and Other Configuration (O) flags on a Router Advertisement header.
@@ -372,6 +395,9 @@ private:
 
         using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
         using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        using Nat64PrefixList = OwningList<Entry<Nat64Prefix>>;
+#endif
         using RdnssAddressList = OwningList<Entry<RdnssAddress>>;
 
         // `mDiscoverTime` tracks the initial discovery time of
@@ -387,6 +413,9 @@ private:
         Ip6::Address     mAddress;
         OnLinkPrefixList mOnLinkPrefixes;
         RoutePrefixList  mRoutePrefixes;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Nat64PrefixList mNat64Prefixes;
+#endif
         RdnssAddressList mRdnssAddresses;
         uint32_t         mDiscoverTime;
         TimeMilli        mLastUpdateTime;
@@ -411,6 +440,7 @@ private:
             kUnspecified,
             kRouterIterator,
             kPrefixIterator,
+            kNat64PrefixIterator,
             kRdnssAddrIterator,
             kIfAddrIterator,
             kNetDataBrIterator, // Used by `NetDataPeerBrTracker`
@@ -422,9 +452,12 @@ private:
             kRoutePrefix,
         };
 
-        void                 Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
-        Error                AdvanceToNextRouter(Type aType);
-        Error                AdvanceToNextPrefixEntry(void);
+        void  Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
+        Error AdvanceToNextRouter(Type aType);
+        Error AdvanceToNextPrefixEntry(void);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Error AdvanceToNextNat64PrefixEntry(void);
+#endif
         Error                AdvanceToNextRdnssAddrEntry(void);
         Error                AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead);
         uint32_t             GetInitUptime(void) const { return mData0; }
@@ -465,6 +498,9 @@ private:
         SharedEntry        *mNext;
         Entry<OnLinkPrefix> mOnLinkEntry;
         Entry<RoutePrefix>  mRouteEntry;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Entry<Nat64Prefix> mNat64PrefixEntry;
+#endif
         Entry<RdnssAddress> mRdnssAddrEntry;
         Entry<IfAddress>    mIfAddrEntry;
     };
@@ -480,13 +516,20 @@ private:
         void UpdateFlagsFrom(const Router &aRouter);
         void UpdateFrom(const OnLinkPrefix &aOnLinkPrefix);
         void UpdateFrom(const RoutePrefix &aRoutePrefix);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        void UpdateFrom(const Nat64Prefix &aNat64Prefix);
+#endif
 
         Ip6::Prefix mFavoredOnLinkPrefix;
-        bool        mHasNonUlaRoute : 1;
-        bool        mHasNonUlaOnLink : 1;
-        bool        mHasUlaOnLink : 1;
-        bool        mHeaderManagedAddressConfigFlag : 1;
-        bool        mHeaderOtherConfigFlag : 1;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Ip6::Prefix mFavoredNat64Prefix;
+#endif
+        bool mHasNonUlaRoute : 1;
+        bool mHasNonUlaOnLink : 1;
+        bool mHasUlaOnLink : 1;
+        bool mHeaderManagedAddressConfigFlag : 1;
+        bool mHeaderOtherConfigFlag : 1;
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         uint16_t mReachablePeerBrCount;
 #endif
@@ -536,6 +579,9 @@ private:
     void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
     void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
     void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    void ProcessNat64PrefixOption(const Nat64PrefixOption &aNat64Prefix, Router &aRouter);
+#endif
     void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
     void UpdateIfAddresses(const Ip6::Address &aAddress);
     void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
@@ -604,6 +650,13 @@ private:
 template <> inline RxRaTracker::Entry<OnLinkPrefix> &RxRaTracker::SharedEntry::GetEntry(void) { return mOnLinkEntry; }
 
 template <> inline RxRaTracker::Entry<RoutePrefix> &RxRaTracker::SharedEntry::GetEntry(void) { return mRouteEntry; }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+template <> inline RxRaTracker::Entry<Nat64Prefix> &RxRaTracker::SharedEntry::GetEntry(void)
+{
+    return mNat64PrefixEntry;
+}
+#endif
 
 template <> inline RxRaTracker::Entry<RdnssAddress> &RxRaTracker::SharedEntry::GetEntry(void)
 {
