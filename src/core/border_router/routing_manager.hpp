@@ -50,11 +50,6 @@
 #error "TRACK_PEER_BR_INFO_ENABLE feature requires OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE"
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE && \
-    !OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-#error "MULTI_AIL_DETECTION_ENABLE feature requires OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE"
-#endif
-
 #include <openthread/border_routing.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
@@ -441,37 +436,6 @@ public:
      */
     void HandleInfraIfStateChanged(void) { EvaluateState(); }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-    /**
-     * Gets the current detected state regarding multiple Adjacent Infrastructure Links (AILs).
-     *
-     * It returns whether the Routing Manager currently believes that Border Routers (BRs) on the Thread mesh may be
-     * connected to different AILs.
-     *
-     * See `otBorderRoutingIsMultiAilDetected()` for more details about detection process.
-     *
-     * @retval TRUE   Has detected that BRs are likely connected to multiple AILs.
-     * @retval FALSE  Has not detected (or no longer detects) that BRs are connected to multiple AILs.
-     */
-    bool IsMultiAilDetected(void) const { return mMultiAilDetector.IsDetected(); }
-
-    /**
-     * Sets a callback function to be notified of changes in the multi-AIL detection state.
-     *
-     * Subsequent calls to this function will overwrite the previous callback setting. Using `NULL` for @p aCallback
-     * will disable the callback.
-     *
-     * @param[in] aCallback  The callback function
-     * @param[in] aContext   A pointer to application-specific context used with @p aCallback.
-     */
-    void SetMultiAilCallback(MultiAilCallback aCallback, void *aContext)
-    {
-        mMultiAilDetector.SetCallback(aCallback, aContext);
-    }
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     /**
      * Determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
@@ -637,56 +601,6 @@ private:
 
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-    void HandleMultiAilDetectorTimer(void) { mMultiAilDetector.HandleTimer(); }
-
-    class MultiAilDetector : public InstanceLocator
-    {
-        // Detects whether BRs may be connected to different AILs by
-        // tracking the number of peer BRs from netdata versus from
-        // `RxRaTracker`. If the netdata count exceeds the RA-tracked
-        // count for more than `kDetectTime` (10 minutes), it notifies
-        // this using the provided callback. To clear the state,
-        // `kClearTime` (1 minute) is used.
-        //
-        // This longer detection window of 10 minutes helps to avoid
-        // false positives due to transient changes. `RxRaTracker` uses
-        // 200 seconds for reachability checks of peer BRs. Stale
-        // Network Data entries are also expected to age out within a
-        // few minutes. So 10-minute detection time accommodates both.
-
-        friend class RxRaTracker;
-
-    public:
-        explicit MultiAilDetector(Instance &aInstance);
-
-        void SetCallback(MultiAilCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
-        bool IsDetected(void) const { return mDetected; }
-
-        void Start(void) { Evaluate(); }
-        void Stop(void);
-        void Evaluate(void);
-        void HandleTimer(void);
-
-    private:
-        static constexpr uint32_t kDetectTime = 10 * Time::kOneMinuteInMsec;
-        static constexpr uint32_t kClearTime  = 1 * Time::kOneMinuteInMsec;
-
-        using DetectCallback = Callback<MultiAilCallback>;
-        using DetectTimer    = TimerMilliIn<RoutingManager, &RoutingManager::HandleMultiAilDetectorTimer>;
-
-        bool           mDetected;
-        uint16_t       mNetDataPeerBrCount;
-        uint16_t       mReachablePeerBrCount;
-        DetectTimer    mTimer;
-        DetectCallback mCallback;
-    };
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     class OmrPrefixManager : public InstanceLocator
     {
@@ -1132,10 +1046,6 @@ private:
     bool            mUserSetRioPreference;
 
     OnLinkPrefixManager mOnLinkPrefixManager;
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    MultiAilDetector mMultiAilDetector;
-#endif
 
     RoutePublisher mRoutePublisher;
 
