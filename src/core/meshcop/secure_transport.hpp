@@ -54,7 +54,8 @@
 #include <mbedtls/version.h>
 
 #ifdef OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
-#error "OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT MUST NOT be defined directly. It is derived from other configs"
+#error \
+    "OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT MUST NOT be defined directly. It is derived from other configs."
 #endif
 
 #if ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
