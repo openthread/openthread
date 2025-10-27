@@ -57,10 +57,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mOmrPrefixManager(aInstance)
     , mRioAdvertiser(aInstance)
     , mOnLinkPrefixManager(aInstance)
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    , mMultiAilDetector(aInstance)
-#endif
     , mRoutePublisher(aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     , mNat64PrefixManager(aInstance)
@@ -271,7 +267,7 @@ void RoutingManager::Start(void)
         mNat64PrefixManager.Start();
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-        mMultiAilDetector.Start();
+        Get<MultiAilDetector>().Start();
 #endif
     }
 }
@@ -289,7 +285,7 @@ void RoutingManager::Stop(void)
     mNat64PrefixManager.Stop();
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    mMultiAilDetector.Stop();
+    Get<MultiAilDetector>().Stop();
 #endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
@@ -670,7 +666,7 @@ void RoutingManager::HandleRxRaTrackerDecisionFactorChanged(void)
     mOnLinkPrefixManager.HandleRxRaTrackerChanged();
     mRoutePublisher.Evaluate();
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    mMultiAilDetector.Evaluate();
+    Get<MultiAilDetector>().Evaluate();
 #endif
 
 exit:
@@ -793,88 +789,6 @@ const char *RoutingManager::RouterAdvOriginToString(RxRaTracker::RouterAdvOrigin
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-//---------------------------------------------------------------------------------------------------------------------
-// MultiAilDetector
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-RoutingManager::MultiAilDetector::MultiAilDetector(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mDetected(false)
-    , mNetDataPeerBrCount(0)
-    , mReachablePeerBrCount(0)
-    , mTimer(aInstance)
-{
-}
-
-void RoutingManager::MultiAilDetector::Stop(void)
-{
-    mTimer.Stop();
-    mDetected             = false;
-    mNetDataPeerBrCount   = 0;
-    mReachablePeerBrCount = 0;
-}
-
-void RoutingManager::MultiAilDetector::Evaluate(void)
-{
-    uint16_t count;
-    uint32_t minAge;
-    bool     detected;
-
-    VerifyOrExit(Get<RoutingManager>().IsRunning());
-
-    count = Get<NetDataBrTracker>().CountBrs(NetDataBrTracker::kExcludeThisDevice, minAge);
-
-    if (count != mNetDataPeerBrCount)
-    {
-        LogInfo("Peer BR count from netdata: %u -> %u", mNetDataPeerBrCount, count);
-        mNetDataPeerBrCount = count;
-    }
-
-    count = Get<RxRaTracker>().GetReachablePeerBrCount();
-
-    if (count != mReachablePeerBrCount)
-    {
-        LogInfo("Reachable Peer BR count from RaTracker: %u -> %u", mReachablePeerBrCount, count);
-        mReachablePeerBrCount = count;
-    }
-
-    detected = (mNetDataPeerBrCount > mReachablePeerBrCount);
-
-    if (detected == mDetected)
-    {
-        mTimer.Stop();
-    }
-    else if (!mTimer.IsRunning())
-    {
-        mTimer.Start(detected ? kDetectTime : kClearTime);
-    }
-
-exit:
-    return;
-}
-
-void RoutingManager::MultiAilDetector::HandleTimer(void)
-{
-    if (!mDetected)
-    {
-        LogNote("BRs on multi AIL detected - BRs are likely connected to different infra-links");
-        LogInfo("More peer BRs in netdata vs from rx RAs for past %lu seconds", ToUlong(Time::MsecToSec(kDetectTime)));
-        LogInfo("NetData Peer BR count: %u, RaTracker reachable Peer BR count: %u", mNetDataPeerBrCount,
-                mReachablePeerBrCount);
-        mDetected = true;
-    }
-    else
-    {
-        LogNote("BRs on multi AIL detection cleared");
-        mDetected = false;
-    }
-
-    mCallback.InvokeIfSet(mDetected);
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // OmrPrefixManager

@@ -154,7 +154,7 @@ void NetDataBrTracker::HandleNotifierEvents(Events aEvents)
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<RoutingManager>().mMultiAilDetector.Evaluate();
+    Get<MultiAilDetector>().Evaluate();
 #endif
 
 exit:
