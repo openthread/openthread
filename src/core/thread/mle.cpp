@@ -1332,7 +1332,7 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
     Error      error = kErrorNone;
     TxMessage *message;
 
-    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMleMessage(aInfo.mCommand)) != nullptr, error = kErrorNoBufs);
 
     for (uint8_t tlvType : aInfo.mTlvList)
     {
@@ -1401,6 +1401,17 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
             SuccessOrExit(error = message->AppendSupervisionIntervalTlvIfSleepyChild());
             break;
 
+        case Tlv::kMode:
+            SuccessOrExit(error = message->AppendModeTlv());
+            break;
+
+        case Tlv::kChallenge:
+            if (aInfo.mCommand == kCommandChildUpdateResponseAndRequest)
+            {
+                SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
+            }
+            break;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         case Tlv::kCslTimeout:
             if (Get<Mac::Mac>().IsCslEnabled())
@@ -1414,7 +1425,10 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
 
     SuccessOrExit(error = message->SendTo(aInfo.mDestination));
 
-    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aInfo.mDestination);
+    Log(kMessageSend,
+        aInfo.mCommand == kCommandChildUpdateResponse ? kTypeChildUpdateResponseAsChild
+                                                      : kTypeChildUpdateResponseAndRequest,
+        aInfo.mDestination);
 
 exit:
     FreeMessageOnError(message, error);
@@ -1786,6 +1800,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     case kCommandChildUpdateResponse:
         HandleChildUpdateResponse(rxInfo);
+        break;
+
+    case kCommandChildUpdateResponseAndRequest:
+        HandleChildUpdateResponseAndRequest(rxInfo);
         break;
 
 #if OPENTHREAD_FTD
@@ -2293,6 +2311,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildUpdateRequestAsChild, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
+    info.mCommand     = kCommandChildUpdateResponse;
     info.mDestination = aRxInfo.mMessageInfo.GetPeerAddr();
 
     info.mTlvList.Add(Tlv::kSourceAddress);
@@ -2371,6 +2390,24 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             break;
         default:
             ExitNow(error = kErrorParse);
+        }
+
+        if (!IsAttached() && mPrevRoleRestorer.IsRestoringChildRole() && IsRxOnWhenIdle() &&
+            aRxInfo.mMessage.ContainsTlv(Tlv::kThreeWayChildUpdate) && !info.mChallenge.IsEmpty())
+        {
+            // The use of "Child Update Response and Request" is
+            // restricted to when both the parent and the non-sleepy
+            // child are attempting to restore the link. The `mTlvList`
+            // is updated to include required TLVs for "Child Update
+            // Request". The parent is expected to already request the
+            // Address Registration TLV, but we add it again anyway
+            // (it will be ignored if already in the list).
+
+            info.mCommand = kCommandChildUpdateResponseAndRequest;
+
+            info.mTlvList.Add(Tlv::kAddressRegistration);
+            info.mTlvList.Add(Tlv::kMode);
+            info.mTlvList.Add(Tlv::kChallenge);
         }
     }
     else
@@ -2559,6 +2596,21 @@ exit:
     }
 
     LogProcessError(kTypeChildUpdateResponseAsChild, error);
+}
+
+void Mle::HandleChildUpdateResponseAndRequest(RxInfo &aRxInfo)
+{
+    Log(kMessageReceive, kTypeChildUpdateResponseAndRequest, aRxInfo.mMessageInfo.GetPeerAddr());
+
+    // A "Response and Request" is always processed as a response
+    // first. It is only processed as a request by parent nodes.
+
+    HandleChildUpdateResponse(aRxInfo);
+
+    if (IsRouterOrLeader())
+    {
+        HandleChildUpdateRequest(aRxInfo);
+    }
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -2938,23 +2990,24 @@ const char *Mle::MessageActionToString(MessageAction aAction)
 
 const char *Mle::MessageTypeToString(MessageType aType)
 {
-#define MessageTypeMapList(_)                                   \
-    _(kTypeAdvertisement, "Advertisement")                      \
-    _(kTypeAnnounce, "Announce")                                \
-    _(kTypeChildIdRequest, "Child ID Request")                  \
-    _(kTypeChildIdRequestShort, "Child ID Request")             \
-    _(kTypeChildIdResponse, "Child ID Response")                \
-    _(kTypeChildUpdateRequestAsChild, "Child Update Request")   \
-    _(kTypeChildUpdateResponseAsChild, "Child Update Response") \
-    _(kTypeDataRequest, "Data Request")                         \
-    _(kTypeDataResponse, "Data Response")                       \
-    _(kTypeDiscoveryRequest, "Discovery Request")               \
-    _(kTypeDiscoveryResponse, "Discovery Response")             \
-    _(kTypeGenericDelayed, "delayed message")                   \
-    _(kTypeGenericUdp, "UDP")                                   \
-    _(kTypeParentRequestToRouters, "Parent Request")            \
-    _(kTypeParentRequestToRoutersReeds, "Parent Request")       \
-    _(kTypeParentResponse, "Parent Response")                   \
+#define MessageTypeMapList(_)                                                  \
+    _(kTypeAdvertisement, "Advertisement")                                     \
+    _(kTypeAnnounce, "Announce")                                               \
+    _(kTypeChildIdRequest, "Child ID Request")                                 \
+    _(kTypeChildIdRequestShort, "Child ID Request")                            \
+    _(kTypeChildIdResponse, "Child ID Response")                               \
+    _(kTypeChildUpdateRequestAsChild, "Child Update Request")                  \
+    _(kTypeChildUpdateResponseAsChild, "Child Update Response")                \
+    _(kTypeChildUpdateResponseAndRequest, "Child Update Response and Request") \
+    _(kTypeDataRequest, "Data Request")                                        \
+    _(kTypeDataResponse, "Data Response")                                      \
+    _(kTypeDiscoveryRequest, "Discovery Request")                              \
+    _(kTypeDiscoveryResponse, "Discovery Response")                            \
+    _(kTypeGenericDelayed, "delayed message")                                  \
+    _(kTypeGenericUdp, "UDP")                                                  \
+    _(kTypeParentRequestToRouters, "Parent Request")                           \
+    _(kTypeParentRequestToRoutersReeds, "Parent Request")                      \
+    _(kTypeParentResponse, "Parent Response")                                  \
     FtdMessageTypeMapList(_) LinkMetricsMessageTypeMapList(_) TimeSyncMessageTypeMapList(_) P2pMessageTypeMapList(_)
 
 #if OPENTHREAD_FTD
@@ -3591,6 +3644,11 @@ Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
 Error Mle::TxMessage::AppendMleFrameCounterTlv(void)
 {
     return Tlv::Append<MleFrameCounterTlv>(*this, Get<KeyManager>().GetMleFrameCounter());
+}
+
+Error Mle::TxMessage::AppendThreeWayChildUpdateTlv(void)
+{
+    return Tlv::AppendTlv(*this, Tlv::kThreeWayChildUpdate, nullptr, 0);
 }
 
 Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<Address16Tlv>(*this, aRloc16); }

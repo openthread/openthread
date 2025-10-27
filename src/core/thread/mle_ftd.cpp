@@ -2246,6 +2246,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 
     VerifyOrExit(!mDetacher.IsDetaching());
 
+    info.mCommand     = kCommandChildUpdateResponse;
     info.mDestination = aRxInfo.mMessageInfo.GetPeerAddr();
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadModeTlv(mode));
@@ -2442,7 +2443,15 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 
     SendChildUpdateResponseToChild(child, info);
 
-    aRxInfo.mClass = RxInfo::kPeerMessage;
+    // If the message is a "Child Update Response and Request",
+    // the `mClass` may have already been set when processing it
+    // as a response. We only set it to `kPeerMessage` if it is
+    // still unknown.
+
+    if (aRxInfo.mClass == RxInfo::kUnknown)
+    {
+        aRxInfo.mClass = RxInfo::kPeerMessage;
+    }
 
 exit:
     LogProcessError(kTypeChildUpdateRequestOfChild, error);
@@ -3000,6 +3009,7 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
         }
 
         SuccessOrExit(error = message->AppendChallengeTlv(aChild.GetChallenge()));
+        SuccessOrExit(error = message->AppendThreeWayChildUpdateTlv());
     }
 
     destination.SetToLinkLocalAddress(aChild.GetExtAddress());
