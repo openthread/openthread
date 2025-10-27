@@ -53,6 +53,17 @@
 #endif
 #include <mbedtls/version.h>
 
+#ifdef OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+#error "OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT MUST NOT be defined directly. It is derived from other configs"
+#endif
+
+#if ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
+     (MBEDTLS_VERSION_NUMBER >= 0x03010000))
+#define OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT 1
+#else
+#define OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT 0
+#endif
+
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #error OPENTHREAD_CONFIG_BLE_TCAT_ENABLE requires MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -755,8 +766,7 @@ private:
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 
-#if ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
-     (MBEDTLS_VERSION_NUMBER >= 0x03010000))
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleMbedtlsExportKeys(void                       *aContext,
                                         mbedtls_ssl_key_export_type aType,
@@ -787,8 +797,7 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
-#endif // ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) ||
-       // (MBEDTLS_VERSION_NUMBER >= 0x03010000))
+#endif // OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleUpdateTask(Tasklet &aTasklet);
     void        HandleUpdateTask(void);
