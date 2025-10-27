@@ -1264,6 +1264,25 @@ exit:
     return error;
 }
 
+Error Mle::SendChildUpdateRejectResponse(const RxChallenge &aChallenge, const Ip6::Address &aDestination)
+{
+    // Send a reject response which only includes a Source Address TLV,
+    // a Status TLV, and a Response TLV when request contained a
+    // Challenge TLV.
+
+    TlvList tlvList;
+
+    tlvList.Add(Tlv::kSourceAddress);
+    tlvList.Add(Tlv::kStatus);
+
+    if (!aChallenge.IsEmpty())
+    {
+        tlvList.Add(Tlv::kResponse);
+    }
+
+    return SendChildUpdateResponse(tlvList, aChallenge, aDestination);
+}
+
 Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
                                    const RxChallenge  &aChallenge,
                                    const Ip6::Address &aDestination)
@@ -2315,19 +2334,8 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
     else
     {
         // This device is not a child of the Child Update Request source.
-        //
-        // Send a reject response which only includes a Source Address TLV,
-        // a Status TLV, and a Response TLV when request contained a
-        // Challenge TLV.
-
-        tlvList.Clear();
-        tlvList.Add(Tlv::kSourceAddress);
-        tlvList.Add(Tlv::kStatus);
-
-        if (!challenge.IsEmpty())
-        {
-            tlvList.Add(Tlv::kResponse);
-        }
+        error = SendChildUpdateRejectResponse(challenge, aRxInfo.mMessageInfo.GetPeerAddr());
+        ExitNow();
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2340,9 +2348,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
     }
 #endif
 
-    // Send the response to the requester, regardless if it's this
-    // device's parent or not.
-    SuccessOrExit(error = SendChildUpdateResponse(tlvList, challenge, aRxInfo.mMessageInfo.GetPeerAddr()));
+    error = SendChildUpdateResponse(tlvList, challenge, aRxInfo.mMessageInfo.GetPeerAddr());
 
 exit:
     LogProcessError(kTypeChildUpdateRequestAsChild, error);

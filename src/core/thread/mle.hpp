@@ -2262,6 +2262,7 @@ private:
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
+    Error      SendChildUpdateRejectResponse(const RxChallenge &aChallenge, const Ip6::Address &aDestination);
     Error      SendChildUpdateResponse(const TlvList      &aTlvList,
                                        const RxChallenge  &aChallenge,
                                        const Ip6::Address &aDestination);
