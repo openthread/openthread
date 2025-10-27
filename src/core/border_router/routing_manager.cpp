@@ -2157,7 +2157,7 @@ exit:
     {
         LogInfo("RoutePublisher state: %s -> %s", StateToString(mState), StateToString(newState));
         UpdatePublishedRoute(newState);
-        Get<RoutingManager>().mOmrPrefixManager.UpdateDefaultRouteFlag(newState == kPublishDefault);
+        Get<RoutingManager>().mOmrPrefixManager.UpdateDefaultRouteFlag(newState != kDoNotPublish);
     }
 }
 
