@@ -2488,7 +2488,7 @@ void Mle::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
     switch (Tlv::Find<StatusTlv>(aRxInfo.mMessage, status))
     {
     case kErrorNone:
-        VerifyOrExit(status != StatusTlv::kError, RemoveNeighbor(*child));
+        VerifyOrExit(status != kStatusError, RemoveNeighbor(*child));
         break;
     case kErrorNotFound:
         break;
@@ -3029,7 +3029,7 @@ void Mle::SendChildUpdateResponseToChild(Child                  *aChild,
         switch (tlvType)
         {
         case Tlv::kStatus:
-            SuccessOrExit(error = message->AppendStatusTlv(StatusTlv::kError));
+            SuccessOrExit(error = message->AppendStatusTlv(kStatusError));
             break;
 
         case Tlv::kLeaderData:
