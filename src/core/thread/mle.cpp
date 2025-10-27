@@ -1289,7 +1289,7 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
     TxMessage *message;
     bool       checkAddress = false;
 
-    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMleMessage(aInfo.mCommand)) != nullptr, error = kErrorNoBufs);
 
     for (uint8_t tlvType : aInfo.mTlvList)
     {
@@ -1352,9 +1352,18 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
         }
     }
 
+    if (aInfo.mCommand == kCommandChildUpdateResponseAndRequest)
+    {
+        // TODO: documents
+        SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
+        SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
+    }
+
     SuccessOrExit(error = message->SendTo(aInfo.mDestination));
 
-    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aInfo.mDestination);
+    Log(kMessageSend, aInfo.mCommand == kCommandChildUpdateResponse ? kTypeChildUpdateResponseAsChild :
+        kTypeChildUpdateResponseAndRequest
+        , aInfo.mDestination);
 
     if (checkAddress && HasUnregisteredAddress())
     {
@@ -1739,6 +1748,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     case kCommandChildUpdateResponse:
         HandleChildUpdateResponse(rxInfo);
+        break;
+
+    case kCommandChildUpdateResponseAndRequest:
+        HandleChildUpdateResponseAndRequest(rxInfo);
         break;
 
 #if OPENTHREAD_FTD
@@ -2245,6 +2258,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildUpdateRequestAsChild, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
+    info.mCommand     = kCommandChildUpdateResponse;
     info.mDestination = aRxInfo.mMessageInfo.GetPeerAddr();
 
     info.mTlvList.Add(Tlv::kSourceAddress);
@@ -2323,6 +2337,11 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             break;
         default:
             ExitNow(error = kErrorParse);
+        }
+
+        if (!IsAttached() && IsRxOnWhenIdle() && aRxInfo.mMessage.ContainsTlv(Tlv::kThreeWayChildUpdate))
+        {
+            info.mCommand = kCommandChildUpdateResponseAndRequest;
         }
     }
     else
@@ -2511,6 +2530,13 @@ exit:
     }
 
     LogProcessError(kTypeChildUpdateResponseAsChild, error);
+}
+
+void Mle::HandleChildUpdateResponseAndRequest(RxInfo &aRxInfo)
+{
+    Log(kMessageReceive, kTypeChildUpdateResponseAndRequest, aRxInfo.mMessageInfo.GetPeerAddr());
+    HandleChildUpdateResponse(aRxInfo);
+    HandleChildUpdateRequest(aRxInfo);
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -2906,6 +2932,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
         "Child ID Response",     // (4)  kTypeChildIdResponse
         "Child Update Request",  // (5)  kTypeChildUpdateRequestAsChild
         "Child Update Response", // (6)  kTypeChildUpdateResponseAsChild
+        "Child Update Response And Request", // kTypeChildUpdateResponseAndRequest
         "Data Request",          // (7)  kTypeDataRequest
         "Data Response",         // (8)  kTypeDataResponse
         "Discovery Request",     // (9)  kTypeDiscoveryRequest
@@ -2955,6 +2982,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
         ValidateNextEnum(kTypeChildIdResponse);
         ValidateNextEnum(kTypeChildUpdateRequestAsChild);
         ValidateNextEnum(kTypeChildUpdateResponseAsChild);
+        ValidateNextEnum(kTypeChildUpdateResponseAndRequest);
         ValidateNextEnum(kTypeDataRequest);
         ValidateNextEnum(kTypeDataResponse);
         ValidateNextEnum(kTypeDiscoveryRequest);
@@ -3592,6 +3620,11 @@ Error Mle::TxMessage::AppendLinkAndMleFrameCounterTlvs(void)
 
 exit:
     return error;
+}
+
+Error Mle::TxMessage::AppendThreeWayChildUpdateTlv(void)
+{
+    return Tlv::AppendTlv(*this, Tlv::kThreeWayChildUpdate, nullptr, 0);
 }
 
 Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<Address16Tlv>(*this, aRloc16); }
