@@ -197,6 +197,40 @@ template <> otError Br::Process<Cmd("multiail")>(Arg aArgs[])
 
         otBorderRoutingSetMultiAilCallback(GetInstancePtr(), callback, this);
     }
+    /**
+     * @cli br multiail state
+     * @code
+     * br multiail state
+     * Enabled: yes
+     * Running: yes
+     * Detected: no
+     * Done
+     * @endcode
+     * @par
+     * Outputs full state of multi-AIL detector:
+     * - Whether the detector is enabled.
+     * - Whether the detector is running (when it is enabled and the infra-if interface is also active).
+     * - Whether multi-AIL was detected.
+     */
+    else if (aArgs[0] == "state")
+    {
+        OutputLine("Enabled: %s", otBorderRoutingIsMultiAilDetectionEnabled(GetInstancePtr()) ? "yes" : "no");
+        OutputLine("Running: %s", otBorderRoutingIsMultiAilDetectionRunning(GetInstancePtr()) ? "yes" : "no");
+        OutputLine("Detected: %s", otBorderRoutingIsMultiAilDetected(GetInstancePtr()) ? "yes" : "no");
+    }
+    /**
+     * @cli br multiail (enable, disable)
+     * @code
+     * br multiail enable
+     * Done
+     * @endcode
+     * @cparam br multiail @ca{enable|disable}
+     * @par api_copy
+     * #otBorderRoutingSetMultiAilDetectionEnabled
+     */
+    else if (ProcessEnableDisable(aArgs, otBorderRoutingSetMultiAilDetectionEnabled) == OT_ERROR_NONE)
+    {
+    }
     else
     {
         error = OT_ERROR_INVALID_ARGS;

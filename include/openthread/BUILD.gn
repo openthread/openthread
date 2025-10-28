@@ -78,6 +78,7 @@ source_set("openthread") {
     "mdns.h",
     "mesh_diag.h",
     "message.h",
+    "multi_ail_detection.h",
     "multi_radio.h",
     "nat64.h",
     "ncp.h",

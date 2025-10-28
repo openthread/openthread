@@ -266,9 +266,6 @@ void RoutingManager::Start(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-        Get<MultiAilDetector>().Start();
-#endif
     }
 }
 
@@ -283,9 +280,6 @@ void RoutingManager::Stop(void)
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<MultiAilDetector>().Stop();
 #endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
