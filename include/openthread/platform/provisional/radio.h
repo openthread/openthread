@@ -76,12 +76,11 @@ typedef enum
  *
  * Represents the radio slot entry.
  */
-OT_TOOL_PACKED_BEGIN
 struct otSlotEntry
 {
     otSlotType mSlotType : 2; ///< The radio slot type.
     uint8_t    mNumSlots : 6; ///< The number of slots with the same radio type.
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * Represents the radio slot entry.
