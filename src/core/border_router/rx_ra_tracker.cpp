@@ -881,7 +881,7 @@ void RxRaTracker::DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime
 
 void RxRaTracker::HandleStaleTimer(void)
 {
-    VerifyOrExit(Get<RoutingManager>().IsRunning());
+    VerifyOrExit(mIsRunning);
 
     LogInfo("Stale timer expired");
     mRsSender.Start();
