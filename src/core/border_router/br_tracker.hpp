@@ -45,8 +45,6 @@
 namespace ot {
 namespace BorderRouter {
 
-class RoutingManager;
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 /**

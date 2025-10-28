@@ -1542,7 +1542,7 @@ private:
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
         Error AppendLeaderDataTlv(void);
         Error AppendScanMaskTlv(uint8_t aScanMask);
-        Error AppendStatusTlv(StatusTlv::Status aStatus);
+        Error AppendStatusTlv(Status aStatus);
         Error AppendLinkMarginTlv(uint8_t aLinkMargin);
         Error AppendVersionTlv(void);
         Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
@@ -2262,6 +2262,7 @@ private:
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
+    Error      SendChildUpdateRejectResponse(const RxChallenge &aChallenge, const Ip6::Address &aDestination);
     Error      SendChildUpdateResponse(const TlvList      &aTlvList,
                                        const RxChallenge  &aChallenge,
                                        const Ip6::Address &aDestination);

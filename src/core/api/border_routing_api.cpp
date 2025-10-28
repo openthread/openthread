@@ -41,21 +41,28 @@ using namespace ot;
 
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
+    AsCoreType(aInstance).Get<BorderRouter::InfraIf>().Init(aInfraIfIndex, aInfraIfIsRunning);
+
+    return kErrorNone;
 }
 
 otError otBorderRoutingGetInfraIfInfo(otInstance *aInstance, uint32_t *aInfraIfIndex, bool *aInfraIfIsRunning)
 {
-    bool isRunning;
+    Error error = kErrorNone;
 
     AssertPointerIsNotNull(aInfraIfIndex);
 
-    if (aInfraIfIsRunning == nullptr)
+    VerifyOrExit(AsCoreType(aInstance).Get<BorderRouter::InfraIf>().IsInitialized(), error = kErrorInvalidState);
+
+    *aInfraIfIndex = AsCoreType(aInstance).Get<BorderRouter::InfraIf>().GetIfIndex();
+
+    if (aInfraIfIsRunning != nullptr)
     {
-        aInfraIfIsRunning = &isRunning;
+        *aInfraIfIsRunning = AsCoreType(aInstance).Get<BorderRouter::InfraIf>().IsRunning();
     }
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetInfraIfInfo(*aInfraIfIndex, *aInfraIfIsRunning);
+exit:
+    return error;
 }
 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
@@ -290,14 +297,14 @@ uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 
 bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsMultiAilDetected();
+    return AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().IsDetected();
 }
 
 void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
                                         otBorderRoutingMultiAilCallback aCallback,
                                         void                           *aContext)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetMultiAilCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().SetCallback(aCallback, aContext);
 }
 
 #endif

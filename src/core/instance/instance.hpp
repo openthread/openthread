@@ -76,6 +76,7 @@
 #include "backbone_router/bbr_manager.hpp"
 #include "border_router/dhcp6_pd_client.hpp"
 #include "border_router/infra_if.hpp"
+#include "border_router/multi_ail_detector.hpp"
 #include "border_router/routing_manager.hpp"
 #include "border_router/rx_ra_tracker.hpp"
 #include "coap/coap_secure.hpp"
@@ -725,6 +726,9 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     BorderRouter::NetDataBrTracker mNetDataBrTracker;
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    BorderRouter::MultiAilDetector mMultiAilDetector;
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     BorderRouter::Dhcp6PdClient mDhcp6PdClient;
 #endif
@@ -1110,6 +1114,9 @@ template <> inline BorderRouter::RxRaTracker    &Instance::Get(void) { return mR
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 template <> inline BorderRouter::NetDataBrTracker &Instance::Get(void) { return mNetDataBrTracker; }
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+template <> inline BorderRouter::MultiAilDetector &Instance::Get(void) { return mMultiAilDetector; }
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 template <> inline BorderRouter::Dhcp6PdClient &Instance::Get(void) { return mDhcp6PdClient; }

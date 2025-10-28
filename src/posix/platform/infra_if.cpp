@@ -606,20 +606,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
 
                 mInfraIfIndex = newInfraIfIndex;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-                otBorderRoutingState state = otBorderRoutingGetState(gInstance);
-                bool wasEnabled = (state == OT_BORDER_ROUTING_STATE_RUNNING || state == OT_BORDER_ROUTING_STATE_STOPPED);
-
-                if (wasEnabled)
-                {
-                    SuccessOrDie(otBorderRoutingSetEnabled(gInstance, false));
-                }
-
                 SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
-
-                if (wasEnabled)
-                {
-                    SuccessOrDie(otBorderRoutingSetEnabled(gInstance, true));
-                }
 #endif
             }
             break;
