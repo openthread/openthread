@@ -107,11 +107,11 @@ proc spawn_node {id {type ""} {args ""}} {
             if {${args} == ""} {
                 set radio_url "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"
             } else {
-                set radio_url "$args"
-            }
-
-            if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
-                set radio_url "$args&forkpty-arg=-L$ot_simulation_local_host"
+               if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
+                   set radio_url "$args&forkpty-arg=-L$ot_simulation_local_host"
+               } else {
+                   set radio_url "$args"
+               }
             }
 
             # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
