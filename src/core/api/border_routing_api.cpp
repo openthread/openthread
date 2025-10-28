@@ -297,14 +297,14 @@ uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 
 bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsMultiAilDetected();
+    return AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().IsDetected();
 }
 
 void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
                                         otBorderRoutingMultiAilCallback aCallback,
                                         void                           *aContext)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetMultiAilCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().SetCallback(aCallback, aContext);
 }
 
 #endif

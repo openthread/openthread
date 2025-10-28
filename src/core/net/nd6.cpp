@@ -183,7 +183,7 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// aNat64PrefixOption
+// Nat64PrefixOption
 
 void Nat64PrefixOption::Init(void)
 {

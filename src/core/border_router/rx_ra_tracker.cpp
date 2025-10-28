@@ -48,6 +48,9 @@ RegisterLogModule("BorderRouting");
 
 RxRaTracker::RxRaTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mRoutingManagerEnabled(false)
+    , mMultiAilDetectorEnabled(false)
+    , mIsRunning(false)
     , mRsSender(aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
@@ -59,14 +62,50 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     mLocalRaHeader.Clear();
 }
 
+void RxRaTracker::SetEnabled(bool aEnable, Requester aRequester)
+{
+    switch (aRequester)
+    {
+    case kRequesterRoutingManager:
+        mRoutingManagerEnabled = aEnable;
+        break;
+    case kRequesterMultiAilDetector:
+        mMultiAilDetectorEnabled = aEnable;
+        break;
+    }
+
+    UpdateState();
+}
+
+void RxRaTracker::UpdateState(void)
+{
+    if ((mRoutingManagerEnabled || mMultiAilDetectorEnabled) && Get<InfraIf>().IsRunning())
+    {
+        Start();
+    }
+    else
+    {
+        Stop();
+    }
+}
+
 void RxRaTracker::Start(void)
 {
+    VerifyOrExit(!mIsRunning);
+    mIsRunning = true;
+
     mRsSender.Start();
     HandleNetDataChange();
+
+exit:
+    return;
 }
 
 void RxRaTracker::Stop(void)
 {
+    VerifyOrExit(mIsRunning);
+    mIsRunning = false;
+
     mRouters.Free();
     mIfAddresses.Free();
     mLocalRaHeader.Clear();
@@ -78,6 +117,9 @@ void RxRaTracker::Stop(void)
     mRdnssAddrTimer.Stop();
 
     mRsSender.Stop();
+
+exit:
+    return;
 }
 
 void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
@@ -1618,7 +1660,7 @@ void RxRaTracker::DecisionFactors::UpdateFrom(const Nat64Prefix &aNat64Prefix)
 }
 #endif
 
-//-------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::RsSender
 
 RxRaTracker::RsSender::RsSender(Instance &aInstance)

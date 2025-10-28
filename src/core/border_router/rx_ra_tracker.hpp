@@ -74,6 +74,7 @@ class RxRaTracker : public InstanceLocator
 {
     friend class NetDataBrTracker;
     friend class ot::Notifier;
+    friend class InfraIf;
 
 public:
     /**
@@ -87,6 +88,15 @@ public:
     };
 
     /**
+     * Represents an entity requesting to enable/disable the `RxRaTracker`.
+     */
+    enum Requester : uint8_t
+    {
+        kRequesterRoutingManager,   ///< Requested by `RoutingManager`.
+        kRequesterMultiAilDetector, ///< Requested by `MultiAilDetector`.
+    };
+
+    /**
      * Initializes the `RxRaTracker` object.
      *
      * @param[in] aInstance  The OpenThread instance.
@@ -94,14 +104,15 @@ public:
     explicit RxRaTracker(Instance &aInstance);
 
     /**
-     * Starts the RA tracker.
+     * Enables or disables the `RxRaTracker`.
+     *
+     * The `RxRaTracker` can be enabled by multiple requesters (see `Requester`). It remains enabled as long as
+     * at least one requester has it enabled. It is disabled only when all requesters have disabled it.
+     *
+     * @param[in] aEnable      A boolean to enable/disable the  Tracker.
+     * @param[in] aRequester   The entity requesting to enable/disable.
      */
-    void Start(void);
-
-    /**
-     * Stops the RA tracker.
-     */
-    void Stop(void);
+    void SetEnabled(bool aEnable, Requester aRequester);
 
     /**
      * Indicates whether the Router Solicitation (RS) transmission process is in progress.
@@ -575,6 +586,9 @@ private:
 
     //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
+    void UpdateState(void);
+    void Start(void);
+    void Stop(void);
     void HandleRsSenderFinished(TimeMilli aStartTime);
     void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
     void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
@@ -597,6 +611,9 @@ private:
 #endif
     void HandleNotifierEvents(Events aEvents);
     void HandleNetDataChange(void);
+
+    // Callback from `InfraIf`
+    void HandleInfraIfStateChanged(void) { UpdateState(); }
 
     // Tasklet or timer callbacks
     void HandleSignalTask(void);
@@ -622,6 +639,9 @@ private:
     using IfAddressList   = OwningList<Entry<IfAddress>>;
     using RdnssCallback   = Callback<RdnssAddrCallback>;
 
+    bool                 mRoutingManagerEnabled : 1;
+    bool                 mMultiAilDetectorEnabled : 1;
+    bool                 mIsRunning : 1;
     RsSender             mRsSender;
     DecisionFactors      mDecisionFactors;
     RouterList           mRouters;
