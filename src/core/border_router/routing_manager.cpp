@@ -602,9 +602,6 @@ void RoutingManager::HandleRxRaTrackerDecisionFactorChanged(void)
 
     mOnLinkPrefixManager.HandleRxRaTrackerChanged();
     mRoutePublisher.Evaluate();
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<MultiAilDetector>().Evaluate();
-#endif
 
 exit:
     return;

@@ -52,6 +52,7 @@ namespace ot {
 namespace BorderRouter {
 
 class NetDataBrTracker;
+class RxRaTracker;
 class RoutingManager;
 
 /**
@@ -69,6 +70,7 @@ class RoutingManager;
 class MultiAilDetector : public InstanceLocator
 {
     friend class NetDataBrTracker;
+    friend class RxRaTracker;
     friend class RoutingManager;
 
 public:
@@ -106,6 +108,9 @@ private:
     void Stop(void);
     void Evaluate(void);
     void HandleTimer(void);
+
+    // Callback from `RxRaTracker`
+    void HandleRxRaTrackerDecisionFactorChanged(void) { Evaluate(); }
 
     using DetectCallback = Callback<MultiAilCallback>;
     using DetectTimer    = TimerMilliIn<MultiAilDetector, &MultiAilDetector::HandleTimer>;

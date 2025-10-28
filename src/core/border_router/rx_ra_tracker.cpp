@@ -892,7 +892,14 @@ exit:
 
 void RxRaTracker::HandleExpirationTimer(void) { Evaluate(); }
 
-void RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRxRaTrackerDecisionFactorChanged(); }
+void RxRaTracker::HandleSignalTask(void)
+{
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<MultiAilDetector>().HandleRxRaTrackerDecisionFactorChanged();
+#endif
+
+    Get<RoutingManager>().HandleRxRaTrackerDecisionFactorChanged();
+}
 
 void RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
 
