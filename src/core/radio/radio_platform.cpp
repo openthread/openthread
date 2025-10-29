@@ -187,7 +187,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 extern "C" void otPlatRadioAvailMapUpdated(otInstance        *aInstance,
                                            uint64_t           aTimestamp,
                                            const otSlotEntry *aSlotEntries,

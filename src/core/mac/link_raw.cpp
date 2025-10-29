@@ -274,7 +274,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 void LinkRaw::InvokeRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries)
 {
     if (IsEnabled() && mRadioAvailMapUpdatedCallback != nullptr)

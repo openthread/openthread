@@ -216,7 +216,7 @@ public:
         void HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError);
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
         /**
          * This callback method handles a "Radio Availability Map Updated" event from radio platform.
          *

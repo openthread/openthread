@@ -289,7 +289,7 @@ public:
     void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
     /**
      * Sets the `otLinkRawRadioAvailMapUpdated` callback.
      *
@@ -315,7 +315,7 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
     otLinkRawRadioAvailMapUpdated mRadioAvailMapUpdatedCallback;
 #endif
 

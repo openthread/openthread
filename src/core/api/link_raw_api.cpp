@@ -226,7 +226,7 @@ uint64_t otLinkRawGetRadioTime(otInstance *aInstance)
     return otPlatTimeGet();
 }
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 void otLinkRawSetRadioAvailMapUpdated(otInstance *aInstance, otLinkRawRadioAvailMapUpdated aCallback)
 {
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetRadioAvailMapUpdated(aCallback);

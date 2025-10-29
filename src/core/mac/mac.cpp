@@ -2765,7 +2765,7 @@ uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
     return trasnferTime;
 }
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 void Mac::RadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries)
 {
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

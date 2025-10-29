@@ -1091,7 +1091,7 @@ struct WakeupInfo
 };
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 /**
  * Represents an radio slot entry.
  */
@@ -1124,7 +1124,7 @@ public:
      */
     uint8_t GetNumSlots(void) const { return mNumSlots; }
 };
-#endif // OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 
 /**
  * @}
@@ -1138,7 +1138,7 @@ DefineCoreType(otMacKey, Mac::Key);
 DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
 DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
 #endif
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 DefineCoreType(otSlotEntry, Mac::SlotEntry);
 DefineMapEnum(otSlotType, Mac::SlotEntry::Type);
 #endif

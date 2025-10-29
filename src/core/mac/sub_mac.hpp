@@ -189,7 +189,7 @@ public:
          */
         void FrameCounterUsed(uint32_t aFrameCounter);
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
         /**
          * Notifies user of `SubMac` that the radio availability map has updated.
          *
@@ -649,7 +649,7 @@ private:
     void UpdateRadioSampleState(void);
     void RadioSample(void);
 #endif
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
     void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries);
 #endif
 

@@ -105,7 +105,7 @@ void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter)
     Get<KeyManager>().MacFrameCounterUsed(aFrameCounter);
 }
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 void SubMac::Callbacks::HandleRadioAvailMapUpdated(uint64_t         aTimestamp,
                                                    const SlotEntry *aSlotEntries,
                                                    uint8_t          aNumEntries)
@@ -145,7 +145,7 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi) { Get<LinkRaw>().InvokeE
 
 void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter) { OT_UNUSED_VARIABLE(aFrameCounter); }
 
-#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 void SubMac::Callbacks::HandleRadioAvailMapUpdated(uint64_t         aTimestamp,
                                                    const SlotEntry *aSlotEntries,
                                                    uint8_t          aNumEntries)
