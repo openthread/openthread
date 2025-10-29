@@ -586,6 +586,13 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
     LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString());
 
+    // We ignore a received Router Solicit (RS) message while
+    // `RxRaTracker` is performing its initial router discovery
+    // and sending RS. This ensures that we do not reply to our own
+    // RS and cause a premature routing policy evaluation.
+
+    VerifyOrExit(Get<RxRaTracker>().IsInitialRouterDiscoveryFinished());
+
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
 
 exit:
@@ -1288,7 +1295,7 @@ exit:
 
 void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 {
-    VerifyOrExit(!Get<RxRaTracker>().IsRsTxInProgress());
+    VerifyOrExit(Get<RxRaTracker>().IsInitialRouterDiscoveryFinished());
 
     SetAilPrefix(Get<RxRaTracker>().GetFavoredOnLinkPrefix());
 

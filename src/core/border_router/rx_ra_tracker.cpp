@@ -51,6 +51,7 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     , mRoutingManagerEnabled(false)
     , mMultiAilDetectorEnabled(false)
     , mIsRunning(false)
+    , mInitialDiscoveryFinished(false)
     , mRsSender(aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
@@ -92,7 +93,9 @@ void RxRaTracker::UpdateState(void)
 void RxRaTracker::Start(void)
 {
     VerifyOrExit(!mIsRunning);
-    mIsRunning = true;
+
+    mIsRunning                = true;
+    mInitialDiscoveryFinished = false;
 
     mRsSender.Start();
     HandleNetDataChange();
@@ -134,6 +137,8 @@ void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
     // Solicitation.
 
     RemoveOrDeprecateOldEntries(aStartTime);
+
+    mInitialDiscoveryFinished = true;
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(RoutingManager::kImmediately);
 }
 

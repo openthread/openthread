@@ -318,6 +318,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     case Ip6::Icmp::Header::kTypeRouterSolicit:
         Log("  Router Solicit message");
         sRsEmitted = true;
+        otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
     case Ip6::Icmp::Header::kTypeRouterAdvert:
