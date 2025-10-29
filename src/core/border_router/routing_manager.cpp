@@ -269,6 +269,26 @@ void RoutingManager::Start(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         Get<MultiAilDetector>().Start();
 #endif
+
+        if (Get<RxRaTracker>().IsIntialRouterDiscoveryFinished())
+        {
+            // The `RxRaTracker` may already be running (e.g., enabled
+            // by `MultiAilDetector`). We check if it has already
+            // finished its initial router discovery (sending Router
+            // Solicit messages). If so, we can start the policy
+            // evaluation after a short delay. Otherwise we wait for
+            // the callback from `RxRaTracker` to signal this
+            // (i.e., `HandleRxRaTrackerInitialDiscoveryFinished()`).
+
+            ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+
+            // We also trigger `HandleRxRaTrackerDecisionFactorChanged()`
+            // to ensure we process any previously discovered RA
+            // prefixes/info by `RxRaTracker` which may impact any of
+            // the decision factors.
+
+            HandleRxRaTrackerDecisionFactorChanged();
+        }
     }
 }
 
@@ -586,7 +606,28 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
     LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString());
 
+    // We ignore a received Router Solicit (RS) message while
+    // `RxRaTracker` is performing its initial router discovery
+    // and sending RS. This ensures that we do not reply to our own
+    // RS and cause a premature routing policy evaluation.
+
+    VerifyOrExit(Get<RxRaTracker>().IsIntialRouterDiscoveryFinished());
+
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
+
+exit:
+    return;
+}
+
+void RoutingManager::HandleRxRaTrackerInitialDiscoveryFinished(void)
+{
+    // This is the callback from `RxRaTracker` indicating that
+    // it has finished with its initial router discovery
+    // (sending Router Solicitations to discover routers).
+
+    VerifyOrExit(mIsRunning);
+    HandleRxRaTrackerDecisionFactorChanged();
+    ScheduleRoutingPolicyEvaluation(kImmediately);
 
 exit:
     return;
@@ -594,7 +635,7 @@ exit:
 
 void RoutingManager::HandleRxRaTrackerDecisionFactorChanged(void)
 {
-    // This is a callback from `RxRaTracker` indicating that
+    // This is the callback from `RxRaTracker` indicating that
     // there has been a change impacting one of the decision
     // factors.
 
@@ -1288,7 +1329,7 @@ exit:
 
 void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 {
-    VerifyOrExit(!Get<RxRaTracker>().IsRsTxInProgress());
+    VerifyOrExit(Get<RxRaTracker>().IsIntialRouterDiscoveryFinished());
 
     SetAilPrefix(Get<RxRaTracker>().GetFavoredOnLinkPrefix());
 
@@ -1347,10 +1388,13 @@ void RoutingManager::OnLinkPrefixManager::HandleRxRaTrackerChanged(void)
     // prefix has changed, we trigger a re-evaluation of the routing
     // policy.
 
-    if (Get<RxRaTracker>().GetFavoredOnLinkPrefix() != mAilPrefix)
-    {
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-    }
+    VerifyOrExit(Get<RxRaTracker>().IsIntialRouterDiscoveryFinished());
+
+    VerifyOrExit(Get<RxRaTracker>().GetFavoredOnLinkPrefix() != mAilPrefix);
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+
+exit:
+    return;
 }
 
 void RoutingManager::OnLinkPrefixManager::PublishAndAdvertise(void)

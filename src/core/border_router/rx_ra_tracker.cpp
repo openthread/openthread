@@ -51,6 +51,7 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     , mRoutingManagerEnabled(false)
     , mMultiAilDetectorEnabled(false)
     , mIsRunning(false)
+    , mIntialDiscoveryFinished(false)
     , mRsSender(aInstance)
     , mExpirationTimer(aInstance)
     , mStaleTimer(aInstance)
@@ -92,7 +93,9 @@ void RxRaTracker::UpdateState(void)
 void RxRaTracker::Start(void)
 {
     VerifyOrExit(!mIsRunning);
-    mIsRunning = true;
+
+    mIsRunning               = true;
+    mIntialDiscoveryFinished = false;
 
     mRsSender.Start();
     HandleNetDataChange();
@@ -134,7 +137,12 @@ void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
     // Solicitation.
 
     RemoveOrDeprecateOldEntries(aStartTime);
-    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(RoutingManager::kImmediately);
+
+    if (!mIntialDiscoveryFinished)
+    {
+        mIntialDiscoveryFinished = true;
+        Get<RoutingManager>().HandleRxRaTrackerInitialDiscoveryFinished();
+    }
 }
 
 void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)

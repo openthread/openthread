@@ -1026,8 +1026,11 @@ private:
 
     bool NetworkDataContainsUlaRoute(void) const;
 
-    void HandleRxRaTrackerDecisionFactorChanged(void);
     void HandleLocalOnLinkPrefixChanged(void);
+
+    // Callbacks from `RxRaTracker`
+    void HandleRxRaTrackerInitialDiscoveryFinished(void);
+    void HandleRxRaTrackerDecisionFactorChanged(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
 
