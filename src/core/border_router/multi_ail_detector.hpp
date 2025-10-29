@@ -43,6 +43,7 @@
 #endif
 
 #include "border_router/br_types.hpp"
+#include "border_router/rx_ra_tracker.hpp"
 #include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -52,7 +53,6 @@ namespace ot {
 namespace BorderRouter {
 
 class NetDataBrTracker;
-class RxRaTracker;
 class RoutingManager;
 
 /**
@@ -110,7 +110,7 @@ private:
     void HandleTimer(void);
 
     // Callback from `RxRaTracker`
-    void HandleRxRaTrackerDecisionFactorChanged(void) { Evaluate(); }
+    void HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents);
 
     using DetectCallback = Callback<MultiAilCallback>;
     using DetectTimer    = TimerMilliIn<MultiAilDetector, &MultiAilDetector::HandleTimer>;

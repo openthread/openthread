@@ -62,6 +62,15 @@ void MultiAilDetector::Stop(void)
     mReachablePeerBrCount = 0;
 }
 
+void MultiAilDetector::HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents)
+{
+    VerifyOrExit(aEvents.mDecisionFactorChanged);
+    Evaluate();
+
+exit:
+    return;
+}
+
 void MultiAilDetector::Evaluate(void)
 {
     uint16_t count;

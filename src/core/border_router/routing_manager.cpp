@@ -599,19 +599,30 @@ exit:
     return;
 }
 
-void RoutingManager::HandleRxRaTrackerDecisionFactorChanged(void)
+void RoutingManager::HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents)
 {
-    // This is a callback from `RxRaTracker` indicating that
-    // there has been a change impacting one of the decision
-    // factors.
+    // This is the callback from `RxRaTracker`.
 
     VerifyOrExit(mIsRunning);
 
-    mOnLinkPrefixManager.HandleRxRaTrackerChanged();
+    if (aEvents.mDecisionFactorChanged)
+    {
+        mOnLinkPrefixManager.HandleRxRaTrackerChanged();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    mNat64PrefixManager.HandleRaDiscoverChanged();
+        mNat64PrefixManager.HandleRxRaTrackerChanged();
 #endif
-    mRoutePublisher.Evaluate();
+        mRoutePublisher.Evaluate();
+    }
+
+    if (aEvents.mLocalRaHeaderChanged)
+    {
+        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+    }
+
+    if (aEvents.mInitialDiscoveryFinished)
+    {
+        ScheduleRoutingPolicyEvaluation(kImmediately);
+    }
 
 exit:
     return;
@@ -2422,7 +2433,7 @@ void RoutingManager::Nat64PrefixManager::HandleInfraIfDiscoverDone(const Ip6::Pr
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 
-void RoutingManager::Nat64PrefixManager::HandleRaDiscoverChanged(void)
+void RoutingManager::Nat64PrefixManager::HandleRxRaTrackerChanged(void)
 {
     const Ip6::Prefix &favoredPrefix = Get<RxRaTracker>().GetFavoredNat64Prefix();
 
