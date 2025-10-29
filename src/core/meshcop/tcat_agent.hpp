@@ -52,6 +52,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "meshcop/secure_transport.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -330,7 +331,7 @@ public:
      * Activate TCAT functions of the TCAT agent.
      *
      * This requires the TCAT agent to be already started.
-     * The state transitions to kStateActive of kStateActiveTemporary. In these states, TCAT Advertisements
+     * The state transitions to kStateActive or kStateActiveTemporary. In these states, TCAT Advertisements
      * are actively sent and TCAT Commissioners are able to connect. From here, TCAT can be set to standby
      * again using Standby().
      * If a connection is ongoing and aDurationMs==0, this call will ensure that kStateActive will
@@ -338,7 +339,7 @@ public:
      * This function will override any ongoing temporary activation of TCAT, or any
      * previously scheduled activation for a future time.
      *
-     * @param[in] aDelayMs   Delay in ms before activating. If 0, activate immediately.
+     * @param[in] aDelayMs    Delay in ms before activating. If 0, activate immediately.
      * @param[in] aDurationMs Duration in ms of the activation. If 0, activate indefinitely.
      *
      * @retval kErrorNone         Successfully set the TCAT agent to kStateActive now, OR scheduled
@@ -413,6 +414,8 @@ public:
      */
     bool GetApplicationResponsePending(void) const { return mApplicationResponsePending; }
 
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 private:
     void  NotifyApplicationResponseSent(void) { mApplicationResponsePending = false; }
     void  NotifyStateChange(void);
@@ -456,7 +459,7 @@ private:
                                 TcatApplicationProtocol aApplicationProtocol,
                                 bool                   &aResponse);
     void  HandleTimer(void);
-
+    void  AdaptToExistingActivePeriod(uint32_t &aPeriodDelayMs, uint32_t &aPeriodDurationMs);
     Error VerifyHash(const Message &aIncomingMessage,
                      uint16_t       aOffset,
                      uint16_t       aLength,
@@ -478,6 +481,7 @@ private:
     static constexpr uint16_t kBufferReserve             = 2048 / (Buffer::kSize - sizeof(otMessageBuffer)) + 1;
     static constexpr uint8_t  kServiceNameMaxLength      = OT_TCAT_SERVICE_NAME_MAX_LENGTH;
     static constexpr uint8_t  kApplicationLayerMaxCount  = OT_TCAT_APPLICATION_LAYER_MAX_COUNT;
+    static constexpr uint16_t kTcatTmfEnableDefaultSec   = OT_TCAT_ENABLE_MAX;
 
     const VendorInfo                *mVendorInfo;
     Callback<JoinCallback>           mJoinCallback;
@@ -488,7 +492,8 @@ private:
     NetworkName                      mCommissionerDomainName;
     ExtendedPanId                    mCommissionerExtendedPanId;
     State                            mState;
-    State                            mNextState;
+    State                            mNextState; //< desired state after client disconnects
+    bool                             mTimerSetsToActive : 1;
     bool                             mCommissionerHasNetworkName : 1;
     bool                             mCommissionerHasDomainName : 1;
     bool                             mCommissionerHasExtendedPanId : 1;
@@ -503,15 +508,10 @@ private:
     uint32_t    mTcatActiveDurationMs;
 };
 
-} // namespace MeshCoP
-
-DefineCoreType(otTcatVendorInfo, MeshCoP::TcatAgent::VendorInfo);
-
-DefineMapEnum(otTcatApplicationProtocol, MeshCoP::TcatAgent::TcatApplicationProtocol);
-DefineMapEnum(otTcatAdvertisedDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType);
+DeclareTmfHandler(TcatAgent, kUriTcatEnable);
 
 // Command class TLVs
-typedef UintTlvInfo<MeshCoP::TcatAgent::kTlvResponseWithStatus, uint8_t> ResponseWithStatusTlv;
+typedef UintTlvInfo<TcatAgent::kTlvResponseWithStatus, uint8_t> ResponseWithStatusTlv;
 
 /**
  * Represent TCAT Device Type and Status
@@ -544,6 +544,13 @@ enum TcatAdvertisementTlvType : uint8_t
     kTlvBleLinkCapabilities = 5, ///< TCAT BLE link capabilities of device
     kTlvVendorIanaPen       = 6, ///< TCAT Vendor IANA PEN
 };
+
+} // namespace MeshCoP
+
+DefineCoreType(otTcatVendorInfo, MeshCoP::TcatAgent::VendorInfo);
+
+DefineMapEnum(otTcatApplicationProtocol, MeshCoP::TcatAgent::TcatApplicationProtocol);
+DefineMapEnum(otTcatAdvertisedDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType);
 
 } // namespace ot
 
