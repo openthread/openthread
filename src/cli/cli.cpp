@@ -8375,6 +8375,25 @@ template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsHexString(p2pRequest.mWakeupRequest.mShared.mExtAddress.m8));
             p2pRequest.mWakeupRequest.mType = OT_WAKEUP_TYPE_EXT_ADDRESS;
         }
+        /**
+         * @cli p2p link
+         * @code
+         * p2p link wakeupid 0x1122
+         * Done
+         * @endcode
+         * @cparam p2p link wakeupid @ca{wakeup-identifier}
+         * @par
+         * `OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+         * @par
+         * Wakes up the Wake-up Listener identified by the wake-up identifier and establishes a peer-to-peer link with
+         * the peer.
+         */
+        else if (aArgs[1] == "wakeupid")
+        {
+            SuccessOrExit(error = aArgs[2].ParseAsUint64(p2pRequest.mWakeupRequest.mShared.mWakeupId));
+            VerifyOrExit(p2pRequest.mWakeupRequest.mShared.mWakeupId != 0, error = OT_ERROR_INVALID_ARGS);
+            p2pRequest.mWakeupRequest.mType = OT_WAKEUP_TYPE_IDENTIFIER;
+        }
         else
         {
             ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -8493,6 +8512,68 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
     else if (aArgs[0] == "listen")
     {
         error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
+    }
+    else if (aArgs[0] == "wakeupid")
+    {
+        /**
+         * @cli wakeup wakeupid add
+         * @code
+         * wakeup wakeupid add 0x1122
+         * Done
+         * @endcode
+         * @cparam wakeup wakeupid add @ca{wakeup-identifier}
+         * @par
+         * Adds the wake-up identifier to the Wake-up Identifier table.
+         * @sa otLinkAddWakeupId
+         */
+        if (aArgs[1] == "add")
+        {
+            otWakeupId wakeupId;
+
+            VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[2].ParseAsUint64(wakeupId));
+
+            error = otLinkAddWakeupId(GetInstancePtr(), wakeupId);
+        }
+        /**
+         * @cli wakeup wakeupid rm
+         * @code
+         * wakeup wakeupid rm 0x1122
+         * Done
+         * @endcode
+         * @cparam wakeup wakeupid remove @ca{wakeup-identifier}
+         * @par
+         * Removes the wake-up identifier from the Wake-up Identifier table.
+         * @sa otLinkRemoveWakeupId
+         */
+        else if (aArgs[1] == "rm")
+        {
+            otWakeupId wakeupId;
+
+            VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[2].ParseAsUint64(wakeupId));
+
+            error = otLinkRemoveWakeupId(GetInstancePtr(), wakeupId);
+        }
+        /**
+         * @cli wakeup wakeupid clear
+         * @code
+         * wakeup wakeupid clear
+         * Done
+         * @endcode
+         * @cparam wakeup wakeupid clear
+         * @par
+         * Clears all wake-up identifers in the Wake-up Identifier table.
+         * @sa otLinkClearWakeupIds
+         */
+        else if (aArgs[1] == "clear")
+        {
+            otLinkClearWakeupIds(GetInstancePtr());
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
     }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE

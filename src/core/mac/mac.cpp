@@ -2699,6 +2699,7 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 {
     Error               error = kErrorNone;
     const ConnectionIe *connectionIe;
+    Address             dstAddr;
     Address             srcAddress;
     WakeupInfo          wakeupInfo;
     uint32_t            rvTimeUs;
@@ -2709,11 +2710,21 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 
     SuccessOrExit(error = aFrame.GetSrcAddr(srcAddress));
     VerifyOrExit(srcAddress.IsExtended(), error = kErrorDrop);
+    SuccessOrExit(error = aFrame.GetDstAddr(dstAddr));
+    VerifyOrExit(dstAddr.IsExtended() || dstAddr.IsNone(), error = kErrorDrop);
+    VerifyOrExit((connectionIe = aFrame.GetConnectionIe()) != nullptr, error = kErrorDrop);
 
-    wakeupInfo.mExtAddress    = srcAddress.GetExtended();
-    connectionIe              = aFrame.GetConnectionIe();
+    if (dstAddr.IsNone())
+    {
+        WakeupId wakeupId;
+
+        SuccessOrExit(error = connectionIe->GetWakeupId(wakeupId));
+        VerifyOrExit(mWakeupIdTable.Contains(wakeupId), error = kErrorDrop);
+    }
+
     wakeupInfo.mRetryInterval = connectionIe->GetRetryInterval();
     wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
+    wakeupInfo.mExtAddress    = srcAddress.GetExtended();
     VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
 
     radioNowUs    = otPlatRadioGetNow(&GetInstance());
@@ -2748,6 +2759,32 @@ Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 exit:
     return error;
 }
+
+Error Mac::AddWakeupId(WakeupId aWakeupId)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mWakeupIdTable.IsFull(), error = kErrorNoBufs);
+    error = mWakeupIdTable.PushBack(aWakeupId);
+
+exit:
+    return error;
+}
+
+Error Mac::RemoveWakeupId(WakeupId aWakeupId)
+{
+    Error     error = kErrorNone;
+    WakeupId *wakeupId;
+
+    wakeupId = mWakeupIdTable.Find(aWakeupId);
+    VerifyOrExit(wakeupId != nullptr, error = kErrorNotFound);
+    mWakeupIdTable.Remove(*wakeupId);
+
+exit:
+    return error;
+}
+
+void Mac::ClearWakeupIds(void) { mWakeupIdTable.Clear(); }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
 uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const

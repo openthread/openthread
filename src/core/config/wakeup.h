@@ -145,6 +145,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE
+ *
+ * Specifies the capacity of Wake-up Identifier table.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE
+#define OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE 10
+#endif
+
+/**
  * @}
  */
 

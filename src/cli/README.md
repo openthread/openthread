@@ -3214,6 +3214,17 @@ Wakes up the peer identified by the extended address and establishes a peer-to-p
 Done
 ```
 
+### p2p link wakeupid \<wakeup-identifier\>
+
+Wakes up the peer identified by the wake-up identifier and establishes a peer-to-peer link with the peer.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+
+```bash
+> p2p link wakeupid 0x1122
+Done
+```
+
 ### p2p unlink \<extaddress\>
 
 Tears down the P2P link identified by the extended address.
@@ -4817,6 +4828,39 @@ Enable/disable listening for wake-up frames.
 
 ```bash
 > wakeup listen enable
+Done
+```
+
+### wakeup wakeupid add \<wakeup-identifier\>
+
+Adds the wake-up identifier to the Wake-up Identifier table.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup wakeupid add 0x1122
+Done
+```
+
+### wakeup wakeupid rm \<wakeup-identifier\>
+
+Removes the wake-up identifier from the Wake-up Identifier table.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup wakeupid rm 0x1122
+Done
+```
+
+### wakeup wakeupid clear
+
+Clears all wake-up identifers in the Wake-up Identifier table.
+
+`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+
+```bash
+> wakeup wakeupid clear
 Done
 ```
 
