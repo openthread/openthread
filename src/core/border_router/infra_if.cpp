@@ -107,14 +107,30 @@ Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination
 
 void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket)
 {
-    Error error = kErrorNone;
+    Error                    error = kErrorNone;
+    const Ip6::Icmp::Header *icmp6Header;
 
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorDrop);
     VerifyOrExit(aPacket.GetBytes() != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Icmp::Header), error = kErrorParse);
 
-    Get<RoutingManager>().HandleReceived(aPacket, aSource);
+    icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
+
+    switch (icmp6Header->GetType())
+    {
+    case Ip6::Icmp::Header::kTypeRouterAdvert:
+        Get<RxRaTracker>().HandleRouterAdvertisement(aPacket, aSource);
+        break;
+    case Ip6::Icmp::Header::kTypeNeighborAdvert:
+        Get<RxRaTracker>().HandleNeighborAdvertisement(aPacket);
+        break;
+    case Ip6::Icmp::Header::kTypeRouterSolicit:
+        Get<RoutingManager>().HandleRouterSolicit(aPacket, aSource);
+        break;
+    default:
+        break;
+    }
 
 exit:
     if (error != kErrorNone)

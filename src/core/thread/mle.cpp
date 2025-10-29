@@ -1264,28 +1264,26 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateRejectResponse(const RxChallenge &aChallenge, const Ip6::Address &aDestination)
+Error Mle::SendChildUpdateRejectResponse(ChildUpdateResponseInfo &aInfo)
 {
     // Send a reject response which only includes a Source Address TLV,
     // a Status TLV, and a Response TLV when request contained a
     // Challenge TLV.
 
-    TlvList tlvList;
+    aInfo.mTlvList.Clear();
 
-    tlvList.Add(Tlv::kSourceAddress);
-    tlvList.Add(Tlv::kStatus);
+    aInfo.mTlvList.Add(Tlv::kSourceAddress);
+    aInfo.mTlvList.Add(Tlv::kStatus);
 
-    if (!aChallenge.IsEmpty())
+    if (!aInfo.mChallenge.IsEmpty())
     {
-        tlvList.Add(Tlv::kResponse);
+        aInfo.mTlvList.Add(Tlv::kResponse);
     }
 
-    return SendChildUpdateResponse(tlvList, aChallenge, aDestination);
+    return SendChildUpdateResponse(aInfo);
 }
 
-Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
-                                   const RxChallenge  &aChallenge,
-                                   const Ip6::Address &aDestination)
+Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
 {
     Error      error = kErrorNone;
     TxMessage *message;
@@ -1293,7 +1291,7 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
 
-    for (uint8_t tlvType : aTlvList)
+    for (uint8_t tlvType : aInfo.mTlvList)
     {
         switch (tlvType)
         {
@@ -1328,7 +1326,7 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
+            SuccessOrExit(error = message->AppendResponseTlv(aInfo.mChallenge));
             break;
 
         case Tlv::kLinkFrameCounter:
@@ -1354,9 +1352,9 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
         }
     }
 
-    SuccessOrExit(error = message->SendTo(aDestination));
+    SuccessOrExit(error = message->SendTo(aInfo.mDestination));
 
-    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aDestination);
+    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aInfo.mDestination);
 
     if (checkAddress && HasUnregisteredAddress())
     {
@@ -1573,6 +1571,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     LogDebg("Receive MLE message");
 
     VerifyOrExit(aMessage.GetOrigin() == Message::kOriginThreadNetif);
+    VerifyOrExit(aMessageInfo.GetPeerAddr().IsLinkLocalUnicast());
+    VerifyOrExit(aMessageInfo.GetSockAddr().IsLinkLocalUnicastOrMulticast());
+
     VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = kErrorParse);
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), securitySuite));
@@ -2229,13 +2230,12 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 
 void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 {
-    Error       error           = kErrorNone;
-    bool        canTrustMessage = aRxInfo.IsNeighborStateValid();
-    uint16_t    sourceAddress;
-    RxChallenge challenge;
-    TlvList     requestedTlvList;
-    TlvList     tlvList;
-    uint8_t     linkMarginOut;
+    Error                   error           = kErrorNone;
+    bool                    canTrustMessage = aRxInfo.IsNeighborStateValid();
+    uint8_t                 linkMarginOut;
+    uint16_t                sourceAddress;
+    ChildUpdateResponseInfo info;
+    TlvList                 requestedTlvList;
 
     if (!IsAttached())
     {
@@ -2253,18 +2253,20 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildUpdateRequestAsChild, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    tlvList.Add(Tlv::kSourceAddress);
-    tlvList.Add(Tlv::kLeaderData);
+    info.mDestination = aRxInfo.mMessageInfo.GetPeerAddr();
 
-    switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
+    info.mTlvList.Add(Tlv::kSourceAddress);
+    info.mTlvList.Add(Tlv::kLeaderData);
+
+    switch (aRxInfo.mMessage.ReadChallengeTlv(info.mChallenge))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kResponse);
-        tlvList.Add(Tlv::kMleFrameCounter);
-        tlvList.Add(Tlv::kLinkFrameCounter);
+        info.mTlvList.Add(Tlv::kResponse);
+        info.mTlvList.Add(Tlv::kMleFrameCounter);
+        info.mTlvList.Add(Tlv::kLinkFrameCounter);
         break;
     case kErrorNotFound:
-        challenge.Clear();
+        info.mChallenge.Clear();
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -2315,7 +2317,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             {
                 // MUST include CSL timeout TLV when request includes
                 // CSL accuracy
-                tlvList.Add(Tlv::kCslTimeout);
+                info.mTlvList.Add(Tlv::kCslTimeout);
             }
         }
 #endif
@@ -2323,7 +2325,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
         switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
         {
         case kErrorNone:
-            tlvList.AddElementsFrom(requestedTlvList);
+            info.mTlvList.AddElementsFrom(requestedTlvList);
             break;
         case kErrorNotFound:
             break;
@@ -2334,7 +2336,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
     else
     {
         // This device is not a child of the Child Update Request source.
-        error = SendChildUpdateRejectResponse(challenge, aRxInfo.mMessageInfo.GetPeerAddr());
+        error = SendChildUpdateRejectResponse(info);
         ExitNow();
     }
 
@@ -2342,13 +2344,13 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
     ProcessKeySequence(aRxInfo);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if ((aRxInfo.mNeighbor != nullptr) && !challenge.IsEmpty())
+    if ((aRxInfo.mNeighbor != nullptr) && !info.mChallenge.IsEmpty())
     {
         aRxInfo.mNeighbor->ClearLastRxFragmentTag();
     }
 #endif
 
-    error = SendChildUpdateResponse(tlvList, challenge, aRxInfo.mMessageInfo.GetPeerAddr());
+    error = SendChildUpdateResponse(info);
 
 exit:
     LogProcessError(kTypeChildUpdateRequestAsChild, error);
