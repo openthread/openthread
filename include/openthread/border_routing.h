@@ -132,6 +132,20 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * Represents an entry from the discovered NAT64 prefix table.
+ *
+ * The entries in the discovered table track the NAT64 Prefix Options in the received Router Advertisement messages from
+ * other routers on the infrastructure link.
+ */
+typedef struct otBorderRoutingNat64PrefixEntry
+{
+    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this NAT64 prefix.
+    otIp6Prefix                mPrefix;              ///< The discovered IPv6 prefix.
+    uint32_t                   mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
+    uint32_t                   mLifetime;            ///< Lifetime of the prefix (in seconds).
+} otBorderRoutingNat64PrefixEntry;
+
+/**
  * Represents a discovered Recursive DNS Server (RDNSS) address entry.
  *
  * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from

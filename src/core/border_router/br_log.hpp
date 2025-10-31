@@ -76,6 +76,16 @@ void LogPrefixInfoOption(const Ip6::Prefix      &aPrefix,
  */
 void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+/**
+ * Logs a NAT64 Prefix Option at info log level.
+ *
+ * @param[in] aPrefix   The IPv6 prefix.
+ * @param[in] aLifetime The NAT64 prefix lifetime in seconds.
+ */
+void LogNat64PrefixOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime);
+#endif
+
 /**
  * Logs a Recursive DNS Server (RDNSS) option at info log level.
  *
@@ -89,6 +99,9 @@ void LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetim
 inline void LogRaHeader(const RouterAdvert::Header &) {}
 inline void LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t, PrefixInfoOption::Flags) {}
 inline void LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+inline void LogNat64PrefixOption(const Ip6::Prefix &, uint32_t) {}
+#endif
 inline void LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
