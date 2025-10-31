@@ -908,8 +908,9 @@ private:
     static constexpr uint32_t kResponseAggregationMaxDelay = 500; // msec
 
     static constexpr uint32_t kUnspecifiedTtl       = 0;
-    static constexpr uint32_t kDefaultTtl           = 120;
-    static constexpr uint32_t kDefaultKeyTtl        = kDefaultTtl;
+    static constexpr uint32_t kDefaultAddrTtl       = 120;
+    static constexpr uint32_t kDefaultServiceTtl    = 4500;
+    static constexpr uint32_t kDefaultKeyTtl        = 4500;
     static constexpr uint32_t kLegacyUnicastNsecTtl = 10;
     static constexpr uint32_t kNsecTtl              = 4500;
     static constexpr uint32_t kServicesPtrTtl       = 4500;
