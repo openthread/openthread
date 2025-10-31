@@ -105,18 +105,16 @@ public:
     void SetEnabled(bool aEnable, Requester aRequester);
 
     /**
-     * Indicates whether the Router Solicitation (RS) transmission process is in progress.
+     * Indicates whether the initial router discovery process (sending Router Solicitation (RS) message) is finished.
      *
-     * Upon `Start()`, the device performs the RS transmission process to discover routers on the infrastructure
-     * interface. The device sends three Router Solicitation (RS) messages every four seconds, starting with a random
-     * delay of up to one second for the first RS transmission. After sending the final RS message, the device waits
-     * one second before concluding the RS transmission process, at which point `IsRsTxInProgress()` returns `FALSE`.
-     * The RS transmission process is also performed if the stale timer for any discovered prefix expires.
+     * When `RxRaTracker` is started, it sends multiple RS messages to discover routers on the infrastructure interface.
+     * It sends three RS messages every four seconds, starting with a random delay of up to one second for the first
+     * RS transmission. After sending the final RS message, it waits one second before concluding discovery process.
      *
-     * @retval TRUE   If the Router Solicitation transmission process is in progress.
-     * @retval FALSE  If the Router Solicitation transmission process is not in progress.
+     * @retval TRUE   If the initial router discovery process is finished.
+     * @retval FALSE  If the initial router discovery process is not finished.
      */
-    bool IsRsTxInProgress(void) const { return mRsSender.IsInProgress(); }
+    bool IsInitialRouterDiscoveryFinished(void) const { return mInitialDiscoveryFinished; }
 
     /**
      * Initializes a `PrefixTableIterator`.
@@ -581,6 +579,7 @@ private:
     bool                 mRoutingManagerEnabled : 1;
     bool                 mMultiAilDetectorEnabled : 1;
     bool                 mIsRunning : 1;
+    bool                 mInitialDiscoveryFinished : 1;
     RsSender             mRsSender;
     DecisionFactors      mDecisionFactors;
     RouterList           mRouters;
