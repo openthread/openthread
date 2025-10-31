@@ -405,7 +405,7 @@ typedef void (*otLinkRawRadioAvailMapUpdated)(otInstance        *aInstance,
                                               uint8_t            aNumEntries);
 
 /**
- * Sets the callback to notify caller of radio availability map updated event.
+ * Sets the callback to notify the caller of a radio availability map updated event.
  *
  * @param[in] aInstance   A pointer to the OpenThread instance.
  * @param[in] aCallback   The callback to notify of events. Can be NULL if not needed.

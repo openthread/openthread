@@ -216,14 +216,14 @@
  * @defgroup plat-toolchain              Toolchain
  * @defgroup plat-trel                   TREL - Platform
  *
- * @defgroup plat-provisional         Provisional
+ * @defgroup plat-provisional            Provisional
  * @brief
  *   This module includes the provisional platform abstraction APIs used by the OpenThread stack. These APIs are not
  *   stable and users should use them with caution.
  *
  * @{
  *
- * @defgroup plat-provisional-radio   Radio
+ * @defgroup plat-provisional-radio      Radio
  *
  * @}
  * @}
