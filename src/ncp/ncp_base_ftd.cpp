@@ -1664,9 +1664,9 @@ exit:
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX>(void)
 {
-    otError                            error = OT_ERROR_NONE;
-    otBorderRoutingPrefixTableEntry    prefixEntry;
-    const otIp6Address *prefixAddr;
+    otError                         error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableEntry prefixEntry;
+    const otIp6Address             *prefixAddr;
 
     memset(&prefixEntry, 0, sizeof(prefixEntry));
 

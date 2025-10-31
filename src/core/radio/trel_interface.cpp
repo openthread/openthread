@@ -47,6 +47,8 @@ Interface::Interface(Instance &aInstance)
     , mStackEnabled(false)
     , mFiltered(false)
     , mState(kStateUninitialized)
+    , mUdpPort(0)
+    , mCallbackTask(aInstance)
 {
 }
 
@@ -106,6 +108,8 @@ void Interface::UpdateState(void)
 
         LogInfo("Disabled interface");
     }
+
+    mCallbackTask.Post();
 
 exit:
     return;
@@ -198,6 +202,8 @@ void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::So
 exit:
     return;
 }
+
+void Interface::HandleTask(void) { mCallback.InvokeIfSet(); }
 
 } // namespace Trel
 } // namespace ot
