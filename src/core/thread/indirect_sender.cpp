@@ -409,7 +409,7 @@ void IndirectSender::HandleSentFrameToSleepyNeighbor(const Mac::TxFrame &aFrame,
     // in the (not common) case where the radio platform does not
     // support the "source address match" feature and always includes
     // "frame pending" flag in acks to data poll frames. In such a case,
-    // `IndirectSender` prepares and sends an empty frame to the sleepy child
+    // `IndirectSender` prepares and sends an empty frame to the sleepy neighbor
     // after it sends a data poll. Here in `HandleSentFrameToCslNeighbor()` we
     // exit quickly if we detect the "send done" is for the empty frame
     // to ensure we do not update any newly added indirect message after
@@ -481,7 +481,7 @@ void IndirectSender::HandleSentFrameToSleepyNeighbor(const Mac::TxFrame &aFrame,
         // disabled, all fragment frames of a larger message are
         // sent even if the transmission of an earlier fragment fail.
         // Note that `GetIndirectTxSuccess() tracks the tx success of
-        // the entire message to the sleepy neighbor child, while `txError = aError`
+        // the entire message to the sleepy neighbor, while `txError = aError`
         // represents the error status of the last fragment frame
         // transmission.
 
