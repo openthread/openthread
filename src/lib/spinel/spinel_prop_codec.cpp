@@ -196,5 +196,99 @@ exit:
     return error;
 }
 
+template <> otError EncodeDnssdDiscovery<otPlatDnssdBrowser>(Encoder &aEncoder, const otPlatDnssdBrowser &aDiscovery)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aEncoder.WriteUtf8(aDiscovery.mServiceType));
+    SuccessOrExit(error = aEncoder.OpenStruct());
+    if (aDiscovery.mSubTypeLabel != nullptr)
+    {
+        SuccessOrExit(error = aEncoder.WriteUtf8(aDiscovery.mSubTypeLabel));
+    }
+    SuccessOrExit(error = aEncoder.CloseStruct());
+    SuccessOrExit(error = aEncoder.WriteUint32(aDiscovery.mInfraIfIndex));
+    SuccessOrExit(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aDiscovery.mCallback),
+                                             sizeof(aDiscovery.mCallback)));
+
+exit:
+    return error;
+}
+
+otError EncodeDnssdBrowseResult(Encoder                       &aEncoder,
+                                const otPlatDnssdBrowseResult &aBrowseResult,
+                                const uint8_t                 *aCallbackData,
+                                uint16_t                       aCallbackDataLen)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aEncoder.WriteUtf8(aBrowseResult.mServiceType));
+    SuccessOrExit(error = aEncoder.OpenStruct());
+    if (aBrowseResult.mSubTypeLabel != nullptr)
+    {
+        SuccessOrExit(error = aEncoder.WriteUtf8(aBrowseResult.mSubTypeLabel));
+    }
+    SuccessOrExit(error = aEncoder.CloseStruct());
+    SuccessOrExit(error = aEncoder.WriteUtf8(aBrowseResult.mServiceInstance));
+    SuccessOrExit(error = aEncoder.WriteUint32(aBrowseResult.mTtl));
+    SuccessOrExit(error = aEncoder.WriteUint32(aBrowseResult.mInfraIfIndex));
+    SuccessOrExit(error = aEncoder.WriteData(aCallbackData, aCallbackDataLen));
+
+exit:
+    return error;
+}
+
+otError DecodeDnssdBrowser(Decoder            &aDecoder,
+                           otPlatDnssdBrowser &aBrowser,
+                           const uint8_t     *&aCallbackData,
+                           uint16_t           &aCallbackDataLen)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aDecoder.ReadUtf8(aBrowser.mServiceType));
+    SuccessOrExit(error = aDecoder.OpenStruct());
+    if (!aDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = aDecoder.ReadUtf8(aBrowser.mSubTypeLabel));
+    }
+    else
+    {
+        aBrowser.mSubTypeLabel = nullptr;
+    }
+    SuccessOrExit(error = aDecoder.CloseStruct());
+    SuccessOrExit(error = aDecoder.ReadUint32(aBrowser.mInfraIfIndex));
+    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
+
+exit:
+    return error;
+}
+
+otError DecodeDnssdBrowseResult(Decoder                 &aDecoder,
+                                otPlatDnssdBrowseResult &aBrowseResult,
+                                const uint8_t          *&aCallbackData,
+                                uint16_t                &aCallbackDataLen)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aDecoder.ReadUtf8(aBrowseResult.mServiceType));
+    SuccessOrExit(error = aDecoder.OpenStruct());
+    if (!aDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = aDecoder.ReadUtf8(aBrowseResult.mSubTypeLabel));
+    }
+    else
+    {
+        aBrowseResult.mSubTypeLabel = nullptr;
+    }
+    SuccessOrExit(error = aDecoder.CloseStruct());
+    SuccessOrExit(error = aDecoder.ReadUtf8(aBrowseResult.mServiceInstance));
+    SuccessOrExit(error = aDecoder.ReadUint32(aBrowseResult.mTtl));
+    SuccessOrExit(error = aDecoder.ReadUint32(aBrowseResult.mInfraIfIndex));
+    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
+
+exit:
+    return error;
+}
+
 } // namespace Spinel
 } // namespace ot

@@ -1692,6 +1692,16 @@ void NcpBase::DnssdUnregisterKey(const otPlatDnssdKey       *aKey,
     DnssdUpdate(aKey, aRequestId, aCallback, /* aRegister */ false);
 }
 
+void NcpBase::DnssdStartBrowser(const otPlatDnssdBrowser *aBrowser)
+{
+    DnssdUpdateDiscovery(aBrowser, /* aStart */ true);
+}
+
+void NcpBase::DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser)
+{
+    DnssdUpdateDiscovery(aBrowser, /* aStart */ false);
+}
+
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
@@ -1726,6 +1736,23 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
     VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
     callback(mInstance, requestId, static_cast<otError>(result));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(void)
+{
+    otError                   error = OT_ERROR_NONE;
+    otPlatDnssdBrowseResult   browseResult;
+    otPlatDnssdBrowseCallback callback = nullptr;
+    const uint8_t            *context;
+    uint16_t                  contextLen;
+
+    SuccessOrExit(error = DecodeDnssdBrowseResult(mDecoder, browseResult, context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdBrowseCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdBrowseCallback *>(context);
+    callback(mInstance, &browseResult);
 
 exit:
     return error;
