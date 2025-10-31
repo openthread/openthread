@@ -34,9 +34,10 @@
 #ifndef OPENTHREAD_PROVISIONAL_LINK_H_
 #define OPENTHREAD_PROVISIONAL_LINK_H_
 
+#include <stdint.h>
+
 #include <openthread/error.h>
 #include <openthread/instance.h>
-#include <openthread/link.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus

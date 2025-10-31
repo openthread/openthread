@@ -4855,7 +4855,7 @@ Done
 
 ### wakeup wakeupid clear
 
-Clears all wake-up identifers in the Wake-up Identifier table.
+Clears all wake-up identifiers in the Wake-up Identifier table.
 
 `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
 

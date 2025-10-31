@@ -8541,7 +8541,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
          * wakeup wakeupid rm 0x1122
          * Done
          * @endcode
-         * @cparam wakeup wakeupid remove @ca{wakeup-identifier}
+         * @cparam wakeup wakeupid rm @ca{wakeup-identifier}
          * @par
          * Removes the wake-up identifier from the Wake-up Identifier table.
          * @sa otLinkRemoveWakeupId
@@ -8563,7 +8563,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
          * @endcode
          * @cparam wakeup wakeupid clear
          * @par
-         * Clears all wake-up identifers in the Wake-up Identifier table.
+         * Clears all wake-up identifiers in the Wake-up Identifier table.
          * @sa otLinkClearWakeupIds
          */
         else if (aArgs[1] == "clear")

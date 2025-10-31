@@ -797,7 +797,7 @@ public:
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    static constexpr uint16_t kWakeupIdTableSize = OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE;
+    static constexpr uint16_t kWakeupIdTableSize = OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SIZE;
 #endif
 
     enum Operation : uint8_t
