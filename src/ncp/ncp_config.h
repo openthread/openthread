@@ -48,6 +48,29 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT
+ *
+ * Specifies the default TREL UDP port for NCP.
+ *
+ * Set to 0 to let the stack choose a random port.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT
+#define OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+ *
+ * Define to 1 to enable UDP forward feature.
+ *
+ * This is required for NCP to forward UDP packets (e.g., mDNS, TREL) to the host infrastructure interface
+ * using SPINEL_PROP_THREAD_UDP_FORWARD_STREAM.
+ */
+#ifndef OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_HDLC_ENABLE
  *
  * Define to 1 to enable NCP HDLC support.

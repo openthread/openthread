@@ -382,6 +382,9 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);
 #endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    otTrelSetStateChangeCallback(mInstance, HandleTrelStateChange, this);
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     otDiagSetOutputCallback(mInstance, &NcpBase::HandleDiagOutput_Jump, this);

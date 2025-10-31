@@ -5040,6 +5040,23 @@ enum
 
     SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
 
+    SPINEL_PROP_TREL__BEGIN = 0x9A0,
+
+    /// TREL service state.
+    /**
+     * Format: `bS`: Get and Unsolicited notifications.
+     *
+     * `b`: Whether the TREL service is running or not.
+     * `S`: The UDP port that is being used by the TREL service. If the TREL is not active, the port MUST be 0.
+     *
+     * For NCP builds with OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE=1, the NCP manages DNS-SD internally
+     * and forwards mDNS packets to the host via UDP forward stream (port 5353). The host acts as a simple
+     * UDP/mDNS proxy and does not need to know about TREL peer discovery details.
+     */
+    SPINEL_PROP_TREL_STATE = SPINEL_PROP_TREL__BEGIN + 1,
+
+    SPINEL_PROP_TREL__END = 0x9C0,
+
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,

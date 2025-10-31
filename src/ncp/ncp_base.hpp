@@ -572,6 +572,7 @@ protected:
                                        void         *aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -930,6 +931,13 @@ protected:
 #endif
 
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    static void HandleTrelStateChange(void *aContext);
+    void        HandleTrelStateChange(void);
+#endif
+#endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     char    *mDiagOutput;
