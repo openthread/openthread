@@ -451,9 +451,15 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
                                              uint16_t           aSaltLength,
                                              const otCryptoKey *aInputKey)
 {
-    Error                           error  = kErrorNone;
-    psa_status_t                    status = PSA_SUCCESS;
-    psa_key_derivation_operation_t *operation;
+    Error                           error       = kErrorNone;
+    psa_status_t                    status      = PSA_SUCCESS;
+    psa_key_derivation_operation_t *operation   = nullptr;
+    otCryptoKeyRef                  keyRef      = PSA_KEY_ID_NULL;
+    psa_key_attributes_t            attributes  = PSA_KEY_ATTRIBUTES_INIT;
+    psa_algorithm_t                 keyAlg      = PSA_ALG_NONE;
+    size_t                          keyLength   = 0;
+    constexpr size_t                kBufferSize = 80;
+    uint8_t                         keyBuffer[kBufferSize];
 
     VerifyOrExit(checkContext(aContext, sizeof(psa_key_derivation_operation_t)), error = kErrorInvalidArgs);
     VerifyOrExit(aInputKey != nullptr, error = kErrorInvalidArgs);
@@ -463,10 +469,34 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
     status = psa_key_derivation_input_bytes(operation, PSA_KEY_DERIVATION_INPUT_SALT, aSalt, aSaltLength);
     SuccessOrExit(error = psaToOtError(status));
 
-    status = psa_key_derivation_input_key(operation, PSA_KEY_DERIVATION_INPUT_SECRET, aInputKey->mKeyRef);
+    status = psa_get_key_attributes(aInputKey->mKeyRef, &attributes);
     SuccessOrExit(error = psaToOtError(status));
 
+    keyAlg = psa_get_key_algorithm(&attributes);
+
+    // The PSA API enforces a policy that restricts each key to a single algorithm.
+    // If the key is already HKDF-SHA256, we can use it directly.
+    // Otherwise, export and re-import it as a volatile HKDF key.
+    if (keyAlg != toPsaAlgorithm(OT_CRYPTO_KEY_ALG_HKDF_SHA256))
+    {
+        SuccessOrExit(error = otPlatCryptoExportKey(aInputKey->mKeyRef, keyBuffer, sizeof(keyBuffer), &keyLength));
+        SuccessOrExit(error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_DERIVE, OT_CRYPTO_KEY_ALG_HKDF_SHA256,
+                                                    OT_CRYPTO_KEY_USAGE_DERIVE, OT_CRYPTO_KEY_STORAGE_VOLATILE,
+                                                    keyBuffer, keyLength));
+
+        status = psa_key_derivation_input_key(operation, PSA_KEY_DERIVATION_INPUT_SECRET, keyRef);
+        SuccessOrExit(error = psaToOtError(status));
+    }
+    else
+    {
+        status = psa_key_derivation_input_key(operation, PSA_KEY_DERIVATION_INPUT_SECRET, aInputKey->mKeyRef);
+        SuccessOrExit(error = psaToOtError(status));
+    }
+
 exit:
+    psa_reset_key_attributes(&attributes);
+    psa_destroy_key(keyRef);
+
     return error;
 }
 
