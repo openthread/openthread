@@ -247,6 +247,8 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
     }
 
+    defines += [ "OPENTHREAD_CONFIG_TCP_ENABLE=${openthread_config_tcp_enable}" ]
+
     if (openthread_config_ping_sender) {
       defines += [ "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1" ]
     }
