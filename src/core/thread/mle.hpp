@@ -1323,6 +1323,13 @@ private:
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
     static constexpr uint8_t  kAlternateRloc16Timeout        = 8; // Time to use alternate RLOC16 (in sec).
 
+    // Child Update Tx constants (used by parent to restore former
+    // children upon its own role restoration).
+    static constexpr uint32_t kMinChildUpdateRestoreDelay          = 250;  // in msec
+    static constexpr uint32_t kEarlyChildUpdateRestoreDelay        = 1250; // in msec
+    static constexpr uint32_t kMaxChildUpdateRestoreDelay          = 5000; // in msec
+    static constexpr uint16_t kThresholdToUseEarlyChildUpdateDelay = 10;
+
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
     // Network Data).
@@ -1708,9 +1715,12 @@ private:
 
         void ScheduleDataRequest(const Ip6::Address &aDestination, uint32_t aDelay);
         void ScheduleChildUpdateRequestToParent(uint32_t aDelay);
+        void RemoveScheduledChildUpdateRequestToParent(void);
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint32_t aDelay);
         void RemoveScheduledParentResponses(void);
+        void ScheduleChildUpdateRequestToChild(const Child &aChild, uint32_t aDelay);
+        void RemoveScheduledChildUpdateRequestToChild(const Child &aChild);
         void ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay);
         void ScheduleMulticastDataResponse(uint32_t aDelay);
         void ScheduleLinkRequest(const Router &aRouter, uint32_t aDelay);
@@ -1721,7 +1731,6 @@ private:
                                        const DiscoveryResponseInfo &aInfo,
                                        uint32_t                     aDelay);
 #endif
-        void RemoveScheduledChildUpdateRequestToParent(void);
 
         void HandleTimer(void);
         void GetQueueInfo(MessageQueue::Info &aQueueInfo) const { mSchedules.GetInfo(aQueueInfo); }
