@@ -1381,6 +1381,17 @@ private:
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
     static constexpr uint8_t  kAlternateRloc16Timeout        = 8; // Time to use alternate RLOC16 (in sec).
 
+    // Child Update Request constants (used by parent to restore
+    // former rx-on children upon its own role restoration). A gap
+    // (interval ± jitter) is used between "Child Update Request"
+    // transmissions. If no response is received, the requests are
+    // re-scheduled after `MinRetryInterval`, doubling the retry
+    // interval each time up to `MaxRetryInterval`.
+    static constexpr uint32_t kChildUpdateRestoreGapInterval      = 15; // in msec
+    static constexpr uint16_t kChildUpdateRestoreGapJitter        = 2;  // in msec
+    static constexpr uint8_t  kChildUpdateRestoreMinRetryInterval = 2;  // in sec
+    static constexpr uint8_t  kChildUpdateRestoreMaxRetryInterval = 64; // in sec
+
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
     // Network Data).
@@ -1774,9 +1785,13 @@ private:
 
         void ScheduleDataRequest(const Ip6::Address &aDestination, uint32_t aDelay);
         void ScheduleChildUpdateRequestToParent(uint32_t aDelay);
+        void RemoveScheduledChildUpdateRequestToParent(void);
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint32_t aDelay);
         void RemoveScheduledParentResponses(void);
+        void ScheduleChildUpdateRequestToChild(const Child &aChild, uint32_t aDelay);
+        bool HasAnyScheduledChildUpdateRequestToChild(const Child &aChild) const;
+        void RemoveScheduledChildUpdateRequestToChild(const Child &aChild);
         void ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay);
         void ScheduleMulticastDataResponse(uint32_t aDelay);
         void ScheduleLinkRequest(const Router &aRouter, uint32_t aDelay);
@@ -1787,7 +1802,6 @@ private:
                                        const DiscoveryResponseInfo &aInfo,
                                        uint32_t                     aDelay);
 #endif
-        void RemoveScheduledChildUpdateRequestToParent(void);
 
         void HandleTimer(void);
         void GetQueueInfo(MessageQueue::Info &aQueueInfo) const { mSchedules.GetInfo(aQueueInfo); }
@@ -2545,6 +2559,7 @@ private:
     void     RemoveChildren(void);
     void     HandleAdvertiseTrickleTimer(void);
     void     HandleTimeTick(void);
+    void     ScheduleChildUpdateToRestoreNonSleepyChildren(void);
     void     HandleRouterTableEvent(RouterTable::Events aEvents);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
@@ -2628,6 +2643,8 @@ private:
     uint8_t  mChildRouterLinks;
     uint8_t  mAlternateRloc16Timeout;
     uint8_t  mLeaderUpgradeThreshold;
+    uint8_t  mChildUpdateRestoreRetryTimeout;
+    uint8_t  mChildUpdateRestoreRetryInterval;
     int8_t   mParentPriority;
     uint32_t mPreviousPartitionIdRouter;
     uint32_t mPreviousPartitionId;
