@@ -689,6 +689,10 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     }
 
 exit:
+    //workaround because the last Block2 response is throwing error when reading options
+    if (aType == Message::kBlockType2) {
+        error = kErrorNone;
+    }
     return error;
 }
 
