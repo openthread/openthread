@@ -640,6 +640,10 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
+    if (aType == Message::kBlockType2) {
+      // needed to provide the token for this request
+      IgnoreReturnValue(aRequest.SetToken(AsConst(aRequestOld).GetToken(), aRequestOld.GetTokenLength()));
+    }
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
