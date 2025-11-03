@@ -56,6 +56,10 @@
 #error "OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF requires OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
 #endif
 
+#if !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
+#error "Testing ot-br-posix using improper config"
+#endif
+
 /**
  * @file
  *   This file includes definitions for the Multicast DNS per RFC 6762.
