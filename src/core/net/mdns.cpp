@@ -5569,12 +5569,14 @@ void Core::CacheEntry::Init(Instance &aInstance, Type aType)
 {
     InstanceLocatorInit::Init(aInstance);
 
-    mType               = aType;
-    mInitalQueries      = 0;
-    mQueryPending       = false;
-    mLastQueryTimeValid = false;
-    mIsActive           = false;
-    mDeleteTime         = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mType                  = aType;
+    mContinuousRetry       = false;
+    mQueryPending          = false;
+    mLastQueryTimeValid    = false;
+    mIsActive              = false;
+    mDeleteTime            = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
 }
 
 void Core::CacheEntry::SetIsActive(bool aIsActive)
@@ -5612,9 +5614,11 @@ bool Core::CacheEntry::ShouldDelete(TimeMilli aNow) const { return !mIsActive &&
 
 void Core::CacheEntry::StartInitialQueries(void)
 {
-    mInitalQueries      = 0;
-    mLastQueryTimeValid = false;
-    mLastQueryTime      = Get<Core>().RandomizeInitialQueryTxTime();
+    mContinuousRetry       = true;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
+    mLastQueryTimeValid    = false;
+    mLastQueryTime         = Get<Core>().RandomizeInitialQueryTxTime();
 
     ScheduleQuery(mLastQueryTime);
 }
@@ -5850,11 +5854,9 @@ void Core::CacheEntry::DetermineNextFireTime(void)
 {
     mQueryPending = false;
 
-    if (mInitalQueries < kNumberOfInitalQueries)
+    if (mContinuousRetry)
     {
-        uint32_t interval = (mInitalQueries == 0) ? 0 : (1U << (mInitalQueries - 1)) * kInitialQueryInterval;
-
-        ScheduleQuery(mLastQueryTime + interval);
+        ScheduleQuery(mLastQueryTime + mJitteredRetryInterval);
     }
 
     if (!mIsActive)
@@ -5883,6 +5885,26 @@ void Core::CacheEntry::DetermineNextFireTime(void)
         As<RecordCache>().DetermineRecordFireTime();
         break;
     }
+}
+
+void Core::CacheEntry::UpdateQueryRetryInterval(void)
+{
+    uint16_t maxJitter;
+
+    VerifyOrExit(mContinuousRetry);
+
+    mRetryInterval *= kQueryRetryGrowthFactor;
+    mRetryInterval = Clamp(mRetryInterval, kMinQueryRetryInterval, kMaxQueryRetryInterval);
+
+    // We pre-calculate the jittered retry interval to ensure
+    // `DetermineNextFireTime()` uses a consistent value.
+
+    maxJitter = ClampToUint16(mRetryInterval / kQueryRetryJitterDivisor);
+
+    mJitteredRetryInterval = Random::NonCrypto::AddJitter(mRetryInterval, maxJitter);
+
+exit:
+    return;
 }
 
 void Core::CacheEntry::ScheduleTimer(void) { ScheduleFireTimeOn(Get<Core>().mCacheTimer); }
@@ -5926,10 +5948,7 @@ void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
     mLastQueryTimeValid = true;
     mLastQueryTime      = aContext.GetNow();
 
-    if (mInitalQueries < kNumberOfInitalQueries)
-    {
-        mInitalQueries++;
-    }
+    UpdateQueryRetryInterval();
 
     // Let the cache entry super-classes update their state
     // after query was sent.
@@ -6477,7 +6496,7 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
 
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
@@ -6653,7 +6672,7 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
     }
 
     ConvertTo(result);
@@ -7066,7 +7085,7 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopInitialQueries();
+    StopQueryRetries();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
@@ -7438,7 +7457,7 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
 
         if (mRecordType != ResourceRecord::kTypeAny)
         {
-            StopInitialQueries();
+            StopQueryRetries();
         }
     }
 
