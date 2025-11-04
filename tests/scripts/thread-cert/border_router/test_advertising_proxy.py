@@ -235,7 +235,7 @@ class SingleHostAndService(thread_cert.TestCase):
             client.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL),
             client.get_ip6_address(config.ADDRESS_TYPE.ML_EID),
             client.get_rloc()
-        ], 'my-service', 12345)
+        ], 'my-service', 12345, deleted=True)
         self.host_check_mdns_service(host, [], 'my-service', 12345)
 
         client.srp_client_set_host_address('2005::3')
@@ -267,7 +267,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(sorted(map(ipaddress.ip_address, service['addresses'])),
                          sorted(map(ipaddress.ip_address, host_addrs)))
 
-    def check_host_and_service(self, server, client, host_addrs, service_instance, service_port=12345):
+    def check_host_and_service(self, server, client, host_addrs, service_instance, service_port=12345, deleted=False):
         """Check that we have properly registered host and service instance.
         """
 
@@ -303,7 +303,10 @@ class SingleHostAndService(thread_cert.TestCase):
 
         # Verify that the server accepted the SRP registration and stores
         # the same service resources.
-        self.assertEqual(server_service['deleted'], 'false')
+        if deleted:
+            self.assertEqual(server_service['deleted'], 'true')
+        else:
+            self.assertEqual(server_service['deleted'], 'false')
         self.assertEqual(server_service['instance'], client_service['instance'])
         self.assertEqual(server_service['name'], client_service['name'])
         self.assertEqual(int(server_service['port']), int(client_service['port']))
@@ -316,7 +319,10 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(len(server_hosts), 1)
         server_host = server_hosts[0]
 
-        self.assertEqual(server_host['deleted'], 'false')
+        if deleted:
+            self.assertEqual(server_host['deleted'], 'true')
+        else:
+            self.assertEqual(server_host['deleted'], 'false')
         self.assertEqual(server_host['fullname'], server_service['host_fullname'])
         self.assertEqual(sorted(map(ipaddress.ip_address, server_host['addresses'])),
                          sorted(map(ipaddress.ip_address, host_addrs)))
