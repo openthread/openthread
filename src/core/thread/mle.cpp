@@ -3415,11 +3415,11 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
 
     case kTypeLinkRequest:
     {
-        uint16_t rlco16;
+        uint16_t rloc16;
         Router  *router;
 
-        IgnoreError(aSchedule.Read(sizeof(Header), rlco16));
-        router = Get<RouterTable>().FindRouterByRloc16(rlco16);
+        IgnoreError(aSchedule.Read(sizeof(Header), rloc16));
+        router = Get<RouterTable>().FindRouterByRloc16(rloc16);
 
         if (router != nullptr)
         {
