@@ -67,7 +67,10 @@ class P256
 {
 public:
     static constexpr uint16_t kFieldBitLength = 256; ///< Prime field bit length used by the P-256 curve.
-
+    /**
+     * Maximum DER-encoded signature length (bytes) for P-256 ECDSA signatures.
+     */
+    static constexpr uint8_t kDerMaxSigLen = 72;
     /**
      * Max bytes in binary representation of an MPI (multi-precision int).
      */

@@ -382,6 +382,8 @@ bool SecureSession::IsMbedtlsHandshakeOver(mbedtls_ssl_context *aSslContext)
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
         mbedtls_ssl_is_handshake_over(aSslContext);
 #else
+        // WARNING: No ABI-safe public API exists in this Mbed TLS version.
+        // This is a necessary direct member access (not ABI-safe) and should be removed when possible.
         (aSslContext->MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER);
 #endif
 }
@@ -1208,26 +1210,21 @@ Error SecureTransport::Extension::GetPeerCertificateBase64(unsigned char *aPeerC
                                                            size_t        *aCertLength,
                                                            size_t         aCertBufferSize)
 {
-    Error          error   = kErrorNone;
-    SecureSession *session = mSecureTransport.mSessions.GetHead();
+    Error                   error     = kErrorNone;
+    SecureSession          *session   = mSecureTransport.mSessions.GetHead();
+    const mbedtls_x509_crt *peer_cert = mbedtls_ssl_get_peer_cert(&session->mSsl);
 
     VerifyOrExit(session != nullptr, error = kErrorInvalidState);
     VerifyOrExit(session->IsConnected(), error = kErrorInvalidState);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
-                                       session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p,
-                                       session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len) ==
+    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength, peer_cert->raw.p, peer_cert->raw.len) ==
                      0,
                  error = kErrorNoBufs);
 #else
-    VerifyOrExit(
-        mbedtls_base64_encode(
-            aPeerCert, aCertBufferSize, aCertLength,
-            session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-            session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(
-                len)) == 0,
-        error = kErrorNoBufs);
+    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength, peer_cert->raw.p, peer_cert->raw.len) ==
+                     0,
+                 error = kErrorNoBufs);
 #endif
 
 exit:
@@ -1238,29 +1235,23 @@ exit:
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 Error SecureTransport::Extension::GetPeerCertificateDer(uint8_t *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
-    Error          error   = kErrorNone;
-    SecureSession *session = mSecureTransport.mSessions.GetHead();
+    Error                   error     = kErrorNone;
+    SecureSession          *session   = mSecureTransport.mSessions.GetHead();
+    const mbedtls_x509_crt *peer_cert = mbedtls_ssl_get_peer_cert(&session->mSsl);
 
     VerifyOrExit(session->IsConnected(), error = kErrorInvalidState);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len < aCertBufferSize,
-                 error = kErrorNoBufs);
+    VerifyOrExit(peer_cert->raw.len < aCertBufferSize, error = kErrorNoBufs);
 
-    *aCertLength = session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len;
-    memcpy(aPeerCert, session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p, *aCertLength);
+    *aCertLength = peer_cert->raw.len;
+    memcpy(aPeerCert, peer_cert->raw.p, *aCertLength);
 
 #else
-    VerifyOrExit(
-        session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len) <
-            aCertBufferSize,
-        error = kErrorNoBufs);
+    VerifyOrExit(peer_cert->raw.len < aCertBufferSize, error = kErrorNoBufs);
 
-    *aCertLength =
-        session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len);
-    memcpy(aPeerCert,
-           session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-           *aCertLength);
+    *aCertLength = peer_cert->raw.len;
+    memcpy(aPeerCert, peer_cert->raw.p, *aCertLength);
 #endif
 
 exit:
