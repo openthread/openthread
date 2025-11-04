@@ -641,7 +641,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
     // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
-    IgnoreReturnValue(aRequest.SetToken(AsConst(aRequestOld).GetToken(), aRequestOld.GetTokenLength()));
+    IgnoreError(aRequest.SetToken(AsConst(aRequestOld).GetToken(), aRequestOld.GetTokenLength()));
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
