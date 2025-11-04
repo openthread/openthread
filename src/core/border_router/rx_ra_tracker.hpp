@@ -43,6 +43,7 @@
 #include "border_router/br_types.hpp"
 #include "border_router/infra_if.hpp"
 #include "common/callback.hpp"
+#include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/error.hpp"
 #include "common/heap_allocatable.hpp"
@@ -84,6 +85,18 @@ public:
     {
         kRequesterRoutingManager,   ///< Requested by `RoutingManager`.
         kRequesterMultiAilDetector, ///< Requested by `MultiAilDetector`.
+    };
+
+    /**
+     * Represents different events that can occur within the `RxRaTracker`.
+     *
+     * Used in callbacks `HandleRxRaTrackerEvents()` to notify other BR components of changes/events by `RxRaTracker`.
+     */
+    struct Events : public Clearable<Events>
+    {
+        bool mInitialDiscoveryFinished : 1; ///< Indicates that the initial router discovery process is finished.
+        bool mDecisionFactorChanged : 1;    ///< Indicates that a decision factor (e.g., on-link prefix) was changed.
+        bool mLocalRaHeaderChanged : 1;     ///< Indicates that the tracked local RA header was changed.
     };
 
     /**
@@ -588,7 +601,7 @@ private:
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     void ReportChangesToHistoryTracker(Router &aRouter, bool aRemoved);
 #endif
-    void HandleNotifierEvents(Events aEvents);
+    void HandleNotifierEvents(ot::Events aEvents);
     void HandleNetDataChange(void);
 
     // Callbacks from `InfraIf`
@@ -597,7 +610,7 @@ private:
     void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
 
     // Tasklet or timer callbacks
-    void HandleSignalTask(void);
+    void HandleEventTask(void);
     void HandleRdnssAddrTask(void);
     void HandleExpirationTimer(void);
     void HandleStaleTimer(void);
@@ -612,7 +625,7 @@ private:
 
     static const char *RouterAdvOriginToString(RouterAdvOrigin aRaOrigin);
 
-    using SignalTask      = TaskletIn<RxRaTracker, &RxRaTracker::HandleSignalTask>;
+    using EventTask       = TaskletIn<RxRaTracker, &RxRaTracker::HandleEventTask>;
     using RdnssAddrTask   = TaskletIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTask>;
     using ExpirationTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleExpirationTimer>;
     using StaleTimer      = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleStaleTimer>;
@@ -626,6 +639,7 @@ private:
     bool                 mMultiAilDetectorEnabled : 1;
     bool                 mIsRunning : 1;
     bool                 mInitialDiscoveryFinished : 1;
+    Events               mPendingEvents;
     RsSender             mRsSender;
     DecisionFactors      mDecisionFactors;
     RouterList           mRouters;
@@ -634,7 +648,7 @@ private:
     StaleTimer           mStaleTimer;
     RouterTimer          mRouterTimer;
     RdnssAddrTimer       mRdnssAddrTimer;
-    SignalTask           mSignalTask;
+    EventTask            mEventTask;
     RdnssAddrTask        mRdnssAddrTask;
     RdnssCallback        mRdnssCallback;
     RouterAdvert::Header mLocalRaHeader;

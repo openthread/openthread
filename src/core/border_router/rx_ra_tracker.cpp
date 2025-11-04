@@ -57,10 +57,11 @@ RxRaTracker::RxRaTracker(Instance &aInstance)
     , mStaleTimer(aInstance)
     , mRouterTimer(aInstance)
     , mRdnssAddrTimer(aInstance)
-    , mSignalTask(aInstance)
+    , mEventTask(aInstance)
     , mRdnssAddrTask(aInstance)
 {
     mLocalRaHeader.Clear();
+    mPendingEvents.Clear();
 }
 
 void RxRaTracker::SetEnabled(bool aEnable, Requester aRequester)
@@ -68,14 +69,33 @@ void RxRaTracker::SetEnabled(bool aEnable, Requester aRequester)
     switch (aRequester)
     {
     case kRequesterRoutingManager:
+        VerifyOrExit(mRoutingManagerEnabled != aEnable);
         mRoutingManagerEnabled = aEnable;
         break;
     case kRequesterMultiAilDetector:
+        VerifyOrExit(mMultiAilDetectorEnabled != aEnable);
         mMultiAilDetectorEnabled = aEnable;
         break;
     }
 
     UpdateState();
+
+    // If `RoutingManager` enables `RxRaTracker`, we check if it was
+    // already enabled and had previously completed its initial
+    // router discovery (sending RS messages). If so, we re-signal
+    // the 'initial discovery finished' and 'decision factors
+    // changed' events. This ensures `RoutingManager` properly
+    // evaluates its state and takes the next actions.
+
+    VerifyOrExit((aRequester == kRequesterRoutingManager) && mRoutingManagerEnabled);
+    VerifyOrExit(mIsRunning && mInitialDiscoveryFinished);
+
+    mPendingEvents.mInitialDiscoveryFinished = true;
+    mPendingEvents.mDecisionFactorChanged    = true;
+    mEventTask.Post();
+
+exit:
+    return;
 }
 
 void RxRaTracker::UpdateState(void)
@@ -138,8 +158,13 @@ void RxRaTracker::HandleRsSenderFinished(TimeMilli aStartTime)
 
     RemoveOrDeprecateOldEntries(aStartTime);
 
-    mInitialDiscoveryFinished = true;
-    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(RoutingManager::kImmediately);
+    if (!mInitialDiscoveryFinished)
+    {
+        mInitialDiscoveryFinished = true;
+
+        mPendingEvents.mInitialDiscoveryFinished = true;
+        mEventTask.Post();
+    }
 }
 
 void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
@@ -279,7 +304,8 @@ void RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router 
 
         if (mLocalRaHeader != oldHeader)
         {
-            Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(RoutingManager::kAfterRandomDelay);
+            mPendingEvents.mLocalRaHeaderChanged = true;
+            mEventTask.Post();
         }
     }
 
@@ -647,7 +673,7 @@ exit:
     return;
 }
 
-void RxRaTracker::HandleNotifierEvents(Events aEvents)
+void RxRaTracker::HandleNotifierEvents(ot::Events aEvents)
 {
     if (aEvents.Contains(kEventThreadNetdataChanged))
     {
@@ -826,7 +852,8 @@ void RxRaTracker::Evaluate(void)
 
     if (oldFactors != mDecisionFactors)
     {
-        mSignalTask.Post();
+        mPendingEvents.mDecisionFactorChanged = true;
+        mEventTask.Post();
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -984,13 +1011,23 @@ exit:
 
 void RxRaTracker::HandleExpirationTimer(void) { Evaluate(); }
 
-void RxRaTracker::HandleSignalTask(void)
+void RxRaTracker::HandleEventTask(void)
 {
+    Events events;
+
+    VerifyOrExit(mInitialDiscoveryFinished);
+
+    events = mPendingEvents;
+    mPendingEvents.Clear();
+
+    Get<RoutingManager>().HandleRxRaTrackerEvents(events);
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<MultiAilDetector>().HandleRxRaTrackerDecisionFactorChanged();
+    Get<MultiAilDetector>().HandleRxRaTrackerEvents(events);
 #endif
 
-    Get<RoutingManager>().HandleRxRaTrackerDecisionFactorChanged();
+exit:
+    return;
 }
 
 void RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
