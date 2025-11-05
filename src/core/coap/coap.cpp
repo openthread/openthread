@@ -633,8 +633,9 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
                                         Message           &aMessage)
 {
     Error            error       = kErrorNone;
-    bool             isOptionSet = false;
     uint16_t         blockOption = 0;
+    uint16_t blockOffset = 0;
+    uint16_t lastOffset = 0;
     Option::Iterator iterator;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
@@ -651,46 +652,31 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
         SuccessOrExit(error);
 
-        // Check if option to copy next is higher than or equal to Block1 option
-        if (optionNumber >= blockOption && !isOptionSet)
+        // Check if option to copy  Block option
+        if (optionNumber == blockOption)
         {
-            // Write Block1 option to next message
-            SuccessOrExit(error = aRequest.AppendBlockOption(aType, aMessage.GetBlockWiseBlockNumber() + 1, aMoreBlocks,
-                                                             aMessage.GetBlockWiseBlockSize()));
-            aRequest.SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber() + 1);
-            aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
-            aRequest.SetMoreBlocksFlag(aMoreBlocks);
-
-            isOptionSet = true;
-
-            // If option to copy next is Block1 or Block2 option, option is not copied
-            if (optionNumber == kOptionBlock1 || optionNumber == kOptionBlock2)
-            {
-                continue;
-            }
+          // Capture block option length because its being skipped, use this
+          // when appending options to account for Block option being skipped
+          blockOffset = iterator.GetOptionValueMessageOffset() - lastOffset;
+          // Skip appending the block option it will happen after the loop
+          continue;
         }
 
         // Copy option
         SuccessOrExit(error = aRequest.AppendOptionFromMessage(optionNumber, iterator.GetOption()->GetLength(),
                                                                iterator.GetMessage(),
-                                                               iterator.GetOptionValueMessageOffset()));
+                                                               iterator.GetOptionValueMessageOffset() - blockOffset));
+        lastOffset = iterator.GetOptionValueMessageOffset();
     }
 
-    if (!isOptionSet)
-    {
-        // Write Block1 option to next message
-        SuccessOrExit(error = aRequest.AppendBlockOption(aType, aMessage.GetBlockWiseBlockNumber() + 1, aMoreBlocks,
-                                                         aMessage.GetBlockWiseBlockSize()));
-        aRequest.SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber() + 1);
-        aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
-        aRequest.SetMoreBlocksFlag(aMoreBlocks);
-    }
+    // Write Block option to next message
+    SuccessOrExit(error = aRequest.AppendBlockOption(aType, aMessage.GetBlockWiseBlockNumber() + 1, aMoreBlocks,
+                                                     aMessage.GetBlockWiseBlockSize()));
+    aRequest.SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber() + 1);
+    aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
+    aRequest.SetMoreBlocksFlag(aMoreBlocks);
 
 exit:
-    //workaround because the last Block2 response is throwing error when reading options
-    if (aType == Message::kBlockType2) {
-        error = kErrorNone;
-    }
     return error;
 }
 
