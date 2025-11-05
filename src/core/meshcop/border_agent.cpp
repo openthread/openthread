@@ -1072,29 +1072,20 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMessage
     OwnedPtr<ForwardContext> forwardContext;
     Tmf::MessageInfo         messageInfo(GetInstance());
     OwnedPtr<Coap::Message>  message;
-    bool                     petition = false;
-    bool                     separate = false;
     OffsetRange              offsetRange;
 
     switch (aUri)
     {
     case kUriLeaderPetition:
-        petition = true;
-        separate = true;
-        break;
     case kUriLeaderKeepAlive:
-        separate = true;
         break;
     default:
-        break;
+        OT_ASSERT(false);
     }
 
-    if (separate)
-    {
-        SuccessOrExit(error = SendAck(aMessage, aMessageInfo));
-    }
+    SuccessOrExit(error = SendAck(aMessage, aMessageInfo));
 
-    forwardContext.Reset(ForwardContext::Allocate(*this, aMessage, petition, separate));
+    forwardContext.Reset(ForwardContext::Allocate(*this, aMessage, aUri));
     VerifyOrExit(!forwardContext.IsNull(), error = kErrorNoBufs);
 
     message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(aUri));
@@ -1124,7 +1115,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        SendErrorMessage(aMessage, separate, error);
+        SendErrorMessage(aMessage, error);
     }
 
     return error;
@@ -1156,7 +1147,7 @@ void Manager::CoapDtlsSession::HandleCoapResponse(const ForwardContext &aForward
     forwardMessage.Reset(NewPriorityMessage());
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
-    if (aForwardContext.mPetition && aResponse->GetCode() == Coap::kCodeChanged)
+    if ((aForwardContext.mUri == kUriLeaderPetition) && (aResponse->GetCode() == Coap::kCodeChanged))
     {
         uint8_t state;
 
@@ -1193,10 +1184,9 @@ void Manager::CoapDtlsSession::HandleCoapResponse(const ForwardContext &aForward
     SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), *aResponse));
 
 exit:
-
     if (error != kErrorNone)
     {
-        LogWarn("Commissioner request[%u] failed: %s", aForwardContext.mMessageId, ErrorToString(error));
+        LogWarn("Commissioner request failed: %s", ErrorToString(error));
 
         SendErrorMessage(aForwardContext, error);
     }
@@ -1283,7 +1273,7 @@ exit:
     LogWarnOnError(error, "send error CoAP message");
 }
 
-void Manager::CoapDtlsSession::SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError)
+void Manager::CoapDtlsSession::SendErrorMessage(const Coap::Message &aRequest, Error aError)
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
@@ -1291,22 +1281,8 @@ void Manager::CoapDtlsSession::SendErrorMessage(const Coap::Message &aRequest, b
     message.Reset(NewPriorityMessage());
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    if (aRequest.IsNonConfirmable() || aSeparate)
-    {
-        message->Init(Coap::kTypeNonConfirmable, CoapCodeFromError(aError));
-    }
-    else
-    {
-        message->Init(Coap::kTypeAck, CoapCodeFromError(aError));
-    }
-
-    if (!aSeparate)
-    {
-        message->SetMessageId(aRequest.GetMessageId());
-    }
-
+    message->Init(Coap::kTypeNonConfirmable, CoapCodeFromError(aError));
     SuccessOrExit(error = message->SetTokenFromMessage(aRequest));
-
     SuccessOrExit(error = SendMessage(message.PassOwnership()));
 
 exit:
@@ -1452,33 +1428,17 @@ void Manager::CoapDtlsSession::HandleTimer(void)
 
 Manager::CoapDtlsSession::ForwardContext::ForwardContext(CoapDtlsSession     &aSession,
                                                          const Coap::Message &aMessage,
-                                                         bool                 aPetition,
-                                                         bool                 aSeparate)
+                                                         Uri                  aUri)
     : mSession(aSession)
-    , mMessageId(aMessage.GetMessageId())
-    , mPetition(aPetition)
-    , mSeparate(aSeparate)
+    , mUri(aUri)
     , mTokenLength(aMessage.GetTokenLength())
-    , mType(aMessage.GetType())
 {
     memcpy(mToken, aMessage.GetToken(), mTokenLength);
 }
 
 Error Manager::CoapDtlsSession::ForwardContext::ToHeader(Coap::Message &aMessage, uint8_t aCode) const
 {
-    if ((mType == Coap::kTypeNonConfirmable) || mSeparate)
-    {
-        aMessage.Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aCode));
-    }
-    else
-    {
-        aMessage.Init(Coap::kTypeAck, static_cast<Coap::Code>(aCode));
-    }
-
-    if (!mSeparate)
-    {
-        aMessage.SetMessageId(mMessageId);
-    }
+    aMessage.Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aCode));
 
     return aMessage.SetToken(mToken, mTokenLength);
 }
