@@ -827,7 +827,7 @@ private:
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
         void               HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix);
-        void               HandleRaDiscoverChanged(void);
+        void               HandleRxRaTrackerChanged(void);
         void               HandleTimer(void);
 
     private:
@@ -1028,8 +1028,10 @@ private:
 
     bool NetworkDataContainsUlaRoute(void) const;
 
-    void HandleRxRaTrackerDecisionFactorChanged(void);
     void HandleLocalOnLinkPrefixChanged(void);
+
+    // Callback from `RxRaTracker`
+    void HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
 

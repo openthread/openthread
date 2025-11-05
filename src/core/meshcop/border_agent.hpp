@@ -294,7 +294,8 @@ private:
         friend Heap::Allocatable<CoapDtlsSession>;
 
     public:
-        Error    ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+        Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
+        Error    ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
         void     Cleanup(void);
         bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
