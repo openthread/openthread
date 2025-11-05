@@ -332,11 +332,13 @@ private:
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
-        static void HandleCoapResponse(void                *aContext,
-                                       otMessage           *aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aResult);
-        void HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
+        static void HandleLeaderResponseToFwdTmf(void                *aContext,
+                                                 otMessage           *aMessage,
+                                                 const otMessageInfo *aMessageInfo,
+                                                 otError              aResult);
+        void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
+                                                 const Coap::Message  *aResponse,
+                                                 Error                 aResult);
         static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
         bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         static bool HandleResource(CoapBase               &aCoapBase,

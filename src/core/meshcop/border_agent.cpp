@@ -972,7 +972,7 @@ void Manager::CoapDtlsSession::Cleanup(void)
     {
         ForwardContext *forwardContext = mForwardContexts.Pop();
 
-        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleCoapResponse, forwardContext));
+        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleLeaderResponseToFwdTmf, forwardContext));
     }
 
     mTimer.Stop();
@@ -1098,13 +1098,13 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMessage
     messageInfo.SetSockPortToTmf();
 
     // On success the message ownership is transferred.
-    SuccessOrExit(error =
-                      Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext.Get()));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleLeaderResponseToFwdTmf,
+                                                        forwardContext.Get()));
     message.Release();
 
     // Release the ownership of `forwardContext` since `SendMessage()`
-    // will own it. We take back ownership from `HandleCoapResponse()`
-    // callback.
+    // will own it. We take back ownership when the callback
+    // `HandleLeaderResponseToFwdTmf()` is invoked.
 
     mForwardContexts.Push(*forwardContext.Release());
 
@@ -1121,21 +1121,21 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::HandleCoapResponse(void                *aContext,
-                                                  otMessage           *aMessage,
-                                                  const otMessageInfo *aMessageInfo,
-                                                  otError              aResult)
+void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(void                *aContext,
+                                                            otMessage           *aMessage,
+                                                            const otMessageInfo *aMessageInfo,
+                                                            otError              aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     OwnedPtr<ForwardContext> forwardContext(static_cast<ForwardContext *>(aContext));
 
-    forwardContext->mSession.HandleCoapResponse(*forwardContext.Get(), AsCoapMessagePtr(aMessage), aResult);
+    forwardContext->mSession.HandleLeaderResponseToFwdTmf(*forwardContext.Get(), AsCoapMessagePtr(aMessage), aResult);
 }
 
-void Manager::CoapDtlsSession::HandleCoapResponse(const ForwardContext &aForwardContext,
-                                                  const Coap::Message  *aResponse,
-                                                  Error                 aResult)
+void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
+                                                            const Coap::Message  *aResponse,
+                                                            Error                 aResult)
 {
     OwnedPtr<Coap::Message> forwardMessage;
     Error                   error;
