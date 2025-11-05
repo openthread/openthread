@@ -147,16 +147,16 @@ proc spawn_node {id {type ""} {args ""}} {
                 lappend adb_cmd -s $args
             }
 
-            set adb_root [concat $adb_cmd root]
-            set adb_ot_ctl [concat $adb_cmd shell ot-ctl]
+            set adb_root_cmd [concat $adb_cmd root]
+            set adb_ot_ctl_cmd [concat $adb_cmd shell ot-ctl]
 
             # restart adb with root permissions
-            spawn {*}$adb_root
+            spawn {*}$adb_root_cmd
             expect eof
 
             sleep 0.1
 
-            spawn {*}$adb_ot_ctl
+            spawn {*}$adb_ot_ctl_cmd
             send "factoryreset\n"
             expect eof
 
@@ -164,7 +164,7 @@ proc spawn_node {id {type ""} {args ""}} {
 
             # The ot-ctl connection will be broken after running the factoryreset command.
             # Here re-starts the ot-ctl.
-            spawn {*}$adb_ot_ctl
+            spawn {*}$adb_ot_ctl_cmd
             wait_for "state" "disabled"
             expect_line "Done"
         }
