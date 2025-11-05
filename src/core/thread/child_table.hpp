@@ -308,7 +308,7 @@ public:
      */
     bool Contains(const Neighbor &aNeighbor) const
     {
-        const Child *child = static_cast<const Child *>(&aNeighbor);
+        const Child *child = reinterpret_cast<const Child *>(&aNeighbor);
 
         return (mChildren <= child) && (child < GetArrayEnd(mChildren));
     }
