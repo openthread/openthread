@@ -634,6 +634,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 {
     Error            error       = kErrorNone;
     uint16_t         blockOption = 0;
+    // Start at zero, this value is calculated in iterator loop when a block option is found.
     uint16_t blockOffset = 0;
     uint16_t lastOffset = 0;
     Option::Iterator iterator;
@@ -645,28 +646,30 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     IgnoreError(aRequest.SetToken(AsConst(aRequestOld).GetToken(), aRequestOld.GetTokenLength()));
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
-    // Copy options from last response to next message
+    // Copy options from last response to next message.
     for (; !iterator.IsDone() && iterator.GetOption()->GetLength() != 0; error = iterator.Advance())
     {
         uint16_t optionNumber = iterator.GetOption()->GetNumber();
 
         SuccessOrExit(error);
 
-        // Check if option to copy is Block option
+        // Check if option to copy is a block option
         if (optionNumber == blockOption)
         {
-          // Capture block option length because it's being skipped, use this
-          // when appending options to account for Block option being skipped
-          blockOffset = iterator.GetOptionValueMessageOffset() - lastOffset;
+          // Capture block option total length because it's being skipped, use this
+          // when appending options to account for Block option being skipped, not supposed to 
+          // occur more than once in loop, but using += incase multiple times in oldrequest
+          blockOffset += iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength() - lastOffset;
           // Skip appending the block option it will happen after the loop
           continue;
         }
 
-        // Copy option
+        // Copy option to request, blockOffset is used because iterator.GetOptionValueMessageOffset() value includes skipped Block option
         SuccessOrExit(error = aRequest.AppendOptionFromMessage(optionNumber, iterator.GetOption()->GetLength(),
                                                                iterator.GetMessage(),
                                                                iterator.GetOptionValueMessageOffset() - blockOffset));
-        lastOffset = iterator.GetOptionValueMessageOffset();
+        // Value is only used if (optionNumber == blockOption) to calculate blockOffset so (it represents loop -1 value).
+        lastOffset = iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength();
     }
 
     // Write Block option to next message
