@@ -652,7 +652,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
         SuccessOrExit(error);
 
-        // Check if option to copy  Block option
+        // Check if option to copy is Block option
         if (optionNumber == blockOption)
         {
           // Capture block option length because its being skipped, use this
