@@ -655,7 +655,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         // Check if option to copy is Block option
         if (optionNumber == blockOption)
         {
-          // Capture block option length because its being skipped, use this
+          // Capture block option length because it's being skipped, use this
           // when appending options to account for Block option being skipped
           blockOffset = iterator.GetOptionValueMessageOffset() - lastOffset;
           // Skip appending the block option it will happen after the loop
