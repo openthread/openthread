@@ -1403,7 +1403,7 @@ void TestBorderAgentTxtDataCallback(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Set MeshCoP service change callback. Will get initial values.
     Log("Set MeshCoP service change callback and check initial values");
-    node0.Get<Manager>().SetServiceChangedCallback(HandleServiceChanged, &callbackInvoked);
+    node0.Get<BaTxtData>().SetChangedCallback(HandleServiceChanged, &callbackInvoked);
     nexus.AdvanceTime(1);
 
     // Check the initial TXT entries
@@ -1904,7 +1904,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Set vendor TXT data and validate that it is included in the registered mDNS service");
 
-    node0.Get<Manager>().SetVendorTxtData(kVendorTxtData, sizeof(kVendorTxtData));
+    node0.Get<BaTxtData>().SetVendorData(kVendorTxtData, sizeof(kVendorTxtData));
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
@@ -1942,7 +1942,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Clear vendor TXT data and validate that the registered mDNS service is updated accordingly");
 
-    node0.Get<Manager>().SetVendorTxtData(nullptr, 0);
+    node0.Get<BaTxtData>().SetVendorData(nullptr, 0);
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();

@@ -64,6 +64,9 @@ const char TxtData::Key::kModelName[]  = "mn";
 
 TxtData::TxtData(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    , mChangedTask(aInstance)
+#endif
 {
 }
 
@@ -160,6 +163,50 @@ Error TxtData::Prepare(ServiceTxtData &aTxtData)
     return Prepare(aTxtData.mData, sizeof(aTxtData.mData), aTxtData.mLength);
 }
 
+void TxtData::SetChangedCallback(ChangedCallback aCallback, void *aContext)
+{
+    mChangedCallback.Set(aCallback, aContext);
+    Refresh();
+}
+
+void TxtData::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
+                            kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleChangedTask(void)
+{
+    VerifyOrExit(Get<Manager>().IsEnabled());
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<Manager>().HandleServiceTxtDataChanged();
+#endif
+
+    mChangedCallback.InvokeIfSet();
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLength)
+{
+    VerifyOrExit(!mVendorData.Matches(aVendorData, aVendorDataLength));
+
+    SuccessOrAssert(mVendorData.SetFrom(aVendorData, aVendorDataLength));
+    Refresh();
+
+exit:
+    return;
+}
+
+#endif
+
 uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
 {
     uint32_t bitmap = 0;
@@ -205,6 +252,8 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
