@@ -632,11 +632,11 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
                                         Message           &aRequest,
                                         Message           &aMessage)
 {
-    Error            error       = kErrorNone;
-    uint16_t         blockOption = 0;
+    Error    error       = kErrorNone;
+    uint16_t blockOption = 0;
     // Start at zero, this value is calculated in iterator loop when a block option is found.
-    uint16_t blockOffset = 0;
-    uint16_t lastOffset = 0;
+    uint16_t         blockOffset = 0;
+    uint16_t         lastOffset  = 0;
     Option::Iterator iterator;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
@@ -656,19 +656,21 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         // Check if option to copy is a block option
         if (optionNumber == blockOption)
         {
-          // Capture block option total length because it's being skipped, use this
-          // when appending options to account for Block option being skipped, not supposed to 
-          // occur more than once in loop, but using += incase multiple times in oldrequest
-          blockOffset += iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength() - lastOffset;
-          // Skip appending the block option it will happen after the loop
-          continue;
+            // Capture block option total length because it's being skipped, use this
+            // when appending options to account for Block option being skipped, not supposed to 
+            // occur more than once in loop, but using += incase multiple times in oldrequest
+            blockOffset += iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength() - lastOffset;
+            // Skip appending the block option it will happen after the loop
+            continue;
         }
 
-        // Copy option to request, blockOffset is used because iterator.GetOptionValueMessageOffset() value includes skipped Block option
+        // Copy option to request, blockOffset is used because iterator.GetOptionValueMessageOffset() value includes
+        // skipped Block option
         SuccessOrExit(error = aRequest.AppendOptionFromMessage(optionNumber, iterator.GetOption()->GetLength(),
                                                                iterator.GetMessage(),
                                                                iterator.GetOptionValueMessageOffset() - blockOffset));
-        // Value is only used if (optionNumber == blockOption) to calculate blockOffset so (it represents loop -1 value).
+        // Value is only used if (optionNumber == blockOption) to calculate blockOffset so (it represents loop -1
+        // value).
         lastOffset = iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength();
     }
 
