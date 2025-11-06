@@ -1093,7 +1093,7 @@ struct WakeupInfo
 
 #if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 /**
- * Represents an radio slot entry.
+ * Represents a radio slot entry.
  */
 OT_TOOL_PACKED_BEGIN
 class SlotEntry : public otSlotEntry, public Equatable<otSlotEntry>, public Clearable<SlotEntry>

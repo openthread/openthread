@@ -229,7 +229,7 @@ uint64_t otLinkRawGetRadioTime(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
 void otLinkRawSetRadioAvailMapUpdated(otInstance *aInstance, otLinkRawRadioAvailMapUpdated aCallback)
 {
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetRadioAvailMapUpdated(aCallback);
+    AsCoreType(aInstance).Get<Mac::LinkRaw>().SetRadioAvailMapUpdated(aCallback);
 }
 #endif
 
