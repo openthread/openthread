@@ -262,23 +262,17 @@ private:
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
 
     private:
-        class ForwardContext : public ot::LinkedListEntry<ForwardContext>,
-                               public Heap::Allocatable<ForwardContext>,
-                               private ot::NonCopyable
+        struct ForwardContext : public ot::LinkedListEntry<ForwardContext>,
+                                public Heap::Allocatable<ForwardContext>,
+                                private ot::NonCopyable
         {
-            friend class Heap::Allocatable<ForwardContext>;
-
-        public:
-            Error ToHeader(Coap::Message &aMessage, uint8_t aCode) const;
+            ForwardContext(CoapDtlsSession &aSession, const Coap::Message &aMessage, Uri aUri);
 
             CoapDtlsSession &mSession;
             ForwardContext  *mNext;
             Uri              mUri;
             uint8_t          mTokenLength;
             uint8_t          mToken[Coap::Message::kMaxTokenLength];
-
-        private:
-            ForwardContext(CoapDtlsSession &aSession, const Coap::Message &aMessage, Uri aUri);
         };
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);

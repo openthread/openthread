@@ -1106,7 +1106,9 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
         }
     }
 
-    SuccessOrExit(error = aForwardContext.ToHeader(*forwardMessage, aResponse->GetCode()));
+    forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->GetCode()));
+
+    SuccessOrExit(error = forwardMessage->SetToken(aForwardContext.mToken, aForwardContext.mTokenLength));
 
     if (aResponse->GetLength() > aResponse->GetOffset())
     {
@@ -1355,13 +1357,6 @@ Manager::CoapDtlsSession::ForwardContext::ForwardContext(CoapDtlsSession     &aS
     , mTokenLength(aMessage.GetTokenLength())
 {
     memcpy(mToken, aMessage.GetToken(), mTokenLength);
-}
-
-Error Manager::CoapDtlsSession::ForwardContext::ToHeader(Coap::Message &aMessage, uint8_t aCode) const
-{
-    aMessage.Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aCode));
-
-    return aMessage.SetToken(mToken, mTokenLength);
 }
 
 } // namespace BorderAgent
