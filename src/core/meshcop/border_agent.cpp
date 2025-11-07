@@ -331,28 +331,6 @@ Manager::CoapDtlsSession *Manager::FindActiveCommissionerSession(void)
     return commissionerSession;
 }
 
-Coap::Message::Code Manager::CoapCodeFromError(Error aError)
-{
-    Coap::Message::Code code;
-
-    switch (aError)
-    {
-    case kErrorNone:
-        code = Coap::kCodeChanged;
-        break;
-
-    case kErrorParse:
-        code = Coap::kCodeBadRequest;
-        break;
-
-    default:
-        code = Coap::kCodeInternalError;
-        break;
-    }
-
-    return code;
-}
-
 template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     // This is from TMF agent.
@@ -1115,7 +1093,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        SendErrorMessage(aMessage, error);
+        SendErrorMessage(error, aMessage.GetToken(), aMessage.GetTokenLength());
     }
 
     return error;
@@ -1188,7 +1166,7 @@ exit:
     {
         LogWarn("Commissioner request failed: %s", ErrorToString(error));
 
-        SendErrorMessage(aForwardContext, error);
+        SendErrorMessage(error, aForwardContext.mToken, aForwardContext.mTokenLength);
     }
 }
 
@@ -1258,31 +1236,20 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::SendErrorMessage(const ForwardContext &aForwardContext, Error aError)
+void Manager::CoapDtlsSession::SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength)
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
+    Coap::Message::Code     code;
 
     message.Reset(NewPriorityMessage());
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = aForwardContext.ToHeader(*message, CoapCodeFromError(aError)));
-    SuccessOrExit(error = SendMessage(message.PassOwnership()));
+    code = (aError == kErrorParse) ? Coap::kCodeBadRequest : Coap::kCodeInternalError;
 
-exit:
-    LogWarnOnError(error, "send error CoAP message");
-}
+    message->Init(Coap::kTypeNonConfirmable, code);
+    SuccessOrExit(error = message->SetToken(aToken, aTokenLength));
 
-void Manager::CoapDtlsSession::SendErrorMessage(const Coap::Message &aRequest, Error aError)
-{
-    Error                   error = kErrorNone;
-    OwnedPtr<Coap::Message> message;
-
-    message.Reset(NewPriorityMessage());
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    message->Init(Coap::kTypeNonConfirmable, CoapCodeFromError(aError));
-    SuccessOrExit(error = message->SetTokenFromMessage(aRequest));
     SuccessOrExit(error = SendMessage(message.PassOwnership()));
 
 exit:

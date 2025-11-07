@@ -327,8 +327,7 @@ private:
         void  HandleTmfProxyTx(Coap::Message &aMessage);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
         Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-        void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
-        void  SendErrorMessage(const Coap::Message &aRequest, Error aError);
+        void  SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
@@ -371,8 +370,6 @@ private:
     void HandleSessionConnected(CoapDtlsSession &aSession);
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
     void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
-
-    static Coap::Message::Code CoapCodeFromError(Error aError);
 
     void PostServiceTask(void);
     void HandleServiceTask(void);
