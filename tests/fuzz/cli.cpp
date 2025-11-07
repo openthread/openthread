@@ -131,6 +131,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     buffer = fdp.ConsumeRemainingBytes();
 
+    Log("CLI Input: \"%s\"", reinterpret_cast<char *>(buffer));
+
     otCliInputLine(reinterpret_cast<char *>(buffer));
 
     nexus.AdvanceTime(60 * 1000);
