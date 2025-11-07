@@ -67,7 +67,7 @@ otError otBorderAgentSetMeshCoPServiceBaseName(otInstance *aInstance, const char
 
 void otBorderAgentSetVendorTxtData(otInstance *aInstance, const uint8_t *aVendorData, uint16_t aVendorDataLength)
 {
-    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().SetVendorTxtData(aVendorData, aVendorDataLength);
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::TxtData>().SetVendorData(aVendorData, aVendorDataLength);
 }
 #endif
 
@@ -106,7 +106,7 @@ void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                   
                                                    otBorderAgentMeshCoPServiceChangedCallback aCallback,
                                                    void                                      *aContext)
 {
-    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().SetServiceChangedCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::TxtData>().SetChangedCallback(aCallback, aContext);
 }
 
 otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAgentMeshCoPServiceTxtData *aTxtData)

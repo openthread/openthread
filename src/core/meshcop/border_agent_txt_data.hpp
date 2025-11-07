@@ -40,10 +40,14 @@
 #include <openthread/border_agent_txt_data.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/error.hpp"
+#include "common/heap_data.hpp"
 #include "common/locator.hpp"
+#include "common/notifier.hpp"
+#include "common/tasklet.hpp"
 #include "common/type_traits.hpp"
 #include "net/dns_types.hpp"
 #include "net/ip6_address.hpp"
@@ -56,6 +60,8 @@ namespace BorderAgent {
 
 class TxtData : public InstanceLocator
 {
+    friend class ot::Notifier;
+
 public:
     typedef otBorderAgentConnMode      ConnMode;     ///< Connection Mode in a Border Agent State Bitmap.
     typedef otBorderAgentThreadIfState IfState;      ///< Thread Interface State in a Border Agent State Bitmap.
@@ -147,7 +153,8 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-    typedef otBorderAgentMeshCoPServiceTxtData ServiceTxtData; ///< Service TXT Data.
+    typedef otBorderAgentMeshCoPServiceTxtData         ServiceTxtData;  ///< Service TXT Data.
+    typedef otBorderAgentMeshCoPServiceChangedCallback ChangedCallback; ///< Service TXT Data changed callback.
 
     /**
      * Prepares the MeshCoP service TXT data.
@@ -170,6 +177,60 @@ public:
      * @retval kErrorNoBufs   The buffer in @p aTxtData is too small.
      */
     Error Prepare(ServiceTxtData &aTxtData);
+
+    /**
+     * Sets the callback function used to notify any changes on the MeshCoP service TXT Data.
+     *
+     * The callback is invoked when the state of MeshCoP service TXT values changes. For example, it is
+     * invoked when the network name or the extended PAN ID changes.
+     *
+     * This callback is invoked once right after this API is called to provide initial states of the MeshCoP
+     * service to the application.
+     *
+     * @param[in] aCallback  The callback to invoke when there are any changes of the MeshCoP service.
+     * @param[in] aContext   A pointer to application-specific context.
+     */
+    void SetChangedCallback(ChangedCallback aCallback, void *aContext);
+
+    /**
+     * Requests a refresh of the MeshCoP service TXT data.
+     *
+     * This method is used to notify the `TxtData` module that a network parameter impacting one of the MeshCoP service
+     * TXT data entries has changed. For example, `RoutingManager` uses this method when the favored OMR prefix is
+     * changed.
+     */
+    void Refresh(void) { mChangedTask.Post(); }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    /**
+     * Returns the vendor TXT data.
+     *
+     * @returns The vendor TXT data.
+     */
+    const Heap::Data &GetVendorData(void) const { return mVendorData; }
+
+    /**
+     * Sets the vendor extra TXT data to be included when the Border Agent advertises the mDNS `_meshcop._udp` service.
+     *
+     * The provided @p aVendorData bytes are appended as they appear in the buffer to the end of the TXT data generated
+     * by the Border Agent itself, and are then included in the advertised mDNS `_meshcop._udp` service.
+     *
+     * This method itself does not perform any validation of the format of the provided @p aVendorData. Therefore, the
+     * caller MUST ensure it is formatted properly. Per the Thread specification, vendor-specific Key-Value TXT data
+     * pairs use TXT keys starting with 'v'. For example, `vn` for vendor name.
+     *
+     * The `BorderAgent` will create and retain its own copy of the bytes in @p aVendorData. So, the buffer passed to
+     * this method does not need to persist beyond the scope of the call.
+     *
+     * The vendor TXT data can be set at any time while the Border Agent is in any state. If there is a change from the
+     * previously set value, it will trigger an update of the registered mDNS service to advertise the new TXT data.
+     *
+     * @param[in] aVendorData        A pointer to the buffer containing the vendor TXT data.
+     * @param[in] aVendorDataLength  The length of @p aVendorData in bytes.
+     */
+    void SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLength);
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
@@ -243,6 +304,21 @@ private:
         static uint32_t Determine(Instance &aInstance);
 #endif
     };
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    // Callback from Notifier
+    void HandleNotifierEvents(Events aEvents);
+
+    void HandleChangedTask(void);
+
+    using ChangedTask = TaskletIn<TxtData, &TxtData::HandleChangedTask>;
+
+    Callback<ChangedCallback> mChangedCallback;
+    ChangedTask               mChangedTask;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Heap::Data mVendorData;
+#endif
+#endif
 };
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE

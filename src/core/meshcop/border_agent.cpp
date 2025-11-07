@@ -60,13 +60,11 @@ Manager::Manager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
-    , mServiceTask(aInstance)
 {
     ClearAllBytes(mCounters);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     ClearAllBytes(mServiceName);
-    PostServiceTask();
 
     static_assert(sizeof(kDefaultBaseServiceName) - 1 <= kBaseServiceNameMaxLen,
                   "OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME is too long");
@@ -105,7 +103,8 @@ void Manager::SetId(const Id &aId)
     Get<Settings>().Save<Settings::BorderAgentId>(aId);
     mId            = aId;
     mIdInitialized = true;
-    PostServiceTask();
+
+    Get<TxtData>().Refresh();
 
 exit:
     return;
@@ -117,6 +116,9 @@ void Manager::SetEnabled(bool aEnabled)
     VerifyOrExit(mEnabled != aEnabled);
     mEnabled = aEnabled;
     LogInfo("%sabling Border Agent", mEnabled ? "En" : "Dis");
+
+    Get<TxtData>().Refresh();
+
     UpdateState();
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
@@ -160,9 +162,9 @@ void Manager::Start(void)
     pskc.Clear();
 
     mIsRunning = true;
-    PostServiceTask();
-
     LogInfo("Border Agent start listening on port %u", GetUdpPort());
+
+    Get<TxtData>().Refresh();
 
 exit:
     if (!mIsRunning)
@@ -179,22 +181,16 @@ void Manager::Stop(void)
 
     mDtlsTransport.Close();
     mIsRunning = false;
-    PostServiceTask();
 
     LogInfo("Border Agent stopped");
+
+    Get<TxtData>().Refresh();
 
 exit:
     return;
 }
 
 uint16_t Manager::GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(); }
-
-void Manager::SetServiceChangedCallback(ServiceChangedCallback aCallback, void *aContext)
-{
-    mServiceChangedCallback.Set(aCallback, aContext);
-
-    PostServiceTask();
-}
 
 void Manager::HandleNotifierEvents(Events aEvents)
 {
@@ -204,12 +200,6 @@ void Manager::HandleNotifierEvents(Events aEvents)
     }
 
     VerifyOrExit(mEnabled);
-
-    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
-                            kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
-    {
-        PostServiceTask();
-    }
 
     if (aEvents.ContainsAny(kEventPskcChanged))
     {
@@ -358,33 +348,6 @@ exit:
     return;
 }
 
-void Manager::PostServiceTask(void)
-{
-    VerifyOrExit(mEnabled);
-
-#if !OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    VerifyOrExit(mServiceChangedCallback.IsSet());
-#endif
-
-    mServiceTask.Post();
-
-exit:
-    return;
-}
-
-void Manager::HandleServiceTask(void)
-{
-    VerifyOrExit(mEnabled);
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    RegisterService();
-#endif
-    mServiceChangedCallback.InvokeIfSet();
-
-exit:
-    return;
-}
-
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 
 Error Manager::SetServiceBaseName(const char *aBaseName)
@@ -407,17 +370,6 @@ exit:
     return error;
 }
 
-void Manager::SetVendorTxtData(const uint8_t *aVendorData, uint16_t aVendorDataLength)
-{
-    VerifyOrExit(!mVendorTxtData.Matches(aVendorData, aVendorDataLength));
-
-    SuccessOrAssert(mVendorTxtData.SetFrom(aVendorData, aVendorDataLength));
-    PostServiceTask();
-
-exit:
-    return;
-}
-
 const char *Manager::GetServiceName(void)
 {
     if (IsServiceNameEmpty())
@@ -438,6 +390,7 @@ void Manager::ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer
 void Manager::RegisterService(void)
 {
     Dnssd::Service service;
+    uint16_t       vendorDataLength;
     uint8_t       *txtDataBuffer;
     uint16_t       txtDataBufferSize;
     uint16_t       txtDataLength;
@@ -450,16 +403,17 @@ void Manager::RegisterService(void)
     // TXT data. The vendor TXT Data is appended at the
     // end.
 
-    txtDataBufferSize = kTxtDataMaxSize + mVendorTxtData.GetLength();
+    vendorDataLength  = Get<TxtData>().GetVendorData().GetLength();
+    txtDataBufferSize = kTxtDataMaxSize + vendorDataLength;
     txtDataBuffer     = reinterpret_cast<uint8_t *>(Heap::CAlloc(txtDataBufferSize, sizeof(uint8_t)));
     OT_ASSERT(txtDataBuffer != nullptr);
 
     SuccessOrAssert(Get<TxtData>().Prepare(txtDataBuffer, txtDataBufferSize, txtDataLength));
 
-    if (mVendorTxtData.GetLength() != 0)
+    if (vendorDataLength != 0)
     {
-        mVendorTxtData.CopyBytesTo(txtDataBuffer + txtDataLength);
-        txtDataLength += mVendorTxtData.GetLength();
+        Get<TxtData>().GetVendorData().CopyBytesTo(txtDataBuffer + txtDataLength);
+        txtDataLength += vendorDataLength;
     }
 
     service.Clear();
@@ -553,15 +507,15 @@ void EphemeralKeyManager::SetEnabled(bool aEnabled)
     {
         VerifyOrExit(mState == kStateDisabled);
         SetState(kStateStopped);
-        Get<Manager>().PostServiceTask();
     }
     else
     {
         VerifyOrExit(mState != kStateDisabled);
         Stop();
         SetState(kStateDisabled);
-        Get<Manager>().PostServiceTask();
     }
+
+    Get<TxtData>().Refresh();
 
 exit:
     return;
