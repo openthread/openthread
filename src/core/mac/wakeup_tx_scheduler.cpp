@@ -56,8 +56,8 @@ Error WakeupTxScheduler::WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16
     Error error = kErrorNone;
 
     VerifyOrExit(!mIsRunning, error = kErrorInvalidState);
-    // TODO: Add support for wake-up identifiers.
-    VerifyOrExit(aWakeupRequest.IsWakeupByExtAddress(), error = kErrorInvalidState);
+    // TODO: Add support for group wake-up identifiers.
+    VerifyOrExit(!aWakeupRequest.IsWakeupByGroupId(), error = kErrorInvalidState);
 
     mWakeupRequest = aWakeupRequest;
     mTxTimeUs      = TimerMicro::GetNow() + mTxRequestAheadTimeUs;
@@ -117,6 +117,10 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     connectionIe = frame->GetConnectionIe();
     connectionIe->SetRetryInterval(kConnectionRetryInterval);
     connectionIe->SetRetryCount(kConnectionRetryCount);
+    if (!mWakeupRequest.IsWakeupByExtAddress())
+    {
+        VerifyOrExit(connectionIe->SetWakeupId(mWakeupRequest.GetWakeupId()) == kErrorNone, frame = nullptr);
+    }
 
     // Advance to the time of the next wake-up frame.
     mTxTimeUs = Max(mTxTimeUs + mIntervalUs, TimerMicro::GetNow() + mTxRequestAheadTimeUs);

@@ -756,6 +756,32 @@ public:
      * @retval FALSE  If listening for wake-up frames is not enabled.
      */
     bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
+
+    /**
+     * Add the wake-up identifier to wake-up identifier table.
+     *
+     * @param[in]  aWakeupId    The wake-up identifier to be added.
+     *
+     * @retval kErrorNone    Successfully added wake-up identifier to the wake-up identifier table.
+     * @retval kErrorNoBuf   No available entry in the wake-up identifier table.
+     */
+    Error AddWakeupId(WakeupId aWakeupId);
+
+    /**
+     * Remove the wake-up identifier from the wake-up identifier table.
+     *
+     * @param[in]  aWakeupId    The wake-up identifier to be removed.
+     *
+     * @retval kErrorNone       Successfully removed the wake-up identifier from the wake-up identifier table.
+     * @retval kErrorNotFound   The wake-up identifier was not in wake-up identifier table.
+     */
+    Error RemoveWakeupId(WakeupId aWakeupId);
+
+    /**
+     * Clear all wake-up identifiers from the wake-up identifier table.
+     *
+     */
+    void ClearWakeupIds(void);
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
     /**
@@ -770,6 +796,9 @@ public:
 
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    static constexpr uint16_t kWakeupIdTableSize = OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SIZE;
+#endif
 
     enum Operation : uint8_t
     {
@@ -918,6 +947,8 @@ private:
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     uint32_t mWakeupListenInterval;
     uint32_t mWakeupListenDuration;
+
+    Array<uint64_t, kWakeupIdTableSize> mWakeupIdTable;
 #endif
     union
     {

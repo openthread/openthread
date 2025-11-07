@@ -36,6 +36,7 @@ set WL2 2
 set WC1 3
 set WC2 4
 set WL1_EXT_ADDRESS "deadbeefcafe0001"
+set WL1_WAKEUPID    "0xcafe01"
 set WL2_EXT_ADDRESS "deadbeefcafe0002"
 set WC1_EXT_ADDRESS "deadbeefcafe0003"
 set WC2_EXT_ADDRESS "deadbeefcafe0004"
@@ -62,6 +63,9 @@ send "ifconfig up\n"
 expect_line "Done"
 
 send "thread start\n"
+expect_line "Done"
+
+send "wakeup wakeupid add $WL1_WAKEUPID\n"
 expect_line "Done"
 
 send "wakeup listen enable\n"
@@ -178,7 +182,7 @@ for {set i 6} {$i <= 10} {incr i} {
 
 send_user "\n\n>>> WC2 establishes a P2P link with WL1\n"
 switch_node $WC2
-send "p2p link extaddr $WL1_EXT_ADDRESS\n"
+send "p2p link wakeupid $WL1_WAKEUPID\n"
 expect_line "Done"
 
 sleep 1

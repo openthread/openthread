@@ -34,7 +34,10 @@
 #ifndef OPENTHREAD_PROVISIONAL_LINK_H_
 #define OPENTHREAD_PROVISIONAL_LINK_H_
 
-#include <openthread/link.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -77,6 +80,35 @@ typedef struct otWakeupRequest
 
     otWakeupType mType; ///< Indicates the wake-up request type (`OT_WAKEUP_TYPE_*` enumeration).
 } otWakeupRequest;
+
+/**
+ * Add a wake-up identifier to the wake-up identifier table.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aWakeupId    The wake-up identifier to be added.
+ *
+ * @retval OT_ERROR_NONE      Successfully added wake-up identifier to the wake-up identifier table.
+ * @retval OT_ERROR_NO_BUFS   No available entry in the wake-up identifier table.
+ */
+otError otLinkAddWakeupId(otInstance *aInstance, otWakeupId aWakeupId);
+
+/**
+ * Remove a wake-up identifier from the wake-up identifier table.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aWakeupId    The wake-up identifier to be removed.
+ *
+ * @retval OT_ERROR_NONE        Successfully removed the wake-up identifier from the wake-up identifier table.
+ * @retval OT_ERROR_NOT_FOUND   The wake-up identifier was not in wake-up identifier table.
+ */
+otError otLinkRemoveWakeupId(otInstance *aInstance, otWakeupId aWakeupId);
+
+/**
+ * Clear all wake-up identifiers from the wake-up identifier table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ */
+void otLinkClearWakeupIds(otInstance *aInstance);
 
 /**
  * @}
