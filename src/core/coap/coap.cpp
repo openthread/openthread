@@ -642,7 +642,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
     // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
-    IgnoreError(aRequest.SetToken(AsConst(aRequestOld).GetToken(), aRequestOld.GetTokenLength()));
+    IgnoreError(aRequest.SetTokenFromMessage(aRequestOld));
     // Iterate on a copy with metadata removed.
     messageCopy = aRequestOld.Clone(aRequestOld.GetLength() - sizeof(Metadata));
     SuccessOrExit(error = iterator.Init(*messageCopy));
