@@ -294,7 +294,8 @@ private:
         friend Heap::Allocatable<CoapDtlsSession>;
 
     public:
-        Error    ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+        Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
+        Error    ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
         void     Cleanup(void);
         bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
@@ -311,15 +312,12 @@ private:
 
             CoapDtlsSession &mSession;
             ForwardContext  *mNext;
-            uint16_t         mMessageId;
-            bool             mPetition : 1;
-            bool             mSeparate : 1;
-            uint8_t          mTokenLength : 4;
-            uint8_t          mType : 2;
+            Uri              mUri;
+            uint8_t          mTokenLength;
             uint8_t          mToken[Coap::Message::kMaxTokenLength];
 
         private:
-            ForwardContext(CoapDtlsSession &aSession, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
+            ForwardContext(CoapDtlsSession &aSession, const Coap::Message &aMessage, Uri aUri);
         };
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
@@ -329,8 +327,7 @@ private:
         void  HandleTmfProxyTx(Coap::Message &aMessage);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
         Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-        void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
-        void  SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
+        void  SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
@@ -373,8 +370,6 @@ private:
     void HandleSessionConnected(CoapDtlsSession &aSession);
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
     void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
-
-    static Coap::Message::Code CoapCodeFromError(Error aError);
 
     void PostServiceTask(void);
     void HandleServiceTask(void);
