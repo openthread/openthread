@@ -258,7 +258,7 @@ Error Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
                 ExitNow();
             }
 
-            VerifyOrExit(index + 1 < kMaxEncodedLength, error = kErrorInvalidArgs);
+            VerifyOrExit(index + 1 <= kMaxEncodedLength, error = kErrorInvalidArgs);
             SuccessOrExit(error = AppendLabel(&aLabels[labelStartIndex], labelLength, aMessage));
 
             labelStartIndex = index + 1;
