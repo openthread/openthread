@@ -635,8 +635,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     Error            error       = kErrorNone;
     bool             isOptionSet = false;
     uint16_t         blockOption = 0;
-    uint16_t         blockOffset = 0;
-    uint16_t         lastOffset  = 0;
+    Message         *messageCopy = nullptr;
     Option::Iterator iterator;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
@@ -644,7 +643,9 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
     // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
     IgnoreError(aRequest.SetToken(AsConst(aRequestOld).GetToken(), aRequestOld.GetTokenLength()));
-    SuccessOrExit(error = iterator.Init(aRequestOld));
+    // Iterate on a copy with metadata removed.
+    messageCopy = aRequestOld.Clone(aRequestOld.GetLength() - sizeof(Metadata));
+    SuccessOrExit(error = iterator.Init(*messageCopy));
 
     // Copy options from last response to next message
     for (; !iterator.IsDone() && iterator.GetOption()->GetLength() != 0; error = iterator.Advance())
@@ -668,8 +669,6 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
             // If option to copy next is Block1 or Block2 option, option is not copied
             if (optionNumber == kOptionBlock1 || optionNumber == kOptionBlock2)
             {
-                // Capture block option total length
-                blockOffset = iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength() - lastOffset;
                 continue;
             }
         }
@@ -677,9 +676,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         // Copy option
         SuccessOrExit(error = aRequest.AppendOptionFromMessage(optionNumber, iterator.GetOption()->GetLength(),
                                                                iterator.GetMessage(),
-                                                               iterator.GetOptionValueMessageOffset() - blockOffset));
-        // Value is only used if (optionNumber == blockOption) to calculate blockOffset
-        lastOffset = iterator.GetOptionValueMessageOffset() + iterator.GetOption()->GetLength();
+                                                               iterator.GetOptionValueMessageOffset()));
     }
 
     if (!isOptionSet)
@@ -693,6 +690,10 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     }
 
 exit:
+    if (messageCopy != nullptr)
+    {
+        FreeMessage(messageCopy);
+    }
     return error;
 }
 
