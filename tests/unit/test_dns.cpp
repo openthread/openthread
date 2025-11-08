@@ -485,9 +485,13 @@ void TestDnsName(void)
 
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", maxLengthName);
+        printf("\"%s\" (len:%u)\n", maxLengthName, static_cast<uint16_t>(strlen(maxLengthName)));
+
+        SuccessOrQuit(Dns::Name::ValidateName(maxLengthName));
 
         SuccessOrQuit(Dns::Name::AppendName(maxLengthName, *message));
+
+        VerifyOrQuit(message->GetLength() == Dns::Name::kMaxNameSize);
     }
 
     printf("----------------------------------------------------------------\n");
@@ -497,7 +501,9 @@ void TestDnsName(void)
     {
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", invalidName);
+        printf("\"%s\" (len:%u)\n", invalidName, static_cast<uint16_t>(strlen(invalidName)));
+
+        VerifyOrQuit(Dns::Name::ValidateName(invalidName) != kErrorNone);
 
         VerifyOrQuit(Dns::Name::AppendName(invalidName, *message) == kErrorInvalidArgs);
     }
