@@ -112,7 +112,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otCliInit(&node.GetInstance(), CliOutput, nullptr);
 
     node.GetInstance().Get<BorderRouter::InfraIf>().Init(/* aInfraIfIndex */ 1, /* aInfraIfIsRunning */ true);
-    node.GetInstance().Get<BorderRouter::RoutingManager>().SetEnabled(true);
+    SuccessOrQuit(node.GetInstance().Get<BorderRouter::RoutingManager>().SetEnabled(true));
     node.GetInstance().Get<Srp::Server>().SetAutoEnableMode(true);
     node.GetInstance().Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(true);
     node.GetInstance().Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(true);
