@@ -1685,7 +1685,7 @@ private:
         void HandleTimer(void);
 
     private:
-        static constexpr uint32_t kExpireInterval = TimeMilli::SecToMsec(10); // in msec
+        static constexpr uint32_t kExpireInterval = TimeMilli::SecToMsec(100); // in msec
 
         struct MsgInfo : public Clearable<MsgInfo>, public Equatable<MsgInfo>
         {
