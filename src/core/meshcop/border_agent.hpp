@@ -45,13 +45,13 @@
 #include "common/appender.hpp"
 #include "common/as_core_type.hpp"
 #include "common/heap_allocatable.hpp"
-#include "common/heap_data.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/tasklet.hpp"
+#include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
 #include "net/dns_types.hpp"
@@ -102,9 +102,6 @@ struct Id : public otBorderAgentId, public Clearable<Id>, public Equatable<Id>
 
 class Manager : public InstanceLocator, private NonCopyable
 {
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    friend class ot::BorderRouter::RoutingManager;
-#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     friend ot::Dnssd;
 #endif
@@ -113,13 +110,13 @@ class Manager : public InstanceLocator, private NonCopyable
 #endif
     friend class ot::Notifier;
     friend class Tmf::Agent;
+    friend class TxtData;
 
     class CoapDtlsSession;
 
 public:
-    typedef otBorderAgentCounters                      Counters;               ///< Border Agent Counters.
-    typedef otBorderAgentSessionInfo                   SessionInfo;            ///< A session info.
-    typedef otBorderAgentMeshCoPServiceChangedCallback ServiceChangedCallback; ///< Service changed callback.
+    typedef otBorderAgentCounters    Counters;    ///< Border Agent Counters.
+    typedef otBorderAgentSessionInfo SessionInfo; ///< A session info.
 
     /**
      * Represents an iterator for secure sessions.
@@ -223,21 +220,6 @@ public:
      */
     uint16_t GetUdpPort(void) const;
 
-    /**
-     * Sets the callback function used by the Border Agent to notify any changes on the MeshCoP service TXT values.
-     *
-     * The callback is invoked when the state of MeshCoP service TXT values changes. For example, it is
-     * invoked when the network name or the extended PAN ID changes and pass the updated encoded TXT data to the
-     * application layer.
-     *
-     * This callback is invoked once right after this API is called to provide initial states of the MeshCoP
-     * service to the application.
-     *
-     * @param[in] aCallback  The callback to invoke when there are any changes of the MeshCoP service.
-     * @param[in] aContext   A pointer to application-specific context.
-     */
-    void SetServiceChangedCallback(ServiceChangedCallback aCallback, void *aContext);
-
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     /**
      * Sets the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp` service
@@ -249,27 +231,6 @@ public:
      * @retval kErrorInvalidArgs   The name is too long or invalid.
      */
     Error SetServiceBaseName(const char *aBaseName);
-
-    /**
-     * Sets the vendor extra TXT data to be included when the Border Agent advertises the mDNS `_meshcop._udp` service.
-     *
-     * The provided @p aVendorData bytes are appended as they appear in the buffer to the end of the TXT data generated
-     * by the Border Agent itself, and are then included in the advertised mDNS `_meshcop._udp` service.
-     *
-     * This method itself does not perform any validation of the format of the provided @p aVendorData. Therefore, the
-     * caller MUST ensure it is formatted properly. Per the Thread specification, vendor-specific Key-Value TXT data
-     * pairs use TXT keys starting with 'v'. For example, `vn` for vendor name.
-     *
-     * The `BorderAgent` will create and retain its own copy of the bytes in @p aVendorData. So, the buffer passed to
-     * this method does not need to persist beyond the scope of the call.
-     *
-     * The vendor TXT data can be set at any time while the Border Agent is in any state. If there is a change from the
-     * previously set value, it will trigger an update of the registered mDNS service to advertise the new TXT data.
-     *
-     * @param[in] aVendorData        A pointer to the buffer containing the vendor TXT data.
-     * @param[in] aVendorDataLength  The length of @p aVendorData in bytes.
-     */
-    void SetVendorTxtData(const uint8_t *aVendorData, uint16_t aVendorDataLength);
 #endif
 
     /**
@@ -294,32 +255,24 @@ private:
         friend Heap::Allocatable<CoapDtlsSession>;
 
     public:
-        Error    ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+        Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
+        Error    ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
         void     Cleanup(void);
         bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
 
     private:
-        class ForwardContext : public ot::LinkedListEntry<ForwardContext>,
-                               public Heap::Allocatable<ForwardContext>,
-                               private ot::NonCopyable
+        struct ForwardContext : public ot::LinkedListEntry<ForwardContext>,
+                                public Heap::Allocatable<ForwardContext>,
+                                private ot::NonCopyable
         {
-            friend class Heap::Allocatable<ForwardContext>;
-
-        public:
-            Error ToHeader(Coap::Message &aMessage, uint8_t aCode) const;
+            ForwardContext(CoapDtlsSession &aSession, const Coap::Message &aMessage, Uri aUri);
 
             CoapDtlsSession &mSession;
             ForwardContext  *mNext;
-            uint16_t         mMessageId;
-            bool             mPetition : 1;
-            bool             mSeparate : 1;
-            uint8_t          mTokenLength : 4;
-            uint8_t          mType : 2;
+            Uri              mUri;
+            uint8_t          mTokenLength;
             uint8_t          mToken[Coap::Message::kMaxTokenLength];
-
-        private:
-            ForwardContext(CoapDtlsSession &aSession, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
         };
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
@@ -329,16 +282,17 @@ private:
         void  HandleTmfProxyTx(Coap::Message &aMessage);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
         Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-        void  SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
-        void  SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
+        void  SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
-        static void HandleCoapResponse(void                *aContext,
-                                       otMessage           *aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aResult);
-        void HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
+        static void HandleLeaderResponseToFwdTmf(void                *aContext,
+                                                 otMessage           *aMessage,
+                                                 const otMessageInfo *aMessageInfo,
+                                                 otError              aResult);
+        void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
+                                                 const Coap::Message  *aResponse,
+                                                 Error                 aResult);
         static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
         bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         static bool HandleResource(CoapBase               &aCoapBase,
@@ -360,6 +314,8 @@ private:
     void UpdateState(void);
     void Start(void);
     void Stop(void);
+
+    // Callback from Notifier
     void HandleNotifierEvents(Events aEvents);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -374,25 +330,19 @@ private:
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
     void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
 
-    static Coap::Message::Code CoapCodeFromError(Error aError);
-
-    void PostServiceTask(void);
-    void HandleServiceTask(void);
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    // Callback from `RoutingManager`
-    void HandleFavoredOmrPrefixChanged(void) { PostServiceTask(); }
-#endif
-
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    // Callback from `BorderAgent::TxtData`.
+    void HandleServiceTxtDataChanged(void) { RegisterService(); }
+
+    // Callback from `Dnssd`
+    void HandleDnssdPlatformStateChange(void) { RegisterService(); }
+
     const char *GetServiceName(void);
     bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
     void        ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
     void        RegisterService(void);
     void        UnregisterService(void);
-    void        HandleDnssdPlatformStateChange(void) { PostServiceTask(); }
 #endif
-
-    using ServiceTask = TaskletIn<Manager, &Manager::HandleServiceTask>;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static const char kServiceType[];
@@ -406,11 +356,8 @@ private:
     Id   mId;
     bool mIdInitialized;
 #endif
-    Callback<ServiceChangedCallback> mServiceChangedCallback;
-    ServiceTask                      mServiceTask;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Dns::Name::LabelBuffer mServiceName;
-    Heap::Data             mVendorTxtData;
 #endif
     Counters mCounters;
 };

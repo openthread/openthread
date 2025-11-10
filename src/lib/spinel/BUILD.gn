@@ -79,7 +79,10 @@ static_library("libopenthread-spinel-ncp") {
     "../../core:libopenthread_core_headers",
     "../platform:libopenthread-platform",
   ]
-  public_configs = [ ":spinel_config_openthread_message_enable" ]
+  public_configs = [
+    ":spinel_config_openthread_message_enable",
+    "../../..:openthread_ftd_config",
+  ]
 }
 
 static_library("libopenthread-spinel-rcp") {
@@ -89,5 +92,8 @@ static_library("libopenthread-spinel-rcp") {
     "../../core:libopenthread_core_headers",
     "../platform:libopenthread-platform",
   ]
-  public_configs = [ ":spinel_config_openthread_message_disable" ]
+  public_configs = [
+    ":spinel_config_openthread_message_disable",
+    "../../..:openthread_radio_config",
+  ]
 }
