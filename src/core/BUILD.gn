@@ -386,6 +386,8 @@ openthread_core_files = [
   "meshcop/announce_begin_client.hpp",
   "meshcop/border_agent.cpp",
   "meshcop/border_agent.hpp",
+  "meshcop/border_agent_ephemeral_key.cpp",
+  "meshcop/border_agent_ephemeral_key.hpp",
   "meshcop/border_agent_tracker.cpp",
   "meshcop/border_agent_tracker.hpp",
   "meshcop/border_agent_txt_data.cpp",
