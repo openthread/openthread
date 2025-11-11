@@ -47,7 +47,7 @@ RegisterLogModule("MulticastDns");
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_VERBOSE_LOGGING_ENABLE
 #define LogVerbose(...)              \
     if (Get<Core>().mVerboseLogging) \
-    LogAt(kLogLevelNone, __VA_ARGS__)
+    LogInfo(__VA_ARGS__)
 #else
 #define LogVerbose(...)
 #endif
@@ -424,6 +424,8 @@ Error Core::GetNextRecordQuerier(Iterator &aIterator, RecordQuerier &aQuerier, C
 
 void Core::InvokeConflictCallback(const char *aName, const char *aServiceType)
 {
+    LogVerbose("Invoking conflict callback: %s %s", aName, aServiceType == nullptr ? "" : aServiceType);
+
     if (mConflictCallback != nullptr)
     {
         mConflictCallback(&GetInstance(), aName, aServiceType);
@@ -2110,6 +2112,8 @@ void Core::HostEntry::HandleConflict(void)
 {
     State oldState = GetState();
 
+    LogVerbose("HostEntry %s - setting state to conflict", mName.AsCString());
+
     SetStateToConflict();
     VerifyOrExit(oldState == kRegistered);
     Get<Core>().InvokeConflictCallback(mName.AsCString(), nullptr);
@@ -2704,6 +2708,9 @@ void Core::ServiceEntry::ScheduleToRemoveIfEmpty(void)
 void Core::ServiceEntry::HandleConflict(void)
 {
     State oldState = GetState();
+
+    LogVerbose("ServiceEntry %s %s - setting state to conflict", mServiceInstance.AsCString(),
+               mServiceType.AsCString());
 
     SetStateToConflict();
     UpdateServiceTypes();
