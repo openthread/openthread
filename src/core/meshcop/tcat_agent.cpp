@@ -907,8 +907,8 @@ Error TcatAgent::HandleRequestPskdHash(const Message &aIncomingMessage,
 
     SuccessOrExit(error = aIncomingMessage.Read(aOffset, &providedChallenge, aLength));
 
-    CalculateHash(providedChallenge, mVendorInfo->mPskdString, StringLength(mVendorInfo->mPskdString, kMaxPskdLength),
-                  hash);
+    SuccessOrExit(error = CalculateHash(providedChallenge, mVendorInfo->mPskdString,
+                                        StringLength(mVendorInfo->mPskdString, kMaxPskdLength), hash));
 
     SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, hash.GetBytes(),
                                          Crypto::HmacSha256::Hash::kSize));
@@ -930,7 +930,7 @@ Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
     VerifyOrExit(aLength == Crypto::HmacSha256::Hash::kSize, error = kErrorSecurity);
     VerifyOrExit(mRandomChallenge != 0, error = kErrorSecurity);
 
-    CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash);
+    SuccessOrExit(error = CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash));
     DumpDebg("Hash", &hash, sizeof(hash));
 
     VerifyOrExit(aIncomingMessage.Compare(aOffset, hash), error = kErrorSecurity);
@@ -939,18 +939,19 @@ exit:
     return error;
 }
 
-void TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash)
+Error TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash)
 {
     const mbedtls_asn1_buf &rawKey = Get<Ble::BleSecure>().GetOwnPublicKey();
     Crypto::Key             cryptoKey;
     Crypto::HmacSha256      hmac;
+    Error                   error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Crypto::Storage::KeyRef keyRef;
-    SuccessOrExit(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
-                                             Crypto::Storage::kKeyAlgorithmHmacSha256, Crypto::Storage::kUsageSignHash,
-                                             Crypto::Storage::kTypeVolatile, reinterpret_cast<const uint8_t *>(aBuf),
-                                             aBufLen));
+    SuccessOrExit(error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                                     Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                                     Crypto::Storage::kUsageSignHash, Crypto::Storage::kTypeVolatile,
+                                                     reinterpret_cast<const uint8_t *>(aBuf), aBufLen));
     cryptoKey.SetAsKeyRef(keyRef);
 #else
     cryptoKey.Set(reinterpret_cast<const uint8_t *>(aBuf), static_cast<uint16_t>(aBufLen));
@@ -965,7 +966,7 @@ void TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBuf
     Crypto::Storage::DestroyKey(keyRef);
 exit:
 #endif
-    return;
+    return error;
 }
 
 Error TcatAgent::HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aResponse)

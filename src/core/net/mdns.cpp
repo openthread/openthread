@@ -1215,10 +1215,7 @@ void Core::Entry::SetState(State aState)
 
 void Core::Entry::Register(const Key &aKey, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     mKeyRecord.UpdateTtl(DetermineTtl(aKey.mTtl, kDefaultKeyTtl));
     mKeyRecord.UpdateProperty(mKeyData, aKey.mKeyData, aKey.mKeyDataLength);
@@ -1318,6 +1315,25 @@ void Core::Entry::InvokeCallbacks(void)
 
     case kProbing:
     case kRemoving:
+        break;
+    }
+}
+
+void Core::Entry::DecideToProbeOnRegister(void)
+{
+    // Checks whether we should start probing when `Register()` is
+    // called. If a conflict was previously detected, we send a probe
+    // again upon an explicit `Register()` request.
+
+    switch (mState)
+    {
+    case kRegistered:
+    case kProbing:
+        break;
+
+    case kRemoving:
+    case kConflict:
+        StartProbing();
         break;
     }
 }
@@ -1951,10 +1967,7 @@ exit:
 
 void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 
@@ -2543,10 +2556,7 @@ void Core::ServiceEntry::Register(const Service &aService, const Callback &aCall
     const char *hostName;
     uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultServiceTtl);
 
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 

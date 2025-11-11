@@ -172,8 +172,8 @@ Instance::Instance(void)
     , mNetworkDiagnosticClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    , mBorderAgentManager(*this)
     , mBorderAgentTxtData(*this)
+    , mBorderAgentManager(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mBorderAgentEphemeralKeyManager(*this)

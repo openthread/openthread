@@ -592,8 +592,8 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    MeshCoP::BorderAgent::Manager mBorderAgentManager;
     MeshCoP::BorderAgent::TxtData mBorderAgentTxtData;
+    MeshCoP::BorderAgent::Manager mBorderAgentManager;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

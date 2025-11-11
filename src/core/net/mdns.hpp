@@ -1172,6 +1172,7 @@ private:
         void SetCallback(const Callback &aCallback);
         void ClearCallback(void) { mCallback.Clear(); }
         void MarkToInvokeCallbackUnconditionally(void);
+        void DecideToProbeOnRegister(void);
         void StartProbing(void);
         void SetStateToConflict(void);
         void SetStateToRemoving(void);
