@@ -827,7 +827,7 @@ void RoutingManager::OmrPrefixManager::SetFavoredPrefix(const OmrPrefix &aOmrPre
     if (oldFavoredPrefix != mFavoredPrefix)
     {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-        Get<MeshCoP::BorderAgent::Manager>().HandleFavoredOmrPrefixChanged();
+        Get<MeshCoP::BorderAgent::TxtData>().Refresh();
 #endif
         LogInfo("Favored OMR prefix: %s -> %s", FavoredToString(oldFavoredPrefix).AsCString(),
                 FavoredToString(mFavoredPrefix).AsCString());

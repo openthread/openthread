@@ -465,7 +465,7 @@ private:
                      uint16_t       aLength,
                      const void    *aBuf,
                      size_t         aBufLen);
-    void  CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
+    Error CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
 
     bool    CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
                                                 CommandClassFlags aDeviceCommandClassFlags,
