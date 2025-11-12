@@ -1122,6 +1122,13 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
+void SubMac::HandleRadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries)
+{
+    mCallbacks.HandleRadioAvailMapUpdated(aTimestamp, aSlotEntries, aNumEntries);
+}
+#endif
+
 // LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)

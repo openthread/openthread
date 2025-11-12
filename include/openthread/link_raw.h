@@ -40,6 +40,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/provisional/radio.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -387,6 +388,29 @@ otError otLinkRawSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMac
  * @returns The current radio time in microseconds.
  */
 uint64_t otLinkRawGetRadioTime(otInstance *aInstance);
+
+/**
+ * Pointer to the callback for handling the radio availability map updated event.
+ *
+ * @param[in]  aInstance     The OpenThread instance.
+ * @param[in]  aTimestamp    The time of the local radio clock in microseconds when the radio availability map
+ *                           starts.
+ * @param[in]  aSlotEntries  A pointer to radio slot entries.
+ * @param[in]  aNumEntries   The number of entries pointed by the @p aSlotEntries. Value 0 indicates that the
+ *                           radio is always available for Thread.
+ */
+typedef void (*otLinkRawRadioAvailMapUpdated)(otInstance        *aInstance,
+                                              uint64_t           aTimestamp,
+                                              const otSlotEntry *aSlotEntries,
+                                              uint8_t            aNumEntries);
+
+/**
+ * Sets the callback to notify the caller of a radio availability map updated event.
+ *
+ * @param[in] aInstance   A pointer to the OpenThread instance.
+ * @param[in] aCallback   The callback to notify of events. Can be NULL if not needed.
+ */
+void otLinkRawSetRadioAvailMapUpdated(otInstance *aInstance, otLinkRawRadioAvailMapUpdated aCallback);
 
 /**
  * @}

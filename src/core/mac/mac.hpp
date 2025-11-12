@@ -768,6 +768,20 @@ public:
      */
     uint32_t CalculateRadioBusTransferTime(uint16_t aFrameSize) const;
 
+    /**
+     * Indicates the radio availability map is updated.
+     *
+     * @param[in]  aTimestamp   The time of the local radio clock in microseconds when the radio availability map
+     *                          starts.
+     * @param[in]  aSlotEntries A pointer to radio slot entries.
+     * @param[in]  aNumEntries  The number of entries pointed by the @p aSlotEntries. Value 0 indicates that the
+     *                          radio is always available for Thread.
+     */
+
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
+    void RadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries);
+#endif
+
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 

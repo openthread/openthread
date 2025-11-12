@@ -132,6 +132,8 @@ public:
 
     static constexpr int8_t kInvalidPower = OT_RADIO_POWER_INVALID;
 
+    static constexpr uint16_t kSlotTimeUs = OT_RADIO_SLOT_TIME_US;
+
     static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
                    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
                   "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT "
@@ -212,6 +214,19 @@ public:
          *                        channel, kErrorAbort when transmission was aborted for other reasons.
          */
         void HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError);
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
+        /**
+         * This callback method handles a "Radio Availability Map Updated" event from radio platform.
+         *
+         * @param[in]  aTimestamp    The time of the local radio clock in microseconds when the radio availability map
+         *                           starts.
+         * @param[in]  aSlotEntries  A pointer to radio slot entries.
+         * @param[in]  aNumEntries   The number of entries pointed by the @p aSlotEntries. Value 0 indicates that the
+         *                           radio is always available for Thread.
+         */
+        void HandleRadioAvailMapUpdated(uint64_t aTimestamp, const Mac::SlotEntry *aSlotEntries, uint8_t aNumEntries);
 #endif
 
     private:

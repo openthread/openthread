@@ -186,7 +186,18 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
     AsCoreType(aInstance).Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
 }
 #endif
-#else // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
+extern "C" void otPlatRadioAvailMapUpdated(otInstance        *aInstance,
+                                           uint64_t           aTimestamp,
+                                           const otSlotEntry *aSlotEntries,
+                                           uint8_t            aNumEntries)
+{
+    AsCoreType(aInstance).Get<Radio::Callbacks>().HandleRadioAvailMapUpdated(
+        aTimestamp, static_cast<const Mac::SlotEntry *>(aSlotEntries), aNumEntries);
+}
+#endif
+#else  // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
 
@@ -198,6 +209,7 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t) {}
 
 extern "C" void otPlatRadioBusLatencyChanged(otInstance *) {}
 
+extern "C" void otPlatRadioAvailMapUpdated(otInstance *, uint64_t, const otSlotEntry *, uint8_t) {}
 #endif // // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------

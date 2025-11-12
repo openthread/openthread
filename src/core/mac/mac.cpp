@@ -2765,5 +2765,34 @@ uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
     return trasnferTime;
 }
 
+#if OPENTHREAD_CONFIG_MAC_RADIO_AVAILABILITY_MAP_ENABLE
+void Mac::RadioAvailMapUpdated(uint64_t aTimestamp, const SlotEntry *aSlotEntries, uint8_t aNumEntries)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    {
+        static constexpr uint16_t kBufSize = 200;
+
+        uint16_t     numSlots = 0;
+        char         buf[kBufSize];
+        StringWriter writer(buf, sizeof(buf));
+
+        writer.Append("RAM: timestamp:%lu, ", ToUlong(aTimestamp));
+
+        for (uint8_t i = 0; i < aNumEntries; i++)
+        {
+            numSlots += aSlotEntries[i].GetNumSlots();
+            writer.Append("%u:%u, ", aSlotEntries[i].GetSlotType(), aSlotEntries[i].GetNumSlots());
+        }
+
+        LogInfo("%s slots:%u", buf, numSlots);
+    }
+#else
+    OT_UNUSED_VARIABLE(aTimestamp);
+    OT_UNUSED_VARIABLE(aSlotEntries);
+    OT_UNUSED_VARIABLE(aNumEntries);
+#endif
+}
+#endif
+
 } // namespace Mac
 } // namespace ot
