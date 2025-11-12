@@ -1416,6 +1416,18 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    // We explicitly disable the multi-AIL detector to prevent
+    // interference with the tests. The detector enables
+    // `RxRaTracker` and keeps it enabled even when Border Routing is
+    // disabled, which keeps prefix entries in the heap and can
+    // invalidate the heap allocation checks. It may also mess up the
+    // expected timing of RS (Router Solicitation) messages (starting
+    // the `RxRaTracker` early).
+    otBorderRoutingSetMultiAilDetectionEnabled(sInstance, false);
+#endif
+
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, aEnablBorderRouting));
 
     // Reset all test flags
