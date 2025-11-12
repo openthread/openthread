@@ -33,10 +33,10 @@ declare_args() {
 }
 
 spinel_sources = [
-  "openthread-spinel-config.h",
-  "logger.hpp",
   "logger.cpp",
+  "logger.hpp",
   "multi_frame_buffer.hpp",
+  "openthread-spinel-config.h",
   "radio_spinel.cpp",
   "radio_spinel.hpp",
   "spi_frame.hpp",
