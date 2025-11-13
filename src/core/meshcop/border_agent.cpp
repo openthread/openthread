@@ -1220,6 +1220,8 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     OffsetRange               offsetRange;
     UdpEncapsulationTlvHeader udpEncapHeader;
 
+    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kUdpEncapsulation, offsetRange));
 
     SuccessOrExit(error = aMessage.Read(offsetRange, udpEncapHeader));
@@ -1257,6 +1259,8 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
     OffsetRange             offsetRange;
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
+
+    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
 
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRouterRloc));
 
