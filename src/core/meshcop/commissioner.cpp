@@ -346,7 +346,7 @@ void Commissioner::ComputeBloomFilter(SteeringData &aSteeringData) const
 {
     Mac::ExtAddress joinerId;
 
-    aSteeringData.Init();
+    IgnoreError(aSteeringData.Init(SteeringData::kMaxLength));
 
     for (const Joiner &joiner : mJoiners)
     {
@@ -357,11 +357,11 @@ void Commissioner::ComputeBloomFilter(SteeringData &aSteeringData) const
 
         case Joiner::kTypeEui64:
             ComputeJoinerId(joiner.mSharedId.mEui64, joinerId);
-            aSteeringData.UpdateBloomFilter(joinerId);
+            IgnoreError(aSteeringData.UpdateBloomFilter(joinerId));
             break;
 
         case Joiner::kTypeDiscerner:
-            aSteeringData.UpdateBloomFilter(joiner.mSharedId.mDiscerner);
+            IgnoreError(aSteeringData.UpdateBloomFilter(joiner.mSharedId.mDiscerner));
             break;
 
         case Joiner::kTypeAny:
