@@ -364,8 +364,11 @@ public:
      * Copies the Steering Data from the TLV into a given `SteeringData` variable.
      *
      * @param[out]  aSteeringData   A reference to a `SteeringData` to copy into.
+     *
+     * @retval kErrorNone         Successfully copied the steering data into @p aSteeringData.
+     * @retval kErrorInvalidArgs  The Steering Data TLV length is invalid.
      */
-    void CopyTo(SteeringData &aSteeringData) const;
+    Error CopyTo(SteeringData &aSteeringData) const;
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

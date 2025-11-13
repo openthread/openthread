@@ -635,7 +635,7 @@ Error Leader::FindSteeringData(MeshCoP::SteeringData &aSteeringData) const
     const MeshCoP::SteeringDataTlv *steeringDataTlv = FindInCommissioningData<MeshCoP::SteeringDataTlv>();
 
     VerifyOrExit(steeringDataTlv != nullptr, error = kErrorNotFound);
-    steeringDataTlv->CopyTo(aSteeringData);
+    error = steeringDataTlv->CopyTo(aSteeringData);
 
 exit:
     return error;

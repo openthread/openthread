@@ -371,7 +371,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
                 OffsetRange            valueOffsetRange = tlvInfo.mValueOffsetRange;
 
                 valueOffsetRange.ShrinkLength(MeshCoP::SteeringData::kMaxLength);
-                steeringData.Init(static_cast<uint8_t>(valueOffsetRange.GetLength()));
+                IgnoreError(steeringData.Init(static_cast<uint8_t>(valueOffsetRange.GetLength())));
                 aRxInfo.mMessage.ReadBytes(valueOffsetRange, steeringData.GetData());
 
                 if (mEnableFiltering)

@@ -121,6 +121,7 @@
  * @defgroup api-border-routing          Border Routing Manager
  * @defgroup api-multi-ail-detection     Border Router Multi AIL Detection
  * @defgroup api-commissioner            Commissioner
+ * @defgroup api-steering-data           MeshCoP Steering Data
  * @defgroup api-thread-general          General
  * @brief This module includes functions for all Thread roles.
  * @defgroup api-joiner                  Joiner
