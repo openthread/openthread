@@ -42,6 +42,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/joiner.h>
+#include <openthread/steering_data.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -83,17 +84,6 @@ typedef enum otCommissionerJoinerEvent
 #define OT_COMMISSIONING_PASSPHRASE_MAX_SIZE 255 ///< Maximum size of the Commissioning Passphrase
 
 #define OT_PROVISIONING_URL_MAX_SIZE 64 ///< Max size (number of chars) in Provisioning URL string (excludes null char).
-
-#define OT_STEERING_DATA_MAX_LENGTH 16 ///< Max steering data length (bytes)
-
-/**
- * Represents the steering data.
- */
-typedef struct otSteeringData
-{
-    uint8_t mLength;                         ///< Length of steering data (bytes)
-    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH]; ///< Byte values
-} otSteeringData;
 
 /**
  * Represents a Commissioning Dataset.

@@ -31,6 +31,7 @@
 #include <openthread/config.h>
 
 #include "test_util.hpp"
+#include "common/clearable.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/timestamp.hpp"
 
@@ -75,7 +76,7 @@ void TestSteeringData(void)
     {
         printf("\n--------------------------------------------");
 
-        steeringData.Init(len);
+        SuccessOrQuit(steeringData.Init(len));
 
         VerifyOrQuit(steeringData.GetLength() == len);
         VerifyOrQuit(steeringData.IsEmpty());
@@ -84,14 +85,14 @@ void TestSteeringData(void)
         VerifyOrQuit(!steeringData.Contains(joinerId2));
         VerifyOrQuit(!steeringData.Contains(indexes));
 
-        steeringData.UpdateBloomFilter(joinerId1);
+        SuccessOrQuit(steeringData.UpdateBloomFilter(joinerId1));
         printf("\nAfter UpdateBloomFilter(joinerId1): %s", steeringData.ToString().AsCString());
         VerifyOrQuit(steeringData.GetLength() == len);
         VerifyOrQuit(!steeringData.IsEmpty());
         VerifyOrQuit(!steeringData.PermitsAllJoiners());
         VerifyOrQuit(steeringData.Contains(joinerId1));
 
-        steeringData.UpdateBloomFilter(joinerId2);
+        SuccessOrQuit(steeringData.UpdateBloomFilter(joinerId2));
         printf("\nAfter UpdateBloomFilter(joinerId2): %s", steeringData.ToString().AsCString());
         VerifyOrQuit(steeringData.GetLength() == len);
         VerifyOrQuit(!steeringData.IsEmpty());
@@ -101,14 +102,12 @@ void TestSteeringData(void)
         VerifyOrQuit(steeringData.Contains(indexes));
     }
 
-    steeringData.Init(0);
+    VerifyOrQuit(steeringData.Init(0) == kErrorInvalidArgs);
+    VerifyOrQuit(steeringData.Init(MeshCoP::SteeringData::kMaxLength + 1) == kErrorInvalidArgs);
 
+    ClearAllBytes(steeringData);
     VerifyOrQuit(steeringData.GetLength() == 0);
-    VerifyOrQuit(steeringData.IsEmpty());
-    VerifyOrQuit(!steeringData.PermitsAllJoiners());
-    VerifyOrQuit(!steeringData.Contains(joinerId1));
-    VerifyOrQuit(!steeringData.Contains(joinerId2));
-    VerifyOrQuit(!steeringData.Contains(indexes));
+    VerifyOrQuit(steeringData.UpdateBloomFilter(joinerId1) == kErrorInvalidArgs);
 
     printf("TestSteeringData() passed\n");
 }
@@ -161,8 +160,8 @@ void TestSteeringDataBloomFilterMerge(void)
             printf("\n--------------------------------------------");
             printf("\nLen:%u OtherLen:%u", length, otherLength);
 
-            steeringData.Init(length);
-            otherSteeringData.Init(otherLength);
+            SuccessOrQuit(steeringData.Init(length));
+            SuccessOrQuit(otherSteeringData.Init(otherLength));
 
             VerifyOrQuit(steeringData.GetLength() == length);
             VerifyOrQuit(otherSteeringData.GetLength() == otherLength);
@@ -184,13 +183,13 @@ void TestSteeringDataBloomFilterMerge(void)
 
             for (Mac::ExtAddress &id : joinerIds)
             {
-                steeringData.UpdateBloomFilter(id);
+                SuccessOrQuit(steeringData.UpdateBloomFilter(id));
                 VerifyOrQuit(steeringData.Contains(id));
             }
 
             for (Mac::ExtAddress &id : otherJoinerIds)
             {
-                otherSteeringData.UpdateBloomFilter(id);
+                SuccessOrQuit(otherSteeringData.UpdateBloomFilter(id));
                 VerifyOrQuit(otherSteeringData.Contains(id));
             }
 
