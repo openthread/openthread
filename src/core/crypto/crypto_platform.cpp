@@ -40,6 +40,7 @@
 #include <mbedtls/ecdsa.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/md.h>
+#include <mbedtls/oid.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/version.h>
@@ -73,6 +74,7 @@ using namespace Crypto;
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 static mbedtls_ctr_drbg_context sCtrDrbgContext;
 static mbedtls_entropy_context  sEntropyContext;
+static bool                     sCryptoRngReady = false;
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 static constexpr uint16_t kEntropyMinThreshold = 16;
 #endif
@@ -464,6 +466,11 @@ exit:
 
 OT_TOOL_WEAK void otPlatCryptoRandomInit(void)
 {
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    if (sCryptoRngReady)
+    {
+        return;
+    }
     mbedtls_entropy_init(&sEntropyContext);
 
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
@@ -476,12 +483,22 @@ OT_TOOL_WEAK void otPlatCryptoRandomInit(void)
     int rval = mbedtls_ctr_drbg_seed(&sCtrDrbgContext, mbedtls_entropy_func, &sEntropyContext, nullptr, 0);
     OT_ASSERT(rval == 0);
     OT_UNUSED_VARIABLE(rval);
+    sCryptoRngReady = true;
+#else
+#endif
 }
 
 OT_TOOL_WEAK void otPlatCryptoRandomDeinit(void)
 {
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    if (!sCryptoRngReady)
+    {
+        return;
+    }
     mbedtls_entropy_free(&sEntropyContext);
     mbedtls_ctr_drbg_free(&sCtrDrbgContext);
+    sCryptoRngReady = false;
+#endif
 }
 
 OT_TOOL_WEAK otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize)
@@ -522,44 +539,84 @@ exit:
 OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair,
                                                    otPlatCryptoEcdsaPublicKey     *aPublicKey)
 {
-    Error                error = kErrorNone;
-    mbedtls_pk_context   pk;
-    mbedtls_ecp_keypair *keyPair;
-    int                  ret;
-#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-    size_t olen = 0;
-#endif
+    Error              error = kErrorNone;
+    mbedtls_pk_context pk;
+    int                ret;
+
+    VerifyOrExit(aKeyPair && aPublicKey, error = kErrorInvalidArgs);
+    VerifyOrExit(aKeyPair->mDerLength > 0 && aKeyPair->mDerLength <= sizeof(aKeyPair->mDerBytes),
+                 error = kErrorInvalidArgs);
 
     mbedtls_pk_init(&pk);
-
     VerifyOrExit(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)) == 0, error = kErrorFailed);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-    VerifyOrExit(mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0,
-                                      MbedTls::CryptoSecurePrng, nullptr) == 0,
-                 error = kErrorParse);
+    ret = mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0, MbedTls::CryptoSecurePrng,
+                               nullptr);
 #else
-    VerifyOrExit(mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0) == 0,
-                 error = kErrorParse);
+    ret = mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0);
 #endif
+    VerifyOrExit(ret == 0, error = kErrorParse);
 
-    keyPair = mbedtls_pk_ec(pk);
+    {
+        unsigned char derBuf[OT_CRYPTO_ECDSA_MAX_DER_SIZE];
+        size_t        derLen;
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-    ret = mbedtls_ecp_write_public_key(keyPair, MBEDTLS_ECP_PF_UNCOMPRESSED, &olen, aPublicKey->m8,
-                                       sizeof(aPublicKey->m8) + 1);
-    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-    VerifyOrExit(olen == (Ecdsa::P256::kMpiSize * 2 + 1), error = kErrorFailed);
-    memmove(aPublicKey->m8, aPublicKey->m8 + 1, Ecdsa::P256::kMpiSize * 2);
+        ret = mbedtls_pk_write_pubkey_der(&pk, derBuf, sizeof(derBuf));
+        VerifyOrExit(ret > 0, error = MbedTls::MapError(ret));
+        derLen = static_cast<size_t>(ret);
+
+        unsigned char *start = derBuf + sizeof(derBuf) - derLen;
+        unsigned char *p     = start;
+        unsigned char *end   = start + derLen;
+
+        size_t len;
+        VerifyOrExit(mbedtls_asn1_get_tag(&p, end, &len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+                     error = kErrorFailed);
+        VerifyOrExit(p + len == end, error = kErrorFailed);
+        unsigned char *spki_end = p + len;
+
+        size_t algLen;
+        VerifyOrExit(mbedtls_asn1_get_tag(&p, spki_end, &algLen, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+                     error = kErrorFailed);
+        VerifyOrExit(p + algLen <= spki_end, error = kErrorFailed);
+        unsigned char *alg_end = p + algLen;
+        {
+            mbedtls_asn1_buf alg_oid;
+            alg_oid.tag = MBEDTLS_ASN1_OID;
+            VerifyOrExit(mbedtls_asn1_get_tag(&p, alg_end, &alg_oid.len, MBEDTLS_ASN1_OID) == 0, error = kErrorFailed);
+            alg_oid.p = p;
+            p += alg_oid.len;
+        }
+        {
+            mbedtls_asn1_buf param_oid;
+            param_oid.tag = MBEDTLS_ASN1_OID;
+            VerifyOrExit(mbedtls_asn1_get_tag(&p, alg_end, &param_oid.len, MBEDTLS_ASN1_OID) == 0,
+                         error = kErrorFailed);
+            param_oid.p = p;
+            p += param_oid.len;
+
+#if defined(MBEDTLS_OID_C)
+            mbedtls_ecp_group_id gid;
+            VerifyOrExit(mbedtls_oid_get_ec_grp(&param_oid, &gid) == 0, error = kErrorFailed);
+            VerifyOrExit(gid == MBEDTLS_ECP_DP_SECP256R1, error = kErrorFailed);
 #else
-    ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), aPublicKey->m8,
-                                   Ecdsa::P256::kMpiSize);
-    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-
-    ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y),
-                                   aPublicKey->m8 + Ecdsa::P256::kMpiSize, Ecdsa::P256::kMpiSize);
-    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+            // Fallback: raw OID byte compare for prime256v1 (1.2.840.10045.3.1.7)
+            static const unsigned char kOidPrime256v1[] = {0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07};
+            VerifyOrExit(param_oid.len == sizeof(kOidPrime256v1) &&
+                             memcmp(param_oid.p, kOidPrime256v1, sizeof(kOidPrime256v1)) == 0,
+                         error = kErrorFailed);
 #endif
+        }
+        size_t bitStrLen;
+        VerifyOrExit(mbedtls_asn1_get_tag(&p, spki_end, &bitStrLen, MBEDTLS_ASN1_BIT_STRING) == 0,
+                     error = kErrorFailed);
+        VerifyOrExit(p + bitStrLen <= spki_end, error = kErrorFailed);
+        VerifyOrExit(bitStrLen == 1 + 1 + Ecdsa::P256::kMpiSize * 2, error = kErrorFailed);
+        VerifyOrExit(p[0] == 0 && p[1] == 0x04, error = kErrorFailed);
+
+        memcpy(aPublicKey->m8, p + 2, Ecdsa::P256::kMpiSize * 2);
+    }
 exit:
     mbedtls_pk_free(&pk);
     return error;
@@ -569,32 +626,35 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyP
                                            const otPlatCryptoSha256Hash   *aHash,
                                            otPlatCryptoEcdsaSignature     *aSignature)
 {
-    Error                error = kErrorNone;
-    mbedtls_pk_context   pk;
-    mbedtls_ecp_keypair *keypair;
-    int                  ret;
-    unsigned char        sig_der[Ecdsa::P256::kDerMaxSigLen];
-    size_t               sig_len = 0;
+    // Returns raw 64-byte signature r||s (big-endian), extracted from DER produced by mbedtls_pk_sign.
+    Error              error = kErrorNone;
+    mbedtls_pk_context pk;
+    int                ret;
+    unsigned char      sigDer[Ecdsa::P256::kDerMaxSigLen];
+    size_t             sigLen = 0;
+
+    VerifyOrExit(aKeyPair && aHash && aSignature, error = kErrorInvalidArgs);
+    VerifyOrExit(aKeyPair->mDerLength > 0, error = kErrorInvalidArgs);
+
+    otPlatCryptoRandomInit(); // now idempotent
 
     mbedtls_pk_init(&pk);
     VerifyOrExit(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)) == 0, error = kErrorFailed);
+
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-    VerifyOrExit(mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0,
-                                      MbedTls::CryptoSecurePrng, nullptr) == 0,
-                 error = kErrorParse);
+    ret = mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0, MbedTls::CryptoSecurePrng,
+                               nullptr);
 #else
-    VerifyOrExit(mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0) == 0,
-                 error = kErrorParse);
+    ret = mbedtls_pk_parse_key(&pk, aKeyPair->mDerBytes, aKeyPair->mDerLength, nullptr, 0);
 #endif
-
-    keypair = mbedtls_pk_ec(pk);
+    VerifyOrExit(ret == 0, error = kErrorParse);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-    ret = mbedtls_ecdsa_write_signature(keypair, MBEDTLS_MD_SHA256, aHash->m8, Sha256::Hash::kSize, sig_der,
-                                        sizeof(sig_der), &sig_len, MbedTls::CryptoSecurePrng, nullptr);
+    ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, aHash->m8, Sha256::Hash::kSize, sigDer, sizeof(sigDer), &sigLen,
+                          MbedTls::CryptoSecurePrng, nullptr);
 #else
-    ret = mbedtls_ecdsa_write_signature(keypair, MBEDTLS_MD_SHA256, aHash->m8, Sha256::Hash::kSize, sig_der, &sig_len,
-                                        MbedTls::CryptoSecurePrng, nullptr);
+    ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, aHash->m8, Sha256::Hash::kSize, sigDer, &sigLen,
+                          MbedTls::CryptoSecurePrng, nullptr);
 #endif
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
@@ -602,9 +662,8 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyP
         mbedtls_mpi r, s;
         mbedtls_mpi_init(&r);
         mbedtls_mpi_init(&s);
-
-        unsigned char *p   = sig_der;
-        unsigned char *end = sig_der + sig_len;
+        unsigned char *p   = sigDer;
+        unsigned char *end = sigDer + sigLen;
         size_t         len;
 
         ret = mbedtls_asn1_get_tag(&p, end, &len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE);
@@ -615,6 +674,9 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyP
         VerifyOrExit(ret == 0, error = kErrorFailed);
         ret = mbedtls_asn1_get_mpi(&p, end, &s);
         VerifyOrExit(ret == 0, error = kErrorFailed);
+
+        VerifyOrExit(mbedtls_mpi_size(&r) <= Ecdsa::P256::kMpiSize, error = kErrorFailed);
+        VerifyOrExit(mbedtls_mpi_size(&s) <= Ecdsa::P256::kMpiSize, error = kErrorFailed);
 
         ret = mbedtls_mpi_write_binary(&r, aSignature->m8, Ecdsa::P256::kMpiSize);
         VerifyOrExit(ret == 0, error = kErrorFailed);
@@ -640,6 +702,8 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *a
     mbedtls_mpi       r, s;
     int               ret;
 
+    VerifyOrExit(aPublicKey && aHash && aSignature, error = kErrorInvalidArgs);
+
     mbedtls_ecp_group_init(&grp);
     mbedtls_ecp_point_init(&Q);
     mbedtls_mpi_init(&r);
@@ -648,7 +712,6 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *a
     ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    // Build uncompressed public key buffer (0x04 || X || Y).
     unsigned char pub[1 + Ecdsa::P256::kMpiSize * 2];
     pub[0] = 0x04;
     memcpy(pub + 1, aPublicKey->m8, Ecdsa::P256::kMpiSize * 2);
@@ -656,11 +719,17 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *a
     ret = mbedtls_ecp_point_read_binary(&grp, &Q, pub, sizeof(pub));
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
+    ret = mbedtls_ecp_check_pubkey(&grp, &Q);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+
+    // Load r, s from raw signature (r||s)
     ret = mbedtls_mpi_read_binary(&r, aSignature->m8, Ecdsa::P256::kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+
     ret = mbedtls_mpi_read_binary(&s, aSignature->m8 + Ecdsa::P256::kMpiSize, Ecdsa::P256::kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
+    // Verify hash with public key
     ret = mbedtls_ecdsa_verify(&grp, aHash->m8, Sha256::Hash::kSize, &Q, &r, &s);
     VerifyOrExit(ret == 0, error = kErrorSecurity);
 
