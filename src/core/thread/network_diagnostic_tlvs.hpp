@@ -66,37 +66,43 @@ public:
      */
     enum Type : uint8_t
     {
-        kExtMacAddress        = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
-        kAddress16            = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
-        kMode                 = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kTimeout              = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
-        kConnectivity         = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
-        kRoute                = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
-        kLeaderData           = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
-        kNetworkData          = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
-        kIp6AddressList       = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
-        kMacCounters          = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
-        kBatteryLevel         = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
-        kSupplyVoltage        = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
-        kChildTable           = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
-        kChannelPages         = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
-        kTypeList             = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
-        kMaxChildTimeout      = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
-        kEui64                = OT_NETWORK_DIAGNOSTIC_TLV_EUI64,
-        kVersion              = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
-        kVendorName           = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
-        kVendorModel          = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
-        kVendorSwVersion      = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
-        kThreadStackVersion   = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
-        kChild                = OT_NETWORK_DIAGNOSTIC_TLV_CHILD,
-        kChildIp6AddressList  = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST,
-        kRouterNeighbor       = OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR,
-        kAnswer               = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
-        kQueryId              = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
-        kMleCounters          = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
-        kVendorAppUrl         = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL,
-        kNonPreferredChannels = OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS,
-        kEnhancedRoute        = OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE,
+        kExtMacAddress         = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
+        kAddress16             = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
+        kMode                  = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
+        kTimeout               = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kConnectivity          = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
+        kRoute                 = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
+        kLeaderData            = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
+        kNetworkData           = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
+        kIp6AddressList        = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
+        kMacCounters           = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
+        kBatteryLevel          = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
+        kSupplyVoltage         = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
+        kChildTable            = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
+        kChannelPages          = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
+        kTypeList              = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
+        kMaxChildTimeout       = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kEui64                 = OT_NETWORK_DIAGNOSTIC_TLV_EUI64,
+        kVersion               = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
+        kVendorName            = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
+        kVendorModel           = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
+        kVendorSwVersion       = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
+        kThreadStackVersion    = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
+        kChild                 = OT_NETWORK_DIAGNOSTIC_TLV_CHILD,
+        kChildIp6AddressList   = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST,
+        kRouterNeighbor        = OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR,
+        kAnswer                = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
+        kQueryId               = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
+        kMleCounters           = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
+        kVendorAppUrl          = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL,
+        kNonPreferredChannels  = OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS,
+        kEnhancedRoute         = OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE,
+        kBrState               = OT_NETWORK_DIAGNOSTIC_TLV_BR_STATE,
+        kBrIfAddrs             = OT_NETWORK_DIAGNOSTIC_TLV_BR_IF_ADDRS,
+        kBrLocalOmrPrefix      = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OMR_PREFIX,
+        kBrDhcp6PdOmrPrefix    = OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX,
+        kBrLocalOnlinkPrefix   = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX,
+        kBrFavoredOnLinkPrefix = OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX,
     };
 
     /**
@@ -234,6 +240,41 @@ typedef TlvInfo<Tlv::kChildIp6AddressList> ChildIp6AddressListTlv;
  * Defines Query ID TLV constants and types.
  */
 typedef UintTlvInfo<Tlv::kQueryId, uint16_t> QueryIdTlv;
+
+/**
+ * Defines BR State TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kBrState, uint8_t> BrStateTlv;
+
+/**
+ * Represents a BR State TLV value.
+ */
+typedef otNetworkDiagBrState BrState;
+
+/**
+ * Defines BR Infra-if Address List TLV constants and types.
+ */
+typedef TlvInfo<Tlv::kBrIfAddrs> BrIfAddrsTlv;
+
+/**
+ * Defines BR Local OMR Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrLocalOmrPrefix, Ip6::NetworkPrefix> BrLocalOmrPrefixTlv;
+
+/**
+ * Defines BR DHCPv6-PD Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrDhcp6PdOmrPrefix, Ip6::NetworkPrefix> BrDhcp6PdOmrPrefixTlv;
+
+/**
+ * Defines BR Local On-link Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrLocalOnlinkPrefix, Ip6::NetworkPrefix> BrLocalOnlinkPrefixTlv;
+
+/**
+ * Defines BR Favored On-link Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrFavoredOnLinkPrefix, Ip6::NetworkPrefix> BrFavoredOnLinkPrefixTlv;
 
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 

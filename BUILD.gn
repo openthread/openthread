@@ -33,6 +33,13 @@ config("openthread_config") {
     defines += [ "OPENTHREAD_CONFIG_FILE=${openthread_config_file}" ]
   }
 
+  cflags = [
+    "-Werror",
+    "-Wall",
+    "-Wextra",
+    "-Wundef",
+  ]
+
   include_dirs = openthread_project_include_dirs
 
   include_dirs += [

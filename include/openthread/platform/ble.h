@@ -201,7 +201,6 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
  * @retval OT_ERROR_NONE           Advertising procedure has been started.
  * @retval OT_ERROR_FAILED         Update of data failed.
  * @retval OT_ERROR_INVALID_ARGS   Invalid value has been supplied.
- *
  */
 otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen);
 

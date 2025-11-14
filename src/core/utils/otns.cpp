@@ -33,7 +33,7 @@
 
 #include "otns.hpp"
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -52,6 +52,42 @@ void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress) const
     EmitStatus("extaddr=%s", revExtAddress.ToString().AsCString());
 }
 
+void Otns::EmitStatus(const char *aFmt, ...) const
+{
+    StatusString string;
+    va_list      args;
+
+    va_start(args, aFmt);
+    string.AppendVarArgs(aFmt, args);
+    va_end(args);
+
+    EmitStatus(string);
+}
+
+void Otns::EmitStatus(const StatusString &aString) const { otPlatOtnsStatus(aString.AsCString()); }
+
+void Otns::EmitTransmit(const Mac::TxFrame &aFrame) const
+{
+    StatusString string;
+    Mac::Address dst;
+
+    IgnoreError(aFrame.GetDstAddr(dst));
+
+    string.Append("transmit=%d,%04x,%d", aFrame.GetChannel(), aFrame.GetFrameControlField(), aFrame.GetSequence());
+
+    if (dst.IsShort())
+    {
+        string.Append(",%04x", dst.GetShort());
+    }
+    else if (dst.IsExtended())
+    {
+        string.Append(",%s", dst.ToString().AsCString());
+    }
+
+    EmitStatus(string);
+}
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Otns::EmitPingRequest(const Ip6::Address &aPeerAddress,
                            uint16_t            aPingLength,
                            uint32_t            aTimestamp,
@@ -69,20 +105,6 @@ void Otns::EmitPingReply(const Ip6::Address &aPeerAddress,
     EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, ToUlong(aTimestamp),
                aHopLimit);
 }
-
-void Otns::EmitStatus(const char *aFmt, ...) const
-{
-    StatusString string;
-    va_list      args;
-
-    va_start(args, aFmt);
-    string.AppendVarArgs(aFmt, args);
-    va_end(args);
-
-    EmitStatus(string);
-}
-
-void Otns::EmitStatus(const StatusString &aString) const { otPlatOtnsStatus(aString.AsCString()); }
 
 void Otns::HandleNotifierEvents(Events aEvents) const
 {
@@ -131,27 +153,6 @@ void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeig
 
 exit:
     return;
-}
-
-void Otns::EmitTransmit(const Mac::TxFrame &aFrame) const
-{
-    StatusString string;
-    Mac::Address dst;
-
-    IgnoreError(aFrame.GetDstAddr(dst));
-
-    string.Append("transmit=%d,%04x,%d", aFrame.GetChannel(), aFrame.GetFrameControlField(), aFrame.GetSequence());
-
-    if (dst.IsShort())
-    {
-        string.Append(",%04x", dst.GetShort());
-    }
-    else if (dst.IsExtended())
-    {
-        string.Append(",%s", dst.ToString().AsCString());
-    }
-
-    EmitStatus(string);
 }
 
 void Otns::EmitDeviceMode(Mle::DeviceMode aMode) const
@@ -217,8 +218,9 @@ void Otns::EmitCoapStatus(const char             *aAction,
 exit:
     LogWarnOnError(error, "EmitCoapStatus");
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace Utils
 } // namespace ot
 
-#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE

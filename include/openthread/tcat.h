@@ -35,9 +35,7 @@
  *   The functions in this module require the build-time feature `OPENTHREAD_CONFIG_BLE_TCAT_ENABLE=1`.
  *
  *  @note
- *   To enable cipher suite DTLS_PSK_WITH_AES_128_CCM_8, MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
- *    must be enabled in mbedtls-config.h
- *   To enable cipher suite DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+ *   To enable the required cipher suite TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
  *    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED must be enabled in mbedtls-config.h.
  */
 
@@ -75,6 +73,7 @@ extern "C" {
 #define OT_TCAT_OPCODE 0x2                     ///< TCAT Advertisement Operation Code.
 #define OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE 5 ///< TCAT max size of any type of advertised Device ID.
 #define OT_TCAT_MAX_DEVICEID_SIZE 64           ///< TCAT max size of device ID.
+#define OT_TCAT_ENABLE_MAX 600                 ///< TCAT_ENABLE_MAX, default max TMF TCAT enable time,  in seconds.
 
 /**
  * Represents TCAT status code.
@@ -95,7 +94,7 @@ typedef enum otTcatStatusCode
 } otTcatStatusCode;
 
 /**
- * Represents TCAT application protocol.
+ * Represents TCAT application protocol options.
  */
 typedef enum otTcatApplicationProtocol
 {
@@ -126,16 +125,16 @@ typedef enum otTcatCommandClass
 } otTcatCommandClass;
 
 /**
- * Represents Advertised Device ID type. (used during TCAT advertisement)
+ * Represents Advertised Device ID type. Used during TCAT advertisement.
  */
 typedef enum otTcatAdvertisedDeviceIdType
 {
-    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Vendor device ID type not set
-    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Vendor device ID type IEEE OUI-24
-    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Vendor device ID type IEEE OUI-36
-    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Vendor device ID type Device Discriminator
-    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Vendor device ID type IANA PEN
-    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Vendor device ID type size
+    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Advertised device ID type not set
+    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Advertised device ID type IEEE OUI-24
+    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Advertised device ID type IEEE OUI-36
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Advertised device ID type Device Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Advertised device ID type IANA PEN
+    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Advertised device ID max number of types
 } otTcatAdvertisedDeviceIdType;
 
 typedef struct otTcatAdvertisedDeviceId
@@ -202,10 +201,16 @@ typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aIn
                                                    void                     *aContext);
 
 /**
- * Pointer to call to notify the completion of a join operation.
+ * Pointer to call to notify the completion of a network join/leave operation performed under
+ * guidance of a TCAT Commissioner.
  *
- * @param[in]  aError           OT_ERROR_NONE if the join process succeeded.
- *                              OT_ERROR_SECURITY if the join process failed due to security credentials.
+ * @param[in]  aError           OT_ERROR_NONE if the network join/leave operation was successfully started.
+ *                              OT_ERROR_INVALID_STATE if network join was requested but network credentials
+ *                                                     were missing or incomplete.
+ *                              OT_ERROR_REJECTED if a network join/leave operation was requested, but the
+ *                                                TCAT Commissioner is not authorized to make such a request.
+ *                              OT_ERROR_SECURITY is reserved for future use for a failed join due to
+ *                                                credential mismatch.
  * @param[in]  aContext         A pointer to arbitrary context information.
  */
 typedef void (*otHandleTcatJoin)(otError aError, void *aContext);

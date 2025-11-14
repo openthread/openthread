@@ -160,7 +160,6 @@ typedef struct otSecurityPolicy
  * Represents a Channel Mask.
  *
  * The least significant bit (LSB), also referred to as bit 0, corresponds to channel number 0, and so on.
- *
  */
 typedef uint32_t otChannelMask;
 
@@ -287,6 +286,7 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_JOINER_IID               = 19,  ///< meshcop Joiner IID TLV
     OT_MESHCOP_TLV_JOINER_RLOC              = 20,  ///< meshcop Joiner Router Locator TLV
     OT_MESHCOP_TLV_JOINER_ROUTER_KEK        = 21,  ///< meshcop Joiner Router KEK TLV
+    OT_MESHCOP_TLV_DURATION                 = 23,  ///< meshcop Duration TLV
     OT_MESHCOP_TLV_PROVISIONING_URL         = 32,  ///< meshcop Provisioning URL TLV
     OT_MESHCOP_TLV_VENDOR_NAME_TLV          = 33,  ///< meshcop Vendor Name TLV
     OT_MESHCOP_TLV_VENDOR_MODEL_TLV         = 34,  ///< meshcop Vendor Model TLV

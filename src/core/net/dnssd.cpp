@@ -528,7 +528,11 @@ void Dnssd::HandleStateChange(void)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    Get<MeshCoP::BorderAgent>().HandleDnssdPlatformStateChange();
+    Get<MeshCoP::BorderAgent::Manager>().HandleDnssdPlatformStateChange();
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+    Get<MeshCoP::BorderAgent::Tracker>().HandleDnssdPlatformStateChange();
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE

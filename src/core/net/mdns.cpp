@@ -209,6 +209,52 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+Error Core::ValidateHostName(const Host &aHost) const { return Name::ValidateName(aHost.mHostName); }
+
+Error Core::ValidateServiceNames(const Service &aService, bool aCheckHostAndSubTypeLabels) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aService.mServiceInstance));
+    SuccessOrExit(error = Name::ValidateName(aService.mServiceType));
+
+    if (aCheckHostAndSubTypeLabels && aService.mHostName != nullptr)
+    {
+        SuccessOrExit(error = Name::ValidateName(aService.mHostName));
+    }
+
+    if (aCheckHostAndSubTypeLabels && (aService.mSubTypeLabelsLength > 0))
+    {
+        VerifyOrExit(aService.mSubTypeLabels != nullptr, error = kErrorInvalidArgs);
+
+        for (uint16_t index = 0; index < aService.mSubTypeLabelsLength; index++)
+        {
+            SuccessOrExit(error = Name::ValidateLabel(aService.mSubTypeLabels[index]));
+        }
+    }
+
+exit:
+    return error;
+}
+
+Error Core::ValidateKeyName(const Key &aKey) const
+{
+    Error error;
+
+    if (IsKeyForService(aKey))
+    {
+        SuccessOrExit(error = Name::ValidateName(aKey.mServiceType));
+        error = Name::ValidateLabel(aKey.mName);
+    }
+    else
+    {
+        error = Name::ValidateName(aKey.mName);
+    }
+
+exit:
+    return error;
+}
+
 template <typename EntryType, typename ItemInfo>
 Error Core::Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback)
 {
@@ -252,27 +298,70 @@ exit:
 
 Error Core::RegisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback)
 {
-    return Register<HostEntry>(aHost, aRequestId, aCallback);
+    Error error;
+
+    SuccessOrExit(error = ValidateHostName(aHost));
+    error = Register<HostEntry>(aHost, aRequestId, aCallback);
+
+exit:
+    return error;
 }
 
-Error Core::UnregisterHost(const Host &aHost) { return Unregister<HostEntry>(aHost); }
+Error Core::UnregisterHost(const Host &aHost)
+{
+    Error error;
+
+    SuccessOrExit(error = ValidateHostName(aHost));
+    error = Unregister<HostEntry>(aHost);
+
+exit:
+    return error;
+}
 
 Error Core::RegisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback)
 {
-    return Register<ServiceEntry>(aService, aRequestId, aCallback);
+    Error error;
+
+    SuccessOrExit(error = ValidateServiceNames(aService, /* aCheckHostAndSubTypeLabels */ true));
+    error = Register<ServiceEntry>(aService, aRequestId, aCallback);
+
+exit:
+    return error;
 }
 
-Error Core::UnregisterService(const Service &aService) { return Unregister<ServiceEntry>(aService); }
+Error Core::UnregisterService(const Service &aService)
+{
+    Error error;
+
+    SuccessOrExit(error = ValidateServiceNames(aService, /* aCheckHostAndSubTypeLabels */ false));
+    error = Unregister<ServiceEntry>(aService);
+
+exit:
+    return error;
+}
 
 Error Core::RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback)
 {
-    return IsKeyForService(aKey) ? Register<ServiceEntry>(aKey, aRequestId, aCallback)
-                                 : Register<HostEntry>(aKey, aRequestId, aCallback);
+    Error error;
+
+    SuccessOrExit(error = ValidateKeyName(aKey));
+
+    error = IsKeyForService(aKey) ? Register<ServiceEntry>(aKey, aRequestId, aCallback)
+                                  : Register<HostEntry>(aKey, aRequestId, aCallback);
+
+exit:
+    return error;
 }
 
 Error Core::UnregisterKey(const Key &aKey)
 {
-    return IsKeyForService(aKey) ? Unregister<ServiceEntry>(aKey) : Unregister<HostEntry>(aKey);
+    Error error;
+
+    SuccessOrExit(error = ValidateKeyName(aKey));
+    error = IsKeyForService(aKey) ? Unregister<ServiceEntry>(aKey) : Unregister<HostEntry>(aKey);
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -1126,10 +1215,7 @@ void Core::Entry::SetState(State aState)
 
 void Core::Entry::Register(const Key &aKey, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     mKeyRecord.UpdateTtl(DetermineTtl(aKey.mTtl, kDefaultKeyTtl));
     mKeyRecord.UpdateProperty(mKeyData, aKey.mKeyData, aKey.mKeyDataLength);
@@ -1229,6 +1315,25 @@ void Core::Entry::InvokeCallbacks(void)
 
     case kProbing:
     case kRemoving:
+        break;
+    }
+}
+
+void Core::Entry::DecideToProbeOnRegister(void)
+{
+    // Checks whether we should start probing when `Register()` is
+    // called. If a conflict was previously detected, we send a probe
+    // again upon an explicit `Register()` request.
+
+    switch (mState)
+    {
+    case kRegistered:
+    case kProbing:
+        break;
+
+    case kRemoving:
+    case kConflict:
+        StartProbing();
         break;
     }
 }
@@ -1862,10 +1967,7 @@ exit:
 
 void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 
@@ -1887,7 +1989,7 @@ void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
         ExitNow();
     }
 
-    mIp6AddrRecord.UpdateTtl(DetermineTtl(aHost.mTtl, kDefaultTtl));
+    mIp6AddrRecord.UpdateTtl(DetermineTtl(aHost.mTtl, kDefaultAddrTtl));
     mIp6AddrRecord.UpdateAddresses(aHost);
 
     DetermineNextFireTime();
@@ -1910,7 +2012,7 @@ void Core::HostEntry::Register(const LocalHost &aLocalHost, const Callback &aCal
     }
     else
     {
-        mIp6AddrRecord.UpdateTtl(kDefaultTtl);
+        mIp6AddrRecord.UpdateTtl(kDefaultAddrTtl);
         mIp6AddrRecord.UpdateAddresses(aLocalHost.GetIp6Addresses());
     }
 
@@ -1929,7 +2031,7 @@ void Core::HostEntry::Register(const LocalHost &aLocalHost, const Callback &aCal
             OT_ASSERT(mIp4AddrRecord != nullptr);
         }
 
-        mIp4AddrRecord->UpdateTtl(kDefaultTtl);
+        mIp4AddrRecord->UpdateTtl(kDefaultAddrTtl);
         mIp4AddrRecord->UpdateAddresses(aLocalHost.GetIp4Addresses());
     }
 
@@ -2452,12 +2554,9 @@ exit:
 void Core::ServiceEntry::Register(const Service &aService, const Callback &aCallback)
 {
     const char *hostName;
-    uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultTtl);
+    uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultServiceTtl);
 
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 

@@ -38,6 +38,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openthread/border_routing.h>
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
@@ -87,6 +88,12 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL 35         ///< Vendor App URL TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS 36 ///< Non-Preferred Channels Mask TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE 37         ///< Enhanced Route TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_STATE 38               ///< Border Router State TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_IF_ADDRS 39            ///< Border Router Infra Interface Addresses TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OMR_PREFIX 40    ///< Border Router Local OMR Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX 41 ///< Border Router DHCPv6-PD OMR Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
@@ -262,6 +269,11 @@ typedef struct otNetworkDiagChildTable
 } otNetworkDiagChildTable;
 
 /**
+ * Represents a Border Router State TLV value.
+ */
+typedef otBorderRoutingState otNetworkDiagBrState;
+
+/**
  * Represents a Network Diagnostic TLV.
  */
 typedef struct otNetworkDiagTlv
@@ -295,6 +307,9 @@ typedef struct otNetworkDiagTlv
         otChannelMask             mNonPreferredChannels;
         otNetworkDiagData         mChannelPages;
         otNetworkDiagChildTable   mChildTable;
+        otNetworkDiagBrState      mBrState;
+        otNetworkDiagIp6AddrList  mBrIfAddrList;
+        otIp6NetworkPrefix        mBrPrefix; // This field is shared for various BR prefix TLV (OMR, on-link).
     } mData;
 } otNetworkDiagTlv;
 

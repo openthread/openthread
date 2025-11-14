@@ -72,12 +72,14 @@
 
 #define OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE 1
 
-// The following two features (`USE_HEAP`) are set explicitly on posix `toranj`
-// to validate the build with these config. The `toranj` build under simulation
-// platform covers the opposite configs (allows `USE_HEAP`).
+// The following features are set explicitly on posix `toranj`
+// to validate the build with these config. The `toranj` build
+// under simulation platform covers the opposite configs.
 
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 0
 
 #define OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE 1
+
+#define OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF 0
 
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_ */

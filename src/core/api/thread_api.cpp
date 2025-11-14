@@ -209,7 +209,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 #if !OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
     // Thread interfaces support a zero length name internally for backwards compatibility, but new names
     // must be at least one valid character long.
-    VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != '\0', error = kErrorInvalidArgs);
+    VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != kNullChar, error = kErrorInvalidArgs);
 #endif
 
     error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);

@@ -1,0 +1,699 @@
+/*
+ *  Copyright (c) 2025, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file includes definitions for the Received RA Tracker.
+ */
+
+#ifndef RX_RA_TRACKER_HPP_
+#define RX_RA_TRACKER_HPP_
+
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#include <openthread/border_routing.h>
+
+#include "border_router/br_types.hpp"
+#include "border_router/infra_if.hpp"
+#include "common/callback.hpp"
+#include "common/clearable.hpp"
+#include "common/equatable.hpp"
+#include "common/error.hpp"
+#include "common/heap_allocatable.hpp"
+#include "common/linked_list.hpp"
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/notifier.hpp"
+#include "common/owning_list.hpp"
+#include "common/pool.hpp"
+#include "common/string.hpp"
+#include "common/tasklet.hpp"
+#include "common/timer.hpp"
+#include "net/ip6.hpp"
+#include "net/nd6.hpp"
+
+namespace ot {
+namespace BorderRouter {
+
+class NetDataBrTracker;
+
+/**
+ * Implements processing and tracking of received Router Advertisement (RA) and Neighbor Advertisement (NA) messages.
+ *
+ * This class processes received RA and NA messages, tracking a table of active routers on the infrastructure link and
+ * their advertised on-link and route prefixes and other information. It also manages prefix lifetimes and router
+ * reachability (sending Neighbor Solicitation probes as needed).
+ */
+class RxRaTracker : public InstanceLocator
+{
+    friend class NetDataBrTracker;
+    friend class ot::Notifier;
+    friend class InfraIf;
+
+public:
+    /**
+     * Represents an entity requesting to enable/disable the `RxRaTracker`.
+     */
+    enum Requester : uint8_t
+    {
+        kRequesterRoutingManager,   ///< Requested by `RoutingManager`.
+        kRequesterMultiAilDetector, ///< Requested by `MultiAilDetector`.
+    };
+
+    /**
+     * Represents different events that can occur within the `RxRaTracker`.
+     *
+     * Used in callbacks `HandleRxRaTrackerEvents()` to notify other BR components of changes/events by `RxRaTracker`.
+     */
+    struct Events : public Clearable<Events>
+    {
+        bool mInitialDiscoveryFinished : 1; ///< Indicates that the initial router discovery process is finished.
+        bool mDecisionFactorChanged : 1;    ///< Indicates that a decision factor (e.g., on-link prefix) was changed.
+        bool mLocalRaHeaderChanged : 1;     ///< Indicates that the tracked local RA header was changed.
+    };
+
+    /**
+     * Initializes the `RxRaTracker` object.
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     */
+    explicit RxRaTracker(Instance &aInstance);
+
+    /**
+     * Enables or disables the `RxRaTracker`.
+     *
+     * The `RxRaTracker` can be enabled by multiple requesters (see `Requester`). It remains enabled as long as
+     * at least one requester has it enabled. It is disabled only when all requesters have disabled it.
+     *
+     * @param[in] aEnable      A boolean to enable/disable the  Tracker.
+     * @param[in] aRequester   The entity requesting to enable/disable.
+     */
+    void SetEnabled(bool aEnable, Requester aRequester);
+
+    /**
+     * Indicates whether the initial router discovery process (sending Router Solicitation (RS) message) is finished.
+     *
+     * When `RxRaTracker` is started, it sends multiple RS messages to discover routers on the infrastructure interface.
+     * It sends three RS messages every four seconds, starting with a random delay of up to one second for the first
+     * RS transmission. After sending the final RS message, it waits one second before concluding discovery process.
+     *
+     * @retval TRUE   If the initial router discovery process is finished.
+     * @retval FALSE  If the initial router discovery process is not finished.
+     */
+    bool IsInitialRouterDiscoveryFinished(void) const { return mInitialDiscoveryFinished; }
+
+    /**
+     * Initializes a `PrefixTableIterator`.
+     *
+     * An iterator can be initialized again to start from the beginning of the table.
+     *
+     * When iterating over entries in the table, to ensure the entry update times are consistent, they are given
+     * relative to the time the iterator was initialized.
+     *
+     * @param[out] aIterator  The iterator to initialize.
+     */
+    void InitIterator(PrefixTableIterator &aIterator) const;
+
+    /**
+     * Iterates over entries in the discovered prefix table.
+     *
+     * @param[in,out] aIterator  An iterator.
+     * @param[out]    aEntry     A reference to the entry to populate.
+     *
+     * @retval kErrorNone        Got the next entry, @p aEntry is updated and @p aIterator is advanced.
+     * @retval kErrorNotFound    No more entries in the table.
+     */
+    Error GetNextPrefixTableEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
+
+    /**
+     * Iterates over discovered router entries on infrastructure link.
+     *
+     * @param[in,out] aIterator  An iterator.
+     * @param[out]    aEntry     A reference to the entry to populate.
+     *
+     * @retval kErrorNone        Got the next router info, @p aEntry is updated and @p aIterator is advanced.
+     * @retval kErrorNotFound    No more routers.
+     */
+    Error GetNextRouterEntry(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    /**
+     * Iterates over the discovered NAT64 prefix entries.
+     *
+     * @param[in,out] aIterator    An iterator.
+     * @param[out]    aEntry       A reference to the entry to populate.
+     *
+     * @retval kErrorNone         Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+     * @retval kErrorNotFound     No more entries in the table.
+     * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
+     */
+    Error GetNextNat64PrefixEntry(PrefixTableIterator &aIterator, Nat64PrefixEntry &aEntry) const;
+#endif
+
+    /**
+     * Iterates over the discovered Recursive DNS Server (RDNSS) address entries.
+     *
+     * @param[in,out] aIterator    An iterator.
+     * @param[out]    aEntry       A reference to the entry to populate.
+     *
+     * @retval kErrorNone         Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+     * @retval kErrorNotFound     No more entries in the table.
+     * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
+     */
+    Error GetNextRdnssAddrEntry(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const;
+
+    /**
+     * Sets the callback to be notified of changes to discovered Recursive DNS Server (RDNSS) address entries.
+     *
+     * A subsequent call to this method, replaces a previously set callback.
+     *
+     * @param[in] aCallback   The callback function pointer. Can be `nullptr` if no callback is required.
+     * @param[in] aConext     An arbitrary context information (used when invoking the callback).
+     */
+    void SetRdnssAddrCallback(RdnssAddrCallback aCallback, void *aContext) { mRdnssCallback.Set(aCallback, aContext); }
+
+    /**
+     * Iterates over the infrastructure interface address entries.
+     *
+     * These are addresses used by the BR itself, for example, when sending Router Advertisements.
+     *
+     * @param[in,out] aIterator    An iterator.
+     * @param[out]    aEntry       A reference to the entry to populate.
+     *
+     * @retval kErrorNone         Iterated to the next address entry, @p aEntry and @p aIterator are updated.
+     * @retval kErrorNotFound     No more entries in the table.
+     * @retval kErrorInvalidArgs  The @p aIterator is not valid (e.g. used to iterate over other entry types).
+     */
+    Error GetNextIfAddrEntry(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const;
+
+    /**
+     * Indicates whether a discovered route prefix is a default route or a non-ULA prefix.
+     *
+     * @retval TRUE   A default route or a non-ULA route prefix is discovered.
+     * @retval FALSE  No default route or non-ULA route prefix is discovered.
+     */
+    bool ContainsDefaultOrNonUlaRoutePrefix(void) const { return mDecisionFactors.mHasNonUlaRoute; }
+
+    /**
+     * Indicates whether a discovered on-link prefix is a non-ULA prefix.
+     *
+     * @retval TRUE   A non-ULA on-link prefix is discovered.
+     * @retval FALSE  No non-ULA on-link prefix is discovered.
+     */
+    bool ContainsNonUlaOnLinkPrefix(void) const { return mDecisionFactors.mHasNonUlaOnLink; }
+
+    /**
+     * Indicates whether a discovered on-link prefix is a ULA prefix.
+     *
+     * @retval TRUE   A ULA on-link prefix is discovered.
+     * @retval FALSE  No ULA on-link prefix is discovered.
+     */
+    bool ContainsUlaOnLinkPrefix(void) const { return mDecisionFactors.mHasUlaOnLink; }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    /**
+     * Gets the number of reachable peer Border Routers.
+     *
+     * A peer BR is a BR on the same Thread mesh that is also connected to the same infrastructure link.
+     *
+     * @returns The number of reachable peer BRs.
+     */
+    uint16_t GetReachablePeerBrCount(void) const { return mDecisionFactors.mReachablePeerBrCount; }
+#endif
+
+    /**
+     * Gets the favored on-link prefix among all discovered on-link prefixes.
+     *
+     * @returns The favored on-link prefix.
+     */
+    const Ip6::Prefix &GetFavoredOnLinkPrefix(void) const { return mDecisionFactors.mFavoredOnLinkPrefix; }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    /**
+     * Gets the favored NAT64 prefix among all discovered NAT64 prefixes.
+     *
+     * @returns The favored NAT64 prefix.
+     */
+    const Ip6::Prefix &GetFavoredNat64Prefix(void) const { return mDecisionFactors.mFavoredNat64Prefix; }
+#endif
+
+    /**
+     * Sets the Managed Address Configuration (M) and Other Configuration (O) flags on a Router Advertisement header.
+     *
+     * The flags are set based on the currently discovered information from other routers on the infrastructure link.
+     *
+     * @param[out] aHeader  The RA header to update.
+     */
+    void SetHeaderFlagsOn(RouterAdvert::Header &aHeader) const;
+
+    /**
+     * Gets the last received Router Advertisement header from a local software entity.
+     *
+     * This can be used to mirror the RA flags in the RA messages sent by the Border Router.
+     *
+     * @returns The last received RA header from a local software entity.
+     */
+    const RouterAdvert::Header &GetLocalRaHeaderToMirror(void) const { return mLocalRaHeader; }
+
+    /**
+     * Indicates whether an address is considered on-link on the infrastructure link.
+     *
+     * An address is considered on-link if it matches the local on-link prefix or any of the discovered on-link
+     * prefixes advertised by other routers.
+     *
+     * @param[in] aAddress  The IPv6 address to check.
+     *
+     * @retval TRUE   The address is on-link.
+     * @retval FALSE  The address is not on-link.
+     */
+    bool IsAddressOnLink(const Ip6::Address &aAddress) const;
+
+    /**
+     * Indicates whether an address is reachable through an explicit route on the infrastructure link.
+     *
+     * This method checks if the given address matches any discovered route prefix, excluding the default route.
+     *
+     * @param[in] aAddress  The IPv6 address to check.
+     *
+     * @retval TRUE   The address is reachable through an explicit route.
+     * @retval FALSE  The address is not reachable through an explicit route.
+     */
+    bool IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const;
+
+    // Callbacks notifying of changes
+    void HandleLocalOnLinkPrefixChanged(void);
+
+private:
+    static constexpr uint32_t kStaleTime = 600; // 10 minutes.
+
+    typedef Ip6::Nd::Option    Option;
+    typedef Ip6::Nd::TxMessage TxMessage;
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    enum RouterAdvOrigin : uint8_t
+    {
+        kAnotherRouter,        // From another router on the infrastructure interface.
+        kThisBrRoutingManager, // From this Border Router, generated by `RoutingManager` itself.
+        kThisBrOtherEntity,    // From this Border Router, generated by another software entity.
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    template <class Type>
+    struct Entry : public Type,
+                   public LinkedListEntry<Entry<Type>>,
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+                   public Heap::Allocatable<Entry<Type>>
+#else
+                   public InstanceLocatorInit
+#endif
+    {
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+        void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
+        void Free(void);
+#endif
+
+        Entry<Type> *mNext;
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    struct Router : public Clearable<Router>
+    {
+        // Reachability timeout intervals before starting Neighbor
+        // Solicitation (NS) probes. Generally 60 seconds (± 2
+        // seconds jitter) is used. For peer BRs a longer timeout
+        // of 200 seconds (3 min and 20 seconds) is used. This is
+        // selected to be longer than regular RA beacon interval
+        // of 3 minutes (± 15 seconds jitter).
+
+        static constexpr uint32_t kReachableInterval = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
+        static constexpr uint32_t kPeerBrReachableInterval = Time::kOneSecondInMsec * 200;
+
+        static constexpr uint8_t  kMaxNsProbes          = 5;    // Max number of NS probe attempts.
+        static constexpr uint32_t kNsProbeRetryInterval = 1000; // In msec. Time between NS probe attempts.
+        static constexpr uint32_t kNsProbeTimeout       = 2000; // In msec. Max Wait time after last NS probe.
+        static constexpr uint32_t kJitter               = 2000; // In msec. Jitter to randomize probe starts.
+
+        static_assert(kMaxNsProbes < 255, "kMaxNsProbes MUST not be 255");
+
+        struct EmptyChecker
+        {
+        };
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        struct HistoryInfo : public Equatable<HistoryInfo>, public Clearable<HistoryInfo>
+        {
+            void DetermineFrom(const Router &aRouter);
+
+            bool            mHistoryRecorded : 1;
+            bool            mManagedAddressConfigFlag : 1;
+            bool            mOtherConfigFlag : 1;
+            bool            mSnacRouterFlag : 1;
+            bool            mIsLocalDevice : 1;
+            bool            mIsReachable : 1;
+            bool            mIsPeerBr : 1;
+            bool            mProvidesDefaultRoute : 1;
+            RoutePreference mDefRoutePreference;
+            Ip6::Prefix     mFavoredOnLinkPrefix;
+        };
+#endif
+
+        bool IsReachable(void) const { return mNsProbeCount <= kMaxNsProbes; }
+        bool ShouldCheckReachability(void) const;
+        void ResetReachabilityState(void);
+        void DetermineReachabilityTimeout(void);
+        bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
+        bool Matches(const EmptyChecker &aChecker);
+        bool IsPeerBr(void) const;
+        void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const;
+
+        using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
+        using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        using Nat64PrefixList = OwningList<Entry<Nat64Prefix>>;
+#endif
+        using RdnssAddressList = OwningList<Entry<RdnssAddress>>;
+
+        // `mDiscoverTime` tracks the initial discovery time of
+        // this router. To accommodate longer durations, the
+        // `Uptime` is used, as `TimeMilli` (which uses `uint32_t`
+        // intervals) would be limited to tracking ~ 49 days.
+        //
+        // `mLastUpdateTime` tracks the most recent time an RA or
+        // NA was received from this router. It is bounded due to
+        // the frequency of reachability checks, so we can safely
+        // use `TimeMilli` for it.
+
+        Ip6::Address     mAddress;
+        OnLinkPrefixList mOnLinkPrefixes;
+        RoutePrefixList  mRoutePrefixes;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Nat64PrefixList mNat64Prefixes;
+#endif
+        RdnssAddressList mRdnssAddresses;
+        uint32_t         mDiscoverTime;
+        TimeMilli        mLastUpdateTime;
+        TimeMilli        mTimeoutTime;
+        uint8_t          mNsProbeCount;
+        bool             mManagedAddressConfigFlag : 1;
+        bool             mOtherConfigFlag : 1;
+        bool             mSnacRouterFlag : 1;
+        bool             mIsLocalDevice : 1;
+        bool             mAllEntriesDisregarded : 1;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        HistoryInfo mHistoryInfo;
+#endif
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    struct Iterator : public PrefixTableIterator
+    {
+        enum Type : uint8_t
+        {
+            kUnspecified,
+            kRouterIterator,
+            kPrefixIterator,
+            kNat64PrefixIterator,
+            kRdnssAddrIterator,
+            kIfAddrIterator,
+            kNetDataBrIterator, // Used by `NetDataPeerBrTracker`
+        };
+
+        enum PrefixType : uint8_t
+        {
+            kOnLinkPrefix,
+            kRoutePrefix,
+        };
+
+        void  Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
+        Error AdvanceToNextRouter(Type aType);
+        Error AdvanceToNextPrefixEntry(void);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Error AdvanceToNextNat64PrefixEntry(void);
+#endif
+        Error                AdvanceToNextRdnssAddrEntry(void);
+        Error                AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead);
+        uint32_t             GetInitUptime(void) const { return mData0; }
+        void                 SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
+        TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
+        void                 SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
+        const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
+        void                 SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
+        Type                 GetType(void) const { return static_cast<Type>(mData2); }
+        void                 SetType(Type aType) { mData2 = aType; }
+        const void          *GetEntry(void) const { return mPtr2; }
+        void                 SetEntry(const void *aEntry) { mPtr2 = aEntry; }
+        bool                 HasEntry(void) const { return mPtr2 != nullptr; }
+        PrefixType           GetPrefixType(void) const { return static_cast<PrefixType>(mData3); }
+        void                 SetPrefixType(PrefixType aType) { mData3 = aType; }
+
+        template <typename ObjectType> const Entry<ObjectType> *GetEntry(void) const
+        {
+            return static_cast<const Entry<ObjectType> *>(mPtr2);
+        }
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+    static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
+    static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
+
+    union SharedEntry
+    {
+        SharedEntry(void) { mNext = nullptr; }
+        void               SetNext(SharedEntry *aNext) { mNext = aNext; }
+        SharedEntry       *GetNext(void) { return mNext; }
+        const SharedEntry *GetNext(void) const { return mNext; }
+
+        template <class Type> Entry<Type> &GetEntry(void);
+
+        SharedEntry        *mNext;
+        Entry<OnLinkPrefix> mOnLinkEntry;
+        Entry<RoutePrefix>  mRouteEntry;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Entry<Nat64Prefix> mNat64PrefixEntry;
+#endif
+        Entry<RdnssAddress> mRdnssAddrEntry;
+        Entry<IfAddress>    mIfAddrEntry;
+    };
+#endif
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    struct DecisionFactors : public Clearable<DecisionFactors>, public Equatable<DecisionFactors>
+    {
+        DecisionFactors(void) { Clear(); }
+
+        bool HasFavoredOnLink(void) const { return (mFavoredOnLinkPrefix.GetLength() != 0); }
+        void UpdateFlagsFrom(const Router &aRouter);
+        void UpdateFrom(const OnLinkPrefix &aOnLinkPrefix);
+        void UpdateFrom(const RoutePrefix &aRoutePrefix);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        void UpdateFrom(const Nat64Prefix &aNat64Prefix);
+#endif
+
+        Ip6::Prefix mFavoredOnLinkPrefix;
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        Ip6::Prefix mFavoredNat64Prefix;
+#endif
+        bool mHasNonUlaRoute : 1;
+        bool mHasNonUlaOnLink : 1;
+        bool mHasUlaOnLink : 1;
+        bool mHeaderManagedAddressConfigFlag : 1;
+        bool mHeaderOtherConfigFlag : 1;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+        uint16_t mReachablePeerBrCount;
+#endif
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
+
+    class RsSender : public InstanceLocator
+    {
+    public:
+        // This class implements tx of Router Solicitation (RS)
+        // messages to discover other routers. `Start()` schedules
+        // a cycle of RS transmissions of `kMaxTxCount` separated
+        // by `kTxInterval`. At the end of cycle the callback
+        // `HandleRsSenderFinished()` is invoked to inform end of
+        // the cycle to `RxRaTracker`.
+
+        explicit RsSender(Instance &aInstance);
+
+        bool IsInProgress(void) const { return mTimer.IsRunning(); }
+        void Start(void);
+        void Stop(void);
+        void HandleTimer(void);
+
+    private:
+        // All time intervals are in msec.
+        static constexpr uint32_t kMaxStartDelay     = 1000;        // Max random delay to send the first RS.
+        static constexpr uint32_t kTxInterval        = 4000;        // Interval between RS tx.
+        static constexpr uint32_t kRetryDelay        = kTxInterval; // Interval to wait to retry a failed RS tx.
+        static constexpr uint32_t kWaitOnLastAttempt = 1000;        // Wait interval after last RS tx.
+        static constexpr uint8_t  kMaxTxCount        = 3;           // Number of RS tx in one cycle.
+
+        Error SendRs(void);
+
+        using RsTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRsSenderTimer>;
+
+        uint8_t   mTxCount;
+        RsTimer   mTimer;
+        TimeMilli mStartTime;
+    };
+
+    //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    void UpdateState(void);
+    void Start(void);
+    void Stop(void);
+    void HandleRsSenderFinished(TimeMilli aStartTime);
+    void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
+    void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
+    void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    void ProcessNat64PrefixOption(const Nat64PrefixOption &aNat64Prefix, Router &aRouter);
+#endif
+    void ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss, Router &aRouter);
+    void UpdateIfAddresses(const Ip6::Address &aAddress);
+    void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
+    void Evaluate(void);
+    void DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime);
+    void DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime);
+    void SendNeighborSolicitToRouter(const Router &aRouter);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    uint16_t CountReachablePeerBrs(void) const;
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    void ReportChangesToHistoryTracker(Router &aRouter, bool aRemoved);
+#endif
+    void HandleNotifierEvents(ot::Events aEvents);
+    void HandleNetDataChange(void);
+
+    // Callbacks from `InfraIf`
+    void HandleInfraIfStateChanged(void) { UpdateState(); }
+    void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
+    void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
+
+    // Tasklet or timer callbacks
+    void HandleEventTask(void);
+    void HandleRdnssAddrTask(void);
+    void HandleExpirationTimer(void);
+    void HandleStaleTimer(void);
+    void HandleRouterTimer(void);
+    void HandleRdnssAddrTimer(void);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+    template <class Type> Entry<Type> *AllocateEntry(void) { return Entry<Type>::Allocate(); }
+#else
+    template <class Type> Entry<Type> *AllocateEntry(void);
+#endif
+
+    static const char *RouterAdvOriginToString(RouterAdvOrigin aRaOrigin);
+
+    using EventTask       = TaskletIn<RxRaTracker, &RxRaTracker::HandleEventTask>;
+    using RdnssAddrTask   = TaskletIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTask>;
+    using ExpirationTimer = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleExpirationTimer>;
+    using StaleTimer      = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleStaleTimer>;
+    using RouterTimer     = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRouterTimer>;
+    using RdnssAddrTimer  = TimerMilliIn<RxRaTracker, &RxRaTracker::HandleRdnssAddrTimer>;
+    using RouterList      = OwningList<Entry<Router>>;
+    using IfAddressList   = OwningList<Entry<IfAddress>>;
+    using RdnssCallback   = Callback<RdnssAddrCallback>;
+
+    bool                 mRoutingManagerEnabled : 1;
+    bool                 mMultiAilDetectorEnabled : 1;
+    bool                 mIsRunning : 1;
+    bool                 mInitialDiscoveryFinished : 1;
+    Events               mPendingEvents;
+    RsSender             mRsSender;
+    DecisionFactors      mDecisionFactors;
+    RouterList           mRouters;
+    IfAddressList        mIfAddresses;
+    ExpirationTimer      mExpirationTimer;
+    StaleTimer           mStaleTimer;
+    RouterTimer          mRouterTimer;
+    RdnssAddrTimer       mRdnssAddrTimer;
+    EventTask            mEventTask;
+    RdnssAddrTask        mRdnssAddrTask;
+    RdnssCallback        mRdnssCallback;
+    RouterAdvert::Header mLocalRaHeader;
+    TimeMilli            mLocalRaHeaderUpdateTime;
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+    Pool<SharedEntry, kMaxEntries>   mEntryPool;
+    Pool<Entry<Router>, kMaxRouters> mRouterPool;
+#endif
+};
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+
+//----------------------------------------------------------------------------------------------------------------------
+// Template specializations and declarations
+
+template <> inline RxRaTracker::Entry<OnLinkPrefix> &RxRaTracker::SharedEntry::GetEntry(void) { return mOnLinkEntry; }
+
+template <> inline RxRaTracker::Entry<RoutePrefix> &RxRaTracker::SharedEntry::GetEntry(void) { return mRouteEntry; }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+template <> inline RxRaTracker::Entry<Nat64Prefix> &RxRaTracker::SharedEntry::GetEntry(void)
+{
+    return mNat64PrefixEntry;
+}
+#endif
+
+template <> inline RxRaTracker::Entry<RdnssAddress> &RxRaTracker::SharedEntry::GetEntry(void)
+{
+    return mRdnssAddrEntry;
+}
+
+template <> inline RxRaTracker::Entry<IfAddress> &RxRaTracker::SharedEntry::GetEntry(void) { return mIfAddrEntry; }
+
+// Declare template (full) specializations for `Router` type.
+
+template <> RxRaTracker::Entry<RxRaTracker::Router> *RxRaTracker::AllocateEntry(void);
+
+template <> void RxRaTracker::Entry<RxRaTracker::Router>::Free(void);
+
+#endif // #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+
+} // namespace BorderRouter
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#endif // RX_RA_TRACKER_HPP_

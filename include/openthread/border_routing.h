@@ -132,6 +132,20 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * Represents an entry from the discovered NAT64 prefix table.
+ *
+ * The entries in the discovered table track the NAT64 Prefix Options in the received Router Advertisement messages from
+ * other routers on the infrastructure link.
+ */
+typedef struct otBorderRoutingNat64PrefixEntry
+{
+    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this NAT64 prefix.
+    otIp6Prefix                mPrefix;              ///< The discovered IPv6 prefix.
+    uint32_t                   mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
+    uint32_t                   mLifetime;            ///< Lifetime of the prefix (in seconds).
+} otBorderRoutingNat64PrefixEntry;
+
+/**
  * Represents a discovered Recursive DNS Server (RDNSS) address entry.
  *
  * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from
@@ -191,10 +205,10 @@ typedef enum
  */
 typedef enum
 {
-    OT_BORDER_ROUTING_STATE_UNINITIALIZED, ///< Routing Manager is uninitialized.
-    OT_BORDER_ROUTING_STATE_DISABLED,      ///< Routing Manager is initialized but disabled.
-    OT_BORDER_ROUTING_STATE_STOPPED,       ///< Routing Manager in initialized and enabled but currently stopped.
-    OT_BORDER_ROUTING_STATE_RUNNING,       ///< Routing Manager is initialized, enabled, and running.
+    OT_BORDER_ROUTING_STATE_UNINITIALIZED = 0, ///< Routing Manager is uninitialized.
+    OT_BORDER_ROUTING_STATE_DISABLED      = 1, ///< Routing Manager is initialized but disabled.
+    OT_BORDER_ROUTING_STATE_STOPPED       = 2, ///< Routing Manager in initialized and enabled but currently stopped.
+    OT_BORDER_ROUTING_STATE_RUNNING       = 3, ///< Routing Manager is initialized, enabled, and running.
 } otBorderRoutingState;
 
 /**
@@ -211,19 +225,18 @@ typedef enum
 /**
  * Initializes the Border Routing Manager on given infrastructure interface.
  *
- * @note  This method MUST be called before any other otBorderRouting* APIs.
- * @note  This method can be re-called to change the infrastructure interface, but the Border Routing Manager should be
- *        disabled first, and re-enabled after.
+ * This function MUST be called before any other otBorderRouting* APIs.
+ *
+ * This function can also be used to re-initialize and switch the infrastructure interface index to a new one.
+ * Switching the interface index will trigger all components running on the previous interface (Border Routing,
+ * mDNS, etc) to be stopped (as if the previous if-index is no longer running) before restarting operations on the
+ * new interface.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex      The infrastructure interface index.
  * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
- *                                interface is running.
  *
  * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is in a state other than disabled or uninitialized.
- * @retval  OT_ERROR_INVALID_ARGS   The index of the infrastructure interface is not valid.
- * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
  *
  * @sa otPlatInfraIfStateChanged.
  * @sa otBorderRoutingSetEnabled.
@@ -740,7 +753,6 @@ typedef void (*otBorderRoutingRdnssAddrCallback)(void *aContext);
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aCallback   The callback function pointer. Can be `NULL` if no callback is required.
  * @param[in] aConext     An arbitrary context information (used when invoking the callback).
- *
  */
 void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
                                          otBorderRoutingRdnssAddrCallback aCallback,

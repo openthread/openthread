@@ -1042,9 +1042,14 @@ public:
      * Schedule tx of MLE Advertisement message (unicast) to the given neighboring router after a random delay.
      *
      * @param[in] aRouter  The router to send the Advertisement to.
-     *
      */
     void ScheduleUnicastAdvertisementTo(const Router &aRouter);
+
+    /**
+     * Remove all parent responses that have been scheduled to be sent at a later time. Used when a precondition
+     * of the parent responses has changed.
+     */
+    void RemoveScheduledParentResponses(void) { mDelayedSender.RemoveScheduledParentResponses(); }
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
@@ -1537,7 +1542,7 @@ private:
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
         Error AppendLeaderDataTlv(void);
         Error AppendScanMaskTlv(uint8_t aScanMask);
-        Error AppendStatusTlv(StatusTlv::Status aStatus);
+        Error AppendStatusTlv(Status aStatus);
         Error AppendLinkMarginTlv(uint8_t aLinkMargin);
         Error AppendVersionTlv(void);
         Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
@@ -1640,6 +1645,13 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    struct ChildUpdateResponseInfo
+    {
+        TlvList      mTlvList;     // The TLVs to include in the Child Update Response.
+        RxChallenge  mChallenge;   // The received challenge from the Child Update Request (can be empty if none).
+        Ip6::Address mDestination; // The destination address.
+    };
+
 #if OPENTHREAD_FTD
     struct ParentResponseInfo
     {
@@ -1698,6 +1710,7 @@ private:
         void ScheduleChildUpdateRequestToParent(uint32_t aDelay);
 #if OPENTHREAD_FTD
         void ScheduleParentResponse(const ParentResponseInfo &aInfo, uint32_t aDelay);
+        void RemoveScheduledParentResponses(void);
         void ScheduleAdvertisement(const Ip6::Address &aDestination, uint32_t aDelay);
         void ScheduleMulticastDataResponse(uint32_t aDelay);
         void ScheduleLinkRequest(const Router &aRouter, uint32_t aDelay);
@@ -1733,6 +1746,7 @@ private:
         void Execute(const Schedule &aSchedule);
         bool HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
         void RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
+        void LogRemove(const Schedule &aSchedule);
 
         static bool Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination);
 
@@ -2255,9 +2269,8 @@ private:
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
-    Error      SendChildUpdateResponse(const TlvList      &aTlvList,
-                                       const RxChallenge  &aChallenge,
-                                       const Ip6::Address &aDestination);
+    Error      SendChildUpdateRejectResponse(ChildUpdateResponseInfo &aInfo);
+    Error      SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo);
     void       SetRloc16(uint16_t aRloc16);
     void       SetStateDetached(void);
     void       SetStateChild(uint16_t aRloc16);
@@ -2380,10 +2393,7 @@ private:
     void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);
     Error    SendChildUpdateRequestToChild(Child &aChild);
-    void     SendChildUpdateResponseToChild(Child                  *aChild,
-                                            const Ip6::MessageInfo &aMessageInfo,
-                                            const TlvList          &aTlvList,
-                                            const RxChallenge      &aChallenge);
+    void     SendChildUpdateResponseToChild(Child *aChild, const ChildUpdateResponseInfo &aInfo);
     void     SendMulticastDataResponse(void);
     void     SendDataResponse(const Ip6::Address &aDestination,
                               const TlvList      &aTlvList,

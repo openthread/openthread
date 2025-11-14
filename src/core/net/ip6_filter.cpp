@@ -76,7 +76,7 @@ Error Filter::Apply(const Message &aMessage) const
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         // Allow native commissioner traffic
         if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled &&
-            dstPort == Get<MeshCoP::BorderAgent>().GetUdpPort())
+            dstPort == Get<MeshCoP::BorderAgent::Manager>().GetUdpPort())
         {
             ExitNow(error = kErrorNone);
         }

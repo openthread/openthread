@@ -49,6 +49,9 @@ class BleStream:
         self.tx_char_uuid = tx_char_uuid
         self.rx_char_uuid = rx_char_uuid
 
+    def __str__(self):
+        return f"BleStream[{self.client}]"
+
     async def __aenter__(self):
         return self
 

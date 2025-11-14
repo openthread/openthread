@@ -42,6 +42,7 @@
 #include <openthread/platform/radio.h>
 
 #include "border_router/routing_manager.hpp"
+#include "border_router/rx_ra_tracker.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
@@ -153,11 +154,12 @@ class Local : public InstanceLocator, private NonCopyable
     friend class ot::RouterTable;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    friend class ot::MeshCoP::BorderAgent;
+    friend class ot::MeshCoP::BorderAgent::Manager;
     friend class ot::MeshCoP::BorderAgent::EphemeralKeyManager;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     friend class ot::BorderRouter::RoutingManager;
+    friend class ot::BorderRouter::RxRaTracker;
 #endif
 
 public:
@@ -532,10 +534,8 @@ private:
     void RecordEpskcEvent(EpskcEvent aEvent);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    void       RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
-                                      BorderRouter::RoutingManager::RoutePreference aPreference,
-                                      bool                                          aIsLocal);
-    void       RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
+    void RecordFavoredOmrPrefix(const Ip6::Prefix &aPrefix, BorderRouter::RoutePreference aPreference, bool aIsLocal);
+    void RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
     AilRouter *RecordAilRouterEvent(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     void RecordDhcp6Pd(BorderRouter::RoutingManager::Dhcp6PdState aState, const Ip6::Prefix &aPrefix);

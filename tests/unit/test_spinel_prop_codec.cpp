@@ -41,6 +41,12 @@ static void DnssdFakeCallback(otInstance *aInstance, otPlatDnssdRequestId aReque
     OT_UNUSED_VARIABLE(aError);
 }
 
+static void FakeDnssdBrowseCallback(otInstance *aInstance, const otPlatDnssdBrowseResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResult);
+}
+
 void TestDnssd(void)
 {
     constexpr uint16_t kMaxSpinelBufferSize = 2048;
@@ -178,6 +184,75 @@ void TestDnssd(void)
     VerifyOrQuit(requestId == 3);
     VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdRegisterCallback));
     VerifyOrQuit(*reinterpret_cast<const otPlatDnssdRegisterCallback *>(callbackData) == DnssdFakeCallback);
+
+    // Test Dnssd Browser encoding and decoding
+    otPlatDnssdBrowser dnssdBrowserEncode;
+    otPlatDnssdBrowser dnssdBrowserDecode;
+
+    dnssdBrowserEncode.mServiceType  = "_meshcop._udp";
+    dnssdBrowserEncode.mSubTypeLabel = nullptr;
+    dnssdBrowserEncode.mInfraIfIndex = 1;
+    dnssdBrowserEncode.mCallback     = FakeDnssdBrowseCallback;
+
+    ncpBuffer.Clear();
+    SuccessOrQuit(
+        error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_INSERTED, SPINEL_PROP_DNSSD_BROWSER));
+    SuccessOrQuit(error = EncodeDnssdDiscovery(encoder, dnssdBrowserEncode));
+    SuccessOrQuit(error = encoder.EndFrame());
+    SuccessOrQuit(ncpBuffer.OutFrameBegin());
+    len = ncpBuffer.OutFrameGetLength();
+    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
+
+    decoder.Init(buf, len);
+    SuccessOrQuit(error = decoder.ReadUint8(header));
+    VerifyOrQuit(header == SPINEL_HEADER_FLAG);
+    SuccessOrQuit(error = decoder.ReadUintPacked(command));
+    VerifyOrQuit(command == SPINEL_CMD_PROP_VALUE_INSERTED);
+    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
+    VerifyOrQuit(static_cast<spinel_prop_key_t>(propKey) == SPINEL_PROP_DNSSD_BROWSER);
+    SuccessOrQuit(error = DecodeDnssdBrowser(decoder, dnssdBrowserDecode, callbackData, callbackDataLen));
+    VerifyOrQuit(strcmp(dnssdBrowserDecode.mServiceType, dnssdBrowserEncode.mServiceType) == 0);
+    VerifyOrQuit(dnssdBrowserDecode.mSubTypeLabel == dnssdBrowserEncode.mSubTypeLabel);
+    VerifyOrQuit(dnssdBrowserDecode.mInfraIfIndex == dnssdBrowserEncode.mInfraIfIndex);
+    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdBrowseCallback));
+    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdBrowseCallback *>(callbackData) == FakeDnssdBrowseCallback);
+
+    // Test Dnssd Browser Result encoding and decoding
+    otPlatDnssdBrowseResult dnssdBrowseResultEncode;
+    otPlatDnssdBrowseResult dnssdBrowseResultDecode;
+
+    dnssdBrowseResultEncode.mServiceType     = "_ms._tcp";
+    dnssdBrowseResultEncode.mSubTypeLabel    = "_nuclear";
+    dnssdBrowseResultEncode.mServiceInstance = "ZGMF-X09A #1";
+    dnssdBrowseResultEncode.mTtl             = 1999;
+    dnssdBrowseResultEncode.mInfraIfIndex    = 1;
+
+    otPlatDnssdBrowseCallback callback = &FakeDnssdBrowseCallback;
+
+    ncpBuffer.Clear();
+    SuccessOrQuit(
+        error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_DNSSD_BROWSE_RESULT));
+    SuccessOrQuit(error = EncodeDnssdBrowseResult(encoder, dnssdBrowseResultEncode,
+                                                  reinterpret_cast<const uint8_t *>(&callback), sizeof(callback)));
+    SuccessOrQuit(error = encoder.EndFrame());
+    SuccessOrQuit(ncpBuffer.OutFrameBegin());
+    len = ncpBuffer.OutFrameGetLength();
+    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
+
+    decoder.Init(buf, len);
+    SuccessOrQuit(error = decoder.ReadUint8(header));
+    VerifyOrQuit(header == SPINEL_HEADER_FLAG);
+    SuccessOrQuit(error = decoder.ReadUintPacked(command));
+    VerifyOrQuit(command == SPINEL_CMD_PROP_VALUE_SET);
+    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
+    VerifyOrQuit(static_cast<spinel_prop_key_t>(propKey) == SPINEL_PROP_DNSSD_BROWSE_RESULT);
+    SuccessOrQuit(error = DecodeDnssdBrowseResult(decoder, dnssdBrowseResultDecode, callbackData, callbackDataLen));
+    VerifyOrQuit(strcmp(dnssdBrowseResultDecode.mServiceType, dnssdBrowseResultEncode.mServiceType) == 0);
+    VerifyOrQuit(strcmp(dnssdBrowseResultDecode.mSubTypeLabel, dnssdBrowseResultEncode.mSubTypeLabel) == 0);
+    VerifyOrQuit(strcmp(dnssdBrowseResultDecode.mServiceInstance, dnssdBrowseResultEncode.mServiceInstance) == 0);
+    VerifyOrQuit(dnssdBrowseResultDecode.mInfraIfIndex == dnssdBrowseResultEncode.mInfraIfIndex);
+    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdBrowseCallback));
+    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdBrowseCallback *>(callbackData) == FakeDnssdBrowseCallback);
 }
 
 } // namespace Spinel

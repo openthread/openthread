@@ -106,13 +106,18 @@ void TestTasklet(void)
     sInstance = static_cast<Instance *>(testInitInstance());
     VerifyOrQuit(sInstance != nullptr);
 
-    sInstance->Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
-
     {
         Tasklet::Scheduler &scheduler = sInstance->Get<Tasklet::Scheduler>();
         Tasklet             task1(*sInstance, HandleTask1);
         Tasklet             task2(*sInstance, HandleTask2);
         Tasklet             task3(*sInstance, HandleTask3);
+
+        Log("Process all initially posted tasks after `Instance` initialization");
+
+        while (scheduler.AreTaskletsPending())
+        {
+            scheduler.ProcessQueuedTasklets();
+        }
 
         VerifyOrQuit(!task1.IsPosted());
         VerifyOrQuit(!task2.IsPosted());
