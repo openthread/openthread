@@ -49,33 +49,6 @@ at_exit()
     exit $EXIT_CODE
 }
 
-wait_for_socat()
-{
-    if [[ "$(head -n2 "$SOCAT_OUTPUT" | wc -l | tr -d ' ')" == 2 ]]; then
-        RADIO_PTY=$(head -n1 "$SOCAT_OUTPUT" | grep -o '/dev/.\+')
-        CORE_PTY=$(head -n2 "$SOCAT_OUTPUT" | tail -n1 | grep -o '/dev/.\+')
-        return 0
-    else
-        echo 'Still waiting for socat'
-    fi
-    return 1
-}
-
-timeout_run()
-{
-    local count="$1"
-    local exit_code
-    shift 1
-
-    while [[ $count != 0 && $exit_code != 0 ]]; do
-        count=$((count - 1))
-        "$@" && return 0 || exit_code=$?
-        sleep 1
-    done
-
-    return $exit_code
-}
-
 do_build()
 {
     ./script/cmake-build simulation
@@ -86,19 +59,7 @@ do_check()
 {
     trap at_exit INT TERM EXIT
 
-    sudo rm -rf tmp
-
-    SOCAT_OUTPUT=/tmp/ot-socat
     OT_OUTPUT=/tmp/ot-output
-    socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$SOCAT_OUTPUT &
-    timeout_run 10 wait_for_socat
-    echo 'RADIO_PTY' "$RADIO_PTY"
-    echo 'CORE_PTY' "$CORE_PTY"
-
-    RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
-
-    # shellcheck disable=SC2094
-    $RADIO_NCP_PATH 1 >"$RADIO_PTY" <"$RADIO_PTY" &
 
     # Setup virtual ethernet pair
     sudo ip link del veth-a || true
@@ -107,50 +68,55 @@ do_check()
     sudo ip link add veth-a type veth peer name veth-b
     sudo ip link set veth-a up
     sudo ip link set veth-b up
+    sleep 1
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
 
-    # Cover setting a valid network interface name.
-    NETIF_NAME="wpan0"
-    readonly NETIF_NAME
+    RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
+    RADIO_URL="spinel+hdlc+forkpty://${RADIO_NCP_PATH}?forkpty-arg=2"
 
-    RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
-
-    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${NETIF_NAME}" -B veth-a "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
+    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I wpan0 -B veth-a "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
     sleep 5
 
     OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
 
     # verify this reset and factoryreset end immediately
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" reset
+    sudo "${OT_CTL_PATH}" reset
     # sleep a while for daemon ready
     sleep 2
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" factoryreset
+    sudo "${OT_CTL_PATH}" factoryreset
     # sleep a while for daemon ready
     sleep 2
 
     # Bring up Thread network
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" dataset init new || die 'failed to init new dataset'
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" dataset commit active || die 'failed to commit active dataset'
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" ifconfig up || die 'failed to bring ifconfig up'
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" thread start || die 'failed to start thread'
-    sleep 10
-    sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" state | grep -q 'leader' || die 'did not become leader'
-    sleep 5
+    sudo "${OT_CTL_PATH}" dataset init new || die 'failed to init new dataset'
+    sudo "${OT_CTL_PATH}" dataset commit active || die 'failed to commit active dataset'
+    sudo "${OT_CTL_PATH}" ifconfig up || die 'failed to bring ifconfig up'
+    sudo "${OT_CTL_PATH}" thread start || die 'failed to start thread'
+    sleep 30
+    sudo "${OT_CTL_PATH}" state | grep -q 'leader' || die 'did not become leader'
+    sudo "${OT_CTL_PATH}" br state | grep -q 'running' || die 'failed to start br'
 
     # Simulate infra interface index change
-    echo "Simulating infra interface index change..."
     sudo ip link del veth-a
     sleep 1
     sudo ip link add veth-a type veth peer name veth-b
     sudo ip link set veth-a up
     sudo ip link set veth-b up
-    sleep 5
+    sleep 1
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
+    sleep 30
+
+    sudo "${OT_CTL_PATH}" state | grep -q 'leader' || die 'did not become leader'
+    sudo "${OT_CTL_PATH}" br state | grep -q 'running' || die 'failed to start br'
 
     # Verify border routing is still functional by checking for a published prefix
     # The border router should re-detect the interface and re-establish routing.
-    # A key indicator of this is the successful publication of the on-link prefix.
-    onlinkprefix=$(sudo "${OT_CTL_PATH}" -I "${NETIF_NAME}" br onlinkprefix favored)
-    onlinkprefix_addr=${onlinkprefix%%/*}
-    sudo ip addr show dev veth-a | grep -q "${onlinkprefix_addr}" || die 'On-link prefix not advertised on infra if after index change'
+    # A key indicator of this is the successful publication of the onlink prefix.
+    onlinkprefix=$(sudo "${OT_CTL_PATH}" br onlinkprefix favored)
+    onlinkprefix_addr=${onlinkprefix%%::*}
+    sudo ip addr show dev veth-a | grep -q "${onlinkprefix_addr}" || die 'Onlink prefix not advertised on infra if after index change'
 
     echo "Test passed: OTBR correctly handled infra interface index change."
 }
