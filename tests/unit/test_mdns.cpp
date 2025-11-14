@@ -5365,6 +5365,33 @@ void TestHostConflict(void)
     VerifyOrQuit(StringMatch(sConflictCallback.mName.AsCString(), host.mHostName, kStringCaseInsensitiveMatch));
     VerifyOrQuit(!sConflictCallback.mHasServiceType);
 
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Since the host was registered before, after conflict probes should be sent again");
+
+    sConflictCallback.Reset();
+    sRegCallbacks[0].Reset();
+
+    for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+    {
+        sDnsMessages.Clear();
+
+        VerifyOrQuit(!sRegCallbacks[0].mWasCalled);
+        AdvanceTime(250);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 2, /* Addnl */ 0);
+        dnsMsg->ValidateAsProbeFor(host, /* aUnicastRequest */ (probeCount == 0));
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    AdvanceTime(500);
+
+    VerifyOrQuit(!sConflictCallback.mWasCalled);
+    VerifyOrQuit(!sRegCallbacks[0].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
@@ -5514,9 +5541,32 @@ void TestServiceConflict(void)
     VerifyOrQuit(
         StringMatch(sConflictCallback.mServiceType.AsCString(), service.mServiceType, kStringCaseInsensitiveMatch));
 
-    sDnsMessages.Clear();
-    AdvanceTime(20000);
-    VerifyOrQuit(sDnsMessages.IsEmpty());
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Since the service was registered before, after conflict probes should be sent again");
+
+    sConflictCallback.Reset();
+    sRegCallbacks[0].Reset();
+
+    for (uint8_t probeCount = 0; probeCount < 3; probeCount++)
+    {
+        sDnsMessages.Clear();
+
+        VerifyOrQuit(!sRegCallbacks[0].mWasCalled);
+        AdvanceTime(250);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 2, /* Addnl */ 0);
+        dnsMsg->ValidateAsProbeFor(service, /* aUnicastRequest */ (probeCount == 0));
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    AdvanceTime(500);
+
+    VerifyOrQuit(!sConflictCallback.mWasCalled);
+    VerifyOrQuit(!sRegCallbacks[0].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);

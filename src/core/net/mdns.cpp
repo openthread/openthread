@@ -2111,7 +2111,10 @@ void Core::HostEntry::HandleConflict(void)
     State oldState = GetState();
 
     SetStateToConflict();
+
     VerifyOrExit(oldState == kRegistered);
+    StartProbing();
+
     Get<Core>().InvokeConflictCallback(mName.AsCString(), nullptr);
 
 exit:
@@ -2709,6 +2712,8 @@ void Core::ServiceEntry::HandleConflict(void)
     UpdateServiceTypes();
 
     VerifyOrExit(oldState == kRegistered);
+    StartProbing();
+
     Get<Core>().InvokeConflictCallback(mServiceInstance.AsCString(), mServiceType.AsCString());
 
 exit:
