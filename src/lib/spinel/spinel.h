@@ -4897,6 +4897,34 @@ enum
      */
     SPINEL_PROP_DNSSD_KEY_RECORD = SPINEL_PROP_DNSSD__BEGIN + 5,
 
+    /// DNS-SD Service Browser
+    /**
+     * Format : Inserted/Removed
+     *
+     * `U`    : The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+     * `t(U)` : The sub-type label if browsing for sub-type, empty otherwise.
+     * `L`    : The infrastructure network interface index to browse the service.
+     * `D`    : The context of the request. A pointer to the browse callback to receive the result.
+     *
+     * NCP uses this property to browse services.
+     */
+    SPINEL_PROP_DNSSD_BROWSER = SPINEL_PROP_DNSSD__BEGIN + 6,
+
+    /// DNS-SD Service Browser Result
+    /**
+     * Format : Set
+     *
+     * `U`    : The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+     * `t(U)` : The sub-type label if browsing for sub-type, empty otherwise.
+     * `U`    : Service instance label.
+     * `L`    : TTL in seconds. Zero TTL indicates that service is removed.
+     * `L`    : The infrastructure network interface index.
+     * `D`    : The context of the request. A pointer to the browse callback to receive the result.
+     *
+     * Host uses this property to send the result of the browser to NCP.
+     */
+    SPINEL_PROP_DNSSD_BROWSE_RESULT = SPINEL_PROP_DNSSD__BEGIN + 7,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,

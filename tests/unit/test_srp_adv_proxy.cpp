@@ -547,7 +547,7 @@ void InitTest(void)
     // Disable the Border Agent to prevent its attempt to
     // register the `_meshcop._udp` service from
     // interfering with this test.
-    sInstance->Get<MeshCoP::BorderAgent>().SetEnabled(false);
+    sInstance->Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
 #endif
 
     // Configure the `Dnssd` module to use `otPlatDnssd` APIs.

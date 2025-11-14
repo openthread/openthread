@@ -89,13 +89,13 @@ Error NetworkName::Set(const NameData &aNameData)
     data.SetLength(newLen);
 
     // Ensure the new name does not match the current one.
-    if (data.MatchesBytesIn(m8) && m8[newLen] == '\0')
+    if (data.MatchesBytesIn(m8) && m8[newLen] == kNullChar)
     {
         ExitNow(error = kErrorAlready);
     }
 
     data.CopyBytesTo(m8);
-    m8[newLen] = '\0';
+    m8[newLen] = kNullChar;
 
 exit:
     return error;

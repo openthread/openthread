@@ -436,7 +436,7 @@ Error Server::SetDomain(const char *aDomain)
 
         memcpy(buf, aDomain, length);
         buf[length]     = '.';
-        buf[length + 1] = '\0';
+        buf[length + 1] = kNullChar;
 
         error = mDomain.Set(buf);
     }

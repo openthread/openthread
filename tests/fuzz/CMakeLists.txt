@@ -56,12 +56,12 @@ macro(ot_nexus_test name)
 
     # Macro to add an OpenThread nexus test.
     #
-    #   Nexus test name will be `nexus_{name}`. Test source file of
-    #   `test_{name}.cpp` is used. Optional extra arguments can be
+    #   Nexus test name will be `{name}-fuzzer`. Test source file of
+    #   `fuzz_{name}.cpp` is used. Optional extra arguments can be
     #   passed to provide additional source files.
 
     add_executable(${name}-fuzzer
-        ${name}.cpp ${ARGN}
+        fuzz_${name}.cpp ${ARGN}
     )
 
     target_include_directories(${name}-fuzzer

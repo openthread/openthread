@@ -3,14 +3,14 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "bbtc client"
-version = "0.1.0"
-description = "BBTC client for TCAT devices"
-authors = ["Piotr Jasinski <piotr.jasinski@nordicsemi.no>"]
+name = "tcat-ble-client"
+version = "0.2.0"
+description = "TCAT Commissioner (BBTC) client to configure TCAT devices"
+authors = ["Piotr Jasinski <piotr.jasinski@nordicsemi.no>", "Esko Dijk <esko.dijk@iotconsultancy.nl>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-bleak = "^0.20.2"
-pytest ="^7.1.2"
-
-[tool.poetry.dev-dependencies]
+python = "^3.10"
+bleak = "^1.0"
+pytest ="^8.4"
+cryptography = "^46.0"
+pyreadline3 = { version = "^3.5", platform = "win32" }

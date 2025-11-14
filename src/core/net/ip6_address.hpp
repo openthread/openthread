@@ -61,6 +61,8 @@ namespace Ip6 {
  * @{
  */
 
+class Prefix;
+
 /**
  * Represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
  */
@@ -79,6 +81,16 @@ public:
      * @retval kErrorFailed   Failed to generate random ULA Network Prefix.
      */
     Error GenerateRandomUla(void);
+
+    /**
+     * Sets the Network Prefix from a given `Prefix`.
+     *
+     * @param[in] aPrefix  The prefix to use to set the Network Prefix.
+     *
+     * @retval kErrorNone          Successfully set the Network Prefix from @p aPrefix.
+     * @retval kErrorInvalidArgs   The @p aPrefix length is not valid (must be `kLength`).
+     */
+    Error SetFrom(const Prefix &aPrefix);
 
 } OT_TOOL_PACKED_END;
 

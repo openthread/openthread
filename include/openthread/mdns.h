@@ -309,6 +309,7 @@ otError otMdnsSetLocalHostName(otInstance *aInstance, const char *aName);
  *
  * @retval OT_ERROR_NONE            Successfully started registration. @p aCallback will report the outcome.
  * @retval OT_ERROR_INVALID_STATE   mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS    The name in @p aHost is invalid.
  */
 otError otMdnsRegisterHost(otInstance            *aInstance,
                            const otMdnsHost      *aHost,
@@ -333,6 +334,7 @@ otError otMdnsRegisterHost(otInstance            *aInstance,
  *
  * @retval OT_ERROR_NONE            Successfully unregistered host.
  * @retval OT_ERROR_INVALID_STATE   mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS    The name in @p aHost is invalid.
  */
 otError otMdnsUnregisterHost(otInstance *aInstance, const otMdnsHost *aHost);
 
@@ -372,6 +374,7 @@ otError otMdnsUnregisterHost(otInstance *aInstance, const otMdnsHost *aHost);
  *
  * @retval OT_ERROR_NONE            Successfully started registration. @p aCallback will report the outcome.
  * @retval OT_ERROR_INVALID_STATE   mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS    A name in @p aService (instance, service type, sub-types, or host) is not valid.
  */
 otError otMdnsRegisterService(otInstance            *aInstance,
                               const otMdnsService   *aService,
@@ -399,6 +402,7 @@ otError otMdnsRegisterService(otInstance            *aInstance,
  *
  * @retval OT_ERROR_NONE            Successfully unregistered service.
  * @retval OT_ERROR_INVALID_STATE   mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS    A name in @p aService (instance or service type) is not valid.
  */
 otError otMdnsUnregisterService(otInstance *aInstance, const otMdnsService *aService);
 
@@ -429,6 +433,7 @@ otError otMdnsUnregisterService(otInstance *aInstance, const otMdnsService *aSer
  *
  * @retval OT_ERROR_NONE            Successfully started registration. @p aCallback will report the outcome.
  * @retval OT_ERROR_INVALID_STATE   mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS    A name in @p aKey is not valid.
  */
 otError otMdnsRegisterKey(otInstance            *aInstance,
                           const otMdnsKey       *aKey,
@@ -457,6 +462,7 @@ otError otMdnsRegisterKey(otInstance            *aInstance,
  *
  * @retval OT_ERROR_NONE            Successfully unregistered key
  * @retval OT_ERROR_INVALID_STATE   mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS    A name in @p aKey is not valid.
  */
 otError otMdnsUnregisterKey(otInstance *aInstance, const otMdnsKey *aKey);
 

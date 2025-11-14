@@ -123,7 +123,6 @@ public:
      *
      * @param[in] aRecursiveDnsServers A pointer to the list of IPv6 recursive DNS server addresses.
      * @param[in] aNumServers          The number of recursive DNS servers.
-     *
      */
     void SetRecursiveDnsServerList(const otIp6Address *aRecursiveDnsServers, uint32_t aNumServers);
 

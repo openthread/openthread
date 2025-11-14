@@ -32,12 +32,12 @@
  */
 
 #include "tcat_agent.hpp"
-#include "common/code_utils.hpp"
-#include "common/error.hpp"
-#include "crypto/storage.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
+#include "common/code_utils.hpp"
+#include "common/error.hpp"
+#include "crypto/storage.hpp"
 #include "instance/instance.hpp"
 #include "thread/network_diagnostic.hpp"
 
@@ -59,59 +59,115 @@ TcatAgent::TcatAgent(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mVendorInfo(nullptr)
     , mState(kStateDisabled)
-    , mCommissionerHasNetworkName(false)
-    , mCommissionerHasDomainName(false)
-    , mCommissionerHasExtendedPanId(false)
-    , mRandomChallenge(0)
-    , mPskdVerified(false)
-    , mPskcVerified(false)
-    , mInstallCodeVerified(false)
-    , mIsCommissioned(false)
-    , mApplicationResponsePending(false)
+    , mNextState(kStateDisabled)
+    , mTimerSetsToActive(false)
+    , mActiveOrStandbyTimer(aInstance)
+    , mTcatActiveDurationMs(0)
 {
-    mJoinerPskd.Clear();
+    ClearCommissionerState();
 }
 
-Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext)
+void TcatAgent::ClearCommissionerState(void)
 {
-    Error error = kErrorNone;
-
-    LogInfo("Starting");
-    VerifyOrExit(mVendorInfo != nullptr, error = kErrorFailed);
-    mAppDataReceiveCallback.Set(aAppDataReceiveCallback, aContext);
-    mJoinCallback.Set(aHandler, aContext);
-    mRandomChallenge = 0;
-    mState           = kStateEnabled;
-
-exit:
-    LogWarnOnError(error, "start TCAT agent");
-    return error;
-}
-
-void TcatAgent::Stop(void)
-{
-    mState = kStateDisabled;
-    mAppDataReceiveCallback.Clear();
-    mJoinCallback.Clear();
+    mCommissionerAuthorizationField = {};
+    mCommissionerExtendedPanId.Clear();
     mCommissionerHasNetworkName    = false;
     mCommissionerHasDomainName     = false;
     mCommissionerHasExtendedPanId  = false;
-    mCommissionerNetworkName.m8[0] = '\0';
-    mCommissionerDomainName.m8[0]  = '\0';
+    mCommissionerNetworkName.m8[0] = kNullChar;
+    mCommissionerDomainName.m8[0]  = kNullChar;
     mRandomChallenge               = 0;
     mPskdVerified                  = false;
     mPskcVerified                  = false;
     mInstallCodeVerified           = false;
     mIsCommissioned                = false;
-    LogInfo("TCAT agent stopped");
+    mApplicationResponsePending    = false;
+}
+
+Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aJoinHandler, void *aContext)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!IsStarted(), error = kErrorAlready);
+    VerifyOrExit(mVendorInfo != nullptr, error = kErrorFailed);
+
+    mAppDataReceiveCallback.Set(aAppDataReceiveCallback, aContext);
+    mJoinCallback.Set(aJoinHandler, aContext);
+    mState                = kStateActive;
+    mNextState            = kStateActive;
+    mTcatActiveDurationMs = 0;
+    LogInfo("Start");
+
+exit:
+    LogWarnOnError(error, "Start");
+    return error;
+}
+
+// Note: closing the TLS is handled by the transport class like #BleSecure
+void TcatAgent::Stop(void)
+{
+    mAppDataReceiveCallback.Clear();
+    mJoinCallback.Clear();
+    mState = kStateDisabled;
+    mActiveOrStandbyTimer.Stop();
+    ClearCommissionerState();
+    LogInfo("Stop");
+}
+
+Error TcatAgent::Standby(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsStarted(), error = kErrorInvalidState);
+
+    mTcatActiveDurationMs = 0;
+    mActiveOrStandbyTimer.Stop();
+    mNextState = kStateStandby;
+    if (!IsConnected() && mState != kStateStandby)
+    {
+        // if already TLS-connected, only move to 'standby' once the connection is done.
+        // if not yet fully connected, go to 'standby' immediately (ignoring a TLS handshake that may be ongoing)
+        mState = kStateStandby;
+        NotifyStateChange();
+        LogInfo("Standby");
+    }
+
+exit:
+    LogWarnOnError(error, "Standby");
+    return error;
+}
+
+Error TcatAgent::Activate(const uint32_t aDelayMs, const uint32_t aDurationMs)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsStarted(), error = kErrorInvalidState);
+    VerifyOrExit(mState != kStateActive);
+
+    mTcatActiveDurationMs = aDurationMs;
+    mTimerSetsToActive    = true;
+    if (aDelayMs > 0)
+    {
+        mActiveOrStandbyTimer.Start(aDelayMs);
+    }
+    else
+    {
+        mActiveOrStandbyTimer.Stop();
+        HandleTimer();
+    }
+
+exit:
+    LogWarnOnError(error, "Activate");
+    return error;
 }
 
 Error TcatAgent::SetTcatVendorInfo(const VendorInfo &aVendorInfo)
 {
-    Error error = kErrorNone;
+    Error      error = kErrorNone;
+    JoinerPskd pskd;
 
     VerifyOrExit(aVendorInfo.IsValid(), error = kErrorInvalidArgs);
-    SuccessOrExit(error = mJoinerPskd.SetFrom(aVendorInfo.mPskdString));
+    SuccessOrExit(error = pskd.SetFrom(aVendorInfo.mPskdString));
     mVendorInfo = &aVendorInfo;
 
 exit:
@@ -123,7 +179,10 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     size_t len;
     Error  error;
 
-    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(IsStarted() && !IsConnected() && mState != kStateStandby && mState != kStateStandbyTemporary,
+                 error = kErrorInvalidState);
+    ClearCommissionerState();
+
     len = sizeof(mCommissionerAuthorizationField);
     SuccessOrExit(
         error = aTls.GetThreadAttributeFromPeerCertificate(
@@ -137,15 +196,11 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     VerifyOrExit(len == sizeof(mDeviceAuthorizationField), error = kErrorParse);
     VerifyOrExit((mDeviceAuthorizationField.mHeader & kCommissionerFlag) == 0, error = kErrorParse);
 
-    mCommissionerHasDomainName    = false;
-    mCommissionerHasNetworkName   = false;
-    mCommissionerHasExtendedPanId = false;
-
     len = sizeof(mCommissionerDomainName) - 1;
     if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateDomainName, reinterpret_cast<uint8_t *>(&mCommissionerDomainName), &len) == kErrorNone)
     {
-        mCommissionerDomainName.m8[len] = '\0';
+        mCommissionerDomainName.m8[len] = kNullChar;
         mCommissionerHasDomainName      = true;
     }
 
@@ -153,7 +208,7 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
     if (aTls.GetThreadAttributeFromPeerCertificate(
             kCertificateNetworkName, reinterpret_cast<uint8_t *>(&mCommissionerNetworkName), &len) == kErrorNone)
     {
-        mCommissionerNetworkName.m8[len] = '\0';
+        mCommissionerNetworkName.m8[len] = kNullChar;
         mCommissionerHasNetworkName      = true;
     }
 
@@ -167,9 +222,14 @@ Error TcatAgent::Connected(MeshCoP::Tls::Extension &aTls)
         }
     }
 
-    mState          = kStateConnected;
+    // A temporary enablement stops after disconnect: to standby.
+    mNextState = (mState == kStateActiveTemporary) ? kStateStandby : kStateActive;
+    mState     = kStateConnected;
+    NotifyStateChange();
+    LogInfo("Connected");
+
+    // This specifically stores the state IsCommissioned at _start_ of session:
     mIsCommissioned = Get<ActiveDatasetManager>().IsCommissioned();
-    LogInfo("TCAT agent connected");
 
 exit:
     return error;
@@ -179,15 +239,11 @@ void TcatAgent::Disconnected(void)
 {
     if (mState != kStateDisabled)
     {
-        mState = kStateEnabled;
+        mState = mNextState;
+        LogInfo("Disconnected");
+        NotifyStateChange();
+        ClearCommissionerState();
     }
-
-    mRandomChallenge     = 0;
-    mPskdVerified        = false;
-    mPskcVerified        = false;
-    mInstallCodeVerified = false;
-
-    LogInfo("TCAT agent disconnected");
 }
 
 uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequired, Dataset::Info *aDatasetInfo) const
@@ -248,7 +304,7 @@ uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequir
                 break;
 
             default:
-                LogCrit("Error while processing access flags. Unexpected flag %d", flag);
+                LogCrit("Error in access flags. Unexpected flag %d", flag);
                 OT_ASSERT(false); // Should not get here
             }
         }
@@ -405,7 +461,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         break;
 
     case kTlvDecommission:
-        error = HandleDecomission();
+        error = HandleDecommission();
         break;
 
     case kTlvPing:
@@ -546,7 +602,6 @@ exit:
 Error TcatAgent::HandleGetActiveOperationalDataset(Message &aOutgoingMessage, bool &aResponse)
 {
     Error         error = kErrorNone;
-    Dataset       dataset;
     Dataset::Tlvs datasetTlvs;
 
     VerifyOrExit(IsCommandClassAuthorized(kExtraction), error = kErrorRejected);
@@ -596,7 +651,7 @@ Error TcatAgent::HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
     offsetRange.Init(aOffset, aLength);
     initialLength = aOutgoingMessage.GetLength();
 
-    // Start with extTlv to avoid the need for a temporary message buffer to calucalate reply length
+    // Start with extTlv to avoid the need for a temporary message buffer to calculate reply length
     extTlv.SetType(kTlvResponseWithPayload);
     extTlv.SetLength(0);
     SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
@@ -633,7 +688,7 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandleDecomission(void)
+Error TcatAgent::HandleDecommission(void)
 {
     Error         error = kErrorNone;
     unsigned char buf[kCommissionerCertMaxLength];
@@ -656,6 +711,8 @@ Error TcatAgent::HandleDecomission(void)
         Get<KeyManager>().SetNetworkKey(networkKey);
     }
 #endif
+
+    mIsCommissioned = false; // enable repeated commissioning/decommissioning in a session
 
 exit:
     return error;
@@ -850,8 +907,8 @@ Error TcatAgent::HandleRequestPskdHash(const Message &aIncomingMessage,
 
     SuccessOrExit(error = aIncomingMessage.Read(aOffset, &providedChallenge, aLength));
 
-    CalculateHash(providedChallenge, mVendorInfo->mPskdString, StringLength(mVendorInfo->mPskdString, kMaxPskdLength),
-                  hash);
+    SuccessOrExit(error = CalculateHash(providedChallenge, mVendorInfo->mPskdString,
+                                        StringLength(mVendorInfo->mPskdString, kMaxPskdLength), hash));
 
     SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, hash.GetBytes(),
                                          Crypto::HmacSha256::Hash::kSize));
@@ -873,7 +930,7 @@ Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
     VerifyOrExit(aLength == Crypto::HmacSha256::Hash::kSize, error = kErrorSecurity);
     VerifyOrExit(mRandomChallenge != 0, error = kErrorSecurity);
 
-    CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash);
+    SuccessOrExit(error = CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash));
     DumpDebg("Hash", &hash, sizeof(hash));
 
     VerifyOrExit(aIncomingMessage.Compare(aOffset, hash), error = kErrorSecurity);
@@ -882,18 +939,19 @@ exit:
     return error;
 }
 
-void TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash)
+Error TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash)
 {
     const mbedtls_asn1_buf &rawKey = Get<Ble::BleSecure>().GetOwnPublicKey();
     Crypto::Key             cryptoKey;
     Crypto::HmacSha256      hmac;
+    Error                   error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Crypto::Storage::KeyRef keyRef;
-    SuccessOrExit(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
-                                             Crypto::Storage::kKeyAlgorithmHmacSha256, Crypto::Storage::kUsageSignHash,
-                                             Crypto::Storage::kTypeVolatile, reinterpret_cast<const uint8_t *>(aBuf),
-                                             aBufLen));
+    SuccessOrExit(error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                                     Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                                     Crypto::Storage::kUsageSignHash, Crypto::Storage::kTypeVolatile,
+                                                     reinterpret_cast<const uint8_t *>(aBuf), aBufLen));
     cryptoKey.SetAsKeyRef(keyRef);
 #else
     cryptoKey.Set(reinterpret_cast<const uint8_t *>(aBuf), static_cast<uint16_t>(aBufLen));
@@ -908,7 +966,7 @@ void TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBuf
     Crypto::Storage::DestroyKey(keyRef);
 exit:
 #endif
-    return;
+    return error;
 }
 
 Error TcatAgent::HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aResponse)
@@ -992,6 +1050,8 @@ Error TcatAgent::HandleStartThreadInterface(void)
     error = Get<Mle::Mle>().Start();
 
 exit:
+    // error values for callback MUST be limited to the allowed set, see #JoinCallback
+    mJoinCallback.InvokeIfSet(error);
     return error;
 }
 
@@ -1004,14 +1064,132 @@ Error TcatAgent::HandleStopThreadInterface(void)
     error = otThreadSetEnabled(&GetInstance(), false);
 
 exit:
+    mJoinCallback.InvokeIfSet(error);
     return error;
 }
 
-void SeralizeTcatAdvertisementTlv(uint8_t                 *aBuffer,
-                                  uint16_t                &aOffset,
-                                  TcatAdvertisementTlvType aType,
-                                  uint16_t                 aLength,
-                                  const uint8_t           *aValue)
+// called when TCAT active-or-standby timer expires
+void TcatAgent::HandleTimer(void)
+{
+    switch (mState)
+    {
+    case kStateStandby:
+    case kStateStandbyTemporary:
+    case kStateActiveTemporary:
+        if (mTimerSetsToActive)
+        {
+            mTimerSetsToActive = false;
+            if (mTcatActiveDurationMs > 0)
+            {
+                mState = kStateActiveTemporary;
+                mActiveOrStandbyTimer.Start(mTcatActiveDurationMs);
+            }
+            else
+            {
+                mState = kStateActive;
+            }
+            NotifyStateChange();
+            LogInfo("Active");
+        }
+        else
+        {
+            IgnoreError(Standby());
+        }
+        break;
+
+    // kStateActive: will not go to standby, based on timer. Application has forced it to 'active'.
+    // kStateConnected: no change here, mNextState already set.
+    default:
+        break;
+    }
+}
+
+// internally called when TcatAgent state changes: perform any required actions.
+void TcatAgent::NotifyStateChange(void)
+{
+    Get<Ble::BleSecure>().NotifySendAdvertisements(mState == kStateActive || mState == kStateActiveTemporary ||
+                                                   mState == kStateConnected);
+}
+
+template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error          error        = kErrorNone;
+    Coap::Message *message      = nullptr;
+    uint32_t       delayTimerMs = 0;
+    uint16_t       durationSec  = 0;
+    uint32_t       durationMs;
+
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
+    message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMessage, delayTimerMs));
+    switch (Tlv::Find<DurationTlv>(aMessage, durationSec))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        durationSec = kTcatTmfEnableDefaultSec; // If Duration TLV absent: use default duration
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+    durationMs = Time::SecToMsec(durationSec);
+
+    // if an existing activation is ongoing, adapt the requested one to be compatible.
+    AdaptToExistingActivePeriod(delayTimerMs, durationMs);
+
+    error = Activate(delayTimerMs, durationMs);
+
+exit:
+    if (message != nullptr)
+    {
+        error =
+            Tlv::Append<StateTlv>(*message, error == kErrorNone ? StateTlv::State::kAccept : StateTlv::State::kReject);
+        if (error == kErrorNone)
+        {
+            error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo);
+        }
+        FreeMessageOnError(message, error);
+    }
+    LogWarnOnError(error, "send TCAT_ENABLE.rsp");
+}
+
+// Adapts delay/duration parameters of the given TCAT temporary activation period to the
+// already-ongoing temporary TCAT activation (if any). The goals of the adaptation are:
+// - not shorten the duration of an existing (scheduled/ongoing) activation
+// - not set the start of activation later than the existing scheduled activation time
+void TcatAgent::AdaptToExistingActivePeriod(uint32_t &aPeriodDelayMs, uint32_t &aPeriodDurationMs)
+{
+    VerifyOrExit(mState != kStateActive);
+
+    if (mActiveOrStandbyTimer.IsRunning())
+    {
+        TimeMilli now = TimerMilli::GetNow();
+        uint32_t  remainingMs;
+        remainingMs = (mActiveOrStandbyTimer.GetFireTime() > now) ? mActiveOrStandbyTimer.GetFireTime() - now : 0;
+        if (mTimerSetsToActive)
+        {
+            aPeriodDelayMs    = Min(aPeriodDelayMs, remainingMs);
+            aPeriodDurationMs = Max(aPeriodDurationMs, remainingMs + mTcatActiveDurationMs - aPeriodDelayMs);
+        }
+        else
+        {
+            aPeriodDelayMs    = 0;
+            aPeriodDurationMs = Max(aPeriodDurationMs, remainingMs);
+        }
+    }
+
+exit:
+    return;
+}
+
+void SerializeTcatAdvertisementTlv(uint8_t                 *aBuffer,
+                                   uint16_t                &aOffset,
+                                   TcatAdvertisementTlvType aType,
+                                   uint16_t                 aLength,
+                                   const uint8_t           *aValue)
 {
     aBuffer[aOffset++] = static_cast<uint8_t>(aType << 4 | (aLength & 0xf));
     memcpy(aBuffer + aOffset, aValue, aLength);
@@ -1040,24 +1218,24 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
             switch (MapEnum(mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdType))
             {
             case kTcatDeviceIdOui24:
-                SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui24,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui24,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             case kTcatDeviceIdOui36:
-                SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui36,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorOui36,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             case kTcatDeviceIdDiscriminator:
-                SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceDiscriminator,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceDiscriminator,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             case kTcatDeviceIdIanaPen:
-                SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorIanaPen,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
-                                             mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
+                SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvVendorIanaPen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceIdLen,
+                                              mVendorInfo->mAdvertisedDeviceIds[i].mDeviceId);
                 break;
             default:
                 break;
@@ -1069,8 +1247,8 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
 
     if (caps.mGattNotifications || caps.mL2CapDirect)
     {
-        SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvBleLinkCapabilities, kTlvBleLinkCapabilitiesLength,
-                                     reinterpret_cast<uint8_t *>(&caps));
+        SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvBleLinkCapabilities, kTlvBleLinkCapabilitiesLength,
+                                      reinterpret_cast<uint8_t *>(&caps));
     }
 
     tas.mRsv               = 0;
@@ -1089,8 +1267,8 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
     tas.mIsBorderRouter = false;
 #endif
 
-    SeralizeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceTypeAndStatus, kTlvDeviceTypeAndStatusLength,
-                                 reinterpret_cast<uint8_t *>(&tas));
+    SerializeTcatAdvertisementTlv(aAdvertisementData, aLen, kTlvDeviceTypeAndStatus, kTlvDeviceTypeAndStatusLength,
+                                  reinterpret_cast<uint8_t *>(&tas));
     OT_ASSERT(aLen <= OT_TCAT_ADVERTISEMENT_MAX_LEN);
 
 exit:

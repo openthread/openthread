@@ -131,6 +131,15 @@ enum DeviceRole : uint8_t
 };
 
 /**
+ * Represents a status value in an MLE Status TLV.
+ */
+enum Status : uint8_t
+{
+    kStatusSuccess = 0, ///< Success status.
+    kStatusError   = 1, ///< Error status.
+};
+
+/**
  * Represents MLE commands.
  */
 enum Command : uint8_t

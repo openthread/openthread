@@ -68,7 +68,7 @@ bool JoinerPskd::operator==(const JoinerPskd &aOther) const
             ExitNow();
         }
 
-        if (m8[i] == '\0')
+        if (m8[i] == kNullChar)
         {
             break;
         }

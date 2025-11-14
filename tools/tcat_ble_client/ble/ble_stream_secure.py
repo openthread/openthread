@@ -28,15 +28,15 @@
 
 import _ssl
 import asyncio
-import ssl
-import sys
 import logging
+import ssl
+from time import time
+from typing import Optional, Callable
 
 from cryptography.x509 import load_der_x509_certificate
 from cryptography.hazmat.primitives.serialization import (Encoding, PublicFormat)
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
-from time import time
 import utils
 
 logger = logging.getLogger(__name__)
@@ -65,48 +65,86 @@ class BleStreamSecure:
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
-    async def do_handshake(self, timeout=30.0):
-        is_debug = logger.getEffectiveLevel() <= logging.DEBUG
+    async def do_handshake(self, timeout=30.0, progress_callback: Optional[Callable[[bool], None]] = None) -> bool:
+        """
+        Performs a TLS handshake with a TCAT Device, reporting progress via an optional callback.
+
+        Args:
+            timeout: The maximum time in seconds to wait for the handshake to complete.
+            progress_callback: A function that accepts one boolean argument:
+                               - False (is_concluded=False): The handshake attempt is ongoing.
+                               - True (is_concluded=True): The handshake attempt has concluded. This call is made
+                                 before any results/errors in do_handshake are logged.
+
+        Returns:
+            True if the TLS handshake was successful, False otherwise.
+        """
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
             outgoing=self.outgoing,
             server_side=False,
             server_hostname=None,
         )
-        start = time()
-        while (time() - start) < timeout:
-            try:
-                if not is_debug:
-                    print('.', end='')
-                    sys.stdout.flush()
-                self.ssl_object.do_handshake()
-                break
 
-            # SSLWantWrite means ssl wants to send data over the link,
-            # but might need a receive first
-            except ssl.SSLWantWriteError:
-                output = await self.stream.recv(4096)
-                if output:
-                    self.incoming.write(output)
-                data = self.outgoing.read()
-                if data:
-                    await self.stream.send(data)
-                await asyncio.sleep(0.02)
+        try:
+            start = time()
+            while (time() - start) < timeout:
+                try:
+                    if progress_callback:
+                        progress_callback(False)
+                    self.ssl_object.do_handshake()
+                    break
 
-            # SSLWantRead means ssl wants to receive data from the link,
-            # but might need to send first
-            except ssl.SSLWantReadError:
-                data = self.outgoing.read()
-                if data:
-                    await self.stream.send(data)
-                output = await self.stream.recv(4096)
-                if output:
-                    self.incoming.write(output)
-                await asyncio.sleep(0.02)
-        else:
-            print('TLS Connection timed out.')
-            return False
-        print('')
+                # SSLWantWrite means ssl wants to send data over the link,
+                # but might need a receive first
+                except ssl.SSLWantWriteError:
+                    output = await self.stream.recv(4096)
+                    if output:
+                        self.incoming.write(output)
+                    data = self.outgoing.read()
+                    if data:
+                        await self.stream.send(data)
+                    await asyncio.sleep(0.02)
+
+                # SSLWantRead means ssl wants to receive data from the link,
+                # but might need to send first
+                except ssl.SSLWantReadError:
+                    data = self.outgoing.read()
+                    if data:
+                        await self.stream.send(data)
+                    output = await self.stream.recv(4096)
+                    if output:
+                        self.incoming.write(output)
+                    await asyncio.sleep(0.02)
+
+                except ssl.SSLCertVerificationError as err:
+                    if progress_callback:
+                        progress_callback(True)
+                    logger.error(
+                        f'SSLCertVerificationError reason={err.reason} verify_code={err.verify_code} verify_msg="{err.verify_message}"'
+                    )
+                    return False
+
+                except ssl.SSLError as err:
+                    if progress_callback:
+                        progress_callback(True)
+                    logger.error(f"SSLError reason={err.reason}")
+                    return False
+
+            else:
+                if progress_callback:
+                    progress_callback(True)
+                logger.error(f'TLS Connection timed out (timeout={timeout}s).')
+                return False
+
+        # also catch Exceptions here which may be raised in SSL-specific Exception handlers
+        except Exception as err:
+            if progress_callback:
+                progress_callback(True)
+            raise err
+
+        if progress_callback:
+            progress_callback(True)
         cert = self.ssl_object.getpeercert(True)
         cert_obj = load_der_x509_certificate(cert)
         self._peer_public_key = cert_obj.public_key().public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)

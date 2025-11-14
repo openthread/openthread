@@ -64,7 +64,7 @@ Commissioner::Commissioner(Instance &aInstance)
 
     IgnoreError(SetId("OpenThread Commissioner"));
 
-    mProvisioningUrl[0] = '\0';
+    mProvisioningUrl[0] = kNullChar;
 }
 
 void Commissioner::SetState(State aState)

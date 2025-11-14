@@ -582,9 +582,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-void Local::RecordFavoredOmrPrefix(const Ip6::Prefix                            &aPrefix,
-                                   BorderRouter::RoutingManager::RoutePreference aPreference,
-                                   bool                                          aIsLocal)
+void Local::RecordFavoredOmrPrefix(const Ip6::Prefix &aPrefix, BorderRouter::RoutePreference aPreference, bool aIsLocal)
 {
     FavoredOmrPrefix *entry = mFavoredOmrPrefixHistory.AddNewEntry();
 

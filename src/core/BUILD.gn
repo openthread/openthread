@@ -247,6 +247,8 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
     }
 
+    defines += [ "OPENTHREAD_CONFIG_TCP_ENABLE=${openthread_config_tcp_enable}" ]
+
     if (openthread_config_ping_sender) {
       defines += [ "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1" ]
     }
@@ -309,6 +311,8 @@ openthread_core_files = [
   "api/backbone_router_ftd_api.cpp",
   "api/ble_secure_api.cpp",
   "api/border_agent_api.cpp",
+  "api/border_agent_tracker_api.cpp",
+  "api/border_agent_txt_data_api.cpp",
   "api/border_router_api.cpp",
   "api/border_routing_api.cpp",
   "api/channel_manager_api.cpp",
@@ -375,14 +379,22 @@ openthread_core_files = [
   "backbone_router/multicast_listeners_table.hpp",
   "backbone_router/ndproxy_table.cpp",
   "backbone_router/ndproxy_table.hpp",
+  "border_router/br_log.cpp",
+  "border_router/br_log.hpp",
   "border_router/br_tracker.cpp",
   "border_router/br_tracker.hpp",
+  "border_router/br_types.cpp",
+  "border_router/br_types.hpp",
   "border_router/dhcp6_pd_client.cpp",
   "border_router/dhcp6_pd_client.hpp",
   "border_router/infra_if.cpp",
   "border_router/infra_if.hpp",
+  "border_router/multi_ail_detector.cpp",
+  "border_router/multi_ail_detector.hpp",
   "border_router/routing_manager.cpp",
   "border_router/routing_manager.hpp",
+  "border_router/rx_ra_tracker.cpp",
+  "border_router/rx_ra_tracker.hpp",
   "coap/coap.cpp",
   "coap/coap.hpp",
   "coap/coap_message.cpp",
@@ -519,6 +531,10 @@ openthread_core_files = [
   "meshcop/announce_begin_client.hpp",
   "meshcop/border_agent.cpp",
   "meshcop/border_agent.hpp",
+  "meshcop/border_agent_tracker.cpp",
+  "meshcop/border_agent_tracker.hpp",
+  "meshcop/border_agent_txt_data.cpp",
+  "meshcop/border_agent_txt_data.hpp",
   "meshcop/commissioner.cpp",
   "meshcop/commissioner.hpp",
   "meshcop/dataset.cpp",

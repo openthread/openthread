@@ -136,7 +136,7 @@ Error Diags::ProcessEcho(uint8_t aArgsLength, char *aArgs[])
             output[i] = '0' + i % 10;
         }
 
-        output[number] = '\0';
+        output[number] = kNullChar;
 
         Output("%s\r\n", output);
     }
@@ -637,7 +637,7 @@ Error Diags::ParseReceiveConfigFormat(const char *aFormat, ReceiveConfig &aConfi
 
     VerifyOrExit(aFormat != nullptr, error = kErrorInvalidArgs);
 
-    for (const char *arg = aFormat; *arg != '\0'; arg++)
+    for (const char *arg = aFormat; *arg != kNullChar; arg++)
     {
         switch (*arg)
         {

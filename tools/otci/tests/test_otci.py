@@ -754,10 +754,10 @@ class TestOTCI(unittest.TestCase):
         rtt: Dict[str, float] = cast(Dict[str, float], statistics['round_trip_time'])
         self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
 
-        ed_report = commissioner.commissioner_energy_scan(3 << commissioner.get_channel(), 4, 32, 1000,
+        ed_report = commissioner.commissioner_energy_scan(3 << commissioner.get_channel(), 3, 32, 1000,
                                                           child1.get_ipaddr_rloc())
         comm_chan = commissioner.get_channel()
-        self.assertEqual({comm_chan: [-30, -30, -30, -30], comm_chan + 1: [-30, -30, -30, -30]}, ed_report)
+        self.assertEqual({comm_chan: [-30, -30, -30], comm_chan + 1: [-30, -30, -30]}, ed_report)
 
         commissioner.commissioner_announce(TEST_CHANNEL_MASK, 1, 32, child1.get_ipaddr_rloc())
 

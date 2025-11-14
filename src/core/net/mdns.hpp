@@ -313,6 +313,7 @@ public:
      *
      * @retval kErrorNone          Successfully started registration. @p aCallback will report the outcome.
      * @retval kErrorInvalidState  mDNS module is not enabled.
+     * @retval kErrorInvalidArgs   The host name in @p aHost is not valid.
      */
     Error RegisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -333,6 +334,7 @@ public:
      *
      * @retval kErrorNone           Successfully unregistered host.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    The host name in @p aHost is not valid.
      */
     Error UnregisterHost(const Host &aHost);
 
@@ -370,6 +372,7 @@ public:
      *
      * @retval kErrorNone           Successfully started registration. @p aCallback will report the outcome.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aService (instance, service type, sub-types, or host) is not valid.
      */
     Error RegisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -393,6 +396,7 @@ public:
      *
      * @retval kErrorNone            Successfully unregistered service.
      * @retval kErrorInvalidState    mDNS module is not enabled.
+     * @retval kErrorInvalidArgs     A name in @p aService (instance, service type) is not valid.
      */
     Error UnregisterService(const Service &aService);
 
@@ -421,6 +425,7 @@ public:
      *
      * @retval kErrorNone            Successfully started registration. @p aCallback will report the outcome.
      * @retval kErrorInvalidState    mDNS module is not enabled.
+     * @retval kErrorInvalidArgs     A name in @p aKey is not valid.
      */
     Error RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback);
 
@@ -445,6 +450,7 @@ public:
      *
      * @retval kErrorNone            Successfully unregistered key
      * @retval kErrorInvalidState    mDNS module is not enabled.
+     * @retval kErrorInvalidArgs     A name in @p aKey is not valid.
      */
     Error UnregisterKey(const Key &aKey);
 
@@ -902,8 +908,9 @@ private:
     static constexpr uint32_t kResponseAggregationMaxDelay = 500; // msec
 
     static constexpr uint32_t kUnspecifiedTtl       = 0;
-    static constexpr uint32_t kDefaultTtl           = 120;
-    static constexpr uint32_t kDefaultKeyTtl        = kDefaultTtl;
+    static constexpr uint32_t kDefaultAddrTtl       = 120;
+    static constexpr uint32_t kDefaultServiceTtl    = 4500;
+    static constexpr uint32_t kDefaultKeyTtl        = 4500;
     static constexpr uint32_t kLegacyUnicastNsecTtl = 10;
     static constexpr uint32_t kNsecTtl              = 4500;
     static constexpr uint32_t kServicesPtrTtl       = 4500;
@@ -1165,6 +1172,7 @@ private:
         void SetCallback(const Callback &aCallback);
         void ClearCallback(void) { mCallback.Clear(); }
         void MarkToInvokeCallbackUnconditionally(void);
+        void DecideToProbeOnRegister(void);
         void StartProbing(void);
         void SetStateToConflict(void);
         void SetStateToRemoving(void);
@@ -2313,6 +2321,9 @@ private:
 
     void      AfterInstanceInit(void);
     Error     SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequester);
+    Error     ValidateHostName(const Host &aHost) const;
+    Error     ValidateServiceNames(const Service &aService, bool aCheckHostAndSubTypeLabels) const;
+    Error     ValidateKeyName(const Key &aKey) const;
     void      HandleInfraIfStateChanged(void);
     void      HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
     void      HandleHostAddressRemoveAll(uint32_t aInfraIfIndex);

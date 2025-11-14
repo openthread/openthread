@@ -963,7 +963,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
         VerifyOrExit(aReceive, error = kErrorDrop);
     }
 
-    if (mReceiveFilterEnabled && aReceive)
+    if (mReceiveFilterEnabled && aReceive && !aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
     {
         switch (aIpProto)
         {

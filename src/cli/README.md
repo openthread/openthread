@@ -23,6 +23,7 @@ Done
 
 - [attachtime](#attachtime)
 - [ba](#ba)
+- [batracker](#batracker-enable)
 - [bbr](#bbr)
 - [br](README_BR.md)
 - [bufferinfo](#bufferinfo)
@@ -606,6 +607,81 @@ pskcSecureSessionFailure: 0
 pskcCommissionerPetition: 0
 mgmtActiveGet: 0
 mgmtPendingGet: 0
+Done
+```
+
+### batracker enable
+
+Enables Border Agent Tracker.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE`.
+
+When enabled, the tracker browses for the `_meshcop._udp` mDNS service to discover and track Border Agents on the infra-if network.
+
+```bash
+> batracker enable
+Done
+```
+
+### batracker disable
+
+Disables Border Agent Tracker.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE`.
+
+```
+> batracker disable
+Done
+```
+
+### batracker state
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE`.
+
+Shows the state of Border Agent Tracker, `running` or `inactive`.
+
+The tracker can be enabled by the user (e.g., via `batracker enable`) or by the OpenThread stack itself. The tracker is considered running if it is enabled by either entity and the underlying DNS-SD (mDNS) is ready.
+
+```bash
+> batracker state
+running
+Done
+```
+
+### batracker agents
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE`.
+
+Outputs the list of discovered Border Agents. Information per Agent:
+
+- Service name
+- Port number
+- Host name
+- TXT data (key/value pairs per line)
+- Host addresses
+- Milliseconds since agent was first discovered
+- Milliseconds since the last change to agent info (port, addresses, TXT data)
+
+```bash
+> batracker agents
+ServiceName: OTBR-by-Google-be345eefb12f7f9c
+    Port: 49152
+    Host: otbe345eefb12f7f9c
+    TxtData:
+        id=4b21d3f4a431725048380698f3073a4b
+        rv=31
+        nn=4f70656e546872656164
+        xp=dead00beef00cafe
+        tv=312e342e30
+        xa=be345eefb12f7f9c
+        sb=00000820
+        dn=44656661756c74446f6d61696e
+    Address(es):
+        fe80:0:0:0:108f:3188:ff96:8e9f
+        fd7c:af54:fada:564d:7:fd6e:744c:e300
+        fd7c:af54:fada:564d:d9:899d:1217:9e2
+    MilliSecondsSinceDiscovered: 5237
+    MilliSecondsSinceLastChange: 5237
 Done
 ```
 

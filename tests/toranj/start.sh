@@ -203,6 +203,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-035-context-id-change-addr-reg.py
     run cli/test-036-dhcp-prefix-netdata.py
     run cli/test-037-mtd-annc-join-older-timestamp.py
+    run cli/test-038-simultaneous-parent-and-child-reset.py
     run cli/test-400-srp-client-server.py
     run cli/test-401-srp-server-address-cache-snoop.py
     run cli/test-500-two-brs-two-networks.py

@@ -1088,8 +1088,15 @@ exit:
         }
         else
         {
+            uint16_t retryJitter;
+
             LogRetryWaitInterval();
-            mTimer.Start(Random::NonCrypto::AddJitter(GetRetryWaitInterval(), kRetryIntervalJitter));
+
+            // Use a divisor of current retry interval for jitter
+            retryJitter = ClampToUint16(GetRetryWaitInterval() / kRetryJitterDivisor);
+            retryJitter = Max(retryJitter, kRetryIntervalJitter);
+            mTimer.Start(Random::NonCrypto::AddJitter(GetRetryWaitInterval(), retryJitter));
+
             GrowRetryWaitInterval();
             InvokeCallback(error);
         }

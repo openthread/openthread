@@ -145,23 +145,10 @@ exit:
  */
 template <> otError Br::Process<Cmd("state")>(Arg aArgs[])
 {
-    static const char *const kStateStrings[] = {
-
-        "uninitialized", // (0) OT_BORDER_ROUTING_STATE_UNINITIALIZED
-        "disabled",      // (1) OT_BORDER_ROUTING_STATE_DISABLED
-        "stopped",       // (2) OT_BORDER_ROUTING_STATE_STOPPED
-        "running",       // (3) OT_BORDER_ROUTING_STATE_RUNNING
-    };
-
     otError error = OT_ERROR_NONE;
 
-    static_assert(0 == OT_BORDER_ROUTING_STATE_UNINITIALIZED, "STATE_UNINITIALIZED value is incorrect");
-    static_assert(1 == OT_BORDER_ROUTING_STATE_DISABLED, "STATE_DISABLED value is incorrect");
-    static_assert(2 == OT_BORDER_ROUTING_STATE_STOPPED, "STATE_STOPPED value is incorrect");
-    static_assert(3 == OT_BORDER_ROUTING_STATE_RUNNING, "STATE_RUNNING value is incorrect");
-
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine("%s", Stringify(otBorderRoutingGetState(GetInstancePtr()), kStateStrings));
+    OutputLine("%s", BorderRoutingStateToString(otBorderRoutingGetState(GetInstancePtr())));
 
 exit:
     return error;

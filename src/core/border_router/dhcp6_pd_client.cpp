@@ -747,7 +747,7 @@ void Dhcp6PdClient::CommitPdPrefix(const PdPrefix &aPdPrefix)
 
 void Dhcp6PdClient::ReportPdPrefixToRoutingManager(void)
 {
-    RoutingManager::Dhcp6PdPrefix prefix;
+    Dhcp6PdPrefix prefix;
 
     LogInfo("Delegated prefix:%s, adj:%s, T1:%lu, T2:%lu, prf:%lu, valid:%lu", mPdPrefix.mPrefix.ToString().AsCString(),
             mPdPrefix.mAdjustedPrefix.ToString().AsCString(), ToUlong(mPdPrefix.mT1), ToUlong(mPdPrefix.mT2),

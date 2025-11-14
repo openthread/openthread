@@ -1001,7 +1001,7 @@ otError CoapSecure::BlockwiseReceiveHook(const uint8_t *aBlock,
     OT_UNUSED_VARIABLE(aMore);
     OT_UNUSED_VARIABLE(aTotalLength);
 
-    OutputLine("received block: Num %i Len %i", aPosition / aBlockLength, aBlockLength);
+    OutputLine("received block: Num %lu Len %u", ToUlong(aPosition / aBlockLength), aBlockLength);
 
     for (uint16_t i = 0; i < aBlockLength / 16; i++)
     {
@@ -1028,7 +1028,7 @@ otError CoapSecure::BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, u
     // Send a random payload
     otRandomNonCryptoFillBuffer(aBlock, *aBlockLength);
 
-    OutputLine("send block: Num %i Len %i", blockCount, *aBlockLength);
+    OutputLine("send block: Num %lu Len %u", ToUlong(blockCount), *aBlockLength);
 
     for (uint16_t i = 0; i < *aBlockLength / 16; i++)
     {

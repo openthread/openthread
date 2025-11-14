@@ -36,22 +36,24 @@
 
 #include "openthread-core-config.h"
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/otns.h>
-
-#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/notifier.hpp"
 #include "common/string.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#include "coap/coap_message.hpp"
+#include "common/notifier.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/neighbor.hpp"
 #include "thread/neighbor_table.hpp"
+#endif
 
 namespace ot {
 namespace Utils {
@@ -61,7 +63,9 @@ namespace Utils {
  */
 class Otns : public InstanceLocator, private NonCopyable
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     friend class ot::Notifier;
+#endif
 
 public:
     /**
@@ -88,6 +92,14 @@ public:
      */
     void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress) const;
 
+    /**
+     * Emits a transmit event to OTNS.
+     *
+     * @param[in]  aFrame  The frame of the transmission.
+     */
+    void EmitTransmit(const Mac::TxFrame &aFrame) const;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * Emits ping request information to OTNS when sending.
      *
@@ -123,13 +135,6 @@ public:
     void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor) const;
 
     /**
-     * Emits a transmit event to OTNS.
-     *
-     * @param[in]  aFrame  The frame of the transmission.
-     */
-    void EmitTransmit(const Mac::TxFrame &aFrame) const;
-
-    /**
      * Emits the device mode to OTNS.
      *
      * @param[in] aMode The device mode.
@@ -159,8 +164,9 @@ public:
      * @param[in] aMessage      The received COAP message.
      * @param[in] aMessageInfo  The message info.
      */
-    void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
+    void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 private:
     static constexpr uint16_t kStatusStringLength = 128;
 
@@ -168,17 +174,19 @@ private:
 
     void EmitStatus(const StatusString &aString) const;
     void EmitStatus(const char *aFmt, ...) const OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     void EmitCoapStatus(const char             *aAction,
                         const Coap::Message    &aMessage,
                         const Ip6::MessageInfo &aMessageInfo,
                         Error                  *aError = nullptr) const;
-
     void HandleNotifierEvents(Events aEvents) const;
+#endif
 };
 
 } // namespace Utils
 } // namespace ot
 
-#endif //(OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #endif // UTILS_OTNS_HPP_
