@@ -83,6 +83,7 @@ static constexpr Entry kEntries[] = {
     {"c/pq"},  // kUriPanIdQuery
     {"c/ps"},  // kUriPendingSet
     {"c/rx"},  // kUriRelayRx
+    {"c/te"},  // kUriTcatEnable
     {"c/tx"},  // kUriRelayTx
     {"c/ur"},  // kUriProxyRx
     {"c/ut"},  // kUriProxyTx
@@ -128,6 +129,7 @@ static_assert(AreConstStringsEqual(kEntries[kUriPendingGet].mPath, "c/pg"), "kEn
 static_assert(AreConstStringsEqual(kEntries[kUriPanIdQuery].mPath, "c/pq"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriPendingSet].mPath, "c/ps"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriRelayRx].mPath, "c/rx"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriTcatEnable].mPath, "c/te"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriRelayTx].mPath, "c/tx"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriProxyRx].mPath, "c/ur"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriProxyTx].mPath, "c/ut"), "kEntries is invalid");
@@ -172,6 +174,7 @@ struct UriEnumCheck
     ValidateNextEnum(kUriPanIdQuery);
     ValidateNextEnum(kUriPendingSet);
     ValidateNextEnum(kUriRelayRx);
+    ValidateNextEnum(kUriTcatEnable);
     ValidateNextEnum(kUriRelayTx);
     ValidateNextEnum(kUriProxyRx);
     ValidateNextEnum(kUriProxyTx);
@@ -235,6 +238,7 @@ template <> const char *UriToString<kUriPendingGet>(void) { return "PendingGet";
 template <> const char *UriToString<kUriPanIdQuery>(void) { return "PanIdQuery"; }
 template <> const char *UriToString<kUriPendingSet>(void) { return "PendingSet"; }
 template <> const char *UriToString<kUriRelayRx>(void) { return "RelayRx"; }
+template <> const char *UriToString<kUriTcatEnable>(void) { return "TcatEnable"; }
 template <> const char *UriToString<kUriRelayTx>(void) { return "RelayTx"; }
 template <> const char *UriToString<kUriProxyRx>(void) { return "ProxyRx"; }
 template <> const char *UriToString<kUriProxyTx>(void) { return "ProxyTx"; }

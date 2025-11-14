@@ -5319,23 +5319,7 @@ void TestHostConflict(void)
     VerifyOrQuit(!sConflictCallback.mWasCalled);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Register the conflicted `HostEntry` again, and make sure no probes are sent");
-
-    sRegCallbacks[1].Reset();
-    sConflictCallback.Reset();
-    sDnsMessages.Clear();
-
-    SuccessOrQuit(mdns->RegisterHost(host, 1, HandleCallback));
-    AdvanceTime(5000);
-
-    VerifyOrQuit(sRegCallbacks[1].mWasCalled);
-    VerifyOrQuit(sRegCallbacks[1].mError == kErrorDuplicated);
-    VerifyOrQuit(!sConflictCallback.mWasCalled);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Unregister the conflicted host and register it again immediately, make sure we see probes");
-
-    SuccessOrQuit(mdns->UnregisterHost(host));
+    Log("Register the conflicted `HostEntry` again, and make sure probes are sent");
 
     sConflictCallback.Reset();
     sRegCallbacks[0].Reset();
@@ -5481,23 +5465,7 @@ void TestServiceConflict(void)
     VerifyOrQuit(!sConflictCallback.mWasCalled);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Register the conflicted `ServiceEntry` again, and make sure no probes are sent");
-
-    sRegCallbacks[1].Reset();
-    sConflictCallback.Reset();
-    sDnsMessages.Clear();
-
-    SuccessOrQuit(mdns->RegisterService(service, 1, HandleCallback));
-    AdvanceTime(5000);
-
-    VerifyOrQuit(sRegCallbacks[1].mWasCalled);
-    VerifyOrQuit(sRegCallbacks[1].mError == kErrorDuplicated);
-    VerifyOrQuit(!sConflictCallback.mWasCalled);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Unregister the conflicted host and register it again immediately, make sure we see probes");
-
-    SuccessOrQuit(mdns->UnregisterService(service));
+    Log("Register the conflicted `ServiceEntry` again, and make sure probes are sent");
 
     sConflictCallback.Reset();
     sRegCallbacks[0].Reset();

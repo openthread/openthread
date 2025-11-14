@@ -775,6 +775,15 @@ Error Name::ValidateName(const char *aName)
     VerifyOrExit(length > 0, error = kErrorInvalidArgs);
     VerifyOrExit(length <= kMaxNameLength, error = kErrorInvalidArgs);
 
+    if (length == kMaxNameLength)
+    {
+        // Allow `kMaxNameLength` only if the `aName` ends with a dot.
+        // This ensures that the encoded name always fits within the
+        // `kMaxEncodedLength = 255` octets.
+
+        VerifyOrExit(aName[length - 1] == kLabelSeparatorChar, error = kErrorInvalidArgs);
+    }
+
     do
     {
         ch = aName[index];

@@ -36,9 +36,9 @@ import time
 #
 # Check multi AIL detection
 #
-#   -+-       _______
-#    |       /       \
-#   br1 --- br2 --- br3
+#   -+-       _________________
+#    |       /       \         \
+#   br1 --- br2 --- br3  --- detector
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
@@ -56,6 +56,7 @@ one_minute = 60
 br1 = cli.Node()
 br2 = cli.Node()
 br3 = cli.Node()
+detector = cli.Node()
 
 IF_INDEX_1 = 1
 IF_INDEX_2 = 2
@@ -66,10 +67,12 @@ IF_INDEX_2 = 2
 br1.form("multiail")
 br2.join(br1)
 br3.join(br2)
+detector.join(br2)
 
 verify(br1.get_state() == 'leader')
 verify(br2.get_state() == 'router')
 verify(br3.get_state() == 'router')
+verify(detector.get_state() == 'router')
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
@@ -85,6 +88,20 @@ br1.br_enable()
 time.sleep(one_minute / speedup)
 verify(br1.br_get_state() == 'running')
 verify(br1.br_get_multiail() == 'not detected')
+
+# Init `detector` on different AIL without enabling it as a BR.
+
+detector.br_init(IF_INDEX_2, 1)
+time.sleep(10 / speedup)
+
+# Check that multi-ail detection is auto-enabled and started
+# on `detector`.
+
+state = detector.br_get_multiail_state()
+verify(len(state) == 3)
+verify(state[0].strip() == 'Enabled: yes')
+verify(state[1].strip() == 'Running: yes')
+verify(state[2].strip() == 'Detected: no')
 
 # Start `br2` and `br3` together on a different AIL
 
@@ -108,6 +125,7 @@ time.sleep(10.01 * one_minute / speedup)
 verify(br1.br_get_multiail() == 'detected')
 verify(br2.br_get_multiail() == 'detected')
 verify(br3.br_get_multiail() == 'detected')
+verify(detector.br_get_multiail() == 'detected')
 
 # Disable `br1`
 
@@ -118,8 +136,9 @@ time.sleep(9 * one_minute / speedup)
 
 verify(br2.br_get_multiail() == 'not detected')
 verify(br3.br_get_multiail() == 'not detected')
+verify(detector.br_get_multiail() == 'not detected')
 
-# Enable `br` again, wait for a short time (before detection) and disable it
+# Enable `br1` again, wait for a short time (before detection) and disable it
 
 br1.br_enable()
 
@@ -133,6 +152,18 @@ time.sleep(10 * one_minute / speedup)
 
 verify(br2.br_get_multiail() == 'not detected')
 verify(br3.br_get_multiail() == 'not detected')
+verify(detector.br_get_multiail() == 'not detected')
+
+# `br1` is no longer enabled to act as BR, but its multi-ail detector
+# should continue to operate and detect that it is on a different AIL.
+
+verify(br1.br_get_multiail() == 'detected')
+
+state = br1.br_get_multiail_state()
+verify(len(state) == 3)
+verify(state[0].strip() == 'Enabled: yes')
+verify(state[1].strip() == 'Running: yes')
+verify(state[2].strip() == 'Detected: yes')
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

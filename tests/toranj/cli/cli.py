@@ -856,6 +856,9 @@ class Node(object):
     def br_get_multiail(self):
         return self._cli_single_output('br multiail')
 
+    def br_get_multiail_state(self):
+        return self.cli('br multiail state')
+
     def br_get_ifaddrs(self):
         return self.cli('br ifaddrs')
 

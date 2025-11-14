@@ -311,12 +311,26 @@ public:
                             otPlatDnssdRegisterCallback aCallback);
 
     /**
+     * Starts a service browser.
+     *
+     * @param[in] aBrowser  The browser to be started.
+     */
+    void DnssdStartBrowser(const otPlatDnssdBrowser *aBrowser);
+
+    /**
+     * Stops a service browser.
+     *
+     * @param[in] aBrowser  The browser to be stopped.
+     */
+    void DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser);
+
+    /**
      * Gets the Dnssd state.
      *
      * Returns the platform dnssd state.
      */
     otPlatDnssdState DnssdGetState(void);
-#endif
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
 protected:
     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
@@ -851,6 +865,8 @@ protected:
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
+    template <typename DnssdObjType> struct DnssdDiscoveryPropKeyFor;
+
     template <typename DnssdObjType>
     void DnssdUpdate(const DnssdObjType         *aObj,
                      otPlatDnssdRequestId        aRequestId,
@@ -873,6 +889,28 @@ protected:
         {
             aCallback(mInstance, aRequestId, error);
         }
+    }
+
+    /**
+     * Template for making service discovery.
+     *
+     * DnssdDiscoveryType can be: otPlatDnssdBrowser, otPlatDnssdSrvResolver, otPlatDnssdTxtResolver,
+     * otPlatDnssdAddressResolver and otPlatDnssdRecordQuerier.
+     */
+    template <typename DnssdDiscoveryType> void DnssdUpdateDiscovery(const DnssdDiscoveryType *aDiscovery, bool aStart)
+    {
+        uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+        spinel_command_t cmd    = aStart ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
+
+        VerifyOrExit(aDiscovery != nullptr);
+        VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY);
+
+        SuccessOrExit(mEncoder.BeginFrame(header, cmd, DnssdDiscoveryPropKeyFor<DnssdDiscoveryType>::Key));
+        SuccessOrExit(Spinel::EncodeDnssdDiscovery(mEncoder, *aDiscovery));
+        SuccessOrExit(mEncoder.EndFrame());
+
+    exit:
+        return;
     }
 
     otPlatDnssdState mDnssdState;
@@ -898,6 +936,13 @@ protected:
     uint16_t mDiagOutputLen;
 #endif
 };
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdBrowser>
+{
+    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_BROWSER;
+};
+#endif
 
 } // namespace Ncp
 } // namespace ot

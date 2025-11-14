@@ -137,8 +137,7 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     bool hardwareReset;
     bool resetDone = false;
 
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    // Avoid resetting the device twice in a row in Multipan RCP architecture
+#if OPENTHREAD_SPINEL_CONFIG_SKIP_RESET_IF_READY
     VerifyOrExit(!mIsCoprocessorReady, resetDone = true);
 #endif
 

@@ -41,8 +41,18 @@ config("mbedtls_config") {
   ]
 
   defines = [ "MBEDTLS_CONFIG_FILE=\"${mbedtls_config_file}\"" ]
+}
+
+config("warnings_fix_config") {
   cflags = [
     "-Wno-conversion",
+    "-Wno-undef",
+  ]
+}
+
+group("warnings_fix") {
+  public_configs = [
+    ":warnings_fix_config",
   ]
 }
 
@@ -314,6 +324,7 @@ static_library("mbedtls") {
   ]
 
   public_deps = mbedtls_deps
+  public_deps += [ ":warnings_fix" ]
 
   public_configs = [ ":mbedtls_config" ]
 }

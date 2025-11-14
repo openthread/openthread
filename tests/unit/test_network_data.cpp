@@ -768,7 +768,7 @@ void TestNetworkDataDsnSrpServices(void)
         {
             SuccessOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo));
 
-            printf("\nanycastInfo { %s, seq:%d, rlco16:%04x, version:%u }",
+            printf("\nanycastInfo { %s, seq:%d, rloc16:%04x, version:%u }",
                    anycastInfo.mAnycastAddress.ToString().AsCString(), anycastInfo.mSequenceNumber, anycastInfo.mRloc16,
                    anycastInfo.mVersion);
 
@@ -1046,7 +1046,7 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
         {
             SuccessOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo));
 
-            printf("\n { %s, seq:%u, version:%u, rlco16:%04x }", anycastInfo.mAnycastAddress.ToString().AsCString(),
+            printf("\n { %s, seq:%u, version:%u, rloc16:%04x }", anycastInfo.mAnycastAddress.ToString().AsCString(),
 
                    anycastInfo.mSequenceNumber, anycastInfo.mVersion, anycastInfo.mRloc16);
 

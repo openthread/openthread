@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/border_routing.h>
+#include <openthread/multi_ail_detection.h>
 
 #include "cli/cli_config.h"
 #include "cli/cli_history.hpp"

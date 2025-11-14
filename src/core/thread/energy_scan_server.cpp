@@ -62,10 +62,13 @@ void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const 
     VerifyOrExit(aMessage.IsPostRequest());
 
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMessage, count));
+    count = Clamp(count, kMinCount, kMaxCount);
+
     SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));
     SuccessOrExit(Tlv::Find<MeshCoP::ScanDurationTlv>(aMessage, scanDuration));
 
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
+    VerifyOrExit(mask != 0);
 
     mReportMessage.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriEnergyReport));
     VerifyOrExit(mReportMessage != nullptr);

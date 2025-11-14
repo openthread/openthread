@@ -33,6 +33,7 @@
 
 #include "lib/spinel/coprocessor_type.h"
 #include "lib/spinel/logger.hpp"
+#include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
 
@@ -49,11 +50,7 @@ namespace Spinel {
 /**
  * Maximum number of Spinel Interface IDs.
  */
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
-#else
-static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
-#endif
+static constexpr uint8_t kSpinelHeaderMaxNumIid = OPENTHREAD_SPINEL_CONFIG_MAX_INTERFACE_ID;
 
 class SpinelDriver : public otSpinelDriver, public Logger
 {

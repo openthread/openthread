@@ -630,6 +630,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_PLATFORM_NEXUS
+ *
+ * Define 1 to enable nexus platform.
+ */
+#ifndef OPENTHREAD_PLATFORM_NEXUS
+#define OPENTHREAD_PLATFORM_NEXUS 0
+#endif
+
+/**
  * @}
  */
 

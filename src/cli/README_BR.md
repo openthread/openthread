@@ -198,6 +198,34 @@ Done
 BR multi AIL callback: cleared
 ```
 
+Usage: `br multiail state`
+
+Outputs full state of multi-AIL detector:
+
+- Whether the detector is enabled.
+- Whether the detector is running (when it is enabled and the infra-if interface is also active).
+- Whether multi-AIL was detected.
+
+```bash
+> br multiail state
+Enabled: yes
+Running: yes
+Detected: no
+Done
+```
+
+Usage: `br multiail enable|disable`
+
+Enable or disable the multi-AIL detector.
+
+```bash
+> br multiail enable
+Done
+
+> br multiail disable
+Done
+```
+
 ### omrconfig
 
 Usage: `br omrconfig`
