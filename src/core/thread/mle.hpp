@@ -1910,6 +1910,8 @@ private:
             kReattachModePending, // Reattach using stored Pending Dataset
         };
 
+        static constexpr uint8_t kMaxChildIdRequests = 3;
+
         void     SetState(State aState);
         uint32_t GetStartDelay(void) const;
         bool     HasAcceptableParentCandidate(void) const;
@@ -1949,6 +1951,7 @@ private:
         TxChallenge             mParentRequestChallenge;
         ParentCandidate         mParentCandidate;
         AttachTimer             mTimer;
+        uint8_t                 mChildIdRequestsRemaining;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
