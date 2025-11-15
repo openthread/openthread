@@ -417,7 +417,7 @@ bool RoutingManager::IsInitialPolicyEvaluationDone(void) const
     // the emitted Router Advert message on infrastructure side
     // and published in the Thread Network Data.
 
-    return mIsRunning && mOmrPrefixManager.IsInitalEvaluationDone() && mOnLinkPrefixManager.IsInitalEvaluationDone();
+    return mIsRunning && mOmrPrefixManager.IsInitialEvaluationDone() && mOnLinkPrefixManager.IsInitialEvaluationDone();
 }
 
 void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
@@ -436,9 +436,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         break;
 
     case kForNextRa:
-        if (mTxRaInfo.mTxCount <= kInitalRaTxCount)
+        if (mTxRaInfo.mTxCount <= kInitialRaTxCount)
         {
-            interval = kInitalRaInterval;
+            interval = kInitialRaInterval;
             jitter   = kInitialRaJitter;
         }
         else
@@ -750,7 +750,7 @@ void RoutingManager::OmrPrefixManager::Stop(void)
     ClearFavoredPrefix();
 }
 
-bool RoutingManager::OmrPrefixManager::IsInitalEvaluationDone(void) const
+bool RoutingManager::OmrPrefixManager::IsInitialEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation of the OMR prefix, i.e., either
@@ -1344,7 +1344,7 @@ exit:
     return;
 }
 
-bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
+bool RoutingManager::OnLinkPrefixManager::IsInitialEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation of the on-link prefixes, i.e., either

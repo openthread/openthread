@@ -581,8 +581,8 @@ private:
     // randomly selected within the range [interval - jitter,
     // interval + jitter].
 
-    static constexpr uint32_t kInitalRaTxCount    = 3;
-    static constexpr uint32_t kInitalRaInterval   = Time::kOneSecondInMsec * 16;
+    static constexpr uint32_t kInitialRaTxCount   = 3;
+    static constexpr uint32_t kInitialRaInterval  = Time::kOneSecondInMsec * 16;
     static constexpr uint16_t kInitialRaJitter    = Time::kOneSecondInMsec * 2;
     static constexpr uint32_t kRaBeaconInterval   = Time::kOneSecondInMsec * 180; // 3 minutes
     static constexpr uint16_t kRaBeaconJitter     = Time::kOneSecondInMsec * 15;
@@ -623,7 +623,7 @@ private:
         void                    Init(const Ip6::Prefix &aBrUlaPrefix);
         void                    Start(void);
         void                    Stop(void);
-        bool                    IsInitalEvaluationDone(void) const;
+        bool                    IsInitialEvaluationDone(void) const;
         OmrConfig               GetConfig(Ip6::Prefix *aPrefix, RoutePreference *aPreference) const;
         Error                   SetConfig(OmrConfig aConfig, const Ip6::Prefix *aPrefix, RoutePreference aPreference);
         void                    Evaluate(void);
@@ -678,7 +678,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
-        bool               IsInitalEvaluationDone(void) const;
+        bool               IsInitialEvaluationDone(void) const;
         void               HandleRxRaTrackerChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
         Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
