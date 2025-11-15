@@ -98,7 +98,7 @@ public:
     void SetEmptyCommissionerData(void);
 
 private:
-    static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
+    static constexpr uint32_t kLeaderPetitionTimeout = 50 * Time::kOneSecondInMsec; // TIMEOUT_LEAD_PET (in msec)
 
     OT_TOOL_PACKED_BEGIN
     class CommissioningData
@@ -131,10 +131,8 @@ private:
 
     using LeaderTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
 
-    LeaderTimer mTimer;
-
-    uint32_t mDelayTimerMinimal;
-
+    LeaderTimer                   mTimer;
+    uint32_t                      mDelayTimerMinimal;
     CommissionerIdTlv::StringType mCommissionerId;
     uint16_t                      mSessionId;
 };
