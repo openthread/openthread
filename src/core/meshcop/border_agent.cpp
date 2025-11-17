@@ -687,30 +687,47 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
     forwardMessage.Reset(NewPriorityMessage());
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
-    if ((aForwardContext.mUri == kUriLeaderPetition) && (aResponse->GetCode() == Coap::kCodeChanged))
+    if (aResponse->GetCode() == Coap::kCodeChanged)
     {
         uint8_t state;
 
         SuccessOrExit(error = Tlv::Find<StateTlv>(*aResponse, state));
 
-        if (state == StateTlv::kAccept)
+        switch (state)
         {
-            uint16_t sessionId;
+        case StateTlv::kAccept:
+            if (aForwardContext.mUri == kUriLeaderPetition)
+            {
+                uint16_t sessionId;
 
-            SuccessOrExit(error = Tlv::Find<CommissionerSessionIdTlv>(*aResponse, sessionId));
+                SuccessOrExit(error = Tlv::Find<CommissionerSessionIdTlv>(*aResponse, sessionId));
 
-            Get<Mle::Mle>().GetCommissionerAloc(sessionId, mCommissionerAloc.GetAddress());
-            Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
-            IgnoreError(Get<Ip6::Udp>().AddReceiver(mUdpReceiver));
-            mIsActiveCommissioner = true;
-            Get<Manager>().HandleCommissionerPetitionAccepted(*this);
+                Get<Mle::Mle>().GetCommissionerAloc(sessionId, mCommissionerAloc.GetAddress());
+                Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+                IgnoreError(Get<Ip6::Udp>().AddReceiver(mUdpReceiver));
+                mIsActiveCommissioner = true;
+                Get<Manager>().HandleCommissionerPetitionAccepted(*this);
 
-            LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
-                    mCommissionerAloc.GetAddress().ToString().AsCString());
-        }
-        else
-        {
+                LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
+                        mCommissionerAloc.GetAddress().ToString().AsCString());
+            }
+
+            break;
+
+        case StateTlv::kReject:
             LogInfo("Commissioner rejected");
+
+            if (mIsActiveCommissioner)
+            {
+                IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
+                Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+                mIsActiveCommissioner = false;
+            }
+
+            break;
+
+        default:
+            break;
         }
     }
 
