@@ -78,7 +78,7 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
     IgnoreError(StringCopy(mCommissionerId, commissionerId));
 
     state = StateTlv::kAccept;
-    mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
+    mTimer.Start(kLeaderPetitionTimeout);
 
 exit:
     SendPetitionResponse(aMessage, aMessageInfo, state);
@@ -152,7 +152,7 @@ template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage,
         }
 
         responseState = StateTlv::kAccept;
-        mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
+        mTimer.Start(kLeaderPetitionTimeout);
     }
 
     SendKeepAliveResponse(aMessage, aMessageInfo, responseState);
