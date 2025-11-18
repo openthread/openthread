@@ -204,6 +204,10 @@ void MultiAilDetector::HandleTimer(void)
     }
 
     mCallback.InvokeIfSet(mDetected);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent::TxtData>().Refresh();
+#endif
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

@@ -248,6 +248,17 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
+    {
+        bitmap |= kFlagMultiAilDetectionEnabled;
+        if (aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected())
+        {
+            bitmap |= kFlagMultiAilDetected;
+        }
+    }
+#endif
+
     return bitmap;
 }
 
@@ -411,13 +422,15 @@ void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
 {
     ClearAllBytes(aInfo);
 
-    aInfo.mConnMode       = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
-    aInfo.mThreadIfState  = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
-    aInfo.mAvailability   = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
-    aInfo.mThreadRole     = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
-    aInfo.mBbrIsActive    = aBitmap & kFlagBbrIsActive;
-    aInfo.mBbrIsPrimary   = aBitmap & kFlagBbrIsPrimary;
-    aInfo.mEpskcSupported = aBitmap & kFlagEpskcSupported;
+    aInfo.mConnMode                 = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
+    aInfo.mThreadIfState            = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
+    aInfo.mAvailability             = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
+    aInfo.mThreadRole               = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
+    aInfo.mBbrIsActive              = aBitmap & kFlagBbrIsActive;
+    aInfo.mBbrIsPrimary             = aBitmap & kFlagBbrIsPrimary;
+    aInfo.mEpskcSupported           = aBitmap & kFlagEpskcSupported;
+    aInfo.mMultiAilDetectionEnabled = aBitmap & kFlagMultiAilDetectionEnabled;
+    aInfo.mMultiAilDetected         = aBitmap & kFlagMultiAilDetected;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
