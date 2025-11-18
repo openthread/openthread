@@ -45,7 +45,6 @@ RegisterLogModule("MeshCoPLeader");
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
-    , mDelayTimerMinimal(DelayTimerTlv::kMinDelay)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
 }
@@ -199,17 +198,6 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 exit:
     FreeMessageOnError(message, error);
     LogWarnOnError(error, "send dataset changed");
-}
-
-Error Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kMinDelay), error = kErrorInvalidArgs);
-    mDelayTimerMinimal = aDelayTimerMinimal;
-
-exit:
-    return error;
 }
 
 void Leader::HandleTimer(void)

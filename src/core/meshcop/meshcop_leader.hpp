@@ -76,23 +76,6 @@ public:
     void SendDatasetChanged(const Ip6::Address &aAddress);
 
     /**
-     * Sets minimal delay timer.
-     *
-     * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
-     *
-     * @retval  kErrorNone         Successfully set the minimal delay timer.
-     * @retval  kErrorInvalidArgs  If @p aDelayTimerMinimal is not valid.
-     */
-    Error SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
-
-    /**
-     * Gets minimal delay timer.
-     *
-     * @retval the minimal delay timer (in ms).
-     */
-    uint32_t GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
-
-    /**
      * Sets empty Commissioner Data TLV in the Thread Network Data.
      */
     void SetEmptyCommissionerData(void);
@@ -132,7 +115,6 @@ private:
     using LeaderTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
 
     LeaderTimer                   mTimer;
-    uint32_t                      mDelayTimerMinimal;
     CommissionerIdTlv::StringType mCommissionerId;
     uint16_t                      mSessionId;
 };
