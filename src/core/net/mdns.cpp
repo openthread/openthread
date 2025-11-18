@@ -1351,9 +1351,15 @@ void Core::Entry::SetStateToConflict(void)
     switch (GetState())
     {
     case kProbing:
-    case kRegistered:
         SetState(kConflict);
         break;
+
+    case kRegistered:
+#if !OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT
+        SetState(kConflict);
+#endif
+        break;
+
     case kConflict:
     case kRemoving:
         break;
