@@ -256,9 +256,10 @@ private:
 
     public:
         Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
-        Error    ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
+        void     ForwardUdpProxyToCommissioner(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        void     ForwardUdpRelayToCommissioner(const Message &aMessage);
         void     Cleanup(void);
-        bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
+        bool     IsActiveCommissioner(void) const;
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
 
     private:
@@ -277,6 +278,7 @@ private:
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
 
+        Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
         void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         void  HandleTmfRelayTx(Coap::Message &aMessage);
         void  HandleTmfProxyTx(Coap::Message &aMessage);
@@ -293,8 +295,6 @@ private:
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
                                                  const Coap::Message  *aResponse,
                                                  Error                 aResult);
-        static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
-        bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         static bool HandleResource(CoapBase               &aCoapBase,
                                    const char             *aUriPath,
                                    Coap::Message          &aMessage,
@@ -303,11 +303,8 @@ private:
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
-        bool                       mIsActiveCommissioner;
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
-        Ip6::Udp::Receiver         mUdpReceiver;
-        Ip6::Netif::UnicastAddress mCommissionerAloc;
         uint64_t                   mAllocationTime;
     };
 
@@ -320,15 +317,23 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    // Callbacks used with `Dtls::Transport`.
     static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     CoapDtlsSession      *HandleAcceptSession(void);
     static void           HandleRemoveSession(void *aContext, SecureSession &aSession);
     void                  HandleRemoveSession(SecureSession &aSession);
-    CoapDtlsSession      *FindActiveCommissionerSession(void);
 
+    const Ip6::Address &GetCommissionerAloc(void) const { return mCommissionerAloc.GetAddress(); }
+    CoapDtlsSession    *GetCommissionerSession(void) { return mCommissionerSession; }
+
+    bool IsCommissionerSession(const CoapDtlsSession &aSession) const { return mCommissionerSession == &aSession; }
     void HandleSessionConnected(CoapDtlsSession &aSession);
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
-    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
+    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession, uint16_t aSessionId);
+    void RevokeRoleIfActiveCommissioner(CoapDtlsSession &aSession);
+
+    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     // Callback from `BorderAgent::TxtData`.
@@ -349,9 +354,13 @@ private:
     static const char kDefaultBaseServiceName[];
 #endif
 
-    bool            mEnabled;
-    bool            mIsRunning;
-    Dtls::Transport mDtlsTransport;
+    bool                       mEnabled;
+    bool                       mIsRunning;
+    Dtls::Transport            mDtlsTransport;
+    CoapDtlsSession           *mCommissionerSession;
+    Ip6::Udp::Receiver         mCommissionerUdpReceiver;
+    Ip6::Netif::UnicastAddress mCommissionerAloc;
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
