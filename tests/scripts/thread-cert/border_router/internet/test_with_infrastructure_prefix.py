@@ -109,8 +109,9 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
+        # Wait for the BR to discover and favor the DNS64 prefix.
+        self.wait_for(lambda: br.get_br_favored_nat64_prefix() != local_nat64_prefix)
         favored_nat64_prefix = br.get_br_favored_nat64_prefix()
-        self.assertNotEqual(favored_nat64_prefix, local_nat64_prefix)
         dns_nat64_prefix = favored_nat64_prefix
 
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
@@ -207,8 +208,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         # Case 9: Change the NAT64 prefix on the DNS64 server.
         # The BR should discover and publish the new prefix.
-        br.bash("sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
-        br.bash("sed -i '/\/\/dns64 /a dns64 " + DNS_NAT64_PREFIX + " {};' /etc/bind/named.conf.options")
+        br.bash(r"sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
+        br.bash(r"sed -i '/\/\/dns64 /a dns64 " + DNS_NAT64_PREFIX + " {};' /etc/bind/named.conf.options")
         br.bash("service bind9 restart")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
