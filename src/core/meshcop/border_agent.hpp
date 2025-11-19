@@ -47,6 +47,7 @@
 #include "common/heap_allocatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
@@ -261,8 +262,16 @@ private:
         void     Cleanup(void);
         bool     IsActiveCommissioner(void) const;
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
+        uint16_t GetIndex(void) const { return mIndex; }
 
     private:
+        enum Action : uint8_t
+        {
+            kReceive,
+            kSend,
+            kForward,
+        };
+
         struct ForwardContext : public ot::LinkedListEntry<ForwardContext>,
                                 public Heap::Allocatable<ForwardContext>,
                                 private ot::NonCopyable
@@ -303,9 +312,20 @@ private:
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        void LogUri(Action aAction, const char *aUriString, const char *aTxt);
+
+        template <Uri kUri> void Log(Action aAction) { Log<kUri>(aAction, ""); }
+        template <Uri kUri> void Log(Action aAction, const char *aTxt) { LogUri(aAction, UriToString<kUri>(), aTxt); }
+#else
+        template <Uri kUri> void Log(Action) {}
+        template <Uri kUri> void Log(Action, const char *) {}
+#endif
+
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
         uint64_t                   mAllocationTime;
+        uint16_t                   mIndex;
     };
 
     void UpdateState(void);
@@ -323,6 +343,7 @@ private:
     static void           HandleRemoveSession(void *aContext, SecureSession &aSession);
     void                  HandleRemoveSession(SecureSession &aSession);
 
+    uint16_t            GetNextSessionIndex(void) { return ++mSessionIndex; }
     const Ip6::Address &GetCommissionerAloc(void) const { return mCommissionerAloc.GetAddress(); }
     CoapDtlsSession    *GetCommissionerSession(void) { return mCommissionerSession; }
 
@@ -356,6 +377,7 @@ private:
 
     bool                       mEnabled;
     bool                       mIsRunning;
+    uint16_t                   mSessionIndex;
     Dtls::Transport            mDtlsTransport;
     CoapDtlsSession           *mCommissionerSession;
     Ip6::Udp::Receiver         mCommissionerUdpReceiver;
