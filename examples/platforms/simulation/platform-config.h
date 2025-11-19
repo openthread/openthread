@@ -41,6 +41,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SIMULATION_UART_ENABLE
+ *
+ * Define as 1 to enable UART transport.
+ */
+#ifndef OPENTHREAD_SIMULATION_UART_ENABLE
+#define OPENTHREAD_SIMULATION_UART_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME
  *
  * This setting configures whether to use virtual time (used for simulation) in simulation platform.

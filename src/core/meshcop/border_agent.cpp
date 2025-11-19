@@ -57,10 +57,14 @@ Manager::Manager(Instance &aInstance)
     , mEnabled(true)
     , mIsRunning(false)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
+    , mCommissionerSession(nullptr)
+    , mCommissionerUdpReceiver(HandleUdpReceive, this)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
 {
+    mCommissionerAloc.InitAsThreadOriginMeshLocal();
+
     ClearAllBytes(mCounters);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
@@ -179,6 +183,11 @@ void Manager::Stop(void)
 {
     VerifyOrExit(mIsRunning);
 
+    if (mCommissionerSession != nullptr)
+    {
+        RevokeRoleIfActiveCommissioner(*mCommissionerSession);
+    }
+
     mDtlsTransport.Close();
     mIsRunning = false;
 
@@ -262,7 +271,7 @@ void Manager::HandleSessionConnected(CoapDtlsSession &aSession)
 
 void Manager::HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent)
 {
-    OT_UNUSED_VARIABLE(aSession);
+    RevokeRoleIfActiveCommissioner(aSession);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     if (Get<EphemeralKeyManager>().OwnsSession(aSession))
@@ -279,9 +288,22 @@ void Manager::HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSessi
     }
 }
 
-void Manager::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession)
+void Manager::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession, uint16_t aSessionId)
 {
-    OT_UNUSED_VARIABLE(aSession);
+    if (mCommissionerSession != nullptr)
+    {
+        RevokeRoleIfActiveCommissioner(*mCommissionerSession);
+    }
+
+    mCommissionerSession = &aSession;
+
+    Get<Mle::Mle>().GetCommissionerAloc(aSessionId, mCommissionerAloc.GetAddress());
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+
+    IgnoreError(Get<Ip6::Udp>().AddReceiver(mCommissionerUdpReceiver));
+
+    LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", aSessionId,
+            mCommissionerAloc.GetAddress().ToString().AsCString());
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     if (Get<EphemeralKeyManager>().OwnsSession(aSession))
@@ -295,30 +317,38 @@ void Manager::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession)
     }
 }
 
-Manager::CoapDtlsSession *Manager::FindActiveCommissionerSession(void)
+void Manager::RevokeRoleIfActiveCommissioner(CoapDtlsSession &aSession)
 {
-    CoapDtlsSession *commissionerSession = nullptr;
+    VerifyOrExit(IsCommissionerSession(aSession));
 
-    for (SecureSession &session : mDtlsTransport.GetSessions())
-    {
-        CoapDtlsSession &coapSession = static_cast<CoapDtlsSession &>(session);
+    LogInfo("Commissioner role revoked");
 
-        if (coapSession.IsActiveCommissioner())
-        {
-            commissionerSession = &coapSession;
-            break;
-        }
-    }
+    IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mCommissionerUdpReceiver));
+    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    if ((Get<EphemeralKeyManager>().mCoapDtlsSession != nullptr) &&
-        Get<EphemeralKeyManager>().mCoapDtlsSession->IsActiveCommissioner())
-    {
-        commissionerSession = Get<EphemeralKeyManager>().mCoapDtlsSession;
-    }
-#endif
+    mCommissionerSession = nullptr;
 
-    return commissionerSession;
+exit:
+    return;
+}
+
+bool Manager::HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    return static_cast<Manager *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
+}
+
+bool Manager::HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    bool didHandle = false;
+
+    VerifyOrExit(mCommissionerSession != nullptr);
+    VerifyOrExit(aMessageInfo.GetSockAddr() == mCommissionerAloc.GetAddress());
+
+    mCommissionerSession->ForwardUdpProxyToCommissioner(aMessage, aMessageInfo);
+    didHandle = true;
+
+exit:
+    return didHandle;
 }
 
 template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -327,22 +357,12 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const 
 
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    OwnedPtr<Coap::Message> forwardMessage;
-    CoapDtlsSession        *session;
-
     VerifyOrExit(mIsRunning);
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
-    session = FindActiveCommissionerSession();
-    VerifyOrExit(session != nullptr);
-
-    forwardMessage.Reset(session->NewPriorityNonConfirmablePostMessage(kUriRelayRx));
-    VerifyOrExit(forwardMessage != nullptr);
-
-    SuccessOrExit(session->ForwardToCommissioner(forwardMessage.PassOwnership(), aMessage));
-
-    LogInfo("Sent to commissioner on RelayRx (c/rx)");
+    VerifyOrExit(mCommissionerSession != nullptr);
+    mCommissionerSession->ForwardUdpRelayToCommissioner(aMessage);
 
 exit:
     return;
@@ -483,13 +503,9 @@ exit:
 
 Manager::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
     : Coap::SecureSession(aInstance, aDtlsTransport)
-    , mIsActiveCommissioner(false)
     , mTimer(aInstance, HandleTimer, this)
-    , mUdpReceiver(HandleUdpReceive, this)
     , mAllocationTime(aInstance.Get<Uptime>().GetUptime())
 {
-    mCommissionerAloc.InitAsThreadOriginMeshLocal();
-
     SetResourceHandler(&HandleResource);
     SetConnectCallback(&HandleConnected, this);
 }
@@ -506,6 +522,8 @@ exit:
     return error;
 }
 
+bool Manager::CoapDtlsSession::IsActiveCommissioner(void) const { return Get<Manager>().IsCommissionerSession(*this); }
+
 void Manager::CoapDtlsSession::Cleanup(void)
 {
     while (!mForwardContexts.IsEmpty())
@@ -516,8 +534,8 @@ void Manager::CoapDtlsSession::Cleanup(void)
     }
 
     mTimer.Stop();
-    IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
-    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+
+    Get<Manager>().RevokeRoleIfActiveCommissioner(*this);
 
     Coap::SecureSession::Cleanup();
 }
@@ -580,9 +598,6 @@ void Manager::CoapDtlsSession::HandleConnected(ConnectEvent aEvent)
     else
     {
         LogInfo("SecureSession disconnected");
-        IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
-        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-
         Get<Manager>().HandleSessionDisconnected(*this, aEvent);
     }
 }
@@ -590,7 +605,8 @@ void Manager::CoapDtlsSession::HandleConnected(ConnectEvent aEvent)
 void Manager::CoapDtlsSession::HandleTmfCommissionerKeepAlive(Coap::Message          &aMessage,
                                                               const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(mIsActiveCommissioner);
+    VerifyOrExit(IsActiveCommissioner());
+
     SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive));
     mTimer.Start(kKeepAliveTimeout);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
@@ -701,29 +717,13 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
                 uint16_t sessionId;
 
                 SuccessOrExit(error = Tlv::Find<CommissionerSessionIdTlv>(*aResponse, sessionId));
-
-                Get<Mle::Mle>().GetCommissionerAloc(sessionId, mCommissionerAloc.GetAddress());
-                Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
-                IgnoreError(Get<Ip6::Udp>().AddReceiver(mUdpReceiver));
-                mIsActiveCommissioner = true;
-                Get<Manager>().HandleCommissionerPetitionAccepted(*this);
-
-                LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", sessionId,
-                        mCommissionerAloc.GetAddress().ToString().AsCString());
+                Get<Manager>().HandleCommissionerPetitionAccepted(*this, sessionId);
             }
 
             break;
 
         case StateTlv::kReject:
-            LogInfo("Commissioner rejected");
-
-            if (mIsActiveCommissioner)
-            {
-                IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
-                Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-                mIsActiveCommissioner = false;
-            }
-
+            Get<Manager>().RevokeRoleIfActiveCommissioner(*this);
             break;
 
         default:
@@ -751,25 +751,14 @@ exit:
     }
 }
 
-bool Manager::CoapDtlsSession::HandleUdpReceive(void                *aContext,
-                                                const otMessage     *aMessage,
-                                                const otMessageInfo *aMessageInfo)
-{
-    return static_cast<CoapDtlsSession *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
-}
-
-bool Manager::CoapDtlsSession::HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Manager::CoapDtlsSession::ForwardUdpProxyToCommissioner(const Message          &aMessage,
+                                                             const Ip6::MessageInfo &aMessageInfo)
 {
     Error                     error = kErrorNone;
     OwnedPtr<Coap::Message>   message;
-    bool                      didHandle = false;
     ExtendedTlv               extTlv;
     UdpEncapsulationTlvHeader udpEncapHeader;
     OffsetRange               offsetRange;
-
-    VerifyOrExit(aMessageInfo.GetSockAddr() == mCommissionerAloc.GetAddress());
-
-    didHandle = true;
 
     VerifyOrExit(aMessage.GetLength() > 0);
 
@@ -796,8 +785,22 @@ bool Manager::CoapDtlsSession::HandleUdpReceive(const Message &aMessage, const I
 
 exit:
     LogWarnOnError(error, "send ProxyRx (c/ur)");
+}
 
-    return didHandle;
+void Manager::CoapDtlsSession::ForwardUdpRelayToCommissioner(const Message &aMessage)
+{
+    OwnedPtr<Coap::Message> forwardMessage;
+    Error                   error = kErrorNone;
+
+    forwardMessage.Reset(NewPriorityNonConfirmablePostMessage(kUriRelayRx));
+    VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), aMessage));
+
+    LogInfo("Sent RelayRx (c/rx) to commissioner");
+
+exit:
+    LogWarnOnError(error, "send RelayRx (c/rx)");
 }
 
 Error Manager::CoapDtlsSession::ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage)
@@ -808,12 +811,9 @@ Error Manager::CoapDtlsSession::ForwardToCommissioner(OwnedPtr<Coap::Message> aF
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
     SuccessOrExit(error = aForwardMessage->AppendBytesFromMessage(aMessage, offsetRange));
 
-    SuccessOrExit(error = SendMessage(aForwardMessage.PassOwnership()));
-
-    LogInfo("Sent to commissioner");
+    error = SendMessage(aForwardMessage.PassOwnership());
 
 exit:
-    LogWarnOnError(error, "send to commissioner");
     return error;
 }
 
@@ -860,7 +860,7 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
 
     messageInfo.SetSockPort(udpEncapHeader.GetSourcePort());
-    messageInfo.SetSockAddr(mCommissionerAloc.GetAddress());
+    messageInfo.SetSockAddr(Get<Manager>().GetCommissionerAloc());
     messageInfo.SetPeerPort(udpEncapHeader.GetDestinationPort());
 
     SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
