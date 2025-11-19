@@ -109,15 +109,15 @@ typedef enum otBorderAgentThreadRole
  */
 typedef struct otBorderAgentStateBitmap
 {
-    otBorderAgentConnMode      mConnMode;                 ///< Connection Mode.
-    otBorderAgentThreadIfState mThreadIfState;            ///< Thread Interface Status.
-    otBorderAgentAvailability  mAvailability;             ///< Availability
-    otBorderAgentThreadRole    mThreadRole;               ///< Thread Role.
-    bool                       mBbrIsActive;              ///< Backbone Router function is active.
-    bool                       mBbrIsPrimary;             ///< Device is the Primary Backbone Router.
-    bool                       mEpskcSupported;           ///< ePSKc Mode is supported.
-    bool                       mMultiAilDetectionEnabled; ///< Multi-AIL detection is enabled.
-    bool                       mMultiAilDetected;         ///< Multi-AIL has been detected.
+    otBorderAgentConnMode      mConnMode;                   ///< Connection Mode.
+    otBorderAgentThreadIfState mThreadIfState;              ///< Thread Interface Status.
+    otBorderAgentAvailability  mAvailability;               ///< Availability
+    otBorderAgentThreadRole    mThreadRole;                 ///< Thread Role.
+    bool                       mBbrIsActive;                ///< Backbone Router function is active.
+    bool                       mBbrIsPrimary;               ///< Device is the Primary Backbone Router.
+    bool                       mEpskcSupported;             ///< ePSKc Mode is supported.
+    bool                       mMultiAilDetectionSupported; ///< Multi-AIL detection is supported.
+    bool                       mMultiAilDetected;           ///< Multi-AIL has been detected.
 } otBorderAgentStateBitmap;
 
 /**

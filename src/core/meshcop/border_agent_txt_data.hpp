@@ -271,15 +271,15 @@ private:
         static constexpr uint8_t kOffsetMultiAilDetectionEnabled = 12;
         static constexpr uint8_t kOffsetMultiAilDetected         = 13;
 
-        static constexpr uint32_t kMaskConnMode                 = 7 << kOffsetConnMode;
-        static constexpr uint32_t kMaskIfState                  = 3 << kOffsetIfState;
-        static constexpr uint32_t kMaskAvailability             = 3 << kOffsetAvailability;
-        static constexpr uint32_t kFlagBbrIsActive              = 1 << kOffsetBbrIsActive;
-        static constexpr uint32_t kFlagBbrIsPrimary             = 1 << kOffsetBbrIsPrimary;
-        static constexpr uint32_t kMaskRole                     = 3 << kOffsetRole;
-        static constexpr uint32_t kFlagEpskcSupported           = 1 << kOffsetEpskcSupported;
-        static constexpr uint32_t kFlagMultiAilDetectionEnabled = 1 << kOffsetMultiAilDetectionEnabled;
-        static constexpr uint32_t kFlagMultiAilDetected         = 1 << kOffsetMultiAilDetected;
+        static constexpr uint32_t kMaskConnMode                   = 7 << kOffsetConnMode;
+        static constexpr uint32_t kMaskIfState                    = 3 << kOffsetIfState;
+        static constexpr uint32_t kMaskAvailability               = 3 << kOffsetAvailability;
+        static constexpr uint32_t kFlagBbrIsActive                = 1 << kOffsetBbrIsActive;
+        static constexpr uint32_t kFlagBbrIsPrimary               = 1 << kOffsetBbrIsPrimary;
+        static constexpr uint32_t kMaskRole                       = 3 << kOffsetRole;
+        static constexpr uint32_t kFlagEpskcSupported             = 1 << kOffsetEpskcSupported;
+        static constexpr uint32_t kFlagMultiAilDetectionSupported = 1 << kOffsetMultiAilDetectionEnabled;
+        static constexpr uint32_t kFlagMultiAilDetected           = 1 << kOffsetMultiAilDetected;
 
         static_assert(kConnModeDisabled == 0, "kConnModeDisabled is incorrect");
         static_assert(kConnModePskc == 1, "kConnModePskc is incorrect");
