@@ -51,7 +51,7 @@ extern "C" {
  * @param[in,out]   aReadFdSet  A pointer to the read file descriptors, which may already contain some FDs.
  * @param[in,out]   aWriteFdSet A pointer to the write file descriptors, which may already contain some FDs.
  * @param[in,out]   aErrorFdSet A pointer to the error file descriptors, which may already contain some FDs.
- * @param[in,out]   aTimeout    A pointer to an initialized timeout,  The caller must initialize this to the maximum
+ * @param[in,out]   aTimeout    A pointer to an initialized timeout. The caller must initialize this to the maximum.
  *                              desired timeout before calling this function; the function may reduce the value, but
  *                              will not increase it. The output should be no larger than the input.
  */
