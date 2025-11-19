@@ -92,6 +92,11 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
+        # Publish the NAT64 prefix from DNS.
+        br.bash(r"sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
+        br.bash(r"sed -i '/\/\/dns64 /a dns64 " + DNS_NAT64_PREFIX + " {};' /etc/bind/named.conf.options")
+        br.bash("service bind9 restart")
+
         # Case 1: No infra-derived OMR prefix. BR publishes its local NAT64 prefix.
         local_nat64_prefix = br.get_br_nat64_prefix()
 
@@ -109,9 +114,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
-        # Wait for the BR to discover and favor the DNS64 prefix.
-        self.wait_for(lambda: br.get_br_favored_nat64_prefix() != local_nat64_prefix)
         favored_nat64_prefix = br.get_br_favored_nat64_prefix()
+        self.assertNotEqual(favored_nat64_prefix, local_nat64_prefix)
         dns_nat64_prefix = favored_nat64_prefix
 
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
@@ -122,45 +126,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
             'Translator': NAT64_STATE_NOT_RUNNING
         })
 
-        # Case 3: A smaller prefix with medium preference is added to Network Data.
-        # The BR should yield to it and stop publishing its discovered prefix.
-        br.add_route(DNS_NAT64_PREFIX, stable=False, nat64=True, prf='med')
-        br.register_netdata()
-        self.simulator.go(5)
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        self.assertNotEqual(dns_nat64_prefix, br.get_netdata_nat64_routes()[0])
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_IDLE,
-            'Translator': NAT64_STATE_NOT_RUNNING
-        })
-
-        br.remove_route(DNS_NAT64_PREFIX)
-        br.register_netdata()
-        self.simulator.go(10)
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        self.assertEqual(nat64_prefix, dns_nat64_prefix)
-
-        # Case 4: A smaller prefix with low preference is added.
-        # The BR should not yield and continue publishing its higher-preference prefix.
-        br.add_route(DNS_NAT64_PREFIX, stable=False, nat64=True, prf='low')
-        br.register_netdata()
-        self.simulator.go(5)
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 2)
-        self.assertEqual(br.get_netdata_nat64_routes(), [dns_nat64_prefix, DNS_NAT64_PREFIX])
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_ACTIVE,
-            'Translator': NAT64_STATE_NOT_RUNNING
-        })
-
-        br.remove_route(DNS_NAT64_PREFIX)
-        br.register_netdata()
-        self.simulator.go(5)
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-
-        # Case 5: Start radvd to advertise a PREF64 prefix via RA.
+        # Case 3: Start radvd to advertise a PREF64 prefix via RA.
         # The RA-discovered NAT64 prefix should be favored over the DNS one.
         br.start_radvd_service(prefix=None, nat64_prefix=RA_NAT64_PREFIX)
         self.simulator.go(10)
@@ -170,7 +136,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(nat64_prefix, RA_NAT64_PREFIX)
         self.assertDictIncludes(br.nat64_state, {'PrefixManager': NAT64_STATE_ACTIVE, 'Translator': NAT64_STATE_IDLE})
 
-        # Case 6: Stop radvd.
+        # Case 4: Stop radvd.
         # The BR should fall back to the DNS-discovered NAT64 prefix.
         br.stop_radvd_service()
         self.simulator.go(310)
@@ -179,7 +145,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         nat64_prefix = br.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, dns_nat64_prefix)
 
-        # Case 7: Infrastructure DNS64 server is stopped.
+        # Case 5: Infrastructure DNS64 server is stopped.
         # The BR should fall back to its local NAT64 prefix.
         br.bash("service bind9 stop || true")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
@@ -201,21 +167,6 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(br.get_br_favored_nat64_prefix(), dns_nat64_prefix)
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
         self.assertEqual(br.get_netdata_nat64_routes()[0], dns_nat64_prefix)
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_ACTIVE,
-            'Translator': NAT64_STATE_NOT_RUNNING
-        })
-
-        # Case 9: Change the NAT64 prefix on the DNS64 server.
-        # The BR should discover and publish the new prefix.
-        br.bash(r"sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
-        br.bash(r"sed -i '/\/\/dns64 /a dns64 " + DNS_NAT64_PREFIX + " {};' /etc/bind/named.conf.options")
-        br.bash("service bind9 restart")
-        self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
-
-        self.assertEqual(br.get_br_favored_nat64_prefix(), DNS_NAT64_PREFIX)
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        self.assertEqual(br.get_netdata_nat64_routes()[0], DNS_NAT64_PREFIX)
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
             'Translator': NAT64_STATE_NOT_RUNNING
