@@ -154,7 +154,12 @@ public:
     /**
      * Initializes TLS session with a peer using an already open BLE connection.
      *
-     * @retval kErrorNone  Successfully started TLS connection.
+     * @retval kErrorNone          Successfully started TLS connection.
+     * @retval kErrorSecurity      TLS security error during session establishment.
+     * @retval kErrorInvalidState  BLE link is not active.
+     * @retval kErrorNoBufs        Failure in buffer memory allocation.
+     * @retval kErrorInvalidArgs   Internal TLS stack error.
+     * @retval kErrorFailed        General TLS error.
      */
     Error Connect(void);
 
@@ -305,8 +310,8 @@ public:
     /**
      * @brief Gets the Install Code Verify Status during the current session.
      *
-     * @return TRUE The install code was correctly verified.
-     * @return FALSE The install code was not verified.
+     * @retval TRUE  The install code was correctly verified.
+     * @retval FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return Get<MeshCoP::TcatAgent>().GetInstallCodeVerifyStatus(); }
 
@@ -314,8 +319,10 @@ public:
      * @brief Notifies the BLE layer that the TCAT advertisement data was changed, so
      * BLE advertisement message content should be updated.
      *
-     * @retval kErrorNone     Successfully updated using the new data.
-     * @return kErrorFailed   Update failed.
+     * @retval kErrorNone         Successfully updated using the new data.
+     * @retval kErrorNoBufs       Updated failed due to buffer allocation failure.
+     * @retval kErrorInvalidArgs  Updated failed due to invalid advertisement data.
+     * @retval kErrorFailed       Update failed.
      */
     Error NotifyAdvertisementChanged();
 

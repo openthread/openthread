@@ -332,7 +332,11 @@ public:
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
-     * @returns Result of the message-send operation: kErrorNone if successful, kErrorNoBufs, or another error.
+     * @retval kErrorNone         Successfully sent message.
+     * @retval kErrorNoBufs       Message not sent: signal to SecureTransport that the sending operation blocks.
+     *                            In this case, the stack will retry the sending later.
+     * @retval kErrorFailed       Failure to send, for other reasons. Note that any other errors not listed here
+     *                            will map to kErrorFailed.
      */
     typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
