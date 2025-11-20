@@ -892,6 +892,9 @@ void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDataset
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
     , mDelayTimer(aInstance)
+#if OPENTHREAD_FTD
+    , mDelayTimerMinimal(DelayTimerTlv::kMinDelay)
+#endif
 {
 }
 
