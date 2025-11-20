@@ -588,6 +588,22 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
         }
     }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+    /**
+     * @cli ba evictcommissioner
+     * @code
+     * ba evictcommissioner
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderAgentEvictActiveCommissioner
+     */
+    else if (aArgs[0] == "evictcommissioner")
+    {
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        error = otBorderAgentEvictActiveCommissioner(GetInstancePtr());
+    }
+#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     else if (aArgs[0] == "ephemeralkey")
     {
