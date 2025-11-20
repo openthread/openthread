@@ -68,6 +68,7 @@ public:
     typedef otBorderAgentThreadIfState IfState;      ///< Thread Interface State in a Border Agent State Bitmap.
     typedef otBorderAgentAvailability  Availability; ///< Availability Status in a Border Agent State Bitmap.
     typedef otBorderAgentThreadRole    Role;         ///< Thread Role in a Border Agent State Bitmap.
+    typedef otBorderAgentMultiAilState MultiAilState;
 
     static constexpr ConnMode kConnModeDisabled = OT_BORDER_AGENT_CONN_MODE_DISABLED; ///< Not allowed.
     static constexpr ConnMode kConnModePskc     = OT_BORDER_AGENT_CONN_MODE_PSKC;     ///< DTLS with PSKc.
@@ -86,6 +87,13 @@ public:
     static constexpr Role kRoleChild            = OT_BORDER_AGENT_THREAD_ROLE_CHILD;                ///< Child.
     static constexpr Role kRoleRouter           = OT_BORDER_AGENT_THREAD_ROLE_ROUTER;               ///< Router.
     static constexpr Role kRoleLeader           = OT_BORDER_AGENT_THREAD_ROLE_LEADER;               ///< Leader.
+
+    static constexpr MultiAilState kMultiAilDisabled = OT_BORDER_AGENT_MULTI_AIL_STATE_DISABLED; ///< Disabled.
+    static constexpr MultiAilState kMultiAilNotDetected =
+        OT_BORDER_AGENT_MULTI_AIL_STATE_NOT_DETECTED;                                            ///< Not detected.
+    static constexpr MultiAilState kMultiAilDetected = OT_BORDER_AGENT_MULTI_AIL_STATE_DETECTED; ///< Detected.
+    static constexpr MultiAilState kMultiAilReserved =
+        OT_BORDER_AGENT_MULTI_AIL_STATE_RESERVED; ///< Reserved for future use.
 
     /**
      * Initializes the `TxtData` object.
@@ -261,25 +269,23 @@ private:
 
     struct StateBitmap
     {
-        static constexpr uint8_t kOffsetConnMode                 = 0;
-        static constexpr uint8_t kOffsetIfState                  = 3;
-        static constexpr uint8_t kOffsetAvailability             = 5;
-        static constexpr uint8_t kOffsetBbrIsActive              = 7;
-        static constexpr uint8_t kOffsetBbrIsPrimary             = 8;
-        static constexpr uint8_t kOffsetRole                     = 9;
-        static constexpr uint8_t kOffsetEpskcSupported           = 11;
-        static constexpr uint8_t kOffsetMultiAilDetectionEnabled = 12;
-        static constexpr uint8_t kOffsetMultiAilDetected         = 13;
+        static constexpr uint8_t kOffsetConnMode       = 0;
+        static constexpr uint8_t kOffsetIfState        = 3;
+        static constexpr uint8_t kOffsetAvailability   = 5;
+        static constexpr uint8_t kOffsetBbrIsActive    = 7;
+        static constexpr uint8_t kOffsetBbrIsPrimary   = 8;
+        static constexpr uint8_t kOffsetRole           = 9;
+        static constexpr uint8_t kOffsetEpskcSupported = 11;
+        static constexpr uint8_t kOffsetMultiAilState  = 12;
 
-        static constexpr uint32_t kMaskConnMode                   = 7 << kOffsetConnMode;
-        static constexpr uint32_t kMaskIfState                    = 3 << kOffsetIfState;
-        static constexpr uint32_t kMaskAvailability               = 3 << kOffsetAvailability;
-        static constexpr uint32_t kFlagBbrIsActive                = 1 << kOffsetBbrIsActive;
-        static constexpr uint32_t kFlagBbrIsPrimary               = 1 << kOffsetBbrIsPrimary;
-        static constexpr uint32_t kMaskRole                       = 3 << kOffsetRole;
-        static constexpr uint32_t kFlagEpskcSupported             = 1 << kOffsetEpskcSupported;
-        static constexpr uint32_t kFlagMultiAilDetectionSupported = 1 << kOffsetMultiAilDetectionEnabled;
-        static constexpr uint32_t kFlagMultiAilDetected           = 1 << kOffsetMultiAilDetected;
+        static constexpr uint32_t kMaskConnMode       = 7 << kOffsetConnMode;
+        static constexpr uint32_t kMaskIfState        = 3 << kOffsetIfState;
+        static constexpr uint32_t kMaskAvailability   = 3 << kOffsetAvailability;
+        static constexpr uint32_t kFlagBbrIsActive    = 1 << kOffsetBbrIsActive;
+        static constexpr uint32_t kFlagBbrIsPrimary   = 1 << kOffsetBbrIsPrimary;
+        static constexpr uint32_t kMaskRole           = 3 << kOffsetRole;
+        static constexpr uint32_t kFlagEpskcSupported = 1 << kOffsetEpskcSupported;
+        static constexpr uint32_t kMaskMultiAilState  = 3 << kOffsetMultiAilState;
 
         static_assert(kConnModeDisabled == 0, "kConnModeDisabled is incorrect");
         static_assert(kConnModePskc == 1, "kConnModePskc is incorrect");
@@ -298,6 +304,10 @@ private:
         static_assert(kRoleChild == 1, "kRoleChild is incorrect");
         static_assert(kRoleRouter == 2, "kRoleRouter is incorrect");
         static_assert(kRoleLeader == 3, "kRoleLeader is incorrect");
+
+        static_assert(kMultiAilDisabled == 0, "kMultiAilDisabled is incorrect");
+        static_assert(kMultiAilNotDetected == 1, "kMultiAilNotDetected is incorrect");
+        static_assert(kMultiAilDetected == 2, "kMultiAilDetected is incorrect");
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
         typedef otBorderAgentStateBitmap Info;

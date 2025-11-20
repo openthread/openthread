@@ -233,6 +233,15 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
         break;
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
+    {
+        bitmap |=
+            ((aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected() ? kMultiAilDetected : kMultiAilNotDetected)
+             << kOffsetMultiAilState);
+    }
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (aInstance.Get<Mle::Mle>().IsAttached())
     {
@@ -245,17 +254,6 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
     if (aInstance.Get<EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
     {
         bitmap |= kFlagEpskcSupported;
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
-    {
-        bitmap |= kFlagMultiAilDetectionSupported;
-        if (aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected())
-        {
-            bitmap |= kFlagMultiAilDetected;
-        }
     }
 #endif
 
@@ -422,15 +420,15 @@ void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
 {
     ClearAllBytes(aInfo);
 
-    aInfo.mConnMode                   = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
-    aInfo.mThreadIfState              = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
-    aInfo.mAvailability               = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
-    aInfo.mThreadRole                 = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
-    aInfo.mBbrIsActive                = aBitmap & kFlagBbrIsActive;
-    aInfo.mBbrIsPrimary               = aBitmap & kFlagBbrIsPrimary;
-    aInfo.mEpskcSupported             = aBitmap & kFlagEpskcSupported;
-    aInfo.mMultiAilDetectionSupported = aBitmap & kFlagMultiAilDetectionSupported;
-    aInfo.mMultiAilDetected           = aBitmap & kFlagMultiAilDetected;
+    aInfo.mConnMode      = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
+    aInfo.mThreadIfState = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
+    aInfo.mAvailability  = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
+    aInfo.mThreadRole    = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
+    aInfo.mMultiAilState =
+        static_cast<otBorderAgentMultiAilState>((aBitmap & kMaskMultiAilState) >> kOffsetMultiAilState);
+    aInfo.mBbrIsActive    = aBitmap & kFlagBbrIsActive;
+    aInfo.mBbrIsPrimary   = aBitmap & kFlagBbrIsPrimary;
+    aInfo.mEpskcSupported = aBitmap & kFlagEpskcSupported;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
