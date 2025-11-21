@@ -65,6 +65,7 @@ namespace MeshCoP {
 class TcatAgent : public InstanceLocator, private NonCopyable
 {
     friend class Ble::BleSecure;
+    friend class TcatAgentTestProbe;
 
 public:
     /**
@@ -376,14 +377,28 @@ public:
     bool IsConnected(void) const { return mState == kStateConnected; }
 
     /**
-     * Indicates whether or not a TCAT command class is authorized for use.
+     * Indicates if a TCAT command class is currently authorized for use by the active TCAT Commissioner.
+     *
+     * @note For Set Active Operational Dataset commands, authorization must be checked separately
+     *       using #IsSetActiveDatasetAuthorized() because it uses different rules.
      *
      * @param[in] aCommandClass Command class to subject to authorization check.
      *
-     * @retval TRUE   The command class is authorized for use by the present (if any) TCAT commissioner.
-     * @retval FALSE  The command class is not authorized for use.
+     * @retval TRUE   The command class is authorized for use by the present TCAT commissioner (if any).
+     * @retval FALSE  The command class is currently not authorized for use.
      */
     bool IsCommandClassAuthorized(CommandClass aCommandClass) const;
+
+    /**
+     * Indicates if Set Active Dataset commands in the Commissioning command class are currently
+     * authorized for use by the active TCAT Commissioner for setting the @p aDataset.
+     *
+     * @param aDataset  The specific Active Operational Dataset intended to be written.
+     *
+     * @retval TRUE     The command for writing @p aDataset is currently authorized.
+     * @retval FALSE    The command for writing @p aDataset is currently not authorized.
+     */
+    bool IsSetActiveDatasetAuthorized(Dataset *aDataset) const;
 
     /**
      * Gets TCAT advertisement data from the TCAT agent.
@@ -394,7 +409,7 @@ public:
      * @retval kErrorNone           Successfully retrieved the TCAT advertisement data.
      * @retval kErrorInvalidArgs    The vendor data could not be retrieved, or aAdvertisementData is null.
      */
-    Error GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData);
+    Error GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData) const;
 
     /**
      * @brief Gets the Install Code Verify Status of the current TCAT Commissioner session.
@@ -467,10 +482,10 @@ private:
                      size_t         aBufLen);
     Error CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
 
-    bool    CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
-                                                CommandClassFlags aDeviceCommandClassFlags,
-                                                Dataset          *aDataset) const;
-    uint8_t CheckAuthorizationRequirements(CommandClassFlags aFlagsChecked, Dataset::Info *aDatasetInfo) const;
+    bool    IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissionerCommandClassFlags,
+                                              CommandClassFlags aDeviceCommandClassFlags,
+                                              Dataset          *aCommSuppliedDataset) const;
+    uint8_t CheckAuthorizationRequirements(CommandClassFlags aFlagsChecked, Dataset::Info *aActiveDatasetInfo) const;
 
     static constexpr uint16_t kPingPayloadMaxLength      = 512;
     static constexpr uint16_t kProvisioningUrlMaxLength  = 64;
@@ -506,6 +521,36 @@ private:
     using ExpireTimer = TimerMilliIn<TcatAgent, &TcatAgent::HandleTimer>;
     ExpireTimer mActiveOrStandbyTimer;
     uint32_t    mTcatActiveDurationMs;
+};
+
+// Used only in unit tests to probe or modify TcatAgent internals.
+class TcatAgentTestProbe
+{
+public:
+    explicit TcatAgentTestProbe(TcatAgent *agent);
+
+    // Mock action: TCAT Commissioner connects with authorization commAuth while device has deviceAuth.
+    void MockCommissionerConnected(TcatAgent::CertificateAuthorizationField commAuth,
+                                   TcatAgent::CertificateAuthorizationField deviceAuth,
+                                   bool                                     isCommissionedAtStart);
+
+    // Mock action: TCAT Commissioner successfully did or did not PSKc proof-of-possession.
+    void MockCommissionerPskcProof(bool isPskcVerified);
+
+    // Mock action: TCAT Commissioner successfully did or did not PSKd proof-of-possession.
+    void MockCommissionerPskdProof(bool isPskdVerified);
+
+    // Mock condition: commissioner has or has not given Extended Pan ID in certificate.
+    void MockExtPanId(bool commHasExtPanId, ExtendedPanId *extPanId);
+
+    // Mock condition: commissioner has or has not given Network Name in certificate.
+    void MockNetworkName(bool commHasNetworkName, NetworkName *networkName);
+
+    // Mock condition: commissioner has or has not given Domain Name in certificate.
+    void MockDomainName(bool commHasDomainName, NetworkName *domainName);
+
+private:
+    TcatAgent *mAgent;
 };
 
 DeclareTmfHandler(TcatAgent, kUriTcatEnable);
