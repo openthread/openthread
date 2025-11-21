@@ -396,7 +396,7 @@
  * Define as 1 to let the process exit when the infra network interface is lost on the POSIX platform.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE 0
+#define OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE 1
 #endif
 
 /**

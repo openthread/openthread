@@ -27,8 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -e
-set -x
+set -euxo pipefail
 
 die()
 {
@@ -41,7 +40,6 @@ at_exit()
     EXIT_CODE=$?
 
     sudo killall ot-daemon || true
-    sudo killall socat || true
 
     sudo ip link del veth-a || true
     sudo ip link del veth-b || true
@@ -68,7 +66,6 @@ do_check()
     sudo ip link add veth-a type veth peer name veth-b
     sudo ip link set veth-a up
     sudo ip link set veth-b up
-    sleep 1
     sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
     sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
 
@@ -99,11 +96,9 @@ do_check()
 
     # Simulate infra interface index change
     sudo ip link del veth-a
-    sleep 1
     sudo ip link add veth-a type veth peer name veth-b
     sudo ip link set veth-a up
     sudo ip link set veth-b up
-    sleep 1
     sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
     sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
     sleep 30
