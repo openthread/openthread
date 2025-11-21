@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2024-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
 #include "test_util.h"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
+#include "cli/cli_dataset.hpp"
 
 #include <openthread/ble_secure.h>
 
@@ -73,7 +75,86 @@
     "eVFOwC8bd//D99KiHAIgU84kwFHIyDvFqu6y+u1hFqBGsiuTmKwZ2PHhVe/xK1k=\n" \
     "-----END CERTIFICATE-----\n"
 
+#define COMM_NETWORK_NAME "OpenThread-c64e"
+
 namespace ot {
+namespace MeshCoP {
+
+static constexpr char     kPskdVendor[]                  = "J01NM3";
+static constexpr char     kUrl[]                         = "dummy_url";
+static constexpr char     kDomainName[]                  = "DefaultDomain";
+static constexpr char     kNetworkName[]                 = COMM_NETWORK_NAME;
+static constexpr uint16_t kConnectionId                  = 0;
+static constexpr int      kCertificateThreadVersion      = 2;
+static constexpr int      kCertificateAuthorizationField = 3;
+
+// TCAT command class bits for expressing any combination of classes in tests
+static constexpr uint16_t kClassNone            = 0;
+static constexpr uint16_t kClassGeneral         = 1 << TcatAgent::kGeneral;
+static constexpr uint16_t kClassCommissioning   = 1 << TcatAgent::kCommissioning;
+static constexpr uint16_t kClassExtraction      = 1 << TcatAgent::kExtraction;
+static constexpr uint16_t kClassDecommissioning = 1 << TcatAgent::kDecommissioning;
+static constexpr uint16_t kClassApplication     = 1 << TcatAgent::kApplication;
+
+// TCAT authorization fields
+static const uint8_t kExpectedDevAuthField[5] = {0x20, 0x01, 0x01, 0x01, 0x01};
+static const uint8_t kCommCert1AuthField[5]   = {0x21, 0x01, 0x01, 0x01, 0x01};
+static const uint8_t kCommCert2AuthField[5]   = {0x21, 0x1F, 0x3F, 0x3F, 0x3F};
+static const uint8_t kCommCert4AuthField[5]   = {0x21, 0x21, 0x05, 0x09, 0x11};
+static const uint8_t kCommCert5AuthField[5]   = {0x21, 0x03, 0x02, 0x83, 0x41};
+
+// TCAT certificate encoded info
+static const uint8_t kCommCert2ExtendedPanId[8] = {0xef, 0x13, 0x98, 0xc2, 0xfd, 0x50, 0x4b, 0x67};
+
+static const otOperationalDataset kDataset = {
+    .mActiveTimestamp =
+        {
+            .mSeconds       = 1,
+            .mTicks         = 0,
+            .mAuthoritative = false,
+        },
+    .mNetworkKey =
+        {
+            .m8 = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mNetworkName = {COMM_NETWORK_NAME},
+    .mExtendedPanId =
+        {
+            .m8 = {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
+        },
+    .mMeshLocalPrefix =
+        {
+            .m8 = {0xfd, 0x00, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mPanId   = 0x1234,
+    .mChannel = 11,
+    .mPskc =
+        {
+            .m8 = {0xc2, 0x3a, 0x76, 0xe9, 0x8f, 0x1a, 0x64, 0x83, 0x63, 0x9b, 0x1a, 0xc1, 0x27, 0x1e, 0x2e, 0x27},
+        },
+    .mSecurityPolicy =
+        {
+            .mRotationTime                 = 672,
+            .mObtainNetworkKeyEnabled      = true,
+            .mNativeCommissioningEnabled   = true,
+            .mRoutersEnabled               = true,
+            .mExternalCommissioningEnabled = true,
+        },
+    .mChannelMask = 0x07fff800,
+    .mComponents =
+        {
+            .mIsActiveTimestampPresent = true,
+            .mIsNetworkKeyPresent      = true,
+            .mIsNetworkNamePresent     = true,
+            .mIsExtendedPanIdPresent   = true,
+            .mIsMeshLocalPrefixPresent = true,
+            .mIsPanIdPresent           = true,
+            .mIsChannelPresent         = true,
+            .mIsPskcPresent            = true,
+            .mIsSecurityPolicyPresent  = true,
+            .mIsChannelMaskPresent     = true,
+        },
+};
 
 class TestBleSecure
 {
@@ -105,17 +186,30 @@ static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool 
     static_cast<TestBleSecure *>(aContext)->HandleBleSecureConnect(aConnected, aBleConnectionOpen);
 }
 
+// test helper to validate that only classes set '1' in aCommandClassesBitmap are authorized and others not.
+static bool CommandClassesAuthorized(const TcatAgent *agent, const uint16_t aCommandClassesBitmap)
+{
+    bool validationResult = true;
+
+    static_assert(TcatAgent::kInvalid < 16, "kInvalid must be less than 16 to fit in uint16_t");
+    for (uint16_t i = TcatAgent::kGeneral; i <= TcatAgent::kInvalid; i++)
+    {
+        const bool isAuthorizedByAgent     = agent->IsCommandClassAuthorized(static_cast<TcatAgent::CommandClass>(i));
+        const bool isAuthorizationExpected = (aCommandClassesBitmap & (1 << i)) != 0;
+        if (isAuthorizedByAgent != isAuthorizationExpected)
+        {
+            printf("Expected command class %d authorization '%d', but TCAT Agent reports '%d'\n", i,
+                   isAuthorizationExpected, isAuthorizedByAgent);
+            validationResult = false;
+        }
+    }
+    return validationResult;
+}
+
 void TestTcat(void)
 {
-    const char         kPskdVendor[]                  = "J01NM3";
-    const char         kUrl[]                         = "dummy_url";
-    constexpr uint16_t kConnectionId                  = 0;
-    const int          kCertificateThreadVersion      = 2;
-    const int          kCertificateAuthorizationField = 3;
-    const uint8_t      expectedTcatAuthField[5]       = {0x20, 0x01, 0x01, 0x01, 0x01};
-    uint8_t            attributeBuffer[8];
-    size_t             attributeLen;
-
+    uint8_t       attributeBuffer[8];
+    size_t        attributeLen;
     TestBleSecure ble;
     Instance     *instance = testInitInstance();
 
@@ -158,29 +252,29 @@ void TestTcat(void)
     otBleSecureDisconnect(instance);
     VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
 
-    // Validate TLS connection can be started only when peer is connected
+    // Validate TLS connection can be started (as client) only when peer is BLE-connected
     otPlatBleGapOnConnected(instance, kConnectionId);
     SuccessOrQuit(otBleSecureConnect(instance));
     VerifyOrQuit(otBleSecureIsConnectionActive(instance));
 
     // Once in TLS client connecting state, the below cert eval functions are available.
-    // Test that the Thread-specific attributes can be decoded properly.
+    // Test that the Thread-specific attributes from own certificate can be decoded properly.
     attributeLen = 1;
     SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateThreadVersion,
                                                                   &attributeBuffer[0], &attributeLen));
     VerifyOrQuit(attributeLen == 1 && attributeBuffer[0] >= kThreadVersion1p4);
 
-    static_assert(5 == sizeof(expectedTcatAuthField), "expectedTcatAuthField size incorrect for test");
+    static_assert(5 == sizeof(kExpectedDevAuthField), "expectedTcatAuthField size incorrect for test");
     attributeLen = 5;
     SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
                                                                   &attributeBuffer[0], &attributeLen));
-    VerifyOrQuit(attributeLen == 5 && memcmp(&expectedTcatAuthField, &attributeBuffer, attributeLen) == 0);
+    VerifyOrQuit(attributeLen == 5 && memcmp(&kExpectedDevAuthField, &attributeBuffer, attributeLen) == 0);
 
-    // Validate TLS connection can be started only when peer is connected
+    // Validate TLS client connection can be started only when peer is BLE-connected
     otBleSecureDisconnect(instance);
     VerifyOrQuit(otBleSecureConnect(instance) == kErrorInvalidState);
 
-    // Validate Tcat state changes after stopping BLE secure
+    // Validate Tcat agent state changes after stopping BLE secure
     VerifyOrQuit(otBleSecureIsTcatAgentStarted(instance));
     otBleSecureStop(instance);
     VerifyOrQuit(!otBleSecureIsTcatAgentStarted(instance));
@@ -188,6 +282,164 @@ void TestTcat(void)
     testFreeInstance(instance);
 }
 
+void TestTcatCommissionerAuth(void)
+{
+    constexpr otTcatVendorInfo               vendorInfo = {.mProvisioningUrl = kUrl, .mPskdString = kPskdVendor};
+    TcatAgent::CertificateAuthorizationField commAuth, deviceAuth;
+    size_t                                   lenAuth  = sizeof(deviceAuth);
+    Instance                                *instance = testInitInstance();
+    TcatAgent                               *agent    = &instance->Get<TcatAgent>();
+    TcatAgentTestProbe                       tester(agent);
+    NetworkName                              commNetworkName;
+    NetworkName                              commDomainName;
+    ExtendedPanId                            commExtPanId;
+    Dataset::Info                            dataset;
+
+    commNetworkName.Set(kNetworkName);
+    commDomainName.Set(kDomainName);
+    dataset = AsCoreType(&kDataset);
+
+    // TCAT Device is initially uncommissioned
+    VerifyOrQuit(!instance->Get<ActiveDatasetManager>().IsCommissioned());
+
+    // Configure TCAT Device certs and vendorInfo
+    SuccessOrQuit(otBleSecureSetTcatVendorInfo(instance, &vendorInfo));
+    otBleSecureSetCertificate(instance, reinterpret_cast<const uint8_t *>(OT_TCAT_X509_CERT), sizeof(OT_TCAT_X509_CERT),
+                              reinterpret_cast<const uint8_t *>(OT_TCAT_PRIV_KEY), sizeof(OT_TCAT_PRIV_KEY));
+    otBleSecureSetCaCertificateChain(instance, reinterpret_cast<const uint8_t *>(OT_TCAT_TRUSTED_ROOT_CERTIFICATE),
+                                     sizeof(OT_TCAT_TRUSTED_ROOT_CERTIFICATE));
+    otBleSecureSetSslAuthMode(instance, true);
+
+    // validate no Commissioner authorizations if not connected
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassNone));
+
+    // setup TCAT and connect as client, such that own cert info becomes available.
+    SuccessOrQuit(otBleSecureStart(instance, nullptr, nullptr, true, nullptr));
+    otPlatBleGapOnConnected(instance, kConnectionId);
+    SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
+    SuccessOrQuit(otBleSecureConnect(instance));
+    VerifyOrQuit(otBleSecureIsConnectionActive(instance));
+
+    // get auth info from own cert of the TCAT Device
+    SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
+                                                                  reinterpret_cast<uint8_t *>(&deviceAuth), &lenAuth));
+
+    // Mock TCAT Commissioner 1 connects to the agent - verify it has access to all classes
+    // ====================================================================================
+    memcpy(&commAuth, &kCommCert1AuthField, sizeof(commAuth));
+    tester.MockCommissionerConnected(commAuth, deviceAuth);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // provide PSKc proof-of-possession - verify access is same as before
+    tester.MockCommissionerPskcProof(true);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // Mock TCAT Commissioner 2 connects to the agent - verify it only has access to class General by default.
+    // CommCert2 contains Network Name, Extended PAN ID in this initial test.
+    // =======================================================================================================
+    memcpy(&commAuth, &kCommCert2AuthField, sizeof(commAuth));
+    memcpy(&commExtPanId, &kCommCert2ExtendedPanId, sizeof(commExtPanId));
+
+    tester.MockCommissionerConnected(commAuth, deviceAuth);
+    tester.MockNetworkName(true, &commNetworkName);
+    tester.MockXpan(true, &commExtPanId);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+
+    // provide PSKd proof-of-possession - verify there's no change
+    tester.MockCommissionerPskdProof(true);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+
+    // Commissioner now has matching Domain Name - unlocks Commissioning class; and also all other classes
+    // because the required PSKc proof is automatically satisfied: the Device doesn't have a PSKc stored, yet.
+    tester.MockDomainName(true, &commDomainName);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // Commissioner now has matching XPAN ID - same as before
+    tester.MockXpan(true, &commExtPanId);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // Commissioner now has matching Network Name also - same as before
+    tester.MockNetworkName(true, &commNetworkName);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // New situation: Active Dataset is configured, but XPAN ID doesn't match - and PSKc proof is not given - so
+    // most classes are revoked.
+    instance->Get<ActiveDatasetManager>().SaveLocal(dataset);
+    VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+
+    // XPAN ID now matches again; class Commissioning authorization is restored because that doesn't require
+    // PSKc proof.
+    dataset.mExtendedPanId = commExtPanId;
+    instance->Get<ActiveDatasetManager>().SaveLocal(dataset);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+
+    // Now PSKc proof is given, unlocking more classes
+    tester.MockCommissionerPskcProof(true);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // Mock TCAT Commissioner 4 connects to the agent - verify it only has access to class General by default.
+    // =======================================================================================================
+    memcpy(&commAuth, &kCommCert4AuthField, sizeof(commAuth));
+    tester.MockCommissionerConnected(commAuth, deviceAuth);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+
+    // PSKc proof
+    tester.MockCommissionerPskcProof(true);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+
+    // Network name
+    tester.MockNetworkName(true, &commNetworkName);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction));
+
+    // New situation: XPAN ID present in Comm cert
+    tester.MockXpan(true, &commExtPanId);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning));
+
+    // New situation: Thread Domain name in cert matches - Application class added.
+    tester.MockDomainName(true, &commDomainName);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning | kClassApplication));
+
+    // New situation: PSKc proof not given - Commissioning revoked
+    tester.MockCommissionerPskcProof(false);
+    VerifyOrQuit(
+        CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassDecommissioning | kClassApplication));
+
+    // New situation: network name present, but mismatch - Extraction revoked
+    commNetworkName.Set("WrongName");
+    tester.MockNetworkName(true, &commNetworkName);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassDecommissioning | kClassApplication));
+
+    // New situation: XPAN ID present, but mismatch - Decommissioning revoked
+    dataset.mExtendedPanId.m8[4]++;
+    instance->Get<ActiveDatasetManager>().SaveLocal(dataset);
+    tester.MockXpan(true, &commExtPanId);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassApplication));
+
+    // Mock TCAT Commissioner 5 connects to the agent - it requires checks that are unknown to the Device
+    // ==================================================================================================
+    memcpy(&commAuth, &kCommCert5AuthField, sizeof(commAuth));
+    tester.MockCommissionerConnected(commAuth, deviceAuth);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
+
+    // PSKd proof is given: it won't enable Extraction, because Extraction access flag = 0.
+    // Also it won't enable Decommissioning, because it has an unknown flag bit 7 set.
+    // It will enable Commissioning.
+    tester.MockCommissionerPskdProof(true);
+    VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+
+    testFreeInstance(instance);
+}
+
+} // namespace MeshCoP
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -195,7 +447,8 @@ void TestTcat(void)
 int main(void)
 {
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    ot::TestTcat();
+    ot::MeshCoP::TestTcat();
+    ot::MeshCoP::TestTcatCommissionerAuth();
     printf("All tests passed\n");
 #else
     printf("Tcat is not enabled\n");
