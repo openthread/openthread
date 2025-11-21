@@ -176,8 +176,6 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
 {
-    otPlatCryptoInit();
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     {
         NetworkKey networkKey;
