@@ -477,9 +477,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         }
         else
         {
-            String<Uptime::kStringSize> string;
+            String<kUptimeStringSize> string;
 
-            Uptime::UptimeToString(duration, string, /* aIncludeMsec */ true);
+            UptimeToString(duration, string, /* aIncludeMsec */ true);
             LogInfo("Will evaluate routing policy in %s (%lu msec)", string.AsCString() + 3, ToUlong(duration));
         }
     }

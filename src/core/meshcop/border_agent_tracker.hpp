@@ -52,6 +52,7 @@
 #include "common/locator.hpp"
 #include "common/owning_list.hpp"
 #include "common/retain_ptr.hpp"
+#include "common/uptime.hpp"
 #include "net/dnssd.hpp"
 #include "net/ip6_address.hpp"
 
@@ -105,8 +106,8 @@ public:
     private:
         const Agent *GetAgentEntry(void) const { return static_cast<const Agent *>(mPtr); }
         void         SetAgentEntry(const Agent *aEntry) { mPtr = aEntry; }
-        uint64_t     GetInitUptime(void) const { return mData; }
-        void         SetInitUptime(uint64_t aUptime) { mData = aUptime; }
+        UptimeMsec   GetInitUptime(void) const { return mData; }
+        void         SetInitUptime(UptimeMsec aUptime) { mData = aUptime; }
     };
 
     /**
@@ -180,14 +181,14 @@ private:
         void  ClearTxtData(void);
         void  SetUpdateTimeToNow(void);
         bool  Matches(MatchType aType, const char *aName) const;
-        void  CopyInfoTo(AgentInfo &aInfo, uint64_t aUptimeNow) const;
+        void  CopyInfoTo(AgentInfo &aInfo, UptimeMsec aUptimeNow) const;
 
         Agent          *mNext;
         Heap::String    mServiceName;
         RetainPtr<Host> mHost;
         Heap::Data      mTxtData;
-        uint64_t        mDiscoverUptime;
-        uint64_t        mLastUpdateUptime;
+        UptimeMsec      mDiscoverUptime;
+        UptimeMsec      mLastUpdateUptime;
         uint16_t        mPort;
     };
 

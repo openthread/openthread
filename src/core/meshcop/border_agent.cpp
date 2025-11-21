@@ -481,7 +481,7 @@ exit:
 void Manager::SessionIterator::Init(Instance &aInstance)
 {
     SetSession(static_cast<CoapDtlsSession *>(aInstance.Get<Manager>().mDtlsTransport.GetSessions().GetHead()));
-    SetInitTime(aInstance.Get<Uptime>().GetUptime());
+    SetInitTime(aInstance.Get<UptimeTracker>().GetUptime());
 }
 
 Error Manager::SessionIterator::GetNextSessionInfo(SessionInfo &aSessionInfo)
@@ -509,7 +509,7 @@ exit:
 Manager::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
     : Coap::SecureSession(aInstance, aDtlsTransport)
     , mTimer(aInstance, HandleTimer, this)
-    , mAllocationTime(aInstance.Get<Uptime>().GetUptime())
+    , mAllocationTime(aInstance.Get<UptimeTracker>().GetUptime())
     , mIndex(aInstance.Get<Manager>().GetNextSessionIndex())
 {
     SetResourceHandler(&HandleResource);

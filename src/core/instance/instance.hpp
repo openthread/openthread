@@ -475,7 +475,7 @@ private:
     Radio mRadio;
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    Uptime mUptime;
+    UptimeTracker mUptimeTracker;
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
@@ -777,7 +777,7 @@ template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStati
 #endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-template <> inline Uptime &Instance::Get(void) { return mUptime; }
+template <> inline UptimeTracker &Instance::Get(void) { return mUptimeTracker; }
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE

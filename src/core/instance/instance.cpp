@@ -82,7 +82,7 @@ Instance::Instance(void)
 #endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    , mUptime(*this)
+    , mUptimeTracker(*this)
 #endif
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     , mOtns(*this)
