@@ -60,6 +60,9 @@
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/spinel_driver_getter.hpp"
 #include "posix/platform/udp.hpp"
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+#include "posix/platform/settings.hpp"
+#endif
 
 otInstance *gInstance = nullptr;
 bool        gDryRun   = false;
@@ -180,6 +183,10 @@ void platformInitNcpMode(otPlatformConfig *aPlatformConfig)
 
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    ot::Posix::PlatformSetSettingsPath(aPlatformConfig->mSettingsPath);
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
     platformBacktraceInit();
 #endif

@@ -484,6 +484,15 @@
 #define OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIOD (5000)
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+ * 
+ * Define as 0 to disable setting POSIX settings path at runtime by default.
+ */
+#ifndef OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+#define OPENTHREAD_POSIX_SETTINGS_PATH_SET_API 0
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // Removed or renamed POSIX specific configs.
 
