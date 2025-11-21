@@ -38,7 +38,6 @@
 
 #include <openthread/border_agent.h>
 #include <openthread/border_agent_txt_data.h>
-#include <openthread/multi_ail_detection.h>
 
 #include "common/as_core_type.hpp"
 #include "common/callback.hpp"
@@ -64,11 +63,11 @@ class TxtData : public InstanceLocator
     friend class ot::Notifier;
 
 public:
-    typedef otBorderAgentConnMode      ConnMode;     ///< Connection Mode in a Border Agent State Bitmap.
-    typedef otBorderAgentThreadIfState IfState;      ///< Thread Interface State in a Border Agent State Bitmap.
-    typedef otBorderAgentAvailability  Availability; ///< Availability Status in a Border Agent State Bitmap.
-    typedef otBorderAgentThreadRole    Role;         ///< Thread Role in a Border Agent State Bitmap.
-    typedef otBorderAgentMultiAilState MultiAilState;
+    typedef otBorderAgentConnMode      ConnMode;      ///< Connection Mode in a Border Agent State Bitmap.
+    typedef otBorderAgentThreadIfState IfState;       ///< Thread Interface State in a Border Agent State Bitmap.
+    typedef otBorderAgentAvailability  Availability;  ///< Availability Status in a Border Agent State Bitmap.
+    typedef otBorderAgentThreadRole    Role;          ///< Thread Role in a Border Agent State Bitmap.
+    typedef otBorderAgentMultiAilState MultiAilState; ///< Multi-AIL detection state in a Border Agent State Bitmap.
 
     static constexpr ConnMode kConnModeDisabled = OT_BORDER_AGENT_CONN_MODE_DISABLED; ///< Not allowed.
     static constexpr ConnMode kConnModePskc     = OT_BORDER_AGENT_CONN_MODE_PSKC;     ///< DTLS with PSKc.
@@ -88,12 +87,9 @@ public:
     static constexpr Role kRoleRouter           = OT_BORDER_AGENT_THREAD_ROLE_ROUTER;               ///< Router.
     static constexpr Role kRoleLeader           = OT_BORDER_AGENT_THREAD_ROLE_LEADER;               ///< Leader.
 
-    static constexpr MultiAilState kMultiAilDisabled = OT_BORDER_AGENT_MULTI_AIL_STATE_DISABLED; ///< Disabled.
-    static constexpr MultiAilState kMultiAilNotDetected =
-        OT_BORDER_AGENT_MULTI_AIL_STATE_NOT_DETECTED;                                            ///< Not detected.
-    static constexpr MultiAilState kMultiAilDetected = OT_BORDER_AGENT_MULTI_AIL_STATE_DETECTED; ///< Detected.
-    static constexpr MultiAilState kMultiAilReserved =
-        OT_BORDER_AGENT_MULTI_AIL_STATE_RESERVED; ///< Reserved for future use.
+    static constexpr MultiAilState kMultiAilDisabled    = OT_BORDER_AGENT_MULTI_AIL_STATE_DISABLED;     ///< Disabled.
+    static constexpr MultiAilState kMultiAilNotDetected = OT_BORDER_AGENT_MULTI_AIL_STATE_NOT_DETECTED; ///< Not det.
+    static constexpr MultiAilState kMultiAilDetected    = OT_BORDER_AGENT_MULTI_AIL_STATE_DETECTED;     ///< Detected.
 
     /**
      * Initializes the `TxtData` object.

@@ -234,11 +234,16 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
     {
-        bitmap |=
-            ((aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected() ? kMultiAilDetected : kMultiAilNotDetected)
-             << kOffsetMultiAilState);
+        MultiAilState state = kMultiAilDisabled;
+
+        if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
+        {
+            state =
+                aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected() ? kMultiAilDetected : kMultiAilNotDetected;
+        }
+
+        bitmap |= (static_cast<uint32_t>(state) << kOffsetMultiAilState);
     }
 #endif
 
