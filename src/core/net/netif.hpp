@@ -149,6 +149,13 @@ public:
         Address &GetAddress(void) { return AsCoreType(&mAddress); }
 
         /**
+         * Sets the unicast address.
+         *
+         * @param[in] aAddress  The unicast address.
+         */
+        void SetAddress(const Address &aAddress) { mAddress = aAddress; }
+
+        /**
          * Returns the address's prefix length (in bits).
          *
          * @returns The prefix length (in bits).

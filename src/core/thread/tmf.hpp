@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
@@ -254,16 +255,43 @@ public:
      */
     explicit SecureAgent(Instance &aInstance);
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Represents a resource handler callback function.
+     *
+     * @param[in] aContext      An arbitrary context (provided when callback is registered).
+     * @param[in] aUriPath      The URI.
+     * @param[in] aMessage      The received message.
+     * @param[in] aMessageInfo  The message info associated with @p aMessage.
+     *
+     * @retval TRUE   Indicates that the URI was known and the message was processed by the handler.
+     * @retval FALSE  Indicates that the URI was not known and the message was not processed by the handler.
+     */
+    typedef bool (*ResourceHandler)(void *aContext, Uri aUri, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * Registers a resource handler callback.
+     *
+     * @param[in] aHandler  The handler function pointer.
+     * @param[in] aContext  An arbitrary context (passed to the @p aHandler when it is invoked).
+     */
+    void RegisterResourceHandler(ResourceHandler aHandler, void *aContext) { mResourceHandler.Set(aHandler, aContext); }
+#endif
+
 private:
     static MeshCoP::SecureSession *HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     Coap::SecureSession           *HandleDtlsAccept(void);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
     static bool HandleResource(CoapBase               &aCoapBase,
                                const char             *aUriPath,
                                Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    Callback<ResourceHandler> mResourceHandler;
 #endif
 };
 
