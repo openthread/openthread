@@ -70,6 +70,11 @@ enum Uri : uint8_t
     kUriJoinerFinalize,         ///< Joiner Finalize ("c/jf")
     kUriLeaderKeepAlive,        ///< Leader Keep Alive ("c/la")
     kUriLeaderPetition,         ///< Leader Petition ("c/lp")
+    kUriEnrollerJoinerAccept,   ///< Enroller Joiner Accept ("c/nj")
+    kUriEnrollerKeepAlive,      ///< Enroller KeepAlive ("c/nk")
+    kUriEnrollerJoinerRelease,  ///< Enroller Joiner Release ("c/nl")
+    kUriEnrollerRegister,       ///< Enroller Register ("c/nr")
+    kUriEnrollerReportState,    ///< Report Admitter State (to enroller) ("c/ns")
     kUriPanIdConflict,          ///< PAN ID Conflict ("c/pc")
     kUriPendingGet,             ///< MGMT_PENDING_GET ("c/pg")
     kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
@@ -144,6 +149,11 @@ template <> const char *UriToString<kUriJoinerEntrust>(void);
 template <> const char *UriToString<kUriJoinerFinalize>(void);
 template <> const char *UriToString<kUriLeaderKeepAlive>(void);
 template <> const char *UriToString<kUriLeaderPetition>(void);
+template <> const char *UriToString<kUriEnrollerJoinerAccept>(void);
+template <> const char *UriToString<kUriEnrollerKeepAlive>(void);
+template <> const char *UriToString<kUriEnrollerJoinerRelease>(void);
+template <> const char *UriToString<kUriEnrollerRegister>(void);
+template <> const char *UriToString<kUriEnrollerReportState>(void);
 template <> const char *UriToString<kUriPanIdConflict>(void);
 template <> const char *UriToString<kUriPendingGet>(void);
 template <> const char *UriToString<kUriPanIdQuery>(void);
