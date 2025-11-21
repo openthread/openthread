@@ -43,6 +43,9 @@ RegisterLogModule("MeshCoP");
 
 namespace MeshCoP {
 
+//---------------------------------------------------------------------------------------------------------------------
+// JoinerPskd
+
 Error JoinerPskd::SetFrom(const char *aPskdString)
 {
     Error error = kErrorNone;
@@ -98,6 +101,9 @@ bool JoinerPskd::IsPskdValid(const char *aPskdString)
 exit:
     return valid;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// JoinerDiscerner
 
 void JoinerDiscerner::GenerateJoinerId(Mac::ExtAddress &aJoinerId) const
 {
@@ -182,6 +188,9 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
     return string;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// SteeringData
+
 void SteeringData::Init(uint8_t aLength)
 {
     OT_ASSERT(aLength <= kMaxLength);
@@ -213,10 +222,28 @@ void SteeringData::UpdateBloomFilter(const JoinerDiscerner &aDiscerner)
 
 void SteeringData::UpdateBloomFilter(const HashBitIndexes &aIndexes)
 {
-    OT_ASSERT((mLength > 0) && (mLength <= kMaxLength));
+    OT_ASSERT(IsLengthValid());
 
     SetBit(aIndexes.mIndex[0] % GetNumBits());
     SetBit(aIndexes.mIndex[1] % GetNumBits());
+}
+
+Error SteeringData::MergeBloomFilterWith(const SteeringData &aOther)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsLengthValid(), error = kErrorInvalidArgs);
+    VerifyOrExit(aOther.IsLengthValid(), error = kErrorInvalidArgs);
+
+    VerifyOrExit(GetLength() % aOther.GetLength() == 0, error = kErrorInvalidArgs);
+
+    for (uint8_t index = 0; index < GetLength(); index++)
+    {
+        m8[index] |= aOther.m8[index % aOther.GetLength()];
+    }
+
+exit:
+    return error;
 }
 
 bool SteeringData::Contains(const Mac::ExtAddress &aJoinerId) const
@@ -273,6 +300,19 @@ bool SteeringData::DoesAllMatch(uint8_t aMatch) const
 
     return matches;
 }
+
+SteeringData::InfoString SteeringData::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("[");
+    string.AppendHexBytes(GetData(), Min(GetLength(), kMaxLength));
+    string.Append("]");
+
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {
