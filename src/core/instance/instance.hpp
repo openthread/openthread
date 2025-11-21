@@ -89,6 +89,7 @@
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
+#include "meshcop/border_agent_admitter.hpp"
 #include "meshcop/border_agent_ephemeral_key.hpp"
 #include "meshcop/border_agent_tracker.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
@@ -602,6 +603,10 @@ private:
     MeshCoP::BorderAgent::Manager mBorderAgentManager;
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    MeshCoP::BorderAgent::Admitter mBorderAgentAdmitter;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     MeshCoP::BorderAgent::EphemeralKeyManager mBorderAgentEphemeralKeyManager;
 #endif
@@ -1071,6 +1076,10 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent::Manager &Instance::Get(void) { return mBorderAgentManager; }
 template <> inline MeshCoP::BorderAgent::TxtData &Instance::Get(void) { return mBorderAgentTxtData; }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+template <> inline MeshCoP::BorderAgent::Admitter &Instance::Get(void) { return mBorderAgentAdmitter; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

@@ -49,6 +49,9 @@ Publisher::Publisher(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mDnsSrpServiceEntry(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    , mBorderAdmitterEntry(aInstance)
+#endif
 #endif
     , mTimer(aInstance)
 {
@@ -220,6 +223,9 @@ void Publisher::HandleNotifierEvents(Events aEvents)
 {
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mDnsSrpServiceEntry.HandleNotifierEvents(aEvents);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    mBorderAdmitterEntry.HandleNotifierEvents(aEvents);
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -234,6 +240,9 @@ void Publisher::HandleTimer(void)
 {
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mDnsSrpServiceEntry.HandleTimer();
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    mBorderAdmitterEntry.HandleTimer();
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -386,6 +395,12 @@ void Publisher::Entry::Add(void)
     {
         static_cast<DnsSrpServiceEntry *>(this)->Add();
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Publisher>().IsBorderAdmitterEntry(*this))
+    {
+        static_cast<BorderAdmitterEntry *>(this)->Add();
+    }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -403,6 +418,12 @@ void Publisher::Entry::Remove(State aNextState)
     {
         static_cast<DnsSrpServiceEntry *>(this)->Remove(aNextState);
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Publisher>().IsBorderAdmitterEntry(*this))
+    {
+        static_cast<BorderAdmitterEntry *>(this)->Remove(aNextState);
+    }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -423,6 +444,13 @@ Publisher::Entry::InfoString Publisher::Entry::ToString(bool aIncludeState) cons
         string.Append("DNS/SRP service");
         ExitNow();
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Publisher>().IsBorderAdmitterEntry(*this))
+    {
+        string.Append("Border Admitter service");
+        ExitNow();
+    }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -765,6 +793,107 @@ Publisher::DnsSrpServiceEntry::Info::Info(Type                aType,
         mAddress = *aAddress;
     }
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Publisher::BorderAddmitterEntry
+
+Publisher::BorderAdmitterEntry::BorderAdmitterEntry(Instance &aInstance) { Init(aInstance); }
+
+void Publisher::BorderAdmitterEntry::Publish(void)
+{
+    VerifyOrExit(GetState() == kNoEntry);
+    LogInfo("Publishing Border Admitter service");
+    SetState(kToAdd);
+    Process();
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::Unpublish(void)
+{
+    VerifyOrExit(GetState() != kNoEntry);
+    LogInfo("Unpublishing Border Admitter service");
+    Remove(/* aNextState */ kNoEntry);
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged))
+    {
+        Process();
+    }
+}
+
+void Publisher::BorderAdmitterEntry::Add(void)
+{
+    SuccessOrExit(Get<Service::Manager>().AddBorderAdmitterService());
+    Get<Notifier>().HandleServerDataUpdated();
+    SetState(kAdded);
+    Notify(kEventEntryAdded);
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::Remove(State aNextState)
+{
+    VerifyOrExit((GetState() == kAdded) || (GetState() == kRemoving));
+
+    SuccessOrExit(Get<Service::Manager>().RemoveBorderAdmitterService());
+    Get<Notifier>().HandleServerDataUpdated();
+    Notify(kEventEntryRemoved);
+
+exit:
+    SetState(aNextState);
+}
+
+void Publisher::BorderAdmitterEntry::Notify(Event aEvent) const
+{
+    Get<MeshCoP::BorderAgent::Admitter>().HandleNetDataPublisherEvent(aEvent);
+}
+
+void Publisher::BorderAdmitterEntry::Process(void)
+{
+    // This method checks the entries currently present in Network Data
+    // based on which it then decides whether or not take action
+    // (add/remove or keep monitoring).
+
+    uint8_t numEntries          = 0;
+    uint8_t numPreferredEntries = 0;
+
+    VerifyOrExit(Get<Mle::Mle>().IsAttached());
+    VerifyOrExit(GetState() != kNoEntry);
+
+    CountEntries(numEntries, numPreferredEntries);
+    UpdateState(numEntries, numPreferredEntries, kDesiredNum);
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::CountEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const
+{
+    Service::Iterator iterator(GetInstance());
+    uint16_t          rloc16;
+
+    while (iterator.GetNextBorderAdmitterInfo(rloc16) == kErrorNone)
+    {
+        aNumEntries++;
+
+        if (IsPreferred(rloc16))
+        {
+            aNumPreferredEntries++;
+        }
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 

@@ -150,6 +150,11 @@ exit:
     return contains;
 }
 
+bool SteeringData::operator==(const SteeringData &aOther) const
+{
+    return (GetLength() == aOther.GetLength()) && (memcmp(GetData(), aOther.GetData(), GetLength()) == 0);
+}
+
 void SteeringData::CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes)
 {
     aIndexes.mIndex[0] = CrcCalculator<uint16_t>(kCrc16CcittPolynomial).Feed(aJoinerId);
