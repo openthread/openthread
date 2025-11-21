@@ -486,7 +486,7 @@
 
 /**
  * @def OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
- * 
+ *
  * Specifies the default behavior for allowing user to specify POSIX TUN device path at runtime.
  * Setting 0 to disable this by default.
  */
@@ -496,7 +496,7 @@
 
 /**
  * @def OPENTHREAD_POSIX_CONFIG_TUN_DEVICE
- * 
+ *
  * Specifies the default POSIX TUN device config.
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_TUN_DEVICE
