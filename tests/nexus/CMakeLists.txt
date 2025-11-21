@@ -131,6 +131,7 @@ ot_nexus_test(5_1_12 "cert;nexus")
 ot_nexus_test(5_1_13 "cert;nexus")
 
 # Misc tests
+ot_nexus_test(border_admitter "core;nexus")
 ot_nexus_test(border_agent "core;nexus")
 ot_nexus_test(border_agent_tracker "core;nexus")
 ot_nexus_test(discover_scan "core;nexus")
