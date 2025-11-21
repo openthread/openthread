@@ -64,7 +64,7 @@ static ot::Posix::SettingsFile sSettingsFile;
 static char sSettingsPath[PATH_MAX] = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
 
 char *ot::Posix::PlatformGetSettingsPath() { return sSettingsPath; }
-void  ot::Posix::PlatformSetSettingsPath(const char *aSettingsPath) { strncpy(sSettingsPath, aSettingsPath, PATH_MAX); }
+void  ot::Posix::PlatformSetSettingsPath(const char *aSettingsPath) { snprintf(sSettingsPath, sizeof(sSettingsPath), "%s", aSettingsPath); }
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE

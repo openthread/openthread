@@ -62,7 +62,7 @@ otError SettingsFile::Init(const char *aSettingsFileBaseName, const char *aSetti
     OT_ASSERT((aSettingsFileBaseName != nullptr) && (strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize));
     strncpy(mSettingFileBaseName, aSettingsFileBaseName, sizeof(mSettingFileBaseName) - 1);
 #if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
-    strncpy(mSettingFileDirectory, aSettingsFileDirectory, sizeof(mSettingFileDirectory) - 1);
+    snprintf(mSettingFileDirectory, sizeof(mSettingFileDirectory), "%s", aSettingsFileDirectory);
 #endif
 
     {
@@ -315,8 +315,9 @@ void SettingsFile::Wipe(void) { VerifyOrDie(0 == ftruncate(mSettingsFd, 0), OT_E
 void SettingsFile::GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap)
 {
 #if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    size_t dir_len = strlen(mSettingFileDirectory);
     snprintf(aFileName, kMaxFilePathSize, "%s%s%s.%s", mSettingFileDirectory,
-             (mSettingFileDirectory[strlen(mSettingFileDirectory) - 1] == '/' ? "" : "/"), mSettingFileBaseName,
+             (dir_len > 0 && mSettingFileDirectory[dir_len - 1] == '/') ? "" : "/", mSettingFileBaseName,
              (aSwap ? "Swap" : "data"));
 #else
     snprintf(aFileName, kMaxFilePathSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s.%s", mSettingFileBaseName,
