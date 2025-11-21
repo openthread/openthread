@@ -111,6 +111,7 @@ endmacro()
 
 #----------------------------------------------------------------------------------------------------------------------
 
+ot_nexus_test(border_admitter)
 ot_nexus_test(border_agent)
 ot_nexus_test(border_agent_tracker)
 ot_nexus_test(dtls)

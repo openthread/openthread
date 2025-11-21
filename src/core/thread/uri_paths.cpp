@@ -78,6 +78,11 @@ static constexpr Entry kEntries[] = {
     {"c/jf"},  // kUriJoinerFinalize
     {"c/la"},  // kUriLeaderKeepAlive
     {"c/lp"},  // kUriLeaderPetition
+    {"c/nj"},  // kUriEnrollerJoinerAccept
+    {"c/nk"},  // kUriEnrollerKeepAlive
+    {"c/nl"},  // kUriEnrollerJoinerRelease
+    {"c/nr"},  // kUriEnrollerRegister
+    {"c/ns"},  // kUriEnrollerReportState
     {"c/pc"},  // kUriPanIdConflict
     {"c/pg"},  // kUriPendingGet
     {"c/pq"},  // kUriPanIdQuery
@@ -126,6 +131,11 @@ static_assert(AreConstStringsEqual(kEntries[kUriJoinerEntrust].mPath, "c/je"), "
 static_assert(AreConstStringsEqual(kEntries[kUriJoinerFinalize].mPath, "c/jf"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriLeaderKeepAlive].mPath, "c/la"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriLeaderPetition].mPath, "c/lp"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnrollerJoinerAccept].mPath, "c/nj"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnrollerKeepAlive].mPath, "c/nk"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnrollerJoinerRelease].mPath, "c/nl"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnrollerRegister].mPath, "c/nr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnrollerReportState].mPath, "c/ns"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriPanIdConflict].mPath, "c/pc"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriPendingGet].mPath, "c/pg"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriPanIdQuery].mPath, "c/pq"), "kEntries is invalid");
@@ -191,6 +201,11 @@ template <> const char *UriToString<kUriJoinerEntrust>(void) { return "JoinerEnt
 template <> const char *UriToString<kUriJoinerFinalize>(void) { return "JoinerFinalize"; }
 template <> const char *UriToString<kUriLeaderKeepAlive>(void) { return "LeaderKeepAlive"; }
 template <> const char *UriToString<kUriLeaderPetition>(void) { return "LeaderPetition"; }
+template <> const char *UriToString<kUriEnrollerJoinerAccept>(void) { return "EnrollerJoinerAccept"; }
+template <> const char *UriToString<kUriEnrollerKeepAlive>(void) { return "EnrollerKeepAlive"; }
+template <> const char *UriToString<kUriEnrollerJoinerRelease>(void) { return "EnrollerJoinerRelease"; }
+template <> const char *UriToString<kUriEnrollerRegister>(void) { return "EnrollerRegister"; }
+template <> const char *UriToString<kUriEnrollerReportState>(void) { return "EnrollerReportState"; }
 template <> const char *UriToString<kUriPanIdConflict>(void) { return "PanIdConflict"; }
 template <> const char *UriToString<kUriPendingGet>(void) { return "PendingGet"; }
 template <> const char *UriToString<kUriPanIdQuery>(void) { return "PanIdQuery"; }
