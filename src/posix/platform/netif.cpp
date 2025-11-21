@@ -174,24 +174,9 @@ unsigned int otSysGetThreadNetifIndex(void) { return gNetifIndex; }
 
 using namespace ot::Posix::Ip6Utils;
 
-#ifndef OPENTHREAD_POSIX_TUN_DEVICE
-
-#ifdef __linux__
-#define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
-#elif defined(__NetBSD__) || defined(__FreeBSD__)
-#define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
-#elif defined(__APPLE__)
-#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
-#define OPENTHREAD_POSIX_TUN_DEVICE // not used - calculated dynamically
-#elif OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN
-#define OPENTHREAD_POSIX_TUN_DEVICE "/dev/tun0"
+#if !OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
+#define OPENTHREAD_POSIX_TUN_DEVICE OPENTHREAD_POSIX_CONFIG_TUN_DEVICE
 #endif
-#else
-// good luck -- untested platform...
-#define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
-#endif
-
-#endif // OPENTHREAD_POSIX_TUN_DEVICE
 
 #ifdef __linux__
 static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
@@ -2033,7 +2018,12 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     struct ifreq ifr;
     const char  *interfaceName;
 
+#if !OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+#else
+    sTunFd = open(aPlatformConfig->mTunDevice, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+#endif
+
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
@@ -2134,9 +2124,12 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     const char *last_slash;
     const char *path;
 
+#if !OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
     (void)aPlatformConfig;
-
     path = OPENTHREAD_POSIX_TUN_DEVICE;
+#else
+    path = aPlatformConfig->mTunDevice;
+#endif
 
     sTunFd = open(path, O_RDWR | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -2150,7 +2143,11 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     err   = ioctl(sTunFd, TUNSIFHEAD, &flags);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
+#if !OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
     last_slash = strrchr(OPENTHREAD_POSIX_TUN_DEVICE, '/');
+#else
+    last_slash = strrchr(aPlatformConfig->mTunDevice, '/');
+#endif
     VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 

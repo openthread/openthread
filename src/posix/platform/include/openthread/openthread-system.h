@@ -83,6 +83,9 @@ typedef struct otPlatformCoprocessorUrls
  */
 typedef struct otPlatformConfig
 {
+#if OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
+    const char               *mTunDevice;             ///< TUN device>
+#endif
     const char               *mBackboneInterfaceName; ///< Backbone network interface name.
     const char               *mInterfaceName;         ///< Thread network interface name.
     otPlatformCoprocessorUrls mCoprocessorUrls;       ///< Coprocessor URLs.
