@@ -635,17 +635,18 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     Error            error       = kErrorNone;
     bool             isOptionSet = false;
     uint16_t         blockOption = 0;
-    Message         *messageCopy = nullptr;
     Option::Iterator iterator;
+    Metadata         metadata;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
+    // Iterate after metadata copied and removed.
+    metadata.ReadFrom(aRequestOld);
+    metadata.RemoveFrom(aRequestOld);
     // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
     IgnoreError(aRequest.SetTokenFromMessage(aRequestOld));
-    // Iterate on a copy with metadata removed.
-    messageCopy = aRequestOld.Clone(aRequestOld.GetLength() - sizeof(Metadata));
-    SuccessOrExit(error = iterator.Init(*messageCopy));
+    SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
     for (; !iterator.IsDone() && iterator.GetOption()->GetLength() != 0; error = iterator.Advance())
@@ -690,10 +691,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     }
 
 exit:
-    if (messageCopy != nullptr)
-    {
-        FreeMessage(messageCopy);
-    }
+    metadata.AppendTo(aRequestOld);
     return error;
 }
 
