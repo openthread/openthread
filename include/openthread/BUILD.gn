@@ -124,6 +124,7 @@ source_set("openthread") {
     "srp_client.h",
     "srp_client_buffers.h",
     "srp_server.h",
+    "steering_data.h",
     "tasklet.h",
     "tcat.h",
     "tcp.h",
