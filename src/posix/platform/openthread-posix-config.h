@@ -484,6 +484,40 @@
 #define OPENTHREAD_POSIX_CONFIG_MDNS_ADDR_MONITOR_PERIOD (5000)
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
+ *
+ * Specifies the default behavior for allowing user to specify POSIX TUN device path at runtime.
+ * Setting 0 to disable this by default.
+ */
+#ifndef OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE
+#define OPENTHREAD_POSIX_TUN_DEVICE_SET_API_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TUN_DEVICE
+ *
+ * Specifies the default POSIX TUN device config.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TUN_DEVICE
+
+#ifdef __linux__
+#define OPENTHREAD_POSIX_CONFIG_TUN_DEVICE "/dev/net/tun"
+#elif defined(__NetBSD__) || defined(__FreeBSD__)
+#define OPENTHREAD_POSIX_CONFIG_TUN_DEVICE "/dev/tun0"
+#elif defined(__APPLE__)
+#if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
+#define OPENTHREAD_POSIX_CONFIG_TUN_DEVICE // not used - calculated dynamically
+#elif OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN
+#define OPENTHREAD_POSIX_CONFIG_TUN_DEVICE "/dev/tun0"
+#endif
+#else
+// good luck -- untested platform...
+#define OPENTHREAD_POSIX_CONFIG_TUN_DEVICE "/dev/net/tun"
+#endif
+
+#endif // OPENTHREAD_POSIX_CONFIG_TUN_DEVICE
+
 //---------------------------------------------------------------------------------------------------------------------
 // Removed or renamed POSIX specific configs.
 
