@@ -1416,6 +1416,18 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    // We explicitly disable the multi-AIL detector to prevent
+    // interference with the tests. The detector enables
+    // `RxRaTracker` and keeps it enabled even when Border Routing is
+    // disabled, which keeps prefix entries in the heap and can
+    // invalidate the heap allocation checks. It may also mess up the
+    // expected timing of RS (Router Solicitation) messages (starting
+    // the `RxRaTracker` early).
+    otBorderRoutingSetMultiAilDetectionEnabled(sInstance, false);
+#endif
+
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, aEnablBorderRouting));
 
     // Reset all test flags
@@ -4615,7 +4627,7 @@ void TestNat64PrefixSelection(void)
     Ip6::Prefix                     localOmr;
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Ip6::Prefix                     omrPrefix             = PrefixFromString("2000:0000:1111:4444::", 64);
-    Ip6::Prefix                     infraIfNat64Prefix    = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     platformNat64Prefix   = PrefixFromString("2000:0:0:1:0:0::", 96);
     Ip6::Prefix                     raTrackerNat64PrefixA = PrefixFromString("2000:0:0:2:0:f::", 96);
     Ip6::Address                    routerAddressA        = AddressFromString("fd00::aaaa");
     Ip6::Prefix                     raTrackerNat64PrefixB = PrefixFromString("2000:0:0:2:0:0::", 96);
@@ -4651,18 +4663,18 @@ void TestNat64PrefixSelection(void)
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // InfraIf NAT64 prefix (e.g. using DNS - RFC 7050) discovered. No infra-derived OMR prefix in Network Data. Check
-    // local NAT64 prefix in Network Data.
+    // Platform-provided NAT64 prefix (e.g. using DNS - RFC 7050) discovered. No infra-derived OMR prefix in Network
+    // Data. Check local NAT64 prefix in Network Data.
 
-    DiscoverNat64Prefix(infraIfNat64Prefix);
+    DiscoverNat64Prefix(platformNat64Prefix);
 
     AdvanceTime(20000);
 
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Add a medium preference OMR prefix into Network Data.
-    // Check InfraIf NAT64 prefix published in Network Data.
+    // Add a medium preference OMR prefix into Network Data. Check that the platform-provided NAT64 prefix is now
+    // published in Network Data.
 
     prefixConfig.Clear();
     prefixConfig.mPrefix       = omrPrefix;
@@ -4679,7 +4691,7 @@ void TestNat64PrefixSelection(void)
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(infraIfNat64Prefix);
+    VerifyNat64PrefixInNetData(platformNat64Prefix);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from a router advertising a NAT64 prefix. Check that the RA-discovered NAT64 prefix is now favored
@@ -4735,16 +4747,16 @@ void TestNat64PrefixSelection(void)
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(infraIfNat64Prefix);
+    VerifyNat64PrefixInNetData(platformNat64Prefix);
 
     VerifyNat64PrefixTableIsEmpty();
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // InfraIf NAT64 prefix removed.
+    // Platform-provided NAT64 prefix removed.
     // Check local NAT64 prefix in Network Data.
 
-    infraIfNat64Prefix.Clear();
-    DiscoverNat64Prefix(infraIfNat64Prefix);
+    platformNat64Prefix.Clear();
+    DiscoverNat64Prefix(platformNat64Prefix);
 
     AdvanceTime(20000);
 

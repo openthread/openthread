@@ -40,13 +40,14 @@
 namespace ot {
 namespace BorderRouter {
 
-RegisterLogModule("BorderRouting");
+RegisterLogModule("MultiAilDetect");
 
 //---------------------------------------------------------------------------------------------------------------------
 // MultiAilDetector
 
 MultiAilDetector::MultiAilDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mState(kAutoEnableMode ? kStateStopped : kStateDisabled)
     , mDetected(false)
     , mNetDataPeerBrCount(0)
     , mReachablePeerBrCount(0)
@@ -54,12 +55,88 @@ MultiAilDetector::MultiAilDetector(Instance &aInstance)
 {
 }
 
+void MultiAilDetector::SetEnabled(bool aEnable)
+{
+    if (aEnable)
+    {
+        VerifyOrExit(mState == kStateDisabled);
+        SetState(kStateStopped);
+        UpdateState();
+    }
+    else
+    {
+        VerifyOrExit(mState != kStateDisabled);
+        Stop();
+        SetState(kStateDisabled);
+    }
+
+exit:
+    return;
+}
+
+void MultiAilDetector::SetState(State aState)
+{
+    VerifyOrExit(mState != aState);
+
+    LogInfo("State: %s -> %s", StateToString(mState), StateToString(aState));
+    mState = aState;
+
+exit:
+    return;
+}
+
+void MultiAilDetector::HandleNotifierEvents(ot::Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadRoleChanged))
+    {
+        UpdateState();
+    }
+}
+
+void MultiAilDetector::UpdateState(void)
+{
+    VerifyOrExit(mState != kStateDisabled);
+
+    if (Get<InfraIf>().IsRunning() && Get<Mle::Mle>().IsAttached())
+    {
+        Start();
+    }
+    else
+    {
+        Stop();
+    }
+
+exit:
+    return;
+}
+
+void MultiAilDetector::Start(void)
+{
+    VerifyOrExit(mState == kStateStopped);
+
+    SetState(kStateRunning);
+
+    Get<RxRaTracker>().SetEnabled(true, RxRaTracker::kRequesterMultiAilDetector);
+    Evaluate();
+
+exit:
+    return;
+}
+
 void MultiAilDetector::Stop(void)
 {
+    VerifyOrExit(mState == kStateRunning);
+
     mTimer.Stop();
     mDetected             = false;
     mNetDataPeerBrCount   = 0;
     mReachablePeerBrCount = 0;
+    Get<RxRaTracker>().SetEnabled(false, RxRaTracker::kRequesterMultiAilDetector);
+
+    SetState(kStateStopped);
+
+exit:
+    return;
 }
 
 void MultiAilDetector::HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents)
@@ -77,7 +154,7 @@ void MultiAilDetector::Evaluate(void)
     uint32_t minAge;
     bool     detected;
 
-    VerifyOrExit(Get<RoutingManager>().IsRunning());
+    VerifyOrExit(mState == kStateRunning);
 
     count = Get<NetDataBrTracker>().CountBrs(NetDataBrTracker::kExcludeThisDevice, minAge);
 
@@ -128,6 +205,29 @@ void MultiAilDetector::HandleTimer(void)
 
     mCallback.InvokeIfSet(mDetected);
 }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+const char *MultiAilDetector::StateToString(State aState)
+{
+    static const char *const kStateStrings[] = {
+        "Disabled", // (0) kStateDisabled
+        "Stopped",  // (1) kStateStopped
+        "Running",  // (2) kStateRunning
+    };
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kStateDisabled);
+        ValidateNextEnum(kStateStopped);
+        ValidateNextEnum(kStateRunning);
+    };
+
+    return kStateStrings[aState];
+}
+
+#endif
 
 } // namespace BorderRouter
 } // namespace ot

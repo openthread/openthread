@@ -409,14 +409,16 @@ public:
     Error GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference);
 
     /**
-     * Informs `RoutingManager` of the result of the discovery request of NAT64 prefix on infrastructure
-     * interface (`InfraIf::DiscoverNat64Prefix()`).
+    // Informs `RoutingManager` of a discovered NAT64 prefix from the platform.
+    //
+    // This is intended to be used by `InfraIf` to pass a NAT64 prefix that is discovered through a platform-specific
+    // mechanism (e.g., from DNS as per RFC 7050).
      *
-     * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
+     * @param[in]  aPrefix  The discovered NAT64 prefix.
      */
-    void HandleInfraIfDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix)
+    void HandlePlatformDiscoveredNat64PrefixDone(const Ip6::Prefix &aPrefix)
     {
-        mNat64PrefixManager.HandleInfraIfDiscoverDone(aPrefix);
+        mNat64PrefixManager.HandlePlatformDiscoveredPrefix(aPrefix);
     }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -581,8 +583,8 @@ private:
     // randomly selected within the range [interval - jitter,
     // interval + jitter].
 
-    static constexpr uint32_t kInitalRaTxCount    = 3;
-    static constexpr uint32_t kInitalRaInterval   = Time::kOneSecondInMsec * 16;
+    static constexpr uint32_t kInitialRaTxCount   = 3;
+    static constexpr uint32_t kInitialRaInterval  = Time::kOneSecondInMsec * 16;
     static constexpr uint16_t kInitialRaJitter    = Time::kOneSecondInMsec * 2;
     static constexpr uint32_t kRaBeaconInterval   = Time::kOneSecondInMsec * 180; // 3 minutes
     static constexpr uint16_t kRaBeaconJitter     = Time::kOneSecondInMsec * 15;
@@ -623,7 +625,7 @@ private:
         void                    Init(const Ip6::Prefix &aBrUlaPrefix);
         void                    Start(void);
         void                    Stop(void);
-        bool                    IsInitalEvaluationDone(void) const;
+        bool                    IsInitialEvaluationDone(void) const;
         OmrConfig               GetConfig(Ip6::Prefix *aPrefix, RoutePreference *aPreference) const;
         Error                   SetConfig(OmrConfig aConfig, const Ip6::Prefix *aPrefix, RoutePreference aPreference);
         void                    Evaluate(void);
@@ -678,7 +680,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
         bool               AddressMatchesLocalPrefix(const Ip6::Address &aAddress) const;
-        bool               IsInitalEvaluationDone(void) const;
+        bool               IsInitialEvaluationDone(void) const;
         void               HandleRxRaTrackerChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
         Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
@@ -826,7 +828,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
-        void               HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix);
         void               HandleRxRaTrackerChanged(void);
         void               HandleTimer(void);
 
@@ -839,7 +841,7 @@ private:
 
         bool            mEnabled;
         Ip6::Prefix     mRaTrackerPrefix;     // The best NAT64 prefix discovered from RAs (RFC 8781).
-        Ip6::Prefix     mInfraIfPrefix;       // The platform-provided NAT64 prefix (e.g., using DNS - RFC 7050).
+        Ip6::Prefix     mPlatformPrefix;      // The platform-provided NAT64 prefix (e.g., using DNS - RFC 7050).
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
         RoutePreference mPublishedPreference; // The published prefix preference.

@@ -64,213 +64,69 @@ if (openthread_enable_core_config_args) {
       assert(false, "Unrecognized log output: ${openthread_config_log_output}")
     }
 
-    if (!openthread_config_assert_enable) {
-      defines += [ "OPENTHREAD_CONFIG_ASSERT_ENABLE=0" ]
-    }
-
-    if (openthread_config_anycast_locator_enable) {
-      defines += [ "OPENTHREAD_CONFIG_ANYCAST_LOCATOR_ENABLE=1" ]
-    }
-
-    if (openthread_config_backbone_router_enable) {
-      defines += [ "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1" ]
-    }
-
-    if (openthread_config_ble_tcat_enable) {
-      defines += [ "OPENTHREAD_CONFIG_BLE_TCAT_ENABLE=1" ]
-    }
-
-    if (openthread_config_border_agent_enable) {
-      defines += [ "OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1" ]
-    }
-
-    if (openthread_config_border_router_enable) {
-      defines += [ "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1" ]
-    }
-
-    if (openthread_config_border_routing_enable) {
-      defines += [ "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1" ]
-    }
-
-    if (openthread_external_mbedtls != "") {
-      defines += [ "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0" ]
-    } else if (!openthread_config_enable_builtin_mbedtls_management) {
-      defines += [ "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT=0" ]
-    }
-
-    if (openthread_config_channel_manager_enable) {
-      defines += [ "OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1" ]
-    }
-
-    if (openthread_config_channel_monitor_enable) {
-      defines += [ "OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1" ]
-    }
-
-    if (openthread_config_coap_api_enable) {
-      defines += [ "OPENTHREAD_CONFIG_COAP_API_ENABLE=1" ]
-    }
-
-    if (openthread_config_coap_secure_api_enable) {
-      defines += [ "OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1" ]
-    }
-
-    if (openthread_config_coap_observe_api_enable) {
-      defines += [ "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=1" ]
-    }
-
-    if (openthread_config_commissioner_enable) {
-      defines += [ "OPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1" ]
-    }
-
-    if (openthread_config_mac_csl_receiver_enable) {
-      defines += [ "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1" ]
-    }
-
-    if (openthread_config_dhcp6_client_enable) {
-      defines += [ "OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1" ]
-    }
-
-    if (openthread_config_dhcp6_server_enable) {
-      defines += [ "OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1" ]
-    }
-
-    if (openthread_config_diag_enable) {
-      defines += [ "OPENTHREAD_CONFIG_DIAG_ENABLE=1" ]
-    }
-
-    if (openthread_config_dns_client_enable) {
-      defines += [ "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1" ]
-    }
-
-    if (openthread_config_dnssd_server_enable) {
-      defines += [ "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1" ]
-    }
-
-    if (openthread_config_ecdsa_enable) {
-      defines += [ "OPENTHREAD_CONFIG_ECDSA_ENABLE=1" ]
-    }
-
-    if (openthread_config_dua_enable) {
-      defines += [ "OPENTHREAD_CONFIG_DUA_ENABLE=1" ]
-    }
-
-    if (openthread_config_mlr_enable) {
-      defines += [ "OPENTHREAD_CONFIG_MLR_ENABLE=1" ]
-    }
-
-    if (openthread_config_heap_external_enable) {
-      defines += [ "OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1" ]
-    }
-
-    if (openthread_config_ip6_fragmentation_enable) {
-      defines += [ "OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1" ]
-    }
-
-    if (openthread_config_jam_detection_enable) {
-      defines += [ "OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1" ]
-    }
-
-    if (openthread_config_joiner_enable) {
-      defines += [ "OPENTHREAD_CONFIG_JOINER_ENABLE=1" ]
-    }
-
-    if (openthread_config_link_metrics_initiator_enable) {
-      defines += [ "DOPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=1" ]
-    }
-
-    if (openthread_config_link_metrics_subject_enable) {
-      defines += [ "DOPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE=1" ]
-    }
-
-    if (openthread_config_link_raw_enable) {
-      defines += [ "OPENTHREAD_CONFIG_LINK_RAW_ENABLE=1" ]
-    }
-
-    if (openthread_config_log_level_dynamic_enable) {
-      defines += [ "OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1" ]
-    }
-
-    if (openthread_config_mac_filter_enable) {
-      defines += [ "OPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1" ]
-    }
-
-    if (openthread_config_message_use_heap) {
-      defines += [ "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1" ]
-    }
-
-    if (openthread_config_mle_long_routes_enable) {
-      defines += [ "OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1" ]
-    }
-
-    if (openthread_config_multiple_instance_enable) {
-      defines += [ "OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1" ]
-    }
-
-    if (openthread_config_tmf_netdiag_client_enable) {
-      defines += [ "OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE=1" ]
-    }
-
-    if (openthread_config_platform_netif_enable) {
-      defines += [ "OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1" ]
-    }
-
-
-    if (openthread_config_platform_udp_enable) {
-      defines += [ "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1" ]
-    }
-
-    if (openthread_config_reference_device_enable) {
-      defines += [ "OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1" ]
-    }
-
-    if (openthread_config_tmf_netdata_service_enable) {
-      defines += [ "OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1" ]
-    }
-
-    if (openthread_settings_ram) {
-      defines += [ "OPENTHREAD_SETTINGS_RAM=1" ]
-    }
-
-    if (openthread_config_ip6_slaac_enable) {
-      defines += [ "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1" ]
-    }
-
-    if (openthread_config_sntp_client_enable) {
-      defines += [ "OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1" ]
-    }
-
-    if (openthread_config_srp_client_enable) {
-      defines += [ "OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1" ]
-    }
-
-    if (openthread_config_srp_server_enable) {
-      defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
-    }
-
-    if (openthread_config_ping_sender) {
-      defines += [ "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1" ]
-    }
-
-    if (openthread_config_time_sync_enable) {
-      defines += [ "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1" ]
-    }
-
-    if (openthread_config_udp_forward_enable) {
-      defines += [ "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1" ]
-    }
-
     if (openthread_config_full_logs) {
       defines += [ "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG" ]
       defines += [ "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1" ]
     }
 
-    if (openthread_config_otns_enable) {
-      defines += [ "OPENTHREAD_CONFIG_OTNS_ENABLE=1" ]
+    if (openthread_external_mbedtls != "") {
+      defines += [ "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0" ]
+    } else {
+      defines += [ "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT=$openthread_config_enable_builtin_mbedtls_management" ]
     }
 
-    if (openthread_config_coexistence_enable) {
-      defines += [ "OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1" ]
-    }
+    defines += [
+      "OPENTHREAD_CONFIG_ANYCAST_LOCATOR_ENABLE=$openthread_config_anycast_locator_enable",
+      "OPENTHREAD_CONFIG_ASSERT_ENABLE=$openthread_config_assert_enable",
+      "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=$openthread_config_backbone_router_enable",
+      "OPENTHREAD_CONFIG_BLE_TCAT_ENABLE=$openthread_config_ble_tcat_enable",
+      "OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=$openthread_config_border_agent_enable",
+      "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=$openthread_config_border_router_enable",
+      "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=$openthread_config_border_routing_enable",
+      "OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=$openthread_config_channel_manager_enable",
+      "OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=$openthread_config_channel_monitor_enable",
+      "OPENTHREAD_CONFIG_COAP_API_ENABLE=$openthread_config_coap_api_enable",
+      "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=$openthread_config_coap_observe_api_enable",
+      "OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=$openthread_config_coap_secure_api_enable",
+      "OPENTHREAD_CONFIG_COMMISSIONER_ENABLE=$openthread_config_commissioner_enable",
+      "OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=$openthread_config_dhcp6_client_enable",
+      "OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=$openthread_config_dhcp6_server_enable",
+      "OPENTHREAD_CONFIG_DIAG_ENABLE=$openthread_config_diag_enable",
+      "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=$openthread_config_dnssd_server_enable",
+      "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=$openthread_config_dns_client_enable",
+      "OPENTHREAD_CONFIG_DUA_ENABLE=$openthread_config_dua_enable",
+      "OPENTHREAD_CONFIG_ECDSA_ENABLE=$openthread_config_ecdsa_enable",
+      "OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=$openthread_config_heap_external_enable",
+      "OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=$openthread_config_ip6_fragmentation_enable",
+      "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=$openthread_config_ip6_slaac_enable",
+      "OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=$openthread_config_jam_detection_enable",
+      "OPENTHREAD_CONFIG_JOINER_ENABLE=$openthread_config_joiner_enable",
+      "OPENTHREAD_CONFIG_LINK_RAW_ENABLE=$openthread_config_link_raw_enable",
+      "OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=$openthread_config_log_level_dynamic_enable",
+      "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=$openthread_config_mac_csl_receiver_enable",
+      "OPENTHREAD_CONFIG_MAC_FILTER_ENABLE=$openthread_config_mac_filter_enable",
+      "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=$openthread_config_message_use_heap",
+      "OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=$openthread_config_link_metrics_initiator_enable",
+      "OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE=$openthread_config_link_metrics_subject_enable",
+      "OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=$openthread_config_mle_long_routes_enable",
+      "OPENTHREAD_CONFIG_MLR_ENABLE=$openthread_config_mlr_enable",
+      "OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=$openthread_config_multiple_instance_enable",
+      "OPENTHREAD_CONFIG_OTNS_ENABLE=$openthread_config_otns_enable",
+      "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=$openthread_config_ping_sender",
+      "OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=$openthread_config_platform_netif_enable",
+      "OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=$openthread_config_coexistence_enable",
+      "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=$openthread_config_platform_udp_enable",
+      "OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=$openthread_config_reference_device_enable",
+      "OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=$openthread_config_sntp_client_enable",
+      "OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=$openthread_config_srp_client_enable",
+      "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=$openthread_config_srp_server_enable",
+      "OPENTHREAD_CONFIG_TCP_ENABLE=${openthread_config_tcp_enable}",
+      "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=$openthread_config_time_sync_enable",
+      "OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=$openthread_config_tmf_netdata_service_enable",
+      "OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE=$openthread_config_tmf_netdiag_client_enable",
+      "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=$openthread_config_udp_forward_enable",
+      "OPENTHREAD_SETTINGS_RAM=$openthread_settings_ram",
+    ]
   }
 }
 
@@ -341,6 +197,7 @@ openthread_core_files = [
   "api/mdns_api.cpp",
   "api/mesh_diag_api.cpp",
   "api/message_api.cpp",
+  "api/multi_ail_detection_api.cpp",
   "api/multi_radio_api.cpp",
   "api/nat64_api.cpp",
   "api/netdata_api.cpp",
@@ -529,6 +386,8 @@ openthread_core_files = [
   "meshcop/announce_begin_client.hpp",
   "meshcop/border_agent.cpp",
   "meshcop/border_agent.hpp",
+  "meshcop/border_agent_ephemeral_key.cpp",
+  "meshcop/border_agent_ephemeral_key.hpp",
   "meshcop/border_agent_tracker.cpp",
   "meshcop/border_agent_tracker.hpp",
   "meshcop/border_agent_txt_data.cpp",

@@ -66,7 +66,6 @@ typedef otBorderRoutingPeerBorderRouterEntry  PeerBrEntry;         ///< Peer Bor
 typedef otBorderRoutingPrefixTableEntry       Dhcp6PdPrefix;       ///< DHCPv6 PD prefix.
 typedef otPdProcessedRaInfo                   Dhcp6PdCounters;     ///< DHCPv6 PD counters.
 typedef otBorderRoutingRequestDhcp6PdCallback Dhcp6PdCallback;     ///< DHCPv6 PD callback.
-typedef otBorderRoutingMultiAilCallback       MultiAilCallback;    ///< Multi AIL detection callback.
 
 // IPv6 Neighbor Discovery (ND) types
 typedef Ip6::Nd::PrefixInfoOption         PrefixInfoOption;         ///< Prefix Info Option (PIO).

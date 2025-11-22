@@ -88,6 +88,7 @@
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
+#include "meshcop/border_agent_ephemeral_key.hpp"
 #include "meshcop/border_agent_tracker.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/commissioner.hpp"

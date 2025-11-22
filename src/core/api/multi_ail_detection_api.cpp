@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,32 +28,43 @@
 
 /**
  * @file
- *   This file implements the OpenThread Operational Dataset API (FTD only).
+ * @brief
+ *   This file implements the OpenThread Multi-AIL Detection API.
  */
 
-#include "openthread-core-config.h"
-
-#if OPENTHREAD_FTD
-
-#include <openthread/dataset_ftd.h>
+#include <openthread/multi_ail_detection.h>
 
 #include "instance/instance.hpp"
 
 using namespace ot;
 
-otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+
+void otBorderRoutingSetMultiAilDetectionEnabled(otInstance *aInstance, bool aEnable)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().CreateNewNetwork(AsCoreType(aDataset));
+    AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().SetEnabled(aEnable);
 }
 
-uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance)
+bool otBorderRoutingIsMultiAilDetectionEnabled(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().GetDelayTimerMinimal();
+    return AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().IsEnabled();
 }
 
-otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
+bool otBorderRoutingIsMultiAilDetectionRunning(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SetDelayTimerMinimal(aDelayTimerMinimal);
+    return AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().IsRunning();
 }
 
-#endif // OPENTHREAD_FTD
+bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().IsDetected();
+}
+
+void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
+                                        otBorderRoutingMultiAilCallback aCallback,
+                                        void                           *aContext)
+{
+    AsCoreType(aInstance).Get<BorderRouter::MultiAilDetector>().SetCallback(aCallback, aContext);
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE

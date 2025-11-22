@@ -131,6 +131,8 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     {
         mCslSampleTimeRadio = static_cast<uint32_t>(Get<Radio>().GetNow());
         mCslSampleTimeLocal = TimerMicro::GetNow();
+        // Update CSL sync time whenever CSL parameters are re-initialized.
+        mCslLastSync = mCslSampleTimeLocal;
 
         HandleCslTimer();
     }

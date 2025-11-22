@@ -42,18 +42,21 @@
 #error "MULTI_AIL_DETECTION_ENABLE feature requires OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE"
 #endif
 
+#include <openthread/multi_ail_detection.h>
+
 #include "border_router/br_types.hpp"
 #include "border_router/rx_ra_tracker.hpp"
 #include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 
 namespace ot {
 namespace BorderRouter {
 
+class InfraIf;
 class NetDataBrTracker;
-class RoutingManager;
 
 /**
  * Implements Multi-AIL (Adjacent Infrastructure Link) detection.
@@ -69,12 +72,51 @@ class RoutingManager;
  */
 class MultiAilDetector : public InstanceLocator
 {
+    friend class InfraIf;
     friend class NetDataBrTracker;
     friend class RxRaTracker;
-    friend class RoutingManager;
+    friend class ot::Notifier;
 
 public:
+    typedef otBorderRoutingMultiAilCallback MultiAilCallback; ///< Multi AIL detection callback.
+
+    /**
+     * Initializes the `MultiAilDetector`.
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     */
     explicit MultiAilDetector(Instance &aInstance);
+
+    /**
+     * Enables or disables the Multi-AIL Detector.
+     *
+     * When enabled, the detector starts monitoring the infrastructure interface state and evaluates for multiple AILs.
+     * When disabled, the detector stops and resets its internal state.
+     *
+     * If `OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_AUTO_ENABLE_MODE` is enabled, the detector is enabled
+     * by default and starts running when the infra-if network is initialized and becomes active.
+     *
+     * @param[in] aEnable TRUE to enable the detector, FALSE to disable.
+     */
+    void SetEnabled(bool aEnable);
+
+    /**
+     * Checks if the Multi-AIL Detector is enabled.
+     *
+     * @retval TRUE   If the detector is enabled.
+     * @retval FALSE  If the detector is disabled.
+     */
+    bool IsEnabled(void) const { return mState != kStateDisabled; }
+
+    /**
+     * Checks if the Multi-AIL Detector is running.
+     *
+     * The detector runs when it is enabled and the infrastructure interface is also running.
+     *
+     * @retval TRUE   If the detector is running.
+     * @retval FALSE  If the detector is not running.
+     */
+    bool IsRunning(void) const { return mState == kStateRunning; }
 
     /**
      * Gets the current detection state regarding multiple Adjacent Infrastructure Links (AILs).
@@ -104,17 +146,37 @@ private:
     static constexpr uint32_t kDetectTime = 10 * Time::kOneMinuteInMsec;
     static constexpr uint32_t kClearTime  = 1 * Time::kOneMinuteInMsec;
 
-    void Start(void) { Evaluate(); }
+    static constexpr bool kAutoEnableMode = OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_AUTO_ENABLE_MODE;
+
+    enum State : uint8_t
+    {
+        kStateDisabled, // Disabled.
+        kStateStopped,  // Enabled but stopped and waiting for `InfraIf` state change.
+        kStateRunning,  // Enabled and running.
+    };
+
+    void SetState(State aState);
+    void UpdateState(void);
+    void Start(void);
     void Stop(void);
     void Evaluate(void);
     void HandleTimer(void);
 
+    // Callback from `Notifier`
+    void HandleNotifierEvents(ot::Events aEvents);
+
+    // Callback from `InfraIf`
+    void HandleInfraIfStateChanged(void) { UpdateState(); }
+
     // Callback from `RxRaTracker`
     void HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents);
+
+    static const char *StateToString(State aState);
 
     using DetectCallback = Callback<MultiAilCallback>;
     using DetectTimer    = TimerMilliIn<MultiAilDetector, &MultiAilDetector::HandleTimer>;
 
+    State          mState;
     bool           mDetected;
     uint16_t       mNetDataPeerBrCount;
     uint16_t       mReachablePeerBrCount;

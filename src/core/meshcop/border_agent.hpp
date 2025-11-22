@@ -47,6 +47,7 @@
 #include "common/heap_allocatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
@@ -256,12 +257,21 @@ private:
 
     public:
         Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
-        Error    ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
+        void     ForwardUdpProxyToCommissioner(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        void     ForwardUdpRelayToCommissioner(const Message &aMessage);
         void     Cleanup(void);
-        bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
+        bool     IsActiveCommissioner(void) const;
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
+        uint16_t GetIndex(void) const { return mIndex; }
 
     private:
+        enum Action : uint8_t
+        {
+            kReceive,
+            kSend,
+            kForward,
+        };
+
         struct ForwardContext : public ot::LinkedListEntry<ForwardContext>,
                                 public Heap::Allocatable<ForwardContext>,
                                 private ot::NonCopyable
@@ -277,6 +287,7 @@ private:
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
 
+        Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
         void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         void  HandleTmfRelayTx(Coap::Message &aMessage);
         void  HandleTmfProxyTx(Coap::Message &aMessage);
@@ -293,8 +304,6 @@ private:
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
                                                  const Coap::Message  *aResponse,
                                                  Error                 aResult);
-        static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
-        bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         static bool HandleResource(CoapBase               &aCoapBase,
                                    const char             *aUriPath,
                                    Coap::Message          &aMessage,
@@ -303,12 +312,20 @@ private:
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
-        bool                       mIsActiveCommissioner;
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        void LogUri(Action aAction, const char *aUriString, const char *aTxt);
+
+        template <Uri kUri> void Log(Action aAction) { Log<kUri>(aAction, ""); }
+        template <Uri kUri> void Log(Action aAction, const char *aTxt) { LogUri(aAction, UriToString<kUri>(), aTxt); }
+#else
+        template <Uri kUri> void Log(Action) {}
+        template <Uri kUri> void Log(Action, const char *) {}
+#endif
+
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
-        Ip6::Udp::Receiver         mUdpReceiver;
-        Ip6::Netif::UnicastAddress mCommissionerAloc;
         uint64_t                   mAllocationTime;
+        uint16_t                   mIndex;
     };
 
     void UpdateState(void);
@@ -320,15 +337,24 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    // Callbacks used with `Dtls::Transport`.
     static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     CoapDtlsSession      *HandleAcceptSession(void);
     static void           HandleRemoveSession(void *aContext, SecureSession &aSession);
     void                  HandleRemoveSession(SecureSession &aSession);
-    CoapDtlsSession      *FindActiveCommissionerSession(void);
 
+    uint16_t            GetNextSessionIndex(void) { return ++mSessionIndex; }
+    const Ip6::Address &GetCommissionerAloc(void) const { return mCommissionerAloc.GetAddress(); }
+    CoapDtlsSession    *GetCommissionerSession(void) { return mCommissionerSession; }
+
+    bool IsCommissionerSession(const CoapDtlsSession &aSession) const { return mCommissionerSession == &aSession; }
     void HandleSessionConnected(CoapDtlsSession &aSession);
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
-    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
+    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession, uint16_t aSessionId);
+    void RevokeRoleIfActiveCommissioner(CoapDtlsSession &aSession);
+
+    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     // Callback from `BorderAgent::TxtData`.
@@ -349,9 +375,14 @@ private:
     static const char kDefaultBaseServiceName[];
 #endif
 
-    bool            mEnabled;
-    bool            mIsRunning;
-    Dtls::Transport mDtlsTransport;
+    bool                       mEnabled;
+    bool                       mIsRunning;
+    uint16_t                   mSessionIndex;
+    Dtls::Transport            mDtlsTransport;
+    CoapDtlsSession           *mCommissionerSession;
+    Ip6::Udp::Receiver         mCommissionerUdpReceiver;
+    Ip6::Netif::UnicastAddress mCommissionerAloc;
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
@@ -364,180 +395,6 @@ private:
 
 DeclareTmfHandler(Manager, kUriRelayRx);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-/**
- * Manages the ephemeral key use by Border Agent.
- */
-class EphemeralKeyManager : public InstanceLocator, private NonCopyable
-{
-    friend class Manager;
-
-public:
-    static constexpr uint16_t kMinKeyLength   = OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH;      ///< Min key len.
-    static constexpr uint16_t kMaxKeyLength   = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH;      ///< Max key len.
-    static constexpr uint32_t kDefaultTimeout = OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT; //< Default timeout.
-    static constexpr uint32_t kMaxTimeout     = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT;     ///< Max timeout.
-
-    typedef otBorderAgentEphemeralKeyCallback CallbackHandler; ///< Callback function pointer.
-
-    /**
-     * Represents the state of the `EphemeralKeyManager`.
-     */
-    enum State : uint8_t
-    {
-        kStateDisabled  = OT_BORDER_AGENT_STATE_DISABLED,  ///< Ephemeral key feature is disabled.
-        kStateStopped   = OT_BORDER_AGENT_STATE_STOPPED,   ///< Enabled, but the key is not set and started.
-        kStateStarted   = OT_BORDER_AGENT_STATE_STARTED,   ///< Key is set and listening to accept connection.
-        kStateConnected = OT_BORDER_AGENT_STATE_CONNECTED, ///< Session connected, not full commissioner.
-        kStateAccepted  = OT_BORDER_AGENT_STATE_ACCEPTED,  ///< Session connected and accepted as full commissioner.
-    };
-
-    /**
-     * Initializes the `EphemeralKeyManager`.
-     *
-     * @param[in] aInstance  The OpenThread instance.
-     */
-    explicit EphemeralKeyManager(Instance &aInstance);
-
-    /**
-     * Enables/disables Ephemeral Key Manager.
-     *
-     * If this method is called to disable, while an an ephemeral key is in use, the ephemeral key use will
-     * be stopped (as if `Stop()` is called).
-     *
-     * @param[in] aEnabled  Whether to enable or disable.
-     */
-    void SetEnabled(bool aEnabled);
-
-    /**
-     * Starts using an ephemeral key for a given timeout duration.
-     *
-     * An ephemeral key can only be set when `GetState()` is `kStateStopped`. Otherwise, `kErrorInvalidState` is
-     * returned. This means that setting the ephemeral key again while a previously set key is still in use will
-     * fail. Callers can stop the previous key by calling `Stop()` before starting with a new key.
-     *
-     * The given @p aKeyString is used directly as the ephemeral PSK (excluding the trailing null `\0` character).
-     * Its length must be between `kMinKeyLength` and `kMaxKeyLength`, inclusive.
-     *
-     * The ephemeral key can be used only once by an external commissioner candidate to establish a secure session.
-     * After the commissioner candidate disconnects, the use of the ephemeral key is stopped. If the timeout
-     * expires, the use of the ephemeral key is also stopped, and any established session using the key is
-     * immediately disconnected.
-     *
-     * @param[in] aKeyString   The ephemeral key.
-     * @param[in] aTimeout     The timeout duration, in milliseconds, to use the ephemeral key.
-     *                         If zero, the default `kDefaultTimeout` value is used. If the timeout value is
-     *                         larger than `kMaxTimeout`, the maximum value is used instead.
-     * @param[in] aUdpPort     The UDP port to use with the ephemeral key. If the UDP port is zero, an ephemeral
-     *                         port is used. `GetUdpPort()` returns the current UDP port being used.
-     *
-     * @retval kErrorNone           Successfully started using the ephemeral key.
-     * @retval kErrorInvalidState   A previously set ephemeral key is still in use or feature is disabled.
-     * @retval kErrorInvalidArgs    The given @p aKeyString is not valid.
-     * @retval kErrorFailed         Failed to start (e.g., it could not bind to the given UDP port).
-     */
-    Error Start(const char *aKeyString, uint32_t aTimeout, uint16_t aUdpPort);
-
-    /**
-     * Stops the ephemeral key use and disconnects any established secure session using it.
-     *
-     * If there is no ephemeral key in use, calling this method has no effect.
-     */
-    void Stop(void);
-
-    /**
-     * Gets the state of ephemeral key use and its session.
-     *
-     * @returns The `EmpheralKeyManager` state.
-     */
-    State GetState(void) const { return mState; }
-
-    /**
-     * Gets the UDP port used by ephemeral key DTLS secure transport.
-     *
-     * @returns  UDP port number.
-     */
-    uint16_t GetUdpPort(void) const { return mDtlsTransport.GetUdpPort(); }
-
-    /**
-     * Sets the callback.
-     *
-     * @param[in] aCallback   The callback function pointer.
-     * @param[in] aContext    The context associated and used with callback handler.
-     */
-    void SetCallback(CallbackHandler aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
-
-    /**
-     * Converts a given `State` to human-readable string.
-     *
-     * @param[in] aState  The state to convert.
-     *
-     * @returns The string corresponding to @p aState.
-     */
-    static const char *StateToString(State aState);
-
-private:
-    static constexpr uint16_t kMaxConnectionAttempts = 10;
-
-    static_assert(kMaxKeyLength <= Dtls::Transport::kPskMaxLength, "Max e-key len is larger than max PSK len");
-
-    using CoapDtlsSession = Manager::CoapDtlsSession;
-    using Counters        = Manager::Counters;
-
-    enum DeactivationReason : uint8_t
-    {
-        kReasonLocalDisconnect,
-        kReasonPeerDisconnect,
-        kReasonSessionError,
-        kReasonSessionTimeout,
-        kReasonMaxFailedAttempts,
-        kReasonEpskcTimeout,
-        kReasonUnknown,
-    };
-
-    void SetState(State aState);
-    void Stop(DeactivationReason aReason);
-    void HandleTimer(void);
-    void HandleTask(void);
-    bool OwnsSession(CoapDtlsSession &aSession) const { return mCoapDtlsSession == &aSession; }
-    void HandleSessionConnected(void);
-    void HandleSessionDisconnected(SecureSession::ConnectEvent aEvent);
-    void HandleCommissionerPetitionAccepted(void);
-    void UpdateCountersAndRecordEvent(DeactivationReason aReason);
-#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    bool ShouldRegisterService(void) const;
-    void RegisterOrUnregisterService(void);
-#endif
-
-    // Session or Transport callbacks
-    static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
-    CoapDtlsSession      *HandleAcceptSession(void);
-    static void           HandleRemoveSession(void *aContext, SecureSession &aSession);
-    void                  HandleRemoveSession(SecureSession &aSession);
-    static void           HandleTransportClosed(void *aContext);
-    void                  HandleTransportClosed(void);
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    static const char *DeactivationReasonToString(DeactivationReason aReason);
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    static const char kServiceType[];
-#endif
-
-    using TimeoutTimer = TimerMilliIn<EphemeralKeyManager, &EphemeralKeyManager::HandleTimer>;
-    using CallbackTask = TaskletIn<EphemeralKeyManager, &EphemeralKeyManager::HandleTask>;
-
-    State                     mState;
-    Dtls::Transport           mDtlsTransport;
-    CoapDtlsSession          *mCoapDtlsSession;
-    TimeoutTimer              mTimer;
-    CallbackTask              mCallbackTask;
-    Callback<CallbackHandler> mCallback;
-};
-
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-
 } // namespace BorderAgent
 } // namespace MeshCoP
 
@@ -546,10 +403,6 @@ DefineCoreType(otBorderAgentId, MeshCoP::BorderAgent::Id);
 #endif
 
 DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::Manager::SessionIterator);
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-DefineMapEnum(otBorderAgentEphemeralKeyState, MeshCoP::BorderAgent::EphemeralKeyManager::State);
-#endif
 
 } // namespace ot
 
