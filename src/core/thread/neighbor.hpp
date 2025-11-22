@@ -761,7 +761,7 @@ private:
     // and this neighbor is the Subject.
     LinkMetrics::Metrics mEnhAckProbingMetrics;
 #endif
-    uint32_t mConnectionStart;
+    UptimeSec mConnectionStart;
 };
 
 DefineCoreType(otNeighborInfo, Neighbor::Info);

@@ -52,6 +52,7 @@
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/tasklet.hpp"
+#include "common/uptime.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
@@ -324,7 +325,7 @@ private:
 
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
-        uint64_t                   mAllocationTime;
+        UptimeMsec                 mAllocationTime;
         uint16_t                   mIndex;
     };
 
