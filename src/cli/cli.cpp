@@ -59,6 +59,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/trel.h>
 #include <openthread/verhoeff_checksum.h>
+#include <openthread/platform/entropy.h>
 #include <openthread/platform/misc.h>
 
 #include "common/new.hpp"
@@ -5293,6 +5294,38 @@ exit:
     return error;
 }
 
+/**
+ * @cli otpc
+ * @code
+ * otpc
+ * @endcode
+ * @par
+ * generate one time passcode.
+ */
+template <> otError Interpreter::Process<Cmd("otpc")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError error = OT_ERROR_NONE;
+    uint8_t passcode[10];
+    uint8_t  length     = 0;
+    uint32_t randomResult;
+    char     verhoeffChecksum;
+
+    memset(passcode, 0, sizeof(passcode));
+
+    VerifyOrExit(otPlatEntropyGet((uint8_t *)&randomResult, sizeof(randomResult)) == OT_ERROR_NONE,
+                 error = OT_ERROR_FAILED);
+    randomResult %= 100000000;
+    length += snprintf((char *)passcode, sizeof(passcode), "%08u", randomResult);
+    VerifyOrExit(otVerhoeffChecksumCalculate((const char *)passcode, &verhoeffChecksum) == OT_ERROR_NONE,
+                 error = OT_ERROR_FAILED);
+    length += snprintf((char *)&passcode[length], sizeof(passcode) - length, "%c", verhoeffChecksum);
+    OutputLine("%s",passcode);
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
 
 template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[]) { return mMeshDiag.Process(aArgs); }
@@ -8756,6 +8789,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_FTD
         CmdEntry("nexthop"),
 #endif
+        CmdEntry("otpc"),
 #if OPENTHREAD_CONFIG_P2P_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         CmdEntry("p2p"),
 #endif
