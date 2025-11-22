@@ -93,6 +93,9 @@ typedef struct otPlatformConfig
                                                       ///< directly after initialization.
     CoprocessorType mCoprocessorType;                 ///< The co-processor type. This field is used to pass
                                                       ///< the type to the app layer.
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    const char               *mSettingsPath;          ///< Settings path.
+#endif
 } otPlatformConfig;
 
 /**

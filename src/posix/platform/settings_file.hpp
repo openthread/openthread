@@ -29,6 +29,8 @@
 #ifndef OT_POSIX_PLATFORM_SETTINGS_FILE_HPP_
 #define OT_POSIX_PLATFORM_SETTINGS_FILE_HPP_
 
+#include <limits.h>
+
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 
@@ -44,7 +46,7 @@ public:
     }
 
     /**
-     * Performs the initialization for the settings file.
+     * Performs the initialization for the settings file at `OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH`.
      *
      * @param[in]  aSettingsFileBaseName    A pointer to the base name of the settings file.
      *
@@ -52,6 +54,17 @@ public:
      * @retval OT_ERROR_PARSE   The key-value format could not be parsed (invalid format).
      */
     otError Init(const char *aSettingsFileBaseName);
+
+    /**
+     * Performs the initialization for the settings file at given settings file directory.
+     *
+     * @param[in]  aSettingsFileBaseName    A pointer to the base name of the settings file.
+     * @param[in]  aSettingsFileDirectory   A pointer to the settings file directory.
+     *
+     * @retval OT_ERROR_NONE    The given settings file was initialized successfully.
+     * @retval OT_ERROR_PARSE   The key-value format could not be parsed (invalid format).
+     */
+    otError Init(const char *aSettingsFileBaseName, const char *aSettingsFileDirectory);
 
     /**
      * Performs the de-initialization for the settings file.
@@ -107,7 +120,12 @@ public:
     void Wipe(void);
 
 private:
+
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    static const size_t kMaxFileDirectorySize   = PATH_MAX;
+#else
     static const size_t kMaxFileDirectorySize   = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH);
+#endif
     static const size_t kSlashLength            = 1;
     static const size_t kMaxFileBaseNameSize    = 64;
     static const size_t kMaxFileExtensionLength = 5; ///< The length of `.Swap` or `.data`.
@@ -121,6 +139,9 @@ private:
     void    SwapPersist(int aFd);
     void    SwapDiscard(int aFd);
 
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    char mSettingFileDirectory[kMaxFileDirectorySize];
+#endif
     char mSettingFileBaseName[kMaxFileBaseNameSize];
     int  mSettingsFd;
 };

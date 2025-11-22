@@ -50,6 +50,10 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+#include "posix/platform/settings.hpp"
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_TMP_STORAGE_ENABLE
 namespace ot {
 namespace Posix {
@@ -97,6 +101,9 @@ otError TmpStorage::SettingsFileInit(void)
     static constexpr size_t kMaxFileBaseNameSize = 32;
     char                    fileBaseName[kMaxFileBaseNameSize];
     const char             *offset = getenv("PORT_OFFSET");
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    const char             *settingsPath = ot::Posix::PlatformGetSettingsPath();
+#endif
     uint64_t                eui64;
 
     otPlatRadioGetIeeeEui64(gInstance, reinterpret_cast<uint8_t *>(&eui64));
@@ -105,7 +112,11 @@ otError TmpStorage::SettingsFileInit(void)
     snprintf(fileBaseName, sizeof(fileBaseName), "%s_%" PRIx64 "-tmp", ((offset == nullptr) ? "0" : offset), eui64);
     VerifyOrDie(strlen(fileBaseName) < kMaxFileBaseNameSize, OT_EXIT_FAILURE);
 
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    return mStorageFile.Init(fileBaseName, settingsPath);
+#else
     return mStorageFile.Init(fileBaseName);
+#endif
 }
 
 time_t TmpStorage::GetBootTime(void)

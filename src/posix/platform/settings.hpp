@@ -43,6 +43,22 @@ namespace Posix {
  */
 void PlatformSettingsGetSensitiveKeys(otInstance *aInstance, const uint16_t **aKeys, uint16_t *aKeysLength);
 
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+/**
+ * Gets the path for setting files.
+ * 
+ * @returns  Path for setting files.
+ */
+char *PlatformGetSettingsPath();
+
+/**
+ * Sets the path for setting files.
+ *
+ * @param[in]   aSettingsPath   Path for setting files.
+ */
+void PlatformSetSettingsPath(const char *aSettingsPath);
+#endif
+
 } // namespace Posix
 } // namespace ot
 

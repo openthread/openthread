@@ -140,6 +140,10 @@ enum
 
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    OT_POSIX_OPT_SETTINGS_PATH,
+#endif
 };
 
 static const struct option kOptions[] = {
@@ -153,6 +157,9 @@ static const struct option kOptions[] = {
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    {"settings-path", required_argument, NULL, OT_POSIX_OPT_SETTINGS_PATH},
+#endif
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -171,6 +178,10 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    fprintf(aStream,
+            "        --settings-path           Path of directory to store settings.\n");
+#endif
 #ifdef SIGRTMIN
     fprintf(aStream,
             "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
@@ -189,6 +200,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+    aConfig->mPlatformConfig.mSettingsPath        = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+#endif
 #ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
@@ -244,6 +258,11 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
+#if OPENTHREAD_POSIX_SETTINGS_PATH_SET_API
+        case OT_POSIX_OPT_SETTINGS_PATH:
+            aConfig->mPlatformConfig.mSettingsPath = optarg;
+            break;
+#endif
 #ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
             if (optarg[0] == '+')
