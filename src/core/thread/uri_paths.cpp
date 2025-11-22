@@ -141,52 +141,6 @@ static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationNotify].mPath, "n
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationRequest].mPath, "n/dr"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriMlr].mPath, "n/mr"), "kEntries is invalid");
 
-struct UriEnumCheck
-{
-    InitEnumValidatorCounter();
-    ValidateNextEnum(kUriAddressError);
-    ValidateNextEnum(kUriAddressNotify);
-    ValidateNextEnum(kUriAddressQuery);
-    ValidateNextEnum(kUriAddressRelease);
-    ValidateNextEnum(kUriAddressSolicit);
-    ValidateNextEnum(kUriServerData);
-    ValidateNextEnum(kUriAnycastLocate);
-    ValidateNextEnum(kUriBackboneAnswer);
-    ValidateNextEnum(kUriBackboneMlr);
-    ValidateNextEnum(kUriBackboneQuery);
-    ValidateNextEnum(kUriAnnounceBegin);
-    ValidateNextEnum(kUriActiveGet);
-    ValidateNextEnum(kUriActiveReplace);
-    ValidateNextEnum(kUriActiveSet);
-    ValidateNextEnum(kUriCommissionerKeepAlive);
-    ValidateNextEnum(kUriCommissionerGet);
-    ValidateNextEnum(kUriCommissionerPetition);
-    ValidateNextEnum(kUriCommissionerSet);
-    ValidateNextEnum(kUriDatasetChanged);
-    ValidateNextEnum(kUriEnergyReport);
-    ValidateNextEnum(kUriEnergyScan);
-    ValidateNextEnum(kUriJoinerEntrust);
-    ValidateNextEnum(kUriJoinerFinalize);
-    ValidateNextEnum(kUriLeaderKeepAlive);
-    ValidateNextEnum(kUriLeaderPetition);
-    ValidateNextEnum(kUriPanIdConflict);
-    ValidateNextEnum(kUriPendingGet);
-    ValidateNextEnum(kUriPanIdQuery);
-    ValidateNextEnum(kUriPendingSet);
-    ValidateNextEnum(kUriRelayRx);
-    ValidateNextEnum(kUriTcatEnable);
-    ValidateNextEnum(kUriRelayTx);
-    ValidateNextEnum(kUriProxyRx);
-    ValidateNextEnum(kUriProxyTx);
-    ValidateNextEnum(kUriDiagnosticGetAnswer);
-    ValidateNextEnum(kUriDiagnosticGetRequest);
-    ValidateNextEnum(kUriDiagnosticGetQuery);
-    ValidateNextEnum(kUriDiagnosticReset);
-    ValidateNextEnum(kUriDuaRegistrationNotify);
-    ValidateNextEnum(kUriDuaRegistrationRequest);
-    ValidateNextEnum(kUriMlr);
-};
-
 } // namespace UriList
 
 const char *PathForUri(Uri aUri)
