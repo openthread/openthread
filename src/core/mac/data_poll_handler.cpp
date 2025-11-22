@@ -143,7 +143,8 @@ Mac::TxFrame *DataPollHandler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    VerifyOrExit(Get<IndirectSender>().PrepareFrameForChild(*frame, mFrameContext, *mIndirectTxChild) == kErrorNone,
+    VerifyOrExit(Get<IndirectSender>().PrepareFrameForSleepyNeighbor(*frame, mFrameContext, *mIndirectTxChild) ==
+                     kErrorNone,
                  frame = nullptr);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -255,7 +256,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
         OT_ASSERT(false);
     }
 
-    Get<IndirectSender>().HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
+    Get<IndirectSender>().HandleSentFrameToSleepyNeighbor(aFrame, mFrameContext, aError, aChild);
 
 exit:
     return;
