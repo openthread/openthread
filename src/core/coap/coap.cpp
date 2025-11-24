@@ -633,7 +633,6 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
                                         Message           &aMessage)
 {
     Error            error       = kErrorNone;
-    Error            errorMd     = kErrorNone;
     bool             isOptionSet = false;
     uint16_t         blockOption = 0;
     Option::Iterator iterator;
@@ -691,10 +690,10 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         aRequest.SetMoreBlocksFlag(aMoreBlocks);
     }
 
+    error = metadata.AppendTo(aRequestOld);
+
 exit:
-    errorMd = metadata.AppendTo(aRequestOld);
-    // Use error from earlier if it exists
-    return (error == kErrorNone) ? errorMd : error;
+    return error;
 }
 
 Error CoapBase::SendNextBlock1Request(Message                &aRequest,
