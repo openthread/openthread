@@ -47,6 +47,21 @@ at_exit()
     exit $EXIT_CODE
 }
 
+wait_for()
+{
+    local command="$1"
+    local expect="$2"
+
+    local count=10
+    while [ ${count} -ne 0 ]; do
+        count=$((count - 1))
+        eval sudo "${OT_CTL_PATH}" "${command}" | grep -q "${expect}" && return 0
+        sleep 1
+    done
+
+    return 1
+}
+
 do_build()
 {
     ./script/cmake-build simulation
@@ -57,7 +72,7 @@ do_check()
 {
     trap at_exit INT TERM EXIT
 
-    OT_OUTPUT=/tmp/ot-output
+    export OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
 
     # Setup virtual ethernet pair
     sudo ip link del veth-a || true
@@ -72,10 +87,8 @@ do_check()
     RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
     RADIO_URL="spinel+hdlc+forkpty://${RADIO_NCP_PATH}?forkpty-arg=2"
 
-    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I wpan0 -B veth-a "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
-    sleep 5
-
-    OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
+    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I wpan0 -B veth-a "${RADIO_URL}" &
+    wait_for "state" "Done" || die "did not become leader"
 
     # verify this reset and factoryreset end immediately
     sudo "${OT_CTL_PATH}" reset
@@ -86,13 +99,13 @@ do_check()
     sleep 2
 
     # Bring up Thread network
-    sudo "${OT_CTL_PATH}" dataset init new || die 'failed to init new dataset'
-    sudo "${OT_CTL_PATH}" dataset commit active || die 'failed to commit active dataset'
-    sudo "${OT_CTL_PATH}" ifconfig up || die 'failed to bring ifconfig up'
-    sudo "${OT_CTL_PATH}" thread start || die 'failed to start thread'
-    sleep 30
-    sudo "${OT_CTL_PATH}" state | grep -q 'leader' || die 'did not become leader'
-    sudo "${OT_CTL_PATH}" br state | grep -q 'running' || die 'failed to start br'
+    sudo "${OT_CTL_PATH}" dataset init new || die "failed to init new dataset"
+    sudo "${OT_CTL_PATH}" dataset commit active || die "failed to commit active dataset"
+    sudo "${OT_CTL_PATH}" ifconfig up || die "failed to bring ifconfig up"
+    sudo "${OT_CTL_PATH}" thread start || die "failed to start thread"
+
+    wait_for "state" "leader" || die "did not become leader"
+    wait_for "br state" "running" || die "failed to start br"
 
     # Simulate infra interface index change
     sudo ip link del veth-a
@@ -101,17 +114,15 @@ do_check()
     sudo ip link set veth-b up
     sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
     sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
-    sleep 30
-
-    sudo "${OT_CTL_PATH}" state | grep -q 'leader' || die 'did not become leader'
-    sudo "${OT_CTL_PATH}" br state | grep -q 'running' || die 'failed to start br'
 
     # Verify border routing is still functional by checking for a published prefix
     # The border router should re-detect the interface and re-establish routing.
     # A key indicator of this is the successful publication of the onlink prefix.
+    sleep 30
+
     onlinkprefix=$(sudo "${OT_CTL_PATH}" br onlinkprefix favored)
     onlinkprefix_addr=${onlinkprefix%%::*}
-    sudo ip addr show dev veth-a | grep -q "${onlinkprefix_addr}" || die 'Onlink prefix not advertised on infra if after index change'
+    sudo ip addr show dev veth-a | grep -q "${onlinkprefix_addr}" || die "Onlink prefix not advertised on infra if after index change"
 
     echo "Test passed: OTBR correctly handled infra interface index change."
 }
