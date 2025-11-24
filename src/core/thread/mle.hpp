@@ -50,6 +50,7 @@
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
+#include "common/uptime.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
@@ -2460,8 +2461,8 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint32_t mCslTimeout;
 #endif
-    uint32_t         mLastAttachTime;
-    uint64_t         mLastUpdatedTimestamp;
+    UptimeSec        mLastAttachTime;
+    UptimeMsec       mLastUpdatedTimestamp;
     LeaderData       mLeaderData;
     Parent           mParent;
     NeighborTable    mNeighborTable;

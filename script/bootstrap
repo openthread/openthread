@@ -46,7 +46,7 @@ install_packages_pretty_format()
     sudo bash "$(dirname "$0")/install-llvm.sh"
 
     # add yapf for pretty
-    python3 -m pip install yapf==0.31.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
+    python3 -m pip install yapf==0.43.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
 
     # add mdv for local size report
     python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
@@ -129,7 +129,7 @@ install_packages_brew()
         } || echo "WARNING: could not install llvm@${LLVM_MAJOR_VERSION}, which is useful if you plan to contribute C/C++ code to the OpenThread project."
 
         # add yapf for pretty
-        python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+        python3 -m pip install yapf==0.43.0 || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
     fi
 
     brew install include-what-you-use || echo 'WARNING: iwyu, which is useful to ensure applying the IWYU rules.'

@@ -896,8 +896,10 @@ private:
     static constexpr uint8_t  kNumberOfAnnounces = 3;
     static constexpr uint32_t kAnnounceInterval  = 1000; // In msec - time between first two announces
 
-    static constexpr uint8_t  kNumberOfInitalQueries = 3;
-    static constexpr uint32_t kInitialQueryInterval  = 1000; // In msec - time between first two queries
+    static constexpr uint32_t kMinQueryRetryInterval   = Time::kOneSecondInMsec; // In msec
+    static constexpr uint32_t kMaxQueryRetryInterval   = Time::kOneHourInMsec;   // In msec
+    static constexpr uint32_t kQueryRetryGrowthFactor  = 2;
+    static constexpr uint32_t kQueryRetryJitterDivisor = 32;
 
     static constexpr uint32_t kMinInitialQueryDelay     = 20;  // msec
     static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
@@ -1843,7 +1845,7 @@ private:
         bool  IsActive(void) const { return mIsActive; }
         bool  ShouldDelete(TimeMilli aNow) const;
         void  StartInitialQueries(void);
-        void  StopInitialQueries(void) { mInitalQueries = kNumberOfInitalQueries; }
+        void  StopQueryRetries(void) { mContinuousRetry = false; }
         Error Add(const ResultCallback &aCallback);
         void  Remove(const ResultCallback &aCallback);
         void  DetermineNextFireTime(void);
@@ -1863,7 +1865,7 @@ private:
         bool     ShouldQuery(TimeMilli aNow);
         void     PrepareQuery(CacheContext &aContext);
         void     ProcessExpiredRecords(TimeMilli aNow);
-        void     DetermineNextInitialQueryTime(void);
+        void     UpdateQueryRetryInterval(void);
 
         ResultCallback *FindCallbackMatching(const ResultCallback &aCallback);
 
@@ -1871,10 +1873,12 @@ private:
         template <typename CacheType> const CacheType &As(void) const { return *static_cast<const CacheType *>(this); }
 
         Type         mType;                   // Cache entry type.
-        uint8_t      mInitalQueries;          // Number initial queries sent already.
+        bool         mContinuousRetry : 1;    // Whether to continue sending queries.
         bool         mQueryPending : 1;       // Whether a query tx request is pending.
         bool         mLastQueryTimeValid : 1; // Whether `mLastQueryTime` is valid.
         bool         mIsActive : 1;           // Whether there is any active resolver/browser/querier for this entry.
+        uint32_t     mRetryInterval;          // The current query retry interval (in msec).
+        uint32_t     mJitteredRetryInterval;  // The current query retry interval with added random jitter (in msec).
         TimeMilli    mNextQueryTime;          // The next query tx time when `mQueryPending`.
         TimeMilli    mLastQueryTime;          // The last query tx time or the upcoming tx time of first initial query.
         TimeMilli    mDeleteTime;             // The time to delete the entry when not `mIsActive`.

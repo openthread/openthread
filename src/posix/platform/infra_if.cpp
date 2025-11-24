@@ -561,32 +561,42 @@ exit:
 void InfraNetif::ProcessNetLinkMessage(struct nlmsghdr *aNetlinkMessage)
 {
     struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
-    bool              isRunning;
 
     switch (aNetlinkMessage->nlmsg_type)
     {
     case RTM_DELLINK:
+    {
         VerifyOrExit(ifinfo->ifi_index == static_cast<int>(mInfraIfIndex));
 
-        isRunning = (ifinfo->ifi_flags & IFF_RUNNING);
-        SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, isRunning));
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, /* aIsRunning */ false));
+#endif
+
+        mInfraIfIndex = 0;
         break;
+    }
     case RTM_NEWLINK:
     {
-        char  nameBuffer[IF_NAMESIZE];
+        char  nameBuffer[IF_NAMESIZE] = {};
         char *ifname;
 
         ifname = if_indextoname(ifinfo->ifi_index, nameBuffer);
-        VerifyOrExit(ifname != nullptr && strncmp(ifname, mInfraIfName, sizeof(mInfraIfName)));
+        VerifyOrExit(ifname != nullptr && strcmp(ifname, mInfraIfName) == 0);
 
-        LogInfo("The infra interface index changed from %u to %u", mInfraIfIndex, ifinfo->ifi_index);
-
-        mInfraIfIndex = ifinfo->ifi_index;
-
+        if (ifinfo->ifi_index != static_cast<int>(mInfraIfIndex))
+        {
+            LogInfo("The infra interface index changed from %u to %u", mInfraIfIndex, ifinfo->ifi_index);
+            mInfraIfIndex = ifinfo->ifi_index;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-        isRunning = (ifinfo->ifi_flags & IFF_RUNNING);
-        SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, isRunning));
+            SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, (ifinfo->ifi_flags & IFF_RUNNING)));
 #endif
+        }
+        else
+        {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, (ifinfo->ifi_flags & IFF_RUNNING)));
+#endif
+        }
         break;
     }
     case NLMSG_ERROR:

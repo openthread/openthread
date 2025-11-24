@@ -531,7 +531,8 @@ otError otThreadWakeup(otInstance         *aInstance,
 void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
 {
     StringWriter writer(aBuffer, aSize);
+    UptimeMsec   uptime = static_cast<UptimeMsec>(aDuration) * Time::kOneSecondInMsec;
 
-    Uptime::UptimeToString(Uptime::SecToMsec(aDuration), writer, /* aIncludeMsec */ false);
+    UptimeToString(uptime, writer, /* aIncludeMsec */ false);
 }
 #endif

@@ -417,7 +417,7 @@ bool RoutingManager::IsInitialPolicyEvaluationDone(void) const
     // the emitted Router Advert message on infrastructure side
     // and published in the Thread Network Data.
 
-    return mIsRunning && mOmrPrefixManager.IsInitalEvaluationDone() && mOnLinkPrefixManager.IsInitalEvaluationDone();
+    return mIsRunning && mOmrPrefixManager.IsInitialEvaluationDone() && mOnLinkPrefixManager.IsInitialEvaluationDone();
 }
 
 void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
@@ -436,9 +436,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         break;
 
     case kForNextRa:
-        if (mTxRaInfo.mTxCount <= kInitalRaTxCount)
+        if (mTxRaInfo.mTxCount <= kInitialRaTxCount)
         {
-            interval = kInitalRaInterval;
+            interval = kInitialRaInterval;
             jitter   = kInitialRaJitter;
         }
         else
@@ -477,9 +477,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         }
         else
         {
-            String<Uptime::kStringSize> string;
+            String<kUptimeStringSize> string;
 
-            Uptime::UptimeToString(duration, string, /* aIncludeMsec */ true);
+            UptimeToString(duration, string, /* aIncludeMsec */ true);
             LogInfo("Will evaluate routing policy in %s (%lu msec)", string.AsCString() + 3, ToUlong(duration));
         }
     }
@@ -750,7 +750,7 @@ void RoutingManager::OmrPrefixManager::Stop(void)
     ClearFavoredPrefix();
 }
 
-bool RoutingManager::OmrPrefixManager::IsInitalEvaluationDone(void) const
+bool RoutingManager::OmrPrefixManager::IsInitialEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation of the OMR prefix, i.e., either
@@ -1344,7 +1344,7 @@ exit:
     return;
 }
 
-bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
+bool RoutingManager::OnLinkPrefixManager::IsInitialEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation of the on-link prefixes, i.e., either
@@ -2196,7 +2196,7 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     , mTimer(aInstance)
 {
     mRaTrackerPrefix.Clear();
-    mInfraIfPrefix.Clear();
+    mPlatformPrefix.Clear();
     mLocalPrefix.Clear();
     mPublishedPrefix.Clear();
 }
@@ -2237,7 +2237,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
     LogInfo("Stopping Nat64PrefixManager");
 
     Unpublish();
-    mInfraIfPrefix.Clear();
+    mPlatformPrefix.Clear();
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -2257,28 +2257,26 @@ void RoutingManager::Nat64PrefixManager::GenerateLocalPrefix(const Ip6::Prefix &
 
 const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePreference &aPreference) const
 {
-    const Ip6::Prefix *favoredPrefix;
+    const Ip6::Prefix *favoredPrefix = &mLocalPrefix;
 
     aPreference = NetworkData::kRoutePreferenceLow;
 
-    if (mRaTrackerPrefix.IsValidNat64() &&
-        Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
+    // To ensure routing coherency, only use a discovered NAT64 prefix if the
+    // OMR prefix is also from the infrastructure.
+    if (Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
     {
         // Per RFC 8781 section 5, discovered NAT64 prefixes from RAs should be favored.
-        favoredPrefix = &mRaTrackerPrefix;
-        aPreference   = NetworkData::kRoutePreferenceMedium;
-    }
-    else if (mInfraIfPrefix.IsValidNat64() &&
-             Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
-    {
-        // We have a valid NAT64 prefix from infrastructure (e.g. using DNS - RFC 7050) and the network is aligned with
-        // an infrastructure-provided OMR prefix.
-        favoredPrefix = &mInfraIfPrefix;
-        aPreference   = NetworkData::kRoutePreferenceMedium;
-    }
-    else
-    {
-        favoredPrefix = &mLocalPrefix;
+        if (mRaTrackerPrefix.IsValidNat64())
+        {
+            favoredPrefix = &mRaTrackerPrefix;
+            aPreference   = NetworkData::kRoutePreferenceMedium;
+        }
+        // A valid NAT64 prefix from the platform (e.g. using DNS - RFC 7050) is the next choice.
+        else if (mPlatformPrefix.IsValidNat64())
+        {
+            favoredPrefix = &mPlatformPrefix;
+            aPreference   = NetworkData::kRoutePreferenceMedium;
+        }
     }
 
     return *favoredPrefix;
@@ -2309,11 +2307,11 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     // - The preferred NAT64 prefix in Network Data was published
     //   by this BR.
     // - The preferred NAT64 prefix in Network Data is same as the
-    //   discovered infrastructure prefix.
+    //   platform-provided prefix.
 
     shouldPublish =
         ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
-         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
+         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mPlatformPrefix));
 
     if (shouldPublish)
     {
@@ -2418,12 +2416,12 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
 }
 
-void RoutingManager::Nat64PrefixManager::HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix)
+void RoutingManager::Nat64PrefixManager::HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix)
 {
-    mInfraIfPrefix = aPrefix;
+    mPlatformPrefix = aPrefix;
 
-    LogInfo("InfraIf Discovered NAT64 prefix: %s",
-            mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
+    LogInfo("Platform Discovered NAT64 prefix: %s",
+            mPlatformPrefix.IsValidNat64() ? mPlatformPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 

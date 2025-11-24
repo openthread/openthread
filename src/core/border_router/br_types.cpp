@@ -231,7 +231,7 @@ void RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const
 //---------------------------------------------------------------------------------------------------------------------
 // IfAddress
 
-void IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
+void IfAddress::SetFrom(const Ip6::Address &aAddress, UptimeSec aUptimeNow)
 {
     mAddress       = aAddress;
     mLastUseUptime = aUptimeNow;
@@ -239,7 +239,7 @@ void IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
 
 bool IfAddress::Matches(const InvalidChecker &aChecker) const { return !aChecker.Get<InfraIf>().HasAddress(mAddress); }
 
-void IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const
+void IfAddress::CopyInfoTo(IfAddrEntry &aEntry, UptimeSec aUptimeNow) const
 {
     aEntry.mAddress         = mAddress;
     aEntry.mSecSinceLastUse = aUptimeNow - mLastUseUptime;

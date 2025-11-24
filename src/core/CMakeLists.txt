@@ -161,6 +161,7 @@ set(COMMON_SOURCES
     mac/wakeup_tx_scheduler.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
+    meshcop/border_agent_ephemeral_key.cpp
     meshcop/border_agent_tracker.cpp
     meshcop/border_agent_txt_data.cpp
     meshcop/commissioner.cpp

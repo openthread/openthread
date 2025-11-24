@@ -342,7 +342,7 @@ otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
  * a random ID will be generated and returned when `otBorderAgentGetId` is called.
  *
  * @param[in]    aInstance  A pointer to an OpenThread instance.
- * @param[out]   aId        A pointer to the Border Agent ID.
+ * @param[in]    aId        A pointer to the Border Agent ID.
  *
  * @retval OT_ERROR_NONE  If successfully set the Border Agent ID.
  * @retval ...            If failed to set the Border Agent ID.

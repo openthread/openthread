@@ -68,7 +68,7 @@ static constexpr uint16_t kClassMask              = 0x7fff;
 static constexpr uint16_t kStringSize             = 300;
 static constexpr uint16_t kMaxDataSize            = 400;
 static constexpr uint16_t kNumAnnounces           = 3;
-static constexpr uint16_t kNumInitalQueries       = 3;
+static constexpr uint16_t kNumInitialQueries      = 15;
 static constexpr uint16_t kNumRefreshQueries      = 4;
 static constexpr bool     kCacheFlush             = true;
 static constexpr uint16_t kMdnsPort               = 5353;
@@ -5825,6 +5825,28 @@ void HandleRecordResultAlternate(otInstance *aInstance, const otMdnsRecordResult
     HandleRecordResult(aInstance, aResult);
 }
 
+uint32_t DetermineQueryWaitTime(uint8_t aQueryCount)
+{
+    uint32_t interval = 125;
+
+    if (aQueryCount == 0)
+    {
+        interval = 125;
+    }
+    else if (aQueryCount <= 12)
+    {
+        interval = (1U << (aQueryCount - 1)) * 1000;
+        interval += (interval / 32) + 1;
+    }
+    else
+    {
+        interval = 3600 * 1000;
+        interval += (interval / 32) + 1;
+    }
+
+    return interval;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 void TestBrowser(void)
@@ -5857,11 +5879,11 @@ void TestBrowser(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartBrowser(browser));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -6157,7 +6179,7 @@ void TestBrowser(void)
 
     sDnsMessages.Clear();
 
-    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 120, kInAnswerSection);
+    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 20 * 3600, kInAnswerSection);
 
     AdvanceTime(1);
 
@@ -6166,19 +6188,19 @@ void TestBrowser(void)
     VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
     VerifyOrQuit(!browseCallback->mIsSubType);
     VerifyOrQuit(browseCallback->mServiceInstance.Matches("mysrv"));
-    VerifyOrQuit(browseCallback->mTtl == 120);
+    VerifyOrQuit(browseCallback->mTtl == 20 * 3600);
     VerifyOrQuit(browseCallback->GetNext() == nullptr);
 
     sBrowseCallbacks.Clear();
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    Log("Validate initial esquires are still sent and include known-answer");
+    Log("Validate initial queries are still sent and include known-answer");
 
-    for (uint8_t queryCount = 1; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 1; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -6231,11 +6253,11 @@ void TestSrvResolver(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartSrvResolver(resolver));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -6610,11 +6632,16 @@ void TestSrvResolver(void)
 
     sSrvCallbacks.Clear();
 
-    AdvanceTime(15 * 1000);
+    AdvanceTime(20 * 1000);
+
+    // Initial query intervals use exponential backoff: 1, 2, 4,
+    // 8, ... seconds. Cumulative send times would be 0, 1, 3, 7,
+    // 15, 31, ... So within 20 seconds, we should see a total of 5
+    // queries.
 
     dnsMsg = sDnsMessages.GetHead();
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount <= 4; queryCount++)
     {
         VerifyOrQuit(dnsMsg != nullptr);
         dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
@@ -6664,11 +6691,11 @@ void TestTxtResolver(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartTxtResolver(resolver));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -7031,11 +7058,16 @@ void TestTxtResolver(void)
 
     sTxtCallbacks.Clear();
 
-    AdvanceTime(15 * 1000);
+    AdvanceTime(20 * 1000);
+
+    // Initial query intervals use exponential backoff: 1, 2, 4,
+    // 8, ... seconds. Cumulative send times would be 0, 1, 3, 7,
+    // 15, 31, ... So within 20 seconds, we should see a total of 5
+    // queries.
 
     dnsMsg = sDnsMessages.GetHead();
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount <= 4; queryCount++)
     {
         VerifyOrQuit(dnsMsg != nullptr);
         dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
@@ -7085,11 +7117,11 @@ void TestIp6AddrResolver(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -7539,11 +7571,16 @@ void TestIp6AddrResolver(void)
 
     sAddrCallbacks.Clear();
 
-    AdvanceTime(15 * 1000);
+    AdvanceTime(20 * 1000);
+
+    // Initial query intervals use exponential backoff: 1, 2, 4,
+    // 8, ... seconds. Cumulative send times would be 0, 1, 3, 7,
+    // 15, 31, ... So within 20 seconds, we should see a total of 5
+    // queries.
 
     dnsMsg = sDnsMessages.GetHead();
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount <= 4; queryCount++)
     {
         VerifyOrQuit(dnsMsg != nullptr);
         dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
@@ -7599,11 +7636,11 @@ void TestRecordQuerier(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartRecordQuerier(querier));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
@@ -8088,11 +8125,11 @@ void TestRecordQuerierForAny(void)
     sDnsMessages.Clear();
     SuccessOrQuit(mdns->StartRecordQuerier(querier));
 
-    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
     {
         sDnsMessages.Clear();
 
-        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();

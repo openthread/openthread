@@ -602,6 +602,50 @@ exit:
     return error;
 }
 
+/**
+ * @cli br nat64prefixtable
+ * @code
+ * br nat64prefixtable
+ * prefix:fd00:1234:5678:0:0:0::/96, ms-since-rx:29526, lifetime:1800, router:fe80:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+ * prefix:fd11:2233:4455:0:0:0::/96, ms-since-rx:29527, lifetime:1800, router:fe80:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+ * Done
+ * @endcode
+ * @par
+ * Get the RA-discovered NAT64 prefixes by Border Routing Manager on the infrastructure link.
+ * Info per prefix entry:
+ * - The prefix
+ * - Milliseconds since last received Router Advertisement containing this prefix
+ * - Prefix lifetime in seconds
+ * - The router IPv6 address which advertises this prefix
+ * - Flags in received Router Advertisement header:
+ *   - M: Managed Address Config flag
+ *   - O: Other Config flag
+ *   - S: SNAC Router flag
+ * @sa otBorderRoutingGetNextNat64PrefixEntry
+ */
+template <> otError Br::Process<Cmd("nat64prefixtable")>(Arg aArgs[])
+{
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingNat64PrefixEntry    entry;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+    while (otBorderRoutingGetNextNat64PrefixEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+    {
+        char string[OT_IP6_PREFIX_STRING_SIZE];
+
+        otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
+        OutputFormat("prefix:%s, ms-since-rx:%lu, lifetime:%lu, router:", string, ToUlong(entry.mMsecSinceLastUpdate),
+                     ToUlong(entry.mLifetime));
+        OutputRouterInfo(entry.mRouter, kShortVersion);
+    }
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
@@ -701,7 +745,7 @@ exit:
  * - Prefix lifetime in seconds
  * - Preferred lifetime in seconds only if prefix is on-link
  * - Route preference (low, med, high) only if prefix is route (not on-link)
- * - The router IPv6 address which advertising this prefix
+ * - The router IPv6 address which advertises this prefix
  * - Flags in received Router Advertisement header:
  *   - M: Managed Address Config flag
  *   - O: Other Config flag
@@ -1172,23 +1216,23 @@ otError Br::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
 #endif
-        CmdEntry("disable"),     CmdEntry("enable"),    CmdEntry("ifaddrs"),      CmdEntry("infraif"),
+        CmdEntry("disable"),     CmdEntry("enable"),           CmdEntry("ifaddrs"),      CmdEntry("infraif"),
         CmdEntry("init"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
         CmdEntry("multiail"),
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        CmdEntry("nat64prefix"),
+        CmdEntry("nat64prefix"), CmdEntry("nat64prefixtable"),
 #endif
-        CmdEntry("omrconfig"),   CmdEntry("omrprefix"), CmdEntry("onlinkprefix"),
+        CmdEntry("omrconfig"),   CmdEntry("omrprefix"),        CmdEntry("onlinkprefix"),
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         CmdEntry("pd"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
         CmdEntry("peers"),
 #endif
-        CmdEntry("prefixtable"), CmdEntry("raoptions"), CmdEntry("rdnsstable"),   CmdEntry("rioprf"),
-        CmdEntry("routeprf"),    CmdEntry("routers"),   CmdEntry("state"),
+        CmdEntry("prefixtable"), CmdEntry("raoptions"),        CmdEntry("rdnsstable"),   CmdEntry("rioprf"),
+        CmdEntry("routeprf"),    CmdEntry("routers"),          CmdEntry("state"),
     };
 
 #undef CmdEntry

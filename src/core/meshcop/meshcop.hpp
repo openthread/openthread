@@ -46,6 +46,7 @@
 #include "common/equatable.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
@@ -229,7 +230,15 @@ private:
 class SteeringData : public otSteeringData
 {
 public:
+    static constexpr uint8_t kMinLength = 1;                           ///< Minimum Steering Data length (in bytes).
     static constexpr uint8_t kMaxLength = OT_STEERING_DATA_MAX_LENGTH; ///< Maximum Steering Data length (in bytes).
+
+    static constexpr uint16_t kInfoStringSize = 45; ///< Size of `InfoString` to use with `ToString()`.
+
+    /**
+     * Defines the fixed-length `String` object returned from `ToString()`.
+     */
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * Represents the hash bit index values for the bloom filter calculated from a Joiner ID.
@@ -300,6 +309,20 @@ public:
     void UpdateBloomFilter(const JoinerDiscerner &aDiscerner);
 
     /**
+     * Merges the bloom filter by combining it with another steering data filter.
+     *
+     * Both bloom filters must have valid lengths (non-zero and not exceeding `kMaxLength`).
+     *
+     * The bloom filter from @p aOther must have a length that is a divisor of the current filter's length.
+     *
+     * @param[in] aOther  The other bloom filter to combine with current filter.
+     *
+     * @retval kErrorNone         Successfully merged @p aOther into the current bloom filter.
+     * @retval kErrorInvalidArgs  The filter lengths are not valid or they cannot be merged.
+     */
+    Error MergeBloomFilterWith(const SteeringData &aOther);
+
+    /**
      * Indicates whether the bloom filter is empty (all the bits are cleared).
      *
      * @returns TRUE if the bloom filter is empty, FALSE otherwise.
@@ -341,6 +364,13 @@ public:
     bool Contains(const HashBitIndexes &aIndexes) const;
 
     /**
+     * Converts the Steering Data to a human-readable string representation.
+     *
+     * @returns An `InfoString` representation of the Steering Data.
+     */
+    InfoString ToString(void) const;
+
+    /**
      * Calculates the bloom filter hash bit indexes from a given Joiner ID.
      *
      * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
@@ -363,6 +393,7 @@ public:
 private:
     static constexpr uint8_t kPermitAll = 0xff;
 
+    bool    IsLengthValid(void) const { return IsValueInRange(mLength, kMinLength, kMaxLength); }
     uint8_t GetNumBits(void) const { return (mLength * kBitsPerByte); }
 
     uint8_t BitIndex(uint8_t aBit) const { return (mLength - 1 - (aBit / kBitsPerByte)); }

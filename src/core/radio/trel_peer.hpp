@@ -52,6 +52,7 @@
 #include "common/owning_list.hpp"
 #include "common/pool.hpp"
 #include "common/timer.hpp"
+#include "common/uptime.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "net/socket.hpp"
@@ -217,12 +218,12 @@ private:
 
     struct ExpireChecker // Matches if the peer is in `kDnssdRemoved` and already expired.
     {
-        explicit ExpireChecker(uint32_t aUptimeNow)
+        explicit ExpireChecker(UptimeSec aUptimeNow)
             : mUptimeNow(aUptimeNow)
         {
         }
 
-        uint32_t mUptimeNow;
+        UptimeSec mUptimeNow;
     };
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
@@ -253,7 +254,7 @@ private:
     bool     Matches(const OtherExtPanIdMatcher &aMatcher) const { return GetExtPanId() != aMatcher.mExtPanId; }
     bool     Matches(const NonNeighborMatcher &aMatcher) const;
     bool     Matches(const ExpireChecker &aChecker) const;
-    uint32_t DetermineExpirationDelay(uint32_t aUptimeNow) const;
+    uint32_t DetermineExpirationDelay(UptimeSec aUptimeNow) const;
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     void SetPort(uint16_t aPort);
@@ -275,7 +276,7 @@ private:
 
     Peer      *mNext;
     DnssdState mDnssdState;
-    uint32_t   mLastInteractionTime;
+    UptimeSec  mLastInteractionTime;
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     bool         mExtAddressSet : 1;
     bool         mResolvingService : 1;

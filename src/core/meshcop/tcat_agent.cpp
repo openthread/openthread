@@ -398,11 +398,13 @@ bool TcatAgent::IsCommandClassAuthorized(CommandClass aCommandClass) const
 
 Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage)
 {
-    Error    error = kErrorParse;
-    ot::Tlv  tlv;
-    uint16_t offset = aIncomingMessage.GetOffset();
-    uint16_t length;
-    bool     response = false;
+    Error          error;
+    StatusCode     statusCode = kStatusGeneralError;
+    ot::Tlv        tlv;
+    uint16_t       offset                   = aIncomingMessage.GetOffset();
+    const uint16_t initialOutgoingMsgLength = aOutgoingMessage.GetLength();
+    uint16_t       length;
+    bool           response = false;
 
     VerifyOrExit(IsConnected(), error = kErrorInvalidState);
     SuccessOrExit(error = aIncomingMessage.Read(offset, tlv));
@@ -514,8 +516,6 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
 
     if (!response)
     {
-        StatusCode statusCode;
-
         switch (error)
         {
         case kErrorNone:
@@ -557,14 +557,21 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
             break;
 
         default:
-            statusCode = kStatusGeneralError;
+            // remains kStatusGeneralError
             break;
         }
-
-        SuccessOrExit(error = ot::Tlv::Append<ResponseWithStatusTlv>(aOutgoingMessage, statusCode));
+        error = kErrorNone; // reset the error - as it's now converted to statusCode
     }
 
 exit:
+    if (!response && error == kErrorNone) // skip initial-check error cases, where no TLV response must be sent.
+    {
+        // reset any partial TLV content that may have been appended already by failed Handle...() methods.
+        IgnoreError(aOutgoingMessage.SetLength(initialOutgoingMsgLength));
+        // Append a single Response with Status TLV to the response message; and ensure to only
+        // return error != kErrorNone if there was an issue appending this TLV.
+        error = ot::Tlv::Append<ResponseWithStatusTlv>(aOutgoingMessage, statusCode);
+    }
     return error;
 }
 
@@ -887,6 +894,7 @@ Error TcatAgent::HandleRequestRandomNumberChallenge(Message &aOutgoingMessage, b
     SuccessOrExit(
         error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, &mRandomChallenge, sizeof(mRandomChallenge)));
     aResponse = true;
+
 exit:
     return error;
 }
