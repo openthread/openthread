@@ -339,6 +339,48 @@ public:
     void DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver);
 
     /**
+     * Starts a TXT resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartTxtResolver(const otPlatDnssdTxtResolver *aResolver);
+
+    /**
+     * Stops a TXT resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopTxtResolver(const otPlatDnssdTxtResolver *aResolver);
+
+    /**
+     * Starts an IPv6 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
+     * Stops an IPv6 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
+     * Starts an IPv4 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
+     * Stops an IPv4 address resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver);
+
+    /**
      * Gets the Dnssd state.
      *
      * Returns the platform dnssd state.
@@ -585,6 +627,10 @@ protected:
                                        uint16_t      aSockPort,
                                        void         *aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    static void HandleTrelStateChanged(void *aContext);
+    void        HandleTrelStateChanged(void);
+#endif
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -901,7 +947,7 @@ protected:
         SuccessOrExit(error = mEncoder.EndFrame());
 
     exit:
-        if (error != OT_ERROR_NONE)
+        if (error != OT_ERROR_NONE && aCallback != nullptr)
         {
             aCallback(mInstance, aRequestId, error);
         }
@@ -928,6 +974,10 @@ protected:
     exit:
         return;
     }
+
+    void DnssdUpdateAddressResolverDiscovery(const otPlatDnssdAddressResolver *aDiscovery,
+                                             bool                              aStart,
+                                             spinel_prop_key_t                 aPropKey);
 
     otPlatDnssdState mDnssdState;
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
@@ -962,6 +1012,11 @@ template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdBrowser>
 template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
 {
     static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_SRV_RESOLVER;
+};
+
+template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdTxtResolver>
+{
+    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_TXT_RESOLVER;
 };
 #endif
 
