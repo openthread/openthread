@@ -693,7 +693,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
 exit:
     errorMd = metadata.AppendTo(aRequestOld);
-    // Use error from earlier it exists
+    // Use error from earlier if it exists
     return (error == kErrorNone) ? errorMd : error;
 }
 
