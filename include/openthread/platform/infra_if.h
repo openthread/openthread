@@ -167,7 +167,7 @@ otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex);
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface on which the NAT64 prefix is discovered.
  * @param[in]  aIp6Prefix     A pointer to NAT64 prefix.
  *
- * @note  This function is used for the platform to discover a NAT64 prefix with a method (such as RFC 7050 DNS-based
+ * @note  This function is used to report a NAT64 prefix discovered by the platform (e.g. using RFC 7050 DNS-based
  *        discovery). The priority of the discovered prefix is lower than that of the prefix discovered via Router
  *        Advertisements PREF64 option (RFC 8781).
  */
