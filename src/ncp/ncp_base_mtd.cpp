@@ -53,6 +53,14 @@
 #endif
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#include <openthread/platform/mdns_socket.h>
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#include <openthread/trel.h>
+#include <openthread/platform/trel.h>
+#include "radio/trel_interface.hpp"
+#endif
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
 #endif
@@ -64,9 +72,6 @@
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 #include <openthread/srp_client_buffers.h>
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/trel.h>
 #endif
 
 #include "cli/cli_config.h"
@@ -4191,7 +4196,42 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_
 exit:
     return error;
 }
-#endif
+
+void NcpBase::HandleTrelStateChanged(void *aContext) { static_cast<NcpBase *>(aContext)->HandleTrelStateChanged(); }
+
+void NcpBase::HandleTrelStateChanged(void)
+{
+    mChangedPropsSet.AddProperty(SPINEL_PROP_TREL_STATE);
+    mUpdateChangedPropsTask.Post();
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TREL_STATE>(void)
+{
+    otError  error   = OT_ERROR_NONE;
+    bool     enabled = otTrelIsEnabled(mInstance);
+    uint16_t port    = enabled ? otTrelGetUdpPort(mInstance) : 0;
+
+    SuccessOrExit(error = mEncoder.WriteBool(enabled));
+    SuccessOrExit(error = mEncoder.WriteUint16(port));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TREL_USER_ENABLE>(void)
+{
+    bool     enabled;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+
+    otTrelSetEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(void)

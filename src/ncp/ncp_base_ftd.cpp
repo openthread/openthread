@@ -1688,6 +1688,10 @@ exit:
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
+namespace {
+constexpr uint16_t kMaxDnssdAddressResultEntries = 32;
+}
+
 void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
                                 otPlatDnssdRequestId        aRequestId,
                                 otPlatDnssdRegisterCallback aCallback)
@@ -1750,6 +1754,54 @@ void NcpBase::DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver)
     DnssdUpdateDiscovery(aResolver, /* aStart */ false);
 }
 
+void NcpBase::DnssdStartTxtResolver(const otPlatDnssdTxtResolver *aResolver)
+{
+    DnssdUpdateDiscovery(aResolver, true);
+}
+
+void NcpBase::DnssdStopTxtResolver(const otPlatDnssdTxtResolver *aResolver)
+{
+    DnssdUpdateDiscovery(aResolver, false);
+}
+
+void NcpBase::DnssdUpdateAddressResolverDiscovery(const otPlatDnssdAddressResolver *aDiscovery,
+                                                  bool                              aStart,
+                                                  spinel_prop_key_t                 aPropKey)
+{
+    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t cmd    = aStart ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
+
+    VerifyOrExit(aDiscovery != nullptr);
+    VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY);
+
+    SuccessOrExit(mEncoder.BeginFrame(header, cmd, aPropKey));
+    SuccessOrExit(Spinel::EncodeDnssdDiscovery(mEncoder, *aDiscovery));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+void NcpBase::DnssdStartIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, true, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER);
+}
+
+void NcpBase::DnssdStopIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, false, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER);
+}
+
+void NcpBase::DnssdStartIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, true, SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER);
+}
+
+void NcpBase::DnssdStopIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, false, SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER);
+}
+
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
@@ -1783,7 +1835,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
     SuccessOrExit(error = mDecoder.ReadData(context, contextLen));
     VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
-    callback(mInstance, requestId, static_cast<otError>(result));
+    if (callback != nullptr)
+    {
+        callback(mInstance, requestId, static_cast<otError>(result));
+    }
 
 exit:
     return error;
@@ -1800,7 +1855,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(
     SuccessOrExit(error = DecodeDnssdBrowseResult(mDecoder, browseResult, context, contextLen));
     VerifyOrExit(contextLen == sizeof(otPlatDnssdBrowseCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdBrowseCallback *>(context);
-    callback(mInstance, &browseResult);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &browseResult);
+    }
 
 exit:
     return error;
@@ -1817,7 +1875,74 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_SRV_RESULT>(voi
     SuccessOrExit(error = DecodeDnssdSrvResult(mDecoder, srvResult, context, contextLen));
     VerifyOrExit(contextLen == sizeof(otPlatDnssdSrvCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdSrvCallback *>(context);
-    callback(mInstance, &srvResult);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &srvResult);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_TXT_RESULT>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otPlatDnssdTxtResult   txtResult;
+    otPlatDnssdTxtCallback callback = nullptr;
+    const uint8_t         *context;
+    uint16_t               contextLen;
+
+    SuccessOrExit(error = DecodeDnssdTxtResult(mDecoder, txtResult, context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdTxtCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdTxtCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &txtResult);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT>(void)
+{
+    otError                     error = OT_ERROR_NONE;
+    otPlatDnssdAddressResult    addrResult;
+    otPlatDnssdAddressAndTtl    addrArray[kMaxDnssdAddressResultEntries];
+    otPlatDnssdAddressCallback callback = nullptr;
+    const uint8_t              *context;
+    uint16_t                    contextLen;
+
+    SuccessOrExit(error = DecodeDnssdAddressResult(mDecoder, addrResult, addrArray, kMaxDnssdAddressResultEntries,
+                                                   context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdAddressCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdAddressCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &addrResult);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT>(void)
+{
+    otError                     error = OT_ERROR_NONE;
+    otPlatDnssdAddressResult    addrResult;
+    otPlatDnssdAddressAndTtl    addrArray[kMaxDnssdAddressResultEntries];
+    otPlatDnssdAddressCallback callback = nullptr;
+    const uint8_t              *context;
+    uint16_t                    contextLen;
+
+    SuccessOrExit(error = DecodeDnssdAddressResult(mDecoder, addrResult, addrArray, kMaxDnssdAddressResultEntries,
+                                                   context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdAddressCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdAddressCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &addrResult);
+    }
 
 exit:
     return error;
