@@ -150,7 +150,7 @@ extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraI
  * @retval  OT_ERROR_NONE    Successfully request NAT64 prefix discovery.
  * @retval  OT_ERROR_FAILED  Failed to request NAT64 prefix discovery.
  *
- * @note  This function is used for the platform to discover a NAT64 prefix with a method (such as RFC 7050 DNS-based
+ * @note  This function requests the platform to discover a NAT64 prefix (e.g. using RFC 7050 DNS-based
  *        discovery). The priority of the discovered prefix is lower than that of the prefix discovered via Router
  *        Advertisements PREF64 option (RFC 8781).
  */
