@@ -472,6 +472,7 @@ public:
      * @retval kErrorNone           Browser started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical browser (same service and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aBrowser is invalid, or the callback is `nullptr`.
      */
     Error StartBrowser(const Browser &aBrowser);
 
@@ -483,7 +484,8 @@ public:
      * @param[in] aBrowser    The browser to stop.
      *
      * @retval kErrorNone           Browser stopped successfully.
-     * @retval kErrorInvalidSatet  mDNS module is not enabled.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aBrowser is invalid, or the callback is `nullptr`.
      */
     Error StopBrowser(const Browser &aBrowser);
 
@@ -507,6 +509,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartSrvResolver(const SrvResolver &aResolver);
 
@@ -519,6 +522,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopSrvResolver(const SrvResolver &aResolver);
 
@@ -542,6 +546,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartTxtResolver(const TxtResolver &aResolver);
 
@@ -554,6 +559,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopTxtResolver(const TxtResolver &aResolver);
 
@@ -577,6 +583,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -589,6 +596,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -613,6 +621,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -625,6 +634,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -653,10 +663,11 @@ public:
      *
      * @param[in] aQuerier    The record querier to be started.
      *
-     * @retval kErrorNone              Record @p aQuerier started successfully.
-     * @retval kErrorInvalidState      mDNS module is not enabled.
-     * @retval kErrorAlready           An identical querier (same name, record type, and callback) is already active.
-     * @retval kErrorInvalidArg   The `mRecordType` in @p aQuerier is invalid. MUST use browser/resolvers.
+     * @retval kErrorNone          Record @p aQuerier started successfully.
+     * @retval kErrorInvalidState  mDNS module is not enabled.
+     * @retval kErrorAlready       An identical querier (same name, record type, and callback) is already active.
+     * @retval kErrorInvalidArgs   The `mRecordType` in @p aQuerier is invalid (MUST use browser/resolvers), or
+     *                             a name in @p aQuerier is invalid, or the callback is `nullptr`.
      */
     Error StartRecordQuerier(const RecordQuerier &aQuerier);
 
@@ -667,8 +678,10 @@ public:
      *
      * @param[in] aQuerier    The record querier to be stopped.
      *
-     * @retval kErrorNone           Querier stopped successfully.
-     * @retval kErrorInvalidStat    mDNS module is not enabled.
+     * @retval kErrorNone          Querier stopped successfully.
+     * @retval kErrorInvalidState  mDNS module is not enabled.
+     * @retval kErrorInvalidArgs   The `mRecordType` in @p aQuerier is invalid (MUST use browser/resolvers), or
+     *                             a name in @p aQuerier is invalid, or the callback is `nullptr`.
      */
     Error StopRecordQuerier(const RecordQuerier &aQuerier);
 
@@ -2328,6 +2341,11 @@ private:
     Error     ValidateHostName(const Host &aHost) const;
     Error     ValidateServiceNames(const Service &aService, bool aCheckHostAndSubTypeLabels) const;
     Error     ValidateKeyName(const Key &aKey) const;
+    Error     ValidateNamesIn(const Browser &aBrowser) const;
+    Error     ValidateNamesIn(const SrvResolver &aSrvResolver) const;
+    Error     ValidateNamesIn(const TxtResolver &aTxtResolver) const;
+    Error     ValidateNamesIn(const AddressResolver &aAddressResolver) const;
+    Error     ValidateNamesIn(const RecordQuerier &aRecordQuerier) const;
     void      HandleInfraIfStateChanged(void);
     void      HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
     void      HandleHostAddressRemoveAll(uint32_t aInfraIfIndex);
