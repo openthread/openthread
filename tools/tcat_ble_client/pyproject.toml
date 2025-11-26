@@ -4,9 +4,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "tcat-ble-client"
-version = "0.2.0"
-description = "TCAT Commissioner (BBTC) client to configure TCAT devices"
+version = "0.3.0"
+description = "TCAT Commissioner (BBTC) test client to configure TCAT devices"
 authors = ["Piotr Jasinski <piotr.jasinski@nordicsemi.no>", "Esko Dijk <esko.dijk@iotconsultancy.nl>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
