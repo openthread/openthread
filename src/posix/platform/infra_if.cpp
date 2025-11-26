@@ -558,6 +558,63 @@ exit:
 
 #ifdef __linux__
 
+void InfraNetif::ProcessNetLinkMessage(struct nlmsghdr *aNetlinkMessage)
+{
+    struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
+
+    switch (aNetlinkMessage->nlmsg_type)
+    {
+    case RTM_DELLINK:
+    {
+        VerifyOrExit(ifinfo->ifi_index == static_cast<int>(mInfraIfIndex));
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, /* aIsRunning */ false));
+#endif
+
+        mInfraIfIndex = 0;
+        break;
+    }
+    case RTM_NEWLINK:
+    {
+        char  nameBuffer[IF_NAMESIZE] = {};
+        char *ifname;
+
+        ifname = if_indextoname(ifinfo->ifi_index, nameBuffer);
+        VerifyOrExit(ifname != nullptr && strcmp(ifname, mInfraIfName) == 0);
+
+        if (ifinfo->ifi_index != static_cast<int>(mInfraIfIndex))
+        {
+            LogInfo("The infra interface index changed from %u to %u", mInfraIfIndex, ifinfo->ifi_index);
+            mInfraIfIndex = ifinfo->ifi_index;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+            SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, (ifinfo->ifi_flags & IFF_RUNNING)));
+#endif
+        }
+        else
+        {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, (ifinfo->ifi_flags & IFF_RUNNING)));
+#endif
+        }
+        break;
+    }
+    case NLMSG_ERROR:
+    {
+        struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(aNetlinkMessage));
+
+        OT_UNUSED_VARIABLE(errMsg);
+        LogWarn("netlink NLMSG_ERROR response: seq=%u, error=%d", aNetlinkMessage->nlmsg_seq, errMsg->error);
+        break;
+    }
+    default:
+        break;
+    }
+
+exit:
+    return;
+}
+
 void InfraNetif::ReceiveNetLinkMessage(void)
 {
     const size_t kMaxNetLinkBufSize = 8192;
@@ -578,30 +635,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
     for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, static_cast<size_t>(len));
          header                  = NLMSG_NEXT(header, len))
     {
-        switch (header->nlmsg_type)
-        {
-        // There are no effective netlink message types to get us notified
-        // of interface RUNNING state changes. But addresses events are
-        // usually associated with interface state changes.
-        case RTM_NEWADDR:
-        case RTM_DELADDR:
-        case RTM_NEWLINK:
-        case RTM_DELLINK:
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
-#endif
-            break;
-        case NLMSG_ERROR:
-        {
-            struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(header));
-
-            OT_UNUSED_VARIABLE(errMsg);
-            LogWarn("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
-            break;
-        }
-        default:
-            break;
-        }
+        ProcessNetLinkMessage(header);
     }
 
 exit:
