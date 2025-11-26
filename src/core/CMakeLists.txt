@@ -84,6 +84,7 @@ set(COMMON_SOURCES
     api/srp_client_api.cpp
     api/srp_client_buffers_api.cpp
     api/srp_server_api.cpp
+    api/steering_data_api.cpp
     api/tasklet_api.cpp
     api/tcp_api.cpp
     api/tcp_ext_api.cpp
