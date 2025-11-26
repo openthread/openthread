@@ -190,6 +190,16 @@ void otTrelResetCounters(otInstance *aInstance);
 uint16_t otTrelGetUdpPort(otInstance *aInstance);
 
 /**
+ * Callback function pointer to signal state changes to the TREL.
+ *
+ * This callback is invoked whenever TREL state or TREL UDP port gets changed.
+ *
+ * @param[in] aContext   A pointer to an arbitrary context (provided when callback is set).
+ */
+typedef void (*otTrelStateChangeCallback)(void *aContext);
+void otTrelSetStateChangeCallback(otInstance *aInstance, otTrelStateChangeCallback aCallback, void *aContext);
+
+/**
  * @}
  */
 
