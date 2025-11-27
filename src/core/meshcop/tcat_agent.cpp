@@ -246,43 +246,79 @@ void TcatAgent::Disconnected(void)
     }
 }
 
-uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequired, Dataset::Info *aDatasetInfo) const
+uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequired,
+                                                  Dataset::Info    *aDatasetInfo,
+                                                  Dataset::Info    *aBackupDatasetInfo) const
 {
+    const bool pskcAbsentInActiveDataset = aDatasetInfo == nullptr || !aDatasetInfo->IsPresent<Dataset::kPskc>();
+    const bool nameAbsentInActiveDataset = aDatasetInfo == nullptr || !aDatasetInfo->IsPresent<Dataset::kNetworkName>();
+    const bool nameAbsentInBackupDataset =
+        aBackupDatasetInfo == nullptr || !aBackupDatasetInfo->IsPresent<Dataset::kNetworkName>();
     uint8_t res = kAccessFlag;
 
     for (uint16_t flag = kPskdFlag; flag < kMaxFlag; flag <<= 1)
     {
         if (aFlagsRequired & flag)
         {
+            bool authorized = false;
+
             switch (flag)
             {
             case kPskdFlag:
                 if (mPskdVerified)
                 {
-                    res |= flag;
+                    authorized = true;
                 }
                 break;
 
             case kNetworkNameFlag:
-                if (aDatasetInfo != nullptr && mCommissionerHasNetworkName &&
-                    aDatasetInfo->IsPresent<Dataset::kNetworkName>() &&
-                    (aDatasetInfo->Get<Dataset::kNetworkName>() == mCommissionerNetworkName))
+                // Commissioner needs to have at least a network name in the certificate.
+                if (mCommissionerHasNetworkName)
                 {
-                    res |= flag;
+                    if (!nameAbsentInActiveDataset &&
+                        aDatasetInfo->Get<Dataset::kNetworkName>() == mCommissionerNetworkName)
+                    {
+                        authorized = true; // Network name matches Active Dataset's
+                    }
+                    if (!nameAbsentInBackupDataset &&
+                        aBackupDatasetInfo->Get<Dataset::kNetworkName>() == mCommissionerNetworkName)
+                    {
+                        authorized = true; // Network name matches Backup Dataset's
+                    }
+                    if (nameAbsentInActiveDataset && nameAbsentInBackupDataset)
+                    {
+                        authorized = true; // Name not in any datasets, so we can authorize with any name.
+                    }
                 }
                 break;
 
             case kExtendedPanIdFlag:
-                if (aDatasetInfo != nullptr && mCommissionerHasExtendedPanId &&
-                    aDatasetInfo->IsPresent<Dataset::kExtendedPanId>() &&
-                    (aDatasetInfo->Get<Dataset::kExtendedPanId>() == mCommissionerExtendedPanId))
+                // Commissioner needs to have at least an XPAN ID in the certificate.
+                if (mCommissionerHasExtendedPanId)
                 {
-                    res |= flag;
+                    const bool xpanAbsentInActiveDataset =
+                        aDatasetInfo == nullptr || !aDatasetInfo->IsPresent<Dataset::kExtendedPanId>();
+                    const bool xpanAbsentInBackupDataset =
+                        aBackupDatasetInfo == nullptr || !aBackupDatasetInfo->IsPresent<Dataset::kExtendedPanId>();
+
+                    if (!xpanAbsentInActiveDataset &&
+                        aDatasetInfo->Get<Dataset::kExtendedPanId>() == mCommissionerExtendedPanId)
+                    {
+                        authorized = true; // Commissioner's XPAN ID matches Active Dataset's.
+                    }
+                    if (!xpanAbsentInBackupDataset &&
+                        aBackupDatasetInfo->Get<Dataset::kExtendedPanId>() == mCommissionerExtendedPanId)
+                    {
+                        authorized = true; // Commissioner's XPAN ID matches Backup Dataset's.
+                    }
+                    if (xpanAbsentInActiveDataset && xpanAbsentInBackupDataset)
+                    {
+                        authorized = true; // XPAN ID not in any datasets, so we can authorize with any XPAN ID.
+                    }
                 }
                 break;
 
             case kThreadDomainFlag:
-
                 if (mCommissionerHasDomainName)
                 {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_4)
@@ -291,21 +327,27 @@ uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequir
                     if (StringMatch(mCommissionerDomainName.GetAsCString(), NetworkName::kDomainNameInit))
 #endif
                     {
-                        res |= flag;
+                        authorized = true;
                     }
                 }
                 break;
 
             case kPskcFlag:
-                if (mPskcVerified)
+                // the presence of PSKc in the Backup Dataset is irrelevant for this case (see spec)
+                if (mPskcVerified || pskcAbsentInActiveDataset)
                 {
-                    res |= flag;
+                    authorized = true;
                 }
                 break;
 
             default:
-                LogCrit("Error in access flags. Unexpected flag %d", flag);
-                OT_ASSERT(false); // Should not get here
+                // A requirement for an unknown/future flag will always fail (see spec).
+                break;
+            }
+
+            if (authorized)
+            {
+                res |= flag;
             }
         }
     }
@@ -313,43 +355,35 @@ uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequir
     return res;
 }
 
-bool TcatAgent::CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
-                                                    CommandClassFlags aDeviceCommandClassFlags,
-                                                    Dataset          *aDataset) const
+bool TcatAgent::IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissionerCommandClassFlags,
+                                                  CommandClassFlags aDeviceCommandClassFlags,
+                                                  Dataset          *aCommSuppliedDataset) const
 {
-    bool          authorized = false;
-    uint8_t       deviceRequirementMet;
-    uint8_t       commissionerRequirementMet;
-    Dataset::Info datasetInfo;
-    Error         datasetError = kErrorNone;
+    bool           authorized = false;
+    uint8_t        deviceRequirementMet;
+    uint8_t        commissionerRequirementMet;
+    Dataset::Info  activeDatasetInfo;
+    Dataset::Info  backupDatasetInfo;
+    Dataset::Info *activeDatasetInfoPtr = nullptr;
+    Dataset::Info *backupDatasetInfoPtr = nullptr;
 
     VerifyOrExit(IsConnected());
 
-    if (aDataset == nullptr)
+    if (Get<ActiveDatasetManager>().Read(activeDatasetInfo) == kErrorNone)
     {
-        datasetError = Get<ActiveDatasetManager>().Read(datasetInfo);
-    }
-    else
-    {
-        aDataset->ConvertTo(datasetInfo);
+        activeDatasetInfoPtr = &activeDatasetInfo;
     }
 
-    if (datasetError == kErrorNone)
+    if (aCommSuppliedDataset != nullptr)
     {
-        deviceRequirementMet       = CheckAuthorizationRequirements(aDeviceCommandClassFlags, &datasetInfo);
-        commissionerRequirementMet = CheckAuthorizationRequirements(aCommissionerCommandClassFlags, &datasetInfo);
-    }
-    else
-    {
-        deviceRequirementMet       = CheckAuthorizationRequirements(aDeviceCommandClassFlags, nullptr);
-        commissionerRequirementMet = CheckAuthorizationRequirements(aCommissionerCommandClassFlags, nullptr);
+        aCommSuppliedDataset->ConvertTo(backupDatasetInfo);
+        backupDatasetInfoPtr = &backupDatasetInfo;
     }
 
-    if (aDataset != nullptr) // For set active operational dataset TLV the PSKc check is always successful
-    {
-        deviceRequirementMet |= kPskcFlag;
-        commissionerRequirementMet |= (aCommissionerCommandClassFlags & kPskcFlag);
-    }
+    deviceRequirementMet =
+        CheckAuthorizationRequirements(aDeviceCommandClassFlags, activeDatasetInfoPtr, backupDatasetInfoPtr);
+    commissionerRequirementMet =
+        CheckAuthorizationRequirements(aCommissionerCommandClassFlags, activeDatasetInfoPtr, backupDatasetInfoPtr);
 
     authorized = (commissionerRequirementMet == aCommissionerCommandClassFlags) &&
                  (deviceRequirementMet & aDeviceCommandClassFlags);
@@ -362,6 +396,8 @@ bool TcatAgent::IsCommandClassAuthorized(CommandClass aCommandClass) const
 {
     bool authorized = false;
 
+    VerifyOrExit(IsConnected());
+
     switch (aCommandClass)
     {
     case kGeneral:
@@ -369,31 +405,37 @@ bool TcatAgent::IsCommandClassAuthorized(CommandClass aCommandClass) const
         break;
 
     case kCommissioning:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
-                                                         mDeviceAuthorizationField.mCommissioningFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                                       mDeviceAuthorizationField.mCommissioningFlags, nullptr);
         break;
 
     case kExtraction:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mExtractionFlags,
-                                                         mDeviceAuthorizationField.mExtractionFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mExtractionFlags,
+                                                       mDeviceAuthorizationField.mExtractionFlags, nullptr);
         break;
 
     case kDecommissioning:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mDecommissioningFlags,
-                                                         mDeviceAuthorizationField.mDecommissioningFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mDecommissioningFlags,
+                                                       mDeviceAuthorizationField.mDecommissioningFlags, nullptr);
         break;
 
     case kApplication:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,
-                                                         mDeviceAuthorizationField.mApplicationFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mApplicationFlags,
+                                                       mDeviceAuthorizationField.mApplicationFlags, nullptr);
         break;
 
-    case kInvalid:
-        authorized = false;
+    default:
         break;
     }
 
+exit:
     return authorized;
+}
+
+bool TcatAgent::IsSetActiveDatasetAuthorized(Dataset *aDataset) const
+{
+    return IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                             mDeviceAuthorizationField.mCommissioningFlags, aDataset);
 }
 
 Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage)
@@ -590,12 +632,7 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     SuccessOrExit(error = dataset.ValidateTlvs());
     VerifyOrExit(dataset.ContainsTlv(Tlv::kNetworkKey), error = kErrorInvalidArgs);
 
-    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
-                                             mDeviceAuthorizationField.mCommissioningFlags, &dataset))
-    {
-        error = kErrorRejected;
-        ExitNow();
-    }
+    VerifyOrExit(IsSetActiveDatasetAuthorized(&dataset), error = kErrorRejected);
 
     SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
     Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
@@ -648,12 +685,7 @@ Error TcatAgent::HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
     uint16_t        initialLength;
     uint16_t        length;
 
-    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
-                                             mDeviceAuthorizationField.mCommissioningFlags, nullptr))
-    {
-        error = kErrorRejected;
-        ExitNow();
-    }
+    VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
 
     offsetRange.Init(aOffset, aLength);
     initialLength = aOutgoingMessage.GetLength();
@@ -1204,7 +1236,7 @@ void SerializeTcatAdvertisementTlv(uint8_t                 *aBuffer,
     aOffset += aLength;
 }
 
-Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData)
+Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData) const
 {
     Error                 error = kErrorNone;
     DeviceTypeAndStatus   tas;
@@ -1281,6 +1313,49 @@ Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementDat
 
 exit:
     return error;
+}
+
+TcatAgentTestProbe::TcatAgentTestProbe(TcatAgent *agent) { mAgent = agent; }
+
+void TcatAgentTestProbe::MockCommissionerConnected(TcatAgent::CertificateAuthorizationField commAuth,
+                                                   TcatAgent::CertificateAuthorizationField deviceAuth)
+{
+    mAgent->mState                          = TcatAgent::kStateConnected;
+    mAgent->mCommissionerAuthorizationField = commAuth;
+    mAgent->mDeviceAuthorizationField       = deviceAuth;
+    mAgent->mPskcVerified                   = false;
+    mAgent->mPskdVerified                   = false;
+    mAgent->mCommissionerHasExtendedPanId   = false;
+    mAgent->mCommissionerHasNetworkName     = false;
+    mAgent->mCommissionerHasDomainName      = false;
+}
+
+void TcatAgentTestProbe::MockCommissionerPskcProof(const bool isPskcVerified)
+{
+    mAgent->mPskcVerified = isPskcVerified;
+}
+
+void TcatAgentTestProbe::MockCommissionerPskdProof(const bool isPskdVerified)
+{
+    mAgent->mPskdVerified = isPskdVerified;
+}
+
+void TcatAgentTestProbe::MockXpan(bool commHasExtPanId, ExtendedPanId *extPanId)
+{
+    mAgent->mCommissionerHasExtendedPanId = commHasExtPanId;
+    mAgent->mCommissionerExtendedPanId    = *extPanId;
+}
+
+void TcatAgentTestProbe::MockNetworkName(bool commHasNetworkName, NetworkName *networkName)
+{
+    mAgent->mCommissionerHasNetworkName = commHasNetworkName;
+    mAgent->mCommissionerNetworkName    = *networkName;
+}
+
+void TcatAgentTestProbe::MockDomainName(bool commHasDomainName, NetworkName *domainName)
+{
+    mAgent->mCommissionerHasDomainName = commHasDomainName;
+    mAgent->mCommissionerDomainName    = *domainName;
 }
 
 } // namespace MeshCoP
