@@ -383,6 +383,23 @@ otError otBorderAgentGetNextSessionInfo(otBorderAgentSessionIterator *aIterator,
  */
 const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance);
 
+/**
+ * Forcefully evicts the current active Thread Commissioner.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE`.
+ *
+ * This is intended as an administrator tool to address a misbehaving or stale commissioner session that may be
+ * connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner role
+ * within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+ *
+ * @param[in] aInstance           A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE          Successfully sent the eviction request to the Leader.
+ * @retval OT_ERROR_NOT_FOUND     There is no active commissioner session to evict.
+ * @retval OT_ERROR_NO_BUFS       Could not allocate a message buffer to send the request.
+ */
+otError otBorderAgentEvictActiveCommissioner(otInstance *aInstance);
+
 /*--------------------------------------------------------------------------------------------------------------------
  * Border Agent Ephemeral Key feature */
 
