@@ -547,6 +547,24 @@ void otBorderAgentEphemeralKeySetCallback(otInstance                       *aIns
 const char *otBorderAgentEphemeralKeyStateToString(otBorderAgentEphemeralKeyState aState);
 
 /**
+ * Generates a Thread Administration One-Time Passcode (TAP) and starts ephemeral key with it.
+ *
+ * This function generates an 8-digit random number, appends a Verhoeff checksum
+ * as the 9th digit to create a 9-digit TAP, and automatically starts the ephemeral
+ * key with the generated passcode.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[out] aTap       A pointer to buffer to store the generated TAP string (must be at least 10 bytes).
+ * @param[in]  aTimeout   Timeout in milliseconds (0 for default).
+ * @param[in]  aUdpPort   UDP port (0 for default).
+ *
+ * @retval OT_ERROR_NONE          Successfully generated TAP and started ephemeral key.
+ * @retval OT_ERROR_INVALID_ARGS  Invalid arguments provided.
+ * @retval OT_ERROR_FAILED        Failed to generate TAP or start ephemeral key.
+ */
+otError otBorderAgentGenerateTapAndKeyStart(otInstance *aInstance, char *aTap, uint32_t aTimeout, uint16_t aUdpPort);
+
+/**
  * @}
  */
 

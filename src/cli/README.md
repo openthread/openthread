@@ -529,6 +529,33 @@ Done
 Done
 ```
 
+### ba ephemeralkey tap-start \[timeout\] \[port\]
+
+Generate a 9-digit Thread Administration One-Time Passcode (TAP) and start the ephemeral key service.
+
+This command generates a cryptographically secure 9-digit passcode consisting of:
+- An 8-digit random number
+- A Verhoeff checksum digit as the 9th digit for validation
+
+The generated TAP is automatically used to start the ephemeral key service, enabling secure commissioning without requiring a pre-shared key.
+
+**Parameters:**
+- `timeout` (optional): Timeout in milliseconds for the ephemeral key session. If not specified, the default timeout is used.
+- `port` (optional): UDP port for the ephemeral key service. If not specified, the default port is used.
+
+**Usage Notes:**
+- The generated 9-digit TAP is displayed and can be shared with commissioners for secure device onboarding
+- The Verhoeff checksum provides error detection for manual entry of the passcode
+- The ephemeral key service must be enabled before using this command (`ba ephemeralkey enable`)
+- Use `ba ephemeralkey state` to check the current status of the ephemeral key service
+- Use `ba ephemeralkey stop` to terminate the ephemeral key session
+
+```bash
+> ba ephemeralkey tap-start 5000 49155
+156429873
+Done
+```
+
 ### ba ephemeralkey stop
 
 Stops the ephemeral key use and disconnects any session using it.
@@ -3224,7 +3251,6 @@ Tears down the P2P link identified by the extended address.
 > p2p unlink dead00beef00cafe
 Done
 ```
-
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.
