@@ -29,6 +29,8 @@
 #ifndef OT_POSIX_PLATFORM_SETTINGS_FILE_HPP_
 #define OT_POSIX_PLATFORM_SETTINGS_FILE_HPP_
 
+#include <limits.h>
+
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 
@@ -46,12 +48,12 @@ public:
     /**
      * Performs the initialization for the settings file.
      *
-     * @param[in]  aSettingsFileBaseName    A pointer to the base name of the settings file.
+     * @param[in]  aSettingsFileFullPathName    A pointer to the full path name of the settings file.
      *
      * @retval OT_ERROR_NONE    The given settings file was initialized successfully.
      * @retval OT_ERROR_PARSE   The key-value format could not be parsed (invalid format).
      */
-    otError Init(const char *aSettingsFileBaseName);
+    otError Init(const char *aSettingsFileFullPathName);
 
     /**
      * Performs the de-initialization for the settings file.
@@ -107,12 +109,9 @@ public:
     void Wipe(void);
 
 private:
-    static const size_t kMaxFileDirectorySize   = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH);
-    static const size_t kSlashLength            = 1;
-    static const size_t kMaxFileBaseNameSize    = 64;
-    static const size_t kMaxFileExtensionLength = 5; ///< The length of `.Swap` or `.data`.
-    static const size_t kMaxFilePathSize =
-        kMaxFileDirectorySize + kSlashLength + kMaxFileBaseNameSize + kMaxFileExtensionLength;
+    static const size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
+    static const size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
+    static const size_t kMaxFilePathSize         = PATH_MAX;
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);
@@ -121,7 +120,7 @@ private:
     void    SwapPersist(int aFd);
     void    SwapDiscard(int aFd);
 
-    char mSettingFileBaseName[kMaxFileBaseNameSize];
+    char mSettingsFileFullPathName[kMaxFileFullPathNameSize];
     int  mSettingsFd;
 };
 

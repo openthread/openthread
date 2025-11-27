@@ -44,18 +44,20 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "posix/platform/settings.hpp"
 #include "posix/platform/settings_file.hpp"
 
 namespace ot {
 namespace Posix {
 
-otError SettingsFile::Init(const char *aSettingsFileBaseName)
+otError SettingsFile::Init(const char *aSettingsFileFullPathName)
 {
     otError     error     = OT_ERROR_NONE;
-    const char *directory = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    const char *directory = ot::Posix::PlatformSettingsGetPath();
 
-    OT_ASSERT((aSettingsFileBaseName != nullptr) && (strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize));
-    strncpy(mSettingFileBaseName, aSettingsFileBaseName, sizeof(mSettingFileBaseName) - 1);
+    OT_ASSERT((aSettingsFileFullPathName != nullptr) &&
+              ((strlen(aSettingsFileFullPathName) + kMaxFileExtensionLength) < sizeof(mSettingsFileFullPathName)));
+    snprintf(mSettingsFileFullPathName, sizeof(mSettingsFileFullPathName), "%s", aSettingsFileFullPathName);
 
     {
         struct stat st;
@@ -306,8 +308,8 @@ void SettingsFile::Wipe(void) { VerifyOrDie(0 == ftruncate(mSettingsFd, 0), OT_E
 
 void SettingsFile::GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap)
 {
-    snprintf(aFileName, kMaxFilePathSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s.%s", mSettingFileBaseName,
-             (aSwap ? "Swap" : "data"));
+    int len = snprintf(aFileName, kMaxFilePathSize, "%s.%s", mSettingsFileFullPathName, (aSwap ? "Swap" : "data"));
+    VerifyOrDie(len > 0 && static_cast<size_t>(len) < kMaxFilePathSize, OT_EXIT_FAILURE);
 }
 
 int SettingsFile::SwapOpen(void)
