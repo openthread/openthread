@@ -91,7 +91,6 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance)
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorAppUrl();
 }
 
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
 {
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorName(aVendorName);
@@ -102,6 +101,7 @@ otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel)
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorModel(aVendorModel);
 }
 
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion)
 {
     return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorSwVersion(aVendorSwVersion);

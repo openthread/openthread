@@ -428,8 +428,6 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance);
 /**
  * Set the vendor name string.
  *
- * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
- *
  * @p aVendorName should be UTF8 with max length of 32 chars (`MAX_VENDOR_NAME_TLV_LENGTH`). Maximum length does not
  * include the null `\0` character.
  *
@@ -443,8 +441,6 @@ otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName);
 
 /**
  * Set the vendor model string.
- *
- * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
  *
  * @p aVendorModel should be UTF8 with max length of 32 chars (`MAX_VENDOR_MODEL_TLV_LENGTH`). Maximum length does not
  * include the null `\0` character.

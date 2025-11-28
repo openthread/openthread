@@ -58,15 +58,14 @@ Server::Server(Instance &aInstance)
     static_assert(sizeof(kVendorSwVersion) <= sizeof(VendorSwVersionTlv::StringType), "VENDOR_SW_VERSION is too long");
     static_assert(sizeof(kVendorAppUrl) <= sizeof(VendorAppUrlTlv::StringType), "VENDOR_APP_URL is too long");
 
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     memcpy(mVendorName, kVendorName, sizeof(kVendorName));
     memcpy(mVendorModel, kVendorModel, sizeof(kVendorModel));
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     memcpy(mVendorSwVersion, kVendorSwVersion, sizeof(kVendorSwVersion));
     memcpy(mVendorAppUrl, kVendorAppUrl, sizeof(kVendorAppUrl));
 #endif
 }
-
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 Error Server::SetVendorName(const char *aVendorName)
 {
@@ -77,6 +76,8 @@ Error Server::SetVendorModel(const char *aVendorModel)
 {
     return StringCopy(mVendorModel, aVendorModel, kStringCheckUtf8Encoding);
 }
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 Error Server::SetVendorSwVersion(const char *aVendorSwVersion)
 {

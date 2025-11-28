@@ -42,6 +42,7 @@
 #include <openthread/border_router.h>
 #include <openthread/cli.h>
 #include <openthread/heap.h>
+#include <openthread/netdiag.h>
 #include <openthread/tasklet.h>
 #include <openthread/trel.h>
 #include <openthread/platform/alarm-milli.h>
@@ -280,6 +281,15 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
         OT_ASSERT(gInstance != nullptr);
 
         platformSetUp(aPlatformConfig);
+    }
+
+    if (aPlatformConfig->mVendorName != NULL)
+    {
+        otThreadSetVendorName(gInstance, aPlatformConfig->mVendorName);
+    }
+    if (aPlatformConfig->mVendorModel != NULL)
+    {
+        otThreadSetVendorModel(gInstance, aPlatformConfig->mVendorModel);
     }
 
     return gInstance;

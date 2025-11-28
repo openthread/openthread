@@ -93,6 +93,8 @@ typedef struct otPlatformConfig
                                                       ///< directly after initialization.
     CoprocessorType mCoprocessorType;                 ///< The co-processor type. This field is used to pass
                                                       ///< the type to the app layer.
+    const char *mVendorName;                          ///< Vendor name. Used if OT_VENDOR_NAME not set at compile time.
+    const char *mVendorModel; ///< Vendor model. Used if OT_VENDOR_MODEL not set at compile time.
 } otPlatformConfig;
 
 /**
