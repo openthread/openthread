@@ -2414,10 +2414,11 @@ private:
     bool     ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
     bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
     void     HandleAdvertiseTrickleTimer(void);
-    void     HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
     void     HandleTimeTick(void);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    DeclareTmfResponseHandlerFullParamIn(Mle, HandleAddressSolicitResponse);
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
@@ -2426,10 +2427,6 @@ private:
     static bool IsMessageMleSubType(const Message &aMessage);
     static bool IsMessageChildUpdateRequest(const Message &aMessage);
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
-    static void HandleAddressSolicitResponse(void                *aContext,
-                                             otMessage           *aMessage,
-                                             const otMessageInfo *aMessageInfo,
-                                             otError              aResult);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     const char *RouterUpgradeReasonToString(uint8_t aReason);

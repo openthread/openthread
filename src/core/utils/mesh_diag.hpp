@@ -44,7 +44,6 @@
 
 #include <openthread/mesh_diag.h>
 
-#include "coap/coap.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -52,6 +51,7 @@
 #include "net/ip6_address.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 struct otMeshDiagIp6AddrIterator
 {
@@ -306,12 +306,7 @@ private:
     bool  ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     bool  ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-
-    static void HandleDiagGetResponse(void                *aContext,
-                                      otMessage           *aMessage,
-                                      const otMessageInfo *aMessageInfo,
-                                      otError              aResult);
+    DeclareTmfResponseHandlerIn(MeshDiag, HandleDiagGetResponse);
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
 

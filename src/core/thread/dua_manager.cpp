@@ -539,18 +539,8 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void DuaManager::HandleDuaResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult)
+void DuaManager::HandleDuaResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<DuaManager *>(aContext)->HandleDuaResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                           aResult);
-}
-
-void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
     Error error;
 
     mIsDuaPending = false;

@@ -40,12 +40,12 @@
 
 #include <openthread/border_router.h>
 
-#include "coap/coap.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -130,13 +130,10 @@ private:
     Error UpdateInconsistentData(void);
 #endif
 
-    void        HandleNotifierEvents(Events aEvents);
-    void        HandleTimer(void);
-    static void HandleCoapResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void        HandleCoapResponse(Error aResult);
+    void HandleNotifierEvents(Events aEvents);
+    void HandleTimer(void);
+
+    DeclareTmfResponseHandlerIn(Notifier, HandleCoapResponse);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     void HandleNetDataFull(void);

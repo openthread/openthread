@@ -472,19 +472,8 @@ exit:
     return;
 }
 
-void Joiner::HandleJoinerFinalizeResponse(void                *aContext,
-                                          otMessage           *aMessage,
-                                          const otMessageInfo *aMessageInfo,
-                                          otError              aResult)
+void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(AsCoapMessagePtr(aMessage), &AsCoreType(aMessageInfo),
-                                                                  aResult);
-}
-
-void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint8_t state;
 
     VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);

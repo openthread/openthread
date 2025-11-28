@@ -113,19 +113,8 @@ exit:
     return error;
 }
 
-void MeshDiag::HandleDiagGetResponse(void                *aContext,
-                                     otMessage           *aMessage,
-                                     const otMessageInfo *aMessageInfo,
-                                     otError              aResult)
+void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<MeshDiag *>(aContext)->HandleDiagGetResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                             aResult);
-}
-
-void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error           error;
     RouterInfo      routerInfo;
     Ip6AddrIterator ip6AddrIterator;

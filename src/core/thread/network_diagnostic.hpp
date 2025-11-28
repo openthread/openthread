@@ -372,11 +372,7 @@ private:
                       Coap::ResponseHandler aHandler = nullptr,
                       void                 *aContext = nullptr);
 
-    static void HandleGetResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult);
-    void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerFullParamIn(Client, HandleGetResponse);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
