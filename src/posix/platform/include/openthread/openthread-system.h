@@ -83,6 +83,8 @@ typedef struct otPlatformCoprocessorUrls
  */
 typedef struct otPlatformConfig
 {
+    const char *mTunDevice;                           ///< The POSIX TUN device path.
+                                                      ///< Used if `OT_PLATFORM_NETIF` is enabled.
     const char               *mBackboneInterfaceName; ///< Backbone network interface name.
     const char               *mInterfaceName;         ///< Thread network interface name.
     otPlatformCoprocessorUrls mCoprocessorUrls;       ///< Coprocessor URLs.

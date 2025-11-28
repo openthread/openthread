@@ -140,9 +140,15 @@ enum
 
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    OT_POSIX_OPT_TUN_DEVICE,
+#endif
 };
 
 static const struct option kOptions[] = {
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
+#endif
     {"backbone-interface-name", required_argument, NULL, OT_POSIX_OPT_BACKBONE_INTERFACE_NAME},
     {"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
     {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
@@ -161,6 +167,9 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+            "        --tun-device              POSIX TUN Device.\n"
+#endif
             "    -B  --backbone-interface-name Backbone network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -189,6 +198,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    aConfig->mPlatformConfig.mTunDevice = NULL;
+#endif
 #ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
@@ -254,6 +266,11 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             {
                 aConfig->mPlatformConfig.mRealTimeSignal = atoi(optarg);
             }
+            break;
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+        case OT_POSIX_OPT_TUN_DEVICE:
+            aConfig->mPlatformConfig.mTunDevice = optarg;
             break;
 #endif
         case '?':

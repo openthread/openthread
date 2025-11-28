@@ -1983,6 +1983,15 @@ exit:
 }
 #endif
 
+#if defined(__linux__) || defined(__NetBSD__) ||                                                       \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
+    defined(__FreeBSD__)
+static const char *platformGetTunDevicePath(otPlatformConfig *aPlatformConfig)
+{
+    return aPlatformConfig->mTunDevice == NULL ? OPENTHREAD_POSIX_TUN_DEVICE : aPlatformConfig->mTunDevice;
+}
+#endif
+
 #ifdef __linux__
 static void SetAddrGenModeToNone(void)
 {
@@ -2033,7 +2042,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     struct ifreq ifr;
     const char  *interfaceName;
 
-    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+    sTunFd = open(platformGetTunDevicePath(aPlatformConfig), O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
@@ -2134,9 +2143,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     const char *last_slash;
     const char *path;
 
-    (void)aPlatformConfig;
-
-    path = OPENTHREAD_POSIX_TUN_DEVICE;
+    path = platformGetTunDevicePath(aPlatformConfig);
 
     sTunFd = open(path, O_RDWR | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -2150,7 +2157,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     err   = ioctl(sTunFd, TUNSIFHEAD, &flags);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    last_slash = strrchr(OPENTHREAD_POSIX_TUN_DEVICE, '/');
+    last_slash = strrchr(platformGetTunDevicePath(aPlatformConfig), '/');
     VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 
