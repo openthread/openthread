@@ -306,21 +306,8 @@ exit:
     return message;
 }
 
-void JoinerRouter::HandleJoinerEntrustResponse(void                *aContext,
-                                               otMessage           *aMessage,
-                                               const otMessageInfo *aMessageInfo,
-                                               otError              aResult)
+void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<JoinerRouter *>(aContext)->HandleJoinerEntrustResponse(AsCoapMessagePtr(aMessage),
-                                                                       AsCoreTypePtr(aMessageInfo), aResult);
-}
-
-void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message          *aMessage,
-                                               const Ip6::MessageInfo *aMessageInfo,
-                                               Error                   aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     SendDelayedJoinerEntrust();
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr);
