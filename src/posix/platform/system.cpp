@@ -285,11 +285,21 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
     if (aPlatformConfig->mVendorName != NULL)
     {
-        otThreadSetVendorName(gInstance, aPlatformConfig->mVendorName);
+        otError error = otThreadSetVendorName(gInstance, aPlatformConfig->mVendorName);
+        if (error != OT_ERROR_NONE)
+        {
+            otPlatLog(OT_LOG_LEVEL_CRIT, OT_LOG_REGION_API, "Failed to set vendor name");
+            exit(OT_EXIT_INVALID_ARGUMENTS);
+        }
     }
     if (aPlatformConfig->mVendorModel != NULL)
     {
-        otThreadSetVendorModel(gInstance, aPlatformConfig->mVendorModel);
+        otError error = otThreadSetVendorModel(gInstance, aPlatformConfig->mVendorModel);
+        if (error != OT_ERROR_NONE)
+        {
+            otPlatLog(OT_LOG_LEVEL_CRIT, OT_LOG_REGION_API, "Failed to set vendor model");
+            exit(OT_EXIT_INVALID_ARGUMENTS);
+        }
     }
 
     return gInstance;
