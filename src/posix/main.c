@@ -69,6 +69,9 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/misc.h>
 
+static bool isVendorNameSet;
+static bool isVendorModelSet;
+
 /**
  * Initializes NCP app.
  *
@@ -140,6 +143,9 @@ enum
 
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+
+    OT_POSIX_OPT_VENDOR_NAME,
+    OT_POSIX_OPT_VENDOR_MODEL,
 };
 
 static const struct option kOptions[] = {
@@ -153,6 +159,8 @@ static const struct option kOptions[] = {
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
+    {"vendor-name", required_argument, NULL, OT_POSIX_OPT_VENDOR_NAME},
+    {"vendor-model", required_argument, NULL, OT_POSIX_OPT_VENDOR_MODEL},
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -171,6 +179,14 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
+    if (!isVendorNameSet)
+    {
+        fprintf(aStream, "        --vendor-name             Vendor Name.\n");
+    }
+    if (!isVendorModelSet)
+    {
+        fprintf(aStream, "        --vendor-model            Vendor Model.\n");
+    }
 #ifdef SIGRTMIN
     fprintf(aStream,
             "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
@@ -185,6 +201,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(*aConfig));
 
+    isVendorNameSet  = strlen(OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME) != 0;
+    isVendorModelSet = strlen(OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL) != 0;
+
     aConfig->mPlatformConfig.mPersistentInterface = false;
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
@@ -192,6 +211,8 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 #ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
+    aConfig->mPlatformConfig.mVendorName  = NULL;
+    aConfig->mPlatformConfig.mVendorModel = NULL;
 
     optind = 1;
 
@@ -256,6 +277,30 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             }
             break;
 #endif
+        case OT_POSIX_OPT_VENDOR_NAME:
+            if (!isVendorNameSet)
+            {
+                aConfig->mPlatformConfig.mVendorName = optarg;
+            }
+            else
+            {
+                fprintf(stderr, "Vendor name has already been set to \"%s\" at compile-time.\n",
+                        OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME);
+                exit(OT_EXIT_INVALID_ARGUMENTS);
+            }
+            break;
+        case OT_POSIX_OPT_VENDOR_MODEL:
+            if (!isVendorModelSet)
+            {
+                aConfig->mPlatformConfig.mVendorModel = optarg;
+            }
+            else
+            {
+                fprintf(stderr, "Vendor model has already been set to \"%s\" at compile-time.\n",
+                        OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL);
+                exit(OT_EXIT_INVALID_ARGUMENTS);
+            }
+            break;
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -263,6 +308,17 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             assert(false);
             break;
         }
+    }
+
+    if (!isVendorNameSet && aConfig->mPlatformConfig.mVendorName == NULL)
+    {
+        fprintf(stderr, "Vendor name needs to be set via `--vendor-name` flag.\n");
+        exit(OT_EXIT_INVALID_ARGUMENTS);
+    }
+    if (!isVendorModelSet && aConfig->mPlatformConfig.mVendorModel == NULL)
+    {
+        fprintf(stderr, "Vendor model needs to be set via `--vendor-model` flag.\n");
+        exit(OT_EXIT_INVALID_ARGUMENTS);
     }
 
     for (; optind < aArgCount; optind++)

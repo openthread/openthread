@@ -42,6 +42,7 @@
 #include <openthread/border_router.h>
 #include <openthread/cli.h>
 #include <openthread/heap.h>
+#include <openthread/netdiag.h>
 #include <openthread/tasklet.h>
 #include <openthread/trel.h>
 #include <openthread/platform/alarm-milli.h>
@@ -280,6 +281,25 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
         OT_ASSERT(gInstance != nullptr);
 
         platformSetUp(aPlatformConfig);
+    }
+
+    if (aPlatformConfig->mVendorName != NULL)
+    {
+        otError error = otThreadSetVendorName(gInstance, aPlatformConfig->mVendorName);
+        if (error != OT_ERROR_NONE)
+        {
+            otPlatLog(OT_LOG_LEVEL_CRIT, OT_LOG_REGION_API, "Failed to set vendor name");
+            exit(OT_EXIT_INVALID_ARGUMENTS);
+        }
+    }
+    if (aPlatformConfig->mVendorModel != NULL)
+    {
+        otError error = otThreadSetVendorModel(gInstance, aPlatformConfig->mVendorModel);
+        if (error != OT_ERROR_NONE)
+        {
+            otPlatLog(OT_LOG_LEVEL_CRIT, OT_LOG_REGION_API, "Failed to set vendor model");
+            exit(OT_EXIT_INVALID_ARGUMENTS);
+        }
     }
 
     return gInstance;

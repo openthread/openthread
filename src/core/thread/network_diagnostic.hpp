@@ -118,7 +118,6 @@ public:
         mNonPreferredChannelsResetCallback.Set(aCallback, aContext);
     }
 
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     /**
      * Returns the vendor name string.
      *
@@ -153,6 +152,7 @@ public:
      */
     Error SetVendorModel(const char *aVendorModel);
 
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     /**
      * Returns the vendor software version string.
      *
@@ -188,8 +188,6 @@ public:
     Error SetVendorAppUrl(const char *aVendorAppUrl);
 
 #else
-    const char *GetVendorName(void) const { return kVendorName; }
-    const char *GetVendorModel(void) const { return kVendorModel; }
     const char *GetVendorSwVersion(void) const { return kVendorSwVersion; }
     const char *GetVendorAppUrl(void) const { return kVendorAppUrl; }
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
@@ -272,9 +270,9 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    VendorNameTlv::StringType  mVendorName;
+    VendorModelTlv::StringType mVendorModel;
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    VendorNameTlv::StringType      mVendorName;
-    VendorModelTlv::StringType     mVendorModel;
     VendorSwVersionTlv::StringType mVendorSwVersion;
     VendorAppUrlTlv::StringType    mVendorAppUrl;
 #endif
