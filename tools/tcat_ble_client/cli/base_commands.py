@@ -324,37 +324,6 @@ class GetNetworkNameCommand(BleCommand):
         return TLV(TcatTLVType.GET_NETWORK_NAME.value, bytes()).to_bytes()
 
 
-class GetPskdHash(BleCommand):
-
-    def get_log_string(self) -> str:
-        return 'Retrieving peer PSKd hash.'
-
-    def get_help_string(self) -> str:
-        return 'Get calculated PSKd hash.'
-
-    def prepare_data(self, args, context):
-        bless: BleStreamSecure = context['ble_sstream']
-        if bless.peer_public_key is None:
-            raise DataNotPrepared("Peer certificate not present.")
-
-        challenge = token_bytes(CHALLENGE_SIZE)
-        pskd = bytes(args[0], 'utf-8')
-
-        data = TLV(TcatTLVType.GET_PSKD_HASH.value, challenge).to_bytes()
-
-        hash = hmac.new(pskd, digestmod=sha256)
-        hash.update(challenge)
-        hash.update(bless.peer_public_key)
-        self.digest = hash.digest()
-        return data
-
-    def process_response(self, tlv_response, context):
-        if tlv_response.value == self.digest:
-            print('Requested hash is valid.')
-        else:
-            print('Requested hash is NOT valid.')
-
-
 class GetRandomNumberChallenge(BleCommand):
 
     def get_log_string(self) -> str:
