@@ -60,8 +60,10 @@ TcatAgent::TcatAgent(Instance &aInstance)
     , mTimerSetsToActive(false)
     , mActiveOrStandbyTimer(aInstance)
     , mTcatActiveDurationMs(0)
+    , mHashVerificationAttempts(1)
 {
     ClearCommissionerState();
+    mLastHashVerificationTimestamp = Get<UptimeTracker>().GetUptimeInSeconds();
 }
 
 void TcatAgent::ClearCommissionerState(void)
@@ -496,10 +498,6 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         error = HandleRequestRandomNumberChallenge(aOutgoingMessage, response);
         break;
 
-    case kTlvRequestPskdHash:
-        error = HandleRequestPskdHash(aIncomingMessage, aOutgoingMessage, offset, length, response);
-        break;
-
     case kTlvGetCommissionerCertificate:
         error = HandleGetCommissionerCertificate(aOutgoingMessage, response);
         break;
@@ -883,33 +881,6 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandleRequestPskdHash(const Message &aIncomingMessage,
-                                       Message       &aOutgoingMessage,
-                                       uint16_t       aOffset,
-                                       uint16_t       aLength,
-                                       bool          &aResponse)
-{
-    Error                    error             = kErrorNone;
-    uint64_t                 providedChallenge = 0;
-    Crypto::HmacSha256::Hash hash;
-
-    VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
-    VerifyOrExit(StringLength(mVendorInfo->mPskdString, kMaxPskdLength) != 0, error = kErrorFailed);
-    VerifyOrExit(aLength == sizeof(providedChallenge), error = kErrorParse);
-
-    SuccessOrExit(error = aIncomingMessage.Read(aOffset, &providedChallenge, aLength));
-
-    SuccessOrExit(error = CalculateHash(providedChallenge, mVendorInfo->mPskdString,
-                                        StringLength(mVendorInfo->mPskdString, kMaxPskdLength), hash));
-
-    SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, hash.GetBytes(),
-                                         Crypto::HmacSha256::Hash::kSize));
-    aResponse = true;
-
-exit:
-    return error;
-}
-
 Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
                             uint16_t       aOffset,
                             uint16_t       aLength,
@@ -918,14 +889,26 @@ Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
 {
     Error                    error = kErrorNone;
     Crypto::HmacSha256::Hash hash;
+    UptimeSec                currentTime = Get<UptimeTracker>().GetUptimeInSeconds();
+    uint32_t newAttempts   = (currentTime - mLastHashVerificationTimestamp) / kHashVerificationAttemptTime;
+    uint32_t totalAttempts = newAttempts + mHashVerificationAttempts;
 
     VerifyOrExit(aLength == Crypto::HmacSha256::Hash::kSize, error = kErrorSecurity);
     VerifyOrExit(mRandomChallenge != 0, error = kErrorSecurity);
+
+    // In case uptime has overflowed (will never happen in practical functional operational life), up to
+    // kHashVerificationMaxAttempts additional attempts can be tolerated.
+    mHashVerificationAttempts = static_cast<uint8_t>(Min<uint32_t>(totalAttempts, kHashVerificationMaxAttempts));
+
+    VerifyOrExit(mHashVerificationAttempts > 0, error = kErrorBusy);
+    mLastHashVerificationTimestamp = currentTime;
+    mHashVerificationAttempts--;
 
     SuccessOrExit(error = CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash));
     DumpDebg("Hash", &hash, sizeof(hash));
 
     VerifyOrExit(aIncomingMessage.Compare(aOffset, hash), error = kErrorSecurity);
+    mHashVerificationAttempts++;
 
 exit:
     return error;
