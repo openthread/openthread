@@ -172,6 +172,20 @@ const char *otBorderAgentEphemeralKeyStateToString(otBorderAgentEphemeralKeyStat
     return MeshCoP::BorderAgent::EphemeralKeyManager::StateToString(MapEnum(aState));
 }
 
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
+otError otBorderAgentEphemeralKeyGenerateTap(otBorderAgentEphemeralKeyTap *aTap)
+{
+    return AsCoreType(aTap).GenerateRandom();
+}
+
+otError otBorderAgentEphemeralKeyValidateTap(const otBorderAgentEphemeralKeyTap *aTap)
+{
+    return AsCoreType(aTap).Validate();
+}
+
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
