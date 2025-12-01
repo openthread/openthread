@@ -2232,9 +2232,14 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     (void)LogNote;
     (void)LogDebg;
 
-    if (aPlatformConfig->mTunDevice == NULL) {
+#if defined(__linux__) || defined(__NetBSD__) ||                                                       \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
+    defined(__FreeBSD__)
+    if (aPlatformConfig->mTunDevice == NULL)
+    {
         aPlatformConfig->mTunDevice = OPENTHREAD_POSIX_TUN_DEVICE;
     }
+#endif
 
     sIpFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
