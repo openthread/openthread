@@ -2235,7 +2235,7 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 #if defined(__linux__) || defined(__NetBSD__) ||                                                       \
     (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
     defined(__FreeBSD__)
-    if (aPlatformConfig->mTunDevice == NULL)
+    if (aPlatformConfig->mTunDevice == nullptr)
     {
         aPlatformConfig->mTunDevice = OPENTHREAD_POSIX_TUN_DEVICE;
     }
