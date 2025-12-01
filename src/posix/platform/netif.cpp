@@ -1983,15 +1983,6 @@ exit:
 }
 #endif
 
-#if defined(__linux__) || defined(__NetBSD__) ||                                                       \
-    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
-    defined(__FreeBSD__)
-static const char *platformGetTunDevicePath(otPlatformConfig *aPlatformConfig)
-{
-    return aPlatformConfig->mTunDevice == NULL ? OPENTHREAD_POSIX_TUN_DEVICE : aPlatformConfig->mTunDevice;
-}
-#endif
-
 #ifdef __linux__
 static void SetAddrGenModeToNone(void)
 {
@@ -2042,7 +2033,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     struct ifreq ifr;
     const char  *interfaceName;
 
-    sTunFd = open(platformGetTunDevicePath(aPlatformConfig), O_RDWR | O_CLOEXEC | O_NONBLOCK);
+    sTunFd = open(aPlatformConfig->mTunDevice, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
@@ -2143,7 +2134,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     const char *last_slash;
     const char *path;
 
-    path = platformGetTunDevicePath(aPlatformConfig);
+    path = aPlatformConfig->mTunDevice;
 
     sTunFd = open(path, O_RDWR | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -2157,7 +2148,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     err   = ioctl(sTunFd, TUNSIFHEAD, &flags);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    last_slash = strrchr(platformGetTunDevicePath(aPlatformConfig), '/');
+    last_slash = strrchr(path, '/');
     VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 
@@ -2240,6 +2231,10 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     (void)LogInfo;
     (void)LogNote;
     (void)LogDebg;
+
+    if (aPlatformConfig->mTunDevice == NULL) {
+        aPlatformConfig->mTunDevice = OPENTHREAD_POSIX_TUN_DEVICE;
+    }
 
     sIpFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
