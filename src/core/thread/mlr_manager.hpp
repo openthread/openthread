@@ -54,6 +54,7 @@
 #include "net/netif.hpp"
 #include "thread/child.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -167,11 +168,7 @@ private:
                                   AddressArray  &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    static void HandleRegisterResponse(void                *aContext,
-                                       otMessage           *aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aResult);
-    void        HandleRegisterResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
+    DeclareTmfResponseHandlerIn(MlrManager, HandleRegisterResponse);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
