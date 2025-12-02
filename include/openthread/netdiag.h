@@ -334,6 +334,23 @@ otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
                                      otNetworkDiagTlv      *aNetworkDiagTlv);
 
 /**
+ * Get the entire raw TLV response from a network diagnostic request.
+ *
+ * Requires `OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE`.
+ *
+ * @param[in] aMessage              A pointer to a message.
+ * @param[in] aBufferCapacity       The capacity of the output buffer.
+ * @param[out] aNetworkDiagTlvs     A buffer to write the TLV response into.
+ * @param[out] aBytesWritten        The number of bytes written to the buffer.
+
+ * @retval OT_ERROR_NONE       Successfully completed the Network Diagnostic TLV fetch request.
+ * @retval OT_ERROR_NO_BUFS    The length of the returned message is larger than the buffer capacity.
+ */
+otError otThreadGetRawDiagnosticTlvs(const otMessage       *aMessage,
+                                     uint16_t               aBufferCapacity,
+                                     uint8_t               *aNetworkDiagTlvs,
+                                     uint16_t              *aBytesWritten);
+/**
  * Pointer is called when Network Diagnostic Get response is received.
  *
  * @param[in]  aError        The error when failed to get the response.
