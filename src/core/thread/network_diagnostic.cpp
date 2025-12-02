@@ -1601,6 +1601,18 @@ exit:
     return error;
 }
 
+Error Client::GetRawDiagTlvs(const Coap::Message &aMessage, uint16_t aBufferCapacity, uint8_t *aNetworkDiagTlvs, uint16_t *aBytesWritten)
+{
+    Error    error  = kErrorNone;
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    VerifyOrExit(length <= aBufferCapacity, error = kErrorNoBufs);
+    *aBytesWritten = aMessage.ReadBytes(aMessage.GetOffset(), aNetworkDiagTlvs, length);
+
+exit:
+    return error;
+}
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Client::UriToString(Uri aUri)

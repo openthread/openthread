@@ -354,6 +354,19 @@ public:
     static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
 
     /**
+     * @brief Get the entire Network Diagnostic TLV response.
+     *
+     * @param[in]  aMessage         A pointer to a message.
+     * @param[in]  aBufferCapacity  The capacity of the output buffer.
+     * @param[out] aNetworkDiagTlvs A buffer to write the TLV response into.
+     * @param[out] aBytesWritten    The number of bytes written to the buffer.
+     *
+     * @retval kErrorNone   Successfully completed the Network Diagnostic TLV fetch request.
+     * @retval kErrorNoBufs The length of the returned message is larger than the buffer capacity.
+     */
+    static Error GetRawDiagTlvs(const Coap::Message &aMessage, uint16_t aBufferCapacity, uint8_t *aNetworkDiagTlvs, uint16_t *aBytesWritten);
+
+    /**
      * This method returns the query ID used for the last Network Diagnostic Query command.
      *
      * @returns The query ID used for last query.

@@ -49,6 +49,16 @@ otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
     return NetworkDiagnostic::Client::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
 }
 
+otError otThreadGetRawDiagnosticTlvs(const otMessage       *aMessage,
+                                     uint16_t               aBufferCapacity,
+                                     uint8_t               *aNetworkDiagTlvs,
+                                     uint16_t              *aBytesWritten)
+{
+    AssertPointerIsNotNull(aNetworkDiagTlvs);
+
+    return NetworkDiagnostic::Client::GetRawDiagTlvs(AsCoapMessage(aMessage), aBufferCapacity, aNetworkDiagTlvs, aBytesWritten);
+}
+
 otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
                                   const otIp6Address            *aDestination,
                                   const uint8_t                  aTlvTypes[],
