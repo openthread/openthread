@@ -29,6 +29,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 #include <openthread/border_agent.h>
 #include <openthread/dataset.h>
 #include <openthread/dataset_ftd.h>
@@ -45,6 +47,48 @@ using namespace ot;
 using ::testing::AnyNumber;
 using ::testing::AtLeast;
 using ::testing::Truly;
+
+TEST(DatasetEquality, MatchesWhenTimestampAndExtendedPanIdMatch)
+{
+    const uint8_t kExtPanIdA[OT_EXT_PAN_ID_SIZE] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+    otOperationalDataset lhs{};
+    otOperationalDataset rhs{};
+
+    lhs.mActiveTimestamp.mSeconds       = 1234;
+    lhs.mActiveTimestamp.mTicks         = 42;
+    lhs.mActiveTimestamp.mAuthoritative = true;
+    lhs.mChannel                        = 15;
+    lhs.mPanId                          = 0x1234;
+    memcpy(lhs.mExtendedPanId.m8, kExtPanIdA, sizeof(kExtPanIdA));
+
+    rhs          = lhs;
+    rhs.mChannel = 20; // Other fields may differ without affecting equality.
+
+    EXPECT_TRUE(lhs == rhs);
+}
+
+TEST(DatasetEquality, DetectsTimestampOrExtendedPanIdDifferences)
+{
+    const uint8_t kExtPanIdA[OT_EXT_PAN_ID_SIZE] = {0, 1, 2, 3, 4, 5, 6, 7};
+    const uint8_t kExtPanIdB[OT_EXT_PAN_ID_SIZE] = {7, 6, 5, 4, 3, 2, 1, 0};
+
+    otOperationalDataset lhs{};
+    otOperationalDataset rhs{};
+
+    lhs.mActiveTimestamp.mSeconds       = 1234;
+    lhs.mActiveTimestamp.mTicks         = 42;
+    lhs.mActiveTimestamp.mAuthoritative = true;
+    memcpy(lhs.mExtendedPanId.m8, kExtPanIdA, sizeof(kExtPanIdA));
+
+    rhs = lhs;
+    memcpy(rhs.mExtendedPanId.m8, kExtPanIdB, sizeof(kExtPanIdB));
+    EXPECT_FALSE(lhs == rhs);
+
+    rhs = lhs;
+    rhs.mActiveTimestamp.mSeconds += 1;
+    EXPECT_FALSE(lhs == rhs);
+}
 
 TEST(otDatasetSetActiveTlvs, shouldTriggerStateCallbackOnSuccess)
 {
