@@ -39,10 +39,12 @@
 #include <openthread/commissioner.h>
 #include <openthread/instance.h>
 #include <openthread/joiner.h>
+#include <openthread/steering_data.h>
 
 #include "coap/coap.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/code_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
@@ -230,7 +232,7 @@ private:
 class SteeringData : public otSteeringData
 {
 public:
-    static constexpr uint8_t kMinLength = 1;                           ///< Minimum Steering Data length (in bytes).
+    static constexpr uint8_t kMinLength = OT_STEERING_DATA_MIN_LENGTH; ///< Minimum Steering Data length (in bytes).
     static constexpr uint8_t kMaxLength = OT_STEERING_DATA_MAX_LENGTH; ///< Maximum Steering Data length (in bytes).
 
     static constexpr uint16_t kInfoStringSize = 45; ///< Size of `InfoString` to use with `ToString()`.
@@ -255,16 +257,37 @@ public:
     /**
      * Initializes the Steering Data and clears the bloom filter.
      *
-     * @param[in]  aLength   The Steering Data length (in bytes) - MUST be smaller than or equal to `kMaxLength`.
+     * @param[in]  aLength   The Steering Data length (in bytes).
+     *
+     * @retval kErrorSuccess      Successfully initialized the Steering Data.
+     * @retval kErrorInvalidArgs  @p aLength is not valid.
      */
-    void Init(uint8_t aLength = kMaxLength);
+    Error Init(uint8_t aLength);
+
+    /**
+     * Initializes the Steering Data.
+     *
+     * @param[in]  aLength   The Steering Data length (in bytes).
+     * @param[in]  aData     A pointer to a buffer containing the data bytes.
+     *
+     * @retval kErrorSuccess      Successfully initialized the Steering Data.
+     * @retval kErrorInvalidArgs  @p aLength is not valid.
+     */
+    Error Init(uint8_t aLength, const uint8_t *aData);
+
+    /**
+     * Checks whether the Steering Data has a valid length.
+     *
+     * @returns TRUE if the Steering Data's length is valid (within min to max range), FALSE otherwise.
+     */
+    bool IsValid(void) const { return IsValueInRange(mLength, kMinLength, kMaxLength); }
 
     /**
      * Clears the bloom filter (all bits are cleared and no Joiner Id is accepted)..
      *
      * The Steering Data length (bloom filter length) is set to one byte with all bits cleared.
      */
-    void Clear(void) { Init(1); }
+    void Clear(void) { IgnoreError(Init(1)); }
 
     /**
      * Sets the bloom filter to permit all Joiner IDs.
@@ -298,15 +321,21 @@ public:
      * Updates the bloom filter adding the given Joiner ID.
      *
      * @param[in]  aJoinerId  The Joiner ID to add to bloom filter.
+     *
+     * @retval kErrorNone         Successfully updated the bloom filter.
+     * @retval kErrorInvalidArgs  The Steering Data's length is invalid.
      */
-    void UpdateBloomFilter(const Mac::ExtAddress &aJoinerId);
+    Error UpdateBloomFilter(const Mac::ExtAddress &aJoinerId);
 
     /**
      * Updates the bloom filter adding a given Joiner Discerner.
      *
      * @param[in]  aDiscerner  The Joiner Discerner to add to bloom filter.
+     *
+     * @retval kErrorNone         Successfully updated the bloom filter.
+     * @retval kErrorInvalidArgs  The Steering Data's length is invalid.
      */
-    void UpdateBloomFilter(const JoinerDiscerner &aDiscerner);
+    Error UpdateBloomFilter(const JoinerDiscerner &aDiscerner);
 
     /**
      * Merges the bloom filter by combining it with another steering data filter.
@@ -393,7 +422,6 @@ public:
 private:
     static constexpr uint8_t kPermitAll = 0xff;
 
-    bool    IsLengthValid(void) const { return IsValueInRange(mLength, kMinLength, kMaxLength); }
     uint8_t GetNumBits(void) const { return (mLength * kBitsPerByte); }
 
     uint8_t BitIndex(uint8_t aBit) const { return (mLength - 1 - (aBit / kBitsPerByte)); }
@@ -403,8 +431,8 @@ private:
     void SetBit(uint8_t aBit) { m8[BitIndex(aBit)] |= BitFlag(aBit); }
     void ClearBit(uint8_t aBit) { m8[BitIndex(aBit)] &= ~BitFlag(aBit); }
 
-    bool DoesAllMatch(uint8_t aMatch) const;
-    void UpdateBloomFilter(const HashBitIndexes &aIndexes);
+    bool  DoesAllMatch(uint8_t aMatch) const;
+    Error UpdateBloomFilter(const HashBitIndexes &aIndexes);
 };
 
 /**
