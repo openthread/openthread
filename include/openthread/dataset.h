@@ -37,6 +37,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
@@ -604,5 +605,28 @@ otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalD
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#ifdef __cplusplus
+/**
+ * Defines equality for two Timestamps.
+ */
+inline bool operator==(const otTimestamp &aLhs, const otTimestamp &aRhs)
+{
+    return (aLhs.mSeconds == aRhs.mSeconds) && (aLhs.mTicks == aRhs.mTicks) &&
+           (aLhs.mAuthoritative == aRhs.mAuthoritative);
+}
+
+/**
+ * Defines equality for two Operational Datasets.
+ *
+ * Equality is intentionally scoped to the Active Timestamp and Extended PAN ID
+ * which are minimal set of fields needed to identify a Thread network.
+ */
+inline bool operator==(const otOperationalDataset &aLhs, const otOperationalDataset &aRhs)
+{
+    return (aLhs.mActiveTimestamp == aRhs.mActiveTimestamp) &&
+           (memcmp(aLhs.mExtendedPanId.m8, aRhs.mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE) == 0);
+}
+#endif // __cplusplus
 
 #endif // OPENTHREAD_DATASET_H_
