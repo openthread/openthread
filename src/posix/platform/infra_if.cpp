@@ -275,7 +275,19 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
 
     if (rval < 0)
     {
-        LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
+        switch (errno)
+        {
+        case EADDRNOTAVAIL:
+        case ENODEV:
+            LogWarn("failed to send ICMPv6 message: %s, suggests infra link might be down, checking status.",
+                    strerror(errno));
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+            break;
+        default:
+            LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
+            break;
+        }
+
         ExitNow(error = OT_ERROR_FAILED);
     }
 
@@ -307,10 +319,8 @@ uint32_t InfraNetif::GetFlags(void) const
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifReq, 0, sizeof(ifReq));
-    static_assert(sizeof(ifReq.ifr_name) >= sizeof(mInfraIfName), "mInfraIfName is not of appropriate size.");
-    strcpy(ifReq.ifr_name, mInfraIfName);
 
-    if (ioctl(sock, SIOCGIFFLAGS, &ifReq) == -1)
+    if ((if_indextoname(mInfraIfIndex, ifReq.ifr_name) == nullptr) || (ioctl(sock, SIOCGIFFLAGS, &ifReq) == -1))
     {
 #if OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE
         LogCrit("The infra link %s may be lost. Exiting.", mInfraIfName);
@@ -588,7 +598,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         case RTM_NEWLINK:
         case RTM_DELLINK:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
 #endif
             break;
         case NLMSG_ERROR:
