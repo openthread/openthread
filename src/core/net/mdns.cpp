@@ -4229,7 +4229,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     mStartOffset[kQuestionSection] = offset;
 
-    SuccessOrAssert(mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
+    SuccessOrExit(error = mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
 
     for (numRecords = mRecordCounts.GetFor(kQuestionSection); numRecords > 0; numRecords--)
     {
