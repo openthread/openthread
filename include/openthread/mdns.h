@@ -684,6 +684,7 @@ typedef otPlatDnssdRecordQuerier otMdnsRecordQuerier;
  * @retval OT_ERROR_NONE           Browser started successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  * @retval OT_ERROR_ALREADY        An identical browser (same service and callback) is already active.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aBrowser is invalid, or the callback is `NULL`.
  */
 otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser);
 
@@ -697,6 +698,7 @@ otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBrowser)
  *
  * @retval OT_ERROR_NONE           Browser stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aBrowser is invalid, or the callback is `NULL`.
  */
 otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer);
 
@@ -721,6 +723,7 @@ otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer);
  * @retval OT_ERROR_NONE           Resolver started successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  * @retval OT_ERROR_ALREADY        An identical resolver (same service and callback) is already active.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStartSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *aResolver);
 
@@ -734,6 +737,7 @@ otError otMdnsStartSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *a
  *
  * @retval OT_ERROR_NONE           Resolver stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStopSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *aResolver);
 
@@ -758,6 +762,7 @@ otError otMdnsStopSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *aR
  * @retval OT_ERROR_NONE           Resolver started successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  * @retval OT_ERROR_ALREADY        An identical resolver (same service and callback) is already active.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStartTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *aResolver);
 
@@ -771,6 +776,7 @@ otError otMdnsStartTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *a
  *
  * @retval OT_ERROR_NONE           Resolver stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStopTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *aResolver);
 
@@ -795,6 +801,7 @@ otError otMdnsStopTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *aR
  * @retval OT_ERROR_NONE           Resolver started successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  * @retval OT_ERROR_ALREADY        An identical resolver (same host and callback) is already active.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStartIp6AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver);
 
@@ -808,6 +815,7 @@ otError otMdnsStartIp6AddressResolver(otInstance *aInstance, const otMdnsAddress
  *
  * @retval OT_ERROR_NONE           Resolver stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStopIp6AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver);
 
@@ -833,6 +841,7 @@ otError otMdnsStopIp6AddressResolver(otInstance *aInstance, const otMdnsAddressR
  * @retval OT_ERROR_NONE           Resolver started successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  * @retval OT_ERROR_ALREADY        An identical resolver (same host and callback) is already active.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStartIp4AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver);
 
@@ -846,6 +855,7 @@ otError otMdnsStartIp4AddressResolver(otInstance *aInstance, const otMdnsAddress
  *
  * @retval OT_ERROR_NONE           Resolver stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   A name in @p aResolver is invalid, or the callback is `NULL`.
  */
 otError otMdnsStopIp4AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver);
 
@@ -886,7 +896,8 @@ otError otMdnsStopIp4AddressResolver(otInstance *aInstance, const otMdnsAddressR
  * @retval OT_ERROR_NONE           Record @p aQuerier started successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
  * @retval OT_ERROR_ALREADY        An identical querier (same name, record type, and callback) is already active.
- * @retval OT_ERROR_INVALID_ARGS   The `mRecordType` in @p aQuerier is invalid. MUST use browser/resolvers.
+ * @retval OT_ERROR_INVALID_ARGS   The `mRecordType` in @p aQuerier is invalid (MUST use browser/resolvers), or
+ *                                 a name in @p aQuerier is invalid, or the callback is `NULL`.
  */
 otError otMdnsStartRecordQuerier(otInstance *aInstance, const otMdnsRecordQuerier *aQuerier);
 
@@ -903,6 +914,8 @@ otError otMdnsStartRecordQuerier(otInstance *aInstance, const otMdnsRecordQuerie
  *
  * @retval OT_ERROR_NONE           Querier stopped successfully.
  * @retval OT_ERROR_INVALID_STATE  mDNS module is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   The `mRecordType` in @p aQuerier is invalid (MUST use browser/resolvers), or
+ *                                 a name in @p aQuerier is invalid, or the callback is `NULL`.
  */
 otError otMdnsStopRecordQuerier(otInstance *aInstance, const otMdnsRecordQuerier *aQuerier);
 
