@@ -235,6 +235,21 @@ public:
     Error SetServiceBaseName(const char *aBaseName);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+    /**
+     * Forcefully evicts the current active Thread Commissioner.
+     *
+     * This is intended as an administrator tool to address a misbehaving or stale commissioner session that may be
+     * connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner
+     * role within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+     *
+     * @retval kErrorNone          Successfully sent the eviction request to the Leader.
+     * @retval kErrorNotFound      There is no active commissioner session to evict.
+     * @retval kErrorNoBufs        Could not allocate a message buffer to send the request.
+     */
+    Error EvictActiveCommissioner(void);
+#endif
+
     /**
      * Gets the set of border agent counters.
      *

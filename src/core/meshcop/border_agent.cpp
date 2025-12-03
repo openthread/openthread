@@ -475,6 +475,37 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+
+Error Manager::EvictActiveCommissioner(void)
+{
+    Error                   error = kErrorNone;
+    uint16_t                sessionId;
+    uint16_t                baRloc16;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    OwnedPtr<Coap::Message> message;
+
+    SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(baRloc16));
+    SuccessOrExit(error = Get<NetworkData::Leader>().FindCommissioningSessionId(sessionId));
+
+    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, StateTlv::kReject));
+    SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, sessionId));
+
+    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
+    messageInfo.SetSockPortToTmf();
+
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    message.Release();
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+
 //----------------------------------------------------------------------------------------------------------------------
 // Manager::SessionIterator
 
