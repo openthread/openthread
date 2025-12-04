@@ -68,6 +68,9 @@ readonly VERBOSE
 BORDER_ROUTING="${BORDER_ROUTING:-1}"
 readonly BORDER_ROUTING
 
+DISCOVERY_PROXY="${DISCOVERY_PROXY:-1}"
+readonly DISCOVERY_PROXY
+
 NAT64="${NAT64:-0}"
 readonly NAT64
 
@@ -359,12 +362,12 @@ do_build_otbr_docker()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
-        "-DOTBR_DNS_UPSTREAM_QUERY=ON"
         "-DOTBR_DUA_ROUTING=ON"
         "-DOTBR_DHCP6_PD=ON"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"
+        "DISCOVERY_PROXY=${DISCOVERY_PROXY}"
         "INFRA_IF_NAME=eth0"
         "BACKBONE_ROUTER=1"
         "REFERENCE_DEVICE=1"

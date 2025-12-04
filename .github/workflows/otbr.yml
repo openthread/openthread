@@ -61,6 +61,7 @@ jobs:
       # packet verification can't handle it because of the order of context ID
       # of OMR prefix and Domain prefix is not deterministic.
       BORDER_ROUTING: 0
+      DISCOVERY_PROXY: 0
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
