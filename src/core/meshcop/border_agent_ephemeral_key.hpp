@@ -162,6 +162,20 @@ public:
      */
     static const char *StateToString(State aState);
 
+    /**
+     * Generates a TAP and starts using the TAP as the ephemeral key.
+     *
+     * @param[out] aTap      Buffer to store generated TAP.
+     *                       Length of the buffer needing to be >= OT_BORDER_AGENT_EPHEMERAL_TAP_STR_LENGTH.
+     * @param[in]  aTimeout  Timeout in milliseconds.
+     * @param[in]  aUdpPort  UDP port.
+     *
+     * @retval kErrorNone           Successfully generated TAP and started ephemeral key.
+     * @retval kErrorFailed         Failed to generate TAP or start ephemeral key.
+     * @retval kErrorInvalidState   A previously set ephemeral key is still in use or feature is disabled.
+     */
+     Error GenerateTapAndKeyStart(char *aTap, uint32_t aTimeout, uint16_t aUdpPort);
+
 private:
     static constexpr uint16_t kMaxConnectionAttempts = 10;
 
