@@ -44,7 +44,7 @@ void Neighbor::SetState(State aState)
 
     if (mState == kStateValid)
     {
-        mConnectionStart = Get<Uptime>().GetUptimeInSeconds();
+        mConnectionStart = Get<UptimeTracker>().GetUptimeInSeconds();
     }
 
 exit:
@@ -53,7 +53,7 @@ exit:
 
 uint32_t Neighbor::GetConnectionTime(void) const
 {
-    return IsStateValid() ? Get<Uptime>().GetUptimeInSeconds() - mConnectionStart : 0;
+    return IsStateValid() ? Get<UptimeTracker>().GetUptimeInSeconds() - mConnectionStart : 0;
 }
 
 bool Neighbor::AddressMatcher::Matches(const Neighbor &aNeighbor) const

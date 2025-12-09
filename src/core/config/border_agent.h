@@ -123,6 +123,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+ *
+ * Define to 1 to enable the `otBorderAgentEvictActiveCommissioner()` API.
+ *
+ * This API provides a mechanism to evict the active Thread Commissioner from the network. This is primarily intended
+ * for administrative use to handle misbehaving or stale commissioner sessions.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
  *
  * Define to 1 to enable the Border Agent Tracker feature.

@@ -636,10 +636,16 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     bool             isOptionSet = false;
     uint16_t         blockOption = 0;
     Option::Iterator iterator;
+    Metadata         metadata;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
+    // Iterate after metadata copied and removed.
+    metadata.ReadFrom(aRequestOld);
+    metadata.RemoveFrom(aRequestOld);
+    // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
+    IgnoreError(aRequest.SetTokenFromMessage(aRequestOld));
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
@@ -683,6 +689,8 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
         aRequest.SetMoreBlocksFlag(aMoreBlocks);
     }
+
+    error = metadata.AppendTo(aRequestOld);
 
 exit:
     return error;

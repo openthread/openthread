@@ -443,6 +443,19 @@ ba sessions
 Done
 ```
 
+### ba evictcommissioner
+
+Forcefully evicts the current active Thread Commissioner.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE`.
+
+This command is intended as an administrator tool to address a misbehaving or stale commissioner session that may be connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner role within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+
+```bash
+> ba evictcommissioner
+Done
+```
+
 ### ba ephemeralkey
 
 Print the Border Agent's Ephemeral Key Manager state.

@@ -56,6 +56,7 @@ Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(true)
     , mIsRunning(false)
+    , mSessionIndex(0)
     , mDtlsTransport(aInstance, kNoLinkSecurity)
     , mCommissionerSession(nullptr)
     , mCommissionerUdpReceiver(HandleUdpReceive, this)
@@ -249,6 +250,8 @@ void Manager::HandleRemoveSession(SecureSession &aSession)
 {
     CoapDtlsSession &coapSession = static_cast<CoapDtlsSession &>(aSession);
 
+    LogInfo("Deleting session %u", coapSession.GetIndex());
+
     coapSession.Cleanup();
     coapSession.Free();
 }
@@ -302,7 +305,7 @@ void Manager::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession, uint
 
     IgnoreError(Get<Ip6::Udp>().AddReceiver(mCommissionerUdpReceiver));
 
-    LogInfo("Commissioner accepted - SessionId:%u ALOC:%s", aSessionId,
+    LogInfo("Session %u accepted as active commissioner - Id:0x%04x ALOC:%s", aSession.GetIndex(), aSessionId,
             mCommissionerAloc.GetAddress().ToString().AsCString());
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
@@ -321,7 +324,7 @@ void Manager::RevokeRoleIfActiveCommissioner(CoapDtlsSession &aSession)
 {
     VerifyOrExit(IsCommissionerSession(aSession));
 
-    LogInfo("Commissioner role revoked");
+    LogInfo("Revoked active commissioner role from session %u", aSession.GetIndex());
 
     IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mCommissionerUdpReceiver));
     Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
@@ -360,6 +363,8 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const 
     VerifyOrExit(mIsRunning);
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
+
+    LogInfo("Received %s from %s", UriToString<kUriRelayRx>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
 
     VerifyOrExit(mCommissionerSession != nullptr);
     mCommissionerSession->ForwardUdpRelayToCommissioner(aMessage);
@@ -470,13 +475,44 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+
+Error Manager::EvictActiveCommissioner(void)
+{
+    Error                   error = kErrorNone;
+    uint16_t                sessionId;
+    uint16_t                baRloc16;
+    Tmf::MessageInfo        messageInfo(GetInstance());
+    OwnedPtr<Coap::Message> message;
+
+    SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(baRloc16));
+    SuccessOrExit(error = Get<NetworkData::Leader>().FindCommissioningSessionId(sessionId));
+
+    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, StateTlv::kReject));
+    SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, sessionId));
+
+    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
+    messageInfo.SetSockPortToTmf();
+
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    message.Release();
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+
 //----------------------------------------------------------------------------------------------------------------------
 // Manager::SessionIterator
 
 void Manager::SessionIterator::Init(Instance &aInstance)
 {
     SetSession(static_cast<CoapDtlsSession *>(aInstance.Get<Manager>().mDtlsTransport.GetSessions().GetHead()));
-    SetInitTime(aInstance.Get<Uptime>().GetUptime());
+    SetInitTime(aInstance.Get<UptimeTracker>().GetUptime());
 }
 
 Error Manager::SessionIterator::GetNextSessionInfo(SessionInfo &aSessionInfo)
@@ -504,10 +540,13 @@ exit:
 Manager::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
     : Coap::SecureSession(aInstance, aDtlsTransport)
     , mTimer(aInstance, HandleTimer, this)
-    , mAllocationTime(aInstance.Get<Uptime>().GetUptime())
+    , mAllocationTime(aInstance.Get<UptimeTracker>().GetUptime())
+    , mIndex(aInstance.Get<Manager>().GetNextSessionIndex())
 {
     SetResourceHandler(&HandleResource);
     SetConnectCallback(&HandleConnected, this);
+
+    LogInfo("Allocating session %u", mIndex);
 }
 
 Error Manager::CoapDtlsSession::SendMessage(OwnedPtr<Coap::Message> aMessage)
@@ -558,6 +597,7 @@ bool Manager::CoapDtlsSession::HandleResource(const char             *aUriPath,
     switch (uri)
     {
     case kUriCommissionerPetition:
+        Log<kUriCommissionerPetition>(kReceive);
         IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderPetition));
         break;
     case kUriCommissionerKeepAlive:
@@ -591,13 +631,13 @@ void Manager::CoapDtlsSession::HandleConnected(ConnectEvent aEvent)
 {
     if (aEvent == kConnected)
     {
-        LogInfo("SecureSession connected");
+        LogInfo("Session %u connected", mIndex);
         mTimer.Start(kKeepAliveTimeout);
         Get<Manager>().HandleSessionConnected(*this);
     }
     else
     {
-        LogInfo("SecureSession disconnected");
+        LogInfo("Session %u disconnected", mIndex);
         Get<Manager>().HandleSessionDisconnected(*this, aEvent);
     }
 }
@@ -606,6 +646,8 @@ void Manager::CoapDtlsSession::HandleTmfCommissionerKeepAlive(Coap::Message     
                                                               const Ip6::MessageInfo &aMessageInfo)
 {
     VerifyOrExit(IsActiveCommissioner());
+
+    Log<kUriCommissionerKeepAlive>(kReceive);
 
     SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive));
     mTimer.Start(kKeepAliveTimeout);
@@ -664,7 +706,17 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMessage
 
     mForwardContexts.Push(*forwardContext.Release());
 
-    LogInfo("Forwarded request to leader on %s", PathForUri(aUri));
+    switch (aUri)
+    {
+    case kUriLeaderPetition:
+        Log<kUriLeaderPetition>(kForward, " to leader");
+        break;
+    case kUriLeaderKeepAlive:
+        Log<kUriLeaderKeepAlive>(kForward, " to leader");
+        break;
+    default:
+        break;
+    }
 
 exit:
     LogWarnOnError(error, "forward to leader");
@@ -697,6 +749,18 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
     Error                   error;
 
     IgnoreError(mForwardContexts.Remove(aForwardContext));
+
+    switch (aForwardContext.mUri)
+    {
+    case kUriLeaderPetition:
+        Log<kUriLeaderPetition>(kReceive, " response from leader");
+        break;
+    case kUriLeaderKeepAlive:
+        Log<kUriLeaderKeepAlive>(kReceive, " response from leader");
+        break;
+    default:
+        break;
+    }
 
     SuccessOrExit(error = aResult);
 
@@ -745,7 +809,23 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
 exit:
     if (error != kErrorNone)
     {
-        LogWarn("Commissioner request failed: %s", ErrorToString(error));
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+        const char *uriString = "Unknown";
+
+        switch (aForwardContext.mUri)
+        {
+        case kUriLeaderPetition:
+            uriString = UriToString<kUriLeaderPetition>();
+            break;
+        case kUriLeaderKeepAlive:
+            uriString = UriToString<kUriLeaderKeepAlive>();
+            break;
+        default:
+            break;
+        }
+
+        LogWarn("Forwarded %s failed - session %u, error:%s", uriString, mIndex, ErrorToString(error));
+#endif
 
         SendErrorMessage(error, aForwardContext.mToken, aForwardContext.mTokenLength);
     }
@@ -781,10 +861,10 @@ void Manager::CoapDtlsSession::ForwardUdpProxyToCommissioner(const Message      
 
     SuccessOrExit(error = SendMessage(message.PassOwnership()));
 
-    LogInfo("Sent ProxyRx (c/ur) to commissioner");
+    Log<kUriProxyRx>(kForward);
 
 exit:
-    LogWarnOnError(error, "send ProxyRx (c/ur)");
+    LogWarnOnError(error, "forward UDP proxy");
 }
 
 void Manager::CoapDtlsSession::ForwardUdpRelayToCommissioner(const Message &aMessage)
@@ -797,10 +877,10 @@ void Manager::CoapDtlsSession::ForwardUdpRelayToCommissioner(const Message &aMes
 
     SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), aMessage));
 
-    LogInfo("Sent RelayRx (c/rx) to commissioner");
+    Log<kUriRelayRx>(kForward);
 
 exit:
-    LogWarnOnError(error, "send RelayRx (c/rx)");
+    LogWarnOnError(error, "forward UDP relay");
 }
 
 Error Manager::CoapDtlsSession::ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage)
@@ -845,6 +925,8 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     OffsetRange               offsetRange;
     UdpEncapsulationTlvHeader udpEncapHeader;
 
+    Log<kUriProxyTx>(kReceive);
+
     VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kUdpEncapsulation, offsetRange));
@@ -869,7 +951,7 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo));
     message.Release();
 
-    LogInfo("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
+    LogInfo("Sent proxy UDP to %s", messageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     LogWarnOnError(error, "send proxy stream");
@@ -887,6 +969,8 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
 
     VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
 
+    Log<kUriRelayTx>(kReceive);
+
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRouterRloc));
 
     message.Reset(Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayTx));
@@ -902,10 +986,10 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
     message.Release();
 
-    LogInfo("Sent to joiner router request on RelayTx (c/tx)");
+    LogInfo("Forward %s to joiner router 0x%04x", UriToString<kUriRelayTx>(), joinerRouterRloc);
 
 exit:
-    LogWarnOnError(error, "send to joiner router request RelayTx (c/tx)");
+    LogWarnOnError(error, "forward to joiner router");
 }
 
 void Manager::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri)
@@ -920,6 +1004,7 @@ void Manager::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, Uri 
     switch (aUri)
     {
     case kUriActiveGet:
+        Log<kUriActiveGet>(kReceive);
         response.Reset(
             Get<ActiveDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags));
         Get<Manager>().mCounters.mMgmtActiveGets++;
@@ -932,6 +1017,7 @@ void Manager::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, Uri 
         break;
 
     case kUriPendingGet:
+        Log<kUriPendingGet>(kReceive);
         response.Reset(
             Get<PendingDatasetManager>().ProcessGetRequest(aMessage, DatasetManager::kIgnoreSecurityPolicyFlags));
         Get<Manager>().mCounters.mMgmtPendingGets++;
@@ -944,6 +1030,7 @@ void Manager::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, Uri 
         break;
 
     case kUriCommissionerGet:
+        Log<kUriCommissionerGet>(kReceive);
         response.Reset(Get<NetworkData::Leader>().ProcessCommissionerGetRequest(aMessage));
         break;
 
@@ -955,7 +1042,20 @@ void Manager::CoapDtlsSession::HandleTmfDatasetGet(Coap::Message &aMessage, Uri 
 
     SuccessOrExit(error = SendMessage(response.PassOwnership()));
 
-    LogInfo("Sent %s response to non-active commissioner", PathForUri(aUri));
+    switch (aUri)
+    {
+    case kUriActiveGet:
+        Log<kUriActiveGet>(kSend, " response");
+        break;
+    case kUriPendingGet:
+        Log<kUriPendingGet>(kSend, " response");
+        break;
+    case kUriCommissionerGet:
+        Log<kUriCommissionerGet>(kSend, " response");
+        break;
+    default:
+        break;
+    }
 
 exit:
     LogWarnOnError(error, "send Active/Pending/CommissionerGet response");
@@ -970,10 +1070,34 @@ void Manager::CoapDtlsSession::HandleTimer(void)
 {
     if (IsConnected())
     {
-        LogInfo("Session timed out - disconnecting");
+        LogInfo("Session %u timed out - disconnecting", mIndex);
         DisconnectTimeout();
     }
 }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+void Manager::CoapDtlsSession::LogUri(Action aAction, const char *aUriString, const char *aTxt)
+{
+    static const char *const kActionStrings[] = {
+        "Receive", // kReceive
+        "Send",    // kSend
+        "Forward", // kForward,
+    };
+
+    struct EnumChecker
+    {
+        InitEnumValidatorCounter();
+
+        ValidateNextEnum(kReceive);
+        ValidateNextEnum(kSend);
+        ValidateNextEnum(kForward);
+    };
+
+    LogInfo("%s %s%s - session %u", kActionStrings[aAction], aUriString, aTxt, mIndex);
+}
+
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // `Manager::CoapDtlsSession::ForwardContext`

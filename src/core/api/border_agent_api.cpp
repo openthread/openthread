@@ -119,6 +119,13 @@ const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().GetCounters();
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+otError otBorderAgentEvictActiveCommissioner(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().EvictActiveCommissioner();
+}
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 otBorderAgentEphemeralKeyState otBorderAgentEphemeralKeyGetState(otInstance *aInstance)
