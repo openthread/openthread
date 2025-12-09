@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 #include "instance/instance.hpp"
+#include "utils/verhoeff_checksum.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -427,6 +428,67 @@ const char *EphemeralKeyManager::DeactivationReasonToString(DeactivationReason a
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+//---------------------------------------------------------------------------------------------------------------------
+// EphemeralKeyManager::Tap
+
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
+Error EphemeralKeyManager::Tap::GenerateRandom(void)
+{
+    Error error;
+    char  checksum;
+
+    ClearAllBytes(mTap);
+
+    for (uint8_t index = 0; index < kLength - 1; index++)
+    {
+        SuccessOrExit(error = GenerateRandomDigit(mTap[index]));
+    }
+
+    IgnoreError(Utils::VerhoeffChecksum::Calculate(mTap, checksum));
+    mTap[kLength - 1] = checksum;
+
+exit:
+    return error;
+}
+
+Error EphemeralKeyManager::Tap::GenerateRandomDigit(char &aChar)
+{
+    static constexpr uint8_t kMaxValue = 250;
+
+    Error   error;
+    uint8_t byte;
+
+    // To ensure uniform random distribution and avoid bias toward
+    // certain digit values, we ignore random `uint8` values of 250 or
+    // larger (i.e., values in the range [250-255]). This ensures the
+    // random `byte` is uniformly distributed in `[0-249]`, which,
+    // when `% 10`, gives us a uniform probability of `[0-9]` values.
+
+    do
+    {
+        SuccessOrExit(error = Random::Crypto::Fill(byte));
+    } while (byte >= kMaxValue);
+
+    aChar = '0' + (byte % 10);
+
+exit:
+    return error;
+}
+
+Error EphemeralKeyManager::Tap::Validate(void) const
+{
+    Error error;
+
+    VerifyOrExit(StringLength(mTap, kLength + 1) == kLength, error = kErrorInvalidArgs);
+    error = Utils::VerhoeffChecksum::Validate(mTap);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
 } // namespace BorderAgent
 } // namespace MeshCoP

@@ -424,6 +424,11 @@ otError otBorderAgentEvictActiveCommissioner(otInstance *aInstance);
 #define OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT (10 * 60 * 1000u)
 
 /**
+ * The string length of Thread Administration One-Time Passcode (TAP).
+ */
+#define OT_BORDER_AGENT_EPHEMERAL_KEY_TAP_STRING_LENGTH 9
+
+/**
  * Represents Border Agent's Ephemeral Key Manager state.
  */
 typedef enum otBorderAgentEphemeralKeyState
@@ -434,6 +439,14 @@ typedef enum otBorderAgentEphemeralKeyState
     OT_BORDER_AGENT_STATE_CONNECTED = 3, ///< Session is established with an external commissioner candidate.
     OT_BORDER_AGENT_STATE_ACCEPTED  = 4, ///< Session is established and candidate is accepted as full commissioner.
 } otBorderAgentEphemeralKeyState;
+
+/**
+ * Represents a Thread Administration One-Time Passcode (TAP).
+ */
+typedef struct otBorderAgentEphemeralKeyTap
+{
+    char mTap[OT_BORDER_AGENT_EPHEMERAL_KEY_TAP_STRING_LENGTH + 1]; ///< TAP string buffer (including `\0` character).
+} otBorderAgentEphemeralKeyTap;
 
 /**
  * Gets the state of Border Agent's Ephemeral Key Manager.
@@ -562,6 +575,37 @@ void otBorderAgentEphemeralKeySetCallback(otInstance                       *aIns
  * @returns Human-readable string corresponding to @p aState.
  */
 const char *otBorderAgentEphemeralKeyStateToString(otBorderAgentEphemeralKeyState aState);
+
+/**
+ * Generates a cryptographically secure random Thread Administration One-Time Passcode (TAP) string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+ *
+ * The TAP is a string of 9 characters, generated as a sequence of eight cryptographically secure random
+ * numeric digits [`0`-`9`] followed by a single check digit determined using the Verhoeff algorithm.
+ *
+ * @param[out] aTap         A pointer to an `otBorderAgentEphemeralKeyTap` to output the generated TAP.
+ *
+ * @retval OT_ERROR_NONE    Successfully generated a random TAP. @p aTap is updated.
+ * @retval OT_ERROR_FAILED  Failed to generate a random TAP.
+ */
+otError otBorderAgentEphemeralKeyGenerateTap(otBorderAgentEphemeralKeyTap *aTap);
+
+/**
+ * Validates a given Thread Administration One-Time Passcode (TAP) string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+ *
+ * Validates that the TAP string has the proper length, contains digit characters [`0`-`9`], and validates the
+ * Verhoeff checksum.
+ *
+ * @param[in] aTap     The `otBorderAgentEphemeralKeyTap` to validate.
+ *
+ * @retval OT_ERROR_NONE            Successfully validated the @p aTap.
+ * @retval OT_ERROR_INVALID_ARGS    The @p aTap string has an invalid length or contains non-digit characters.
+ * @retval OT_ERROR_FAILED          Checksum validation failed.
+ */
+otError otBorderAgentEphemeralKeyValidateTap(const otBorderAgentEphemeralKeyTap *aTap);
 
 /**
  * @}
