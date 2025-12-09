@@ -351,7 +351,7 @@ jobs:
         retention-days: 1
 
   thread-1-4-posix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       COVERAGE: 1
       PYTHONUNBUFFERED: 1

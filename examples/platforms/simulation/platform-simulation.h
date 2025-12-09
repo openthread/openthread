@@ -354,4 +354,15 @@ void platformBleUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct time
  */
 void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
+/**
+ * Send bytes over Virtual UART.
+ *
+ * @param[in] aData        A pointer to the data buffer.
+ * @param[in] aLength      Number of bytes to transmit.
+ *
+ * @retval OT_ERROR_NONE    Successfully started transmission.
+ * @retval OT_ERROR_FAILED  Failed to start the transmission.
+ */
+otError platformUartSendVirtual(const uint8_t *aData, uint16_t aLength);
+
 #endif // PLATFORM_SIMULATION_H_
