@@ -91,6 +91,8 @@ static constexpr Entry kEntries[] = {
     {"d/dg"},  // kUriDiagnosticGetRequest
     {"d/dq"},  // kUriDiagnosticGetQuery
     {"d/dr"},  // kUriDiagnosticReset
+    {"h/an"},  // kUriHistoryAnswer
+    {"h/qy"},  // kUriHistoryQuery
     {"n/dn"},  // kUriDuaRegistrationNotify
     {"n/dr"},  // kUriDuaRegistrationRequest
     {"n/mr"},  // kUriMlr
@@ -137,6 +139,8 @@ static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetAnswer].mPath, "d/d
 static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetRequest].mPath, "d/dg"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetQuery].mPath, "d/dq"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticReset].mPath, "d/dr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriHistoryAnswer].mPath, "h/an"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriHistoryQuery].mPath, "h/qy"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationNotify].mPath, "n/dn"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationRequest].mPath, "n/dr"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriMlr].mPath, "n/mr"), "kEntries is invalid");
@@ -200,6 +204,8 @@ template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "Dia
 template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
 template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
 template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
+template <> const char *UriToString<kUriHistoryAnswer>(void) { return "HistAnswer"; }
+template <> const char *UriToString<kUriHistoryQuery>(void) { return "HistQuery"; }
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
 template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }
