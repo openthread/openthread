@@ -140,7 +140,7 @@ enum
 
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
-    OT_POSIX_OPT_SETTINGS_PATH,
+    OT_POSIX_OPT_DATA_PATH,
 };
 
 static const struct option kOptions[] = {
@@ -154,7 +154,7 @@ static const struct option kOptions[] = {
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
-    {"settings-path", required_argument, NULL, OT_POSIX_OPT_SETTINGS_PATH},
+    {"data-path", required_argument, NULL, OT_POSIX_OPT_DATA_PATH},
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -163,7 +163,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
-            "        --settings-path           Path of directory to store settings.\n"
+            "        --data-path               Path of directory to store data.\n"
             "    -B  --backbone-interface-name Backbone network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -192,7 +192,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
-    aConfig->mPlatformConfig.mSettingsPath        = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    aConfig->mPlatformConfig.mDataPath            = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
 #ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
@@ -248,8 +248,8 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
-        case OT_POSIX_OPT_SETTINGS_PATH:
-            aConfig->mPlatformConfig.mSettingsPath = optarg;
+        case OT_POSIX_OPT_DATA_PATH:
+            aConfig->mPlatformConfig.mDataPath = optarg;
             break;
 #ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
