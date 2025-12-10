@@ -156,6 +156,7 @@ set(COMMON_SOURCES
     mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
+    mac/poll_accelerator.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
@@ -215,6 +216,7 @@ set(COMMON_SOURCES
     net/tcp6_ext.cpp
     net/udp6.cpp
     radio/ble_secure.cpp
+    radio/poll_accelerator_platform.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp

@@ -211,6 +211,9 @@ bool Mac::IsInTransmitState(void) const
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     case kOperationTransmitWakeup:
 #endif
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    case kOperationPolling:
+#endif
         retval = true;
         break;
 
@@ -634,6 +637,12 @@ void Mac::StartOperation(Operation aOperation)
     {
         mOperationTask.Post();
     }
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    else if (mOperation == kOperationPolling)
+    {
+        Get<DataPollSender>().StopPollAccelerator();
+    }
+#endif
 }
 
 void Mac::PerformNextOperation(void)
@@ -745,6 +754,10 @@ void Mac::PerformNextOperation(void)
         mLinks.Receive(mRadioChannel);
         mTimer.Start(kDataPollTimeout);
         break;
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    case kOperationPolling:
+        break;
+#endif
     }
 
 exit:
@@ -1147,6 +1160,15 @@ void Mac::BeginTransmit(void)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if ((mOperation == kOperationTransmitPoll) &&
+        Get<DataPollSender>().StartPollAccelerator(*frame, IsPending(kOperationTransmitDataDirect)))
+    {
+        mOperation = kOperationPolling;
+        ExitNow();
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mLinks.Send(*frame, mTxPendingRadioLinks);
 #else
@@ -1292,8 +1314,49 @@ exit:
 }
 
 void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+{
+    HandleTransmitDone(0, nullptr, aFrame, aAckFrame, aError);
+}
+
+void Mac::HandleTransmitDone(uint32_t aIterationsDone,
+                             RxFrame *aPrevAckFrame,
+                             TxFrame &aFrame,
+                             RxFrame *aAckFrame,
+                             Error    aError)
+#endif
 {
     bool ackRequested = aFrame.GetAckRequest();
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if (mOperation == kOperationPolling)
+    {
+        uint32_t frameCounter;
+
+        if (aFrame.GetFrameCounter(frameCounter) == kErrorNone)
+        {
+            Get<KeyManager>().MacFrameCounterUsed(frameCounter);
+        }
+
+        // the poll accelerator did several successful iterations
+        if (aIterationsDone && (aPrevAckFrame != nullptr) && ackRequested)
+        {
+            Address dstAddr;
+
+            IgnoreError(aFrame.GetDstAddr(dstAddr));
+
+            Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
+
+            if (neighbor != nullptr)
+            {
+                UpdateNeighborLinkInfo(*neighbor, *aPrevAckFrame);
+            }
+
+            mDataSequence += aIterationsDone;
+            mCounters.mTxDataPoll += aIterationsDone;
+        }
+    }
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (!aFrame.IsEmpty()
@@ -1449,9 +1512,40 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
         mCounters.mTxDataPoll++;
         FinishOperation();
-        Get<DataPollSender>().HandlePollSent(aFrame, aError);
+        Get<DataPollSender>().HandlePollSent(
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+            aIterationsDone, false,
+#endif
+            aFrame, aError);
         PerformNextOperation();
         break;
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    case kOperationPolling:
+    {
+        bool rxExpected = false;
+
+        if ((aError == kErrorNone) && (aAckFrame != nullptr) && aAckFrame->GetFramePending())
+        {
+            // the poll accelerator already did the reception
+            // HandleReceivedFrame() will be called by it
+            rxExpected = true;
+        }
+
+        if (!rxExpected)
+        {
+            FinishOperation();
+        }
+        Get<DataPollSender>().HandlePollSent(aIterationsDone, rxExpected, aFrame, aError);
+
+        if (!rxExpected)
+        {
+            PerformNextOperation();
+        }
+        mCounters.mTxDataPoll++;
+    }
+    break;
+#endif
 
     case kOperationTransmitDataDirect:
         mCounters.mTxData++;
@@ -1857,6 +1951,23 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     Error     error            = aError;
     bool      isFrameValidated = false;
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if (mOperation == kOperationPolling)
+    {
+        if (aFrame == nullptr)
+        {
+            FinishOperation();
+            Get<DataPollSender>().HandlePollTimeout();
+            PerformNextOperation();
+            VerifyOrExit(aFrame != nullptr, error = kErrorNoFrameReceived);
+        }
+        else if (aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
+        {
+            Get<KeyManager>().MacFrameCounterUsed(aFrame->mInfo.mRxInfo.mAckFrameCounter);
+        }
+    }
+#endif
+
     mCounters.mRxTotal++;
 
     SuccessOrExit(error);
@@ -1973,7 +2084,12 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     ProcessCsl(*aFrame, srcaddr);
 #endif
 
-    Get<DataPollSender>().ProcessRxFrame(*aFrame);
+    Get<DataPollSender>().ProcessRxFrame(*aFrame
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+                                         ,
+                                         mOperation == kOperationPolling
+#endif
+    );
 
     if (neighbor != nullptr)
     {
@@ -2041,6 +2157,9 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         VerifyOrExit(mScanChannel == mPanChannel, mCounters.mRxOther++);
         break;
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    case kOperationPolling:
+#endif
     case kOperationWaitingForData:
 
         if (!dstaddr.IsNone())
