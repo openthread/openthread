@@ -140,6 +140,7 @@ enum
 
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+    OT_POSIX_OPT_DATA_PATH,
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     OT_POSIX_OPT_TUN_DEVICE,
 #endif
@@ -159,6 +160,7 @@ static const struct option kOptions[] = {
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
+    {"data-path", required_argument, NULL, OT_POSIX_OPT_DATA_PATH},
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -167,6 +169,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
+            "        --data-path               Path of directory to store data.\n"
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
             "        --tun-device              POSIX TUN Device.\n"
 #endif
@@ -198,6 +201,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
+    aConfig->mPlatformConfig.mDataPath            = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     aConfig->mPlatformConfig.mTunDevice = NULL;
 #endif
@@ -255,6 +259,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
+            break;
+        case OT_POSIX_OPT_DATA_PATH:
+            aConfig->mPlatformConfig.mDataPath = optarg;
             break;
 #ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
