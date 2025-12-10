@@ -425,6 +425,14 @@ public:
      */
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    void HandleTransmitDone(uint32_t aIterationsDone,
+                            RxFrame *aPrevAckFrame,
+                            TxFrame &aFrame,
+                            RxFrame *aAckFrame,
+                            Error    aError);
+#endif
+
     /**
      * Returns if an active scan is in progress.
      */
@@ -793,6 +801,9 @@ private:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         kOperationTransmitWakeup,
 #endif
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+        kOperationPolling,
+#endif
     };
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
@@ -950,6 +961,16 @@ private:
 #endif
 
     KeyMaterial mMode2KeyMaterial;
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    bool mRxOnWhenIdleIsPending : 1;
+    bool mPendingRxOnWhenIdle : 1;
+    bool mPromiscuousIsPending : 1;
+    bool mPendingPromiscuous : 1;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    bool mCslUpdateIsPending : 1;
+#endif
+#endif
 };
 
 /**

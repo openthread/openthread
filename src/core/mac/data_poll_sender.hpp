@@ -42,6 +42,7 @@
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/poll_accelerator.hpp"
 #include "thread/neighbor.hpp"
 
 namespace ot {
@@ -61,6 +62,11 @@ namespace ot {
 
 class DataPollSender : public InstanceLocator, private NonCopyable
 {
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    friend class Instance;
+    friend class Mac::Mac;
+#endif
+
 public:
     static constexpr uint8_t kDefaultFastPolls  = 8;  ///< Default number of fast poll tx (@sa StartFastPolls).
     static constexpr uint8_t kMaxFastPolls      = 15; ///< Maximum number of fast poll tx allowed.
@@ -131,7 +137,13 @@ public:
      * @param[in] aFrame     The data poll frame.
      * @param[in] aError     Error status of a data poll message transmission.
      */
-    void HandlePollSent(Mac::TxFrame &aFrame, Error aError);
+    void HandlePollSent(Mac::TxFrame &aFrame,
+                        Error         aError
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+                        ,
+                        uint32_t aIterationsDone
+#endif
+    );
 
     /**
      * Informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
@@ -264,6 +276,12 @@ private:
     Error GetPollDestinationAddress(Mac::Address &aDest) const;
 #endif
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    bool StartPollAccelerator(Mac::TxFrame &aFrame, bool aOneIteration);
+    void StopPollAccelerator(void);
+    void RestartPollTimer(uint32_t aLastPollTimestamp);
+#endif
+
     using PollTimer = TimerMilliIn<DataPollSender, &DataPollSender::HandlePollTimer>;
 
     TimeMilli mTimerStartTime;
@@ -279,6 +297,11 @@ private:
     uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimeout`).
     uint8_t mPollTxFailureCounter : 4; // Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   // Number of remaining fast polls when in transient fast polling mode.
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    uint8_t         mPendingFastPolls : 4; // Number of fast polls requested while poll accelerator is running
+    PollAccelerator mPollAccelerator;
+#endif
 };
 
 /**
