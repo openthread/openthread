@@ -34,6 +34,7 @@
 #include "crypto/storage.hpp"
 
 #include "common/debug.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -58,6 +59,26 @@ exit:
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+Storage::KeyRefManager::KeyRefManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    , mExtraOffset(0)
+#endif
+{
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+    // Set the key reference offset during construction to ensure each instance
+    // uses the correct instance-specific key references. This must happen before
+    // KeyManager is constructed, otherwise all instances would use offset 0 during
+    // KeyManager initialization, causing key collisions where instance 1's
+    // initialization destroys instance 0's keys.
+    mExtraOffset = kKeyRefExtraOffset * Instance::GetIdx(&aInstance);
+#else
+#error "OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE must be enabled when both OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE and OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE are enabled"
+#endif
+#endif
+}
 
 void Storage::KeyRefManager::DestroyPersistentKeys(void)
 {
