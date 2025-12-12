@@ -783,12 +783,18 @@ group("libopenthread_platform") {
 
 static_library("libopenthread-ftd") {
   sources = openthread_core_sources
+  if (openthread_config_tcp_enable) {
+    deps = [ "../../third_party/tcplp" ]
+  }
   public_deps = [ ":libopenthread_platform" ]
   public_configs = [ "../..:openthread_ftd_config" ]
 }
 
 static_library("libopenthread-mtd") {
   sources = openthread_core_sources
+  if (openthread_config_tcp_enable) {
+    deps = [ "../../third_party/tcplp" ]
+  }
   public_deps = [ ":libopenthread_platform" ]
   public_configs = [ "../..:openthread_mtd_config" ]
 }

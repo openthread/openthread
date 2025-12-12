@@ -1,0 +1,83 @@
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+config("warnings_fix_config") {
+  cflags = [
+    "-Wno-conversion",
+    "-Wno-sign-compare",
+    "-Wno-undef",
+    "-Wno-unused-parameter",
+    "-Wno-vla",
+  ]
+}
+
+group("warnings_fix") {
+  public_configs = [
+    ":warnings_fix_config",
+  ]
+}
+
+static_library("tcplp") {
+  sources = [
+    "bsdtcp/tcp_seq.h",
+    "bsdtcp/tcp_output.c",
+    "bsdtcp/cc.h",
+    "bsdtcp/icmp_var.h",
+    "bsdtcp/tcp_timer.c",
+    "bsdtcp/tcp_reass.c",
+    "bsdtcp/tcp_subr.c",
+    "bsdtcp/tcp_fsm.h",
+    "bsdtcp/ip.h",
+    "bsdtcp/tcp_const.h",
+    "bsdtcp/sys/queue.h",
+    "bsdtcp/tcp_fastopen.h",
+    "bsdtcp/tcp_sack.c",
+    "bsdtcp/tcp_usrreq.c",
+    "bsdtcp/tcp_timewait.c",
+    "bsdtcp/tcp.h",
+    "bsdtcp/cc/cc_module.h",
+    "bsdtcp/cc/cc_newreno.c",
+    "bsdtcp/ip6.h",
+    "bsdtcp/types.h",
+    "bsdtcp/tcp_fastopen.c",
+    "bsdtcp/tcp_timer.h",
+    "bsdtcp/tcp_input.c",
+    "bsdtcp/tcp_var.h",
+    "tcplp.h",
+    "lib/bitmap.c",
+    "lib/cbuf.c",
+    "lib/cbuf.h",
+    "lib/bitmap.h",
+    "lib/lbuf.h",
+    "lib/lbuf.c",
+    "lib/test/test_all.c",
+  ]
+  deps = [
+    ":warnings_fix",
+    "../../include/openthread",
+  ]
+}
