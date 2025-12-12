@@ -135,6 +135,9 @@ void otPlatFree(void *aPtr)
 
     free(aPtr);
 }
+
+void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
+void  otPlatCryptoFree(void *aPtr) { free(aPtr); }
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED

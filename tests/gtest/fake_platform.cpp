@@ -50,6 +50,10 @@
 #include <openthread/platform/trel.h>
 #include <openthread/platform/udp.h>
 
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+#include <psa/crypto.h>
+#endif
+
 using namespace ot;
 
 bool operator<(const otExtAddress &aLeft, const otExtAddress &aRight)
@@ -481,6 +485,36 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+/**
+ * When OpenThread is compiled with the PSA Crypto backend using Mbed TLS 3.x, there is no
+ * API to configure a dedicated non-default entropy source. It is documented that a future version of
+ * Mbed TLS (likely 4.x) will include a PSA interface for configuring entropy sources.
+ *
+ * For now, we need to define the external RNG. Since the implementation of `otPlatEntropyGet` already
+ * uses CSPRNG, we will call it here as well.
+ */
+extern "C" psa_status_t mbedtls_psa_external_get_random(mbedtls_psa_external_random_context_t *context,
+                                                        uint8_t                               *output,
+                                                        size_t                                 output_size,
+                                                        size_t                                *output_length)
+{
+    OT_UNUSED_VARIABLE(context);
+
+    otError      error;
+    psa_status_t status = PSA_ERROR_GENERIC_ERROR;
+
+    error = otPlatEntropyGet(output, (uint16_t)output_size);
+    if (error == OT_ERROR_NONE)
+    {
+        *output_length = output_size;
+        status         = PSA_SUCCESS;
+    }
+
+    return status;
+}
+#endif
 
 void otPlatDiagSetOutputCallback(otInstance *, otPlatDiagOutputCallback, void *) {}
 

@@ -419,6 +419,102 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
+  cli-psa:
+    runs-on: ubuntu-24.04
+    env:
+      COVERAGE: 1
+      THREAD_VERSION: 1.4
+      VIRTUAL_TIME: 1
+      INTER_OP_BBR: 1
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+      with:
+        python-version: '3.12'
+        cache: pip
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        OT_OPTIONS="-DOT_PLATFORM_KEY_REF=ON -DOT_CRYPTO_LIB=PSA" OT_NODE_TYPE=cli ./script/test build
+    - name: Run
+      run: |
+        ./script/test unit
+        OT_NODE_TYPE=cli ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
+    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      if: ${{ failure() }}
+      with:
+        name: cli-psa
+        path: ot_testing
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      with:
+        name: cov-cli-psa
+        path: tmp/coverage.info
+        retention-days: 1
+
+  cli-psa-expects:
+    runs-on: ubuntu-24.04
+    env:
+      COVERAGE: 1
+      THREAD_VERSION: 1.4
+      VIRTUAL_TIME: 0
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+      with:
+        python-version: '3.12'
+        cache: pip
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+        sudo bash script/install_socat
+        pip install bleak 'cryptography==43.0.0'
+    - name: Run CLI Mode
+      run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        OT_OPTIONS="-DOT_PLATFORM_KEY_REF=ON -DOT_CRYPTO_LIB=PSA -DOT_TIME_SYNC=ON -DOT_BLE_TCAT=ON" OT_NODE_TYPE=cli ./script/test build expect
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-cli-psa-expects-1-4
+        path: |
+          ./ot-core-dump/*
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      with:
+        name: cov-cli-psa-expects
+        path: tmp/coverage.info
+        retention-days: 1
+
   upload-coverage:
     needs:
     - thread-1-4
@@ -426,6 +522,8 @@ jobs:
     - packet-verification-1-1-on-1-4
     - expects
     - thread-1-4-posix
+    - cli-psa
+    - cli-psa-expects
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
