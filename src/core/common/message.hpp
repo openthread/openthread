@@ -1849,6 +1849,13 @@ public:
      */
     explicit MessagePool(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * Tears down the object and releases platform managed resources.
+     */
+    ~MessagePool(void);
+#endif
+
     /**
      * Allocates a new message with specified settings.
      *

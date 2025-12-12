@@ -58,6 +58,10 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+MessagePool::~MessagePool(void) { otPlatMessagePoolDeinit(&GetInstance()); }
+#endif
+
 Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings)
 {
     Error    error = kErrorNone;
