@@ -70,6 +70,9 @@ readonly OT_SRCDIR
 OT_PLATFORMS=(simulation posix android-ndk)
 readonly OT_PLATFORMS
 
+OT_CLEAN_INTERMEDIATES="${OT_CLEAN_INTERMEDIATES-${GITHUB_ACTION-}}"
+readonly OT_CLEAN_INTERMEDIATES
+
 OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_ANYCAST_LOCATOR=ON"
     "-DOT_BLE_TCAT=ON"
@@ -139,6 +142,10 @@ build()
     fi
 
     cd "${OT_SRCDIR}"
+
+    if [[ -n $OT_CLEAN_INTERMEDIATES ]]; then
+        find "${builddir}" \( -name '*.o' -o -name '*.a' \) -delete
+    fi
 }
 
 main()
