@@ -48,8 +48,15 @@ RegisterLogModule("BorderAgent");
 // `Manager`
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
 const char Manager::kServiceType[]            = "_meshcop._udp";
 const char Manager::kDefaultBaseServiceName[] = OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+const char        Manager::kAdmitterSubType[] = "_admitter";
+const char *const Manager::kServiceSubTypes[] = {kAdmitterSubType};
+#endif
+
 #endif
 
 Manager::Manager(Instance &aInstance)
@@ -171,6 +178,10 @@ void Manager::Start(void)
 
     Get<TxtData>().Refresh();
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    Get<Admitter>().EvaluateOperation();
+#endif
+
 exit:
     if (!mIsRunning)
     {
@@ -195,6 +206,10 @@ void Manager::Stop(void)
     LogInfo("Border Agent stopped");
 
     Get<TxtData>().Refresh();
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    Get<Admitter>().EvaluateOperation();
+#endif
 
 exit:
     return;
@@ -366,6 +381,10 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, const 
 
     LogInfo("Received %s from %s", UriToString<kUriRelayRx>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    Get<Admitter>().ForwardJoinerRelayToEnrollers(aMessage);
+#endif
+
     VerifyOrExit(mCommissionerSession != nullptr);
     mCommissionerSession->ForwardUdpRelayToCommissioner(aMessage);
 
@@ -448,6 +467,14 @@ void Manager::RegisterService(void)
     service.mTxtData         = txtDataBuffer;
     service.mTxtDataLength   = txtDataLength;
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Admitter>().IsPrimeAdmitter())
+    {
+        service.mSubTypeLabels       = kServiceSubTypes;
+        service.mSubTypeLabelsLength = GetArrayLength(kServiceSubTypes);
+    }
+#endif
+
     Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
 
     Heap::Free(txtDataBuffer);
@@ -523,12 +550,7 @@ Error Manager::SessionIterator::GetNextSessionInfo(SessionInfo &aSessionInfo)
     VerifyOrExit(session != nullptr, error = kErrorNotFound);
 
     SetSession(static_cast<CoapDtlsSession *>(session->GetNext()));
-
-    aSessionInfo.mPeerSockAddr.mAddress = session->GetMessageInfo().GetPeerAddr();
-    aSessionInfo.mPeerSockAddr.mPort    = session->GetMessageInfo().GetPeerPort();
-    aSessionInfo.mIsConnected           = session->IsConnected();
-    aSessionInfo.mIsCommissioner        = session->IsActiveCommissioner();
-    aSessionInfo.mLifetime              = GetInitTime() - session->GetAllocationTime();
+    session->CopyInfoTo(aSessionInfo, GetInitTime());
 
 exit:
     return error;
@@ -576,6 +598,10 @@ void Manager::CoapDtlsSession::Cleanup(void)
 
     Get<Manager>().RevokeRoleIfActiveCommissioner(*this);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    ResignEnroller();
+#endif
+
     Coap::SecureSession::Cleanup();
 }
 
@@ -614,6 +640,15 @@ bool Manager::CoapDtlsSession::HandleResource(const char             *aUriPath,
     case kUriProxyTx:
         HandleTmfProxyTx(aMessage);
         break;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    case kUriEnrollerRegister:
+    case kUriEnrollerKeepAlive:
+    case kUriEnrollerJoinerAccept:
+    case kUriEnrollerJoinerRelease:
+        HandleEnrollerTmf(uri, aMessage);
+        break;
+#endif
+
     default:
         didHandle = false;
         break;
@@ -638,6 +673,9 @@ void Manager::CoapDtlsSession::HandleConnected(ConnectEvent aEvent)
     else
     {
         LogInfo("Session %u disconnected", mIndex);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+        ResignEnroller();
+#endif
         Get<Manager>().HandleSessionDisconnected(*this, aEvent);
     }
 }
@@ -834,6 +872,17 @@ exit:
 void Manager::CoapDtlsSession::ForwardUdpProxyToCommissioner(const Message          &aMessage,
                                                              const Ip6::MessageInfo &aMessageInfo)
 {
+    Error error;
+
+    SuccessOrExit(error = ForwardUdpProxy(aMessage, aMessageInfo));
+    Log<kUriProxyRx>(kForward);
+
+exit:
+    LogWarnOnError(error, "forward UDP proxy");
+}
+
+Error Manager::CoapDtlsSession::ForwardUdpProxy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
     Error                     error = kErrorNone;
     OwnedPtr<Coap::Message>   message;
     ExtendedTlv               extTlv;
@@ -859,15 +908,24 @@ void Manager::CoapDtlsSession::ForwardUdpProxyToCommissioner(const Message      
 
     SuccessOrExit(error = Tlv::Append<Ip6AddressTlv>(*message, aMessageInfo.GetPeerAddr()));
 
-    SuccessOrExit(error = SendMessage(message.PassOwnership()));
-
-    Log<kUriProxyRx>(kForward);
+    error = SendMessage(message.PassOwnership());
 
 exit:
-    LogWarnOnError(error, "forward UDP proxy");
+    return error;
 }
 
 void Manager::CoapDtlsSession::ForwardUdpRelayToCommissioner(const Message &aMessage)
+{
+    Error error;
+
+    SuccessOrExit(error = ForwardUdpRelay(aMessage));
+    Log<kUriRelayRx>(kForward);
+
+exit:
+    LogWarnOnError(error, "forward UDP relay");
+}
+
+Error Manager::CoapDtlsSession::ForwardUdpRelay(const Message &aMessage)
 {
     OwnedPtr<Coap::Message> forwardMessage;
     Error                   error = kErrorNone;
@@ -875,12 +933,10 @@ void Manager::CoapDtlsSession::ForwardUdpRelayToCommissioner(const Message &aMes
     forwardMessage.Reset(NewPriorityNonConfirmablePostMessage(kUriRelayRx));
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), aMessage));
-
-    Log<kUriRelayRx>(kForward);
+    error = ForwardToCommissioner(forwardMessage.PassOwnership(), aMessage);
 
 exit:
-    LogWarnOnError(error, "forward UDP relay");
+    return error;
 }
 
 Error Manager::CoapDtlsSession::ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage)
@@ -927,7 +983,18 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
 
     Log<kUriProxyTx>(kReceive);
 
-    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (IsEnroller())
+    {
+        VerifyOrExit(Get<Admitter>().IsActiveCommissioner(), error = kErrorInvalidState);
+        messageInfo.SetSockAddr(Get<Admitter>().mCommissionerPetitioner.GetAloc());
+    }
+    else
+#endif
+    {
+        VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+        messageInfo.SetSockAddr(Get<Manager>().GetCommissionerAloc());
+    }
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kUdpEncapsulation, offsetRange));
 
@@ -942,7 +1009,6 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
 
     messageInfo.SetSockPort(udpEncapHeader.GetSourcePort());
-    messageInfo.SetSockAddr(Get<Manager>().GetCommissionerAloc());
     messageInfo.SetPeerPort(udpEncapHeader.GetDestinationPort());
 
     SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
@@ -967,7 +1033,16 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
-    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (IsEnroller())
+    {
+        VerifyOrExit(Get<Admitter>().IsActiveCommissioner(), error = kErrorInvalidState);
+    }
+    else
+#endif
+    {
+        VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+    }
 
     Log<kUriRelayTx>(kReceive);
 
@@ -1070,9 +1145,21 @@ void Manager::CoapDtlsSession::HandleTimer(void)
 {
     if (IsConnected())
     {
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+        ResignEnroller();
+#endif
         LogInfo("Session %u timed out - disconnecting", mIndex);
         DisconnectTimeout();
     }
+}
+
+void Manager::CoapDtlsSession::CopyInfoTo(SessionInfo &aInfo, UptimeMsec aUptimeNow) const
+{
+    aInfo.mPeerSockAddr.mAddress = GetMessageInfo().GetPeerAddr();
+    aInfo.mPeerSockAddr.mPort    = GetMessageInfo().GetPeerPort();
+    aInfo.mIsConnected           = IsConnected();
+    aInfo.mIsCommissioner        = IsActiveCommissioner();
+    aInfo.mLifetime              = aUptimeNow - GetAllocationTime();
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

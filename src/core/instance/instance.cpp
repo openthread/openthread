@@ -175,6 +175,9 @@ Instance::Instance(void)
     , mBorderAgentTxtData(*this)
     , mBorderAgentManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    , mBorderAgentAdmitter(*this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mBorderAgentEphemeralKeyManager(*this)
 #endif
