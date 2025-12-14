@@ -95,21 +95,18 @@ otError TmpStorage::RestoreRadioSpinelMetrics(otRadioSpinelMetrics &aMetrics)
 
 otError TmpStorage::SettingsFileInit(void)
 {
-    static constexpr size_t kMaxFileFullPathNameSize = PATH_MAX;
-    char                    fileFullPathName[kMaxFileFullPathNameSize];
-    const char             *offset       = getenv("PORT_OFFSET");
-    const char             *settingsPath = ot::Posix::PlatformSettingsGetPath();
+    static constexpr size_t kMaxFileBaseNameSize = 32;
+    char                    fileBaseName[kMaxFileBaseNameSize];
+    const char             *offset = getenv("PORT_OFFSET");
     uint64_t                eui64;
-    int                     length;
 
     otPlatRadioGetIeeeEui64(gInstance, reinterpret_cast<uint8_t *>(&eui64));
     eui64 = ot::BigEndian::HostSwap64(eui64);
 
-    length = snprintf(fileFullPathName, sizeof(fileFullPathName), "%s/%s_%" PRIx64 "-tmp", settingsPath,
-                      ((offset == nullptr) ? "0" : offset), eui64);
-    VerifyOrDie(length > 0 && static_cast<size_t>(length) < sizeof(fileFullPathName), OT_EXIT_FAILURE);
+    snprintf(fileBaseName, sizeof(fileBaseName), "%s_%" PRIx64 "-tmp", ((offset == nullptr) ? "0" : offset), eui64);
+    VerifyOrDie(strlen(fileBaseName) < kMaxFileBaseNameSize, OT_EXIT_FAILURE);
 
-    return mStorageFile.Init(fileFullPathName);
+    return mStorageFile.Init(fileBaseName);
 }
 
 time_t TmpStorage::GetBootTime(void)

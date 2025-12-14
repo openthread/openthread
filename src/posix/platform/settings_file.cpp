@@ -50,14 +50,22 @@
 namespace ot {
 namespace Posix {
 
-otError SettingsFile::Init(const char *aSettingsFileFullPathName)
+char SettingsFile::sSettingsPath[] = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+
+const char *SettingsFile::GetSettingsPath(void) { return sSettingsPath; }
+void        SettingsFile::SetSettingsPath(const char *aSettingsPath)
+{
+    snprintf(sSettingsPath, sizeof(sSettingsPath), "%s", aSettingsPath);
+}
+
+otError SettingsFile::Init(const char *aSettingsFileBaseName)
 {
     otError     error     = OT_ERROR_NONE;
-    const char *directory = ot::Posix::PlatformSettingsGetPath();
+    const char *directory = GetSettingsPath();
 
-    OT_ASSERT((aSettingsFileFullPathName != nullptr) &&
-              ((strlen(aSettingsFileFullPathName) + kMaxFileExtensionLength) < sizeof(mSettingsFileFullPathName)));
-    snprintf(mSettingsFileFullPathName, sizeof(mSettingsFileFullPathName), "%s", aSettingsFileFullPathName);
+    OT_ASSERT((aSettingsFileBaseName != nullptr) && ((strlen(directory) + 1 + strlen(aSettingsFileBaseName) +
+                                                      kMaxFileExtensionLength) < sizeof(mSettingsFileFullPathName)));
+    snprintf(mSettingsFileFullPathName, sizeof(mSettingsFileFullPathName), "%s/%s", directory, aSettingsFileBaseName);
 
     {
         struct stat st;

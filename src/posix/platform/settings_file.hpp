@@ -40,6 +40,20 @@ namespace Posix {
 class SettingsFile
 {
 public:
+    /**
+     * Gets the path for storing setting files.
+     *
+     * @returns  Path for setting files.
+     */
+    static const char *GetSettingsPath(void);
+
+    /**
+     * Sets the path for storing setting files.
+     *
+     * @param[in]   aSettingsPath   Path for setting files.
+     */
+    static void SetSettingsPath(const char *aSettingsPath);
+
     SettingsFile(void)
         : mSettingsFd(-1)
     {
@@ -48,12 +62,12 @@ public:
     /**
      * Performs the initialization for the settings file.
      *
-     * @param[in]  aSettingsFileFullPathName    A pointer to the full path name of the settings file.
+     * @param[in]  aSettingsFileBaseName    A pointer to the base name of the settings file.
      *
      * @retval OT_ERROR_NONE    The given settings file was initialized successfully.
      * @retval OT_ERROR_PARSE   The key-value format could not be parsed (invalid format).
      */
-    otError Init(const char *aSettingsFileFullPathName);
+    otError Init(const char *aSettingsFileBaseName);
 
     /**
      * Performs the de-initialization for the settings file.
@@ -112,6 +126,7 @@ private:
     static const size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
     static const size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
     static const size_t kMaxFilePathSize         = PATH_MAX;
+    static char         sSettingsPath[PATH_MAX];
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);

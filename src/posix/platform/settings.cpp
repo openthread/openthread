@@ -60,13 +60,6 @@
 
 static ot::Posix::SettingsFile sSettingsFile;
 
-static char sSettingsPath[PATH_MAX] = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
-const char *ot::Posix::PlatformSettingsGetPath(void) { return sSettingsPath; }
-void        ot::Posix::PlatformSettingsSetPath(const char *aSettingsPath)
-{
-    snprintf(sSettingsPath, sizeof(sSettingsPath), "%s", aSettingsPath);
-}
-
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
 static const uint16_t *sSensitiveKeys       = nullptr;
 static uint16_t        sSensitiveKeysLength = 0;
@@ -89,20 +82,18 @@ exit:
 
 static otError settingsFileInit(otInstance *aInstance)
 {
-    static constexpr size_t kMaxFileFullPathNameSize = PATH_MAX;
-    char                    fileFullPathName[kMaxFileFullPathNameSize];
-    const char             *offset       = getenv("PORT_OFFSET");
-    const char             *settingsPath = ot::Posix::PlatformSettingsGetPath();
+    static constexpr size_t kMaxFileBaseNameSize = 32;
+    char                    fileBaseName[kMaxFileBaseNameSize];
+    const char             *offset = getenv("PORT_OFFSET");
     uint64_t                nodeId;
 
     otPlatRadioGetIeeeEui64(aInstance, reinterpret_cast<uint8_t *>(&nodeId));
     nodeId = ot::BigEndian::HostSwap64(nodeId);
 
-    int len = snprintf(fileFullPathName, sizeof(fileFullPathName), "%s/%s_%" PRIx64, settingsPath,
-                       offset == nullptr ? "0" : offset, nodeId);
-    VerifyOrDie(len > 0 && static_cast<size_t>(len) < sizeof(fileFullPathName), OT_EXIT_FAILURE);
+    snprintf(fileBaseName, sizeof(fileBaseName), "%s_%" PRIx64, offset == nullptr ? "0" : offset, nodeId);
+    VerifyOrDie(strlen(fileBaseName) < kMaxFileBaseNameSize, OT_EXIT_FAILURE);
 
-    return sSettingsFile.Init(fileFullPathName);
+    return sSettingsFile.Init(fileBaseName);
 }
 
 void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
