@@ -58,7 +58,6 @@
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/mdns_socket.hpp"
 #include "posix/platform/radio_url.hpp"
-#include "posix/platform/settings.hpp"
 #include "posix/platform/settings_file.hpp"
 #include "posix/platform/spinel_driver_getter.hpp"
 #include "posix/platform/udp.hpp"

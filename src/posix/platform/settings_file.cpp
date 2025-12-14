@@ -44,7 +44,6 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "posix/platform/settings.hpp"
 #include "posix/platform/settings_file.hpp"
 
 namespace ot {
@@ -316,8 +315,10 @@ void SettingsFile::Wipe(void) { VerifyOrDie(0 == ftruncate(mSettingsFd, 0), OT_E
 
 void SettingsFile::GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap)
 {
-    int len = snprintf(aFileName, kMaxFilePathSize, "%s.%s", mSettingsFileFullPathName, (aSwap ? "Swap" : "data"));
-    VerifyOrDie(len > 0 && static_cast<size_t>(len) < kMaxFilePathSize, OT_EXIT_FAILURE);
+    int length;
+
+    length = snprintf(aFileName, kMaxFilePathSize, "%s.%s", mSettingsFileFullPathName, (aSwap ? "Swap" : "data"));
+    VerifyOrDie(length > 0 && static_cast<size_t>(length) < kMaxFilePathSize, OT_EXIT_FAILURE);
 }
 
 int SettingsFile::SwapOpen(void)

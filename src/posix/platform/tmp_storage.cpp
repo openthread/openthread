@@ -49,7 +49,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "posix/platform/settings.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_TMP_STORAGE_ENABLE
 namespace ot {
