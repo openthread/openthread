@@ -100,13 +100,14 @@ otError TmpStorage::SettingsFileInit(void)
     const char             *offset       = getenv("PORT_OFFSET");
     const char             *settingsPath = ot::Posix::PlatformSettingsGetPath();
     uint64_t                eui64;
+    int                     length;
 
     otPlatRadioGetIeeeEui64(gInstance, reinterpret_cast<uint8_t *>(&eui64));
     eui64 = ot::BigEndian::HostSwap64(eui64);
 
-    int len = snprintf(fileFullPathName, sizeof(fileFullPathName), "%s/%s_%" PRIx64 "-tmp", settingsPath,
-                       ((offset == nullptr) ? "0" : offset), eui64);
-    VerifyOrDie(len > 0 && static_cast<size_t>(len) < sizeof(fileFullPathName), OT_EXIT_FAILURE);
+    length = snprintf(fileFullPathName, sizeof(fileFullPathName), "%s/%s_%" PRIx64 "-tmp", settingsPath,
+                      ((offset == nullptr) ? "0" : offset), eui64);
+    VerifyOrDie(length > 0 && static_cast<size_t>(length) < sizeof(fileFullPathName), OT_EXIT_FAILURE);
 
     return mStorageFile.Init(fileFullPathName);
 }

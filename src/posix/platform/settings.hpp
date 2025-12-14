@@ -48,7 +48,7 @@ void PlatformSettingsGetSensitiveKeys(otInstance *aInstance, const uint16_t **aK
  *
  * @returns  Path for setting files.
  */
-char *PlatformSettingsGetPath();
+const char *PlatformSettingsGetPath(void);
 
 /**
  * Sets the path for setting files.
