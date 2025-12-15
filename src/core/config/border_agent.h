@@ -123,6 +123,39 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+ *
+ * Define to 1 to enable the `otBorderAgentEvictActiveCommissioner()` API.
+ *
+ * This API provides a mechanism to evict the active Thread Commissioner from the network. This is primarily intended
+ * for administrative use to handle misbehaving or stale commissioner sessions.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+ *
+ * Define to 1 to enable the Border Agent Tracker feature.
+ *
+ * The Border Agent Tracker feature discovers and tracks Border Agents on the infrastructure network. This feature
+ * requires either `OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE` or `OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE` to be enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+ *
+ * Define to 1 to enable the Border Agent TXT Data Parser feature.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE 0
+#endif
+
+/**
  * @}
  */
 

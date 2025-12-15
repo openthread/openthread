@@ -62,8 +62,8 @@ bool NetDataBrTracker::BrMatchesFilter(const BorderRouter &aEntry, Filter aFilte
 
 uint16_t NetDataBrTracker::CountBrs(Filter aFilter, uint32_t &aMinAge) const
 {
-    uint32_t uptime = Get<Uptime>().GetUptimeInSeconds();
-    uint16_t count  = 0;
+    UptimeSec uptime = Get<UptimeTracker>().GetUptimeInSeconds();
+    uint16_t  count  = 0;
 
     SetToUintMax(aMinAge);
 
@@ -88,7 +88,7 @@ uint16_t NetDataBrTracker::CountBrs(Filter aFilter, uint32_t &aMinAge) const
 
 Error NetDataBrTracker::GetNext(Filter aFilter, TableIterator &aIterator, BorderRouterEntry &aEntry) const
 {
-    using Iterator = RoutingManager::RxRaTracker::Iterator;
+    using Iterator = RxRaTracker::Iterator;
 
     Iterator           &iterator = static_cast<Iterator &>(aIterator);
     Error               error    = kErrorNone;
@@ -148,13 +148,13 @@ void NetDataBrTracker::HandleNotifierEvents(Events aEvents)
         VerifyOrExit(newEntry != nullptr, LogWarn("Failed to allocate `BorderRouter` entry"));
 
         newEntry->mRloc16       = rloc16;
-        newEntry->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
+        newEntry->mDiscoverTime = Get<UptimeTracker>().GetUptimeInSeconds();
 
         mBorderRouters.Push(*newEntry);
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    Get<RoutingManager>().mMultiAilDetector.Evaluate();
+    Get<MultiAilDetector>().Evaluate();
 #endif
 
 exit:

@@ -50,28 +50,45 @@ InfraIf::InfraIf(Instance &aInstance)
 {
 }
 
-Error InfraIf::Init(uint32_t aIfIndex)
+void InfraIf::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
-    Error error = kErrorNone;
+    if (mInitialized)
+    {
+        VerifyOrExit(aInfraIfIndex != mIfIndex);
 
-    VerifyOrExit(!mInitialized, error = kErrorInvalidState);
+        LogInfo("Switching previously configured %s to %lu", ToString().AsCString(), ToUlong(aInfraIfIndex));
 
-    mIfIndex     = aIfIndex;
+        // When switching interface index, we `Deinit()` to signal
+        // that the previous `mIfIndex` is down so that all modules
+        // operating on this interface are stopped before restarting
+        // operation on the new interface.
+
+        Deinit();
+    }
+
+    mIfIndex     = aInfraIfIndex;
     mInitialized = true;
 
     LogInfo("Init %s", ToString().AsCString());
 
+    Get<RoutingManager>().Init();
+
 exit:
-    return error;
+    IgnoreError(HandleStateChanged(mIfIndex, aInfraIfIsRunning));
 }
 
 void InfraIf::Deinit(void)
 {
-    mInitialized = false;
-    mIsRunning   = false;
-    mIfIndex     = 0;
+    VerifyOrExit(mInitialized);
 
-    LogInfo("Deinit");
+    LogInfo("Deinit %s", ToString().AsCString());
+
+    IgnoreError(HandleStateChanged(mIfIndex, /* aIsRunning */ false));
+
+    mInitialized = false;
+
+exit:
+    return;
 }
 
 bool InfraIf::HasAddress(const Ip6::Address &aAddress) const
@@ -90,14 +107,30 @@ Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination
 
 void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket)
 {
-    Error error = kErrorNone;
+    Error                    error = kErrorNone;
+    const Ip6::Icmp::Header *icmp6Header;
 
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorDrop);
     VerifyOrExit(aPacket.GetBytes() != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Icmp::Header), error = kErrorParse);
 
-    Get<RoutingManager>().HandleReceived(aPacket, aSource);
+    icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
+
+    switch (icmp6Header->GetType())
+    {
+    case Ip6::Icmp::Header::kTypeRouterAdvert:
+        Get<RxRaTracker>().HandleRouterAdvertisement(aPacket, aSource);
+        break;
+    case Ip6::Icmp::Header::kTypeNeighborAdvert:
+        Get<RxRaTracker>().HandleNeighborAdvertisement(aPacket);
+        break;
+    case Ip6::Icmp::Header::kTypeRouterSolicit:
+        Get<RoutingManager>().HandleRouterSolicit(aPacket, aSource);
+        break;
+    default:
+        break;
+    }
 
 exit:
     if (error != kErrorNone)
@@ -106,29 +139,23 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 Error InfraIf::DiscoverNat64Prefix(void) const
 {
     OT_ASSERT(mInitialized);
 
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     return otPlatInfraIfDiscoverNat64Prefix(mIfIndex);
-#else
-    return kErrorNotImplemented;
-#endif
 }
 
 void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
-    OT_UNUSED_VARIABLE(aPrefix);
-
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
 
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    Get<RoutingManager>().HandleDiscoverNat64PrefixDone(aPrefix);
-#endif
+    Get<RoutingManager>().HandlePlatformDiscoveredNat64PrefixDone(aPrefix);
 
 exit:
     if (error != kErrorNone)
@@ -136,6 +163,8 @@ exit:
         LogDebg("Failed to handle discovered NAT64 synthetic addresses: %s", ErrorToString(error));
     }
 }
+
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 Error InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress)
 {
@@ -153,6 +182,12 @@ Error InfraIf::HandleStateChanged(uint32_t aIfIndex, bool aIsRunning)
     LogInfo("State changed: %sRUNNING -> %sRUNNING", mIsRunning ? "" : "NOT ", aIsRunning ? "" : "NOT ");
 
     mIsRunning = aIsRunning;
+
+    Get<RxRaTracker>().HandleInfraIfStateChanged();
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<MultiAilDetector>().HandleInfraIfStateChanged();
+#endif
 
     Get<RoutingManager>().HandleInfraIfStateChanged();
 
@@ -233,7 +268,13 @@ extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstanc
                                                      uint32_t           aInfraIfIndex,
                                                      const otIp6Prefix *aIp6Prefix)
 {
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     AsCoreType(aInstance).Get<InfraIf>().DiscoverNat64PrefixDone(aInfraIfIndex, AsCoreType(aIp6Prefix));
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aIp6Prefix);
+#endif
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE

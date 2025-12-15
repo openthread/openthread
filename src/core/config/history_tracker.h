@@ -53,6 +53,25 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+ *
+ * Define as 1 to enable History Tracker Server module (answering received TMF history queries).
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+ *
+ * Define as 1 to enable History Tracker Client module (using TMF history query to retrieve history info from other
+ * devices).
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE
  *
  * Specifies the maximum number of entries in Network Info (role, mode, partition ID, RLOC16) history list.

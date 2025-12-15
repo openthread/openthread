@@ -64,7 +64,7 @@ jobs:
         ./script/check-size
         cat /tmp/ot-size-report/report_pr >> $GITHUB_STEP_SUMMARY
     - name: Upload report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: report_pr
         path: /tmp/ot-size-report/report_pr
@@ -79,13 +79,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Download report
-      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
       with:
         name: report_pr
         path: /tmp/ot-size-report
 
     - name: Post Report
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
       id: post-report
       with:
         script: |

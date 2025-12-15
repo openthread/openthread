@@ -89,7 +89,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError CancelResourceSubscription(void);
+    otError CancelResourceSubscription(bool aSendCancelMessage);
     void    CancelSubscriber(void);
 #endif
 
@@ -105,11 +105,16 @@ private:
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    static void HandleNotificationResponse(void                *aContext,
-                                           otMessage           *aMessage,
-                                           const otMessageInfo *aMessageInfo,
-                                           otError              aError);
-    void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    // Maximum number of non-confirmable (NON) notifications that are sent, before sending a confirmable notification
+    // for validating that the client is still there and still interested. The value (5) matches libcoap's
+    // implementation. The mechanism satisfies RFC 7641 requirements for interspersing confirmable (CON) notifications
+    // among non-confirmable (NON) notifications to validate the client.
+    static constexpr uint8_t kMaxNonNotificationsBeforeValidation = 5;
+    static void              HandleNotificationAck(void                *aContext,
+                                                   otMessage           *aMessage,
+                                                   const otMessageInfo *aMessageInfo,
+                                                   otError              aError);
+    void HandleNotificationAck(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 #endif
 
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
@@ -171,6 +176,8 @@ private:
     uint8_t  mRequestTokenLength;
     uint8_t  mSubscriberTokenLength;
     bool     mSubscriberConfirmableNotifications;
+    bool     mValidateObserveClient;
+    uint8_t  mNotificationSeriesCount;
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     uint32_t mBlockCount;

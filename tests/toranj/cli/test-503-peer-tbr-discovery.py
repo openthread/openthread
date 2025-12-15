@@ -71,6 +71,13 @@ verify(br3.get_state() == 'router')
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
+BR_STATE_TLV = 38
+BR_IF_ADDRS_TLV = 39
+BR_LOCAL_OMR_PREFIX_TLV = 40
+BR_DHCP6_PD_OMR_PREFIX_TLV = 41
+BR_LOCAL_OL_PREFIX_TLV = 42
+BR_FAVORED_OL_PREFIX_TLV = 43
+
 # Start first border router `br1`
 
 br1.srp_server_set_addr_mode('unicast')
@@ -114,7 +121,7 @@ for br in all_brs:
     verify(int(br.br_count_peers().split()[0]) == 2)
     peers = br.br_get_peer_brs()
     verify(len(peers) == 2)
-    other_brs = all_brs
+    other_brs = [br1, br2, br3]
     other_brs.remove(br)
     for other_br in other_brs:
         rloc16 = other_br.get_rloc16()
@@ -122,6 +129,38 @@ for br in all_brs:
     ifaddrs = br.br_get_ifaddrs()
     verify(len(ifaddrs) == 1)
     verify(ifaddrs[0].startswith('fe80:'))
+
+# Validate network diagnostic BR TLVs, query BR2 from BR1.
+
+br2_rloc = br2.get_rloc_ip_addr()
+result = br1.cli('networkdiagnostic get', br2_rloc, BR_STATE_TLV)
+verify(len(result) == 2)
+verify(result[1] == 'BR State: running')
+
+result = br1.cli('networkdiagnostic get', br2_rloc, BR_IF_ADDRS_TLV)
+verify(len(result) > 2)
+verify(result[1] == 'BR Infra-if IP6 Address List:')
+verify(result[2].startswith('    - fe80:'))
+
+result = br1.cli('networkdiagnostic get', br2_rloc, BR_LOCAL_OMR_PREFIX_TLV)
+verify(len(result) == 2)
+verify(result[1].startswith('BR Local OMR Prefix: '))
+verify(result[1].split(': ')[1].strip() == br2.br_get_local_omrprefix())
+
+result = br1.cli('networkdiagnostic get', br2_rloc, BR_DHCP6_PD_OMR_PREFIX_TLV)
+verify(len(result) == 2)
+verify(result[1].startswith('BR DHCPv6-PD OMR Prefix:'))
+verify(result[1].split(': ')[1].strip() == '0:0:0:0::/64')
+
+result = br1.cli('networkdiagnostic get', br2_rloc, BR_LOCAL_OL_PREFIX_TLV)
+verify(len(result) == 2)
+verify(result[1].startswith('BR Local On-link Prefix: '))
+verify(result[1].split(': ')[1].strip() == br2.br_get_local_onlinkprefix())
+
+result = br1.cli('networkdiagnostic get', br2_rloc, BR_FAVORED_OL_PREFIX_TLV)
+verify(len(result) == 2)
+verify(result[1].startswith('BR Favored On-link Prefix: '))
+verify(result[1].split(': ')[1].strip() == br2.br_get_favored_onlinkprefix())
 
 # Disable BR3 and validate that BR1 and BR2 detect this.
 # BR3 itself should continue to detect BR1 and BR2

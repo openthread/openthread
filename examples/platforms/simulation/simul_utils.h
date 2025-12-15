@@ -53,6 +53,8 @@ typedef struct utilsSocket
 
 extern const char *gLocalInterface; ///< Local interface name or address to use for sockets
 
+extern bool gVirtualUart; ///< Whether to use Virtual UART or not.
+
 /**
  * Adds a file descriptor (FD) to a given FD set.
  *

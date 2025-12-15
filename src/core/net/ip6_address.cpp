@@ -48,6 +48,17 @@ Error NetworkPrefix::GenerateRandomUla(void)
     return Random::Crypto::FillBuffer(&m8[1], kSize - 1);
 }
 
+Error NetworkPrefix::SetFrom(const Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aPrefix.GetLength() == kLength, error = kErrorInvalidArgs);
+    memcpy(m8, aPrefix.GetBytes(), kSize);
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // Prefix methods
 
@@ -136,7 +147,6 @@ bool Prefix::IsValidNat64PrefixLength(uint8_t aLength)
 Error Prefix::FromString(const char *aString)
 {
     constexpr char kSlashChar = '/';
-    constexpr char kNullChar  = '\0';
 
     Error       error = kErrorParse;
     const char *cur;
@@ -499,12 +509,7 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
     }
 }
 
-Error Address::FromString(const char *aString)
-{
-    constexpr char kNullChar = '\0';
-
-    return ParseFrom(aString, kNullChar);
-}
+Error Address::FromString(const char *aString) { return ParseFrom(aString, kNullChar); }
 
 Error Address::ParseFrom(const char *aString, char aTerminatorChar)
 {

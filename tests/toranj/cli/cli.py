@@ -456,6 +456,9 @@ class Node(object):
     def get_netdata_contexts(self):
         return self.get_netdata()['contexts']
 
+    def get_netdata_commissioning(self):
+        return self.get_netdata()['commissioning']
+
     def get_netdata_versions(self):
         leaderdata = Node.parse_list(self.cli('leaderdata'))
         return (int(leaderdata['Data Version']), int(leaderdata['Stable Data Version']))
@@ -855,6 +858,9 @@ class Node(object):
 
     def br_get_multiail(self):
         return self._cli_single_output('br multiail')
+
+    def br_get_multiail_state(self):
+        return self.cli('br multiail state')
 
     def br_get_ifaddrs(self):
         return self.cli('br ifaddrs')

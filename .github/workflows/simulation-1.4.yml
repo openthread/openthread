@@ -73,7 +73,7 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
@@ -100,12 +100,12 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() }}
       with:
         name: thread-1-4-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-packet-verification-thread-1-4
@@ -114,7 +114,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: cov-thread-1-4-${{ matrix.compiler.c }}-${{ matrix.arch }}
         path: tmp/coverage.info
@@ -140,7 +140,7 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
@@ -176,14 +176,14 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() }}
       with:
         name: packet-verification-low-power-pcaps
         path: |
           *.pcap
           *.json
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-packet-verification-low-power
@@ -192,7 +192,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: cov-packet-verification-low-power
         path: tmp/coverage.info
@@ -216,7 +216,7 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
@@ -235,7 +235,7 @@ jobs:
     - name: Run
       run: |
         ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() }}
       with:
         name: packet-verification-1.1-on-1.4-pcaps
@@ -245,7 +245,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: cov-packet-verification-1-1-on-1-4
         path: tmp/coverage.info
@@ -269,7 +269,7 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
@@ -286,7 +286,7 @@ jobs:
       run: |
         ulimit -c unlimited
         ./script/test cert_suite ./tests/scripts/thread-cert/addon_test_channel_manager_autocsl*.py
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() }}
       with:
         name: channel-manager-csl
@@ -294,7 +294,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: cov-channel-manager-csl
         path: tmp/coverage.info
@@ -314,7 +314,7 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
@@ -335,7 +335,7 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-expect-1-4
@@ -344,14 +344,14 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: cov-expects
         path: tmp/coverage.info
         retention-days: 1
 
   thread-1-4-posix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       COVERAGE: 1
       PYTHONUNBUFFERED: 1
@@ -370,7 +370,7 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
@@ -399,12 +399,12 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() }}
       with:
         name: thread-1-4-posix-pcaps
         path: "*.pcap"
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-thread-1-4-posix
@@ -413,7 +413,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: cov-thread-1-4-posix
         path: tmp/coverage.info
@@ -435,11 +435,11 @@ jobs:
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
-        submodules: true
+        submodules: recursive
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y lcov
-    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+    - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
       with:
         path: coverage/
         pattern: cov-*

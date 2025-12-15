@@ -82,7 +82,7 @@ Instance::Instance(void)
 #endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    , mUptime(*this)
+    , mUptimeTracker(*this)
 #endif
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     , mOtns(*this)
@@ -172,7 +172,14 @@ Instance::Instance(void)
     , mNetworkDiagnosticClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    , mBorderAgent(*this)
+    , mBorderAgentTxtData(*this)
+    , mBorderAgentManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    , mBorderAgentEphemeralKeyManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+    , mBorderAgentTracker(*this)
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
@@ -253,6 +260,12 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     , mHistoryTrackerLocal(*this)
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    , mHistoryTrackerServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    , mHistoryTrackerClient(*this)
+#endif
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     , mLinkMetricsManager(*this)
@@ -264,9 +277,14 @@ Instance::Instance(void)
     , mAnnounceSender(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mInfraIf(*this)
+    , mRxRaTracker(*this)
     , mRoutingManager(*this)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     , mNetDataBrTracker(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    , mMultiAilDetector(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     , mDhcp6PdClient(*this)

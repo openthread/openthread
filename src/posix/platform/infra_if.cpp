@@ -275,7 +275,19 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
 
     if (rval < 0)
     {
-        LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
+        switch (errno)
+        {
+        case EADDRNOTAVAIL:
+        case ENODEV:
+            LogWarn("failed to send ICMPv6 message: %s, suggests infra link might be down, checking status.",
+                    strerror(errno));
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+            break;
+        default:
+            LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
+            break;
+        }
+
         ExitNow(error = OT_ERROR_FAILED);
     }
 
@@ -292,7 +304,9 @@ exit:
 
 bool InfraNetif::IsRunning(void) const
 {
-    return mInfraIfIndex ? ((GetFlags() & IFF_RUNNING) && HasLinkLocalAddress()) : false;
+    return mInfraIfIndex
+               ? (if_nametoindex(mInfraIfName) == mInfraIfIndex && (GetFlags() & IFF_RUNNING) && HasLinkLocalAddress())
+               : false;
 }
 
 uint32_t InfraNetif::GetFlags(void) const
@@ -469,7 +483,7 @@ void InfraNetif::SetUp(void)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
+    SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, IsRunning()));
     SuccessOrDie(otBorderRoutingSetEnabled(gInstance, /* aEnabled */ true));
 #endif
 

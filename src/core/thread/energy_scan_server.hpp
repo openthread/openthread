@@ -66,6 +66,8 @@ public:
 private:
     static constexpr uint32_t kScanDelay   = 1000; // SCAN_DELAY (milliseconds)
     static constexpr uint32_t kReportDelay = 500;  // Delay before sending a report (milliseconds)
+    static constexpr uint8_t  kMinCount    = 1;
+    static constexpr uint8_t  kMaxCount    = 3;
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

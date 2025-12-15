@@ -120,7 +120,6 @@
  *
  * On FTD/MTD builds this feature is now mandatory and MUST be enabled. This config is therefore only applicable for
  * RADIO/RCP builds.
- *
  */
 #ifndef OPENTHREAD_CONFIG_UPTIME_ENABLE
 #define OPENTHREAD_CONFIG_UPTIME_ENABLE (OPENTHREAD_FTD || OPENTHREAD_MTD)
@@ -309,6 +308,15 @@
 #else
 #define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS 384
 #endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE
+ *
+ * Define as 1 to enable the MeshCoP Steering Data public APIs (in `openthread/steering_data.h`).
+ */
+#ifndef OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE
+#define OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE 0
 #endif
 
 /**
@@ -628,6 +636,15 @@
  */
 #ifndef OPENTHREAD_CONFIG_USE_STD_NEW
 #define OPENTHREAD_CONFIG_USE_STD_NEW 0
+#endif
+
+/**
+ * @def OPENTHREAD_PLATFORM_NEXUS
+ *
+ * Define 1 to enable nexus platform.
+ */
+#ifndef OPENTHREAD_PLATFORM_NEXUS
+#define OPENTHREAD_PLATFORM_NEXUS 0
 #endif
 
 /**

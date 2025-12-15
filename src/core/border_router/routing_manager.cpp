@@ -31,7 +31,7 @@
  *   This file includes implementation for the RA-based routing management.
  */
 
-#include "border_router/routing_manager.hpp"
+#include "routing_manager.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
@@ -41,27 +41,22 @@
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/infra_if.h>
 
+#include "border_router/br_log.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
 
 namespace BorderRouter {
 
-RegisterLogModule("RoutingManager");
+RegisterLogModule("BorderRouting");
 
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
-    , mInfraIf(aInstance)
     , mOmrPrefixManager(aInstance)
     , mRioAdvertiser(aInstance)
     , mOnLinkPrefixManager(aInstance)
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    , mMultiAilDetector(aInstance)
-#endif
-    , mRxRaTracker(aInstance)
     , mRoutePublisher(aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     , mNat64PrefixManager(aInstance)
@@ -69,68 +64,31 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     , mPdPrefixManager(aInstance)
 #endif
-    , mRsSender(aInstance)
     , mRoutingPolicyTimer(aInstance)
 {
     mBrUlaPrefix.Clear();
 }
 
-Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
+void RoutingManager::Init(void)
 {
-    Error error;
+    VerifyOrExit(Get<InfraIf>().IsInitialized());
 
-    VerifyOrExit(GetState() == kStateUninitialized || GetState() == kStateDisabled, error = kErrorInvalidState);
-
-    if (!mInfraIf.IsInitialized())
-    {
-        LogInfo("Initializing - InfraIfIndex:%lu", ToUlong(aInfraIfIndex));
-        SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
-        SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
-        mOmrPrefixManager.Init(mBrUlaPrefix);
+    LoadOrGenerateRandomBrUlaPrefix();
+    mOmrPrefixManager.Init(mBrUlaPrefix);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
+    mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
 #endif
-        mOnLinkPrefixManager.Init();
-    }
-    else if (aInfraIfIndex != mInfraIf.GetIfIndex())
-    {
-        LogInfo("Reinitializing - InfraIfIndex:%lu -> %lu", ToUlong(mInfraIf.GetIfIndex()), ToUlong(aInfraIfIndex));
-
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
-        IgnoreError(Get<Dns::Multicast::Core>().SetEnabled(false, mInfraIf.GetIfIndex()));
-#endif
-
-        mInfraIf.SetIfIndex(aInfraIfIndex);
-    }
-
-    error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning);
+    mOnLinkPrefixManager.Init();
 
 exit:
-    if (error != kErrorNone)
-    {
-        mInfraIf.Deinit();
-    }
-
-    return error;
-}
-
-Error RoutingManager::GetInfraIfInfo(uint32_t &aInfraIfIndex, bool &aInfraIfIsRunning) const
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aInfraIfIndex     = mInfraIf.GetIfIndex();
-    aInfraIfIsRunning = mInfraIf.IsRunning();
-
-exit:
-    return error;
+    return;
 }
 
 Error RoutingManager::SetEnabled(bool aEnabled)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
 
     VerifyOrExit(aEnabled != mIsEnabled);
 
@@ -146,7 +104,7 @@ RoutingManager::State RoutingManager::GetState(void) const
 {
     State state = kStateUninitialized;
 
-    VerifyOrExit(IsInitialized());
+    VerifyOrExit(Get<InfraIf>().IsInitialized());
     VerifyOrExit(IsEnabled(), state = kStateDisabled);
 
     state = IsRunning() ? kStateRunning : kStateStopped;
@@ -159,7 +117,7 @@ Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOmrPrefixManager.GetGeneratedPrefix();
 
 exit:
@@ -171,7 +129,7 @@ Error RoutingManager::GetDhcp6PdOmrPrefix(Dhcp6PdPrefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     error = mPdPrefixManager.GetPrefix(aPrefix);
 
 exit:
@@ -182,7 +140,7 @@ Error RoutingManager::GetDhcp6PdCounters(Dhcp6PdCounters &aCounters)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     error = mPdPrefixManager.GetCounters(aCounters);
 
 exit:
@@ -206,7 +164,7 @@ Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOnLinkPrefixManager.GetLocalPrefix();
 
 exit:
@@ -217,7 +175,7 @@ Error RoutingManager::GetFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOnLinkPrefixManager.GetFavoredPrefix();
 
 exit:
@@ -235,7 +193,7 @@ Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mNat64PrefixManager.GetLocalPrefix();
 
 exit:
@@ -246,7 +204,7 @@ Error RoutingManager::GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreferenc
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(Get<InfraIf>().IsInitialized(), error = kErrorInvalidState);
     aPrefix = mNat64PrefixManager.GetFavoredPrefix(aRoutePreference);
 
 exit:
@@ -254,10 +212,9 @@ exit:
 }
 #endif
 
-Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
+void RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
 {
-    Error error     = kErrorNone;
-    bool  generated = false;
+    bool generated = false;
 
     if (Get<Settings>().Read<Settings::BrUlaPrefix>(mBrUlaPrefix) != kErrorNone || !IsValidBrUlaPrefix(mBrUlaPrefix))
     {
@@ -265,7 +222,7 @@ Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
 
         LogNote("No valid /48 BR ULA prefix found in settings, generating new one");
 
-        SuccessOrExit(error = randomUlaPrefix.GenerateRandomUla());
+        SuccessOrAssert(randomUlaPrefix.GenerateRandomUla());
 
         mBrUlaPrefix.Set(randomUlaPrefix);
         mBrUlaPrefix.SetSubnetId(0);
@@ -278,18 +235,11 @@ Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
     OT_UNUSED_VARIABLE(generated);
 
     LogNote("BR ULA prefix: %s (%s)", mBrUlaPrefix.ToString().AsCString(), generated ? "generated" : "loaded");
-
-exit:
-    if (error != kErrorNone)
-    {
-        LogCrit("Failed to generate random /48 BR ULA prefix");
-    }
-    return error;
 }
 
 void RoutingManager::EvaluateState(void)
 {
-    if (mIsEnabled && Get<Mle::Mle>().IsAttached() && mInfraIf.IsRunning())
+    if (mIsEnabled && Get<Mle::Mle>().IsAttached() && Get<InfraIf>().IsRunning())
     {
         Start();
     }
@@ -306,19 +256,15 @@ void RoutingManager::Start(void)
         LogInfo("Starting");
 
         mIsRunning = true;
-        mRxRaTracker.Start();
+        Get<RxRaTracker>().SetEnabled(true, RxRaTracker::kRequesterRoutingManager);
         mOnLinkPrefixManager.Start();
         mOmrPrefixManager.Start();
         mRoutePublisher.Start();
-        mRsSender.Start();
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         mPdPrefixManager.Start();
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-        mMultiAilDetector.Start();
 #endif
     }
 }
@@ -335,17 +281,12 @@ void RoutingManager::Stop(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    mMultiAilDetector.Stop();
-#endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
 
-    mRxRaTracker.Stop();
+    Get<RxRaTracker>().SetEnabled(false, RxRaTracker::kRequesterRoutingManager);
 
     mTxRaInfo.mTxCount = 0;
-
-    mRsSender.Stop();
 
     mRoutingPolicyTimer.Stop();
 
@@ -401,33 +342,6 @@ exit:
 }
 #endif
 
-void RoutingManager::HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
-{
-    const Ip6::Icmp::Header *icmp6Header;
-
-    VerifyOrExit(mIsRunning);
-
-    icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
-
-    switch (icmp6Header->GetType())
-    {
-    case Ip6::Icmp::Header::kTypeRouterAdvert:
-        HandleRouterAdvertisement(aPacket, aSrcAddress);
-        break;
-    case Ip6::Icmp::Header::kTypeRouterSolicit:
-        HandleRouterSolicit(aPacket, aSrcAddress);
-        break;
-    case Ip6::Icmp::Header::kTypeNeighborAdvert:
-        HandleNeighborAdvertisement(aPacket);
-        break;
-    default:
-        break;
-    }
-
-exit:
-    return;
-}
-
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -437,7 +351,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     mRoutePublisher.HandleNotifierEvents(aEvents);
 
-    VerifyOrExit(IsInitialized() && IsEnabled());
+    VerifyOrExit(Get<InfraIf>().IsInitialized() && IsEnabled());
 
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
@@ -446,7 +360,6 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
-        mRxRaTracker.HandleNetDataChange();
         mOnLinkPrefixManager.HandleNetDataChange();
         ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
@@ -504,7 +417,7 @@ bool RoutingManager::IsInitialPolicyEvaluationDone(void) const
     // the emitted Router Advert message on infrastructure side
     // and published in the Thread Network Data.
 
-    return mIsRunning && mOmrPrefixManager.IsInitalEvaluationDone() && mOnLinkPrefixManager.IsInitalEvaluationDone();
+    return mIsRunning && mOmrPrefixManager.IsInitialEvaluationDone() && mOnLinkPrefixManager.IsInitialEvaluationDone();
 }
 
 void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
@@ -523,9 +436,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         break;
 
     case kForNextRa:
-        if (mTxRaInfo.mTxCount <= kInitalRaTxCount)
+        if (mTxRaInfo.mTxCount <= kInitialRaTxCount)
         {
-            interval = kInitalRaInterval;
+            interval = kInitialRaInterval;
             jitter   = kInitialRaJitter;
         }
         else
@@ -564,9 +477,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         }
         else
         {
-            String<Uptime::kStringSize> string;
+            String<kUptimeStringSize> string;
 
-            Uptime::UptimeToString(duration, string, /* aIncludeMsec */ true);
+            UptimeToString(duration, string, /* aIncludeMsec */ true);
             LogInfo("Will evaluate routing policy in %s (%lu msec)", string.AsCString() + 3, ToUlong(duration));
         }
     }
@@ -578,25 +491,25 @@ exit:
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 {
-    Error                   error = kErrorNone;
-    RouterAdvert::TxMessage raMsg;
-    RouterAdvert::Header    header;
-    Ip6::Address            destAddress;
-    InfraIf::Icmp6Packet    packet;
-    LinkLayerAddress        linkAddr;
+    Error                     error = kErrorNone;
+    RouterAdvert::TxMessage   raMsg;
+    RouterAdvert::Header      header;
+    Ip6::Address              destAddress;
+    InfraIf::Icmp6Packet      packet;
+    InfraIf::LinkLayerAddress linkAddr;
 
     LogInfo("Preparing RA");
 
-    if (mRxRaTracker.GetLocalRaHeaderToMirror().IsValid())
+    if (Get<RxRaTracker>().GetLocalRaHeaderToMirror().IsValid())
     {
-        header = mRxRaTracker.GetLocalRaHeaderToMirror();
+        header = Get<RxRaTracker>().GetLocalRaHeaderToMirror();
     }
     else
     {
         header.SetToDefault();
     }
 
-    mRxRaTracker.SetHeaderFlagsOn(header);
+    Get<RxRaTracker>().SetHeaderFlagsOn(header);
     header.SetSnacRouterFlag();
 
     SuccessOrExit(error = raMsg.Append(header));
@@ -637,31 +550,19 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
     mTxRaInfo.IncrementTxCountAndSaveHash(packet);
 
-    SuccessOrExit(error = mInfraIf.Send(packet, destAddress));
+    SuccessOrExit(error = Get<InfraIf>().Send(packet, destAddress));
 
     mTxRaInfo.mLastTxTime = TimerMilli::GetNow();
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;
-    LogInfo("Sent RA on %s", mInfraIf.ToString().AsCString());
+    LogInfo("Sent RA on %s", Get<InfraIf>().ToString().AsCString());
     DumpDebg("[BR-CERT] direction=send | type=RA |", packet.GetBytes(), packet.GetLength());
 
 exit:
     if (error != kErrorNone)
     {
         Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
-        LogWarn("Failed to send RA on %s: %s", mInfraIf.ToString().AsCString(), ErrorToString(error));
+        LogWarn("Failed to send RA on %s: %s", Get<InfraIf>().ToString().AsCString(), ErrorToString(error));
     }
-}
-
-TimeMilli RoutingManager::CalculateExpirationTime(TimeMilli aUpdateTime, uint32_t aLifetime)
-{
-    // `aLifetime` is in unit of seconds. We clamp the lifetime to max
-    // interval supported by `Timer` (`2^31` msec or ~24.8 days).
-    // This ensures that the time calculation fits within `TimeMilli`
-    // range.
-
-    static constexpr uint32_t kMaxLifetime = Time::MsecToSec(Timer::kMaxDelay);
-
-    return aUpdateTime + Time::SecToMsec(Min(aLifetime, kMaxLifetime));
 }
 
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
@@ -669,96 +570,53 @@ bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
     return aBrUlaPrefix.mLength == kBrUlaPrefixLength && aBrUlaPrefix.mPrefix.mFields.m8[0] == 0xfd;
 }
 
-bool RoutingManager::IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
-{
-    return IsValidOmrPrefix(aOnMeshPrefixConfig.GetPrefix()) && aOnMeshPrefixConfig.mOnMesh &&
-           aOnMeshPrefixConfig.mSlaac && aOnMeshPrefixConfig.mStable;
-}
-
-bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aPrefix)
-{
-    // Accept ULA/GUA prefixes with 64-bit length.
-    return (aPrefix.GetLength() == kOmrPrefixLength) && !aPrefix.IsLinkLocal() && !aPrefix.IsMulticast();
-}
-
-void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
-{
-    // This is a callback from `RsSender` and is invoked when it
-    // finishes a cycle of sending Router Solicitations. `aStartTime`
-    // specifies the start time of the RS transmission cycle.
-    //
-    // We remove or deprecate old entries in discovered table that are
-    // not refreshed during Router Solicitation. We also invalidate
-    // the learned RA header if it is not refreshed during Router
-    // Solicitation.
-
-    mRxRaTracker.RemoveOrDeprecateOldEntries(aStartTime);
-    ScheduleRoutingPolicyEvaluation(kImmediately);
-}
-
 void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
     OT_UNUSED_VARIABLE(aPacket);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
+    VerifyOrExit(mIsRunning);
+
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
-    LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString());
+    LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), Get<InfraIf>().ToString().AsCString());
+
+    // We ignore a received Router Solicit (RS) message while
+    // `RxRaTracker` is performing its initial router discovery
+    // and sending RS. This ensures that we do not reply to our own
+    // RS and cause a premature routing policy evaluation.
+
+    VerifyOrExit(Get<RxRaTracker>().IsInitialRouterDiscoveryFinished());
 
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
-}
-
-void RoutingManager::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket)
-{
-    const NeighborAdvertMessage *naMsg;
-
-    VerifyOrExit(aPacket.GetLength() >= sizeof(NeighborAdvertMessage));
-    naMsg = reinterpret_cast<const NeighborAdvertMessage *>(aPacket.GetBytes());
-
-    mRxRaTracker.ProcessNeighborAdvertMessage(*naMsg);
 
 exit:
     return;
 }
 
-void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
+void RoutingManager::HandleRxRaTrackerEvents(const RxRaTracker::Events &aEvents)
 {
-    RouterAdvert::RxMessage raMsg(aPacket);
-    RouterAdvOrigin         raOrigin = kAnotherRouter;
-
-    OT_ASSERT(mIsRunning);
-
-    VerifyOrExit(raMsg.IsValid());
-
-    Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
-
-    if (mInfraIf.HasAddress(aSrcAddress))
-    {
-        raOrigin = mTxRaInfo.IsRaFromManager(raMsg) ? kThisBrRoutingManager : kThisBrOtherEntity;
-    }
-
-    LogInfo("Received RA from %s on %s %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString(),
-            RouterAdvOriginToString(raOrigin));
-
-    DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
-
-    mRxRaTracker.ProcessRouterAdvertMessage(raMsg, aSrcAddress, raOrigin);
-
-exit:
-    return;
-}
-
-void RoutingManager::HandleRaPrefixTableChanged(void)
-{
-    // This is a callback from `mRxRaTracker` indicating that
-    // there has been a change in the table.
+    // This is the callback from `RxRaTracker`.
 
     VerifyOrExit(mIsRunning);
 
-    mOnLinkPrefixManager.HandleRaPrefixTableChanged();
-    mRoutePublisher.Evaluate();
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    mMultiAilDetector.Evaluate();
+    if (aEvents.mDecisionFactorChanged)
+    {
+        mOnLinkPrefixManager.HandleRxRaTrackerChanged();
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        mNat64PrefixManager.HandleRxRaTrackerChanged();
 #endif
+        mRoutePublisher.Evaluate();
+    }
+
+    if (aEvents.mLocalRaHeaderChanged)
+    {
+        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+    }
+
+    if (aEvents.mInitialDiscoveryFinished)
+    {
+        ScheduleRoutingPolicyEvaluation(kImmediately);
+    }
 
 exit:
     return;
@@ -773,7 +631,7 @@ void RoutingManager::HandleLocalOnLinkPrefixChanged(void)
     VerifyOrExit(mIsRunning);
 
     mRoutePublisher.Evaluate();
-    mRxRaTracker.HandleLocalOnLinkPrefixChanged();
+    Get<RxRaTracker>().HandleLocalOnLinkPrefixChanged();
     ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 
 exit:
@@ -838,8 +696,8 @@ void RoutingManager::CheckReachabilityToSendIcmpError(const Message &aMessage, c
 
     VerifyOrExit(matchesUlaOmrLowPrf);
 
-    VerifyOrExit(!mRxRaTracker.IsAddressOnLink(aIp6Header.GetDestination()));
-    VerifyOrExit(!mRxRaTracker.IsAddressReachableThroughExplicitRoute(aIp6Header.GetDestination()));
+    VerifyOrExit(!Get<RxRaTracker>().IsAddressOnLink(aIp6Header.GetDestination()));
+    VerifyOrExit(!Get<RxRaTracker>().IsAddressReachableThroughExplicitRoute(aIp6Header.GetDestination()));
     VerifyOrExit(!Get<NetworkData::Leader>().IsNat64(aIp6Header.GetDestination()));
 
     LogInfo("Send ICMP unreachable for fwd msg with local ULA src and non-local dst");
@@ -857,1779 +715,6 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_REACHABILITY_CHECK_ICMP6_ERROR_ENABLE
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-void RoutingManager::LogRaHeader(const RouterAdvert::Header &aRaHeader)
-{
-    LogInfo("- RA Header - flags - M:%u O:%u S:%u", aRaHeader.IsManagedAddressConfigFlagSet(),
-            aRaHeader.IsOtherConfigFlagSet(), aRaHeader.IsSnacRouterFlagSet());
-    LogInfo("- RA Header - default route - lifetime:%u", aRaHeader.GetRouterLifetime());
-}
-
-void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix      &aPrefix,
-                                         uint32_t                aValidLifetime,
-                                         uint32_t                aPreferredLifetime,
-                                         PrefixInfoOption::Flags aFlags)
-{
-    LogInfo("- PIO %s (valid:%lu, preferred:%lu, flags - L:%u A:%u P:%u)", aPrefix.ToString().AsCString(),
-            ToUlong(aValidLifetime), ToUlong(aPreferredLifetime), (aFlags & PrefixInfoOption::kOnLinkFlag) ? 1 : 0,
-            (aFlags & PrefixInfoOption::kAutoConfigFlag) ? 1 : 0,
-            (aFlags & PrefixInfoOption::kDhcp6PdPreferredFlag) ? 1 : 0);
-}
-
-void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference)
-{
-    LogInfo("- RIO %s (lifetime:%lu, prf:%s)", aPrefix.ToString().AsCString(), ToUlong(aLifetime),
-            RoutePreferenceToString(aPreference));
-}
-
-void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &aAddress, uint32_t aLifetime)
-{
-    LogInfo("- RDNSS %s (lifetime:%lu)", aAddress.ToString().AsCString(), ToUlong(aLifetime));
-}
-
-const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
-{
-    static const char *const kOriginStrings[] = {
-        "",                          // (0) kAnotherRouter
-        "(this BR routing-manager)", // (1) kThisBrRoutingManager
-        "(this BR other sw entity)", // (2) kThisBrOtherEntity
-    };
-
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAnotherRouter);
-        ValidateNextEnum(kThisBrRoutingManager);
-        ValidateNextEnum(kThisBrOtherEntity);
-    };
-
-    return kOriginStrings[aRaOrigin];
-}
-
-#else
-
-void RoutingManager::LogRaHeader(const RouterAdvert::Header &) {}
-void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t, PrefixInfoOption::Flags) {}
-void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
-void RoutingManager::LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
-
-#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-//---------------------------------------------------------------------------------------------------------------------
-// LifetimedPrefix
-
-TimeMilli RoutingManager::LifetimedPrefix::CalculateExpirationTime(uint32_t aLifetime) const
-{
-    // `aLifetime` is in unit of seconds. This method ensures
-    // that the time calculation fits with `TimeMilli` range.
-
-    return RoutingManager::CalculateExpirationTime(mLastUpdateTime, aLifetime);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// OnLinkPrefix
-
-void RoutingManager::OnLinkPrefix::SetFrom(const PrefixInfoOption &aPio)
-{
-    aPio.GetPrefix(mPrefix);
-    mValidLifetime        = aPio.GetValidLifetime();
-    mPreferredLifetime    = aPio.GetPreferredLifetime();
-    mAutoAddrConfigFlag   = aPio.IsAutoAddrConfigFlagSet();
-    mDhcp6PdPreferredFlag = aPio.IsDhcp6PdPreferredFlagSet();
-    mLastUpdateTime       = TimerMilli::GetNow();
-}
-
-void RoutingManager::OnLinkPrefix::SetFrom(const PrefixTableEntry &aPrefixTableEntry)
-{
-    mPrefix            = AsCoreType(&aPrefixTableEntry.mPrefix);
-    mValidLifetime     = aPrefixTableEntry.mValidLifetime;
-    mPreferredLifetime = aPrefixTableEntry.mPreferredLifetime;
-    mLastUpdateTime    = TimerMilli::GetNow();
-}
-
-bool RoutingManager::OnLinkPrefix::IsDeprecated(void) const { return GetDeprecationTime() <= TimerMilli::GetNow(); }
-
-TimeMilli RoutingManager::OnLinkPrefix::GetDeprecationTime(void) const
-{
-    return CalculateExpirationTime(mPreferredLifetime);
-}
-
-TimeMilli RoutingManager::OnLinkPrefix::GetStaleTime(void) const
-{
-    return CalculateExpirationTime(Min(kStaleTime, mPreferredLifetime));
-}
-
-void RoutingManager::OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
-{
-    constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
-
-    // Per RFC 4862 section 5.5.3.e:
-    //
-    // 1.  If the received Valid Lifetime is greater than 2 hours or
-    //     greater than RemainingLifetime, set the valid lifetime of the
-    //     corresponding address to the advertised Valid Lifetime.
-    // 2.  If RemainingLifetime is less than or equal to 2 hours, ignore
-    //     the Prefix Information option with regards to the valid
-    //     lifetime, unless ...
-    // 3.  Otherwise, reset the valid lifetime of the corresponding
-    //     address to 2 hours.
-
-    if (aPrefix.mValidLifetime > kTwoHoursInSeconds || aPrefix.GetExpireTime() > GetExpireTime())
-    {
-        mValidLifetime = aPrefix.mValidLifetime;
-    }
-    else if (GetExpireTime() > TimerMilli::GetNow() + TimeMilli::SecToMsec(kTwoHoursInSeconds))
-    {
-        mValidLifetime = kTwoHoursInSeconds;
-    }
-
-    mPreferredLifetime    = aPrefix.GetPreferredLifetime();
-    mAutoAddrConfigFlag   = aPrefix.mAutoAddrConfigFlag;
-    mDhcp6PdPreferredFlag = aPrefix.mDhcp6PdPreferredFlag;
-    mLastUpdateTime       = aPrefix.GetLastUpdateTime();
-}
-
-void RoutingManager::OnLinkPrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
-{
-    aEntry.mPrefix              = GetPrefix();
-    aEntry.mIsOnLink            = true;
-    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
-    aEntry.mValidLifetime       = GetValidLifetime();
-    aEntry.mPreferredLifetime   = GetPreferredLifetime();
-}
-
-bool RoutingManager::OnLinkPrefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
-{
-    bool isFavored = false;
-
-    // Validate that the `OnLinkPrefix` is eligible to be a favored
-    // on-link prefix. It must have a valid length and either the
-    // AutoAddrConfig (`A`) or Dhcp6PdPreferred (`P`) flag.
-    // Additionally, it must not be deprecated and its preferred
-    // lifetime must be at least `kFavoredMinPreferredLifetime`
-    // (1800) seconds.
-
-    VerifyOrExit(mPrefix.GetLength() == kOnLinkPrefixLength);
-    VerifyOrExit(mAutoAddrConfigFlag || mDhcp6PdPreferredFlag);
-    VerifyOrExit(!IsDeprecated());
-    VerifyOrExit(GetPreferredLifetime() >= kFavoredMinPreferredLifetime);
-
-    // Numerically smaller prefix is favored (unless `aPrefix` is empty).
-
-    VerifyOrExit(aPrefix.GetLength() != 0, isFavored = true);
-
-    isFavored = GetPrefix() < aPrefix;
-
-exit:
-    return isFavored;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RoutePrefix
-
-void RoutingManager::RoutePrefix::SetFrom(const RouteInfoOption &aRio)
-{
-    aRio.GetPrefix(mPrefix);
-    mValidLifetime   = aRio.GetRouteLifetime();
-    mRoutePreference = aRio.GetPreference();
-    mLastUpdateTime  = TimerMilli::GetNow();
-}
-
-void RoutingManager::RoutePrefix::SetFrom(const RouterAdvert::Header &aRaHeader)
-{
-    mPrefix.Clear();
-    mValidLifetime   = aRaHeader.GetRouterLifetime();
-    mRoutePreference = aRaHeader.GetDefaultRouterPreference();
-    mLastUpdateTime  = TimerMilli::GetNow();
-}
-
-TimeMilli RoutingManager::RoutePrefix::GetStaleTime(void) const
-{
-    return CalculateExpirationTime(Min(kStaleTime, mValidLifetime));
-}
-
-void RoutingManager::RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
-{
-    aEntry.mPrefix              = GetPrefix();
-    aEntry.mIsOnLink            = false;
-    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
-    aEntry.mValidLifetime       = GetValidLifetime();
-    aEntry.mPreferredLifetime   = 0;
-    aEntry.mRoutePreference     = static_cast<otRoutePreference>(GetRoutePreference());
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RdnssAddress
-
-void RoutingManager::RdnssAddress::SetFrom(const RecursiveDnsServerOption &aRdnss, uint16_t aAddressIndex)
-{
-    mAddress        = aRdnss.GetAddressAt(aAddressIndex);
-    mLifetime       = aRdnss.GetLifetime();
-    mLastUpdateTime = TimerMilli::GetNow();
-}
-
-TimeMilli RoutingManager::RdnssAddress::GetExpireTime(void) const
-{
-    return RoutingManager::CalculateExpirationTime(mLastUpdateTime, mLifetime);
-}
-
-void RoutingManager::RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const
-{
-    aEntry.mAddress             = GetAddress();
-    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
-    aEntry.mLifetime            = GetLifetime();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// IfAddress
-
-void RoutingManager::IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
-{
-    mAddress       = aAddress;
-    mLastUseUptime = aUptimeNow;
-}
-
-bool RoutingManager::IfAddress::Matches(const InvalidChecker &aChecker) const
-{
-    return !aChecker.Get<InfraIf>().HasAddress(mAddress);
-}
-
-void RoutingManager::IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const
-{
-    aEntry.mAddress         = mAddress;
-    aEntry.mSecSinceLastUse = aUptimeNow - mLastUseUptime;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// MultiAilDetector
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-RoutingManager::MultiAilDetector::MultiAilDetector(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mDetected(false)
-    , mNetDataPeerBrCount(0)
-    , mRxRaTrackerReachablePeerBrCount(0)
-    , mTimer(aInstance)
-{
-}
-
-void RoutingManager::MultiAilDetector::Stop(void)
-{
-    mTimer.Stop();
-    mDetected                        = false;
-    mNetDataPeerBrCount              = 0;
-    mRxRaTrackerReachablePeerBrCount = 0;
-}
-
-void RoutingManager::MultiAilDetector::Evaluate(void)
-{
-    uint16_t count;
-    uint32_t minAge;
-    bool     detected;
-
-    VerifyOrExit(Get<RoutingManager>().IsRunning());
-
-    count = Get<NetDataBrTracker>().CountBrs(NetDataBrTracker::kExcludeThisDevice, minAge);
-
-    if (count != mNetDataPeerBrCount)
-    {
-        LogInfo("Peer BR count from netdata: %u -> %u", mNetDataPeerBrCount, count);
-        mNetDataPeerBrCount = count;
-    }
-
-    count = Get<RoutingManager>().mRxRaTracker.GetReachablePeerBrCount();
-
-    if (count != mRxRaTrackerReachablePeerBrCount)
-    {
-        LogInfo("Reachable Peer BR count from RaTracker: %u -> %u", mRxRaTrackerReachablePeerBrCount, count);
-        mRxRaTrackerReachablePeerBrCount = count;
-    }
-
-    detected = (mNetDataPeerBrCount > mRxRaTrackerReachablePeerBrCount);
-
-    if (detected == mDetected)
-    {
-        mTimer.Stop();
-    }
-    else if (!mTimer.IsRunning())
-    {
-        mTimer.Start(detected ? kDetectTime : kClearTime);
-    }
-
-exit:
-    return;
-}
-
-void RoutingManager::MultiAilDetector::HandleTimer(void)
-{
-    if (!mDetected)
-    {
-        LogNote("BRs on multi AIL detected - BRs are likely connected to different infra-links");
-        LogInfo("More peer BRs in netdata vs from rx RAs for past %lu seconds", ToUlong(Time::MsecToSec(kDetectTime)));
-        LogInfo("NetData Peer BR count: %u, RaTracker reachable Peer BR count: %u", mNetDataPeerBrCount,
-                mRxRaTrackerReachablePeerBrCount);
-        mDetected = true;
-    }
-    else
-    {
-        LogNote("BRs on multi AIL detection cleared");
-        mDetected = false;
-    }
-
-    mCallback.InvokeIfSet(mDetected);
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
-// RxRaTracker
-
-RoutingManager::RxRaTracker::RxRaTracker(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mExpirationTimer(aInstance)
-    , mStaleTimer(aInstance)
-    , mRouterTimer(aInstance)
-    , mRdnssAddrTimer(aInstance)
-    , mSignalTask(aInstance)
-    , mRdnssAddrTask(aInstance)
-{
-    mLocalRaHeader.Clear();
-}
-
-void RoutingManager::RxRaTracker::Start(void) { HandleNetDataChange(); }
-
-void RoutingManager::RxRaTracker::Stop(void)
-{
-    mRouters.Free();
-    mIfAddresses.Free();
-    mLocalRaHeader.Clear();
-    mDecisionFactors.Clear();
-
-    mExpirationTimer.Stop();
-    mStaleTimer.Stop();
-    mRouterTimer.Stop();
-    mRdnssAddrTimer.Stop();
-}
-
-void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
-                                                             const Ip6::Address            &aSrcAddress,
-                                                             RouterAdvOrigin                aRaOrigin)
-{
-    // Process a received RA message and update the prefix table.
-
-    Router *router;
-
-    switch (aRaOrigin)
-    {
-    case kThisBrOtherEntity:
-    case kThisBrRoutingManager:
-        UpdateIfAddresses(aSrcAddress);
-        break;
-    case kAnotherRouter:
-        break;
-    }
-
-    VerifyOrExit(aRaOrigin != kThisBrRoutingManager);
-
-    router = mRouters.FindMatching(aSrcAddress);
-
-    if (router == nullptr)
-    {
-        Entry<Router> *newEntry = AllocateEntry<Router>();
-
-        if (newEntry == nullptr)
-        {
-            LogWarn("Received RA from too many routers, ignore RA from %s", aSrcAddress.ToString().AsCString());
-            ExitNow();
-        }
-
-        router = newEntry;
-        router->Clear();
-        router->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
-        router->mAddress      = aSrcAddress;
-
-        mRouters.Push(*newEntry);
-    }
-
-    // RA message can indicate router provides default route in the RA
-    // message header and can also include an RIO for `::/0`. When
-    // processing an RA message, the preference and lifetime values
-    // in a `::/0` RIO override the preference and lifetime values in
-    // the RA header (per RFC 4191 section 3.1).
-
-    ProcessRaHeader(aRaMessage.GetHeader(), *router, aRaOrigin);
-
-    for (const Option &option : aRaMessage)
-    {
-        switch (option.GetType())
-        {
-        case Option::kTypePrefixInfo:
-            ProcessPrefixInfoOption(static_cast<const PrefixInfoOption &>(option), *router);
-            break;
-
-        case Option::kTypeRouteInfo:
-            ProcessRouteInfoOption(static_cast<const RouteInfoOption &>(option), *router);
-            break;
-
-        case Option::kTypeRecursiveDnsServer:
-            ProcessRecursiveDnsServerOption(static_cast<const RecursiveDnsServerOption &>(option), *router);
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    router->mIsLocalDevice = (aRaOrigin == kThisBrOtherEntity);
-
-    router->ResetReachabilityState();
-
-    Evaluate();
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aRaHeader,
-                                                  Router                     &aRouter,
-                                                  RouterAdvOrigin             aRaOrigin)
-{
-    Entry<RoutePrefix> *entry;
-    Ip6::Prefix         prefix;
-
-    LogRaHeader(aRaHeader);
-
-    aRouter.mManagedAddressConfigFlag = aRaHeader.IsManagedAddressConfigFlagSet();
-    aRouter.mOtherConfigFlag          = aRaHeader.IsOtherConfigFlagSet();
-    aRouter.mSnacRouterFlag           = aRaHeader.IsSnacRouterFlagSet();
-
-    if (aRaOrigin == kThisBrOtherEntity)
-    {
-        // Update `mLocalRaHeader`, which tracks the RA header of
-        // locally generated RA by another sw entity running on this
-        // device.
-
-        RouterAdvert::Header oldHeader = mLocalRaHeader;
-
-        if (aRaHeader.GetRouterLifetime() == 0)
-        {
-            mLocalRaHeader.Clear();
-        }
-        else
-        {
-            mLocalRaHeader           = aRaHeader;
-            mLocalRaHeaderUpdateTime = TimerMilli::GetNow();
-
-            // The checksum is set to zero which indicates to platform
-            // that it needs to do the calculation and update it.
-
-            mLocalRaHeader.SetChecksum(0);
-        }
-
-        if (mLocalRaHeader != oldHeader)
-        {
-            Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-        }
-    }
-
-    prefix.Clear();
-    entry = aRouter.mRoutePrefixes.FindMatching(prefix);
-
-    if (entry == nullptr)
-    {
-        VerifyOrExit(aRaHeader.GetRouterLifetime() != 0);
-
-        entry = AllocateEntry<RoutePrefix>();
-
-        if (entry == nullptr)
-        {
-            LogWarn("Discovered too many prefixes, ignore default route from RA header");
-            ExitNow();
-        }
-
-        entry->SetFrom(aRaHeader);
-        aRouter.mRoutePrefixes.Push(*entry);
-    }
-    else
-    {
-        entry->SetFrom(aRaHeader);
-    }
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter)
-{
-    Ip6::Prefix          prefix;
-    Entry<OnLinkPrefix> *entry;
-    bool                 disregard;
-
-    // We track all valid PIO prefixes with the on-link (`L`) flag. The
-    // `OnLinkPrefix` entries store other PIO flags and are used by
-    // `DecisionFactors` to determine if a ULA or non-ULA on-link
-    // prefix has been observed. This decision then guides
-    // `RoutePublisher` on which route to publish. For determining the
-    // favored on-link prefix, only eligible `OnLinkPrefix` entries are
-    // considered. These entries must meet specific conditions, such as
-    // having a valid 64-bit length and either the AutoAddrConfig
-    // (`A`) and/or Dhcp6PdPreferred (`P`) flag set. The full set of
-    // conditions is covered in `OnLinkPrefix::IsFavoredOver()`.
-
-    VerifyOrExit(aPio.IsValid());
-    aPio.GetPrefix(prefix);
-    VerifyOrExit(!prefix.IsLinkLocal() && !prefix.IsMulticast());
-
-    if (!aPio.IsOnLinkFlagSet())
-    {
-        aRouter.mOnLinkPrefixes.RemoveMatching(prefix);
-        ExitNow();
-    }
-
-    // Disregard the PIO prefix if it matches our local on-link prefix,
-    // as this indicates it's likely from a peer Border Router connected
-    // to the same Thread mesh.
-
-    disregard = (prefix == Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix());
-
-#if !OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    VerifyOrExit(!disregard);
-#endif
-
-    LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime(), aPio.GetFlags());
-
-    entry = aRouter.mOnLinkPrefixes.FindMatching(prefix);
-
-    if (entry == nullptr)
-    {
-        VerifyOrExit(aPio.GetValidLifetime() != 0);
-
-        entry = AllocateEntry<OnLinkPrefix>();
-
-        if (entry == nullptr)
-        {
-            LogWarn("Discovered too many prefixes, ignore on-link prefix %s", prefix.ToString().AsCString());
-            ExitNow();
-        }
-
-        entry->SetFrom(aPio);
-        aRouter.mOnLinkPrefixes.Push(*entry);
-    }
-    else
-    {
-        OnLinkPrefix newPrefix;
-
-        newPrefix.SetFrom(aPio);
-        entry->AdoptFlagsAndValidAndPreferredLifetimesFrom(newPrefix);
-    }
-
-    entry->SetDisregardFlag(disregard);
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter)
-{
-    Ip6::Prefix         prefix;
-    Entry<RoutePrefix> *entry;
-    bool                disregard;
-
-    VerifyOrExit(aRio.IsValid());
-    aRio.GetPrefix(prefix);
-
-    VerifyOrExit(!prefix.IsLinkLocal() && !prefix.IsMulticast());
-
-    // Disregard our own advertised OMR prefixes and those currently
-    // present in the Thread Network Data. This implies it is likely
-    // from a peer Thread BR connected to the same Thread mesh.
-    //
-    // There should be eventual parity between the `RioAdvertiser`
-    // prefixes and the OMR prefixes in Network Data, but temporary
-    // discrepancies can occur due to the tx timing of RAs and time
-    // required to update Network Data (registering with leader). So
-    // both checks are necessary.
-
-    disregard = (Get<RoutingManager>().mOmrPrefixManager.GetLocalPrefix().GetPrefix() == prefix) ||
-                Get<RoutingManager>().mRioAdvertiser.HasAdvertised(prefix) ||
-                Get<NetworkData::Leader>().ContainsOmrPrefix(prefix);
-
-#if !OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-    VerifyOrExit(!disregard);
-#endif
-
-    LogRouteInfoOption(prefix, aRio.GetRouteLifetime(), aRio.GetPreference());
-
-    entry = aRouter.mRoutePrefixes.FindMatching(prefix);
-
-    if (entry == nullptr)
-    {
-        VerifyOrExit(aRio.GetRouteLifetime() != 0);
-
-        entry = AllocateEntry<RoutePrefix>();
-
-        if (entry == nullptr)
-        {
-            LogWarn("Discovered too many prefixes, ignore route prefix %s", prefix.ToString().AsCString());
-            ExitNow();
-        }
-
-        entry->SetFrom(aRio);
-        aRouter.mRoutePrefixes.Push(*entry);
-    }
-    else
-    {
-        entry->SetFrom(aRio);
-    }
-
-    entry->SetDisregardFlag(disregard);
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::ProcessRecursiveDnsServerOption(const RecursiveDnsServerOption &aRdnss,
-                                                                  Router                         &aRouter)
-{
-    Entry<RdnssAddress> *entry;
-    bool                 didChange = false;
-    uint32_t             lifetime;
-
-    VerifyOrExit(aRdnss.IsValid());
-
-    lifetime = aRdnss.GetLifetime();
-
-    for (uint16_t index = 0; index < aRdnss.GetNumAddresses(); index++)
-    {
-        const Ip6::Address &address = aRdnss.GetAddressAt(index);
-
-        LogRecursiveDnsServerOption(address, lifetime);
-
-        if (lifetime == 0)
-        {
-            didChange |= (aRouter.mRdnssAddresses.RemoveAndFreeAllMatching(address));
-            continue;
-        }
-
-        entry = aRouter.mRdnssAddresses.FindMatching(address);
-
-        if (entry != nullptr)
-        {
-            entry->SetFrom(aRdnss, index);
-        }
-        else
-        {
-            entry = AllocateEntry<RdnssAddress>();
-
-            if (entry == nullptr)
-            {
-                LogWarn("Discovered too many entries, ignore RDNSS address %s", address.ToString().AsCString());
-                ExitNow();
-            }
-
-            entry->SetFrom(aRdnss, index);
-            aRouter.mRdnssAddresses.Push(*entry);
-            didChange = true;
-        }
-    }
-
-exit:
-    if (didChange)
-    {
-        mRdnssAddrTask.Post();
-    }
-}
-
-void RoutingManager::RxRaTracker::UpdateIfAddresses(const Ip6::Address &aAddress)
-{
-    Entry<IfAddress> *entry;
-
-    mIfAddresses.RemoveAndFreeAllMatching(IfAddress::InvalidChecker(GetInstance()));
-
-    entry = mIfAddresses.FindMatching(aAddress);
-
-    if (entry == nullptr)
-    {
-        entry = AllocateEntry<IfAddress>();
-        VerifyOrExit(entry != nullptr);
-        mIfAddresses.Push(*entry);
-    }
-
-    entry->SetFrom(aAddress, Get<Uptime>().GetUptimeInSeconds());
-
-exit:
-    return;
-}
-
-#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-
-template <>
-RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker::Router> *RoutingManager::RxRaTracker::AllocateEntry(
-    void)
-{
-    Entry<Router> *router = mRouterPool.Allocate();
-
-    VerifyOrExit(router != nullptr);
-    router->Init(GetInstance());
-
-exit:
-    return router;
-}
-
-template <class Type> RoutingManager::RxRaTracker::Entry<Type> *RoutingManager::RxRaTracker::AllocateEntry(void)
-{
-    static_assert(TypeTraits::IsSame<Type, OnLinkPrefix>::kValue || TypeTraits::IsSame<Type, RoutePrefix>::kValue ||
-                      TypeTraits::IsSame<Type, RdnssAddress>::kValue || TypeTraits::IsSame<Type, IfAddress>::kValue,
-                  "Type MUST be RoutePrefix, OnLinkPrefix, RdnssAddress, or IfAddress");
-
-    Entry<Type> *entry       = nullptr;
-    SharedEntry *sharedEntry = mEntryPool.Allocate();
-
-    VerifyOrExit(sharedEntry != nullptr);
-    entry = &sharedEntry->GetEntry<Type>();
-    entry->Init(GetInstance());
-
-exit:
-    return entry;
-}
-
-template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker::Router>::Free(void)
-{
-    mOnLinkPrefixes.Free();
-    mRoutePrefixes.Free();
-    mRdnssAddresses.Free();
-    Get<RoutingManager>().mRxRaTracker.mRouterPool.Free(*this);
-}
-
-template <class Type> void RoutingManager::RxRaTracker::Entry<Type>::Free(void)
-{
-    static_assert(TypeTraits::IsSame<Type, OnLinkPrefix>::kValue || TypeTraits::IsSame<Type, RoutePrefix>::kValue ||
-                      TypeTraits::IsSame<Type, RdnssAddress>::kValue || TypeTraits::IsSame<Type, IfAddress>::kValue,
-                  "Type MUST be RoutePrefix, OnLinkPrefix, RdnssAddress, or IfAddress");
-
-    Get<RoutingManager>().mRxRaTracker.mEntryPool.Free(*reinterpret_cast<SharedEntry *>(this));
-}
-
-#endif // !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-
-void RoutingManager::RxRaTracker::HandleLocalOnLinkPrefixChanged(void)
-{
-    const Ip6::Prefix &prefix    = Get<RoutingManager>().mOnLinkPrefixManager.GetLocalPrefix();
-    bool               didChange = false;
-
-    // When `TRACK_PEER_BR_INFO_ENABLE` is enabled, we mark
-    // to disregard any on-link prefix entries matching the new
-    // local on-link prefix. Otherwise, we can remove and free
-    // them.
-
-    for (Router &router : mRouters)
-    {
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-        OnLinkPrefix *entry = router.mOnLinkPrefixes.FindMatching(prefix);
-
-        if ((entry != nullptr) && !entry->ShouldDisregard())
-        {
-            entry->SetDisregardFlag(true);
-            didChange = true;
-        }
-#else
-        didChange |= router.mOnLinkPrefixes.RemoveAndFreeAllMatching(prefix);
-#endif
-    }
-
-    VerifyOrExit(didChange);
-
-    Evaluate();
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::HandleNetDataChange(void)
-{
-    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig prefixConfig;
-    bool                            didChange = false;
-
-    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
-    {
-        if (!IsValidOmrPrefix(prefixConfig))
-        {
-            continue;
-        }
-
-        for (Router &router : mRouters)
-        {
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
-            RoutePrefix *entry = router.mRoutePrefixes.FindMatching(prefixConfig.GetPrefix());
-
-            if ((entry != nullptr) && !entry->ShouldDisregard())
-            {
-                entry->SetDisregardFlag(true);
-                didChange = true;
-            }
-#else
-            didChange |= router.mRoutePrefixes.RemoveAndFreeAllMatching(prefixConfig.GetPrefix());
-#endif
-        }
-    }
-
-    if (didChange)
-    {
-        Evaluate();
-    }
-}
-
-void RoutingManager::RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold)
-{
-    // Remove route prefix entries and deprecate on-link entries in
-    // the table that are old (not updated since `aTimeThreshold`).
-
-    for (Router &router : mRouters)
-    {
-        for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
-        {
-            if (entry.GetLastUpdateTime() <= aTimeThreshold)
-            {
-                entry.ClearPreferredLifetime();
-            }
-        }
-
-        for (RoutePrefix &entry : router.mRoutePrefixes)
-        {
-            if (entry.GetLastUpdateTime() <= aTimeThreshold)
-            {
-                entry.ClearValidLifetime();
-            }
-        }
-
-        for (RdnssAddress &entry : router.mRdnssAddresses)
-        {
-            if (entry.GetLastUpdateTime() <= aTimeThreshold)
-            {
-                entry.ClearLifetime();
-            }
-        }
-    }
-
-    if (mLocalRaHeader.IsValid() && (mLocalRaHeaderUpdateTime <= aTimeThreshold))
-    {
-        mLocalRaHeader.Clear();
-    }
-
-    Evaluate();
-}
-
-void RoutingManager::RxRaTracker::Evaluate(void)
-{
-    DecisionFactors oldFactors = mDecisionFactors;
-    TimeMilli       now        = TimerMilli::GetNow();
-    NextFireTime    routerTimeoutTime(now);
-    NextFireTime    entryExpireTime(now);
-    NextFireTime    staleTime(now);
-    NextFireTime    rdnsssAddrExpireTime(now);
-    RouterList      removedRouters;
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Remove expired entries associated with each router
-
-    for (Router &router : mRouters)
-    {
-        ExpirationChecker expirationChecker(now);
-
-        router.mOnLinkPrefixes.RemoveAndFreeAllMatching(expirationChecker);
-        router.mRoutePrefixes.RemoveAndFreeAllMatching(expirationChecker);
-
-        if (router.mRdnssAddresses.RemoveAndFreeAllMatching(expirationChecker))
-        {
-            mRdnssAddrTask.Post();
-        }
-    }
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Remove any router entry that no longer has any valid on-link
-    // or route prefixes, RDNSS addresses, or other relevant flags set.
-
-    mRouters.RemoveAllMatching(removedRouters, Router::EmptyChecker());
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    for (Router &router : removedRouters)
-    {
-        ReportChangesToHistoryTracker(router, /* aRemoved */ true);
-    }
-#endif
-
-    removedRouters.Free();
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Determine decision factors (favored on-link prefix, has any
-    // ULA/non-ULA on-link/route prefix, M/O flags).
-
-    mDecisionFactors.Clear();
-
-    for (Router &router : mRouters)
-    {
-        router.mAllEntriesDisregarded = true;
-
-        mDecisionFactors.UpdateFlagsFrom(router);
-
-        for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
-        {
-            mDecisionFactors.UpdateFrom(entry);
-            entry.SetStaleTimeCalculated(false);
-
-            router.mAllEntriesDisregarded &= entry.ShouldDisregard();
-        }
-
-        for (RoutePrefix &entry : router.mRoutePrefixes)
-        {
-            mDecisionFactors.UpdateFrom(entry);
-            entry.SetStaleTimeCalculated(false);
-
-            router.mAllEntriesDisregarded &= entry.ShouldDisregard();
-        }
-    }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-    mDecisionFactors.mReachablePeerBrCount = CountReachablePeerBrs();
-#endif
-
-    if (oldFactors != mDecisionFactors)
-    {
-        mSignalTask.Post();
-    }
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Schedule timers
-
-    // If multiple routers advertise the same on-link or route prefix,
-    // the stale time for the prefix is determined by the latest stale
-    // time among all corresponding entries.
-    //
-    // The "StaleTimeCalculated" flag is used to ensure stale time is
-    // calculated only once for each unique prefix. Initially, this
-    // flag is cleared on all entries. As we iterate over routers and
-    // their entries, `DetermineStaleTimeFor()` will consider all
-    // matching entries and mark "StaleTimeCalculated" flag on them.
-
-    for (Router &router : mRouters)
-    {
-        if (router.ShouldCheckReachability())
-        {
-            router.DetermineReachabilityTimeout();
-            routerTimeoutTime.UpdateIfEarlier(router.mTimeoutTime);
-        }
-
-        for (const OnLinkPrefix &entry : router.mOnLinkPrefixes)
-        {
-            entryExpireTime.UpdateIfEarlier(entry.GetExpireTime());
-
-            if (!entry.IsStaleTimeCalculated())
-            {
-                DetermineStaleTimeFor(entry, staleTime);
-            }
-        }
-
-        for (const RoutePrefix &entry : router.mRoutePrefixes)
-        {
-            entryExpireTime.UpdateIfEarlier(entry.GetExpireTime());
-
-            if (!entry.IsStaleTimeCalculated())
-            {
-                DetermineStaleTimeFor(entry, staleTime);
-            }
-        }
-
-        for (const RdnssAddress &entry : router.mRdnssAddresses)
-        {
-            rdnsssAddrExpireTime.UpdateIfEarlier(entry.GetExpireTime());
-        }
-    }
-
-    if (mLocalRaHeader.IsValid())
-    {
-        uint16_t interval = kStaleTime;
-
-        if (mLocalRaHeader.GetRouterLifetime() > 0)
-        {
-            interval = Min(interval, mLocalRaHeader.GetRouterLifetime());
-        }
-
-        staleTime.UpdateIfEarlier(CalculateExpirationTime(mLocalRaHeaderUpdateTime, interval));
-    }
-
-    mRouterTimer.FireAt(routerTimeoutTime);
-    mExpirationTimer.FireAt(entryExpireTime);
-    mStaleTimer.FireAt(staleTime);
-    mRdnssAddrTimer.FireAt(rdnsssAddrExpireTime);
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Report any changes to history tracker.
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    for (Router &router : mRouters)
-    {
-        ReportChangesToHistoryTracker(router, /* aRemoved */ false);
-    }
-
-#endif
-}
-
-void RoutingManager::RxRaTracker::DetermineStaleTimeFor(const OnLinkPrefix &aPrefix, NextFireTime &aStaleTime)
-{
-    TimeMilli prefixStaleTime = aStaleTime.GetNow();
-    bool      found           = false;
-
-    for (Router &router : mRouters)
-    {
-        for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
-        {
-            if (!entry.Matches(aPrefix.GetPrefix()))
-            {
-                continue;
-            }
-
-            entry.SetStaleTimeCalculated(true);
-
-            if (entry.IsDeprecated())
-            {
-                continue;
-            }
-
-            prefixStaleTime = Max(prefixStaleTime, Max(aStaleTime.GetNow(), entry.GetStaleTime()));
-            found           = true;
-        }
-    }
-
-    if (found)
-    {
-        aStaleTime.UpdateIfEarlier(prefixStaleTime);
-    }
-}
-
-void RoutingManager::RxRaTracker::DetermineStaleTimeFor(const RoutePrefix &aPrefix, NextFireTime &aStaleTime)
-{
-    TimeMilli prefixStaleTime = aStaleTime.GetNow();
-    bool      found           = false;
-
-    for (Router &router : mRouters)
-    {
-        for (RoutePrefix &entry : router.mRoutePrefixes)
-        {
-            if (!entry.Matches(aPrefix.GetPrefix()))
-            {
-                continue;
-            }
-
-            entry.SetStaleTimeCalculated(true);
-
-            prefixStaleTime = Max(prefixStaleTime, Max(aStaleTime.GetNow(), entry.GetStaleTime()));
-            found           = true;
-        }
-    }
-
-    if (found)
-    {
-        aStaleTime.UpdateIfEarlier(prefixStaleTime);
-    }
-}
-
-void RoutingManager::RxRaTracker::HandleStaleTimer(void)
-{
-    VerifyOrExit(Get<RoutingManager>().IsRunning());
-
-    LogInfo("Stale timer expired");
-    Get<RoutingManager>().mRsSender.Start();
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::HandleExpirationTimer(void) { Evaluate(); }
-
-void RoutingManager::RxRaTracker::HandleSignalTask(void) { Get<RoutingManager>().HandleRaPrefixTableChanged(); }
-
-void RoutingManager::RxRaTracker::HandleRdnssAddrTask(void) { mRdnssCallback.InvokeIfSet(); }
-
-void RoutingManager::RxRaTracker::ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage)
-{
-    Router *router;
-
-    VerifyOrExit(aNaMessage.IsValid());
-
-    router = mRouters.FindMatching(aNaMessage.GetTargetAddress());
-    VerifyOrExit(router != nullptr);
-
-    LogInfo("Received NA from router %s", router->mAddress.ToString().AsCString());
-
-    router->ResetReachabilityState();
-
-    Evaluate();
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::HandleRouterTimer(void)
-{
-    TimeMilli now = TimerMilli::GetNow();
-
-    for (Router &router : mRouters)
-    {
-        if (!router.ShouldCheckReachability() || (router.mTimeoutTime > now))
-        {
-            continue;
-        }
-
-        router.mNsProbeCount++;
-
-        if (router.IsReachable())
-        {
-            router.mTimeoutTime = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
-                                                                                       : Router::kNsProbeTimeout);
-            SendNeighborSolicitToRouter(router);
-        }
-        else
-        {
-            LogInfo("No response to all Neighbor Solicitations attempts from router %s - marking it unreachable",
-                    router.mAddress.ToString().AsCString());
-
-            // Remove route prefix entries and deprecate on-link prefix entries
-            // of the unreachable router.
-
-            for (OnLinkPrefix &entry : router.mOnLinkPrefixes)
-            {
-                if (!entry.IsDeprecated())
-                {
-                    entry.ClearPreferredLifetime();
-                }
-            }
-
-            for (RoutePrefix &entry : router.mRoutePrefixes)
-            {
-                entry.ClearValidLifetime();
-            }
-
-            for (RdnssAddress &entry : router.mRdnssAddresses)
-            {
-                entry.ClearLifetime();
-            }
-        }
-    }
-
-    Evaluate();
-}
-
-void RoutingManager::RxRaTracker::HandleRdnssAddrTimer(void) { Evaluate(); }
-
-void RoutingManager::RxRaTracker::SendNeighborSolicitToRouter(const Router &aRouter)
-{
-    InfraIf::Icmp6Packet  packet;
-    NeighborSolicitHeader nsHdr;
-    TxMessage             nsMsg;
-    LinkLayerAddress      linkAddr;
-
-    VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
-
-    nsHdr.SetTargetAddress(aRouter.mAddress);
-    SuccessOrExit(nsMsg.Append(nsHdr));
-
-    if (Get<InfraIf>().GetLinkLayerAddress(linkAddr) == kErrorNone)
-    {
-        SuccessOrExit(nsMsg.AppendLinkLayerOption(linkAddr, Option::kSourceLinkLayerAddr));
-    }
-
-    nsMsg.GetAsPacket(packet);
-
-    IgnoreError(Get<RoutingManager>().mInfraIf.Send(packet, aRouter.mAddress));
-
-    LogInfo("Sent Neighbor Solicitation to %s - attempt:%u/%u", aRouter.mAddress.ToString().AsCString(),
-            aRouter.mNsProbeCount, Router::kMaxNsProbes);
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::SetHeaderFlagsOn(RouterAdvert::Header &aHeader) const
-{
-    if (mDecisionFactors.mHeaderManagedAddressConfigFlag)
-    {
-        aHeader.SetManagedAddressConfigFlag();
-    }
-
-    if (mDecisionFactors.mHeaderOtherConfigFlag)
-    {
-        aHeader.SetOtherConfigFlag();
-    }
-}
-
-bool RoutingManager::RxRaTracker::IsAddressOnLink(const Ip6::Address &aAddress) const
-{
-    bool isOnLink = Get<RoutingManager>().mOnLinkPrefixManager.AddressMatchesLocalPrefix(aAddress);
-
-    VerifyOrExit(!isOnLink);
-
-    for (const Router &router : mRouters)
-    {
-        for (const OnLinkPrefix &onLinkPrefix : router.mOnLinkPrefixes)
-        {
-            isOnLink = aAddress.MatchesPrefix(onLinkPrefix.GetPrefix());
-            VerifyOrExit(!isOnLink);
-        }
-    }
-
-exit:
-    return isOnLink;
-}
-
-bool RoutingManager::RxRaTracker::IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const
-{
-    // Checks whether the `aAddress` matches any discovered route
-    // prefix excluding `::/0`.
-
-    bool isReachable = false;
-
-    for (const Router &router : mRouters)
-    {
-        for (const RoutePrefix &routePrefix : router.mRoutePrefixes)
-        {
-            if (routePrefix.GetPrefix().GetLength() == 0)
-            {
-                continue;
-            }
-
-            isReachable = aAddress.MatchesPrefix(routePrefix.GetPrefix());
-            VerifyOrExit(!isReachable);
-        }
-    }
-
-exit:
-    return isReachable;
-}
-
-void RoutingManager::RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
-{
-    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Get<Uptime>().GetUptimeInSeconds());
-}
-
-Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
-{
-    Error     error    = kErrorNone;
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-
-    ClearAllBytes(aEntry);
-
-    SuccessOrExit(error = iterator.AdvanceToNextPrefixEntry());
-
-    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
-
-    switch (iterator.GetPrefixType())
-    {
-    case Iterator::kOnLinkPrefix:
-        iterator.GetEntry<OnLinkPrefix>()->CopyInfoTo(aEntry, iterator.GetInitTime());
-        break;
-    case Iterator::kRoutePrefix:
-        iterator.GetEntry<RoutePrefix>()->CopyInfoTo(aEntry, iterator.GetInitTime());
-        break;
-    }
-
-exit:
-    return error;
-}
-
-Error RoutingManager::RxRaTracker::GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const
-{
-    Error     error    = kErrorNone;
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-
-    ClearAllBytes(aEntry);
-
-    SuccessOrExit(error = iterator.AdvanceToNextRouter(Iterator::kRouterIterator));
-    iterator.GetRouter()->CopyInfoTo(aEntry, iterator.GetInitTime(), iterator.GetInitUptime());
-
-exit:
-    return error;
-}
-
-Error RoutingManager::RxRaTracker::GetNextRdnssAddr(PrefixTableIterator &aIterator, RdnssAddrEntry &aEntry) const
-{
-    Error     error    = kErrorNone;
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-
-    ClearAllBytes(aEntry);
-
-    SuccessOrExit(error = iterator.AdvanceToNextRdnssAddrEntry());
-
-    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime(), iterator.GetInitUptime());
-    iterator.GetEntry<RdnssAddress>()->CopyInfoTo(aEntry, iterator.GetInitTime());
-
-exit:
-    return error;
-}
-
-Error RoutingManager::RxRaTracker::GetNextIfAddr(PrefixTableIterator &aIterator, IfAddrEntry &aEntry) const
-{
-    Error     error    = kErrorNone;
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-
-    ClearAllBytes(aEntry);
-
-    SuccessOrExit(error = iterator.AdvanceToNextIfAddrEntry(mIfAddresses.GetHead()));
-
-    iterator.GetEntry<IfAddress>()->CopyInfoTo(aEntry, iterator.GetInitUptime());
-
-exit:
-    return error;
-}
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-uint16_t RoutingManager::RxRaTracker::CountReachablePeerBrs(void) const
-{
-    uint16_t count = 0;
-
-    for (const Router &router : mRouters)
-    {
-        if (!router.mIsLocalDevice && router.IsPeerBr() && router.IsReachable())
-        {
-            count++;
-        }
-    }
-
-    return count;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-
-void RoutingManager::RxRaTracker::ReportChangesToHistoryTracker(Router &aRouter, bool aRemoved)
-{
-    // Report any changes in the `aRouter` to `HistoryTracker` only if
-    // something has changed since the last recorded event.
-
-    Router::HistoryInfo        oldInfo;
-    HistoryTracker::AilRouter *entry;
-
-    if (aRemoved)
-    {
-        // If we have never recorded this router entry in the
-        // `HistoryTracker`, there is no point in reporting its
-        // removal. This can happen if we receive an RA from a router
-        // with no useful information that we want to track. In this
-        // case, the router entry is removed immediately during
-        // `Evaluate()`.
-
-        VerifyOrExit(aRouter.mHistoryInfo.mHistoryRecorded);
-    }
-    else
-    {
-        oldInfo = aRouter.mHistoryInfo;
-    }
-
-    aRouter.mHistoryInfo.DetermineFrom(aRouter);
-
-    VerifyOrExit(aRemoved || (aRouter.mHistoryInfo != oldInfo));
-
-    // Allocate and populate the new `HistoryTracker::AilRouter` entry.
-
-    entry = Get<HistoryTracker::Local>().RecordAilRouterEvent();
-    VerifyOrExit(entry != nullptr);
-
-    entry->mEvent = aRemoved ? HistoryTracker::Local::kAilRouterRemoved
-                             : (oldInfo.mHistoryRecorded ? HistoryTracker::Local::kAilRouterChanged
-                                                         : HistoryTracker::Local::kAilRouterAdded);
-
-    entry->mAddress                  = aRouter.mAddress;
-    entry->mDefRoutePreference       = static_cast<int8_t>(aRouter.mHistoryInfo.mDefRoutePreference);
-    entry->mFavoredOnLinkPrefix      = aRouter.mHistoryInfo.mFavoredOnLinkPrefix;
-    entry->mProvidesDefaultRoute     = aRouter.mHistoryInfo.mProvidesDefaultRoute;
-    entry->mManagedAddressConfigFlag = aRouter.mHistoryInfo.mManagedAddressConfigFlag;
-    entry->mOtherConfigFlag          = aRouter.mHistoryInfo.mOtherConfigFlag;
-    entry->mSnacRouterFlag           = aRouter.mHistoryInfo.mSnacRouterFlag;
-    entry->mIsLocalDevice            = aRouter.mHistoryInfo.mIsLocalDevice;
-    entry->mIsReachable              = aRouter.mHistoryInfo.mIsReachable;
-    entry->mIsPeerBr                 = aRouter.mHistoryInfo.mIsPeerBr;
-
-exit:
-    return;
-}
-
-#endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
-// RxRaTracker::Iterator
-
-void RoutingManager::RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHead, uint32_t aUptime)
-{
-    SetInitUptime(aUptime);
-    SetInitTime();
-    SetType(kUnspecified);
-    SetRouter(aRoutersHead);
-    SetEntry(nullptr);
-    SetPrefixType(kRoutePrefix);
-}
-
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextRouter(Type aType)
-{
-    Error error = kErrorNone;
-
-    if (GetType() == kUnspecified)
-    {
-        // On the first call, when iterator type is `kUnspecified`, we
-        // set the type, and keep the `GetRouter()` as is so to start
-        // from the first router in the list.
-
-        SetType(aType);
-    }
-    else
-    {
-        // On subsequent call, we ensure that the iterator type
-        // matches what we expect and advance to the next router on
-        // the list.
-
-        VerifyOrExit(GetType() == aType, error = kErrorInvalidArgs);
-        VerifyOrExit(GetRouter() != nullptr, error = kErrorNone);
-        SetRouter(GetRouter()->GetNext());
-    }
-
-    VerifyOrExit(GetRouter() != nullptr, error = kErrorNotFound);
-
-exit:
-    return error;
-}
-
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextPrefixEntry(void)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRouter() != nullptr, error = kErrorNotFound);
-
-    if (HasEntry())
-    {
-        switch (GetPrefixType())
-        {
-        case kOnLinkPrefix:
-            SetEntry(GetEntry<OnLinkPrefix>()->GetNext());
-            break;
-        case kRoutePrefix:
-            SetEntry(GetEntry<RoutePrefix>()->GetNext());
-            break;
-        }
-    }
-
-    while (!HasEntry())
-    {
-        switch (GetPrefixType())
-        {
-        case kOnLinkPrefix:
-
-            // Transition from on-link prefixes to route prefixes of
-            // the current router.
-
-            SetEntry(GetRouter()->mRoutePrefixes.GetHead());
-            SetPrefixType(kRoutePrefix);
-            break;
-
-        case kRoutePrefix:
-
-            // Transition to the next router and start with its on-link
-            // prefixes.
-            //
-            // On the first call when iterator type is `kUnspecified`,
-            // `AdvanceToNextRouter()` sets the type and starts from
-            // the first router.
-
-            SuccessOrExit(error = AdvanceToNextRouter(kPrefixIterator));
-            SetEntry(GetRouter()->mOnLinkPrefixes.GetHead());
-            SetPrefixType(kOnLinkPrefix);
-            break;
-        }
-    }
-
-exit:
-    return error;
-}
-
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextRdnssAddrEntry(void)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(GetRouter() != nullptr, error = kErrorNotFound);
-
-    if (HasEntry())
-    {
-        VerifyOrExit(GetType() == kRdnssAddrIterator, error = kErrorInvalidArgs);
-        SetEntry(GetEntry<RdnssAddress>()->GetNext());
-    }
-
-    while (!HasEntry())
-    {
-        SuccessOrExit(error = AdvanceToNextRouter(kRdnssAddrIterator));
-        SetEntry(GetRouter()->mRdnssAddresses.GetHead());
-    }
-
-exit:
-    return error;
-}
-
-Error RoutingManager::RxRaTracker::Iterator::AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead)
-{
-    Error error = kErrorNone;
-
-    if (GetType() == kUnspecified)
-    {
-        SetType(kIfAddrIterator);
-        SetEntry(aListHead);
-    }
-    else
-    {
-        VerifyOrExit(GetType() == kIfAddrIterator, error = kErrorInvalidArgs);
-        VerifyOrExit(HasEntry(), error = kErrorNotFound);
-        SetEntry(GetEntry<IfAddress>()->GetNext());
-    }
-
-    VerifyOrExit(HasEntry(), error = kErrorNotFound);
-
-exit:
-    return error;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RxRaTracker::Router
-
-bool RoutingManager::RxRaTracker::Router::ShouldCheckReachability(void) const
-{
-    // Perform reachability check (send NS probes) only if the router:
-    // - Is not already marked as unreachable (due to failed NS probes)
-    // - Is not the local device itself (to avoid potential issues with
-    //   the platform receiving/processing NAs from itself).
-
-    return IsReachable() && !mIsLocalDevice;
-}
-
-void RoutingManager::RxRaTracker::Router::ResetReachabilityState(void)
-{
-    // Called when an RA or NA is received and processed.
-
-    mNsProbeCount   = 0;
-    mLastUpdateTime = TimerMilli::GetNow();
-    mTimeoutTime    = mLastUpdateTime + Random::NonCrypto::AddJitter(kReachableInterval, kJitter);
-}
-
-void RoutingManager::RxRaTracker::Router::DetermineReachabilityTimeout(void)
-{
-    uint32_t interval;
-
-    VerifyOrExit(ShouldCheckReachability());
-    VerifyOrExit(mNsProbeCount == 0);
-
-    // If all of the router's prefix entries are marked as
-    // disregarded (excluded from any decisions), it indicates that
-    // this router is likely a peer BR connected to the same Thread
-    // mesh. We use a longer reachability check interval for such
-    // peer BRs.
-
-    interval     = mAllEntriesDisregarded ? kPeerBrReachableInterval : kReachableInterval;
-    mTimeoutTime = mLastUpdateTime + Random::NonCrypto::AddJitter(interval, kJitter);
-
-exit:
-    return;
-}
-
-bool RoutingManager::RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
-{
-    OT_UNUSED_VARIABLE(aChecker);
-
-    bool hasFlags = false;
-
-    // Router can be removed if it does not advertise M or O flags and
-    // also does not have any advertised prefix entries (RIO/PIO) or
-    // RDNSS address entries. If the router already failed to respond
-    // to max NS probe attempts, we consider it as offline and
-    // therefore do not consider its flags anymore.
-
-    if (IsReachable())
-    {
-        hasFlags = (mManagedAddressConfigFlag || mOtherConfigFlag);
-    }
-
-    return !hasFlags && mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty() && mRdnssAddresses.IsEmpty();
-}
-
-bool RoutingManager::RxRaTracker::Router::IsPeerBr(void) const
-{
-    // Determines whether the router is a peer BR (connected to the
-    // same Thread mesh network). It must have at least one entry
-    // (on-link or route) and all entries should be marked to be
-    // disregarded. While this model is generally effective to detect
-    // peer BRs, it may not be 100% accurate in all scenarios.
-
-    return mAllEntriesDisregarded && !(mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty());
-}
-
-void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const
-{
-    aEntry.mAddress                  = mAddress;
-    aEntry.mMsecSinceLastUpdate      = aNow - mLastUpdateTime;
-    aEntry.mAge                      = aUptime - mDiscoverTime;
-    aEntry.mManagedAddressConfigFlag = mManagedAddressConfigFlag;
-    aEntry.mOtherConfigFlag          = mOtherConfigFlag;
-    aEntry.mSnacRouterFlag           = mSnacRouterFlag;
-    aEntry.mIsLocalDevice            = mIsLocalDevice;
-    aEntry.mIsReachable              = IsReachable();
-    aEntry.mIsPeerBr                 = IsPeerBr();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RxRaTracker::Router::HistoryInfo
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-
-void RoutingManager::RxRaTracker::Router::HistoryInfo::DetermineFrom(const Router &aRouter)
-{
-    Ip6::Prefix        emptyPrefix;
-    const RoutePrefix *defRoute;
-
-    Clear();
-
-    mHistoryRecorded          = true;
-    mManagedAddressConfigFlag = aRouter.mManagedAddressConfigFlag;
-    mOtherConfigFlag          = aRouter.mOtherConfigFlag;
-    mSnacRouterFlag           = aRouter.mSnacRouterFlag;
-    mIsLocalDevice            = aRouter.mIsLocalDevice;
-    mIsReachable              = aRouter.IsReachable();
-    mIsPeerBr                 = aRouter.IsPeerBr();
-
-    emptyPrefix.Clear();
-    defRoute = aRouter.mRoutePrefixes.FindMatching(emptyPrefix);
-
-    if ((defRoute != nullptr) && (defRoute->GetValidLifetime() > 0))
-    {
-        mProvidesDefaultRoute = true;
-        mDefRoutePreference   = defRoute->GetRoutePreference();
-    }
-
-    for (const OnLinkPrefix &onLinkPrefix : aRouter.mOnLinkPrefixes)
-    {
-        if (onLinkPrefix.IsFavoredOver(mFavoredOnLinkPrefix))
-        {
-            mFavoredOnLinkPrefix = onLinkPrefix.GetPrefix();
-        }
-    }
-}
-
-#endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
-// RxRaTracker::DecisionFactors
-
-void RoutingManager::RxRaTracker::DecisionFactors::UpdateFlagsFrom(const Router &aRouter)
-{
-    // Determine the `M` and `O` flags to include in the RA message
-    // header to be emitted.
-    //
-    // If any discovered router on infrastructure which is not itself a
-    // stub router (e.g., another Thread BR) includes the `M` or `O`
-    // flag, we also include the same flag.
-
-    VerifyOrExit(!aRouter.mSnacRouterFlag);
-    VerifyOrExit(aRouter.IsReachable());
-
-    if (aRouter.mManagedAddressConfigFlag)
-    {
-        mHeaderManagedAddressConfigFlag = true;
-    }
-
-    if (aRouter.mOtherConfigFlag)
-    {
-        mHeaderOtherConfigFlag = true;
-    }
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const OnLinkPrefix &aOnLinkPrefix)
-{
-    VerifyOrExit(!aOnLinkPrefix.ShouldDisregard());
-
-    if (aOnLinkPrefix.GetPrefix().IsUniqueLocal())
-    {
-        mHasUlaOnLink = true;
-    }
-    else
-    {
-        mHasNonUlaOnLink = true;
-    }
-
-    if (aOnLinkPrefix.IsFavoredOver(mFavoredOnLinkPrefix))
-    {
-        mFavoredOnLinkPrefix = aOnLinkPrefix.GetPrefix();
-    }
-
-exit:
-    return;
-}
-
-void RoutingManager::RxRaTracker::DecisionFactors::UpdateFrom(const RoutePrefix &aRoutePrefix)
-{
-    VerifyOrExit(!aRoutePrefix.ShouldDisregard());
-
-    if (!mHasNonUlaRoute)
-    {
-        mHasNonUlaRoute = !aRoutePrefix.GetPrefix().IsUniqueLocal();
-    }
-
-exit:
-    return;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// FavoredOmrPrefix
-
-bool RoutingManager::FavoredOmrPrefix::IsInfrastructureDerived(void) const
-{
-    // Indicate whether the OMR prefix is infrastructure-derived which
-    // can be identified as a valid OMR prefix with preference of
-    // medium or higher.
-
-    return !IsEmpty() && (mPreference >= NetworkData::kRoutePreferenceMedium);
-}
-
-void RoutingManager::FavoredOmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
-{
-    mPrefix         = aOnMeshPrefixConfig.GetPrefix();
-    mPreference     = aOnMeshPrefixConfig.GetPreference();
-    mIsDomainPrefix = aOnMeshPrefixConfig.mDp;
-}
-
-void RoutingManager::FavoredOmrPrefix::SetFrom(const OmrPrefix &aOmrPrefix)
-{
-    mPrefix         = aOmrPrefix.GetPrefix();
-    mPreference     = aOmrPrefix.GetPreference();
-    mIsDomainPrefix = aOmrPrefix.IsDomainPrefix();
-}
-
-bool RoutingManager::FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const
-{
-    // This method determines whether this OMR prefix is favored
-    // over another prefix. A prefix with higher preference is
-    // favored. If the preference is the same, then the smaller
-    // prefix (in the sense defined by `Ip6::Prefix`) is favored.
-
-    bool isFavored = (mPreference > aOmrPrefixConfig.GetPreference());
-
-    OT_ASSERT(IsValidOmrPrefix(aOmrPrefixConfig));
-
-    if (mPreference == aOmrPrefixConfig.GetPreference())
-    {
-        isFavored = (mPrefix < aOmrPrefixConfig.GetPrefix());
-    }
-
-    return isFavored;
-}
 
 //---------------------------------------------------------------------------------------------------------------------
 // OmrPrefixManager
@@ -2665,7 +750,7 @@ void RoutingManager::OmrPrefixManager::Stop(void)
     ClearFavoredPrefix();
 }
 
-bool RoutingManager::OmrPrefixManager::IsInitalEvaluationDone(void) const
+bool RoutingManager::OmrPrefixManager::IsInitialEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation of the OMR prefix, i.e., either
@@ -2705,8 +790,7 @@ Error RoutingManager::OmrPrefixManager::SetConfig(OmrConfig          aConfig,
     {
         VerifyOrExit((aPrefix != nullptr) && IsValidOmrPrefix(*aPrefix), error = kErrorInvalidArgs);
 
-        customPrefix.mPrefix     = *aPrefix;
-        customPrefix.mPreference = aPreference;
+        customPrefix.SetPrefix(*aPrefix, aPreference);
     }
 
     VerifyOrExit((aConfig != mConfig) || (customPrefix != mCustomPrefix));
@@ -2737,7 +821,7 @@ void RoutingManager::OmrPrefixManager::SetFavoredPrefix(const OmrPrefix &aOmrPre
     if (oldFavoredPrefix != mFavoredPrefix)
     {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-        Get<MeshCoP::BorderAgent>().HandleFavoredOmrPrefixChanged();
+        Get<MeshCoP::BorderAgent::TxtData>().Refresh();
 #endif
         LogInfo("Favored OMR prefix: %s -> %s", FavoredToString(oldFavoredPrefix).AsCString(),
                 FavoredToString(mFavoredPrefix).AsCString());
@@ -2786,9 +870,8 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
             if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
             {
                 RemoveLocalFromNetData();
-                mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
-                mLocalPrefix.mPreference     = PdPrefixManager::kPdRoutePreference;
-                mLocalPrefix.mIsDomainPrefix = false;
+                mLocalPrefix.SetPrefix(Get<RoutingManager>().mPdPrefixManager.GetPrefix(),
+                                       PdPrefixManager::kPdRoutePreference);
                 LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
             }
         }
@@ -2797,9 +880,7 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
             if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
         {
             RemoveLocalFromNetData();
-            mLocalPrefix.mPrefix         = mGeneratedPrefix;
-            mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceLow;
-            mLocalPrefix.mIsDomainPrefix = false;
+            mLocalPrefix.SetPrefix(mGeneratedPrefix, RoutePreference::kRoutePreferenceLow);
             LogInfo("Setting local OMR prefix to generated prefix: %s",
                     mLocalPrefix.GetPrefix().ToString().AsCString());
         }
@@ -3222,9 +1303,9 @@ exit:
 
 void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 {
-    VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
+    VerifyOrExit(Get<RxRaTracker>().IsInitialRouterDiscoveryFinished());
 
-    SetAilPrefix(Get<RoutingManager>().mRxRaTracker.GetFavoredOnLinkPrefix());
+    SetAilPrefix(Get<RxRaTracker>().GetFavoredOnLinkPrefix());
 
     if ((mAilPrefix.GetLength() == 0) || (mAilPrefix == mLocalPrefix))
     {
@@ -3263,7 +1344,7 @@ exit:
     return;
 }
 
-bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
+bool RoutingManager::OnLinkPrefixManager::IsInitialEvaluationDone(void) const
 {
     // This method indicates whether or not we are done with the
     // initial policy evaluation of the on-link prefixes, i.e., either
@@ -3274,14 +1355,14 @@ bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
     return (mAilPrefix.GetLength() != 0 || IsPublishingOrAdvertising());
 }
 
-void RoutingManager::OnLinkPrefixManager::HandleRaPrefixTableChanged(void)
+void RoutingManager::OnLinkPrefixManager::HandleRxRaTrackerChanged(void)
 {
-    // This is a callback from `mRxRaTracker` indicating that
+    // This is a callback from `RxRaTracker` indicating that
     // there has been a change in the table. If the favored on-link
     // prefix has changed, we trigger a re-evaluation of the routing
     // policy.
 
-    if (Get<RoutingManager>().mRxRaTracker.GetFavoredOnLinkPrefix() != mAilPrefix)
+    if (Get<RxRaTracker>().GetFavoredOnLinkPrefix() != mAilPrefix)
     {
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
@@ -3897,15 +1978,15 @@ void RoutingManager::RoutePublisher::Evaluate(void)
     VerifyOrExit(Get<RoutingManager>().IsRunning());
 
     if (Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived() &&
-        Get<RoutingManager>().mRxRaTracker.ContainsDefaultOrNonUlaRoutePrefix())
+        Get<RxRaTracker>().ContainsDefaultOrNonUlaRoutePrefix())
     {
         newState = kPublishDefault;
     }
-    else if (Get<RoutingManager>().mRxRaTracker.ContainsNonUlaOnLinkPrefix())
+    else if (Get<RxRaTracker>().ContainsNonUlaOnLinkPrefix())
     {
         newState = kPublishDefault;
     }
-    else if (Get<RoutingManager>().mRxRaTracker.ContainsUlaOnLinkPrefix() ||
+    else if (Get<RxRaTracker>().ContainsUlaOnLinkPrefix() ||
              Get<RoutingManager>().mOnLinkPrefixManager.ShouldPublishUlaRoute())
     {
         newState = kPublishUla;
@@ -4114,7 +2195,8 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     , mEnabled(false)
     , mTimer(aInstance)
 {
-    mInfraIfPrefix.Clear();
+    mRaTrackerPrefix.Clear();
+    mPlatformPrefix.Clear();
     mLocalPrefix.Clear();
     mPublishedPrefix.Clear();
 }
@@ -4155,7 +2237,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
     LogInfo("Stopping Nat64PrefixManager");
 
     Unpublish();
-    mInfraIfPrefix.Clear();
+    mPlatformPrefix.Clear();
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -4179,11 +2261,22 @@ const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePre
 
     aPreference = NetworkData::kRoutePreferenceLow;
 
-    if (mInfraIfPrefix.IsValidNat64() &&
-        Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
+    // To ensure routing coherency, only use a discovered NAT64 prefix if the
+    // OMR prefix is also from the infrastructure.
+    if (Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
     {
-        favoredPrefix = &mInfraIfPrefix;
-        aPreference   = NetworkData::kRoutePreferenceMedium;
+        // Per RFC 8781 section 5, discovered NAT64 prefixes from RAs should be favored.
+        if (mRaTrackerPrefix.IsValidNat64())
+        {
+            favoredPrefix = &mRaTrackerPrefix;
+            aPreference   = NetworkData::kRoutePreferenceMedium;
+        }
+        // A valid NAT64 prefix from the platform (e.g. using DNS - RFC 7050) is the next choice.
+        else if (mPlatformPrefix.IsValidNat64())
+        {
+            favoredPrefix = &mPlatformPrefix;
+            aPreference   = NetworkData::kRoutePreferenceMedium;
+        }
     }
 
     return *favoredPrefix;
@@ -4214,14 +2307,11 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     // - The preferred NAT64 prefix in Network Data was published
     //   by this BR.
     // - The preferred NAT64 prefix in Network Data is same as the
-    //   discovered infrastructure prefix.
-    //
-    // TODO: change to check RLOC16 to determine if the NAT64 prefix
-    // was published by this BR.
+    //   platform-provided prefix.
 
     shouldPublish =
         ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
-         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
+         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mPlatformPrefix));
 
     if (shouldPublish)
     {
@@ -4310,7 +2400,7 @@ void RoutingManager::Nat64PrefixManager::HandleTimer(void)
 
 void RoutingManager::Nat64PrefixManager::Discover(void)
 {
-    Error error = Get<RoutingManager>().mInfraIf.DiscoverNat64Prefix();
+    Error error = Get<InfraIf>().DiscoverNat64Prefix();
 
     if (error == kErrorNone)
     {
@@ -4326,12 +2416,26 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
 }
 
-void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &aPrefix)
+void RoutingManager::Nat64PrefixManager::HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix)
 {
-    mInfraIfPrefix = aPrefix;
+    mPlatformPrefix = aPrefix;
 
-    LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
+    LogInfo("Platform Discovered NAT64 prefix: %s",
+            mPlatformPrefix.IsValidNat64() ? mPlatformPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+}
+
+void RoutingManager::Nat64PrefixManager::HandleRxRaTrackerChanged(void)
+{
+    const Ip6::Prefix &favoredPrefix = Get<RxRaTracker>().GetFavoredNat64Prefix();
+
+    if (favoredPrefix != mRaTrackerPrefix)
+    {
+        mRaTrackerPrefix = favoredPrefix;
+        LogInfo("RA discovered NAT64 prefix: %s",
+                mRaTrackerPrefix.IsValidNat64() ? mRaTrackerPrefix.ToString().AsCString() : "none");
+        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+    }
 }
 
 Nat64::State RoutingManager::Nat64PrefixManager::GetState(void) const
@@ -4412,104 +2516,6 @@ void RoutingManager::TxRaInfo::CalculateHash(const RouterAdvert::RxMessage &aRaM
     sha256.Update(header);
     sha256.Update(aRaMessage.GetOptionStart(), aRaMessage.GetOptionLength());
     sha256.Finish(aHash);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// RsSender
-
-RoutingManager::RsSender::RsSender(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mTxCount(0)
-    , mTimer(aInstance)
-{
-}
-
-void RoutingManager::RsSender::Start(void)
-{
-    uint32_t delay;
-
-    VerifyOrExit(!IsInProgress());
-
-    delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
-
-    LogInfo("RsSender: Starting - will send first RS in %lu msec", ToUlong(delay));
-
-    mTxCount   = 0;
-    mStartTime = TimerMilli::GetNow();
-    mTimer.Start(delay);
-
-exit:
-    return;
-}
-
-void RoutingManager::RsSender::Stop(void) { mTimer.Stop(); }
-
-Error RoutingManager::RsSender::SendRs(void)
-{
-    Ip6::Address         destAddress;
-    RouterSolicitHeader  rsHdr;
-    TxMessage            rsMsg;
-    LinkLayerAddress     linkAddr;
-    InfraIf::Icmp6Packet packet;
-    Error                error;
-
-    SuccessOrExit(error = rsMsg.Append(rsHdr));
-
-    if (Get<InfraIf>().GetLinkLayerAddress(linkAddr) == kErrorNone)
-    {
-        SuccessOrExit(error = rsMsg.AppendLinkLayerOption(linkAddr, Option::kSourceLinkLayerAddr));
-    }
-
-    rsMsg.GetAsPacket(packet);
-    destAddress.SetToLinkLocalAllRoutersMulticast();
-
-    error = Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
-
-    if (error == kErrorNone)
-    {
-        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxSuccess++;
-    }
-    else
-    {
-        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxFailure++;
-    }
-exit:
-    return error;
-}
-
-void RoutingManager::RsSender::HandleTimer(void)
-{
-    Error    error;
-    uint32_t delay;
-
-    if (mTxCount >= kMaxTxCount)
-    {
-        LogInfo("RsSender: Finished sending RS msgs and waiting for RAs");
-        Get<RoutingManager>().HandleRsSenderFinished(mStartTime);
-        ExitNow();
-    }
-
-    error = SendRs();
-
-    if (error == kErrorNone)
-    {
-        mTxCount++;
-        delay = (mTxCount == kMaxTxCount) ? kWaitOnLastAttempt : kTxInterval;
-        LogInfo("RsSender: Sent RS %u/%u", mTxCount, kMaxTxCount);
-    }
-    else
-    {
-        LogCrit("RsSender: Failed to send RS %u/%u: %s", mTxCount + 1, kMaxTxCount, ErrorToString(error));
-
-        // Note that `mTxCount` is intentionally not incremented
-        // if the tx fails.
-        delay = kRetryDelay;
-    }
-
-    mTimer.Start(delay);
-
-exit:
-    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

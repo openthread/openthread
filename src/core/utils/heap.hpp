@@ -223,6 +223,7 @@ private:
     static constexpr uint16_t kSuperBlockOffset   = kAlignSize - sizeof(uint16_t);
     static constexpr uint16_t kFirstBlockOffset   = kAlignSize * 2 - sizeof(uint16_t);
     static constexpr uint16_t kGuardBlockOffset   = kMemorySize - sizeof(uint16_t);
+    static constexpr uint16_t kTotalSizeGuard     = kAlignSize + sizeof(Block);
 
     static_assert(kMemorySize % kAlignSize == 0, "The heap memory size is not aligned to kAlignSize!");
 

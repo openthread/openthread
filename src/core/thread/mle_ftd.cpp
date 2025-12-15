@@ -2213,38 +2213,39 @@ exit:
 
 void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
 {
-    Error           error = kErrorNone;
-    Mac::ExtAddress extAddr;
-    DeviceMode      mode;
-    RxChallenge     challenge;
-    LeaderData      leaderData;
-    uint32_t        timeout;
-    uint16_t        supervisionInterval;
-    Child          *child;
-    DeviceMode      oldMode;
-    TlvList         requestedTlvList;
-    TlvList         tlvList;
-    bool            childDidChange = false;
+    Error                   error = kErrorNone;
+    Mac::ExtAddress         extAddr;
+    DeviceMode              mode;
+    LeaderData              leaderData;
+    uint32_t                timeout;
+    uint16_t                supervisionInterval;
+    Child                  *child;
+    DeviceMode              oldMode;
+    TlvList                 requestedTlvList;
+    ChildUpdateResponseInfo info;
+    bool                    childDidChange = false;
 
     Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(!mDetacher.IsDetaching());
 
+    info.mDestination = aRxInfo.mMessageInfo.GetPeerAddr();
+
     SuccessOrExit(error = aRxInfo.mMessage.ReadModeTlv(mode));
 
-    switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
+    switch (aRxInfo.mMessage.ReadChallengeTlv(info.mChallenge))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kResponse);
+        info.mTlvList.Add(Tlv::kResponse);
         break;
     case kErrorNotFound:
-        challenge.Clear();
+        info.mChallenge.Clear();
         break;
     default:
         ExitNow(error = kErrorParse);
     }
 
-    tlvList.Add(Tlv::kSourceAddress);
+    info.mTlvList.Add(Tlv::kSourceAddress);
 
     extAddr.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
     child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
@@ -2255,8 +2256,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         // Status TLV (error).
         if (mode.IsRxOnWhenIdle())
         {
-            tlvList.Add(Tlv::kStatus);
-            SendChildUpdateResponseToChild(nullptr, aRxInfo.mMessageInfo, tlvList, challenge);
+            IgnoreError(SendChildUpdateRejectResponse(info));
         }
 
         ExitNow();
@@ -2273,22 +2273,22 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     oldMode = child->GetDeviceMode();
     child->SetDeviceMode(mode);
 
-    tlvList.Add(Tlv::kMode);
-    tlvList.Add(Tlv::kLinkMargin);
+    info.mTlvList.Add(Tlv::kMode);
+    info.mTlvList.Add(Tlv::kLinkMargin);
 
     // Parent MUST include Leader Data TLV in Child Update Response
-    tlvList.Add(Tlv::kLeaderData);
+    info.mTlvList.Add(Tlv::kLeaderData);
 
-    if (!challenge.IsEmpty())
+    if (!info.mChallenge.IsEmpty())
     {
-        tlvList.Add(Tlv::kMleFrameCounter);
-        tlvList.Add(Tlv::kLinkFrameCounter);
+        info.mTlvList.Add(Tlv::kMleFrameCounter);
+        info.mTlvList.Add(Tlv::kLinkFrameCounter);
     }
 
     switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kAddressRegistration);
+        info.mTlvList.Add(Tlv::kAddressRegistration);
         break;
     case kErrorNotFound:
         break;
@@ -2316,7 +2316,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
             childDidChange = true;
         }
 
-        tlvList.Add(Tlv::kTimeout);
+        info.mTlvList.Add(Tlv::kTimeout);
         break;
 
     case kErrorNotFound:
@@ -2329,7 +2329,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kSupervisionInterval);
+        info.mTlvList.Add(Tlv::kSupervisionInterval);
         break;
 
     case kErrorNotFound:
@@ -2346,7 +2346,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
     {
     case kErrorNone:
-        tlvList.AddElementsFrom(requestedTlvList);
+        info.mTlvList.AddElementsFrom(requestedTlvList);
         break;
     case kErrorNotFound:
         break;
@@ -2365,7 +2365,7 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         case kErrorNone:
             child->SetCslTimeout(cslTimeout);
             // MUST include CSL accuracy TLV when request includes CSL timeout
-            tlvList.Add(Tlv::kCslClockAccuracy);
+            info.mTlvList.Add(Tlv::kCslClockAccuracy);
             break;
         case kErrorNotFound:
             break;
@@ -2417,13 +2417,13 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
     // from a detached child trying to restore its link with its
     // parent which is indicated by the presence of Challenge TLV in
     // the message.
-    if (!challenge.IsEmpty())
+    if (!info.mChallenge.IsEmpty())
     {
         child->ClearLastRxFragmentTag();
     }
 #endif
 
-    SendChildUpdateResponseToChild(child, aRxInfo.mMessageInfo, tlvList, challenge);
+    SendChildUpdateResponseToChild(child, info);
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 
@@ -2488,7 +2488,7 @@ void Mle::HandleChildUpdateResponseOnParent(RxInfo &aRxInfo)
     switch (Tlv::Find<StatusTlv>(aRxInfo.mMessage, status))
     {
     case kErrorNone:
-        VerifyOrExit(status != StatusTlv::kError, RemoveNeighbor(*child));
+        VerifyOrExit(status != kStatusError, RemoveNeighbor(*child));
         break;
     case kErrorNotFound:
         break;
@@ -2696,9 +2696,9 @@ void Mle::SetSteeringData(const Mac::ExtAddress *aExtAddress)
     {
         Mac::ExtAddress joinerId;
 
-        mSteeringData.Init();
+        IgnoreError(mSteeringData.Init(MeshCoP::SteeringData::kMaxLength));
         MeshCoP::ComputeJoinerId(*aExtAddress, joinerId);
-        mSteeringData.UpdateBloomFilter(joinerId);
+        IgnoreError(mSteeringData.UpdateBloomFilter(joinerId));
     }
 }
 #endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
@@ -2817,8 +2817,8 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
     {
-        SuccessOrExit(
-            error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, Get<MeshCoP::BorderAgent>().GetUdpPort()));
+        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(
+                          *message, Get<MeshCoP::BorderAgent::Manager>().GetUdpPort()));
 
         discoveryResponseTlv.SetNativeCommissioner(true);
     }
@@ -3012,24 +3012,21 @@ exit:
     return error;
 }
 
-void Mle::SendChildUpdateResponseToChild(Child                  *aChild,
-                                         const Ip6::MessageInfo &aMessageInfo,
-                                         const TlvList          &aTlvList,
-                                         const RxChallenge      &aChallenge)
+void Mle::SendChildUpdateResponseToChild(Child *aChild, const ChildUpdateResponseInfo &aInfo)
 {
     Error      error = kErrorNone;
     TxMessage *message;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
 
-    for (uint8_t tlvType : aTlvList)
+    for (uint8_t tlvType : aInfo.mTlvList)
     {
         // Add all TLV types that do not depend on `child`
 
         switch (tlvType)
         {
         case Tlv::kStatus:
-            SuccessOrExit(error = message->AppendStatusTlv(StatusTlv::kError));
+            SuccessOrExit(error = message->AppendStatusTlv(kStatusError));
             break;
 
         case Tlv::kLeaderData:
@@ -3037,7 +3034,7 @@ void Mle::SendChildUpdateResponseToChild(Child                  *aChild,
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
+            SuccessOrExit(error = message->AppendResponseTlv(aInfo.mChallenge));
             break;
 
         case Tlv::kSourceAddress:
@@ -3099,15 +3096,15 @@ void Mle::SendChildUpdateResponseToChild(Child                  *aChild,
         }
     }
 
-    SuccessOrExit(error = message->SendTo(aMessageInfo.GetPeerAddr()));
+    SuccessOrExit(error = message->SendTo(aInfo.mDestination));
 
     if (aChild == nullptr)
     {
-        Log(kMessageSend, kTypeChildUpdateResponseOfChild, aMessageInfo.GetPeerAddr());
+        Log(kMessageSend, kTypeChildUpdateResponseOfChild, aInfo.mDestination);
     }
     else
     {
-        Log(kMessageSend, kTypeChildUpdateResponseOfChild, aMessageInfo.GetPeerAddr(), aChild->GetRloc16());
+        Log(kMessageSend, kTypeChildUpdateResponseOfChild, aInfo.mDestination, aChild->GetRloc16());
     }
 
 exit:
@@ -3333,15 +3330,6 @@ void Mle::SendAddressRelease(void)
 exit:
     FreeMessageOnError(message, error);
     LogSendError(kTypeAddressRelease, error);
-}
-
-void Mle::HandleAddressSolicitResponse(void                *aContext,
-                                       otMessage           *aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aResult)
-{
-    static_cast<Mle *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                               aResult);
 }
 
 void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)

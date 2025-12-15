@@ -94,7 +94,7 @@ template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::Mes
     Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+    Get<MeshCoP::BorderAgent::Manager>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
 #endif
 }
 
@@ -172,6 +172,13 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+        Case(kUriHistoryQuery, HistoryTracker::Server);
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+        Case(kUriHistoryAnswer, HistoryTracker::Client);
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
         Case(kUriMlr, BackboneRouter::Manager);
@@ -179,6 +186,9 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
         Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
 #endif
+#endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+        Case(kUriTcatEnable, MeshCoP::TcatAgent);
 #endif
 
     default:

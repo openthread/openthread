@@ -111,6 +111,7 @@ class Interpreter : public OutputImplementer, public Utils
     friend class Commissioner;
     friend class Dns;
     friend class Joiner;
+    friend class History;
     friend class LinkMetrics;
     friend class Mdns;
     friend class MeshDiag;
@@ -264,6 +265,7 @@ private:
     void OutputRouteData(uint8_t aIndentSize, const otNetworkDiagRouteData &aRouteData);
     void OutputEnhRoute(uint8_t aIndentSize, const otNetworkDiagEnhRoute &aEnhRoute);
     void OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLeaderData);
+    void OutputIp6AddrList(uint8_t aIndentSize, const otNetworkDiagIp6AddrList &aIp6Addrs);
     void OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters);
     void OutputNetworkDiagMleCounters(uint8_t aIndentSize, const otNetworkDiagMleCounters &aMleCounters);
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);

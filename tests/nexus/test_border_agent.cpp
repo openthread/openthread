@@ -37,7 +37,8 @@ namespace ot {
 namespace Nexus {
 
 using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
-using BorderAgent          = MeshCoP::BorderAgent;
+using Manager              = MeshCoP::BorderAgent::Manager;
+using BaTxtData            = MeshCoP::BorderAgent::TxtData;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
@@ -48,16 +49,16 @@ using TxtEntry             = Dns::TxtEntry;
 
 void TestBorderAgent(void)
 {
-    Core                         nexus;
-    Node                        &node0 = nexus.CreateNode();
-    Node                        &node1 = nexus.CreateNode();
-    Node                        &node2 = nexus.CreateNode();
-    Node                        &node3 = nexus.CreateNode();
-    Ip6::SockAddr                sockAddr;
-    Pskc                         pskc;
-    Coap::Message               *message;
-    BorderAgent::SessionIterator iter;
-    BorderAgent::SessionInfo     sessionInfo;
+    Core                     nexus;
+    Node                    &node0 = nexus.CreateNode();
+    Node                    &node1 = nexus.CreateNode();
+    Node                    &node2 = nexus.CreateNode();
+    Node                    &node3 = nexus.CreateNode();
+    Ip6::SockAddr            sockAddr;
+    Pskc                     pskc;
+    Coap::Message           *message;
+    Manager::SessionIterator iter;
+    Manager::SessionInfo     sessionInfo;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAgent");
@@ -87,27 +88,27 @@ void TestBorderAgent(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check Border Agent initial state");
 
-    VerifyOrQuit(node0.Get<BorderAgent>().IsEnabled());
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
+    VerifyOrQuit(node0.Get<Manager>().IsEnabled());
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check disabling and re-enabling of Border Agent");
 
-    node0.Get<BorderAgent>().SetEnabled(false);
-    VerifyOrQuit(!node0.Get<BorderAgent>().IsEnabled());
-    VerifyOrQuit(!node0.Get<BorderAgent>().IsRunning());
+    node0.Get<Manager>().SetEnabled(false);
+    VerifyOrQuit(!node0.Get<Manager>().IsEnabled());
+    VerifyOrQuit(!node0.Get<Manager>().IsRunning());
 
-    node0.Get<BorderAgent>().SetEnabled(true);
-    VerifyOrQuit(node0.Get<BorderAgent>().IsEnabled());
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
+    node0.Get<Manager>().SetEnabled(true);
+    VerifyOrQuit(node0.Get<Manager>().IsEnabled());
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
 
-    SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(node0.Get<BorderAgent>().GetUdpPort()));
+    SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(node0.Get<Manager>().GetUdpPort()));
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Establish a DTLS connection to Border Agent");
 
     sockAddr.SetAddress(node0.Get<Mle::Mle>().GetLinkLocalAddress());
-    sockAddr.SetPort(node0.Get<BorderAgent>().GetUdpPort());
+    sockAddr.SetPort(node0.Get<Manager>().GetUdpPort());
 
     node0.Get<KeyManager>().GetPskc(pskc);
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
@@ -119,7 +120,7 @@ void TestBorderAgent(void)
 
     VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcSecureSessionSuccesses == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcSecureSessionSuccesses == 1);
 
     iter.Init(node0.GetInstance());
     SuccessOrQuit(iter.GetNextSessionInfo(sessionInfo));
@@ -136,7 +137,7 @@ void TestBorderAgent(void)
     nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
 
     iter.Init(node0.GetInstance());
     VerifyOrQuit(iter.GetNextSessionInfo(sessionInfo) == kErrorNotFound);
@@ -151,7 +152,7 @@ void TestBorderAgent(void)
 
     VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcSecureSessionSuccesses == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcSecureSessionSuccesses == 2);
 
     iter.Init(node0.GetInstance());
     SuccessOrQuit(iter.GetNextSessionInfo(sessionInfo));
@@ -170,8 +171,8 @@ void TestBorderAgent(void)
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcSecureSessionSuccesses == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcCommissionerPetitions == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcSecureSessionSuccesses == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcCommissionerPetitions == 1);
 
     iter.Init(node0.GetInstance());
     SuccessOrQuit(iter.GetNextSessionInfo(sessionInfo));
@@ -209,7 +210,7 @@ void TestBorderAgent(void)
 
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
 
     iter.Init(node0.GetInstance());
@@ -230,8 +231,8 @@ void TestBorderAgent(void)
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcSecureSessionSuccesses == 3);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcCommissionerPetitions == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcSecureSessionSuccesses == 3);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcCommissionerPetitions == 2);
 
     iter.Init(node0.GetInstance());
     SuccessOrQuit(iter.GetNextSessionInfo(sessionInfo));
@@ -257,8 +258,8 @@ void TestBorderAgent(void)
     VerifyOrQuit(node2.Get<Tmf::SecureAgent>().IsConnected());
     VerifyOrQuit(node3.Get<Tmf::SecureAgent>().IsConnected());
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcSecureSessionSuccesses == 5);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mPskcCommissionerPetitions == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcSecureSessionSuccesses == 5);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcCommissionerPetitions == 2);
 
     iter.Init(node0.GetInstance());
 
@@ -289,7 +290,7 @@ void TestBorderAgent(void)
     nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
 
     VerifyOrQuit(node2.Get<Tmf::SecureAgent>().IsConnected());
     VerifyOrQuit(node3.Get<Tmf::SecureAgent>().IsConnected());
@@ -392,15 +393,15 @@ void TestBorderAgentEphemeralKey(void)
     static constexpr uint16_t kEphemeralKeySize = sizeof(kEphemeralKey) - 1;
     static constexpr uint16_t kUdpPort          = 49155;
 
-    Core                         nexus;
-    Node                        &node0 = nexus.CreateNode();
-    Node                        &node1 = nexus.CreateNode();
-    Node                        &node2 = nexus.CreateNode();
-    Ip6::SockAddr                sockAddr;
-    Ip6::SockAddr                baSockAddr;
-    Pskc                         pskc;
-    BorderAgent::SessionIterator iter;
-    BorderAgent::SessionInfo     sessionInfo;
+    Core                     nexus;
+    Node                    &node0 = nexus.CreateNode();
+    Node                    &node1 = nexus.CreateNode();
+    Node                    &node2 = nexus.CreateNode();
+    Ip6::SockAddr            sockAddr;
+    Ip6::SockAddr            baSockAddr;
+    Pskc                     pskc;
+    Manager::SessionIterator iter;
+    Manager::SessionInfo     sessionInfo;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAgentEphemeralKey");
@@ -426,14 +427,14 @@ void TestBorderAgentEphemeralKey(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check Border Agent ephemeral key counter's initial value");
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationTimeouts == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationMaxAttempts == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationClears == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidArgsErrors == 0);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidBaStateErrors == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationTimeouts == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationMaxAttempts == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationClears == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidArgsErrors == 0);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidBaStateErrors == 0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check Border Agent ephemeral key feature enabled");
@@ -443,7 +444,7 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().Start(kEphemeralKey, /* aTimeout */ 0, kUdpPort) ==
                  kErrorInvalidState);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidBaStateErrors == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidBaStateErrors == 1);
 
     node0.Get<EphemeralKeyManager>().SetEnabled(true);
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
@@ -463,7 +464,7 @@ void TestBorderAgentEphemeralKey(void)
 
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetUdpPort() == kUdpPort);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 1);
 
     SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(kUdpPort));
 
@@ -488,8 +489,8 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateConnected);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 1);
 
     VerifyOrQuit(sEphemeralKeyCallbackCalled);
 
@@ -506,9 +507,9 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
     VerifyOrQuit(sEphemeralKeyCallbackCalled);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
 
     nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
 
@@ -528,9 +529,9 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateConnected);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
 
     Log("  Check the ephemeral key timeout behavior");
 
@@ -541,10 +542,10 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
     VerifyOrQuit(sEphemeralKeyCallbackCalled);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationTimeouts == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationTimeouts == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Start using ephemeral key without any candidate connecting, check timeout");
@@ -561,10 +562,10 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
     VerifyOrQuit(sEphemeralKeyCallbackCalled);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 3);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationTimeouts == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 3);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationTimeouts == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check that ephemeral key use is stopped after max failed connection attempts");
@@ -599,11 +600,11 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
     VerifyOrQuit(sEphemeralKeyCallbackCalled);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 4);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationTimeouts == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationMaxAttempts == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 4);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationTimeouts == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationMaxAttempts == 1);
 
     node1.Get<Tmf::SecureAgent>().Close();
 
@@ -641,18 +642,18 @@ void TestBorderAgentEphemeralKey(void)
     nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 5);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 3);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationTimeouts == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationMaxAttempts == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationClears == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 5);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 3);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationTimeouts == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationMaxAttempts == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationClears == 1);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Check ephemeral key can be used along with PSKc");
 
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
-    SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(node0.Get<BorderAgent>().GetUdpPort()));
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
+    SuccessOrQuit(node0.Get<Ip6::Filter>().AddUnsecurePort(node0.Get<Manager>().GetUdpPort()));
 
     node0.Get<EphemeralKeyManager>().SetEnabled(true);
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
@@ -665,7 +666,7 @@ void TestBorderAgentEphemeralKey(void)
     Log("  Establish a secure session using PSKc (from node2)");
 
     baSockAddr.SetAddress(node0.Get<Mle::Mle>().GetLinkLocalAddress());
-    baSockAddr.SetPort(node0.Get<BorderAgent>().GetUdpPort());
+    baSockAddr.SetPort(node0.Get<Manager>().GetUdpPort());
 
     node0.Get<KeyManager>().GetPskc(pskc);
     SuccessOrQuit(node2.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
@@ -709,12 +710,12 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
     VerifyOrQuit(sEphemeralKeyCallbackCalled);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 6);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcSecureSessionSuccesses == 4);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationTimeouts == 2);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationDisconnects == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationMaxAttempts == 1);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcDeactivationClears == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 6);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcSecureSessionSuccesses == 4);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationTimeouts == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationDisconnects == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationMaxAttempts == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcDeactivationClears == 2);
 
     Log("  Check the BA session using PSKc is still connected");
 
@@ -747,13 +748,82 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().Start(kTooShortEphemeralKey, /* aTimeout */ 0, kUdpPort) ==
                  kErrorInvalidArgs);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 6);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidArgsErrors == 1);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 6);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidArgsErrors == 1);
 
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().Start(kTooLongEphemeralKey, /* aTimeout */ 0, kUdpPort) ==
                  kErrorInvalidArgs);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcActivations == 6);
-    VerifyOrQuit(node0.Get<BorderAgent>().GetCounters().mEpskcInvalidArgsErrors == 2);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcActivations == 6);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidArgsErrors == 2);
+}
+
+void TestBorderAgentEphemeralKeyTapGeneration(void)
+{
+    static constexpr uint16_t kMaxRounds = 20;
+
+    using Tap = EphemeralKeyManager::Tap;
+
+    Core    nexus;
+    Node   &node = nexus.CreateNode();
+    Tap     tap;
+    uint8_t index;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentEphemeralKeyTapGeneration");
+
+    nexus.AdvanceTime(0);
+
+    node.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    for (uint16_t round = 0; round < kMaxRounds; round++)
+    {
+        SuccessOrQuit(tap.GenerateRandom());
+        SuccessOrQuit(tap.Validate());
+        Log("Generated random TAP: %s", tap.mTap);
+
+        // Tamper with one of the digits and ensure checksum fails.
+
+        index = round % Tap::kLength;
+
+        tap.mTap[index]++;
+
+        if (tap.mTap[index] > '9')
+        {
+            tap.mTap[index] = '0';
+        }
+
+        VerifyOrQuit(tap.Validate() == kErrorFailed);
+    }
+
+    // CHeck valid TAP strings (Thread spec (1.4.1d3) - section  8.4.9.7)
+
+    SuccessOrQuit(StringCopy(tap.mTap, "903723159"));
+    SuccessOrQuit(tap.Validate());
+
+    SuccessOrQuit(StringCopy(tap.mTap, "746351983"));
+    SuccessOrQuit(tap.Validate());
+
+    // Check invalid TAP strings.
+
+    SuccessOrQuit(StringCopy(tap.mTap, ""));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "1234"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "12345678"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "123456789"));
+    VerifyOrQuit(tap.Validate() == kErrorFailed);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "a23456789"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "12345678A"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
 }
 
 EpskcEvent GetNewestEpskcEvent(Node &aNode)
@@ -1240,76 +1310,130 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     static constexpr uint32_t kThreadRoleLeader             = 3 << 9;
     static constexpr uint32_t kFlagEpskcSupported           = 1 << 11;
 
-    BorderAgent::Id id;
-    uint32_t        stateBitmap;
-    uint32_t        threadIfStatus;
-    uint32_t        threadRole;
+    MeshCoP::BorderAgent::Id id;
+    BaTxtData::Info          info;
+    const Mac::ExtAddress   &extAddress = aNode.Get<Mac::Mac>().GetExtAddress();
+    uint32_t                 stateBitmap;
+    uint32_t                 threadIfStatus;
+    uint32_t                 threadRole;
+    bool                     baIsRunning;
 
     aTxtData.ValidateFormat();
     aTxtData.LogAllTxtEntries();
 
-    aNode.Get<BorderAgent>().GetId(id);
+    SuccessOrQuit(info.ParseFrom(aTxtData.mData, aTxtData.mLength));
+
+    aNode.Get<Manager>().GetId(id);
     aTxtData.ValidateKey("id", id);
+    VerifyOrQuit(info.mHasAgentId);
+    VerifyOrQuit(id == AsCoreType(&info.mAgentId));
+
     aTxtData.ValidateKey("rv", "1");
+    VerifyOrQuit(info.mHasRecordVersion);
+    VerifyOrQuit(StringMatch(info.mRecordVersion, "1"));
+
     aTxtData.ValidateKey("tv", kThreadVersionString);
-    aTxtData.ValidateKey("xa", aNode.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(info.mHasThreadVersion);
+    VerifyOrQuit(StringMatch(info.mThreadVersion, kThreadVersionString));
+
+    aTxtData.ValidateKey("xa", extAddress);
+    VerifyOrQuit(info.mHasExtAddress);
+    VerifyOrQuit(AsCoreType(&info.mExtAddress) == extAddress);
 
     if (aNode.Get<MeshCoP::ActiveDatasetManager>().IsComplete())
     {
-        aTxtData.ValidateKey("nn", aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString());
-        aTxtData.ValidateKey("xp", aNode.Get<ExtendedPanIdManager>().GetExtPanId());
+        const char                   *networkName = aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString();
+        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<ExtendedPanIdManager>().GetExtPanId();
+
+        aTxtData.ValidateKey("nn", networkName);
+        VerifyOrQuit(info.mHasNetworkName);
+        VerifyOrQuit(StringMatch(info.mNetworkName.m8, networkName));
+
+        aTxtData.ValidateKey("xp", extPanId);
+        VerifyOrQuit(info.mHasExtendedPanId);
+        VerifyOrQuit(AsCoreType(&info.mExtendedPanId) == extPanId);
     }
 
     if (aNode.Get<Mle::Mle>().IsAttached())
     {
-        aTxtData.ValidateKey("pt", BigEndian::HostSwap32(aNode.Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
-        aTxtData.ValidateKey("at", aNode.Get<ActiveDatasetManager>().GetTimestamp());
+        uint32_t                  partitionId = aNode.Get<Mle::Mle>().GetLeaderData().GetPartitionId();
+        const MeshCoP::Timestamp &timestamp   = aNode.Get<ActiveDatasetManager>().GetTimestamp();
+        MeshCoP::Timestamp::Info  timestampInfo;
+
+        aTxtData.ValidateKey("pt", BigEndian::HostSwap32(partitionId));
+        VerifyOrQuit(info.mHasPartitionId);
+        VerifyOrQuit(info.mPartitionId == partitionId);
+
+        aTxtData.ValidateKey("at", timestamp);
+        timestamp.ConvertTo(timestampInfo);
+        VerifyOrQuit(info.mHasActiveTimestamp);
+        VerifyOrQuit(info.mActiveTimestamp.mSeconds == timestampInfo.mSeconds);
+        VerifyOrQuit(info.mActiveTimestamp.mTicks == timestampInfo.mTicks);
+        VerifyOrQuit(info.mActiveTimestamp.mAuthoritative == timestampInfo.mAuthoritative);
     }
     else
     {
         VerifyOrQuit(!aTxtData.ContainsKey("pt"));
+        VerifyOrQuit(!info.mHasPartitionId);
+
         VerifyOrQuit(!aTxtData.ContainsKey("at"));
+        VerifyOrQuit(!info.mHasActiveTimestamp);
     }
 
     stateBitmap = aTxtData.ReadUint32Key("sb");
+    VerifyOrQuit(info.mHasStateBitmap);
 
-    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == aNode.Get<BorderAgent>().IsRunning() ? kConnectionModePskc
-                                                                                             : kConnectionModeDisabled);
+    baIsRunning = aNode.Get<Manager>().IsRunning();
+    VerifyOrQuit((stateBitmap & kMaskConnectionMode) == (baIsRunning ? kConnectionModePskc : kConnectionModeDisabled));
+    VerifyOrQuit(info.mStateBitmap.mConnMode ==
+                 (baIsRunning ? BaTxtData::kConnModePskc : BaTxtData::kConnModeDisabled));
+
     switch (aNode.Get<Mle::Mle>().GetRole())
     {
     case Mle::DeviceRole::kRoleDisabled:
         threadIfStatus = kThreadIfStatusNotInitialized;
         threadRole     = kThreadRoleDisabledOrDetached;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfNotInit);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleDisabledDetached);
         break;
     case Mle::DeviceRole::kRoleDetached:
         threadIfStatus = kThreadIfStatusInitialized;
         threadRole     = kThreadRoleDisabledOrDetached;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfInit);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleDisabledDetached);
         break;
     case Mle::DeviceRole::kRoleChild:
         threadIfStatus = kThreadIfStatusActive;
         threadRole     = kThreadRoleChild;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfActive);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleChild);
         break;
     case Mle::DeviceRole::kRoleRouter:
         threadIfStatus = kThreadIfStatusActive;
         threadRole     = kThreadRoleRouter;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfActive);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleRouter);
         break;
     case Mle::DeviceRole::kRoleLeader:
         threadIfStatus = kThreadIfStatusActive;
         threadRole     = kThreadRoleLeader;
+        VerifyOrQuit(info.mStateBitmap.mThreadIfState == BaTxtData::kThreadIfActive);
+        VerifyOrQuit(info.mStateBitmap.mThreadRole == BaTxtData::kRoleLeader);
         break;
     }
 
     VerifyOrQuit((stateBitmap & kMaskThreadIfStatus) == threadIfStatus);
     VerifyOrQuit((stateBitmap & kMaskThreadRole) == threadRole);
 
-    if (aNode.Get<BorderAgent>().Get<EphemeralKeyManager>().GetState() !=
-        BorderAgent::EphemeralKeyManager::kStateDisabled)
+    if (aNode.Get<EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
     {
         VerifyOrQuit(stateBitmap & kFlagEpskcSupported);
+        VerifyOrQuit(info.mStateBitmap.mEpskcSupported);
     }
     else
     {
         VerifyOrQuit(!(stateBitmap & kFlagEpskcSupported));
+        VerifyOrQuit(!info.mStateBitmap.mEpskcSupported);
     }
 }
 
@@ -1324,10 +1448,10 @@ void HandleServiceChanged(void *aContext) // Callback used in `TestBorderAgentTx
 
 void ReadAndValidateMeshCoPTxtData(Node &aNode)
 {
-    BorderAgent::ServiceTxtData serviceTxtData;
-    TxtData                     txtData;
+    BaTxtData::ServiceTxtData serviceTxtData;
+    TxtData                   txtData;
 
-    SuccessOrQuit(aNode.Get<BorderAgent>().PrepareServiceTxtData(serviceTxtData));
+    SuccessOrQuit(aNode.Get<BaTxtData>().Prepare(serviceTxtData));
     txtData.Init(serviceTxtData.mData, serviceTxtData.mLength);
 
     ValidateMeshCoPTxtData(txtData, aNode);
@@ -1335,10 +1459,10 @@ void ReadAndValidateMeshCoPTxtData(Node &aNode)
 
 void TestBorderAgentTxtDataCallback(void)
 {
-    Core            nexus;
-    Node           &node0           = nexus.CreateNode();
-    bool            callbackInvoked = false;
-    BorderAgent::Id newId;
+    Core                     nexus;
+    Node                    &node0           = nexus.CreateNode();
+    bool                     callbackInvoked = false;
+    MeshCoP::BorderAgent::Id newId;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAgentTxtDataCallback");
@@ -1348,15 +1472,15 @@ void TestBorderAgentTxtDataCallback(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Set MeshCoP service change callback. Will get initial values.
     Log("Set MeshCoP service change callback and check initial values");
-    node0.Get<BorderAgent>().SetServiceChangedCallback(HandleServiceChanged, &callbackInvoked);
+    node0.Get<BaTxtData>().SetChangedCallback(HandleServiceChanged, &callbackInvoked);
     nexus.AdvanceTime(1);
 
     // Check the initial TXT entries
     ReadAndValidateMeshCoPTxtData(node0);
 
     // Check the Border Agent state
-    VerifyOrQuit(!node0.Get<BorderAgent>().IsRunning());
-    VerifyOrQuit(node0.Get<BorderAgent>().GetUdpPort() == 0);
+    VerifyOrQuit(!node0.Get<Manager>().IsRunning());
+    VerifyOrQuit(node0.Get<Manager>().GetUdpPort() == 0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Join Thread network and check updated values and states.
@@ -1368,8 +1492,8 @@ void TestBorderAgentTxtDataCallback(void)
     VerifyOrQuit(callbackInvoked);
     ReadAndValidateMeshCoPTxtData(node0);
 
-    VerifyOrQuit(node0.Get<BorderAgent>().IsRunning());
-    VerifyOrQuit(node0.Get<BorderAgent>().GetUdpPort() != 0);
+    VerifyOrQuit(node0.Get<Manager>().IsRunning());
+    VerifyOrQuit(node0.Get<Manager>().GetUdpPort() != 0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1378,7 +1502,7 @@ void TestBorderAgentTxtDataCallback(void)
     newId.GenerateRandom();
 
     callbackInvoked = false;
-    node0.Get<BorderAgent>().SetId(newId);
+    node0.Get<Manager>().SetId(newId);
 
     nexus.AdvanceTime(1);
     ReadAndValidateMeshCoPTxtData(node0);
@@ -1387,7 +1511,7 @@ void TestBorderAgentTxtDataCallback(void)
     // correctly detected and does not trigger the callback.
 
     callbackInvoked = false;
-    node0.Get<BorderAgent>().SetId(newId);
+    node0.Get<Manager>().SetId(newId);
     nexus.AdvanceTime(1);
     VerifyOrQuit(!callbackInvoked);
 
@@ -1527,7 +1651,7 @@ void TestBorderAgentServiceRegistration(void)
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Disable Border Agent function on node1
-    node1.Get<MeshCoP::BorderAgent>().SetEnabled(false);
+    node1.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Enable mDNS
@@ -1543,7 +1667,7 @@ void TestBorderAgentServiceRegistration(void)
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent>().IsEnabled());
+    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent::Manager>().IsEnabled());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate the registered mDNS MeshCop service by Border Agent");
@@ -1562,7 +1686,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
     VerifyOrQuit(StringStartsWith(service.mServiceInstance, kDefaultServiceBaseName));
     VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
-    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
     VerifyOrQuit(service.mSubTypeLabelsLength == 0);
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
@@ -1608,7 +1732,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(sSrvOutcomes.GetLength() == 1);
     VerifyOrQuit(StringStartsWith(sSrvOutcomes[0].mHostName, "ot"));
     VerifyOrQuit(sSrvOutcomes[0].mTtl > 0);
-    VerifyOrQuit(sSrvOutcomes[0].mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(sSrvOutcomes[0].mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
 
     VerifyOrQuit(sTxtOutcomes.GetLength() == 1);
     VerifyOrQuit(sTxtOutcomes[0].mTtl > 0);
@@ -1658,7 +1782,7 @@ void TestBorderAgentServiceRegistration(void)
 
         if (StringMatch(service.mServiceType, "_meshcop._udp"))
         {
-            VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+            VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
             ValidateRegisteredServiceData(service, node0);
         }
         else if (StringMatch(service.mServiceType, "_meshcop-e._udp"))
@@ -1701,7 +1825,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(StringStartsWith(service.mServiceInstance, kDefaultServiceBaseName));
     VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
     VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
@@ -1715,7 +1839,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Change the base service name and validate the new service");
 
-    SuccessOrQuit(node0.Get<MeshCoP::BorderAgent>().SetServiceBaseName("OpenThreadAgent"));
+    SuccessOrQuit(node0.Get<MeshCoP::BorderAgent::Manager>().SetServiceBaseName("OpenThreadAgent"));
 
     nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
 
@@ -1733,7 +1857,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
     VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
     VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
@@ -1768,8 +1892,8 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable Border Agent and validate that registered service is removed");
 
-    node0.Get<MeshCoP::BorderAgent>().SetEnabled(false);
-    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent>().IsEnabled());
+    node0.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
+    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent::Manager>().IsEnabled());
 
     nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
 
@@ -1787,10 +1911,30 @@ void TestBorderAgentServiceRegistration(void)
     sBrowseOutcomes.Clear();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Change the base service name while agent is disabled and validate no service is registered");
+
+    SuccessOrQuit(node0.Get<MeshCoP::BorderAgent::Manager>().SetServiceBaseName("NewName"));
+
+    VerifyOrQuit(!node0.Get<MeshCoP::BorderAgent::Manager>().IsEnabled());
+
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    VerifyOrQuit(sBrowseOutcomes.IsEmpty());
+
+    SuccessOrQuit(node0.Get<MeshCoP::BorderAgent::Manager>().SetServiceBaseName("OpenThreadAgent"));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable Border Agent and validate that service is registered again");
 
-    node0.Get<MeshCoP::BorderAgent>().SetEnabled(true);
-    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent>().IsEnabled());
+    node0.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(true);
+    VerifyOrQuit(node0.Get<MeshCoP::BorderAgent::Manager>().IsEnabled());
 
     nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
 
@@ -1808,7 +1952,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
     VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
     VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
@@ -1829,7 +1973,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Set vendor TXT data and validate that it is included in the registered mDNS service");
 
-    node0.Get<BorderAgent>().SetVendorTxtData(kVendorTxtData, sizeof(kVendorTxtData));
+    node0.Get<BaTxtData>().SetVendorData(kVendorTxtData, sizeof(kVendorTxtData));
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
@@ -1846,7 +1990,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
     VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
     VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
@@ -1867,7 +2011,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Clear vendor TXT data and validate that the registered mDNS service is updated accordingly");
 
-    node0.Get<BorderAgent>().SetVendorTxtData(nullptr, 0);
+    node0.Get<BaTxtData>().SetVendorData(nullptr, 0);
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
@@ -1884,7 +2028,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
     VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
     VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent>().GetUdpPort());
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
@@ -1904,6 +2048,7 @@ int main(void)
 {
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
+    ot::Nexus::TestBorderAgentEphemeralKeyTapGeneration();
     ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();

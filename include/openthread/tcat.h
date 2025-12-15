@@ -73,6 +73,7 @@ extern "C" {
 #define OT_TCAT_OPCODE 0x2                     ///< TCAT Advertisement Operation Code.
 #define OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE 5 ///< TCAT max size of any type of advertised Device ID.
 #define OT_TCAT_MAX_DEVICEID_SIZE 64           ///< TCAT max size of device ID.
+#define OT_TCAT_ENABLE_MAX 600                 ///< TCAT_ENABLE_MAX, default max TMF TCAT enable time,  in seconds.
 
 /**
  * Represents TCAT status code.

@@ -54,6 +54,25 @@ void SubMac::CslInit(void)
     mCslTimer.Stop();
 }
 
+void SubMac::RestartCslTimerAfterSyncUpdate(void)
+{
+    // Only applies for the case where radio supports receive timing.
+    if (RadioSupportsReceiveTiming() && mCslTimer.IsRunning())
+    {
+        uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
+
+        mCslTimer.Stop();
+
+        // Rewind sample times by one period. HandleCslTimer() will add this
+        // period back, effectively re-evaluating the current CSL period's
+        // schedule using the updated mCslLastSync.
+        mCslSampleTimeRadio -= periodUs;
+        mCslSampleTimeLocal -= periodUs;
+
+        HandleCslTimer();
+    }
+}
+
 void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
 {
     // Actual synchronization timestamp should be from the sent frame instead of the current time.
@@ -62,6 +81,8 @@ void SubMac::UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame)
     {
         mCslLastSync = TimeMicro(GetLocalTime());
     }
+
+    RestartCslTimerAfterSyncUpdate();
 }
 
 void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
@@ -81,6 +102,8 @@ void SubMac::UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError)
         mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
 #endif
     }
+
+    RestartCslTimerAfterSyncUpdate();
 
 exit:
     return;
@@ -108,6 +131,8 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     {
         mCslSampleTimeRadio = static_cast<uint32_t>(Get<Radio>().GetNow());
         mCslSampleTimeLocal = TimerMicro::GetNow();
+        // Update CSL sync time whenever CSL parameters are re-initialized.
+        mCslLastSync = mCslSampleTimeLocal;
 
         HandleCslTimer();
     }
@@ -234,7 +259,6 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
      *    |           |            |           |           |            |            |                        |
      * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
      * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
-     *
      */
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
     uint32_t curTime, elapsed, semiWindow;

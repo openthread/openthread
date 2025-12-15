@@ -75,6 +75,7 @@ enum Uri : uint8_t
     kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
     kUriPendingSet,             ///< MGMT_PENDING_SET ("c/ps")
     kUriRelayRx,                ///< Relay RX ("c/rx")
+    kUriTcatEnable,             ///< TCAT Enable ("c/te")
     kUriRelayTx,                ///< Relay TX ("c/tx")
     kUriProxyRx,                ///< Proxy RX ("c/ur")
     kUriProxyTx,                ///< Proxy TX ("c/ut")
@@ -82,6 +83,8 @@ enum Uri : uint8_t
     kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
     kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
     kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,          ///< History Answer ("h/an")
+    kUriHistoryQuery,           ///< History Query ("h/qy")
     kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
     kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
     kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
@@ -146,6 +149,7 @@ template <> const char *UriToString<kUriPendingGet>(void);
 template <> const char *UriToString<kUriPanIdQuery>(void);
 template <> const char *UriToString<kUriPendingSet>(void);
 template <> const char *UriToString<kUriRelayRx>(void);
+template <> const char *UriToString<kUriTcatEnable>(void);
 template <> const char *UriToString<kUriRelayTx>(void);
 template <> const char *UriToString<kUriProxyRx>(void);
 template <> const char *UriToString<kUriProxyTx>(void);

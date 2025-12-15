@@ -41,6 +41,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/multi_ail_detection.h> // IWYU pragma: keep
 #include <openthread/netdata.h>
 
 #ifdef __cplusplus
@@ -132,6 +133,20 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * Represents an entry from the discovered NAT64 prefix table.
+ *
+ * The entries in the discovered table track the NAT64 Prefix Options in the received Router Advertisement messages from
+ * other routers on the infrastructure link.
+ */
+typedef struct otBorderRoutingNat64PrefixEntry
+{
+    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this NAT64 prefix.
+    otIp6Prefix                mPrefix;              ///< The discovered IPv6 prefix.
+    uint32_t                   mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
+    uint32_t                   mLifetime;            ///< Lifetime of the prefix (in seconds).
+} otBorderRoutingNat64PrefixEntry;
+
+/**
  * Represents a discovered Recursive DNS Server (RDNSS) address entry.
  *
  * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from
@@ -191,10 +206,10 @@ typedef enum
  */
 typedef enum
 {
-    OT_BORDER_ROUTING_STATE_UNINITIALIZED, ///< Routing Manager is uninitialized.
-    OT_BORDER_ROUTING_STATE_DISABLED,      ///< Routing Manager is initialized but disabled.
-    OT_BORDER_ROUTING_STATE_STOPPED,       ///< Routing Manager in initialized and enabled but currently stopped.
-    OT_BORDER_ROUTING_STATE_RUNNING,       ///< Routing Manager is initialized, enabled, and running.
+    OT_BORDER_ROUTING_STATE_UNINITIALIZED = 0, ///< Routing Manager is uninitialized.
+    OT_BORDER_ROUTING_STATE_DISABLED      = 1, ///< Routing Manager is initialized but disabled.
+    OT_BORDER_ROUTING_STATE_STOPPED       = 2, ///< Routing Manager in initialized and enabled but currently stopped.
+    OT_BORDER_ROUTING_STATE_RUNNING       = 3, ///< Routing Manager is initialized, enabled, and running.
 } otBorderRoutingState;
 
 /**
@@ -211,19 +226,18 @@ typedef enum
 /**
  * Initializes the Border Routing Manager on given infrastructure interface.
  *
- * @note  This method MUST be called before any other otBorderRouting* APIs.
- * @note  This method can be re-called to change the infrastructure interface, but the Border Routing Manager should be
- *        disabled first, and re-enabled after.
+ * This function MUST be called before any other otBorderRouting* APIs.
+ *
+ * This function can also be used to re-initialize and switch the infrastructure interface index to a new one.
+ * Switching the interface index will trigger all components running on the previous interface (Border Routing,
+ * mDNS, etc) to be stopped (as if the previous if-index is no longer running) before restarting operations on the
+ * new interface.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex      The infrastructure interface index.
  * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
- *                                interface is running.
  *
  * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is in a state other than disabled or uninitialized.
- * @retval  OT_ERROR_INVALID_ARGS   The index of the infrastructure interface is not valid.
- * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
  *
  * @sa otPlatInfraIfStateChanged.
  * @sa otBorderRoutingSetEnabled.
@@ -629,68 +643,6 @@ otError otBorderRoutingGetNextPeerBrEntry(otInstance                           *
 uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge);
 
 /**
- * A callback function pointer called when the multi-AIL detection state changes.
- *
- * This callback function is invoked by the OpenThread stack whenever the Routing Manager determines a change in
- * whether Border Routers on the Thread mesh might be connected to different Adjacent Infrastructure Links (AILs).
- *
- * See `otBorderRoutingIsMultiAilDetected()` for more details.
- *
- * @param[in] aDetected   `TRUE` if multiple AILs are now detected, `FALSE` otherwise.
- * @param[in] aContext    A pointer to arbitrary context information provided when the callback was registered
- *                        using `otBorderRoutingSetMultiAilCallback()`.
- */
-typedef void (*otBorderRoutingMultiAilCallback)(bool aDetected, void *aContext);
-
-/**
- * Gets the current detected state regarding multiple Adjacent Infrastructure Links (AILs).
- *
- * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE`.
- *
- * It returns whether the Routing Manager currently believes that Border Routers (BRs) on the Thread mesh may be
- * connected to different AILs.
- *
- * The detection mechanism operates as follows: The Routing Manager monitors the number of peer BRs listed in the
- * Thread Network Data (see `otBorderRoutingCountPeerBrs()`) and compares this count with the number of peer BRs
- * discovered by processing received Router Advertisement (RA) messages on its connected AIL. If the count derived from
- * Network Data consistently exceeds the count derived from RAs for a detection duration of 10 minutes, it concludes
- * that BRs are likely connected to different AILs. To clear state a shorter window of 1 minute is used.
- *
- * The detection window of 10 minutes helps to avoid false positives due to transient changes. The Routing Manager uses
- * 200 seconds for reachability checks of peer BRs (sending Neighbor Solicitation). Stale Network Data entries are
- * also expected to age out within a few minutes. So a 10-minute detection time accommodates both cases.
- *
- * While generally effective, this detection mechanism may get less reliable in scenarios with a large number of
- * BRs, particularly exceeding ten. This is related to the "Network Data Publisher" mechanism, where BRs might refrain
- * from publishing their external route information in the Network Data to conserve its limited size, potentially
- * skewing the Network Data BR count.
- *
- * @param[in] aInstance  A pointer to the OpenThread instance.
- *
- * @retval TRUE   Has detected that BRs are likely connected to multiple AILs.
- * @retval FALSE  Has not detected (or no longer detects) that BRs are connected to multiple AILs.
- */
-bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance);
-
-/**
- * Sets a callback function to be notified of changes in the multi-AIL detection state.
- *
- * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE`.
- *
- * Subsequent calls to this function will overwrite the previous callback setting. Using `NULL` for @p aCallback will
- * disable the callback.
- *
- * @param[in] aInstance  A pointer to the OpenThread instance.
- * @param[in] aCallback  A pointer to the function (`otBorderRoutingMultiAilCallback`) to be called
- *                       upon state changes, or `NULL` to unregister a previously set callback.
- * @param[in] aContext   A pointer to application-specific context that will be passed back
- *                       in the `aCallback` function. This can be `NULL` if no context is needed.
- */
-void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
-                                        otBorderRoutingMultiAilCallback aCallback,
-                                        void                           *aContext);
-
-/**
  * Iterates over the Recursive DNS Server (RDNSS) address entries.
  *
  * Address entries are discovered by processing the RDNSS options within received Router Advertisement messages from
@@ -710,6 +662,24 @@ void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstanc
 otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
                                              otBorderRoutingPrefixTableIterator *aIterator,
                                              otBorderRoutingRdnssAddrEntry      *aEntry);
+
+/**
+ * Iterates through the RA-discovered NAT64 prefix table.
+ *
+ * Requires `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE`.
+ *
+ * @param[in]     aInstance    The OpenThread instance.
+ * @param[in,out] aIterator    A pointer to the iterator.
+ * @param[out]    aEntry       A pointer to the entry to populate.
+ *
+ * @retval OT_ERROR_NONE          Iterated to the next NAT64 prefix entry, @p aEntry and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND     No more entries in the table.
+ * @retval OT_ERROR_INVALID_ARGS  The iterator is invalid (used to iterate over other entry types).
+ *
+ */
+otError otBorderRoutingGetNextNat64PrefixEntry(otInstance                         *aInstance,
+                                               otBorderRoutingPrefixTableIterator *aIterator,
+                                               otBorderRoutingNat64PrefixEntry    *aEntry);
 
 /**
  * Callback function pointer to notify of changes to discovered Recursive DNS Server (RDNSS) address entries.
@@ -740,7 +710,6 @@ typedef void (*otBorderRoutingRdnssAddrCallback)(void *aContext);
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aCallback   The callback function pointer. Can be `NULL` if no callback is required.
  * @param[in] aConext     An arbitrary context information (used when invoking the callback).
- *
  */
 void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
                                          otBorderRoutingRdnssAddrCallback aCallback,

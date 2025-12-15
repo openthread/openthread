@@ -318,6 +318,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     case Ip6::Icmp::Header::kTypeRouterSolicit:
         Log("  Router Solicit message");
         sRsEmitted = true;
+        otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
     case Ip6::Icmp::Header::kTypeRouterAdvert:
@@ -612,6 +613,18 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
             break;
         }
 
+        case Ip6::Nd::Option::kTypeNat64Prefix:
+        {
+            const Ip6::Nd::Nat64PrefixOption &nat64Prefix = static_cast<const Ip6::Nd::Nat64PrefixOption &>(option);
+            Ip6::Prefix                       prefix;
+
+            VerifyOrQuit(nat64Prefix.IsValid());
+            SuccessOrQuit(nat64Prefix.GetPrefix(prefix));
+
+            Log("     NAT64 Prefix - %s, lifetime:%u", prefix.ToString().AsCString(), nat64Prefix.GetLifetime());
+            break;
+        }
+
         case Ip6::Nd::Option::kTypeRecursiveDnsServer:
         {
             const Ip6::Nd::RecursiveDnsServerOption &rdnss =
@@ -879,6 +892,18 @@ struct RaFlags : public Clearable<RaFlags>
     bool mSnacRouterFlag;
 };
 
+struct Pref64
+{
+    Pref64(const Ip6::Prefix &aPrefix, uint32_t aLifetime)
+        : mPrefix(aPrefix)
+        , mLifetime(aLifetime)
+    {
+    }
+
+    const Ip6::Prefix &mPrefix;
+    uint32_t           mLifetime;
+};
+
 struct Rdnss
 {
     template <uint16_t kNumAddrs> static Rdnss Create(uint32_t aLifetime, const Ip6::Address (&aAddresses)[kNumAddrs])
@@ -905,6 +930,8 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
                        uint16_t                          aNumRios,
                        const Rdnss                      *aRdnsses,
                        uint16_t                          aNumRdnsses,
+                       const Pref64                     *aPref64s,
+                       uint16_t                          aNumPref64s,
                        const DefaultRoute               &aDefaultRoute,
                        const RaFlags                    &aRaFlags)
 {
@@ -941,6 +968,13 @@ void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
         SuccessOrQuit(aRaMsg.AppendRouteInfoOption(aRios->mPrefix, aRios->mValidLifetime, aRios->mPreference));
     }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    for (; aNumPref64s > 0; aPref64s++, aNumPref64s--)
+    {
+        SuccessOrQuit(aRaMsg.AppendNat64PrefixOption(aPref64s->mPrefix, aPref64s->mLifetime));
+    }
+#endif
+
     for (; aNumRdnsses > 0; aRdnsses++, aNumRdnsses--)
     {
         SuccessOrQuit(
@@ -955,13 +989,16 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       uint16_t            aNumRios,
                       const Rdnss        *aRdnsses,
                       uint16_t            aNumRdnsses,
+                      const Pref64       *aPref64s,
+                      uint16_t            aNumPref64s,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags)
 {
     Ip6::Nd::RouterAdvert::TxMessage raMsg;
     Icmp6Packet                      packet;
 
-    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aRdnsses, aNumRdnsses, aDefaultRoute, aRaFlags);
+    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aRdnsses, aNumRdnsses, aPref64s, aNumPref64s,
+                      aDefaultRoute, aRaFlags);
     raMsg.GetAsPacket(packet);
 
     SendRouterAdvert(aRouterAddress, packet);
@@ -976,7 +1013,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, aPios, kNumPios, aRios, kNumRios, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, aPios, kNumPios, aRios, kNumRios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 template <uint16_t kNumPios>
@@ -985,7 +1022,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, aPios, kNumPios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, aPios, kNumPios, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 template <uint16_t kNumRios>
@@ -994,19 +1031,19 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute = DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
                       const RaFlags      &aRaFlags      = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, aRios, kNumRios, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, aRios, kNumRios, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Rdnss &aRdnss)
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, &aRdnss, 1,
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, &aRdnss, 1, nullptr, 0,
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
 template <uint16_t kNumRdnsses>
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Rdnss (&aRdnsses)[kNumRdnsses])
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aRdnsses, kNumRdnsses,
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aRdnsses, kNumRdnsses, nullptr, 0,
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
@@ -1014,13 +1051,19 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags = RaFlags())
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0, aDefaultRoute, aRaFlags);
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const RaFlags &aRaFlags)
 {
-    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0,
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0,
                      DefaultRoute(0, NetworkData::kRoutePreferenceMedium), aRaFlags);
+}
+
+void SendRouterAdvert(const Ip6::Address &aRouterAddress, const Pref64 &aPref64)
+{
+    SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, nullptr, 0, &aPref64, 1,
+                     DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
 }
 
 struct OnLinkPrefix : public Pio
@@ -1073,16 +1116,16 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
                        const RoutePrefix  *aRoutePrefixes,
                        uint16_t            aNumRoutePrefixes)
 {
-    BorderRouter::RoutingManager::PrefixTableIterator iter;
-    BorderRouter::RoutingManager::PrefixTableEntry    entry;
-    uint16_t                                          onLinkPrefixCount = 0;
-    uint16_t                                          routePrefixCount  = 0;
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::PrefixTableEntry    entry;
+    uint16_t                          onLinkPrefixCount = 0;
+    uint16_t                          routePrefixCount  = 0;
 
     Log("VerifyPrefixTable()");
 
-    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
 
-    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(iter, entry) == kErrorNone)
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextPrefixTableEntry(iter, entry) == kErrorNone)
     {
         bool didFind = false;
 
@@ -1141,6 +1184,69 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
 
 void VerifyPrefixTableIsEmpty(void) { VerifyPrefixTable(nullptr, 0, nullptr, 0); }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+struct Nat64Prefix
+{
+    Nat64Prefix(const Ip6::Prefix &aPrefix, uint32_t aLifetime, const Ip6::Address &aRouterAddress)
+        : mPrefix(aPrefix)
+        , mLifetime(aLifetime)
+        , mRouterAddress(aRouterAddress)
+    {
+    }
+
+    const Ip6::Prefix  &mPrefix;
+    uint32_t            mLifetime;
+    const Ip6::Address &mRouterAddress;
+};
+
+template <uint16_t kNumNat64Prefixes>
+void VerifyNat64PrefixTable(const Nat64Prefix (&aNat64Prefixes)[kNumNat64Prefixes])
+{
+    VerifyNat64PrefixTable(aNat64Prefixes, kNumNat64Prefixes);
+}
+
+void VerifyNat64PrefixTable(const Nat64Prefix *aNat64Prefixes, uint16_t aNumNat64Prefixes)
+{
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::Nat64PrefixEntry    entry;
+    uint16_t                          count = 0;
+
+    Log("VerifyNat64PrefixTable()");
+
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
+
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextNat64PrefixEntry(iter, entry) == kErrorNone)
+    {
+        bool didFind = false;
+
+        Log("   nat64 prefix:%s, lifetime:%u, router:%s, age:%u", AsCoreType(&entry.mPrefix).ToString().AsCString(),
+            entry.mLifetime, AsCoreType(&entry.mRouter.mAddress).ToString().AsCString(),
+            entry.mMsecSinceLastUpdate / 1000);
+
+        count++;
+
+        for (uint16_t index = 0; index < aNumNat64Prefixes; index++)
+        {
+            const Nat64Prefix &nat64Prefix = aNat64Prefixes[index];
+
+            if ((nat64Prefix.mPrefix == AsCoreType(&entry.mPrefix)) &&
+                (AsCoreType(&entry.mRouter.mAddress) == nat64Prefix.mRouterAddress))
+            {
+                VerifyOrQuit(entry.mLifetime == nat64Prefix.mLifetime);
+                didFind = true;
+                break;
+            }
+        }
+
+        VerifyOrQuit(didFind);
+    }
+
+    VerifyOrQuit(count == aNumNat64Prefixes);
+}
+
+void VerifyNat64PrefixTableIsEmpty(void) { VerifyNat64PrefixTable(nullptr, 0); }
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 struct RdnssAddress
 {
     RdnssAddress(const Ip6::Address &aAddress, uint32_t aLifetime, const Ip6::Address &aRouterAddress)
@@ -1162,15 +1268,15 @@ template <uint16_t kNumAddrs> void VerifyRdnssAddressTable(const RdnssAddress (&
 
 void VerifyRdnssAddressTable(const RdnssAddress *aRdnssAddresses, uint16_t aNumAddrs)
 {
-    BorderRouter::RoutingManager::PrefixTableIterator iter;
-    BorderRouter::RoutingManager::RdnssAddrEntry      entry;
-    uint16_t                                          count = 0;
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::RdnssAddrEntry      entry;
+    uint16_t                          count = 0;
 
     Log("VerifyRdnssAddressTable()");
 
-    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
 
-    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextRdnssAddrEntry(iter, entry) == kErrorNone)
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRdnssAddrEntry(iter, entry) == kErrorNone)
     {
         bool didFind = false;
 
@@ -1229,15 +1335,15 @@ template <uint16_t kNumRouters> void VerifyDiscoveredRouters(const InfraRouter (
 
 void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
 {
-    BorderRouter::RoutingManager::PrefixTableIterator iter;
-    BorderRouter::RoutingManager::RouterEntry         entry;
-    uint16_t                                          count = 0;
+    BorderRouter::PrefixTableIterator iter;
+    BorderRouter::RouterEntry         entry;
+    uint16_t                          count = 0;
 
     Log("VerifyDiscoveredRouters()");
 
-    sInstance->Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(iter);
+    sInstance->Get<BorderRouter::RxRaTracker>().InitIterator(iter);
 
-    while (sInstance->Get<BorderRouter::RoutingManager>().GetNextRouterEntry(iter, entry) == kErrorNone)
+    while (sInstance->Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(iter, entry) == kErrorNone)
     {
         bool didFind = false;
 
@@ -1310,6 +1416,18 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    // We explicitly disable the multi-AIL detector to prevent
+    // interference with the tests. The detector enables
+    // `RxRaTracker` and keeps it enabled even when Border Routing is
+    // disabled, which keeps prefix entries in the heap and can
+    // invalidate the heap allocation checks. It may also mess up the
+    // expected timing of RS (Router Solicitation) messages (starting
+    // the `RxRaTracker` early).
+    otBorderRoutingSetMultiAilDetectionEnabled(sInstance, false);
+#endif
+
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, aEnablBorderRouting));
 
     // Reset all test flags
@@ -4506,10 +4624,16 @@ void TestAutoEnableOfSrpServer(void)
 void TestNat64PrefixSelection(void)
 {
     Ip6::Prefix                     localNat64;
-    Ip6::Prefix                     ailNat64 = PrefixFromString("2000:0:0:1:0:0::", 96);
     Ip6::Prefix                     localOmr;
-    Ip6::Prefix                     omrPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    Ip6::Prefix                     omrPrefix             = PrefixFromString("2000:0000:1111:4444::", 64);
+    Ip6::Prefix                     platformNat64Prefix   = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     raTrackerNat64PrefixA = PrefixFromString("2000:0:0:2:0:f::", 96);
+    Ip6::Address                    routerAddressA        = AddressFromString("fd00::aaaa");
+    Ip6::Prefix                     raTrackerNat64PrefixB = PrefixFromString("2000:0:0:2:0:0::", 96);
+    Ip6::Address                    routerAddressB        = AddressFromString("fd00::bbbb");
+    Ip6::Prefix                     raTrackerNat64PrefixC = PrefixFromString("2000:0:0:2:0:8::", 96);
+    Ip6::Address                    routerAddressC        = AddressFromString("fd00::cccc");
     uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
@@ -4529,7 +4653,7 @@ void TestNat64PrefixSelection(void)
     Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Enable Nat64 Prefix Manager. Check local NAT64 prefix in Network Data.
+    // Enable NAT64 Prefix Manager. Check local NAT64 prefix in Network Data.
 
     sInstance->Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(true);
 
@@ -4539,18 +4663,18 @@ void TestNat64PrefixSelection(void)
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // AIL NAT64 prefix discovered. No infra-derived OMR prefix in Network Data.
-    // Check local NAT64 prefix in Network Data.
+    // Platform-provided NAT64 prefix (e.g. using DNS - RFC 7050) discovered. No infra-derived OMR prefix in Network
+    // Data. Check local NAT64 prefix in Network Data.
 
-    DiscoverNat64Prefix(ailNat64);
+    DiscoverNat64Prefix(platformNat64Prefix);
 
     AdvanceTime(20000);
 
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Add a medium preference OMR prefix into Network Data.
-    // Check AIL NAT64 prefix published in Network Data.
+    // Add a medium preference OMR prefix into Network Data. Check that the platform-provided NAT64 prefix is now
+    // published in Network Data.
 
     prefixConfig.Clear();
     prefixConfig.mPrefix       = omrPrefix;
@@ -4567,14 +4691,72 @@ void TestNat64PrefixSelection(void)
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(ailNat64);
+    VerifyNat64PrefixInNetData(platformNat64Prefix);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // AIL NAT64 prefix removed.
+    // Send an RA from a router advertising a NAT64 prefix. Check that the RA-discovered NAT64 prefix is now favored
+    // and published. Check the RA-discovered NAT64 prefix table.
+
+    VerifyNat64PrefixTableIsEmpty();
+
+    SendRouterAdvert(routerAddressA, Pref64(raTrackerNat64PrefixA, kValidLitime));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(raTrackerNat64PrefixA);
+
+    VerifyNat64PrefixTable({Nat64Prefix(raTrackerNat64PrefixA, kValidLitime, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send two RAs from routers B and C advertising two different NAT64 prefixes. Check that the numerically smallest
+    // prefix is now favored. Check the RA-discovered NAT64 prefix table.
+
+    SendRouterAdvert(routerAddressB, Pref64(raTrackerNat64PrefixB, kValidLitime));
+    SendRouterAdvert(routerAddressC, Pref64(raTrackerNat64PrefixC, kValidLitime));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(raTrackerNat64PrefixB);
+
+    VerifyNat64PrefixTable({Nat64Prefix(raTrackerNat64PrefixA, kValidLitime, routerAddressA),
+                            Nat64Prefix(raTrackerNat64PrefixB, kValidLitime, routerAddressB),
+                            Nat64Prefix(raTrackerNat64PrefixC, kValidLitime, routerAddressC)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove RA-discovered NAT64 prefix A and B from router A and B. Check that the remained RA-discovered prefix C
+    // is now favored. Check the RA-discovered NAT64 prefix table.
+
+    SendRouterAdvert(routerAddressA, Pref64(raTrackerNat64PrefixA, 0));
+    SendRouterAdvert(routerAddressB, Pref64(raTrackerNat64PrefixB, 0));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(raTrackerNat64PrefixC);
+
+    VerifyNat64PrefixTable({Nat64Prefix(raTrackerNat64PrefixC, kValidLitime, routerAddressC)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove RA-discovered NAT64 prefix C. Check that the infra-if NAT64 prefix is published again. Check the
+    // RA-discovered NAT64 prefix table is empty.
+
+    SendRouterAdvert(routerAddressC, Pref64(raTrackerNat64PrefixC, 0));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
+    VerifyNat64PrefixInNetData(platformNat64Prefix);
+
+    VerifyNat64PrefixTableIsEmpty();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Platform-provided NAT64 prefix removed.
     // Check local NAT64 prefix in Network Data.
 
-    ailNat64.Clear();
-    DiscoverNat64Prefix(ailNat64);
+    platformNat64Prefix.Clear();
+    DiscoverNat64Prefix(platformNat64Prefix);
 
     AdvanceTime(20000);
 
@@ -4595,7 +4777,7 @@ void TestNat64PrefixSelection(void)
 
 void VerifyPdOmrPrefix(const Ip6::Prefix &aPrefix)
 {
-    BorderRouter::RoutingManager::Dhcp6PdPrefix pdPrefix;
+    BorderRouter::Dhcp6PdPrefix pdPrefix;
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetDhcp6PdOmrPrefix(pdPrefix));
     VerifyOrQuit(AsCoreType(&pdPrefix.mPrefix) == aPrefix);
@@ -4603,7 +4785,7 @@ void VerifyPdOmrPrefix(const Ip6::Prefix &aPrefix)
 
 void VerifyNoPdOmrPrefix(void)
 {
-    BorderRouter::RoutingManager::Dhcp6PdPrefix pdPrefix;
+    BorderRouter::Dhcp6PdPrefix pdPrefix;
 
     VerifyOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetDhcp6PdOmrPrefix(pdPrefix) == kErrorNotFound);
 }
@@ -4613,7 +4795,7 @@ template <uint16_t kNumPios> void ReportPdPrefixesAsRa(const Pio (&aPios)[kNumPi
     Ip6::Nd::RouterAdvert::TxMessage raMsg;
     Icmp6Packet                      packet;
 
-    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, nullptr, 0,
+    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, nullptr, 0, nullptr, 0,
                       DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
     raMsg.GetAsPacket(packet);
 
@@ -4977,7 +5159,7 @@ void TestRdnss(void)
     // Set the RDNSS callback on Routing Manager
 
     rdnssCallbackCalled = false;
-    sInstance->Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(HandleRdnssChanged, &rdnssCallbackCalled);
+    sInstance->Get<BorderRouter::RxRaTracker>().SetRdnssAddrCallback(HandleRdnssChanged, &rdnssCallbackCalled);
 
     VerifyOrQuit(!rdnssCallbackCalled);
 

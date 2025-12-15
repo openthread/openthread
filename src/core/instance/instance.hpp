@@ -55,6 +55,7 @@
 #include "common/non_copyable.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
+#include "common/string.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
@@ -74,7 +75,10 @@
 #include "backbone_router/bbr_local.hpp"
 #include "backbone_router/bbr_manager.hpp"
 #include "border_router/dhcp6_pd_client.hpp"
+#include "border_router/infra_if.hpp"
+#include "border_router/multi_ail_detector.hpp"
 #include "border_router/routing_manager.hpp"
+#include "border_router/rx_ra_tracker.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/code_utils.hpp"
 #include "common/notifier.hpp"
@@ -84,6 +88,9 @@
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
+#include "meshcop/border_agent_ephemeral_key.hpp"
+#include "meshcop/border_agent_tracker.hpp"
+#include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
 #include "meshcop/dataset_updater.hpp"
@@ -140,6 +147,8 @@
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
+#include "utils/history_tracker_client.hpp"
+#include "utils/history_tracker_server.hpp"
 #include "utils/jam_detector.hpp"
 #include "utils/link_metrics_manager.hpp"
 #include "utils/mesh_diag.hpp"
@@ -468,7 +477,7 @@ private:
     Radio mRadio;
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    Uptime mUptime;
+    UptimeTracker mUptimeTracker;
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
@@ -586,7 +595,16 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    MeshCoP::BorderAgent mBorderAgent;
+    MeshCoP::BorderAgent::TxtData mBorderAgentTxtData;
+    MeshCoP::BorderAgent::Manager mBorderAgentManager;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    MeshCoP::BorderAgent::EphemeralKeyManager mBorderAgentEphemeralKeyManager;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+    MeshCoP::BorderAgent::Tracker mBorderAgentTracker;
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
@@ -690,6 +708,12 @@ private:
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     HistoryTracker::Local mHistoryTrackerLocal;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    HistoryTracker::Server mHistoryTrackerServer;
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    HistoryTracker::Client mHistoryTrackerClient;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
@@ -705,9 +729,14 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    BorderRouter::InfraIf        mInfraIf;
+    BorderRouter::RxRaTracker    mRxRaTracker;
     BorderRouter::RoutingManager mRoutingManager;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     BorderRouter::NetDataBrTracker mNetDataBrTracker;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    BorderRouter::MultiAilDetector mMultiAilDetector;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     BorderRouter::Dhcp6PdClient mDhcp6PdClient;
@@ -756,7 +785,7 @@ template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStati
 #endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-template <> inline Uptime &Instance::Get(void) { return mUptime; }
+template <> inline UptimeTracker &Instance::Get(void) { return mUptimeTracker; }
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
@@ -1009,7 +1038,16 @@ template <> inline Utils::MeshDiag &Instance::Get(void) { return mMeshDiag; }
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
 template <> inline HistoryTracker::Local &Instance::Get(void) { return mHistoryTrackerLocal; }
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+template <> inline HistoryTracker::Server &Instance::Get(void) { return mHistoryTrackerServer; }
+#endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+template <> inline HistoryTracker::Client &Instance::Get(void) { return mHistoryTrackerClient; }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
@@ -1021,14 +1059,19 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-template <> inline MeshCoP::BorderAgent &Instance::Get(void) { return mBorderAgent; }
+template <> inline MeshCoP::BorderAgent::Manager &Instance::Get(void) { return mBorderAgentManager; }
+template <> inline MeshCoP::BorderAgent::TxtData &Instance::Get(void) { return mBorderAgentTxtData; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 template <> inline MeshCoP::BorderAgent::EphemeralKeyManager &Instance::Get(void)
 {
-    return mBorderAgent.GetEphemeralKeyManager();
+    return mBorderAgentEphemeralKeyManager;
 }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+template <> inline MeshCoP::BorderAgent::Tracker &Instance::Get(void) { return mBorderAgentTracker; }
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -1084,10 +1127,14 @@ template <> inline LinkMetrics::Subject &Instance::Get(void) { return mSubject; 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mInfraIf; }
+template <> inline BorderRouter::RxRaTracker    &Instance::Get(void) { return mRxRaTracker; }
 template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
-template <> inline BorderRouter::InfraIf        &Instance::Get(void) { return mRoutingManager.mInfraIf; }
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 template <> inline BorderRouter::NetDataBrTracker &Instance::Get(void) { return mNetDataBrTracker; }
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+template <> inline BorderRouter::MultiAilDetector &Instance::Get(void) { return mMultiAilDetector; }
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 template <> inline BorderRouter::Dhcp6PdClient &Instance::Get(void) { return mDhcp6PdClient; }

@@ -86,18 +86,32 @@
 /**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
  *
- * Define to 1 to enable Routing Manager multiple Adjacent Infrastructure Links (AILs) detection feature.
+ * Define to 1 to enable Multiple Adjacent Infrastructure Links (AILs) detection feature.
  *
- * The detection mechanism operates as follows: The Routing Manager monitors the number of peer BRs listed in the
- * Thread Network Data (see `otBorderRoutingCountPeerBrs()`) and compares this count with the number of peer BRs
- * discovered by processing received Router Advertisement (RA) messages on its connected AIL. If the count derived from
- * Network Data consistently exceeds the count derived from RAs for a detection duration of 10 minutes, it concludes
- * that BRs are likely connected to different AILs. To clear state a shorter window of 1 minute is used.
+ * The detection mechanism operates as follows: The detector monitors the number of peer BRs listed in the Thread
+ * Network Data (see `otBorderRoutingCountPeerBrs()`) and compares this count with the number of peer BRs discovered
+ * by processing received Router Advertisement (RA) messages on its connected AIL. If the count derived from Network
+ * Data consistently exceeds the count derived from RAs for a detection duration of 10 minutes, it concludes that BRs
+ * are likely connected to different AILs. To clear state a shorter window of 1 minute is used.
  *
  * See `otBorderRoutingIsMultiAilDetected()` for more details.
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_AUTO_ENABLE_MODE
+ *
+ * Specifies the "Auto Enable Mode" for Multi-AIL Detection feature.
+ *
+ * When "Auto Enable Mode" is set, the Multi-AIL Detector is enabled by default and starts running and monitoring
+ * when the infrastructure interface network is initialized and become active/running. If this mode is disabled, the
+ * detector will be in a disabled state initially and must be explicitly enabled using the public API
+ * `otBorderRoutingSetMultiAilDetectionEnabled()`.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_AUTO_ENABLE_MODE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_AUTO_ENABLE_MODE 1
 #endif
 
 /**
@@ -216,6 +230,27 @@
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME
+ *
+ * This parameter sets the minimum preferred lifetime (in seconds) for the Border Router's built-in OpenThread
+ * DHCPv6 Prefix Delegation (PD) client feature. The default value is suggested based on:
+ * https://datatracker.ietf.org/doc/draft-ietf-snac-simple/.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME (30 * 60)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME
+ *
+ * This parameter sets the maximum preferred lifetime (in seconds) for the Border Router's built-in OpenThread
+ * DHCPv6 Prefix Delegation (PD) client feature.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME (4 * 60 * 60)
 #endif
 
 /**
