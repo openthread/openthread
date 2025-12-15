@@ -41,14 +41,14 @@ class SettingsFile
 {
 public:
     /**
-     * Gets the path for storing setting files.
+     * Gets the path to store setting files.
      *
      * @returns  Path for setting files.
      */
     static const char *GetSettingsPath(void);
 
     /**
-     * Sets the path for storing setting files.
+     * Sets the path to store setting files.
      *
      * @param[in]   aSettingsPath   Path for setting files.
      */
@@ -127,7 +127,7 @@ private:
     static const size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
     static const size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
     static const size_t kMaxFilePathSize         = PATH_MAX;
-    static char         sSettingsPath[PATH_MAX];
+    static char         sSettingsPath[kMaxFileFullPathNameSize];
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);
