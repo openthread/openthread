@@ -4374,17 +4374,17 @@ void Mle::PrevRoleRestorer::SendChildUpdate(void)
 void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
 {
     uint32_t delay;
-    uint32_t aRetxDelayMin = kMulticastRetxDelayMin;
-    uint32_t aRetxDelayMax = kMulticastRetxDelayMax;
+    uint32_t retxDelayMin = kMulticastRetxDelayMin;
+    uint32_t retxDelayMax = kMulticastRetxDelayMax;
 
     if (Get<Mle>().mLastSavedRole == kRoleLeader)
     {
-        aRetxDelayMin = kLeaderRetxDelayMin;
-        aRetxDelayMax = kLeaderRetxDelayMax;
+        retxDelayMin = kLeaderRetxDelayMin;
+        retxDelayMax = kLeaderRetxDelayMax;
     }
 
     delay = (mAttempts == 0) ? kLinkRequestTimeout
-                             : Random::NonCrypto::GetUint32InRange(aRetxDelayMin, aRetxDelayMax);
+                             : Random::NonCrypto::GetUint32InRange(retxDelayMin, retxDelayMax);
 
     mTimer.Start(delay);
 
