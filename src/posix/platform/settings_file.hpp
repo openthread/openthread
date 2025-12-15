@@ -40,6 +40,8 @@ namespace Posix {
 class SettingsFile
 {
 public:
+    static constexpr size_t kMaxFileBaseNameSize = 32;
+
     /**
      * Gets the path to store setting files.
      *
@@ -126,8 +128,9 @@ private:
     static const size_t kSlashLength             = 1;
     static const size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
     static const size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
+    static const size_t kMaxFileBasePathNameSize = kMaxFileFullPathNameSize - kSlashLength - kMaxFileBaseNameSize;
     static const size_t kMaxFilePathSize         = PATH_MAX;
-    static char         sSettingsPath[kMaxFileFullPathNameSize];
+    static char         sSettingsPath[kMaxFileBasePathNameSize];
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);
