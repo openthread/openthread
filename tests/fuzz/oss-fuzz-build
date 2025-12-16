@@ -29,6 +29,8 @@
 
 set -euxo pipefail
 
+git submodule update --init --recursive --depth 1
+
 (
     mkdir build
     cd build || exit
