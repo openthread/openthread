@@ -165,6 +165,7 @@ openthread_core_files = [
   "api/backbone_router_ftd_api.cpp",
   "api/ble_secure_api.cpp",
   "api/border_agent_api.cpp",
+  "api/border_agent_ephemeral_key_api.cpp",
   "api/border_agent_tracker_api.cpp",
   "api/border_agent_txt_data_api.cpp",
   "api/border_router_api.cpp",
