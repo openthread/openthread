@@ -372,9 +372,38 @@ Error CoapBase::SendMessage(Message                &aMessage,
 #endif
 }
 
+Error CoapBase::SendMessage(OwnedPtr<Message>       aMessage,
+                            const Ip6::MessageInfo &aMessageInfo,
+                            ResponseHandler         aHandler,
+                            void                   *aContext)
+{
+    Error error;
+
+    OT_ASSERT(aMessage != nullptr);
+
+    SuccessOrExit(error = SendMessage(*aMessage, aMessageInfo, aHandler, aContext));
+    aMessage.Release();
+
+exit:
+    return error;
+}
+
 Error CoapBase::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return SendMessage(aMessage, aMessageInfo, nullptr, nullptr);
+}
+
+Error CoapBase::SendMessage(OwnedPtr<Message> aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error error;
+
+    OT_ASSERT(aMessage != nullptr);
+
+    SuccessOrExit(error = SendMessage(*aMessage, aMessageInfo));
+    aMessage.Release();
+
+exit:
+    return error;
 }
 
 Error CoapBase::SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
