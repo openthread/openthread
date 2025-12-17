@@ -77,6 +77,17 @@
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+
+#if !OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && \
+    (OPENTHREAD_POSIX_CONFIG_NETIF_LINK_LOCAL_ROUTE_METRIC || OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC)
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 18, 0)
+#error "Cannot set route metric on kernel < 4.18. " \
+    "Consider using OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE "\
+    "to install OMR routes with higher priority on kernel < 4.18"
+#endif // LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
+#endif
+
 #endif // __linux__
 #include <math.h>
 #include <net/if.h>
