@@ -43,6 +43,9 @@ RegisterLogModule("MeshCoP");
 
 namespace MeshCoP {
 
+//---------------------------------------------------------------------------------------------------------------------
+// JoinerPskd
+
 Error JoinerPskd::SetFrom(const char *aPskdString)
 {
     Error error = kErrorNone;
@@ -68,7 +71,7 @@ bool JoinerPskd::operator==(const JoinerPskd &aOther) const
             ExitNow();
         }
 
-        if (m8[i] == '\0')
+        if (m8[i] == kNullChar)
         {
             break;
         }
@@ -98,6 +101,9 @@ bool JoinerPskd::IsPskdValid(const char *aPskdString)
 exit:
     return valid;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// JoinerDiscerner
 
 void JoinerDiscerner::GenerateJoinerId(Mac::ExtAddress &aJoinerId) const
 {
@@ -182,41 +188,86 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
     return string;
 }
 
-void SteeringData::Init(uint8_t aLength)
+//---------------------------------------------------------------------------------------------------------------------
+// SteeringData
+
+Error SteeringData::Init(uint8_t aLength)
 {
-    OT_ASSERT(aLength <= kMaxLength);
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsValueInRange(aLength, kMinLength, kMaxLength), error = kErrorInvalidArgs);
+
     mLength = aLength;
     ClearAllBytes(m8);
+
+exit:
+    return error;
+}
+
+Error SteeringData::Init(uint8_t aLength, const uint8_t *aData)
+{
+    Error error;
+
+    SuccessOrExit(error = Init(aLength));
+    memcpy(m8, aData, mLength);
+
+exit:
+    return error;
 }
 
 void SteeringData::SetToPermitAllJoiners(void)
 {
-    Init(1);
+    IgnoreError(Init(1));
     m8[0] = kPermitAll;
 }
 
-void SteeringData::UpdateBloomFilter(const Mac::ExtAddress &aJoinerId)
+Error SteeringData::UpdateBloomFilter(const Mac::ExtAddress &aJoinerId)
 {
     HashBitIndexes indexes;
 
     CalculateHashBitIndexes(aJoinerId, indexes);
-    UpdateBloomFilter(indexes);
+
+    return UpdateBloomFilter(indexes);
 }
 
-void SteeringData::UpdateBloomFilter(const JoinerDiscerner &aDiscerner)
+Error SteeringData::UpdateBloomFilter(const JoinerDiscerner &aDiscerner)
 {
     HashBitIndexes indexes;
 
     CalculateHashBitIndexes(aDiscerner, indexes);
-    UpdateBloomFilter(indexes);
+
+    return UpdateBloomFilter(indexes);
 }
 
-void SteeringData::UpdateBloomFilter(const HashBitIndexes &aIndexes)
+Error SteeringData::UpdateBloomFilter(const HashBitIndexes &aIndexes)
 {
-    OT_ASSERT((mLength > 0) && (mLength <= kMaxLength));
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsValid(), error = kErrorInvalidArgs);
 
     SetBit(aIndexes.mIndex[0] % GetNumBits());
     SetBit(aIndexes.mIndex[1] % GetNumBits());
+
+exit:
+    return error;
+}
+
+Error SteeringData::MergeBloomFilterWith(const SteeringData &aOther)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsValid(), error = kErrorInvalidArgs);
+    VerifyOrExit(aOther.IsValid(), error = kErrorInvalidArgs);
+
+    VerifyOrExit(GetLength() % aOther.GetLength() == 0, error = kErrorInvalidArgs);
+
+    for (uint8_t index = 0; index < GetLength(); index++)
+    {
+        m8[index] |= aOther.m8[index % aOther.GetLength()];
+    }
+
+exit:
+    return error;
 }
 
 bool SteeringData::Contains(const Mac::ExtAddress &aJoinerId) const
@@ -239,7 +290,13 @@ bool SteeringData::Contains(const JoinerDiscerner &aDiscerner) const
 
 bool SteeringData::Contains(const HashBitIndexes &aIndexes) const
 {
-    return (mLength > 0) && GetBit(aIndexes.mIndex[0] % GetNumBits()) && GetBit(aIndexes.mIndex[1] % GetNumBits());
+    bool contains = false;
+
+    VerifyOrExit(IsValid());
+    contains = GetBit(aIndexes.mIndex[0] % GetNumBits()) && GetBit(aIndexes.mIndex[1] % GetNumBits());
+
+exit:
+    return contains;
 }
 
 void SteeringData::CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes)
@@ -260,19 +317,36 @@ void SteeringData::CalculateHashBitIndexes(const JoinerDiscerner &aDiscerner, Ha
 
 bool SteeringData::DoesAllMatch(uint8_t aMatch) const
 {
-    bool matches = true;
+    bool matches = false;
+
+    VerifyOrExit(IsValid());
 
     for (uint8_t i = 0; i < mLength; i++)
     {
         if (m8[i] != aMatch)
         {
-            matches = false;
-            break;
+            ExitNow();
         }
     }
 
+    matches = true;
+
+exit:
     return matches;
 }
+
+SteeringData::InfoString SteeringData::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("[");
+    string.AppendHexBytes(GetData(), Min(GetLength(), kMaxLength));
+    string.Append("]");
+
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {

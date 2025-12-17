@@ -209,6 +209,52 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+Error Core::ValidateHostName(const Host &aHost) const { return Name::ValidateName(aHost.mHostName); }
+
+Error Core::ValidateServiceNames(const Service &aService, bool aCheckHostAndSubTypeLabels) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aService.mServiceInstance));
+    SuccessOrExit(error = Name::ValidateName(aService.mServiceType));
+
+    if (aCheckHostAndSubTypeLabels && aService.mHostName != nullptr)
+    {
+        SuccessOrExit(error = Name::ValidateName(aService.mHostName));
+    }
+
+    if (aCheckHostAndSubTypeLabels && (aService.mSubTypeLabelsLength > 0))
+    {
+        VerifyOrExit(aService.mSubTypeLabels != nullptr, error = kErrorInvalidArgs);
+
+        for (uint16_t index = 0; index < aService.mSubTypeLabelsLength; index++)
+        {
+            SuccessOrExit(error = Name::ValidateLabel(aService.mSubTypeLabels[index]));
+        }
+    }
+
+exit:
+    return error;
+}
+
+Error Core::ValidateKeyName(const Key &aKey) const
+{
+    Error error;
+
+    if (IsKeyForService(aKey))
+    {
+        SuccessOrExit(error = Name::ValidateName(aKey.mServiceType));
+        error = Name::ValidateLabel(aKey.mName);
+    }
+    else
+    {
+        error = Name::ValidateName(aKey.mName);
+    }
+
+exit:
+    return error;
+}
+
 template <typename EntryType, typename ItemInfo>
 Error Core::Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback)
 {
@@ -252,27 +298,70 @@ exit:
 
 Error Core::RegisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback)
 {
-    return Register<HostEntry>(aHost, aRequestId, aCallback);
+    Error error;
+
+    SuccessOrExit(error = ValidateHostName(aHost));
+    error = Register<HostEntry>(aHost, aRequestId, aCallback);
+
+exit:
+    return error;
 }
 
-Error Core::UnregisterHost(const Host &aHost) { return Unregister<HostEntry>(aHost); }
+Error Core::UnregisterHost(const Host &aHost)
+{
+    Error error;
+
+    SuccessOrExit(error = ValidateHostName(aHost));
+    error = Unregister<HostEntry>(aHost);
+
+exit:
+    return error;
+}
 
 Error Core::RegisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback)
 {
-    return Register<ServiceEntry>(aService, aRequestId, aCallback);
+    Error error;
+
+    SuccessOrExit(error = ValidateServiceNames(aService, /* aCheckHostAndSubTypeLabels */ true));
+    error = Register<ServiceEntry>(aService, aRequestId, aCallback);
+
+exit:
+    return error;
 }
 
-Error Core::UnregisterService(const Service &aService) { return Unregister<ServiceEntry>(aService); }
+Error Core::UnregisterService(const Service &aService)
+{
+    Error error;
+
+    SuccessOrExit(error = ValidateServiceNames(aService, /* aCheckHostAndSubTypeLabels */ false));
+    error = Unregister<ServiceEntry>(aService);
+
+exit:
+    return error;
+}
 
 Error Core::RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback)
 {
-    return IsKeyForService(aKey) ? Register<ServiceEntry>(aKey, aRequestId, aCallback)
-                                 : Register<HostEntry>(aKey, aRequestId, aCallback);
+    Error error;
+
+    SuccessOrExit(error = ValidateKeyName(aKey));
+
+    error = IsKeyForService(aKey) ? Register<ServiceEntry>(aKey, aRequestId, aCallback)
+                                  : Register<HostEntry>(aKey, aRequestId, aCallback);
+
+exit:
+    return error;
 }
 
 Error Core::UnregisterKey(const Key &aKey)
 {
-    return IsKeyForService(aKey) ? Unregister<ServiceEntry>(aKey) : Unregister<HostEntry>(aKey);
+    Error error;
+
+    SuccessOrExit(error = ValidateKeyName(aKey));
+    error = IsKeyForService(aKey) ? Unregister<ServiceEntry>(aKey) : Unregister<HostEntry>(aKey);
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
@@ -1126,10 +1215,7 @@ void Core::Entry::SetState(State aState)
 
 void Core::Entry::Register(const Key &aKey, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     mKeyRecord.UpdateTtl(DetermineTtl(aKey.mTtl, kDefaultKeyTtl));
     mKeyRecord.UpdateProperty(mKeyData, aKey.mKeyData, aKey.mKeyDataLength);
@@ -1233,6 +1319,25 @@ void Core::Entry::InvokeCallbacks(void)
     }
 }
 
+void Core::Entry::DecideToProbeOnRegister(void)
+{
+    // Checks whether we should start probing when `Register()` is
+    // called. If a conflict was previously detected, we send a probe
+    // again upon an explicit `Register()` request.
+
+    switch (mState)
+    {
+    case kRegistered:
+    case kProbing:
+        break;
+
+    case kRemoving:
+    case kConflict:
+        StartProbing();
+        break;
+    }
+}
+
 void Core::Entry::StartProbing(void)
 {
     SetState(kProbing);
@@ -1246,9 +1351,15 @@ void Core::Entry::SetStateToConflict(void)
     switch (GetState())
     {
     case kProbing:
-    case kRegistered:
         SetState(kConflict);
         break;
+
+    case kRegistered:
+#if !OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT
+        SetState(kConflict);
+#endif
+        break;
+
     case kConflict:
     case kRemoving:
         break;
@@ -1862,10 +1973,7 @@ exit:
 
 void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
 {
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 
@@ -1887,7 +1995,7 @@ void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
         ExitNow();
     }
 
-    mIp6AddrRecord.UpdateTtl(DetermineTtl(aHost.mTtl, kDefaultTtl));
+    mIp6AddrRecord.UpdateTtl(DetermineTtl(aHost.mTtl, kDefaultAddrTtl));
     mIp6AddrRecord.UpdateAddresses(aHost);
 
     DetermineNextFireTime();
@@ -1910,7 +2018,7 @@ void Core::HostEntry::Register(const LocalHost &aLocalHost, const Callback &aCal
     }
     else
     {
-        mIp6AddrRecord.UpdateTtl(kDefaultTtl);
+        mIp6AddrRecord.UpdateTtl(kDefaultAddrTtl);
         mIp6AddrRecord.UpdateAddresses(aLocalHost.GetIp6Addresses());
     }
 
@@ -1929,7 +2037,7 @@ void Core::HostEntry::Register(const LocalHost &aLocalHost, const Callback &aCal
             OT_ASSERT(mIp4AddrRecord != nullptr);
         }
 
-        mIp4AddrRecord->UpdateTtl(kDefaultTtl);
+        mIp4AddrRecord->UpdateTtl(kDefaultAddrTtl);
         mIp4AddrRecord->UpdateAddresses(aLocalHost.GetIp4Addresses());
     }
 
@@ -2452,12 +2560,9 @@ exit:
 void Core::ServiceEntry::Register(const Service &aService, const Callback &aCallback)
 {
     const char *hostName;
-    uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultTtl);
+    uint32_t    ttl = DetermineTtl(aService.mTtl, kDefaultServiceTtl);
 
-    if (GetState() == kRemoving)
-    {
-        StartProbing();
-    }
+    DecideToProbeOnRegister();
 
     SetCallback(aCallback);
 
@@ -4124,7 +4229,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     mStartOffset[kQuestionSection] = offset;
 
-    SuccessOrAssert(mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
+    SuccessOrExit(error = mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
 
     for (numRecords = mRecordCounts.GetFor(kQuestionSection); numRecords > 0; numRecords--)
     {
@@ -5042,6 +5147,7 @@ Error Core::Start(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
 
@@ -5067,6 +5173,7 @@ Error Core::Stop(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
     VerifyOrExit(cacheEntry != nullptr);
@@ -5116,6 +5223,8 @@ Error Core::StartRecordQuerier(const RecordQuerier &aQuerier)
     return error;
 }
 
+Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+
 Error Core::StopIp6AddressResolver(const AddressResolver &aResolver)
 {
     return Stop<Ip6AddrCache, AddressResolver>(aResolver);
@@ -5131,7 +5240,62 @@ Error Core::StopIp4AddressResolver(const AddressResolver &aResolver)
     return Stop<Ip4AddrCache, AddressResolver>(aResolver);
 }
 
-Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+Error Core::ValidateNamesIn(const Browser &aBrowser) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateName(aBrowser.mServiceType));
+
+    if (aBrowser.mSubTypeLabel != nullptr)
+    {
+        error = Name::ValidateLabel(aBrowser.mSubTypeLabel);
+    }
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const SrvResolver &aSrvResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aSrvResolver.mServiceInstance));
+    error = Name::ValidateName(aSrvResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const TxtResolver &aTxtResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aTxtResolver.mServiceInstance));
+    error = Name::ValidateName(aTxtResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const AddressResolver &aAddressResolver) const
+{
+    return Name::ValidateName(aAddressResolver.mHostName);
+}
+
+Error Core::ValidateNamesIn(const RecordQuerier &aRecordQuerier) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aRecordQuerier.mFirstLabel));
+
+    if (aRecordQuerier.mNextLabels != nullptr)
+    {
+        error = Name::ValidateName(aRecordQuerier.mNextLabels);
+    }
+
+exit:
+    return error;
+}
 
 void Core::AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType)
 {
@@ -5470,12 +5634,14 @@ void Core::CacheEntry::Init(Instance &aInstance, Type aType)
 {
     InstanceLocatorInit::Init(aInstance);
 
-    mType               = aType;
-    mInitalQueries      = 0;
-    mQueryPending       = false;
-    mLastQueryTimeValid = false;
-    mIsActive           = false;
-    mDeleteTime         = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mType                  = aType;
+    mContinuousRetry       = false;
+    mQueryPending          = false;
+    mLastQueryTimeValid    = false;
+    mIsActive              = false;
+    mDeleteTime            = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
 }
 
 void Core::CacheEntry::SetIsActive(bool aIsActive)
@@ -5513,9 +5679,11 @@ bool Core::CacheEntry::ShouldDelete(TimeMilli aNow) const { return !mIsActive &&
 
 void Core::CacheEntry::StartInitialQueries(void)
 {
-    mInitalQueries      = 0;
-    mLastQueryTimeValid = false;
-    mLastQueryTime      = Get<Core>().RandomizeInitialQueryTxTime();
+    mContinuousRetry       = true;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
+    mLastQueryTimeValid    = false;
+    mLastQueryTime         = Get<Core>().RandomizeInitialQueryTxTime();
 
     ScheduleQuery(mLastQueryTime);
 }
@@ -5751,11 +5919,9 @@ void Core::CacheEntry::DetermineNextFireTime(void)
 {
     mQueryPending = false;
 
-    if (mInitalQueries < kNumberOfInitalQueries)
+    if (mContinuousRetry)
     {
-        uint32_t interval = (mInitalQueries == 0) ? 0 : (1U << (mInitalQueries - 1)) * kInitialQueryInterval;
-
-        ScheduleQuery(mLastQueryTime + interval);
+        ScheduleQuery(mLastQueryTime + mJitteredRetryInterval);
     }
 
     if (!mIsActive)
@@ -5784,6 +5950,26 @@ void Core::CacheEntry::DetermineNextFireTime(void)
         As<RecordCache>().DetermineRecordFireTime();
         break;
     }
+}
+
+void Core::CacheEntry::UpdateQueryRetryInterval(void)
+{
+    uint16_t maxJitter;
+
+    VerifyOrExit(mContinuousRetry);
+
+    mRetryInterval *= kQueryRetryGrowthFactor;
+    mRetryInterval = Clamp(mRetryInterval, kMinQueryRetryInterval, kMaxQueryRetryInterval);
+
+    // We pre-calculate the jittered retry interval to ensure
+    // `DetermineNextFireTime()` uses a consistent value.
+
+    maxJitter = ClampToUint16(mRetryInterval / kQueryRetryJitterDivisor);
+
+    mJitteredRetryInterval = Random::NonCrypto::AddJitter(mRetryInterval, maxJitter);
+
+exit:
+    return;
 }
 
 void Core::CacheEntry::ScheduleTimer(void) { ScheduleFireTimeOn(Get<Core>().mCacheTimer); }
@@ -5827,10 +6013,7 @@ void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
     mLastQueryTimeValid = true;
     mLastQueryTime      = aContext.GetNow();
 
-    if (mInitalQueries < kNumberOfInitalQueries)
-    {
-        mInitalQueries++;
-    }
+    UpdateQueryRetryInterval();
 
     // Let the cache entry super-classes update their state
     // after query was sent.
@@ -6378,7 +6561,7 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
 
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
@@ -6554,7 +6737,7 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
     }
 
     ConvertTo(result);
@@ -6967,7 +7150,7 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopInitialQueries();
+    StopQueryRetries();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
@@ -7339,7 +7522,7 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
 
         if (mRecordType != ResourceRecord::kTypeAny)
         {
-            StopInitialQueries();
+            StopQueryRetries();
         }
     }
 

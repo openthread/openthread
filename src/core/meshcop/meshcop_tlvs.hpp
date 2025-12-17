@@ -94,6 +94,7 @@ public:
         kJoinerIid               = OT_MESHCOP_TLV_JOINER_IID,               ///< Joiner IID TLV
         kJoinerRouterLocator     = OT_MESHCOP_TLV_JOINER_RLOC,              ///< Joiner Router Locator TLV
         kJoinerRouterKek         = OT_MESHCOP_TLV_JOINER_ROUTER_KEK,        ///< Joiner Router KEK TLV
+        kDuration                = OT_MESHCOP_TLV_DURATION,                 ///< Duration TLV
         kProvisioningUrl         = OT_MESHCOP_TLV_PROVISIONING_URL,         ///< Provisioning URL TLV
         kVendorName              = OT_MESHCOP_TLV_VENDOR_NAME_TLV,          ///< meshcop Vendor Name TLV
         kVendorModel             = OT_MESHCOP_TLV_VENDOR_MODEL_TLV,         ///< meshcop Vendor Model TLV
@@ -204,6 +205,11 @@ typedef UintTlvInfo<Tlv::kJoinerRouterLocator, uint16_t> JoinerRouterLocatorTlv;
  * Defines Joiner Router KEK TLV constants and types.
  */
 typedef SimpleTlvInfo<Tlv::kJoinerRouterKek, Kek> JoinerRouterKekTlv;
+
+/**
+ * Defines Duration TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kDuration, uint16_t> DurationTlv;
 
 /**
  * Defines Count TLV constants and types.
@@ -358,8 +364,11 @@ public:
      * Copies the Steering Data from the TLV into a given `SteeringData` variable.
      *
      * @param[out]  aSteeringData   A reference to a `SteeringData` to copy into.
+     *
+     * @retval kErrorNone         Successfully copied the steering data into @p aSteeringData.
+     * @retval kErrorInvalidArgs  The Steering Data TLV length is invalid.
      */
-    void CopyTo(SteeringData &aSteeringData) const;
+    Error CopyTo(SteeringData &aSteeringData) const;
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

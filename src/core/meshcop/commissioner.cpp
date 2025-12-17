@@ -64,7 +64,7 @@ Commissioner::Commissioner(Instance &aInstance)
 
     IgnoreError(SetId("OpenThread Commissioner"));
 
-    mProvisioningUrl[0] = '\0';
+    mProvisioningUrl[0] = kNullChar;
 }
 
 void Commissioner::SetState(State aState)
@@ -346,7 +346,7 @@ void Commissioner::ComputeBloomFilter(SteeringData &aSteeringData) const
 {
     Mac::ExtAddress joinerId;
 
-    aSteeringData.Init();
+    IgnoreError(aSteeringData.Init(SteeringData::kMaxLength));
 
     for (const Joiner &joiner : mJoiners)
     {
@@ -357,11 +357,11 @@ void Commissioner::ComputeBloomFilter(SteeringData &aSteeringData) const
 
         case Joiner::kTypeEui64:
             ComputeJoinerId(joiner.mSharedId.mEui64, joinerId);
-            aSteeringData.UpdateBloomFilter(joinerId);
+            IgnoreError(aSteeringData.UpdateBloomFilter(joinerId));
             break;
 
         case Joiner::kTypeDiscerner:
-            aSteeringData.UpdateBloomFilter(joiner.mSharedId.mDiscerner);
+            IgnoreError(aSteeringData.UpdateBloomFilter(joiner.mSharedId.mDiscerner));
             break;
 
         case Joiner::kTypeAny:
@@ -630,21 +630,8 @@ exit:
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerGetResponse(void                *aContext,
-                                                     otMessage           *aMessage,
-                                                     const otMessageInfo *aMessageInfo,
-                                                     otError              aResult)
+void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(AsCoapMessagePtr(aMessage),
-                                                                             AsCoreTypePtr(aMessageInfo), aResult);
-}
-
-void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
-                                                     const Ip6::MessageInfo *aMessageInfo,
-                                                     Error                   aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged);
     LogInfo("Received %s response", UriToString<kUriCommissionerGet>());
 
@@ -701,21 +688,8 @@ exit:
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerSetResponse(void                *aContext,
-                                                     otMessage           *aMessage,
-                                                     const otMessageInfo *aMessageInfo,
-                                                     otError              aResult)
+void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(AsCoapMessagePtr(aMessage),
-                                                                             AsCoreTypePtr(aMessageInfo), aResult);
-}
-
-void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
-                                                     const Ip6::MessageInfo *aMessageInfo,
-                                                     Error                   aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error   error;
     uint8_t state;
 
@@ -754,21 +728,8 @@ exit:
     return error;
 }
 
-void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
-                                                otMessage           *aMessage,
-                                                const otMessageInfo *aMessageInfo,
-                                                otError              aResult)
+void Commissioner::HandleLeaderPetitionResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(AsCoapMessagePtr(aMessage),
-                                                                        AsCoreTypePtr(aMessageInfo), aResult);
-}
-
-void Commissioner::HandleLeaderPetitionResponse(Coap::Message          *aMessage,
-                                                const Ip6::MessageInfo *aMessageInfo,
-                                                Error                   aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint8_t state;
     bool    retransmit = false;
 
@@ -841,21 +802,8 @@ exit:
     LogWarnOnError(error, "send keep alive");
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
-                                                 otMessage           *aMessage,
-                                                 const otMessageInfo *aMessageInfo,
-                                                 otError              aResult)
+void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(AsCoapMessagePtr(aMessage),
-                                                                         AsCoreTypePtr(aMessageInfo), aResult);
-}
-
-void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message          *aMessage,
-                                                 const Ip6::MessageInfo *aMessageInfo,
-                                                 Error                   aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint8_t state;
 
     VerifyOrExit(mState == kStateActive);

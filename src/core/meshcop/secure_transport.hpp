@@ -53,6 +53,18 @@
 #endif
 #include <mbedtls/version.h>
 
+#ifdef OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+#error \
+    "OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT MUST NOT be defined directly. It is derived from other configs."
+#endif
+
+#if ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
+     (MBEDTLS_VERSION_NUMBER >= 0x03010000))
+#define OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT 1
+#else
+#define OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT 0
+#endif
+
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #error OPENTHREAD_CONFIG_BLE_TCAT_ENABLE requires MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -314,11 +326,17 @@ public:
     static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
 
     /**
-     * Pointer is called to send encrypted message.
+     * Pointer to function that is called to send an encrypted message.
      *
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     * @retval kErrorNone         Successfully sent message.
+     * @retval kErrorNoBufs       Message not sent: signal to SecureTransport that the sending operation blocks.
+     *                            In this case, the stack will retry the sending later.
+     * @retval kErrorFailed       Failure to send, for other reasons. Note that any other errors not listed here
+     *                            will map to kErrorFailed.
      */
     typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -339,7 +357,7 @@ public:
      *
      * `nullptr` can be returned to reject the new session connection request.
      *
-     * @param[in] aContex       A pointer to arbitrary context information.
+     * @param[in] aContext      A pointer to arbitrary context information.
      * @param[in] aMessageInfo  The message info from the new session connection request message.
      *
      * @returns A pointer to `SecureSession` to use for new session or `nullptr` if new connection is rejected.
@@ -755,8 +773,7 @@ private:
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 
-#ifdef MBEDTLS_SSL_EXPORT_KEYS
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleMbedtlsExportKeys(void                       *aContext,
                                         mbedtls_ssl_key_export_type aType,
@@ -787,8 +804,7 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
-#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-#endif // MBEDTLS_SSL_EXPORT_KEYS
+#endif // OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleUpdateTask(Tasklet &aTasklet);
     void        HandleUpdateTask(void);

@@ -1418,7 +1418,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_CHANN
     otError error            = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadBool(skipQualityCheck));
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     error = otChannelManagerRequestChannelSelect(mInstance, skipQualityCheck);
+#else
+    OT_UNUSED_VARIABLE(skipQualityCheck);
+    error = OT_ERROR_NOT_CAPABLE;
+#endif
 
 exit:
     return error;
@@ -1643,6 +1648,44 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_SERVER_AUTO_ENABL
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+    otBorderRoutingDhcp6PdSetEnabled(mInstance, enable);
+
+exit:
+    return error;
+}
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX>(void)
+{
+    otError                         error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableEntry prefixEntry;
+    const otIp6Address             *prefixAddr;
+
+    memset(&prefixEntry, 0, sizeof(prefixEntry));
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(prefixAddr));
+    prefixEntry.mPrefix.mPrefix = *prefixAddr;
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixEntry.mPrefix.mLength));
+
+    SuccessOrExit(error = mDecoder.ReadUint32(prefixEntry.mValidLifetime));
+    SuccessOrExit(error = mDecoder.ReadUint32(prefixEntry.mPreferredLifetime));
+
+    otPlatBorderRoutingProcessDhcp6PdPrefix(mInstance, &prefixEntry);
+
+exit:
+    return error;
+}
+#endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
 void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
@@ -1687,6 +1730,16 @@ void NcpBase::DnssdUnregisterKey(const otPlatDnssdKey       *aKey,
     DnssdUpdate(aKey, aRequestId, aCallback, /* aRegister */ false);
 }
 
+void NcpBase::DnssdStartBrowser(const otPlatDnssdBrowser *aBrowser)
+{
+    DnssdUpdateDiscovery(aBrowser, /* aStart */ true);
+}
+
+void NcpBase::DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser)
+{
+    DnssdUpdateDiscovery(aBrowser, /* aStart */ false);
+}
+
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
@@ -1721,6 +1774,23 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
     VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
     callback(mInstance, requestId, static_cast<otError>(result));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(void)
+{
+    otError                   error = OT_ERROR_NONE;
+    otPlatDnssdBrowseResult   browseResult;
+    otPlatDnssdBrowseCallback callback = nullptr;
+    const uint8_t            *context;
+    uint16_t                  contextLen;
+
+    SuccessOrExit(error = DecodeDnssdBrowseResult(mDecoder, browseResult, context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdBrowseCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdBrowseCallback *>(context);
+    callback(mInstance, &browseResult);
 
 exit:
     return error;

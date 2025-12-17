@@ -86,10 +86,22 @@ extern "C" {
 #define OT_BLE_ADV_INTERVAL_UNIT OT_BLE_TIMESLOT_UNIT
 
 /**
- * Maximum allowed ATT MTU size (must be >= 23).
+ * Minimum allowed ATT MTU size (MUST be 23).
+ */
+
+#define OT_BLE_ATT_MTU_MIN 23
+
+/**
+ * Maximum allowed ATT MTU size (MUST be >= OT_BLE_ATT_MTU_MIN).
  */
 
 #define OT_BLE_ATT_MTU_MAX 67
+
+/**
+ * Default ATT MTU size (used if no MTU indication is given yet, or none can be given). It MUST be 23.
+ */
+
+#define OT_BLE_ATT_MTU_DEFAULT 23
 
 /**
  * Default power value for BLE.
@@ -201,7 +213,6 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
  * @retval OT_ERROR_NONE           Advertising procedure has been started.
  * @retval OT_ERROR_FAILED         Update of data failed.
  * @retval OT_ERROR_INVALID_ARGS   Invalid value has been supplied.
- *
  */
 otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen);
 
@@ -275,7 +286,7 @@ otError otPlatBleGapDisconnect(otInstance *aInstance);
  *******************************************************************************/
 
 /**
- * Reads currently use value of ATT_MTU.
+ * Reads currently used value of ATT_MTU from the platform BLE driver.
  *
  * @param[in]   aInstance  The OpenThread instance structure.
  * @param[out]  aMtu       A pointer to output the current ATT_MTU value.
@@ -289,7 +300,7 @@ otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu);
  * The BLE driver calls this method to notify OpenThread that ATT_MTU has been updated.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
- * @param[in]  aMtu          The updated ATT_MTU value.
+ * @param[in]  aMtu          The updated ATT_MTU value. It MUST be >=OT_BLE_ATT_MTU_MIN.
  */
 extern void otPlatBleGattOnMtuUpdate(otInstance *aInstance, uint16_t aMtu);
 

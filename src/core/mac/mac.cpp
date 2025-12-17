@@ -293,10 +293,12 @@ void Mac::PerformActiveScan(void)
     if (UpdateScanChannel() == kErrorNone)
     {
         // If there are more channels to scan, send the beacon request.
+        mLinks.SetRxOnWhenIdle(true);
         BeginTransmit();
     }
     else
     {
+        mLinks.SetRxOnWhenIdle(mRxOnWhenIdle);
         mLinks.SetPanId(mPanId);
         FinishOperation();
         ReportActiveScanResult(nullptr);

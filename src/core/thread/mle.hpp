@@ -50,6 +50,7 @@
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
+#include "common/uptime.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
@@ -1042,7 +1043,6 @@ public:
      * Schedule tx of MLE Advertisement message (unicast) to the given neighboring router after a random delay.
      *
      * @param[in] aRouter  The router to send the Advertisement to.
-     *
      */
     void ScheduleUnicastAdvertisementTo(const Router &aRouter);
 
@@ -1543,7 +1543,7 @@ private:
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
         Error AppendLeaderDataTlv(void);
         Error AppendScanMaskTlv(uint8_t aScanMask);
-        Error AppendStatusTlv(StatusTlv::Status aStatus);
+        Error AppendStatusTlv(Status aStatus);
         Error AppendLinkMarginTlv(uint8_t aLinkMargin);
         Error AppendVersionTlv(void);
         Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
@@ -1645,6 +1645,13 @@ private:
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    struct ChildUpdateResponseInfo
+    {
+        TlvList      mTlvList;     // The TLVs to include in the Child Update Response.
+        RxChallenge  mChallenge;   // The received challenge from the Child Update Request (can be empty if none).
+        Ip6::Address mDestination; // The destination address.
+    };
 
 #if OPENTHREAD_FTD
     struct ParentResponseInfo
@@ -2266,9 +2273,8 @@ private:
     void       HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void       ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     Error      SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode);
-    Error      SendChildUpdateResponse(const TlvList      &aTlvList,
-                                       const RxChallenge  &aChallenge,
-                                       const Ip6::Address &aDestination);
+    Error      SendChildUpdateRejectResponse(ChildUpdateResponseInfo &aInfo);
+    Error      SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo);
     void       SetRloc16(uint16_t aRloc16);
     void       SetStateDetached(void);
     void       SetStateChild(uint16_t aRloc16);
@@ -2391,10 +2397,7 @@ private:
     void     SendParentResponse(const ParentResponseInfo &aInfo);
     Error    SendChildIdResponse(Child &aChild);
     Error    SendChildUpdateRequestToChild(Child &aChild);
-    void     SendChildUpdateResponseToChild(Child                  *aChild,
-                                            const Ip6::MessageInfo &aMessageInfo,
-                                            const TlvList          &aTlvList,
-                                            const RxChallenge      &aChallenge);
+    void     SendChildUpdateResponseToChild(Child *aChild, const ChildUpdateResponseInfo &aInfo);
     void     SendMulticastDataResponse(void);
     void     SendDataResponse(const Ip6::Address &aDestination,
                               const TlvList      &aTlvList,
@@ -2414,10 +2417,11 @@ private:
     bool     ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
     bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
     void     HandleAdvertiseTrickleTimer(void);
-    void     HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
     void     HandleTimeTick(void);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    DeclareTmfResponseHandlerFullParamIn(Mle, HandleAddressSolicitResponse);
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
@@ -2426,10 +2430,6 @@ private:
     static bool IsMessageMleSubType(const Message &aMessage);
     static bool IsMessageChildUpdateRequest(const Message &aMessage);
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
-    static void HandleAddressSolicitResponse(void                *aContext,
-                                             otMessage           *aMessage,
-                                             const otMessageInfo *aMessageInfo,
-                                             otError              aResult);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     const char *RouterUpgradeReasonToString(uint8_t aReason);
@@ -2461,8 +2461,8 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint32_t mCslTimeout;
 #endif
-    uint32_t         mLastAttachTime;
-    uint64_t         mLastUpdatedTimestamp;
+    UptimeSec        mLastAttachTime;
+    UptimeMsec       mLastUpdatedTimestamp;
     LeaderData       mLeaderData;
     Parent           mParent;
     NeighborTable    mNeighborTable;

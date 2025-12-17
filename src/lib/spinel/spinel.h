@@ -4897,6 +4897,34 @@ enum
      */
     SPINEL_PROP_DNSSD_KEY_RECORD = SPINEL_PROP_DNSSD__BEGIN + 5,
 
+    /// DNS-SD Service Browser
+    /**
+     * Format : Inserted/Removed
+     *
+     * `U`    : The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+     * `t(U)` : The sub-type label if browsing for sub-type, empty otherwise.
+     * `L`    : The infrastructure network interface index to browse the service.
+     * `D`    : The context of the request. A pointer to the browse callback to receive the result.
+     *
+     * NCP uses this property to browse services.
+     */
+    SPINEL_PROP_DNSSD_BROWSER = SPINEL_PROP_DNSSD__BEGIN + 6,
+
+    /// DNS-SD Service Browser Result
+    /**
+     * Format : Set
+     *
+     * `U`    : The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+     * `t(U)` : The sub-type label if browsing for sub-type, empty otherwise.
+     * `U`    : Service instance label.
+     * `L`    : TTL in seconds. Zero TTL indicates that service is removed.
+     * `L`    : The infrastructure network interface index.
+     * `D`    : The context of the request. A pointer to the browse callback to receive the result.
+     *
+     * Host uses this property to send the result of the browser to NCP.
+     */
+    SPINEL_PROP_DNSSD_BROWSE_RESULT = SPINEL_PROP_DNSSD__BEGIN + 7,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
@@ -4985,6 +5013,32 @@ enum
     SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER = SPINEL_PROP_BACKBONE_ROUTER__BEGIN + 3,
 
     SPINEL_PROP_BACKBONE_ROUTER__END = 0x990,
+
+    SPINEL_PROP_BORDER_ROUTER__BEGIN = 0x990,
+
+    /// Enables or Disables DHCPv6 Prefix Delegation
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Enables or disables DHCPv6 Prefix Delegation
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE = SPINEL_PROP_BORDER_ROUTER__BEGIN + 1,
+
+    /// Process DHCPv6 Prefix Delegation Prefix
+    /**
+     * Format: `6CLL` - Write-Only
+     *
+     * This property is used to provide a DHCPv6 Prefix Delegation (PD) prefix to the OpenThread stack
+     * via the NCP interface. It calls `otPlatBorderRoutingProcessDhcp6PdPrefix()`.
+     *
+     * `6` : IPv6 prefix address
+     * `C` : Prefix length in bits
+     * `L` : Valid lifetime in seconds
+     * `L` : Preferred lifetime in seconds
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
+
+    SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 

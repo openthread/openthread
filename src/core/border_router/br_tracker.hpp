@@ -45,8 +45,6 @@
 namespace ot {
 namespace BorderRouter {
 
-class RoutingManager;
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
 
 /**
@@ -122,12 +120,12 @@ private:
             const NetworkData::Rlocs &mExcludeRlocs;
         };
 
-        uint32_t GetAge(uint32_t aUptime) const { return aUptime - mDiscoverTime; }
+        uint32_t GetAge(UptimeSec aUptime) const { return aUptime - mDiscoverTime; }
         bool     Matches(uint16_t aRloc16) const { return mRloc16 == aRloc16; }
         bool     Matches(const RlocFilter &aFilter) const { return !aFilter.mExcludeRlocs.Contains(mRloc16); }
 
         BorderRouter *mNext;
-        uint32_t      mDiscoverTime;
+        UptimeSec     mDiscoverTime;
         uint16_t      mRloc16;
     };
 

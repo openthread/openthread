@@ -131,7 +131,8 @@ void Notifier::EmitEvents(void)
     Get<AnnounceSender>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().HandleNotifierEvents(events);
+    Get<MeshCoP::BorderAgent::Manager>().HandleNotifierEvents(events);
+    Get<MeshCoP::BorderAgent::TxtData>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Get<MlrManager>().HandleNotifierEvents(events);
@@ -161,9 +162,13 @@ void Notifier::EmitEvents(void)
     Get<Extension::ExtensionBase>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Get<BorderRouter::RxRaTracker>().HandleNotifierEvents(events);
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
     Get<BorderRouter::NetDataBrTracker>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<BorderRouter::MultiAilDetector>().HandleNotifierEvents(events);
 #endif
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

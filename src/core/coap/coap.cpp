@@ -636,10 +636,16 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     bool             isOptionSet = false;
     uint16_t         blockOption = 0;
     Option::Iterator iterator;
+    Metadata         metadata;
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
+    // Iterate after metadata copied and removed.
+    metadata.ReadFrom(aRequestOld);
+    metadata.RemoveFrom(aRequestOld);
+    // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
+    IgnoreError(aRequest.SetTokenFromMessage(aRequestOld));
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
@@ -683,6 +689,8 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
         aRequest.SetMoreBlocksFlag(aMoreBlocks);
     }
+
+    error = metadata.AppendTo(aRequestOld);
 
 exit:
     return error;
@@ -1121,7 +1129,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
             FinalizeCoapTransaction(*request, metadata, nullptr, nullptr, kErrorAbort);
         }
 
-        // Silently ignore non-empty reset messages (RFC 7252, p. 4.2).
+        // Silently ignore non-empty reset messages (RFC 7252, Section 4.2).
         break;
 
     case kTypeAck:
@@ -1131,7 +1139,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (metadata.mObserve && !request->IsRequest())
             {
-                // This is the ACK to our RFC7641 notification.  There will be no
+                // This is the ACK to our RFC7641 CON notification.  There will be no
                 // "separate" response so pass it back as if it were a piggy-backed
                 // response so we can stop re-sending and the application can move on.
                 FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, kErrorNone);
@@ -1278,8 +1286,17 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 #endif
                                                            ))
         {
-            // If multicast non-confirmable request, allow multiple responses
             metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, kErrorNone);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+            // When any Observe response is seen, consider a NON observe request "acknowledged" at this point.
+            // This will keep the Observe request active indefinitely until it is canceled.
+            if (metadata.mObserve && !metadata.mConfirmable && responseObserve)
+            {
+                metadata.mAcknowledged = true;
+                metadata.UpdateIn(*request);
+            }
+#endif
         }
         else
         {
@@ -1374,7 +1391,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         SuccessOrExit(error = iterator.Advance());
     }
 
-    curUriPath[0] = '\0';
+    curUriPath[0] = kNullChar;
 
     for (const ResourceBlockWise &resource : mBlockWiseResources)
     {

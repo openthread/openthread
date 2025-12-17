@@ -53,94 +53,97 @@ struct Entry
 
 // The list of URI paths (MUST be sorted alphabetically)
 static constexpr Entry kEntries[] = {
-    {"a/ae"},  // (0) kUriAddressError
-    {"a/an"},  // (1) kUriAddressNotify
-    {"a/aq"},  // (2) kUriAddressQuery
-    {"a/ar"},  // (3) kUriAddressRelease
-    {"a/as"},  // (4) kUriAddressSolicit
-    {"a/sd"},  // (5) kUriServerData
-    {"a/yl"},  // (6) kUriAnycastLocate
-    {"b/ba"},  // (7) kUriBackboneAnswer
-    {"b/bmr"}, // (8) kUriBackboneMlr
-    {"b/bq"},  // (9) kUriBackboneQuery
-    {"c/ab"},  // (10) kUriAnnounceBegin
-    {"c/ag"},  // (11) kUriActiveGet
-    {"c/ar"},  // (12) kUriActiveReplace
-    {"c/as"},  // (13) kUriActiveSet
-    {"c/ca"},  // (14) kUriCommissionerKeepAlive
-    {"c/cg"},  // (15) kUriCommissionerGet
-    {"c/cp"},  // (16) kUriCommissionerPetition
-    {"c/cs"},  // (17) kUriCommissionerSet
-    {"c/dc"},  // (18) kUriDatasetChanged
-    {"c/er"},  // (19) kUriEnergyReport
-    {"c/es"},  // (20) kUriEnergyScan
-    {"c/je"},  // (21) kUriJoinerEntrust
-    {"c/jf"},  // (22) kUriJoinerFinalize
-    {"c/la"},  // (23) kUriLeaderKeepAlive
-    {"c/lp"},  // (24) kUriLeaderPetition
-    {"c/pc"},  // (25) kUriPanIdConflict
-    {"c/pg"},  // (26) kUriPendingGet
-    {"c/pq"},  // (27) kUriPanIdQuery
-    {"c/ps"},  // (28) kUriPendingSet
-    {"c/rx"},  // (29) kUriRelayRx
-    {"c/tx"},  // (30) kUriRelayTx
-    {"c/ur"},  // (31) kUriProxyRx
-    {"c/ut"},  // (32) kUriProxyTx
-    {"d/da"},  // (33) kUriDiagnosticGetAnswer
-    {"d/dg"},  // (34) kUriDiagnosticGetRequest
-    {"d/dq"},  // (35) kUriDiagnosticGetQuery
-    {"d/dr"},  // (36) kUriDiagnosticReset
-    {"n/dn"},  // (37) kUriDuaRegistrationNotify
-    {"n/dr"},  // (38) kUriDuaRegistrationRequest
-    {"n/mr"},  // (39) kUriMlr
+    {"a/ae"},  // kUriAddressError
+    {"a/an"},  // kUriAddressNotify
+    {"a/aq"},  // kUriAddressQuery
+    {"a/ar"},  // kUriAddressRelease
+    {"a/as"},  // kUriAddressSolicit
+    {"a/sd"},  // kUriServerData
+    {"a/yl"},  // kUriAnycastLocate
+    {"b/ba"},  // kUriBackboneAnswer
+    {"b/bmr"}, // kUriBackboneMlr
+    {"b/bq"},  // kUriBackboneQuery
+    {"c/ab"},  // kUriAnnounceBegin
+    {"c/ag"},  // kUriActiveGet
+    {"c/ar"},  // kUriActiveReplace
+    {"c/as"},  // kUriActiveSet
+    {"c/ca"},  // kUriCommissionerKeepAlive
+    {"c/cg"},  // kUriCommissionerGet
+    {"c/cp"},  // kUriCommissionerPetition
+    {"c/cs"},  // kUriCommissionerSet
+    {"c/dc"},  // kUriDatasetChanged
+    {"c/er"},  // kUriEnergyReport
+    {"c/es"},  // kUriEnergyScan
+    {"c/je"},  // kUriJoinerEntrust
+    {"c/jf"},  // kUriJoinerFinalize
+    {"c/la"},  // kUriLeaderKeepAlive
+    {"c/lp"},  // kUriLeaderPetition
+    {"c/pc"},  // kUriPanIdConflict
+    {"c/pg"},  // kUriPendingGet
+    {"c/pq"},  // kUriPanIdQuery
+    {"c/ps"},  // kUriPendingSet
+    {"c/rx"},  // kUriRelayRx
+    {"c/te"},  // kUriTcatEnable
+    {"c/tx"},  // kUriRelayTx
+    {"c/ur"},  // kUriProxyRx
+    {"c/ut"},  // kUriProxyTx
+    {"d/da"},  // kUriDiagnosticGetAnswer
+    {"d/dg"},  // kUriDiagnosticGetRequest
+    {"d/dq"},  // kUriDiagnosticGetQuery
+    {"d/dr"},  // kUriDiagnosticReset
+    {"h/an"},  // kUriHistoryAnswer
+    {"h/qy"},  // kUriHistoryQuery
+    {"n/dn"},  // kUriDuaRegistrationNotify
+    {"n/dr"},  // kUriDuaRegistrationRequest
+    {"n/mr"},  // kUriMlr
 };
 
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
 
-struct UriEnumCheck
-{
-    InitEnumValidatorCounter();
-    ValidateNextEnum(kUriAddressError);
-    ValidateNextEnum(kUriAddressNotify);
-    ValidateNextEnum(kUriAddressQuery);
-    ValidateNextEnum(kUriAddressRelease);
-    ValidateNextEnum(kUriAddressSolicit);
-    ValidateNextEnum(kUriServerData);
-    ValidateNextEnum(kUriAnycastLocate);
-    ValidateNextEnum(kUriBackboneAnswer);
-    ValidateNextEnum(kUriBackboneMlr);
-    ValidateNextEnum(kUriBackboneQuery);
-    ValidateNextEnum(kUriAnnounceBegin);
-    ValidateNextEnum(kUriActiveGet);
-    ValidateNextEnum(kUriActiveReplace);
-    ValidateNextEnum(kUriActiveSet);
-    ValidateNextEnum(kUriCommissionerKeepAlive);
-    ValidateNextEnum(kUriCommissionerGet);
-    ValidateNextEnum(kUriCommissionerPetition);
-    ValidateNextEnum(kUriCommissionerSet);
-    ValidateNextEnum(kUriDatasetChanged);
-    ValidateNextEnum(kUriEnergyReport);
-    ValidateNextEnum(kUriEnergyScan);
-    ValidateNextEnum(kUriJoinerEntrust);
-    ValidateNextEnum(kUriJoinerFinalize);
-    ValidateNextEnum(kUriLeaderKeepAlive);
-    ValidateNextEnum(kUriLeaderPetition);
-    ValidateNextEnum(kUriPanIdConflict);
-    ValidateNextEnum(kUriPendingGet);
-    ValidateNextEnum(kUriPanIdQuery);
-    ValidateNextEnum(kUriPendingSet);
-    ValidateNextEnum(kUriRelayRx);
-    ValidateNextEnum(kUriRelayTx);
-    ValidateNextEnum(kUriProxyRx);
-    ValidateNextEnum(kUriProxyTx);
-    ValidateNextEnum(kUriDiagnosticGetAnswer);
-    ValidateNextEnum(kUriDiagnosticGetRequest);
-    ValidateNextEnum(kUriDiagnosticGetQuery);
-    ValidateNextEnum(kUriDiagnosticReset);
-    ValidateNextEnum(kUriDuaRegistrationNotify);
-    ValidateNextEnum(kUriDuaRegistrationRequest);
-    ValidateNextEnum(kUriMlr);
-};
+// Validate that the `kEntries[]` order match the `kUri*` enum constants
+static_assert(AreConstStringsEqual(kEntries[kUriAddressError].mPath, "a/ae"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriAddressNotify].mPath, "a/an"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriAddressQuery].mPath, "a/aq"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriAddressRelease].mPath, "a/ar"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriAddressSolicit].mPath, "a/as"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriServerData].mPath, "a/sd"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriAnycastLocate].mPath, "a/yl"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriBackboneAnswer].mPath, "b/ba"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriBackboneMlr].mPath, "b/bmr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriBackboneQuery].mPath, "b/bq"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriAnnounceBegin].mPath, "c/ab"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriActiveGet].mPath, "c/ag"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriActiveReplace].mPath, "c/ar"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriActiveSet].mPath, "c/as"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriCommissionerKeepAlive].mPath, "c/ca"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriCommissionerGet].mPath, "c/cg"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriCommissionerPetition].mPath, "c/cp"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriCommissionerSet].mPath, "c/cs"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDatasetChanged].mPath, "c/dc"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnergyReport].mPath, "c/er"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriEnergyScan].mPath, "c/es"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriJoinerEntrust].mPath, "c/je"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriJoinerFinalize].mPath, "c/jf"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriLeaderKeepAlive].mPath, "c/la"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriLeaderPetition].mPath, "c/lp"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriPanIdConflict].mPath, "c/pc"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriPendingGet].mPath, "c/pg"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriPanIdQuery].mPath, "c/pq"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriPendingSet].mPath, "c/ps"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriRelayRx].mPath, "c/rx"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriTcatEnable].mPath, "c/te"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriRelayTx].mPath, "c/tx"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriProxyRx].mPath, "c/ur"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriProxyTx].mPath, "c/ut"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetAnswer].mPath, "d/da"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetRequest].mPath, "d/dg"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetQuery].mPath, "d/dq"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticReset].mPath, "d/dr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriHistoryAnswer].mPath, "h/an"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriHistoryQuery].mPath, "h/qy"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationNotify].mPath, "n/dn"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationRequest].mPath, "n/dr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriMlr].mPath, "n/mr"), "kEntries is invalid");
 
 } // namespace UriList
 
@@ -193,6 +196,7 @@ template <> const char *UriToString<kUriPendingGet>(void) { return "PendingGet";
 template <> const char *UriToString<kUriPanIdQuery>(void) { return "PanIdQuery"; }
 template <> const char *UriToString<kUriPendingSet>(void) { return "PendingSet"; }
 template <> const char *UriToString<kUriRelayRx>(void) { return "RelayRx"; }
+template <> const char *UriToString<kUriTcatEnable>(void) { return "TcatEnable"; }
 template <> const char *UriToString<kUriRelayTx>(void) { return "RelayTx"; }
 template <> const char *UriToString<kUriProxyRx>(void) { return "ProxyRx"; }
 template <> const char *UriToString<kUriProxyTx>(void) { return "ProxyTx"; }
@@ -200,6 +204,8 @@ template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "Dia
 template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
 template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
 template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
+template <> const char *UriToString<kUriHistoryAnswer>(void) { return "HistAnswer"; }
+template <> const char *UriToString<kUriHistoryQuery>(void) { return "HistQuery"; }
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
 template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }

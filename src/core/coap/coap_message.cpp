@@ -261,7 +261,7 @@ Error Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) con
         SuccessOrExit(error = iterator.Advance(kOptionUriPath));
     }
 
-    *curUriPath = '\0';
+    *curUriPath = kNullChar;
 
 exit:
     return error;

@@ -257,18 +257,18 @@ const Counters &Mle::GetCounters(void)
 void Mle::ResetCounters(void)
 {
     ClearAllBytes(mCounters);
-    mLastUpdatedTimestamp = Get<Uptime>().GetUptime();
+    mLastUpdatedTimestamp = Get<UptimeTracker>().GetUptime();
 }
 
 uint32_t Mle::GetCurrentAttachDuration(void) const
 {
-    return IsAttached() ? Get<Uptime>().GetUptimeInSeconds() - mLastAttachTime : 0;
+    return IsAttached() ? Get<UptimeTracker>().GetUptimeInSeconds() - mLastAttachTime : 0;
 }
 
 void Mle::UpdateRoleTimeCounters(DeviceRole aRole)
 {
-    uint64_t currentUptimeMsec = Get<Uptime>().GetUptime();
-    uint64_t durationMsec      = currentUptimeMsec - mLastUpdatedTimestamp;
+    UptimeMsec currentUptimeMsec = Get<UptimeTracker>().GetUptime();
+    uint64_t   durationMsec      = currentUptimeMsec - mLastUpdatedTimestamp;
 
     mLastUpdatedTimestamp = currentUptimeMsec;
 
@@ -304,7 +304,7 @@ void Mle::SetRole(DeviceRole aRole)
 
     if ((oldRole == kRoleDetached) && IsAttached())
     {
-        mLastAttachTime = Get<Uptime>().GetUptimeInSeconds();
+        mLastAttachTime = Get<UptimeTracker>().GetUptimeInSeconds();
     }
 
     UpdateRoleTimeCounters(oldRole);
@@ -1194,8 +1194,17 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     case kAppendZeroTimeout:
         break;
     case kAppendChallengeTlv:
-    case kToRestoreChildRole:
         mPrevRoleRestorer.GenerateRandomChallenge();
+        OT_FALL_THROUGH;
+
+    case kToRestoreChildRole:
+        // The challenge used for child role restoration is generated
+        // only once, specifically when the `mPrevRoleRestorer` state
+        // changes and the process starts. We reuse this single challenge
+        // for all "Child Update Request" retries. This prevents a new
+        // challenge from invalidating a potentially delayed, yet correct,
+        // response from the parent.
+
         SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
         break;
     }
@@ -1255,28 +1264,51 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
-                                   const RxChallenge  &aChallenge,
-                                   const Ip6::Address &aDestination)
+Error Mle::SendChildUpdateRejectResponse(ChildUpdateResponseInfo &aInfo)
+{
+    // Send a reject response which only includes a Source Address TLV,
+    // a Status TLV, and a Response TLV when request contained a
+    // Challenge TLV.
+
+    aInfo.mTlvList.Clear();
+
+    aInfo.mTlvList.Add(Tlv::kSourceAddress);
+    aInfo.mTlvList.Add(Tlv::kStatus);
+
+    if (!aInfo.mChallenge.IsEmpty())
+    {
+        aInfo.mTlvList.Add(Tlv::kResponse);
+    }
+
+    return SendChildUpdateResponse(aInfo);
+}
+
+Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
 {
     Error      error = kErrorNone;
     TxMessage *message;
     bool       checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendSourceAddressTlv());
-    SuccessOrExit(error = message->AppendLeaderDataTlv());
 
-    for (uint8_t tlvType : aTlvList)
+    for (uint8_t tlvType : aInfo.mTlvList)
     {
         switch (tlvType)
         {
+        case Tlv::kSourceAddress:
+            SuccessOrExit(error = message->AppendSourceAddressTlv());
+            break;
+
+        case Tlv::kLeaderData:
+            SuccessOrExit(error = message->AppendLeaderDataTlv());
+            break;
+
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
             break;
 
         case Tlv::kStatus:
-            SuccessOrExit(error = message->AppendStatusTlv(StatusTlv::kError));
+            SuccessOrExit(error = message->AppendStatusTlv(kStatusError));
             break;
 
         case Tlv::kAddressRegistration:
@@ -1294,7 +1326,7 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
+            SuccessOrExit(error = message->AppendResponseTlv(aInfo.mChallenge));
             break;
 
         case Tlv::kLinkFrameCounter:
@@ -1320,9 +1352,9 @@ Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
         }
     }
 
-    SuccessOrExit(error = message->SendTo(aDestination));
+    SuccessOrExit(error = message->SendTo(aInfo.mDestination));
 
-    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aDestination);
+    Log(kMessageSend, kTypeChildUpdateResponseAsChild, aInfo.mDestination);
 
     if (checkAddress && HasUnregisteredAddress())
     {
@@ -1539,6 +1571,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     LogDebg("Receive MLE message");
 
     VerifyOrExit(aMessage.GetOrigin() == Message::kOriginThreadNetif);
+    VerifyOrExit(aMessageInfo.GetPeerAddr().IsLinkLocalUnicast());
+    VerifyOrExit(aMessageInfo.GetSockAddr().IsLinkLocalUnicastOrMulticast());
+
     VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = kErrorParse);
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), securitySuite));
@@ -2181,44 +2216,57 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    VerifyOrExit(IsAttached());
-
 #if OPENTHREAD_FTD
     if (IsRouterOrLeader())
     {
         HandleChildUpdateRequestOnParent(aRxInfo);
-        ExitNow();
     }
+    else
 #endif
-
-    HandleChildUpdateRequestOnChild(aRxInfo);
-
-exit:
-    return;
+    {
+        HandleChildUpdateRequestOnChild(aRxInfo);
+    }
 }
 
 void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
 {
-    Error       error = kErrorNone;
-    uint16_t    sourceAddress;
-    RxChallenge challenge;
-    TlvList     requestedTlvList;
-    TlvList     tlvList;
-    uint8_t     linkMarginOut;
+    Error                   error           = kErrorNone;
+    bool                    canTrustMessage = aRxInfo.IsNeighborStateValid();
+    uint8_t                 linkMarginOut;
+    uint16_t                sourceAddress;
+    ChildUpdateResponseInfo info;
+    TlvList                 requestedTlvList;
+
+    if (!IsAttached())
+    {
+        // If detached and trying to restore our role as a child, we
+        // allow processing of a received "Child Update Request"
+        // and send a response. But since we have not yet established
+        // trust with any device (including our former parent),
+        // we will not save any of the content (TLVs) from the
+        // message (`canTrustMessage` will be `false`).
+
+        VerifyOrExit(mPrevRoleRestorer.IsRestoringChildRole());
+    }
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
     Log(kMessageReceive, kTypeChildUpdateRequestAsChild, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
+    info.mDestination = aRxInfo.mMessageInfo.GetPeerAddr();
+
+    info.mTlvList.Add(Tlv::kSourceAddress);
+    info.mTlvList.Add(Tlv::kLeaderData);
+
+    switch (aRxInfo.mMessage.ReadChallengeTlv(info.mChallenge))
     {
     case kErrorNone:
-        tlvList.Add(Tlv::kResponse);
-        tlvList.Add(Tlv::kMleFrameCounter);
-        tlvList.Add(Tlv::kLinkFrameCounter);
+        info.mTlvList.Add(Tlv::kResponse);
+        info.mTlvList.Add(Tlv::kMleFrameCounter);
+        info.mTlvList.Add(Tlv::kLinkFrameCounter);
         break;
     case kErrorNotFound:
-        challenge.Clear();
+        info.mChallenge.Clear();
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -2231,7 +2279,7 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
         switch (Tlv::Find<StatusTlv>(aRxInfo.mMessage, status))
         {
         case kErrorNone:
-            VerifyOrExit(status != StatusTlv::kError, IgnoreError(BecomeDetached()));
+            VerifyOrExit(status != kStatusError, IgnoreError(BecomeDetached()));
             break;
         case kErrorNotFound:
             break;
@@ -2245,17 +2293,20 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             ExitNow();
         }
 
-        SuccessOrExit(error = HandleLeaderData(aRxInfo));
-
-        switch (Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginOut))
+        if (canTrustMessage)
         {
-        case kErrorNone:
-            mParent.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginOut));
-            break;
-        case kErrorNotFound:
-            break;
-        default:
-            ExitNow(error = kErrorParse);
+            SuccessOrExit(error = HandleLeaderData(aRxInfo));
+
+            switch (Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginOut))
+            {
+            case kErrorNone:
+                mParent.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginOut));
+                break;
+            case kErrorNotFound:
+                break;
+            default:
+                ExitNow(error = kErrorParse);
+            }
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -2266,41 +2317,40 @@ void Mle::HandleChildUpdateRequestOnChild(RxInfo &aRxInfo)
             {
                 // MUST include CSL timeout TLV when request includes
                 // CSL accuracy
-                tlvList.Add(Tlv::kCslTimeout);
+                info.mTlvList.Add(Tlv::kCslTimeout);
             }
         }
 #endif
+
+        switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
+        {
+        case kErrorNone:
+            info.mTlvList.AddElementsFrom(requestedTlvList);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
     else
     {
-        // This device is not a child of the Child Update Request source
-        tlvList.Add(Tlv::kStatus);
-    }
-
-    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
-    {
-    case kErrorNone:
-        tlvList.AddElementsFrom(requestedTlvList);
-        break;
-    case kErrorNotFound:
-        break;
-    default:
-        ExitNow(error = kErrorParse);
+        // This device is not a child of the Child Update Request source.
+        error = SendChildUpdateRejectResponse(info);
+        ExitNow();
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if ((aRxInfo.mNeighbor != nullptr) && !challenge.IsEmpty())
+    if ((aRxInfo.mNeighbor != nullptr) && !info.mChallenge.IsEmpty())
     {
         aRxInfo.mNeighbor->ClearLastRxFragmentTag();
     }
 #endif
 
-    // Send the response to the requester, regardless if it's this
-    // device's parent or not.
-    SuccessOrExit(error = SendChildUpdateResponse(tlvList, challenge, aRxInfo.mMessageInfo.GetPeerAddr()));
+    error = SendChildUpdateResponse(info);
 
 exit:
     LogProcessError(kTypeChildUpdateRequestAsChild, error);
@@ -3365,11 +3415,11 @@ void Mle::DelayedSender::Execute(const Schedule &aSchedule)
 
     case kTypeLinkRequest:
     {
-        uint16_t rlco16;
+        uint16_t rloc16;
         Router  *router;
 
-        IgnoreError(aSchedule.Read(sizeof(Header), rlco16));
-        router = Get<RouterTable>().FindRouterByRloc16(rlco16);
+        IgnoreError(aSchedule.Read(sizeof(Header), rloc16));
+        router = Get<RouterTable>().FindRouterByRloc16(rloc16);
 
         if (router != nullptr)
         {
@@ -3506,7 +3556,7 @@ Error Mle::TxMessage::AppendSourceAddressTlv(void)
     return Tlv::Append<SourceAddressTlv>(*this, Get<Mle>().GetRloc16());
 }
 
-Error Mle::TxMessage::AppendStatusTlv(StatusTlv::Status aStatus) { return Tlv::Append<StatusTlv>(*this, aStatus); }
+Error Mle::TxMessage::AppendStatusTlv(Status aStatus) { return Tlv::Append<StatusTlv>(*this, aStatus); }
 
 Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode) { return Tlv::Append<ModeTlv>(*this, aMode.Get()); }
 
@@ -4251,6 +4301,7 @@ Error Mle::PrevRoleRestorer::Start(void)
     VerifyOrExit(Get<Mle>().mLastSavedRole == kRoleChild);
     VerifyOrExit(Get<Mle>().mParent.IsStateValidOrRestoring());
     SetState(kRestoringChildRole);
+    GenerateRandomChallenge();
     mAttempts = kMaxChildUpdatesToRestoreRole;
     mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
     error = kErrorNone;

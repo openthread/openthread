@@ -41,21 +41,28 @@ using namespace ot;
 
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
+    AsCoreType(aInstance).Get<BorderRouter::InfraIf>().Init(aInfraIfIndex, aInfraIfIsRunning);
+
+    return kErrorNone;
 }
 
 otError otBorderRoutingGetInfraIfInfo(otInstance *aInstance, uint32_t *aInfraIfIndex, bool *aInfraIfIsRunning)
 {
-    bool isRunning;
+    Error error = kErrorNone;
 
     AssertPointerIsNotNull(aInfraIfIndex);
 
-    if (aInfraIfIsRunning == nullptr)
+    VerifyOrExit(AsCoreType(aInstance).Get<BorderRouter::InfraIf>().IsInitialized(), error = kErrorInvalidState);
+
+    *aInfraIfIndex = AsCoreType(aInstance).Get<BorderRouter::InfraIf>().GetIfIndex();
+
+    if (aInfraIfIsRunning != nullptr)
     {
-        aInfraIfIsRunning = &isRunning;
+        *aInfraIfIsRunning = AsCoreType(aInstance).Get<BorderRouter::InfraIf>().IsRunning();
     }
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetInfraIfInfo(*aInfraIfIndex, *aInfraIfIsRunning);
+exit:
+    return error;
 }
 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
@@ -74,16 +81,15 @@ otError otBorderRoutingSetOmrConfig(otInstance              *aInstance,
                                     otRoutePreference        aPreference)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetOmrConfig(
-        MapEnum(aConfig), AsCoreTypePtr(aOmrPrefix),
-        static_cast<BorderRouter::RoutingManager::RoutePreference>(aPreference));
+        MapEnum(aConfig), AsCoreTypePtr(aOmrPrefix), static_cast<BorderRouter::RoutePreference>(aPreference));
 }
 
 otBorderRoutingOmrConfig otBorderRoutingGetOmrConfig(otInstance        *aInstance,
                                                      otIp6Prefix       *aOmrPrefix,
                                                      otRoutePreference *aPreference)
 {
-    BorderRouter::RoutingManager::RoutePreference preference;
-    BorderRouter::RoutingManager::OmrConfig       omrConfig;
+    BorderRouter::RoutePreference           preference;
+    BorderRouter::RoutingManager::OmrConfig omrConfig;
 
     omrConfig =
         AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrConfig(AsCoreTypePtr(aOmrPrefix), &preference);
@@ -158,8 +164,8 @@ otError otBorderRoutingGetPdProcessedRaInfo(otInstance *aInstance, otPdProcessed
 
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference)
 {
-    otError                                       error;
-    BorderRouter::RoutingManager::RoutePreference preference;
+    otError                       error;
+    BorderRouter::RoutePreference preference;
 
     AssertPointerIsNotNull(aPreference);
 
@@ -191,8 +197,8 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance        *aInstance,
                                              otIp6Prefix       *aPrefix,
                                              otRoutePreference *aPreference)
 {
-    otError                                       error;
-    BorderRouter::RoutingManager::RoutePreference preference;
+    otError                       error;
+    BorderRouter::RoutePreference preference;
 
     AssertPointerIsNotNull(aPreference);
 
@@ -209,7 +215,7 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 {
     AssertPointerIsNotNull(aIterator);
 
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(*aIterator);
+    AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().InitIterator(*aIterator);
 }
 
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
@@ -219,7 +225,7 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextPrefixTableEntry(*aIterator, *aEntry);
 }
 
 otError otBorderRoutingGetNextRouterEntry(otInstance                         *aInstance,
@@ -229,8 +235,20 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRouterEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(*aIterator, *aEntry);
 }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+otError otBorderRoutingGetNextNat64PrefixEntry(otInstance                         *aInstance,
+                                               otBorderRoutingPrefixTableIterator *aIterator,
+                                               otBorderRoutingNat64PrefixEntry    *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextNat64PrefixEntry(*aIterator, *aEntry);
+}
+#endif
 
 otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
                                              otBorderRoutingPrefixTableIterator *aIterator,
@@ -239,14 +257,14 @@ otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextRdnssAddrEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextRdnssAddrEntry(*aIterator, *aEntry);
 }
 
 void otBorderRoutingSetRdnssAddrCallback(otInstance                      *aInstance,
                                          otBorderRoutingRdnssAddrCallback aCallback,
                                          void                            *aContext)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRdnssAddrCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().SetRdnssAddrCallback(aCallback, aContext);
 }
 
 otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aInstance,
@@ -256,7 +274,7 @@ otError otBorderRoutingGetNextIfAddrEntry(otInstance                         *aI
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aEntry);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextIfAddrEntry(*aIterator, *aEntry);
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextIfAddrEntry(*aIterator, *aEntry);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
@@ -283,22 +301,6 @@ uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 
     return AsCoreType(aInstance).Get<BorderRouter::NetDataBrTracker>().CountBrs(
         BorderRouter::NetDataBrTracker::kExcludeThisDevice, *aMinAge);
-}
-
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsMultiAilDetected();
-}
-
-void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
-                                        otBorderRoutingMultiAilCallback aCallback,
-                                        void                           *aContext)
-{
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetMultiAilCallback(aCallback, aContext);
 }
 
 #endif

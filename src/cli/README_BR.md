@@ -9,13 +9,19 @@ Usage : `br [command] ...`
 - [enable](#enable)
 - [help](#help)
 - [ifaddrs](#ifaddrs)
+- [infraif](#infraif)
 - [init](#init)
+- [multiail](#multiail)
 - [nat64prefix](#nat64prefix)
+- [nat64prefixtable](#nat64prefixtable)
+- [omrconfig](#omrconfig)
 - [omrprefix](#omrprefix)
 - [onlinkprefix](#onlinkprefix)
 - [pd](#pd)
 - [peers](#peers)
 - [prefixtable](#prefixtable)
+- [raoptions](#raoptions)
+- [rdnsstable](#rdnsstable)
 - [rioprf](#rioprf)
 - [routeprf](#routeprf)
 - [routers](#routers)
@@ -34,7 +40,12 @@ Print BR command help menu.
 counters
 disable
 enable
+ifaddrs
+infraif
+init
 multiail
+nat64prefix
+nat64prefixtable
 omrconfig
 omrprefix
 onlinkprefix
@@ -189,6 +200,34 @@ Done
 BR multi AIL callback: cleared
 ```
 
+Usage: `br multiail state`
+
+Outputs full state of multi-AIL detector:
+
+- Whether the detector is enabled.
+- Whether the detector is running (when it is enabled and the infra-if interface is also active).
+- Whether multi-AIL was detected.
+
+```bash
+> br multiail state
+Enabled: yes
+Running: yes
+Detected: no
+Done
+```
+
+Usage: `br multiail enable|disable`
+
+Enable or disable the multi-AIL detector.
+
+```bash
+> br multiail enable
+Done
+
+> br multiail disable
+Done
+```
+
 ### omrconfig
 
 Usage: `br omrconfig`
@@ -306,8 +345,34 @@ Done
 fd14:1078:b3d5:b0b0:0:0::/96 prf:low
 Done
 
-> br nat64prefix
+> br nat64prefix local
 fd14:1078:b3d5:b0b0:0:0::/96
+Done
+```
+
+### nat64prefixtable
+
+Usage: `br nat64prefixtable`
+
+Get the discovered NAT64 prefixes by Border Routing Manager on the infrastructure link.
+
+`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required.
+
+Info per prefix entry:
+
+- The prefix
+- Milliseconds since last received Router Advertisement containing this prefix
+- Prefix lifetime in seconds
+- The router IPv6 address which advertises this prefix
+- Flags in received Router Advertisement header:
+  - M: Managed Address Config flag
+  - O: Other Config flag
+  - S: SNAC Router flag
+
+```bash
+> br nat64prefixtable
+prefix:fd00:1234:5678:0:0:0::/96, ms-since-rx:29526, lifetime:1800, router:fe80:0:0:0:0:0:0:1 (M:0 O:0 S:1)
+prefix:fd11:2233:4455:0:0:0::/96, ms-since-rx:29527, lifetime:1800, router:fe80:0:0:0:0:0:0:1 (M:0 O:0 S:1)
 Done
 ```
 
@@ -409,7 +474,7 @@ Info per prefix entry:
 - Prefix lifetime in seconds
 - Preferred lifetime in seconds only if prefix is on-link
 - Route preference (low, med, high) only if prefix is route (not on-link)
-- The router IPv6 address which advertising this prefix
+- The router IPv6 address which advertises this prefix
 - Flags in received Router Advertisement header:
   - M: Managed Address Config flag
   - O: Other Config flag

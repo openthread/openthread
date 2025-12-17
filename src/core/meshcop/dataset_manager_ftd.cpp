@@ -178,7 +178,7 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
         }
         else
         {
-            delayTimer = Max(delayTimer, Get<Leader>().GetDelayTimerMinimal());
+            delayTimer = Max(delayTimer, Get<PendingDatasetManager>().GetDelayTimerMinimal());
         }
 
         IgnoreError(aInfo.mDataset.Write<DelayTimerTlv>(delayTimer));
@@ -393,6 +393,17 @@ exit:
 
 void PendingDatasetManager::StartLeader(void) { StartDelayTimer(); }
 
+Error PendingDatasetManager::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kMinDelay), error = kErrorInvalidArgs);
+    mDelayTimerMinimal = aDelayTimerMinimal;
+
+exit:
+    return error;
+}
+
 template <>
 void PendingDatasetManager::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
@@ -411,7 +422,7 @@ void PendingDatasetManager::ApplyActiveDataset(Dataset &aDataset)
 
     SuccessOrExit(aDataset.Read<ActiveTimestampTlv>(activeTimestamp));
     SuccessOrExit(aDataset.Write<PendingTimestampTlv>(activeTimestamp));
-    SuccessOrExit(aDataset.Write<DelayTimerTlv>(Get<Leader>().GetDelayTimerMinimal()));
+    SuccessOrExit(aDataset.Write<DelayTimerTlv>(GetDelayTimerMinimal()));
 
     IgnoreError(DatasetManager::Save(aDataset));
     StartDelayTimer(aDataset);
