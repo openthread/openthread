@@ -461,7 +461,7 @@ public:
      *
      * @returns The string writer.
      */
-    StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
+    StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
     /**
      * Appends an array of bytes in hex representation (using "%02x" style) to the buffer.

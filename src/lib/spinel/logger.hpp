@@ -50,8 +50,9 @@ protected:
     void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
     void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
-    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
-    void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
+    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(4, 5);
+    void LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
 
     enum
     {
