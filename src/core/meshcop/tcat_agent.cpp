@@ -308,8 +308,7 @@ bool TcatAgent::IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissione
                                                   CommandClassFlags aDeviceCommandClassFlags,
                                                   Dataset          *aCommSuppliedDataset) const
 {
-    bool           authorized            = false;
-    bool           isPskcInActiveDataset = false;
+    bool           authorized = false;
     uint8_t        deviceRequirementMet;
     uint8_t        commissionerRequirementMet;
     Dataset::Info  datasetInfo;
@@ -317,25 +316,22 @@ bool TcatAgent::IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissione
 
     VerifyOrExit(IsConnected());
 
-    if (Get<ActiveDatasetManager>().Read(datasetInfo) == kErrorNone)
-    {
-        datasetInfoPtr        = &datasetInfo;
-        isPskcInActiveDataset = datasetInfoPtr->IsPresent<Dataset::kPskc>();
-    }
-
     if (aCommSuppliedDataset != nullptr)
     {
         aCommSuppliedDataset->ConvertTo(datasetInfo);
+        datasetInfoPtr = &datasetInfo;
+    }
+    else if (Get<ActiveDatasetManager>().Read(datasetInfo) == kErrorNone)
+    {
         datasetInfoPtr = &datasetInfo;
     }
 
     deviceRequirementMet       = CheckAuthorizationRequirements(aDeviceCommandClassFlags, datasetInfoPtr);
     commissionerRequirementMet = CheckAuthorizationRequirements(aCommissionerCommandClassFlags, datasetInfoPtr);
 
-    if (!isPskcInActiveDataset && aCommSuppliedDataset != nullptr)
+    if (aCommSuppliedDataset != nullptr)
     {
-        // if there is no PSKc in the Active Dataset (or if there is no Active Dataset), and
-        // the Commissioner supplies a dataset to write (which can only happen for the Commissioning command class),
+        // If Commissioner supplies a dataset (only for Set Active Operational Dataset TLV commands),
         // then the PSKc check is always considered successful. Table 13-9, bit 5.
         deviceRequirementMet |= kPskcFlag;
         commissionerRequirementMet |= (aCommissionerCommandClassFlags & kPskcFlag);

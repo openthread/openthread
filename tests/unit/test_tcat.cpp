@@ -724,6 +724,42 @@ void TestTcatCommissioner2AuthWithDeviceRequirements(void)
     testFreeInstance(instance);
 }
 
+void TestTcatCommissioner4AuthWithExistingPartialDataset(void)
+{
+    Instance          *instance = testInitInstanceTcat();
+    TcatAgent         *agent    = &instance->Get<TcatAgent>();
+    TcatAgentTestProbe tester(agent);
+
+    // TCAT device was commissioned earlier on with a partial dataset.
+    instance->Get<ActiveDatasetManager>().SaveLocal(partialDataset);
+
+    // Mock TCAT Commissioner 4 connects to the Device.
+    // static const uint8_t kCommCert4AuthField[5]   = {0x21, 0x21, 0x05, 0x09, 0x11};
+    memcpy(&commAuth, &kCommCert4AuthField, sizeof(commAuth));
+    tester.MockCommissionerConnected(commAuth, deviceAuth, true);
+    tester.MockNetworkName(true, &commNetworkName);
+    tester.MockExtPanId(true, &commExtPanId);
+
+    // It wants access to Extraction class (0x05) based on matching Network Name, but it's denied.
+    // Decommissioning (0x09) based on matching XPAN ID is also denied.
+    VerifyOrQuit(commandClassesAuthorized(agent, kClassGeneral));
+    VerifyOrQuit(!setActiveDatasetAuthorized(agent, fullDataset));
+
+    // PSKc proof - satisfies 0x21. Set Active Dataset is not allowed: Device already commissioned.
+    tester.MockCommissionerPskcProof(true);
+    VerifyOrQuit(commandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+    VerifyOrQuit(!setActiveDatasetAuthorized(agent, fullDataset));
+
+    // As a sanity check, redo the test assuming that a (matching) full dataset was initially in the Device.
+    // Now, Extraction and Commissioning classes do work because of matching elements in the Commcert.
+    instance->Get<ActiveDatasetManager>().SaveLocal(fullDataset);
+    VerifyOrQuit(commandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
+                                                     kClassDecommissioning));
+    VerifyOrQuit(!setActiveDatasetAuthorized(agent, fullDataset));
+
+    testFreeInstance(instance);
+}
+
 } // namespace MeshCoP
 } // namespace ot
 
@@ -739,6 +775,7 @@ int main(void)
     ot::MeshCoP::TestTcatCommissioner5Auth();
     ot::MeshCoP::TestTcatCommissioner1AuthWithDeviceRequirements();
     ot::MeshCoP::TestTcatCommissioner2AuthWithDeviceRequirements();
+    ot::MeshCoP::TestTcatCommissioner4AuthWithExistingPartialDataset();
     printf("All tests passed\n");
 #else
     printf("Tcat is not enabled\n");
