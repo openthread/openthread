@@ -1631,42 +1631,42 @@ void ResponsesQueue::HandleTimer(void)
     mTimer.FireAt(nextDequeueTime);
 }
 
-/// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.
-static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
-{
-    uint32_t result = 0;
-
-    VerifyOrExit(aValueA);
-
-    result = aValueA * aValueB;
-    result = (result / aValueA == aValueB) ? result : 0;
-
-exit:
-    return result;
-}
-
 bool TxParameters::IsValid(void) const
 {
-    bool rval = false;
+    bool     isValid = false;
+    uint32_t duration;
+    uint32_t retryFactor;
 
-    // support fire and forget requests
     if (mAckTimeout == 0)
     {
-        rval = true;
-    }
-    else if ((mAckRandomFactorDenominator > 0) && (mAckRandomFactorNumerator >= mAckRandomFactorDenominator) &&
-             (mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT) && (mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT))
-    {
-        // Calculate exchange lifetime step by step and verify no overflow.
-        uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
-
-        tmp = Multiply(tmp, mAckRandomFactorNumerator);
-        tmp /= mAckRandomFactorDenominator;
-
-        rval = (tmp != 0 && (tmp + mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
+        // Support fire and forget requests
+        isValid = true;
+        ExitNow();
     }
 
-    return rval;
+    VerifyOrExit(mAckRandomFactorDenominator > 0);
+    VerifyOrExit(mAckRandomFactorNumerator >= mAckRandomFactorDenominator);
+    VerifyOrExit(mAckTimeout >= kMinAckTimeout);
+    VerifyOrExit(mMaxRetransmit <= kMaxRetransmit);
+
+    // Calculate exchange lifetime max duration step by step and verify no overflow.
+
+    static_assert(kMaxRetransmit < 31, "kMaxRetransmit is not valid");
+
+    retryFactor = static_cast<uint32_t>((1U << (mMaxRetransmit + 1)) - 1);
+    SuccessOrExit(SafeMultiply<uint32_t>(mAckTimeout, retryFactor, duration));
+
+    SuccessOrExit(SafeMultiply<uint32_t>(duration, mAckRandomFactorNumerator, duration));
+    duration /= mAckRandomFactorDenominator;
+
+    VerifyOrExit(duration > 0);
+    VerifyOrExit(CanAddSafely<uint32_t>(mAckTimeout, 2 * kDefaultMaxLatency));
+    VerifyOrExit(CanAddSafely<uint32_t>(duration, mAckTimeout + 2 * kDefaultMaxLatency));
+
+    isValid = true;
+
+exit:
+    return isValid;
 }
 
 uint32_t TxParameters::CalculateInitialRetransmissionTimeout(void) const

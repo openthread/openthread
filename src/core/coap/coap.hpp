@@ -128,6 +128,8 @@ private:
     static constexpr uint8_t  kDefaultAckRandomFactorDenominator = 2;
     static constexpr uint8_t  kDefaultMaxRetransmit              = 4;
     static constexpr uint32_t kDefaultMaxLatency                 = 100000; // in msec
+    static constexpr uint8_t  kMaxRetransmit                     = OT_COAP_MAX_RETRANSMIT;
+    static constexpr uint32_t kMinAckTimeout                     = OT_COAP_MIN_ACK_TIMEOUT;
 
     uint32_t CalculateInitialRetransmissionTimeout(void) const;
     uint32_t CalculateExchangeLifetime(void) const;
