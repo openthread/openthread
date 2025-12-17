@@ -58,7 +58,6 @@
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/mdns_socket.hpp"
 #include "posix/platform/radio_url.hpp"
-#include "posix/platform/settings_file.hpp"
 #include "posix/platform/spinel_driver_getter.hpp"
 #include "posix/platform/udp.hpp"
 
@@ -181,7 +180,7 @@ void platformInitNcpMode(otPlatformConfig *aPlatformConfig)
 
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
-    ot::Posix::SettingsFile::SetSettingsPath(aPlatformConfig->mDataPath);
+    platformSettingsInit(aPlatformConfig->mDataPath);
 
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
     platformBacktraceInit();

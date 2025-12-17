@@ -46,6 +46,8 @@
 #include "common/debug.hpp"
 #include "posix/platform/settings_file.hpp"
 
+void platformSettingsInit(const char *aDataPath) { ot::Posix::SettingsFile::SetSettingsPath(aDataPath); }
+
 namespace ot {
 namespace Posix {
 
