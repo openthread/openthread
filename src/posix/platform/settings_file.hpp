@@ -130,7 +130,6 @@ private:
     static const size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
     static const size_t kMaxFileBasePathNameSize = kMaxFileFullPathNameSize - kSlashLength - kMaxFileBaseNameSize;
     static const size_t kMaxFilePathSize         = PATH_MAX;
-    static char         sSettingsPath[kMaxFileBasePathNameSize];
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);
@@ -139,8 +138,9 @@ private:
     void    SwapPersist(int aFd);
     void    SwapDiscard(int aFd);
 
-    char mSettingsFileFullPathName[kMaxFileFullPathNameSize];
-    int  mSettingsFd;
+    static char sSettingsPath[kMaxFileBasePathNameSize];
+    char        mSettingsFileFullPathName[kMaxFileFullPathNameSize];
+    int         mSettingsFd;
 };
 
 } // namespace Posix
