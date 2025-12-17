@@ -56,6 +56,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_ba.hpp"
 #include "cli/cli_bbr.hpp"
 #include "cli/cli_br.hpp"
 #include "cli/cli_coap.hpp"
@@ -106,6 +107,7 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 class Interpreter : public OutputImplementer, public Utils
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+    friend class Ba;
     friend class Br;
     friend class Bbr;
     friend class Commissioner;
@@ -292,14 +294,6 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    void OutputBorderAgentCounters(const otBorderAgentCounters &aCounters);
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    static void HandleBorderAgentEphemeralKeyStateChange(void *aContext);
-    void        HandleBorderAgentEphemeralKeyStateChange(void);
-#endif
-#endif
-
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
 
@@ -371,6 +365,10 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
     Mdns mMdns;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Ba mBa;
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
