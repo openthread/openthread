@@ -125,11 +125,11 @@ public:
     void Wipe(void);
 
 private:
-    static const size_t kSlashLength             = 1;
-    static const size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
-    static const size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
-    static const size_t kMaxFileBasePathNameSize = kMaxFileFullPathNameSize - kSlashLength - kMaxFileBaseNameSize;
-    static const size_t kMaxFilePathSize         = PATH_MAX;
+    static constexpr size_t kSlashLength             = 1;
+    static constexpr size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
+    static constexpr size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
+    static constexpr size_t kMaxFileBasePathNameSize = kMaxFileFullPathNameSize - kSlashLength - kMaxFileBaseNameSize;
+    static constexpr size_t kMaxFilePathSize         = PATH_MAX;
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);
