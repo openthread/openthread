@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 
 namespace ot {
@@ -66,7 +67,6 @@ void *Heap::CAlloc(size_t aCount, size_t aSize)
     void    *ret  = nullptr;
     Block   *prev = nullptr;
     Block   *curr = nullptr;
-    size_t   totalSize;
     uint16_t size;
 
     // Verify that the requested allocation size will not cause an overflow.
@@ -79,12 +79,10 @@ void *Heap::CAlloc(size_t aCount, size_t aSize)
     VerifyOrExit(aCount <= NumericLimits<uint16_t>::kMax);
     VerifyOrExit(aSize <= NumericLimits<uint16_t>::kMax);
 
-    totalSize = aCount * aSize;
-    VerifyOrExit(totalSize <= NumericLimits<uint16_t>::kMax - kTotalSizeGuard);
+    SuccessOrExit(SafeMultiply<uint16_t>(static_cast<uint16_t>(aCount), static_cast<uint16_t>(aSize), size));
 
-    size = static_cast<uint16_t>(totalSize);
-
-    VerifyOrExit(size);
+    VerifyOrExit(size > 0);
+    VerifyOrExit(size <= NumericLimits<uint16_t>::kMax - kTotalSizeGuard);
 
     size += kAlignSize - 1 - kBlockRemainderSize;
     size &= ~(kAlignSize - 1);

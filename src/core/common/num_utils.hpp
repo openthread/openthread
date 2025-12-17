@@ -34,6 +34,8 @@
 #ifndef NUM_UTILS_HPP_
 #define NUM_UTILS_HPP_
 
+#include "common/code_utils.hpp"
+#include "common/error.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/type_traits.hpp"
 
@@ -227,6 +229,37 @@ template <typename Type> int ThreeWayCompare(Type aFirst, Type aSecond)
 template <> inline int ThreeWayCompare(bool aFirst, bool aSecond)
 {
     return (aFirst == aSecond) ? 0 : (aFirst ? 1 : -1);
+}
+
+/**
+ * Safely multiplies two unsigned integers and checks for overflow.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in]  aFirstValue   The first operand in the multiplication.
+ * @param[in]  aSecondValue  The second operand in the multiplication.
+ * @param[out] aResult       A reference to return the multiplication result.
+ *
+ * @retval kErrorNone          If the multiplication was performed safely without overflow. @p aResult is updated.
+ * @retval kErrorInvalidArgs   If the multiplication would result in an overflow.
+ */
+template <typename UintType> inline Error SafeMultiply(UintType aFirstValue, UintType aSecondValue, UintType &aResult)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    Error error = kErrorNone;
+
+    if (aFirstValue == 0 || aSecondValue == 0)
+    {
+        aResult = 0;
+        ExitNow();
+    }
+
+    aResult = aFirstValue * aSecondValue;
+    VerifyOrExit(aResult / aFirstValue == aSecondValue, error = kErrorInvalidArgs);
+
+exit:
+    return error;
 }
 
 /**
