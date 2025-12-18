@@ -31,8 +31,8 @@
  *   This file includes definitions for the multi AIL detector.
  */
 
-#ifndef MULTI_AIL_DETECTOR_HPP_
-#define MULTI_AIL_DETECTOR_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_MULTI_AIL_DETECTOR_HPP_
+#define OT_CORE_BORDER_ROUTER_MULTI_AIL_DETECTOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -189,4 +189,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
 
-#endif // MULTI_AIL_DETECTOR_HPP_
+#endif // OT_CORE_BORDER_ROUTER_MULTI_AIL_DETECTOR_HPP_

@@ -30,8 +30,8 @@
  *   This file contains definitions a spinel interface to the OpenThread stack.
  */
 
-#ifndef NCP_BASE_HPP_
-#define NCP_BASE_HPP_
+#ifndef OT_NCP_NCP_BASE_HPP_
+#define OT_NCP_NCP_BASE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -947,4 +947,4 @@ template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdBrowser>
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_BASE_HPP_
+#endif // OT_NCP_NCP_BASE_HPP_

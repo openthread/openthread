@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,48 +27,25 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Makefile Check
+set -euo pipefail
 
-on:
-  push:
-    branches-ignore:
-      - 'dependabot/**'
-  pull_request:
-    branches:
-      - 'main'
+die()
+{
+    echo >&2 "ERROR: $*"
+    exit 1
+}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
-  cancel-in-progress: true
+main()
+{
+    ./script/update-header-guards.py || die "Could not run ./script/update-header-guards - fix header guards"
 
-permissions:  # added using https://github.com/step-security/secure-workflows
-  contents: read
+    status=$(git status --porcelain)
 
-jobs:
-  makefile-check:
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+    if [ -n "${status}" ]; then
+        die "Header guards are not properly formatted - run ./script/update-header-guards"
+    else
+        echo 'PASS: header-guard-check'
+    fi
+}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: recursive
-    - name: Check
-      run: |
-        script/check-core-makefiles
-
-  header-guard-check:
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: Check
-      run: |
-        script/check-header-guards
+main "$@"

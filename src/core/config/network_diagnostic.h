@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Network Diagnostics.
  */
 
-#ifndef CONFIG_NETWORK_DIAGNOSTIC_H_
-#define CONFIG_NETWORK_DIAGNOSTIC_H_
+#ifndef OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_
+#define OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_
 
 /**
  * @addtogroup config-network-diagnostic
@@ -101,4 +101,4 @@
  * @}
  */
 
-#endif // CONFIG_NETWORK_DIAGNOSTIC_H_
+#endif // OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_

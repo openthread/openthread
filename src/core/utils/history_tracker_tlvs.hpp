@@ -31,8 +31,8 @@
  *   This file includes definitions to support History Tracker TLVs.
  */
 
-#ifndef HISTORY_TRACKER_TLVS_HPP_
-#define HISTORY_TRACKER_TLVS_HPP_
+#ifndef OT_CORE_UTILS_HISTORY_TRACKER_TLVS_HPP_
+#define OT_CORE_UTILS_HISTORY_TRACKER_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -212,4 +212,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // HISTORY_TRACKER_TLVS_HPP_
+#endif // OT_CORE_UTILS_HISTORY_TRACKER_TLVS_HPP_

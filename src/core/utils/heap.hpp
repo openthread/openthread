@@ -31,8 +31,8 @@
  *   This file includes definitions for heap.
  */
 
-#ifndef OT_UTILS_HEAP_HPP_
-#define OT_UTILS_HEAP_HPP_
+#ifndef OT_CORE_UTILS_HEAP_HPP_
+#define OT_CORE_UTILS_HEAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -326,4 +326,4 @@ private:
 
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-#endif // OT_UTILS_HEAP_HPP_
+#endif // OT_CORE_UTILS_HEAP_HPP_

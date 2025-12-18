@@ -31,8 +31,8 @@
  *   This file includes definitions for the Border Agent Ephemeral Key Manager.
  */
 
-#ifndef BORDER_AGENT_EPHEMERAL_KEY_HPP_
-#define BORDER_AGENT_EPHEMERAL_KEY_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_EPHEMERAL_KEY_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_EPHEMERAL_KEY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -271,4 +271,4 @@ DefineCoreType(otBorderAgentEphemeralKeyTap, MeshCoP::BorderAgent::EphemeralKeyM
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
-#endif // BORDER_AGENT_EPHEMERAL_KEY_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_EPHEMERAL_KEY_HPP_

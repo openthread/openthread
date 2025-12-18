@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 Neighbor Discovery Agent.
  */
 
-#ifndef NEIGHBOR_DISCOVERY_AGENT_HPP_
-#define NEIGHBOR_DISCOVERY_AGENT_HPP_
+#ifndef OT_CORE_NET_ND_AGENT_HPP_
+#define OT_CORE_NET_ND_AGENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -77,4 +77,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
 
-#endif // NEIGHBOR_DISCOVERY_AGENT_HPP_
+#endif // OT_CORE_NET_ND_AGENT_HPP_

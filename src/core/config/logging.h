@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the logging service.
  */
 
-#ifndef CONFIG_LOGGING_H_
-#define CONFIG_LOGGING_H_
+#ifndef OT_CORE_CONFIG_LOGGING_H_
+#define OT_CORE_CONFIG_LOGGING_H_
 
 #include <openthread/platform/logging.h>
 
@@ -187,4 +187,4 @@
  * @}
  */
 
-#endif // CONFIG_LOGGING_H_
+#endif // OT_CORE_CONFIG_LOGGING_H_

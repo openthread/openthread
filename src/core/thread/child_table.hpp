@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread child table.
  */
 
-#ifndef CHILD_TABLE_HPP_
-#define CHILD_TABLE_HPP_
+#ifndef OT_CORE_THREAD_CHILD_TABLE_HPP_
+#define OT_CORE_THREAD_CHILD_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -346,4 +346,4 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-#endif // CHILD_TABLE_HPP_
+#endif // OT_CORE_THREAD_CHILD_TABLE_HPP_

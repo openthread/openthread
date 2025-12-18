@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to Energy Scan Requests.
  */
 
-#ifndef ENERGY_SCAN_SERVER_HPP_
-#define ENERGY_SCAN_SERVER_HPP_
+#ifndef OT_CORE_THREAD_ENERGY_SCAN_SERVER_HPP_
+#define OT_CORE_THREAD_ENERGY_SCAN_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -101,4 +101,4 @@ DeclareTmfHandler(EnergyScanServer, kUriEnergyScan);
 
 } // namespace ot
 
-#endif // ENERGY_SCAN_SERVER_HPP_
+#endif // OT_CORE_THREAD_ENERGY_SCAN_SERVER_HPP_

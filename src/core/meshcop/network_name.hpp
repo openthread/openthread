@@ -31,8 +31,8 @@
  *   This file includes definitions for managing the Network Name.
  */
 
-#ifndef MESHCOP_NETWORK_NAME_HPP_
-#define MESHCOP_NETWORK_NAME_HPP_
+#ifndef OT_CORE_MESHCOP_NETWORK_NAME_HPP_
+#define OT_CORE_MESHCOP_NETWORK_NAME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -263,4 +263,4 @@ DefineCoreType(otNetworkName, MeshCoP::NetworkName);
 
 } // namespace ot
 
-#endif // MESHCOP_EXTENDED_PANID_HPP_
+#endif // OT_CORE_MESHCOP_NETWORK_NAME_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for a bit-set.
  */
 
-#ifndef BIT_SET_HPP_
-#define BIT_SET_HPP_
+#ifndef OT_CORE_COMMON_BIT_SET_HPP_
+#define OT_CORE_COMMON_BIT_SET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -137,4 +137,4 @@ private:
 
 } // namespace ot
 
-#endif // BIT_SET_HPP_
+#endif // OT_CORE_COMMON_BIT_SET_HPP_

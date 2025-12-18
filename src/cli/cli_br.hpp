@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to Border Router.
  */
 
-#ifndef CLI_BR_HPP_
-#define CLI_BR_HPP_
+#ifndef OT_CLI_CLI_BR_HPP_
+#define OT_CLI_CLI_BR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -115,4 +115,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // CLI_BR_HPP_
+#endif // OT_CLI_CLI_BR_HPP_

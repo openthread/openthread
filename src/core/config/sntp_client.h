@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the SNTP Client.
  */
 
-#ifndef CONFIG_SNTP_CLIENT_H_
-#define CONFIG_SNTP_CLIENT_H_
+#ifndef OT_CORE_CONFIG_SNTP_CLIENT_H_
+#define OT_CORE_CONFIG_SNTP_CLIENT_H_
 
 /**
  * @addtogroup config-sntp-client
@@ -74,4 +74,4 @@
  * @}
  */
 
-#endif // CONFIG_SNTP_CLIENT_H_
+#endif // OT_CORE_CONFIG_SNTP_CLIENT_H_

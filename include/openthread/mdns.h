@@ -32,8 +32,8 @@
  *   This file includes the mDNS related APIs.
  */
 
-#ifndef OPENTHREAD_MULTICAST_DNS_H_
-#define OPENTHREAD_MULTICAST_DNS_H_
+#ifndef OPENTHREAD_MDNS_H_
+#define OPENTHREAD_MDNS_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -1111,4 +1111,4 @@ bool otMdnsIsVerboseLoggingEnabled(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_MULTICAST_DNS_H_
+#endif // OPENTHREAD_MDNS_H_

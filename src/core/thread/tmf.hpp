@@ -272,4 +272,4 @@ private:
 } // namespace Tmf
 } // namespace ot
 
-#endif //  OT_CORE_THREAD_TMF_HPP_
+#endif // OT_CORE_THREAD_TMF_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef PANID_QUERY_SERVER_HPP_
-#define PANID_QUERY_SERVER_HPP_
+#ifndef OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_
+#define OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -90,4 +90,4 @@ DeclareTmfHandler(PanIdQueryServer, kUriPanIdQuery);
 
 } // namespace ot
 
-#endif // PANID_QUERY_SERVER_HPP_
+#endif // OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_

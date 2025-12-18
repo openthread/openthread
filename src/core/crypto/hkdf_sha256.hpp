@@ -32,8 +32,8 @@
  *   SHA-256.
  */
 
-#ifndef HKDF_SHA256_HPP_
-#define HKDF_SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_HKDF_SHA256_HPP_
+#define OT_CORE_CRYPTO_HKDF_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -104,4 +104,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // HKDF_SHA256_HPP_
+#endif // OT_CORE_CRYPTO_HKDF_SHA256_HPP_

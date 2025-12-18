@@ -31,8 +31,8 @@
  *   This file includes definitions for the IEEE 802.15.4 MAC.
  */
 
-#ifndef MAC_HPP_
-#define MAC_HPP_
+#ifndef OT_CORE_MAC_MAC_HPP_
+#define OT_CORE_MAC_MAC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -958,4 +958,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_HPP_
+#endif // OT_CORE_MAC_MAC_HPP_

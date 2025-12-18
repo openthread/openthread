@@ -31,8 +31,8 @@
  *   This file includes definitions for Crypto Internal Trusted Storage (ITS) APIs.
  */
 
-#ifndef STORAGE_HPP_
-#define STORAGE_HPP_
+#ifndef OT_CORE_CRYPTO_STORAGE_HPP_
+#define OT_CORE_CRYPTO_STORAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -394,4 +394,4 @@ DefineCoreType(otCryptoKey, Crypto::Key);
 
 } // namespace ot
 
-#endif // STORAGE_HPP_
+#endif // OT_CORE_CRYPTO_STORAGE_HPP_

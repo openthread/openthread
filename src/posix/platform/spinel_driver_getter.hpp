@@ -32,8 +32,8 @@
  *   app can access to the posix spinel driver.
  */
 
-#ifndef POSIX_PLATFORM_SPINEL_DRIVER_GETTER_HPP_
-#define POSIX_PLATFORM_SPINEL_DRIVER_GETTER_HPP_
+#ifndef OT_POSIX_PLATFORM_SPINEL_DRIVER_GETTER_HPP_
+#define OT_POSIX_PLATFORM_SPINEL_DRIVER_GETTER_HPP_
 
 #include "lib/spinel/spinel_driver.hpp"
 
@@ -48,4 +48,4 @@ extern Spinel::SpinelDriver &GetSpinelDriver(void);
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_SPINEL_DRIVER_GETTER_HPP_
+#endif // OT_POSIX_PLATFORM_SPINEL_DRIVER_GETTER_HPP_

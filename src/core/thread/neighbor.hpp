@@ -31,8 +31,8 @@
  *   This file includes definitions for a Thread `Neighbor`.
  */
 
-#ifndef NEIGHBOR_HPP_
-#define NEIGHBOR_HPP_
+#ifndef OT_CORE_THREAD_NEIGHBOR_HPP_
+#define OT_CORE_THREAD_NEIGHBOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -784,4 +784,4 @@ class CslNeighbor : public Neighbor
 
 } // namespace ot
 
-#endif // NEIGHBOR_HPP_
+#endif // OT_CORE_THREAD_NEIGHBOR_HPP_

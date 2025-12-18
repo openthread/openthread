@@ -31,8 +31,8 @@
  *   This file includes compile-time configuration constants for OpenThread.
  */
 
-#ifndef OPENTHREAD_SPINEL_CONFIG_H_
-#define OPENTHREAD_SPINEL_CONFIG_H_
+#ifndef OT_LIB_SPINEL_OPENTHREAD_SPINEL_CONFIG_H_
+#define OT_LIB_SPINEL_OPENTHREAD_SPINEL_CONFIG_H_
 
 /**
  * Include project specific lib config file if defined.
@@ -199,4 +199,4 @@
 #endif
 #endif
 
-#endif // OPENTHREAD_SPINEL_CONFIG_H_
+#endif // OT_LIB_SPINEL_OPENTHREAD_SPINEL_CONFIG_H_

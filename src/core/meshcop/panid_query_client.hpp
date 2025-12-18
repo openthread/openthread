@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef PANID_QUERY_CLIENT_HPP_
-#define PANID_QUERY_CLIENT_HPP_
+#ifndef OT_CORE_MESHCOP_PANID_QUERY_CLIENT_HPP_
+#define OT_CORE_MESHCOP_PANID_QUERY_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -95,4 +95,4 @@ DeclareTmfHandler(PanIdQueryClient, kUriPanIdConflict);
 
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
-#endif // PANID_QUERY_CLIENT_HPP_
+#endif // OT_CORE_MESHCOP_PANID_QUERY_CLIENT_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Link Metrics TLVs.
  */
 
-#ifndef LINK_METRICS_TLVS_HPP_
-#define LINK_METRICS_TLVS_HPP_
+#ifndef OT_CORE_THREAD_LINK_METRICS_TLVS_HPP_
+#define OT_CORE_THREAD_LINK_METRICS_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -307,4 +307,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-#endif // LINK_METRICS_TLVS_HPP_
+#endif // OT_CORE_THREAD_LINK_METRICS_TLVS_HPP_

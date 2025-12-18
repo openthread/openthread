@@ -32,8 +32,8 @@
  *   This file includes platform abstraction for secure non-volatile storage of settings.
  */
 
-#ifndef OPENTHREAD_POSIX_SECURE_SETTINGS_H_
-#define OPENTHREAD_POSIX_SECURE_SETTINGS_H_
+#ifndef OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_PLATFORM_SECURE_SETTINGS_H_
+#define OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_PLATFORM_SECURE_SETTINGS_H_
 
 #include <openthread/instance.h>
 
@@ -166,4 +166,4 @@ void otPosixSecureSettingsWipe(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_POSIX_SECURE_SETTINGS_H_
+#endif // OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_PLATFORM_SECURE_SETTINGS_H_

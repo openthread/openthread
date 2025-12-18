@@ -31,8 +31,8 @@
  *   This file includes definitions for ICMPv6.
  */
 
-#ifndef ICMP6_HPP_
-#define ICMP6_HPP_
+#ifndef OT_CORE_NET_ICMP6_HPP_
+#define OT_CORE_NET_ICMP6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -339,4 +339,4 @@ DefineCoreType(otIcmp6Handler, Ip6::Icmp::Handler);
 
 } // namespace ot
 
-#endif // ICMP6_HPP_
+#endif // OT_CORE_NET_ICMP6_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing MeshCoP TLVs.
  */
 
-#ifndef MESHCOP_TLVS_HPP_
-#define MESHCOP_TLVS_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_TLVS_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1198,4 +1198,4 @@ private:
 
 } // namespace ot
 
-#endif // MESHCOP_TLVS_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_TLVS_HPP_

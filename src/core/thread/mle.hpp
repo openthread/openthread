@@ -31,8 +31,8 @@
  *   This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles.
  */
 
-#ifndef MLE_HPP_
-#define MLE_HPP_
+#ifndef OT_CORE_THREAD_MLE_HPP_
+#define OT_CORE_THREAD_MLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -2549,4 +2549,4 @@ DeclareTmfHandler(Mle, kUriAddressRelease);
 
 } // namespace ot
 
-#endif // MLE_HPP_
+#endif // OT_CORE_THREAD_MLE_HPP_

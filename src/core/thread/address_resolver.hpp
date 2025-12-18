@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread EID-to-RLOC mapping and caching.
  */
 
-#ifndef ADDRESS_RESOLVER_HPP_
-#define ADDRESS_RESOLVER_HPP_
+#ifndef OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_
+#define OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -405,4 +405,4 @@ DefineMapEnum(otCacheEntryState, AddressResolver::EntryInfo::State);
 
 } // namespace ot
 
-#endif // ADDRESS_RESOLVER_HPP_
+#endif // OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_

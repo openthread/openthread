@@ -31,8 +31,8 @@
  *   This file includes definitions for handle network diagnostic.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_HPP_
-#define NETWORK_DIAGNOSTIC_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -398,4 +398,4 @@ DeclareTmfHandler(Client, kUriDiagnosticReset);
 
 } // namespace ot
 
-#endif // NETWORK_DIAGNOSTIC_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_

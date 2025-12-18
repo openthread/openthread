@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Multicast DNS (mDNS).
  */
 
-#ifndef CONFIG_MULTICAST_DNS_H_
-#define CONFIG_MULTICAST_DNS_H_
+#ifndef OT_CORE_CONFIG_MDNS_H_
+#define OT_CORE_CONFIG_MDNS_H_
 
 /**
  * @addtogroup config-mdns
@@ -155,4 +155,4 @@
  * @}
  */
 
-#endif // CONFIG_MULTICAST_DNS_H_
+#endif // OT_CORE_CONFIG_MDNS_H_

@@ -31,8 +31,8 @@
  *   This file includes miscellaneous compile-time configuration constants for OpenThread.
  */
 
-#ifndef CONFIG_MISC_H_
-#define CONFIG_MISC_H_
+#ifndef OT_CORE_CONFIG_MISC_H_
+#define OT_CORE_CONFIG_MISC_H_
 
 /**
  * @addtogroup config-misc
@@ -651,4 +651,4 @@
  * @}
  */
 
-#endif // CONFIG_MISC_H_
+#endif // OT_CORE_CONFIG_MISC_H_

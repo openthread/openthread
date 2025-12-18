@@ -31,8 +31,8 @@
  *   This file includes definitions for MeshCoP.
  */
 
-#ifndef MESHCOP_HPP_
-#define MESHCOP_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -597,4 +597,4 @@ DefineCoreType(otCommissioningDataset, MeshCoP::CommissioningDataset);
 
 } // namespace ot
 
-#endif // MESHCOP_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_HPP_

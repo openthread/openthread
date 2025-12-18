@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPINEL_LOGGER_HPP_
-#define SPINEL_LOGGER_HPP_
+#ifndef OT_LIB_SPINEL_LOGGER_HPP_
+#define OT_LIB_SPINEL_LOGGER_HPP_
 
 #include <stdint.h>
 
@@ -64,4 +64,4 @@ protected:
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_LOG_HPP_
+#endif // OT_LIB_SPINEL_LOGGER_HPP_

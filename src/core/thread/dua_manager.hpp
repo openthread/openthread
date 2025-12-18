@@ -31,8 +31,8 @@
  *   This file includes definitions for managing Domain Unicast Address feature defined in Thread 1.2.
  */
 
-#ifndef DUA_MANAGER_HPP_
-#define DUA_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_DUA_MANAGER_HPP_
+#define OT_CORE_THREAD_DUA_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -279,4 +279,4 @@ DeclareTmfHandler(DuaManager, kUriDuaRegistrationNotify);
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-#endif // DUA_MANAGER_HPP_
+#endif // OT_CORE_THREAD_DUA_MANAGER_HPP_

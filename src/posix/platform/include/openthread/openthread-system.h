@@ -32,8 +32,8 @@
  *   This file defines the platform-specific functions needed by OpenThread's example applications.
  */
 
-#ifndef OPENTHREAD_SYSTEM_H_
-#define OPENTHREAD_SYSTEM_H_
+#ifndef OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_
+#define OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_
 
 #include <setjmp.h>
 #include <stdbool.h>
@@ -333,4 +333,4 @@ void otSysSetRcpRestorationEnabled(bool aEnabled);
 } // end of extern "C"
 #endif
 
-#endif // OPENTHREAD_SYSTEM_H_
+#endif // OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_

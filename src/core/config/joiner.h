@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Joiner.
  */
 
-#ifndef CONFIG_JOINER_H_
-#define CONFIG_JOINER_H_
+#ifndef OT_CORE_CONFIG_JOINER_H_
+#define OT_CORE_CONFIG_JOINER_H_
 
 /**
  * @addtogroup config-joiner
@@ -65,4 +65,4 @@
  * @}
  */
 
-#endif // CONFIG_JOINER_H_
+#endif // OT_CORE_CONFIG_JOINER_H_

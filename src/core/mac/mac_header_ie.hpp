@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing IEEE 802.15.4 IE (Information Element).
  */
 
-#ifndef MAC_HEADER_IE_HPP_
-#define MAC_HEADER_IE_HPP_
+#ifndef OT_CORE_MAC_MAC_HEADER_IE_HPP_
+#define OT_CORE_MAC_MAC_HEADER_IE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -426,4 +426,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_HEADER_IE_HPP_
+#endif // OT_CORE_MAC_MAC_HEADER_IE_HPP_

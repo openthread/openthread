@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to Announce Requests.
  */
 
-#ifndef ANNOUNCE_BEGIN_SERVER_HPP_
-#define ANNOUNCE_BEGIN_SERVER_HPP_
+#ifndef OT_CORE_THREAD_ANNOUNCE_BEGIN_SERVER_HPP_
+#define OT_CORE_THREAD_ANNOUNCE_BEGIN_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -84,4 +84,4 @@ DeclareTmfHandler(AnnounceBeginServer, kUriAnnounceBegin);
 
 } // namespace ot
 
-#endif // ANNOUNCE_BEGIN_SERVER_HPP_
+#endif // OT_CORE_THREAD_ANNOUNCE_BEGIN_SERVER_HPP_

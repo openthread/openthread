@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to control History Tracker
  */
 
-#ifndef CLI_HISTORY_HPP_
-#define CLI_HISTORY_HPP_
+#ifndef OT_CLI_CLI_HISTORY_HPP_
+#define OT_CLI_CLI_HISTORY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -133,4 +133,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // CLI_HISTORY_HPP_
+#endif // OT_CLI_CLI_HISTORY_HPP_

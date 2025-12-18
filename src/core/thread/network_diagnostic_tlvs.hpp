@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Network Diagnostics TLVs.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_TLVS_HPP_
-#define NETWORK_DIAGNOSTIC_TLVS_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1155,4 +1155,4 @@ private:
 } // namespace NetworkDiagnostic
 } // namespace ot
 
-#endif // NETWORK_DIAGNOSTIC_TLVS_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_

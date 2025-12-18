@@ -31,8 +31,8 @@
  *   This file includes definitions for a MeshCoP Leader.
  */
 
-#ifndef MESHCOP_LEADER_HPP_
-#define MESHCOP_LEADER_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -127,4 +127,4 @@ DeclareTmfHandler(Leader, kUriLeaderKeepAlive);
 
 #endif // OPENTHREAD_FTD
 
-#endif // MESHCOP_LEADER_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_

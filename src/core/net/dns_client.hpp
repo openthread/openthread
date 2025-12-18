@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DNS_CLIENT_HPP_
-#define DNS_CLIENT_HPP_
+#ifndef OT_CORE_NET_DNS_CLIENT_HPP_
+#define OT_CORE_NET_DNS_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1043,4 +1043,4 @@ DefineMapEnum(otDnsRecordSection, Dns::Client::RecordInfo::RecordSection);
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
-#endif // DNS_CLIENT_HPP_
+#endif // OT_CORE_NET_DNS_CLIENT_HPP_

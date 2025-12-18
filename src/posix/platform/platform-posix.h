@@ -32,8 +32,8 @@
  *   This file includes the platform-specific initializers.
  */
 
-#ifndef OT_PLATFORM_POSIX_H_
-#define OT_PLATFORM_POSIX_H_
+#ifndef OT_POSIX_PLATFORM_PLATFORM_POSIX_H_
+#define OT_POSIX_PLATFORM_PLATFORM_POSIX_H_
 
 #include "openthread-posix-config.h"
 
@@ -425,4 +425,4 @@ void platformCoprocessorResetFailed(void *aContext);
 #ifdef __cplusplus
 }
 #endif
-#endif // OT_PLATFORM_POSIX_H_
+#endif // OT_POSIX_PLATFORM_PLATFORM_POSIX_H_

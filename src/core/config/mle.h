@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the MLE service.
  */
 
-#ifndef CONFIG_MLE_H_
-#define CONFIG_MLE_H_
+#ifndef OT_CORE_CONFIG_MLE_H_
+#define OT_CORE_CONFIG_MLE_H_
 
 /**
  * @addtogroup config-mle
@@ -351,4 +351,4 @@
  * @}
  */
 
-#endif // CONFIG_MLE_H_
+#endif // OT_CORE_CONFIG_MLE_H_

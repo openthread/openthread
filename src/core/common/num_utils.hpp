@@ -31,8 +31,8 @@
  *   This file includes definitions for generic number utility functions (min, max, clamp).
  */
 
-#ifndef NUM_UTILS_HPP_
-#define NUM_UTILS_HPP_
+#ifndef OT_CORE_COMMON_NUM_UTILS_HPP_
+#define OT_CORE_COMMON_NUM_UTILS_HPP_
 
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
@@ -303,4 +303,4 @@ inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned lon
 
 } // namespace ot
 
-#endif // NUM_UTILS_HPP_
+#endif // OT_CORE_COMMON_NUM_UTILS_HPP_

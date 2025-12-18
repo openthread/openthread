@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COAP_HPP_
-#define COAP_HPP_
+#ifndef OT_CORE_COAP_COAP_HPP_
+#define OT_CORE_COAP_COAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -978,4 +978,4 @@ DefineCoreType(otCoapBlockwiseResource, Coap::ResourceBlockWise);
 
 } // namespace ot
 
-#endif // COAP_HPP_
+#endif // OT_CORE_COAP_COAP_HPP_

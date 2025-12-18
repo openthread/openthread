@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI CoAP server and client.
  */
 
-#ifndef CLI_COAP_HPP_
-#define CLI_COAP_HPP_
+#ifndef OT_CLI_CLI_COAP_HPP_
+#define OT_CLI_CLI_COAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -189,4 +189,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-#endif // CLI_COAP_HPP_
+#endif // OT_CLI_CLI_COAP_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for locator class for OpenThread objects.
  */
 
-#ifndef LOCATOR_HPP_
-#define LOCATOR_HPP_
+#ifndef OT_CORE_COMMON_LOCATOR_HPP_
+#define OT_CORE_COMMON_LOCATOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -187,4 +187,4 @@ protected:
 
 } // namespace ot
 
-#endif // LOCATOR_HPP_
+#endif // OT_CORE_COMMON_LOCATOR_HPP_

@@ -31,8 +31,8 @@
  *  This file defines OpenThread instance class.
  */
 
-#ifndef INSTANCE_HPP_
-#define INSTANCE_HPP_
+#ifndef OT_CORE_INSTANCE_INSTANCE_HPP_
+#define OT_CORE_INSTANCE_INSTANCE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1231,4 +1231,4 @@ void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
 
 } // namespace ot
 
-#endif // INSTANCE_HPP_
+#endif // OT_CORE_INSTANCE_INSTANCE_HPP_

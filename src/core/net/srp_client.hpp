@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SRP_CLIENT_HPP_
-#define SRP_CLIENT_HPP_
+#ifndef OT_CORE_NET_SRP_CLIENT_HPP_
+#define OT_CORE_NET_SRP_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1117,4 +1117,4 @@ DefineMapEnum(otSrpClientItemState, Srp::Client::ItemState);
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
-#endif // SRP_CLIENT_HPP_
+#endif // OT_CORE_NET_SRP_CLIENT_HPP_

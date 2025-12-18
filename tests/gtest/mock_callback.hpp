@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_TESTS_GTEST_MOCK_CALLBACK
-#define OT_TESTS_GTEST_MOCK_CALLBACK
+#ifndef OT_GTEST_MOCK_CALLBACK_HPP_
+#define OT_GTEST_MOCK_CALLBACK_HPP_
 
 #include "gmock/gmock.h"
 
@@ -44,4 +44,4 @@ public:
     };
 };
 
-#endif // OT_TESTS_GTEST_MOCK_CALLBACK
+#endif // OT_GTEST_MOCK_CALLBACK_HPP_

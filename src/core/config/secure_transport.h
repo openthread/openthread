@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for TLS/DTLS.
  */
 
-#ifndef CONFIG_SECURE_TRANSPORT_H_
-#define CONFIG_SECURE_TRANSPORT_H_
+#ifndef OT_CORE_CONFIG_SECURE_TRANSPORT_H_
+#define OT_CORE_CONFIG_SECURE_TRANSPORT_H_
 
 /**
  * @addtogroup config-secure-transport
@@ -72,4 +72,4 @@
  * @}
  */
 
-#endif // CONFIG_SECURE_TRANSPORT_H_
+#endif // OT_CORE_CONFIG_SECURE_TRANSPORT_H_
