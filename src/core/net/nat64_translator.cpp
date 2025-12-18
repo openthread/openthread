@@ -33,14 +33,10 @@
 
 #include "nat64_translator.hpp"
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #include "instance/instance.hpp"
 
 namespace ot {
 namespace Nat64 {
-
-RegisterLogModule("Nat64");
 
 const char *StateToString(State aState)
 {
@@ -62,6 +58,10 @@ const char *StateToString(State aState)
 
     return kStateString[aState];
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+RegisterLogModule("Nat64");
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -914,7 +914,7 @@ void Translator::SetEnabled(bool aEnable)
     }
 }
 
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 } // namespace Nat64
 } // namespace ot
-
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
