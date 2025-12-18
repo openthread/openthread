@@ -2065,7 +2065,7 @@ void Client::UpdateState(void)
 
         mHostInfo.SetState(kToRefresh);
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kToAdd:
     case kToRefresh:
@@ -2075,7 +2075,7 @@ void Client::UpdateState(void)
         // for empty service list.
         VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.IsAutoAddressEnabled() || (mHostInfo.GetNumAddresses() > 0)));
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kToRemove:
         shouldUpdate = true;
