@@ -1310,13 +1310,26 @@ exit:
 
     if (error == kErrorNone && request == nullptr)
     {
-        if (!InvokeResponseFallback(aMessage, aMessageInfo) && aMessage.RequireResetOnError())
+        bool didHandle = InvokeResponseFallback(aMessage, aMessageInfo);
+
+        if (!didHandle && aMessage.RequireResetOnError())
         {
             // Successfully parsed a header but no matching request was
             // found - reject the message by sending reset.
             IgnoreError(SendReset(aMessage, aMessageInfo));
         }
     }
+}
+
+bool CoapBase::InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+{
+    bool didHandle = false;
+
+    VerifyOrExit(mResponseFallback.IsSet());
+    didHandle = mResponseFallback.Invoke(&aMessage, &aMessageInfo);
+
+exit:
+    return didHandle;
 }
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

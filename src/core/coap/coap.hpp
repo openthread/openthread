@@ -849,15 +849,7 @@ private:
                                      Message                *aResponse,
                                      const Ip6::MessageInfo *aMessageInfo,
                                      Error                   aResult);
-
-    inline bool InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-    {
-        if (mResponseFallback.IsSet())
-        {
-            return mResponseFallback.Invoke(&aMessage, &aMessageInfo);
-        }
-        return false;
-    }
+    bool     InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     void  FreeLastBlockResponse(void);
