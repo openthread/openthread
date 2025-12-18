@@ -25,10 +25,25 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-toolchain("gcc") {
+toolchain("toolchain") {
+  diagnostic_cflags = [
+    "-Werror",
+    "-Wall",
+    "-Wextra",
+    "-Wundef",
+  ]
+  if (use_clang) {
+    cc = "clang"
+    cxx = "clang++"
+  } else {
+    cc = "gcc"
+    cxx = "g++"
+  }
+  cflags = string_join(" ", diagnostic_cflags)
+
   tool("cc") {
     depfile = "{{output}}.d"
-    command = "gcc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
+    command = "$cc -MMD -MF $depfile {{defines}} {{include_dirs}} $cflags {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
     depsformat = "gcc"
     description = "CC {{output}}"
     outputs = [
@@ -37,7 +52,7 @@ toolchain("gcc") {
   }
   tool("cxx") {
     depfile = "{{output}}.d"
-    command = "g++ -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
+    command = "$cxx -MMD -MF $depfile {{defines}} {{include_dirs}} $cflags {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
     depsformat = "gcc"
     description = "CXX {{output}}"
     outputs = [
@@ -59,7 +74,7 @@ toolchain("gcc") {
     soname = "{{target_output_name}}{{output_extension}}"  # e.g. "libfoo.so".
     sofile = "{{output_dir}}/$soname"
     rspfile = soname + ".rsp"
-    command = "g++ -shared {{ldflags}} -o $sofile -Wl,-soname=$soname @$rspfile"
+    command = "$cxx -shared {{ldflags}} -o $sofile -Wl,-soname=$soname @$rspfile"
     rspfile_content = "-Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive {{libs}}"
     description = "SOLINK $soname"
     # Use this for {{output_extension}} expansions unless a target manually
@@ -79,7 +94,7 @@ toolchain("gcc") {
   tool("link") {
     outfile = "{{target_output_name}}{{output_extension}}"
     rspfile = "$outfile.rsp"
-    command = "g++ {{ldflags}} -o $outfile -Wl,--start-group @$rspfile {{solibs}} -Wl,--end-group {{libs}}"
+    command = "$cxx {{ldflags}} -o $outfile -Wl,--start-group @$rspfile {{solibs}} -Wl,--end-group {{libs}}"
     description = "LINK $outfile"
     default_output_dir = "{{root_out_dir}}"
     rspfile_content = "{{inputs}}"
