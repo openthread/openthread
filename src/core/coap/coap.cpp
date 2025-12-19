@@ -40,11 +40,14 @@ namespace Coap {
 
 RegisterLogModule("Coap");
 
+//---------------------------------------------------------------------------------------------------------------------
+// CoapBase
+
 CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     : InstanceLocator(aInstance)
     , mMessageId(Random::NonCrypto::GetUint16())
     , mRetransmissionTimer(aInstance, Coap::HandleRetransmissionTimer, this)
-    , mResponsesQueue(aInstance)
+    , mResponseCache(aInstance)
     , mResourceHandler(nullptr)
     , mSender(aSender)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -56,7 +59,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
 void CoapBase::ClearAllRequestsAndResponses(void)
 {
     ClearRequests(nullptr); // Clear requests matching any address.
-    mResponsesQueue.DequeueAllResponses();
+    mResponseCache.RemoveAll();
     mRetransmissionTimer.Stop();
 }
 
@@ -234,7 +237,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
         }
 #endif
 
-        mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
+        mResponseCache.Add(aMessage, aMessageInfo, aTxParameters.CalculateExchangeLifetime());
         break;
     case kTypeReset:
         OT_ASSERT(aMessage.GetCode() == kCodeEmpty);
@@ -604,7 +607,7 @@ void CoapBase::GetRequestAndCachedResponsesQueueInfo(MessageQueue::Info &aQueueI
     MessageQueue::Info info;
 
     mPendingRequests.GetInfo(aQueueInfo);
-    mResponsesQueue.GetResponses().GetInfo(info);
+    mResponseCache.GetInfo(info);
     MessageQueue::AddQueueInfos(aQueueInfo, info);
 }
 
@@ -1363,9 +1366,8 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char     uriPath[Message::kMaxReceivedUriPath + 1];
-    Message *cachedResponse = nullptr;
-    Error    error          = kErrorNone;
+    char  uriPath[Message::kMaxReceivedUriPath + 1];
+    Error error = kErrorNone;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     Option::Iterator iterator;
     char            *curUriPath        = uriPath;
@@ -1378,20 +1380,19 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         SuccessOrExit(error = mInterceptor.Invoke(aMessage, aMessageInfo));
     }
 
-    switch (mResponsesQueue.GetMatchedResponseCopy(aMessage, aMessageInfo, &cachedResponse))
+    // Check if `mResponseCache` has a matching cached response for this
+    // request and send it. Only if not found (`kErrorNotFound`), we
+    // continue to process the `aMessage` further.
+
+    error = mResponseCache.SendCachedResponse(aMessage, aMessageInfo, *this);
+
+    switch (error)
     {
-    case kErrorNone:
-        cachedResponse->Finish();
-        error = Send(*cachedResponse, aMessageInfo);
-        ExitNow();
-
-    case kErrorNoBufs:
-        error = kErrorNoBufs;
-        ExitNow();
-
     case kErrorNotFound:
-    default:
         break;
+    case kErrorNone:
+    default:
+        ExitNow();
     }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -1531,147 +1532,164 @@ exit:
         {
             IgnoreError(SendNotFound(aMessage, aMessageInfo));
         }
-
-        FreeMessage(cachedResponse);
     }
 }
 
-ResponsesQueue::ResponsesQueue(Instance &aInstance)
-    : mTimer(aInstance, ResponsesQueue::HandleTimer, this)
+//---------------------------------------------------------------------------------------------------------------------
+// CoapBase::ResponseCache
+
+CoapBase::ResponseCache::ResponseCache(Instance &aInstance)
+    : mTimer(aInstance, ResponseCache::HandleTimer, this)
 {
 }
 
-Error ResponsesQueue::GetMatchedResponseCopy(const Message          &aRequest,
-                                             const Ip6::MessageInfo &aMessageInfo,
-                                             Message               **aResponse)
+Error CoapBase::ResponseCache::SendCachedResponse(const Message          &aRequest,
+                                                  const Ip6::MessageInfo &aMessageInfo,
+                                                  CoapBase               &aCoapBase)
 {
-    Error          error = kErrorNone;
-    const Message *cacheResponse;
+    // Search `ResponseCache` for a cached response matching the given
+    // `aRequest`. If found, clone the response and send it. Returns
+    // `kErrorNotFound` if no match is found, `kErrorNone` on success,
+    // or other errors if send fails.
 
-    cacheResponse = FindMatchedResponse(aRequest, aMessageInfo);
-    VerifyOrExit(cacheResponse != nullptr, error = kErrorNotFound);
+    Error          error    = kErrorNone;
+    const Message *match    = FindMatching(aRequest.GetMessageId(), aMessageInfo);
+    Message       *response = nullptr;
 
-    *aResponse = cacheResponse->Clone(cacheResponse->GetLength() - sizeof(ResponseMetadata));
-    VerifyOrExit(*aResponse != nullptr, error = kErrorNoBufs);
+    VerifyOrExit(match != nullptr, error = kErrorNotFound);
+
+    response = match->Clone(match->GetLength() - sizeof(ResponseMetadata));
+    VerifyOrExit(response != nullptr, error = kErrorNoBufs);
+
+    response->Finish();
+
+    error = aCoapBase.Send(*response, aMessageInfo);
 
 exit:
+    FreeMessageOnError(response, error);
     return error;
 }
 
-const Message *ResponsesQueue::FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const
+const Message *CoapBase::ResponseCache::FindMatching(uint16_t aMessageId, const Ip6::MessageInfo &aMessageInfo) const
 {
-    const Message *response = nullptr;
+    const Message *match = nullptr;
 
-    for (const Message &message : mQueue)
+    for (const Message &response : mResponses)
     {
-        if (message.GetMessageId() == aRequest.GetMessageId())
+        if (response.GetMessageId() == aMessageId)
         {
             ResponseMetadata metadata;
 
-            metadata.ReadFrom(message);
+            metadata.ReadFrom(response);
 
             if (metadata.mMessageInfo.HasSamePeerAddrAndPort(aMessageInfo))
             {
-                response = &message;
+                match = &response;
                 break;
             }
         }
     }
 
-    return response;
+    return match;
 }
 
-void ResponsesQueue::EnqueueResponse(Message                &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     const TxParameters     &aTxParameters)
+void CoapBase::ResponseCache::Add(const Message          &aResponse,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  uint32_t                aExchangeLifetime)
 {
-    Message         *responseCopy;
+    // Adds a clone of the `aResponse` to the cache if a matching
+    // entry does not already exist.
+
+    Message         *responseClone = nullptr;
     ResponseMetadata metadata;
 
-    metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
+    VerifyOrExit(FindMatching(aResponse.GetMessageId(), aMessageInfo) == nullptr);
+
+    MaintainCacheSize();
+
+    responseClone = aResponse.Clone();
+    VerifyOrExit(responseClone != nullptr);
+
+    metadata.mExpireTime  = TimerMilli::GetNow() + aExchangeLifetime;
     metadata.mMessageInfo = aMessageInfo;
 
-    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == nullptr);
+    SuccessOrExit(metadata.AppendTo(*responseClone));
 
-    UpdateQueue();
+    mResponses.Enqueue(*responseClone);
+    responseClone = nullptr;
 
-    VerifyOrExit((responseCopy = aMessage.Clone()) != nullptr);
-
-    VerifyOrExit(metadata.AppendTo(*responseCopy) == kErrorNone, responseCopy->Free());
-
-    mQueue.Enqueue(*responseCopy);
-
-    mTimer.FireAtIfEarlier(metadata.mDequeueTime);
+    mTimer.FireAtIfEarlier(metadata.mExpireTime);
 
 exit:
-    return;
+    FreeMessage(responseClone);
 }
 
-void ResponsesQueue::UpdateQueue(void)
+void CoapBase::ResponseCache::MaintainCacheSize(void)
 {
-    uint16_t  msgCount    = 0;
-    Message  *earliestMsg = nullptr;
-    TimeMilli earliestDequeueTime(0);
+    // Checks the cache size. If the limit (`kMaxCacheSize`) is
+    // reached, removes the entry with the earliest expire time.
 
-    // Check the number of messages in the queue and if number is at
-    // `kMaxCachedResponses` remove the one with earliest dequeue
-    // time.
+    uint16_t  count       = 0;
+    Message  *msgToRemove = nullptr;
+    TimeMilli earliestExpireTime;
 
-    for (Message &message : mQueue)
+    for (Message &response : mResponses)
     {
         ResponseMetadata metadata;
 
-        metadata.ReadFrom(message);
+        metadata.ReadFrom(response);
 
-        if ((earliestMsg == nullptr) || (metadata.mDequeueTime < earliestDequeueTime))
+        if ((msgToRemove == nullptr) || (metadata.mExpireTime < earliestExpireTime))
         {
-            earliestMsg         = &message;
-            earliestDequeueTime = metadata.mDequeueTime;
+            msgToRemove        = &response;
+            earliestExpireTime = metadata.mExpireTime;
         }
 
-        msgCount++;
+        count++;
     }
 
-    if (msgCount >= kMaxCachedResponses)
+    if (count >= kMaxCacheSize)
     {
-        DequeueResponse(*earliestMsg);
+        mResponses.DequeueAndFree(*msgToRemove);
     }
 }
 
-void ResponsesQueue::DequeueResponse(Message &aMessage) { mQueue.DequeueAndFree(aMessage); }
-
-void ResponsesQueue::DequeueAllResponses(void)
+void CoapBase::ResponseCache::RemoveAll(void)
 {
-    mQueue.DequeueAndFreeAll();
+    mResponses.DequeueAndFreeAll();
     mTimer.Stop();
 }
 
-void ResponsesQueue::HandleTimer(Timer &aTimer)
+void CoapBase::ResponseCache::HandleTimer(Timer &aTimer)
 {
-    static_cast<ResponsesQueue *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
+    static_cast<ResponseCache *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
 }
 
-void ResponsesQueue::HandleTimer(void)
+void CoapBase::ResponseCache::HandleTimer(void)
 {
-    NextFireTime nextDequeueTime;
+    NextFireTime expireTime;
 
-    for (Message &message : mQueue)
+    for (Message &response : mResponses)
     {
         ResponseMetadata metadata;
 
-        metadata.ReadFrom(message);
+        metadata.ReadFrom(response);
 
-        if (nextDequeueTime.GetNow() >= metadata.mDequeueTime)
+        if (expireTime.GetNow() >= metadata.mExpireTime)
         {
-            DequeueResponse(message);
-            continue;
+            mResponses.DequeueAndFree(response);
         }
-
-        nextDequeueTime.UpdateIfEarlier(metadata.mDequeueTime);
+        else
+        {
+            expireTime.UpdateIfEarlier(metadata.mExpireTime);
+        }
     }
 
-    mTimer.FireAt(nextDequeueTime);
+    mTimer.FireAt(expireTime);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// TxParameters
 
 bool TxParameters::IsValid(void) const
 {
@@ -1738,7 +1756,8 @@ const otCoapTxParameters TxParameters::kDefaultTxParameters = {
     kDefaultMaxRetransmit,
 };
 
-//----------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+// Resource
 
 Resource::Resource(const char *aUriPath, RequestHandler aHandler, void *aContext)
 {
@@ -1753,7 +1772,8 @@ Resource::Resource(Uri aUri, RequestHandler aHandler, void *aContext)
 {
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+// Coap
 
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)
