@@ -138,19 +138,17 @@ enum
 
     OT_POSIX_OPT_SHORT_MAX = 128,
 
+    OT_POSIX_OPT_DATA_PATH,
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
-    OT_POSIX_OPT_DATA_PATH,
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     OT_POSIX_OPT_TUN_DEVICE,
 #endif
 };
 
 static const struct option kOptions[] = {
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
-#endif
     {"backbone-interface-name", required_argument, NULL, OT_POSIX_OPT_BACKBONE_INTERFACE_NAME},
+    {"data-path", required_argument, NULL, OT_POSIX_OPT_DATA_PATH},
     {"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
     {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
     {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
@@ -159,8 +157,10 @@ static const struct option kOptions[] = {
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
+#endif
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
-    {"data-path", required_argument, NULL, OT_POSIX_OPT_DATA_PATH},
     {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
