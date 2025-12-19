@@ -64,8 +64,8 @@ otError SettingsFile::Init(const char *aSettingsFileBaseName)
     otError     error     = OT_ERROR_NONE;
     const char *directory = GetSettingsPath();
 
-    OT_ASSERT((aSettingsFileBaseName != nullptr) && ((strlen(directory) + kSlashLength + strlen(aSettingsFileBaseName) +
-                                                      kMaxFileExtensionLength) < sizeof(mSettingsFileFullPathName)));
+    OT_ASSERT(strlen(directory) < kMaxFileBasePathNameSize);
+    OT_ASSERT((aSettingsFileBaseName != nullptr) && strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize);
     snprintf(mSettingsFileFullPathName, sizeof(mSettingsFileFullPathName), "%s/%s", directory, aSettingsFileBaseName);
 
     {
