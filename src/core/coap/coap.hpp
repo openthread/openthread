@@ -41,6 +41,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -596,6 +597,7 @@ public:
      * @retval kErrorNoBufs  Insufficient buffers available to send the CoAP message.
      */
     Error SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters);
+
     /**
      * Sends a CoAP message with default transmission parameters.
      *
@@ -619,6 +621,27 @@ public:
      *
      * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
      *
+     * This flavor of `SendMessage()` accepts an `OwnedPtr<Message>` and therefore takes ownership of the passed-in
+     * message.
+     *
+     * @param[in]  aMessage      An `OwnedPtr` to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     *
+     * @retval kErrorNone    Successfully sent CoAP message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the CoAP response.
+     */
+    Error SendMessage(OwnedPtr<Message>       aMessage,
+                      const Ip6::MessageInfo &aMessageInfo,
+                      ResponseHandler         aHandler,
+                      void                   *aContext);
+
+    /**
+     * Sends a CoAP message with default transmission parameters.
+     *
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
+     *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
@@ -626,6 +649,22 @@ public:
      * @retval kErrorNoBufs  Insufficient buffers available to send the CoAP response.
      */
     Error SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * Sends a CoAP message with default transmission parameters.
+     *
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
+     *
+     * This flavor of `SendMessage()` accepts an `OwnedPtr<Message>` and therefore takes ownership of the passed-in
+     * message.
+     *
+     * @param[in]  aMessage      An `OwnedPtr` to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     * @retval kErrorNone    Successfully sent CoAP message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the CoAP response.
+     */
+    Error SendMessage(OwnedPtr<Message> aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * Sends a CoAP reset message.

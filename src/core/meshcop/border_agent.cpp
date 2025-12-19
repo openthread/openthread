@@ -497,8 +497,7 @@ Error Manager::EvictActiveCommissioner(void)
     messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
     messageInfo.SetSockPortToTmf();
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
-    message.Release();
+    error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo);
 
 exit:
     return error;
@@ -695,10 +694,8 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMessage
     messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
     messageInfo.SetSockPortToTmf();
 
-    // On success the message ownership is transferred.
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleLeaderResponseToFwdTmf,
-                                                        forwardContext.Get()));
-    message.Release();
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo,
+                                                        HandleLeaderResponseToFwdTmf, forwardContext.Get()));
 
     // Release the ownership of `forwardContext` since `SendMessage()`
     // will own it. We take back ownership when the callback
@@ -982,9 +979,7 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
     messageInfo.SetSockAddrToRlocPeerAddrTo(joinerRouterRloc);
     messageInfo.SetSockPortToTmf();
 
-    // On success the message ownership is transferred.
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
-    message.Release();
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo));
 
     LogInfo("Forward %s to joiner router 0x%04x", UriToString<kUriRelayTx>(), joinerRouterRloc);
 
