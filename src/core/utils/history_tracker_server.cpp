@@ -128,13 +128,13 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
 
 void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Coap::Message *answer;
-    Error          error;
-    AnswerInfo     info;
-    OffsetRange    offsetRange;
-    Tlv            tlv;
-    RequestTlv     requestTlv;
-    AnswerTlv      answerTlv;
+    Coap::Message  *answer;
+    Error           error;
+    AnswerInfo      info;
+    OffsetRange     offsetRange;
+    Tlv::ParsedInfo tlvInfo;
+    RequestTlv      requestTlv;
+    AnswerTlv       answerTlv;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
     {
@@ -147,12 +147,16 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
 
     offsetRange.InitFromMessageOffsetToEnd(aRequest);
 
-    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlv.GetSize()))
+    for (; !offsetRange.IsEmpty(); offsetRange.AdvanceOffset(tlvInfo.GetSize()))
     {
-        SuccessOrExit(error = aRequest.Read(offsetRange, tlv));
-        VerifyOrExit(offsetRange.Contains(tlv.GetSize()), error = kErrorParse);
+        SuccessOrExit(error = tlvInfo.ParseFrom(aRequest, offsetRange));
 
-        if (tlv.GetType() == Tlv::kRequest)
+        if (tlvInfo.mIsExtended)
+        {
+            continue;
+        }
+
+        if (tlvInfo.mType == Tlv::kRequest)
         {
             SuccessOrExit(error = aRequest.Read(offsetRange, requestTlv));
             VerifyOrExit(requestTlv.IsValid(), error = kErrorParse);
