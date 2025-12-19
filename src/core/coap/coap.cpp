@@ -1424,7 +1424,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
                     {
                     case kErrorNone:
                         resource.HandleRequest(aMessage, aMessageInfo);
-                        // Fall through
+                        OT_FALL_THROUGH;
                     case kErrorBusy:
                         error = kErrorNone;
                         break;
