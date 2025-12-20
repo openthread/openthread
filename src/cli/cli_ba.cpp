@@ -48,8 +48,18 @@ namespace Cli {
  * ba enable
  * Done
  * @endcode
- * @par api_copy
- * #otBorderAgentSetEnabled
+ * @par
+ * Enables the Border Agent service on the device.
+ * @par
+ * By default, the Border Agent service is enabled. The `ba enable` and `ba disable` commands allow users to explicitly
+ * control its state. This can be useful in scenarios such as:
+ * - The user wishes to delay the start of the Border Agent service (and its mDNS advertisement of the `_meshcop._udp`
+ *   service on the infrastructure link). This allows time to prepare or determine vendor-specific TXT data entries for
+ *   inclusion.
+ * - Unit tests or test scripts might disable the Border Agent service to prevent it from interfering with specific
+ *   test steps. For example, tests validating mDNS or DNS-SD functionality may disable the Border Agent to prevent its
+ *   registration of the MeshCoP service.
+ * @sa otBorderAgentSetEnabled
  */
 template <> otError Ba::Process<Cmd("enable")>(Arg aArgs[])
 {
@@ -68,8 +78,10 @@ exit:
  * ba disable
  * Done
  * @endcode
- * @par api_copy
- * #otBorderAgentSetEnabled
+ * @par
+ * Disables the Border Agent service on the device.
+ * @csa{ba enable}
+ * @sa otBorderAgentSetEnabled
  */
 template <> otError Ba::Process<Cmd("disable")>(Arg aArgs[])
 {
