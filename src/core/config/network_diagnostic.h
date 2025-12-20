@@ -43,13 +43,22 @@
  * @{
  */
 
+#include "config/misc.h"
+
 /**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
  *
  * Specifies the default Vendor Name string.
+ *
+ * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, the Vendor Name string MUST start with the "RD:" prefix
+ * to ensure reference devices are identifiable. This is checked and enforced at build-time (`static_assert`).
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "RD:"
+#else
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME ""
+#endif
 #endif
 
 /**
