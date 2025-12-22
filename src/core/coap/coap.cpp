@@ -180,7 +180,7 @@ Error CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 Error CoapBase::SendMessage(Message                    &aMessage,
                             const Ip6::MessageInfo     &aMessageInfo,
-                            const TxParameters         &aTxParameters,
+                            const TxParameters         *aTxParameters,
                             ResponseHandler             aHandler,
                             void                       *aContext,
                             otCoapBlockwiseTransmitHook aTransmitHook,
@@ -188,7 +188,7 @@ Error CoapBase::SendMessage(Message                    &aMessage,
 #else
 Error CoapBase::SendMessage(Message                &aMessage,
                             const Ip6::MessageInfo &aMessageInfo,
-                            const TxParameters     &aTxParameters,
+                            const TxParameters     *aTxParameters,
                             ResponseHandler         aHandler,
                             void                   *aContext)
 #endif
@@ -202,10 +202,13 @@ Error CoapBase::SendMessage(Message                &aMessage,
     bool     moreBlocks           = false;
 #endif
 
-    // fire and forget (mAckTimeout=0) is only allowed for Non-confirmable (NON) messages
-    if (aTxParameters.mAckTimeout == 0)
+    if (aTxParameters == nullptr)
     {
-        VerifyOrExit(aMessage.IsNonConfirmable(), error = kErrorInvalidArgs);
+        aTxParameters = &TxParameters::GetDefault();
+    }
+    else
+    {
+        SuccessOrExit(error = aTxParameters->ValidateFor(aMessage));
     }
 
     switch (aMessage.GetType())
@@ -227,7 +230,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
         }
 #endif
 
-        mResponseCache.Add(aMessage, aMessageInfo, aTxParameters.CalculateExchangeLifetime());
+        mResponseCache.Add(aMessage, aMessageInfo, aTxParameters->CalculateExchangeLifetime());
         break;
     case kTypeReset:
         OT_ASSERT(aMessage.GetCode() == kCodeEmpty);
@@ -313,8 +316,8 @@ Error CoapBase::SendMessage(Message                &aMessage,
         metadata.mMulticastLoop            = aMessageInfo.GetMulticastLoop();
         metadata.mResponseHandler          = aHandler;
         metadata.mResponseContext          = aContext;
-        metadata.mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
-        metadata.mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
+        metadata.mRetransmissionsRemaining = aTxParameters->mMaxRetransmit;
+        metadata.mRetransmissionTimeout    = aTxParameters->CalculateInitialRetransmissionTimeout();
         metadata.mAcknowledged             = false;
         metadata.mConfirmable              = aMessage.IsConfirmable();
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -330,7 +333,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
 #endif
         metadata.mNextTimerShot =
             TimerMilli::GetNow() +
-            (metadata.mConfirmable ? metadata.mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
+            (metadata.mConfirmable ? metadata.mRetransmissionTimeout : aTxParameters->CalculateMaxTransmitWait());
 
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != nullptr, error = kErrorNoBufs);
@@ -350,7 +353,7 @@ exit:
 
 Error CoapBase::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters)
 {
-    return SendMessage(aMessage, aMessageInfo, aTxParameters, nullptr, nullptr);
+    return SendMessage(aMessage, aMessageInfo, &aTxParameters, nullptr, nullptr);
 }
 
 Error CoapBase::SendMessage(Message                &aMessage,
@@ -358,11 +361,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
                             ResponseHandler         aHandler,
                             void                   *aContext)
 {
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    return SendMessage(aMessage, aMessageInfo, TxParameters::GetDefault(), aHandler, aContext, nullptr, nullptr);
-#else
-    return SendMessage(aMessage, aMessageInfo, TxParameters::GetDefault(), aHandler, aContext);
-#endif
+    return SendMessage(aMessage, aMessageInfo, nullptr, aHandler, aContext);
 }
 
 Error CoapBase::SendMessage(OwnedPtr<Message>       aMessage,
@@ -1276,7 +1275,7 @@ Error CoapBase::SendNextBlock1Request(Message                &aRequest,
     LogInfo("Send Block1 Nr. %d, Size: %d bytes, More Blocks Flag: %d", request->GetBlockWiseBlockNumber(),
             otCoapBlockSizeFromExponent(request->GetBlockWiseBlockSize()), request->IsMoreBlocksFlagSet());
 
-    SuccessOrExit(error = SendMessage(*request, aMessageInfo, TxParameters::GetDefault(),
+    SuccessOrExit(error = SendMessage(*request, aMessageInfo, /* aTxParamters */ nullptr,
                                       aCoapMetadata.mResponseHandler, aCoapMetadata.mResponseContext,
                                       aCoapMetadata.mBlockwiseTransmitHook, aCoapMetadata.mBlockwiseReceiveHook));
 
@@ -1339,7 +1338,7 @@ Error CoapBase::SendNextBlock2Request(Message                &aRequest,
             otCoapBlockSizeFromExponent(request->GetBlockWiseBlockSize()));
 
     SuccessOrExit(error =
-                      SendMessage(*request, aMessageInfo, TxParameters::GetDefault(), aCoapMetadata.mResponseHandler,
+                      SendMessage(*request, aMessageInfo, /* aTxParameters */ nullptr, aCoapMetadata.mResponseHandler,
                                   aCoapMetadata.mResponseContext, nullptr, aCoapMetadata.mBlockwiseReceiveHook));
 
 exit:
@@ -1694,16 +1693,45 @@ void CoapBase::ResponseCache::HandleTimer(void)
 //---------------------------------------------------------------------------------------------------------------------
 // TxParameters
 
-bool TxParameters::IsValid(void) const
+const otCoapTxParameters TxParameters::kDefaultTxParameters = {
+    kDefaultAckTimeout,
+    kDefaultAckRandomFactorNumerator,
+    kDefaultAckRandomFactorDenominator,
+    kDefaultMaxRetransmit,
+};
+
+const TxParameters &TxParameters::GetDefault(void)
 {
-    bool     isValid = false;
+    // Validate the default `TxParameters` at compile-time
+
+    static constexpr uint64_t kMaxDuration = static_cast<uint64_t>(kDefaultAckTimeout) *
+                                                 kDefaultAckRandomFactorNumerator *
+                                                 (1UL << (kDefaultMaxRetransmit + 1)) +
+                                             2 * kDefaultMaxLatency;
+
+    static_assert(kDefaultAckRandomFactorDenominator > 0, "kDefaultAckRandomFactorDenominator MUST be non-zero");
+    static_assert(kDefaultAckRandomFactorNumerator >= kDefaultAckRandomFactorDenominator, "Numerator is invalid");
+    static_assert(kMinAckTimeout > 0, "kMinAckTimeout MUST be non-zero");
+    static_assert(kDefaultAckTimeout >= kMinAckTimeout, "kDefaultAckTimeout is invalid");
+    static_assert(kMaxRetransmit > 0, "kMaxRetransmit MUST be non-zero");
+    static_assert(kMaxRetransmit < 31, "kMaxRetransmit is not valid");
+    static_assert(kDefaultMaxRetransmit <= kMaxRetransmit, "kDefaultMaxRetransmit is invalid");
+    static_assert(kMaxDuration < NumericLimits<uint32_t>::kMax, "Default `TxParameters` is invalid");
+
+    return AsCoreType(&kDefaultTxParameters);
+}
+
+Error TxParameters::ValidateFor(const Message &aMessage) const
+{
+    Error    error = kErrorInvalidArgs;
     uint32_t duration;
     uint32_t retryFactor;
 
     if (mAckTimeout == 0)
     {
-        // Support fire and forget requests
-        isValid = true;
+        // Fire and forget is only allowed for non-confirmable messages.
+        VerifyOrExit(aMessage.IsNonConfirmable());
+        error = kErrorNone;
         ExitNow();
     }
 
@@ -1713,8 +1741,6 @@ bool TxParameters::IsValid(void) const
     VerifyOrExit(mMaxRetransmit <= kMaxRetransmit);
 
     // Calculate exchange lifetime max duration step by step and verify no overflow.
-
-    static_assert(kMaxRetransmit < 31, "kMaxRetransmit is not valid");
 
     retryFactor = static_cast<uint32_t>((1U << (mMaxRetransmit + 1)) - 1);
     SuccessOrExit(SafeMultiply<uint32_t>(mAckTimeout, retryFactor, duration));
@@ -1726,10 +1752,10 @@ bool TxParameters::IsValid(void) const
     VerifyOrExit(CanAddSafely<uint32_t>(mAckTimeout, 2 * kDefaultMaxLatency));
     VerifyOrExit(CanAddSafely<uint32_t>(duration, mAckTimeout + 2 * kDefaultMaxLatency));
 
-    isValid = true;
+    error = kErrorNone;
 
 exit:
-    return isValid;
+    return error;
 }
 
 uint32_t TxParameters::CalculateInitialRetransmissionTimeout(void) const
@@ -1751,13 +1777,6 @@ uint32_t TxParameters::CalculateSpan(uint8_t aMaxRetx) const
     return static_cast<uint32_t>(mAckTimeout * ((1U << aMaxRetx) - 1) / mAckRandomFactorDenominator *
                                  mAckRandomFactorNumerator);
 }
-
-const otCoapTxParameters TxParameters::kDefaultTxParameters = {
-    kDefaultAckTimeout,
-    kDefaultAckRandomFactorNumerator,
-    kDefaultAckRandomFactorDenominator,
-    kDefaultMaxRetransmit,
-};
 
 //---------------------------------------------------------------------------------------------------------------------
 // Resource
