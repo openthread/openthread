@@ -51,6 +51,10 @@
 #include <openthread/platform/alarm-milli.h>
 
 #include "../simul_utils.h"
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+#include <psa/crypto.h>
+#endif
+
 #include "lib/platform/exit_code.h"
 #include "utils/uart.h"
 
@@ -63,6 +67,11 @@ static bool sUseUnixSocket = false;
 
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
+
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+static char        sNativeItsFileNamePrefix[256];
+extern const char *gItsFileNamePrefix;
+#endif
 
 uint64_t sNow = 0; // microseconds
 int      sSockFd;
@@ -272,6 +281,15 @@ void otSysInit(int argc, char *argv[])
     {
         DieNow(OT_EXIT_FAILURE);
     }
+
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+    psa_crypto_init();
+#if OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE
+    snprintf(sNativeItsFileNamePrefix, sizeof(sNativeItsFileNamePrefix), "%s/%s_%d_",
+             OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, getenv("PORT_OFFSET") ? getenv("PORT_OFFSET") : "0", gNodeId);
+    gItsFileNamePrefix = sNativeItsFileNamePrefix;
+#endif
+#endif
 
     socket_init();
 

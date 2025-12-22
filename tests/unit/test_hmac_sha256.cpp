@@ -141,10 +141,15 @@ void TestHmacSha256(void)
 {
     struct TestCase
     {
-        otCryptoKey        mKey;
+        const uint8_t     *mKey;
+        uint16_t           mKeyLength;
         const void        *mData;
         uint16_t           mDataLength;
         otCryptoSha256Hash mHash;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        Crypto::Storage::KeyRef mKeyRef;
+#endif
     };
 
     // Test-cases from RFC 4231.
@@ -218,12 +223,12 @@ void TestHmacSha256(void)
         0xbf, 0xdc, 0x63, 0x64, 0x4f, 0x07, 0x13, 0x93, 0x8a, 0x7f, 0x51, 0x53, 0x5c, 0x3a, 0x35, 0xe2,
     }};
 
-    static const TestCase kTestCases[] = {
-        {{&kKey1[0], sizeof(kKey1), 0}, kData1, sizeof(kData1) - 1, kHash1},
-        {{reinterpret_cast<const uint8_t *>(&kKey2[0]), sizeof(kKey2) - 1, 0}, kData2, sizeof(kData2) - 1, kHash2},
-        {{&kKey3[0], sizeof(kKey3), 0}, kData3, sizeof(kData3), kHash3},
-        {{&kKey4[0], sizeof(kKey4), 0}, kData4, sizeof(kData4), kHash4},
-        {{&kKey5[0], sizeof(kKey5), 0}, kData5, sizeof(kData5) - 1, kHash5},
+    static TestCase kTestCases[] = {
+        {kKey1, sizeof(kKey1), kData1, sizeof(kData1) - 1, kHash1},
+        {reinterpret_cast<const uint8_t *>(kKey2), sizeof(kKey2) - 1, kData2, sizeof(kData2) - 1, kHash2},
+        {kKey3, sizeof(kKey3), kData3, sizeof(kData3), kHash3},
+        {kKey4, sizeof(kKey4), kData4, sizeof(kData4), kHash4},
+        {kKey5, sizeof(kKey5), kData5, sizeof(kData5) - 1, kHash5},
     };
 
     Instance    *instance = testInitInstance();
@@ -239,12 +244,23 @@ void TestHmacSha256(void)
     messagePool = &instance->Get<MessagePool>();
     VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
-    for (const TestCase &testCase : kTestCases)
+    for (TestCase &testCase : kTestCases)
     {
         Crypto::HmacSha256       hmac;
         Crypto::HmacSha256::Hash hash;
+        Crypto::Key              key;
 
-        hmac.Start(static_cast<const Crypto::Key &>(testCase.mKey));
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        SuccessOrQuit(Crypto::Storage::ImportKey(
+            testCase.mKeyRef, Crypto::Storage::kKeyTypeHmac, Crypto::Storage::kKeyAlgorithmHmacSha256,
+            Crypto::Storage::kUsageSignHash, Crypto::Storage::kTypeVolatile, testCase.mKey, testCase.mKeyLength));
+
+        key.SetAsKeyRef(testCase.mKeyRef);
+#else
+        key.Set(testCase.mKey, testCase.mKeyLength);
+#endif
+
+        hmac.Start(key);
         hmac.Update(testCase.mData, testCase.mDataLength);
         hmac.Finish(hash);
 
@@ -255,7 +271,7 @@ void TestHmacSha256(void)
 
     index = 0;
 
-    for (const TestCase &testCase : kTestCases)
+    for (TestCase &testCase : kTestCases)
     {
         SuccessOrQuit(message->Append("Hello"));
         offsets[index++] = message->GetLength();
@@ -269,12 +285,23 @@ void TestHmacSha256(void)
     {
         Crypto::HmacSha256       hmac;
         Crypto::HmacSha256::Hash hash;
+        Crypto::Key              key;
 
-        hmac.Start(static_cast<const Crypto::Key &>(testCase.mKey));
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        key.SetAsKeyRef(testCase.mKeyRef);
+#else
+        key.Set(testCase.mKey, testCase.mKeyLength);
+#endif
+
+        hmac.Start(key);
         hmac.Update(*message, offsets[index++], testCase.mDataLength);
         hmac.Finish(hash);
 
         VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash));
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        Crypto::Storage::DestroyKey(testCase.mKeyRef);
+#endif
     }
 
     message->Free();

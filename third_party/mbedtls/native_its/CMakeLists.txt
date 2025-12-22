@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,35 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-ncp-ftd
-    main.c
-    ncp.c
+add_library(openthread-native-its-file STATIC)
+target_sources(openthread-native-its-file PRIVATE
+    src/file/its_file.c
+)
+target_include_directories(openthread-native-its-file PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    ${OT_PUBLIC_INCLUDES}
+    $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+)
+target_compile_definitions(openthread-native-its-file
+    PRIVATE
+        $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
+    PUBLIC
+        OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_FILE=1
 )
 
-target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
-
-if(NOT DEFINED OT_PLATFORM_LIB_FTD)
-    set(OT_PLATFORM_LIB_FTD ${OT_PLATFORM_LIB})
-endif()
-
-target_link_libraries(ot-ncp-ftd PRIVATE
-    openthread-ncp-ftd
-    ${OT_PLATFORM_LIB_FTD}
-    openthread-ftd
-    openthread-ncp-ftd
-    ${OT_MBEDTLS}
-    ${OT_PLATFORM_LIB_FTD}
-    ot-config-ftd
-    ot-config
+add_library(openthread-native-its-ram STATIC)
+target_sources(openthread-native-its-ram PRIVATE
+    src/ram/its_ram.c
+)
+target_include_directories(openthread-native-its-ram PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    ${OT_PUBLIC_INCLUDES}
+    $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+)
+target_compile_definitions(openthread-native-its-ram
+    PRIVATE
+        $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
+    PUBLIC
+        OPENTHREAD_PSA_CRYPTO_NATIVE_ITS_RAM=1
 )
 
-if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
-        target_link_libraries(ot-ncp-ftd PRIVATE -Wl,-map,ot-ncp-ftd.map)
-    else()
-        target_link_libraries(ot-ncp-ftd PRIVATE -Wl,-Map=ot-ncp-ftd.map)
-    endif()
-endif()
-
-install(TARGETS ot-ncp-ftd DESTINATION bin)

@@ -47,6 +47,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/crypto.h>
 #include <openthread/platform/entropy.h>
+#include <openthread/platform/memory.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -78,10 +79,10 @@ static constexpr uint16_t kEntropyMinThreshold = 16;
 #endif
 #endif
 
-OT_TOOL_WEAK void otPlatCryptoInit(void)
-{
-    // Intentionally empty.
-}
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return otPlatCAlloc(aNum, aSize); }
+OT_TOOL_WEAK void  otPlatCryptoFree(void *aPtr) { otPlatFree(aPtr); }
+#endif
 
 // AES  Implementation
 OT_TOOL_WEAK otError otPlatCryptoAesInit(otCryptoContext *aContext)
@@ -745,76 +746,6 @@ OT_TOOL_WEAK otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
 
 exit:
     return error;
-}
-
-#endif // #if OPENTHREAD_FTD
-
-#elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
-
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_ECDSA_ENABLE
-
-OT_TOOL_WEAK otError otPlatCryptoEcdsaGenerateKey(otPlatCryptoEcdsaKeyPair *aKeyPair)
-{
-    OT_UNUSED_VARIABLE(aKeyPair);
-
-    return OT_ERROR_NOT_CAPABLE;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                                                   otPlatCryptoEcdsaPublicKey     *aPublicKey)
-{
-    OT_UNUSED_VARIABLE(aKeyPair);
-    OT_UNUSED_VARIABLE(aPublicKey);
-
-    return OT_ERROR_NOT_CAPABLE;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                                           const otPlatCryptoSha256Hash   *aHash,
-                                           otPlatCryptoEcdsaSignature     *aSignature)
-{
-    OT_UNUSED_VARIABLE(aKeyPair);
-    OT_UNUSED_VARIABLE(aHash);
-    OT_UNUSED_VARIABLE(aSignature);
-
-    return OT_ERROR_NOT_CAPABLE;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
-                                             const otPlatCryptoSha256Hash     *aHash,
-                                             const otPlatCryptoEcdsaSignature *aSignature)
-
-{
-    OT_UNUSED_VARIABLE(aPublicKey);
-    OT_UNUSED_VARIABLE(aHash);
-    OT_UNUSED_VARIABLE(aSignature);
-
-    return OT_ERROR_NOT_CAPABLE;
-}
-#endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
-
-#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
-
-#if OPENTHREAD_FTD
-
-OT_TOOL_WEAK otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
-                                                   uint16_t       aPasswordLen,
-                                                   const uint8_t *aSalt,
-                                                   uint16_t       aSaltLen,
-                                                   uint32_t       aIterationCounter,
-                                                   uint16_t       aKeyLen,
-                                                   uint8_t       *aKey)
-{
-    OT_UNUSED_VARIABLE(aPassword);
-    OT_UNUSED_VARIABLE(aPasswordLen);
-    OT_UNUSED_VARIABLE(aSalt);
-    OT_UNUSED_VARIABLE(aSaltLen);
-    OT_UNUSED_VARIABLE(aIterationCounter);
-    OT_UNUSED_VARIABLE(aKeyLen);
-    OT_UNUSED_VARIABLE(aKey);
-
-    return OT_ERROR_NOT_CAPABLE;
 }
 
 #endif // #if OPENTHREAD_FTD
