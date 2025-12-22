@@ -268,7 +268,7 @@ protected:
         mHandler(mContext, &aMessage, &aMessageInfo);
     }
 };
-#endif
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 /**
  * Implements the CoAP client and server.
@@ -276,10 +276,6 @@ protected:
 class CoapBase : public InstanceLocator, private NonCopyable
 {
 public:
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    static constexpr uint16_t kMaxBlockLength = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
-#endif
-
     /**
      * Pointer is called before CoAP server processing a CoAP message.
      *
@@ -770,6 +766,8 @@ protected:
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
+    static constexpr uint16_t kMaxBlockLength = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+
     struct Metadata : public Message::FooterData<Metadata>
     {
         Ip6::Address    mSourceAddress;            // IPv6 address of the message source.
@@ -828,28 +826,30 @@ private:
         TimerMilliContext mTimer;
     };
 
-    Message *InitMessage(Message *aMessage, Type aType, Uri aUri);
-    Message *InitResponse(Message *aMessage, const Message &aRequest);
-
+    Message    *InitMessage(Message *aMessage, Type aType, Uri aUri);
+    Message    *InitResponse(Message *aMessage, const Message &aRequest);
     void        ScheduleRetransmissionTimer(void);
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);
-
-    void     ClearRequests(const Ip6::Address *aAddress);
-    Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata);
-    void     DequeueMessage(Message &aMessage);
-    Message *FindRelatedRequest(const Message &aResponse, const Ip6::MessageInfo &aMessageInfo, Metadata &aMetadata);
-    void     FinalizeCoapTransaction(Message                &aRequest,
-                                     const Metadata         &aMetadata,
-                                     Message                *aResponse,
-                                     const Ip6::MessageInfo *aMessageInfo,
-                                     Error                   aResult);
-    bool     InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void        ClearRequests(const Ip6::Address *aAddress);
+    Message    *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata);
+    void        DequeueMessage(Message &aMessage);
+    Message    *FindRelatedRequest(const Message &aResponse, const Ip6::MessageInfo &aMessageInfo, Metadata &aMetadata);
+    void        FinalizeCoapTransaction(Message                &aRequest,
+                                        const Metadata         &aMetadata,
+                                        Message                *aResponse,
+                                        const Ip6::MessageInfo *aMessageInfo,
+                                        Error                   aResult);
+    bool        InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void        ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error       SendEmptyMessage(Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error       Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
-
     Error PrepareNextBlockRequest(Message::BlockType aType,
                                   bool               aMoreBlocks,
                                   Message           &aRequestOld,
@@ -862,11 +862,6 @@ private:
     Error ProcessBlock2Request(Message                 &aMessage,
                                const Ip6::MessageInfo  &aMessageInfo,
                                const ResourceBlockWise &aResource);
-#endif
-    void ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     Error SendNextBlock1Request(Message                &aRequest,
                                 Message                &aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
@@ -878,10 +873,6 @@ private:
                                 uint32_t                aTotalLength,
                                 bool                    aBeginBlock1Transfer);
 #endif
-    void  SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error SendEmptyMessage(Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
-
-    Error Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     MessageQueue      mPendingRequests;
     uint16_t          mMessageId;
