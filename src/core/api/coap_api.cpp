@@ -209,19 +209,13 @@ otError otCoapSendRequestBlockWiseWithParameters(otInstance                 *aIn
                                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    Error                     error;
-    const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
+    Error error;
 
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
-    if (aTxParameters != nullptr)
-    {
-        VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
-    }
-
     error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), txParameters, aHandler, aContext, aTransmitHook,
-        aReceiveHook);
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), aHandler, aContext,
+        aTransmitHook, aReceiveHook);
 
 exit:
     return error;
@@ -237,17 +231,10 @@ otError otCoapSendRequestWithParameters(otInstance               *aInstance,
 {
     Error error;
 
-    const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
-
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
-    if (aTxParameters != nullptr)
-    {
-        VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
-    }
-
     error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), txParameters, aHandler, aContext);
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), aHandler, aContext);
 
 exit:
     return error;
@@ -305,7 +292,7 @@ otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aI
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
     error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), Coap::TxParameters::From(aTxParameters), nullptr, aContext,
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), nullptr, aContext,
         aTransmitHook, nullptr);
 exit:
     return error;
@@ -322,7 +309,7 @@ otError otCoapSendResponseWithParameters(otInstance               *aInstance,
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
     error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), Coap::TxParameters::From(aTxParameters), nullptr, nullptr);
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), nullptr, nullptr);
 
 exit:
     return error;

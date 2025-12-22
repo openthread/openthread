@@ -66,7 +66,7 @@ Error SecureSession::SendMessage(Message                    &aMessage,
                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), TxParameters::GetDefault(), aHandler,
+    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), /* aTxParameters */ nullptr, aHandler,
                                                  aContext, aTransmitHook, aReceiveHook)
                          : kErrorInvalidState;
 }
