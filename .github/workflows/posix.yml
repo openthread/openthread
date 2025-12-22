@@ -236,6 +236,29 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
+  infra-if-index-changed-linux:
+    name: infra-if-index-changed-linux
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y net-tools ninja-build
+    - name: Build
+      run: |
+        script/check-infra-if-index-changed build
+    - name: Run
+      run: |
+        script/check-infra-if-index-changed check
+
   pty-macos:
     name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: macos-14

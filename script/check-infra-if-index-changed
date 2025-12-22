@@ -1,0 +1,173 @@
+#!/bin/bash
+#
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euxo pipefail
+
+die()
+{
+    echo " *** ERROR: " "$*"
+    exit 1
+}
+
+at_exit()
+{
+    EXIT_CODE=$?
+
+    sudo killall ot-daemon || true
+
+    sudo ip link del veth-a || true
+    sudo ip link del veth-b || true
+
+    exit $EXIT_CODE
+}
+
+wait_for()
+{
+    local command="$1"
+    local expect="$2"
+
+    local count=10
+    while [ ${count} -ne 0 ]; do
+        count=$((count - 1))
+        eval sudo "${OT_CTL_PATH}" "${command}" | grep -q "${expect}" && return 0
+        sleep 1
+    done
+
+    return 1
+}
+
+wait_for_onlinkprefix()
+{
+    local count=30
+
+    while [ "$count" -gt 0 ]; do
+        onlinkprefix=$(sudo "${OT_CTL_PATH}" br onlinkprefix favored)
+        onlinkprefix_addr=${onlinkprefix%%::*}
+        if [ -n "$onlinkprefix_addr" ]; then
+            if sudo ip addr show dev veth-a | grep -q "${onlinkprefix_addr}"; then
+                return 0
+            fi
+        fi
+        sleep 1
+        count=$((count - 1))
+    done
+
+    echo "Timed out waiting for onlink prefix on veth-a"
+    return 1
+}
+
+do_build()
+{
+    ./script/cmake-build simulation
+    ./script/cmake-build posix -DOT_BORDER_ROUTING=ON -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_DAEMON=ON
+}
+
+do_check()
+{
+    trap at_exit INT TERM EXIT
+
+    export OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
+
+    # Setup virtual ethernet pair
+    sudo ip link del veth-a || true
+    sudo ip link del veth-b || true
+
+    sudo ip link add veth-a type veth peer name veth-b
+    sudo ip link set veth-a up
+    sudo ip link set veth-b up
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
+
+    RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
+    RADIO_URL="spinel+hdlc+forkpty://${RADIO_NCP_PATH}?forkpty-arg=2"
+
+    sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I wpan0 -B veth-a "${RADIO_URL}" &
+    wait_for "state" "Done" || die "failed to start daemon"
+
+    # verify this reset and factoryreset end immediately
+    sudo "${OT_CTL_PATH}" reset
+    # sleep a while for daemon ready
+    sleep 2
+    sudo "${OT_CTL_PATH}" factoryreset
+    # sleep a while for daemon ready
+    sleep 2
+
+    # Bring up Thread network
+    sudo "${OT_CTL_PATH}" dataset init new || die "failed to init new dataset"
+    sudo "${OT_CTL_PATH}" dataset commit active || die "failed to commit active dataset"
+    sudo "${OT_CTL_PATH}" ifconfig up || die "failed to bring ifconfig up"
+    sudo "${OT_CTL_PATH}" thread start || die "failed to start thread"
+
+    wait_for "state" "leader" || die "did not become leader"
+    wait_for "br state" "running" || die "failed to start br"
+
+    # Simulate infra interface index change
+    sudo ip link del veth-a
+    wait_for "br state" "stopped" || die "failed to stop br"
+
+    sudo ip link add veth-a type veth peer name veth-b
+    sudo ip link set veth-a up
+    sudo ip link set veth-b up
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
+
+    # Verify border routing is still functional by checking for a published prefix
+    # The border router should re-detect the interface and re-establish routing.
+    # A key indicator of this is the successful publication of the onlink prefix.
+    wait_for_onlinkprefix
+
+    echo "Test passed: OTBR correctly handled infra interface index change."
+}
+
+main()
+{
+    if [[ $# == 0 ]]; then
+        do_build
+        do_check
+        return 0
+    fi
+
+    while [[ $# != 0 ]]; do
+        case $1 in
+            build)
+                do_build
+                ;;
+            check)
+                do_check
+                ;;
+            *)
+                echo "Unknown action: $1"
+                return 1
+                ;;
+        esac
+        shift
+    done
+}
+
+main "$@"
