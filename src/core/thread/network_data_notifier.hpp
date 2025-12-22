@@ -31,8 +31,8 @@
  *   This file includes definitions for transmitting SVR_DATA.ntf messages.
  */
 
-#ifndef NETWORK_DATA_NOTIFIER_HPP_
-#define NETWORK_DATA_NOTIFIER_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_NOTIFIER_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_NOTIFIER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -171,4 +171,4 @@ private:
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-#endif // NETWORK_DATA_NOTIFIER_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_NOTIFIER_HPP_

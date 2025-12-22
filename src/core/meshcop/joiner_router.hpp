@@ -31,8 +31,8 @@
  *  This file includes definitions for the Joiner Router role.
  */
 
-#ifndef JOINER_ROUTER_HPP_
-#define JOINER_ROUTER_HPP_
+#ifndef OT_CORE_MESHCOP_JOINER_ROUTER_HPP_
+#define OT_CORE_MESHCOP_JOINER_ROUTER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -128,4 +128,4 @@ DeclareTmfHandler(JoinerRouter, kUriRelayTx);
 
 #endif // OPENTHREAD_FTD
 
-#endif // JOINER_ROUTER_HPP_
+#endif // OT_CORE_MESHCOP_JOINER_ROUTER_HPP_

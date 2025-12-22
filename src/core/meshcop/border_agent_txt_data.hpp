@@ -31,8 +31,8 @@
  *   This file includes definitions for Border Agent MeshCoP service TXT data.
  */
 
-#ifndef BORDER_AGENT_TXT_DATA_HPP_
-#define BORDER_AGENT_TXT_DATA_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_TXT_DATA_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_TXT_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -343,4 +343,4 @@ DefineCoreType(otBorderAgentTxtDataInfo, MeshCoP::BorderAgent::TxtData::Info);
 
 } // namespace ot
 
-#endif // BORDER_AGENT_TXT_DATA_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_TXT_DATA_HPP_

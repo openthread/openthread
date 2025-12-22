@@ -31,8 +31,8 @@
  *   This file includes definitions for the RA-based routing management.
  */
 
-#ifndef ROUTING_MANAGER_HPP_
-#define ROUTING_MANAGER_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_
+#define OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1087,4 +1087,4 @@ DefineMapEnum(otBorderRoutingDhcp6PdState, BorderRouter::RoutingManager::Dhcp6Pd
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // ROUTING_MANAGER_HPP_
+#endif // OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_

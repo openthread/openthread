@@ -31,8 +31,8 @@
  *   This file includes definitions for Mesh Diagnostic module.
  */
 
-#ifndef MESH_DIAG_HPP_
-#define MESH_DIAG_HPP_
+#ifndef OT_CORE_UTILS_MESH_DIAG_HPP_
+#define OT_CORE_UTILS_MESH_DIAG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -336,4 +336,4 @@ DefineCoreType(otMeshDiagChildIterator, Utils::MeshDiag::ChildIterator);
 
 #endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
-#endif // MESH_DIAG_HPP_
+#endif // OT_CORE_UTILS_MESH_DIAG_HPP_

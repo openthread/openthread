@@ -31,8 +31,8 @@
  *   This file includes logging related  definitions.
  */
 
-#ifndef LOG_HPP_
-#define LOG_HPP_
+#ifndef OT_CORE_COMMON_LOG_HPP_
+#define OT_CORE_COMMON_LOG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -401,4 +401,4 @@ Error GenerateNextHexDumpLine(HexDumpInfo &aInfo);
 
 } // namespace ot
 
-#endif // LOG_HPP_
+#endif // OT_CORE_COMMON_LOG_HPP_

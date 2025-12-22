@@ -31,8 +31,8 @@
  *   This file includes definitions for the Commissioner role.
  */
 
-#ifndef COMMISSIONER_HPP_
-#define COMMISSIONER_HPP_
+#ifndef OT_CORE_MESHCOP_COMMISSIONER_HPP_
+#define OT_CORE_MESHCOP_COMMISSIONER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -468,4 +468,4 @@ DefineMapEnum(otCommissionerJoinerEvent, MeshCoP::Commissioner::JoinerEvent);
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-#endif // COMMISSIONER_HPP_
+#endif // OT_CORE_MESHCOP_COMMISSIONER_HPP_

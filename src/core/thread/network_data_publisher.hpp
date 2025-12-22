@@ -31,8 +31,8 @@
  *   This file includes definition of Network Data Publisher.
  */
 
-#ifndef NETWORK_DATA_PUBLISHER_HPP_
-#define NETWORK_DATA_PUBLISHER_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_PUBLISHER_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_PUBLISHER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -532,4 +532,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
-#endif // NETWORK_DATA_PUBLISHER_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_PUBLISHER_HPP_

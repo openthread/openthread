@@ -31,8 +31,8 @@
  *   This file includes definitions for performing HMAC SHA-256 computations.
  */
 
-#ifndef HMAC_SHA256_HPP_
-#define HMAC_SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_HMAC_SHA256_HPP_
+#define OT_CORE_CRYPTO_HMAC_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -134,4 +134,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // HMAC_SHA256_HPP_
+#endif // OT_CORE_CRYPTO_HMAC_SHA256_HPP_

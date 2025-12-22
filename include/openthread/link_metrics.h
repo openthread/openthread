@@ -32,8 +32,8 @@
  *   This file defines the OpenThread Link Metrics API.
  */
 
-#ifndef LINK_METRICS_H_
-#define LINK_METRICS_H_
+#ifndef OPENTHREAD_LINK_METRICS_H_
+#define OPENTHREAD_LINK_METRICS_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -280,4 +280,4 @@ otError otLinkMetricsManagerGetMetricsValueByExtAddr(otInstance          *aInsta
 } // extern "C"
 #endif
 
-#endif // LINK_METRICS_H_
+#endif // OPENTHREAD_LINK_METRICS_H_

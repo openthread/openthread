@@ -31,8 +31,8 @@
  *   This file includes definitions for managing the Extended PAN ID.
  */
 
-#ifndef MESHCOP_EXTENDED_PANID_HPP_
-#define MESHCOP_EXTENDED_PANID_HPP_
+#ifndef OT_CORE_MESHCOP_EXTENDED_PANID_HPP_
+#define OT_CORE_MESHCOP_EXTENDED_PANID_HPP_
 
 #include "openthread-core-config.h"
 
@@ -107,4 +107,4 @@ DefineCoreType(otExtendedPanId, MeshCoP::ExtendedPanId);
 
 } // namespace ot
 
-#endif // MESHCOP_EXTENDED_PANID_HPP_
+#endif // OT_CORE_MESHCOP_EXTENDED_PANID_HPP_

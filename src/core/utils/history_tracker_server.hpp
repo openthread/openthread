@@ -31,8 +31,8 @@
  *   This file includes definitions to support History Tracker Server (TMF).
  */
 
-#ifndef HISTORY_TRACKER_SERVER_HPP_
-#define HISTORY_TRACKER_SERVER_HPP_
+#ifndef OT_CORE_UTILS_HISTORY_TRACKER_SERVER_HPP_
+#define OT_CORE_UTILS_HISTORY_TRACKER_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -113,4 +113,4 @@ DeclareTmfHandler(Server, kUriHistoryQuery);
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
 
-#endif // HISTORY_TRACKER_SERVER_HPP_
+#endif // OT_CORE_UTILS_HISTORY_TRACKER_SERVER_HPP_

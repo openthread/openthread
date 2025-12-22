@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing MLE TLVs.
  */
 
-#ifndef MLE_TLVS_HPP_
-#define MLE_TLVS_HPP_
+#ifndef OT_CORE_THREAD_MLE_TLVS_HPP_
+#define OT_CORE_THREAD_MLE_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1160,4 +1160,4 @@ private:
 
 } // namespace ot
 
-#endif // MLE_TLVS_HPP_
+#endif // OT_CORE_THREAD_MLE_TLVS_HPP_

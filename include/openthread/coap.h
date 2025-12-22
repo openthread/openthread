@@ -1124,4 +1124,4 @@ static inline otError otCoapSendResponse(otInstance *aInstance, otMessage *aMess
 } // extern "C"
 #endif
 
-#endif /* OPENTHREAD_COAP_H_ */
+#endif // OPENTHREAD_COAP_H_

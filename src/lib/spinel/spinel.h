@@ -30,8 +30,8 @@
  *   This file contains definitions of spinel.
  */
 
-#ifndef SPINEL_HEADER_INCLUDED
-#define SPINEL_HEADER_INCLUDED 1
+#ifndef OT_LIB_SPINEL_SPINEL_H_
+#define OT_LIB_SPINEL_SPINEL_H_
 
 /*
  *   Spinel is a host-controller protocol designed to enable
@@ -5318,4 +5318,4 @@ SPINEL_API_EXTERN const char *spinel_link_metrics_status_to_cstr(uint8_t status)
 }
 #endif
 
-#endif /* defined(SPINEL_HEADER_INCLUDED) */
+#endif // OT_LIB_SPINEL_SPINEL_H_

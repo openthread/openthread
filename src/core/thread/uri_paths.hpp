@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread URIs.
  */
 
-#ifndef URI_PATHS_HPP_
-#define URI_PATHS_HPP_
+#ifndef OT_CORE_THREAD_URI_PATHS_HPP_
+#define OT_CORE_THREAD_URI_PATHS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -163,4 +163,4 @@ template <> const char *UriToString<kUriMlr>(void);
 
 } // namespace ot
 
-#endif // URI_PATHS_HPP_
+#endif // OT_CORE_THREAD_URI_PATHS_HPP_

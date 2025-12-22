@@ -31,8 +31,8 @@
  *   This file includes definitions for the BorderAgent role.
  */
 
-#ifndef BORDER_AGENT_HPP_
-#define BORDER_AGENT_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -424,4 +424,4 @@ DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::Manager::Sess
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#endif // BORDER_AGENT_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_HPP_

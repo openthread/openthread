@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Border Agent.
  */
 
-#ifndef CONFIG_BORDER_AGENT_H_
-#define CONFIG_BORDER_AGENT_H_
+#ifndef OT_CORE_CONFIG_BORDER_AGENT_H_
+#define OT_CORE_CONFIG_BORDER_AGENT_H_
 
 /**
  * @addtogroup config-border-agent
@@ -159,4 +159,4 @@
  * @}
  */
 
-#endif // CONFIG_BORDER_AGENT_H_
+#endif // OT_CORE_CONFIG_BORDER_AGENT_H_

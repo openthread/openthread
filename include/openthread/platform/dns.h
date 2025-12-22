@@ -123,4 +123,4 @@ extern void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQ
 }
 #endif
 
-#endif
+#endif // OPENTHREAD_PLATFORM_DNS_H_

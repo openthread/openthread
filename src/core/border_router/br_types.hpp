@@ -31,8 +31,8 @@
  *   This file includes common type definitions for Border Router modules.
  */
 
-#ifndef BR_TYPES_HPP_
-#define BR_TYPES_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_
+#define OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -671,4 +671,4 @@ TimeMilli CalculateClampedExpirationTime(TimeMilli aUpdateTime, uint32_t aLifeti
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // BR_TYPES_HPP_
+#endif // OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DNS_SERVER_HPP_
-#define DNS_SERVER_HPP_
+#ifndef OT_CORE_NET_DNSSD_SERVER_HPP_
+#define OT_CORE_NET_DNSSD_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -679,4 +679,4 @@ DefineCoreType(otPlatDnsUpstreamQuery, Dns::ServiceDiscovery::Server::UpstreamQu
 
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-#endif // DNS_SERVER_HPP_
+#endif // OT_CORE_NET_DNSSD_SERVER_HPP_

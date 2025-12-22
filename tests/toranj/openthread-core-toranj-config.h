@@ -30,12 +30,13 @@
  * This header file defines the OpenThread core configuration options used in NCP build for `toranj` test framework.
  */
 
-#if !defined(OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_) && !defined(OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_)
-#error "This header file should only be included through the platform-specific one"
+#ifndef OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_H_
+#define OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_H_
 #endif
 
-#ifndef OPENTHREAD_RADIO
-#define OPENTHREAD_RADIO 0
+#if !defined(OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_) && \
+    !defined(OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_)
+#error "This header file should only be included through the platform-specific one"
 #endif
 
 #ifndef OPENTHREAD_RADIO
@@ -232,4 +233,4 @@
 
 #define OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE 1
 
-#endif
+#endif // OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_H_

@@ -31,8 +31,8 @@
  *   This file includes definitions for managing MeshCoP Datasets.
  */
 
-#ifndef MESHCOP_DATASET_MANAGER_HPP_
-#define MESHCOP_DATASET_MANAGER_HPP_
+#ifndef OT_CORE_MESHCOP_DATASET_MANAGER_HPP_
+#define OT_CORE_MESHCOP_DATASET_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -495,4 +495,4 @@ DeclareTmfHandler(PendingDatasetManager, kUriPendingSet);
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // MESHCOP_DATASET_MANAGER_HPP_
+#endif // OT_CORE_MESHCOP_DATASET_MANAGER_HPP_

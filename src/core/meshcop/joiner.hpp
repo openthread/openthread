@@ -31,8 +31,8 @@
  *  This file includes definitions for the Joiner role.
  */
 
-#ifndef JOINER_HPP_
-#define JOINER_HPP_
+#ifndef OT_CORE_MESHCOP_JOINER_HPP_
+#define OT_CORE_MESHCOP_JOINER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -246,4 +246,4 @@ DefineMapEnum(otJoinerState, MeshCoP::Joiner::State);
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#endif // JOINER_HPP_
+#endif // OT_CORE_MESHCOP_JOINER_HPP_

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MULTICAST_DNS_HPP_
-#define MULTICAST_DNS_HPP_
+#ifndef OT_CORE_NET_MDNS_HPP_
+#define OT_CORE_NET_MDNS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -2463,4 +2463,4 @@ DefineCoreType(otPlatMdnsAddressInfo, Dns::Multicast::Core::AddressInfo);
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
-#endif // MULTICAST_DNS_HPP_
+#endif // OT_CORE_NET_MDNS_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions to support History Tracker Client.
  */
 
-#ifndef HISTORY_TRACKER_CLIENT_HPP_
-#define HISTORY_TRACKER_CLIENT_HPP_
+#ifndef OT_CORE_UTILS_HISTORY_TRACKER_CLIENT_HPP_
+#define OT_CORE_UTILS_HISTORY_TRACKER_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -134,4 +134,4 @@ DeclareTmfHandler(Client, kUriHistoryAnswer);
 
 #endif // #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
 
-#endif // HISTORY_TRACKER_CLIENT_HPP_
+#endif // OT_CORE_UTILS_HISTORY_TRACKER_CLIENT_HPP_

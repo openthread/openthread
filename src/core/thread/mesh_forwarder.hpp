@@ -31,8 +31,8 @@
  *   This file includes definitions for forwarding IPv6 datagrams across the Thread mesh.
  */
 
-#ifndef MESH_FORWARDER_HPP_
-#define MESH_FORWARDER_HPP_
+#ifndef OT_CORE_THREAD_MESH_FORWARDER_HPP_
+#define OT_CORE_THREAD_MESH_FORWARDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -590,4 +590,4 @@ private:
 
 } // namespace ot
 
-#endif // MESH_FORWARDER_HPP_
+#endif // OT_CORE_THREAD_MESH_FORWARDER_HPP_

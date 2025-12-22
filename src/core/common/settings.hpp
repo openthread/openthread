@@ -31,8 +31,8 @@
  *   This file includes definitions for non-volatile storage of settings.
  */
 
-#ifndef SETTINGS_HPP_
-#define SETTINGS_HPP_
+#ifndef OT_CORE_COMMON_SETTINGS_HPP_
+#define OT_CORE_COMMON_SETTINGS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1132,4 +1132,4 @@ private:
 
 } // namespace ot
 
-#endif // SETTINGS_HPP_
+#endif // OT_CORE_COMMON_SETTINGS_HPP_

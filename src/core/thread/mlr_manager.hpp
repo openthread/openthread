@@ -31,8 +31,8 @@
  *   This file includes definitions for managing Multicast Listener Registration feature defined in Thread 1.2.
  */
 
-#ifndef MLR_MANAGER_HPP_
-#define MLR_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_MLR_MANAGER_HPP_
+#define OT_CORE_THREAD_MLR_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -213,4 +213,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-#endif // MLR_MANAGER_HPP_
+#endif // OT_CORE_THREAD_MLR_MANAGER_HPP_

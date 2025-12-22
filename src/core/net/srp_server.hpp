@@ -31,8 +31,8 @@
  *   This file includes definitions for SRP server.
  */
 
-#ifndef NET_SRP_SERVER_HPP_
-#define NET_SRP_SERVER_HPP_
+#ifndef OT_CORE_NET_SRP_SERVER_HPP_
+#define OT_CORE_NET_SRP_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1069,4 +1069,4 @@ DefineMapEnum(otSrpServerAddressMode, Srp::Server::AddressMode);
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-#endif // NET_SRP_SERVER_HPP_
+#endif // OT_CORE_NET_SRP_SERVER_HPP_

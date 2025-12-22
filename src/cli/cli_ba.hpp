@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to Border Agent.
  */
 
-#ifndef CLI_BA_HPP_
-#define CLI_BA_HPP_
+#ifndef OT_CLI_CLI_BA_HPP_
+#define OT_CLI_CLI_BA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -93,4 +93,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#endif // CLI_BA_HPP_
+#endif // OT_CLI_CLI_BA_HPP_

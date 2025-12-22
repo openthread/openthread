@@ -31,8 +31,8 @@
  *   This file includes definitions for the Received RA Tracker.
  */
 
-#ifndef RX_RA_TRACKER_HPP_
-#define RX_RA_TRACKER_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_RX_RA_TRACKER_HPP_
+#define OT_CORE_BORDER_ROUTER_RX_RA_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -696,4 +696,4 @@ template <> void RxRaTracker::Entry<RxRaTracker::Router>::Free(void);
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // RX_RA_TRACKER_HPP_
+#endif // OT_CORE_BORDER_ROUTER_RX_RA_TRACKER_HPP_

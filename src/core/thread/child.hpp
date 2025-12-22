@@ -31,8 +31,8 @@
  *   This file includes definitions for a Thread `Child`.
  */
 
-#ifndef CHILD_HPP_
-#define CHILD_HPP_
+#ifndef OT_CORE_THREAD_CHILD_HPP_
+#define OT_CORE_THREAD_CHILD_HPP_
 
 #include "openthread-core-config.h"
 
@@ -394,4 +394,4 @@ DefineCoreType(otChildInfo, Child::Info);
 
 } // namespace ot
 
-#endif // CHILD_HPP_
+#endif // OT_CORE_THREAD_CHILD_HPP_

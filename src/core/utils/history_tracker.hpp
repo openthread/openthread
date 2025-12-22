@@ -31,8 +31,8 @@
  *   This file includes definitions to support History Tracker module.
  */
 
-#ifndef HISTORY_TRACKER_HPP_
-#define HISTORY_TRACKER_HPP_
+#ifndef OT_CORE_UTILS_HISTORY_TRACKER_HPP_
+#define OT_CORE_UTILS_HISTORY_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -607,4 +607,4 @@ DefineCoreType(otHistoryTrackerExternalRouteInfo, HistoryTracker::ExternalRouteI
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // HISTORY_TRACKER_HPP_
+#endif // OT_CORE_UTILS_HISTORY_TRACKER_HPP_

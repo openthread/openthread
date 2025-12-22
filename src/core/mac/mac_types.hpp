@@ -31,8 +31,8 @@
  *   This file includes definitions for MAC types.
  */
 
-#ifndef MAC_TYPES_HPP_
-#define MAC_TYPES_HPP_
+#ifndef OT_CORE_MAC_MAC_TYPES_HPP_
+#define OT_CORE_MAC_MAC_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1105,4 +1105,4 @@ DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
 
 } // namespace ot
 
-#endif // MAC_TYPES_HPP_
+#endif // OT_CORE_MAC_MAC_TYPES_HPP_

@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI CoAP server and client.
  */
 
-#ifndef CLI_UDP_EXAMPLE_HPP_
-#define CLI_UDP_EXAMPLE_HPP_
+#ifndef OT_CLI_CLI_UDP_HPP_
+#define OT_CLI_CLI_UDP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -88,4 +88,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UDP_EXAMPLE_HPP_
+#endif // OT_CLI_CLI_UDP_HPP_

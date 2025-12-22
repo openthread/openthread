@@ -31,8 +31,8 @@
  *  This file defines OpenThread String class.
  */
 
-#ifndef STRING_HPP_
-#define STRING_HPP_
+#ifndef OT_CORE_COMMON_STRING_HPP_
+#define OT_CORE_COMMON_STRING_HPP_
 
 #include "openthread-core-config.h"
 
@@ -582,4 +582,4 @@ public:
 
 } // namespace ot
 
-#endif // STRING_HPP_
+#endif // OT_CORE_COMMON_STRING_HPP_

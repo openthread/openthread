@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIG_CRYPTO_H_
-#define CONFIG_CRYPTO_H_
+#ifndef OT_CORE_CONFIG_CRYPTO_H_
+#define OT_CORE_CONFIG_CRYPTO_H_
 
 /**
  * @addtogroup config-crypto
@@ -103,4 +103,4 @@
  * @}
  */
 
-#endif // CONFIG_CRYPTO_H_
+#endif // OT_CORE_CONFIG_CRYPTO_H_

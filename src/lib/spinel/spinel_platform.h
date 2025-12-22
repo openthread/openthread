@@ -25,8 +25,8 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPINEL_PLATFORM_OPENTHREAD_H_
-#define SPINEL_PLATFORM_OPENTHREAD_H_
+#ifndef OT_LIB_SPINEL_SPINEL_PLATFORM_H_
+#define OT_LIB_SPINEL_SPINEL_PLATFORM_H_
 
 /**
  * This is the platform header file used for spinel on
@@ -55,4 +55,4 @@
 #include <stdlib.h>
 #include <string.h>
 
-#endif // SPINEL_PLATFORM_OPENTHREAD_H_
+#endif // OT_LIB_SPINEL_SPINEL_PLATFORM_H_

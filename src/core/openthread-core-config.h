@@ -31,8 +31,8 @@
  *   This file includes compile-time configuration constants for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#ifndef OT_CORE_OPENTHREAD_CORE_CONFIG_H_
+#define OT_CORE_OPENTHREAD_CORE_CONFIG_H_
 
 #include <openthread/config.h>
 #include <openthread/thread.h>
@@ -120,4 +120,4 @@
 #include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
 #endif
 
-#endif // OPENTHREAD_CORE_CONFIG_H_
+#endif // OT_CORE_OPENTHREAD_CORE_CONFIG_H_

@@ -31,8 +31,8 @@
  *   This file includes definitions for MLE types and constants.
  */
 
-#ifndef MLE_TYPES_HPP_
-#define MLE_TYPES_HPP_
+#ifndef OT_CORE_THREAD_MLE_TYPES_HPP_
+#define OT_CORE_THREAD_MLE_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -885,4 +885,4 @@ DefineCoreType(otP2pRequest, Mle::P2pRequest);
 
 } // namespace ot
 
-#endif // MLE_TYPES_HPP_
+#endif // OT_CORE_THREAD_MLE_TYPES_HPP_

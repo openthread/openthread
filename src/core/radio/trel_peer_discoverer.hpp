@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Radio Encapsulation Link (TREL) peer discovery.
  */
 
-#ifndef TREL_PEER_DISCOVERER_HPP_
-#define TREL_PEER_DISCOVERER_HPP_
+#ifndef OT_CORE_RADIO_TREL_PEER_DISCOVERER_HPP_
+#define OT_CORE_RADIO_TREL_PEER_DISCOVERER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -287,4 +287,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // TREL_PEER_DISCOVERER_HPP_
+#endif // OT_CORE_RADIO_TREL_PEER_DISCOVERER_HPP_

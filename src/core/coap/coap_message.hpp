@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing CoAP messages.
  */
 
-#ifndef COAP_HEADER_HPP_
-#define COAP_HEADER_HPP_
+#ifndef OT_CORE_COAP_COAP_MESSAGE_HPP_
+#define OT_CORE_COAP_COAP_MESSAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1232,4 +1232,4 @@ inline const Coap::Message *AsCoapMessagePtr(const otMessage *aMessage)
 
 } // namespace ot
 
-#endif // COAP_HEADER_HPP_
+#endif // OT_CORE_COAP_COAP_MESSAGE_HPP_

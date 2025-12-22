@@ -31,8 +31,8 @@
  *   This file includes definitions for Anycast Locator functionality.
  */
 
-#ifndef ANYCAST_LOCATOR_HPP_
-#define ANYCAST_LOCATOR_HPP_
+#ifndef OT_CORE_THREAD_ANYCAST_LOCATOR_HPP_
+#define OT_CORE_THREAD_ANYCAST_LOCATOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -110,4 +110,4 @@ DeclareTmfHandler(AnycastLocator, kUriAnycastLocate);
 
 #endif // OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 
-#endif //  ANYCAST_LOCATOR_HPP_
+#endif // OT_CORE_THREAD_ANYCAST_LOCATOR_HPP_

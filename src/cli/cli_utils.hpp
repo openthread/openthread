@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI util functions.
  */
 
-#ifndef CLI_UTILS_HPP_
-#define CLI_UTILS_HPP_
+#ifndef OT_CLI_CLI_UTILS_HPP_
+#define OT_CLI_CLI_UTILS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -792,4 +792,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UTILS_HPP_
+#endif // OT_CLI_CLI_UTILS_HPP_

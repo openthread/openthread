@@ -31,8 +31,8 @@
  *   This file includes definitions for Backbone TMF functionality.
  */
 
-#ifndef OT_CORE_THREAD_BACKBONE_TMF_HPP_
-#define OT_CORE_THREAD_BACKBONE_TMF_HPP_
+#ifndef OT_CORE_BACKBONE_ROUTER_BACKBONE_TMF_HPP_
+#define OT_CORE_BACKBONE_ROUTER_BACKBONE_TMF_HPP_
 
 #include "openthread-core-config.h"
 
@@ -104,4 +104,4 @@ private:
 
 #endif //  OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#endif //  OT_CORE_THREAD_BACKBONE_TMF_HPP_
+#endif // OT_CORE_BACKBONE_ROUTER_BACKBONE_TMF_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for the trickle timer logic.
  */
 
-#ifndef TRICKLE_TIMER_HPP_
-#define TRICKLE_TIMER_HPP_
+#ifndef OT_CORE_COMMON_TRICKLE_TIMER_HPP_
+#define OT_CORE_COMMON_TRICKLE_TIMER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -211,4 +211,4 @@ private:
 
 } // namespace ot
 
-#endif // TRICKLE_TIMER_HPP_
+#endif // OT_CORE_COMMON_TRICKLE_TIMER_HPP_

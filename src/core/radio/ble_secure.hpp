@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BLE_SECURE_HPP_
-#define BLE_SECURE_HPP_
+#ifndef OT_CORE_RADIO_BLE_SECURE_HPP_
+#define OT_CORE_RADIO_BLE_SECURE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -388,4 +388,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
-#endif // BLE_SECURE_HPP_
+#endif // OT_CORE_RADIO_BLE_SECURE_HPP_

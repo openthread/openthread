@@ -31,8 +31,8 @@
  *   This file includes definitions Thread `Router` and `Parent`.
  */
 
-#ifndef ROUTER_HPP_
-#define ROUTER_HPP_
+#ifndef OT_CORE_THREAD_ROUTER_HPP_
+#define OT_CORE_THREAD_ROUTER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -315,4 +315,4 @@ DefineCoreType(otRouterInfo, Router::Info);
 
 } // namespace ot
 
-#endif // ROUTER_HPP_
+#endif // OT_CORE_THREAD_ROUTER_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for numeric limits.
  */
 
-#ifndef NUMERIC_LIMITS_HPP_
-#define NUMERIC_LIMITS_HPP_
+#ifndef OT_CORE_COMMON_NUMERIC_LIMITS_HPP_
+#define OT_CORE_COMMON_NUMERIC_LIMITS_HPP_
 
 #include <stdint.h>
 
@@ -99,4 +99,4 @@ template <> struct NumericLimits<uint64_t>
 
 } // namespace ot
 
-#endif // NUMERIC_LIMITS_HPP_
+#endif // OT_CORE_COMMON_NUMERIC_LIMITS_HPP_

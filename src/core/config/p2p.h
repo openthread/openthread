@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the peer-to-peer (P2P).
  */
 
-#ifndef CONFIG_P2P_H_
-#define CONFIG_P2P_H_
+#ifndef OT_CORE_CONFIG_P2P_H_
+#define OT_CORE_CONFIG_P2P_H_
 
 /**
  * @addtogroup config-p2p
@@ -65,4 +65,4 @@
  * @}
  */
 
-#endif // CONFIG_P2P_H_
+#endif // OT_CORE_CONFIG_P2P_H_

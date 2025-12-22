@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the SRP (Service Registration Protocol) Client.
  */
 
-#ifndef CONFIG_SRP_CLIENT_H_
-#define CONFIG_SRP_CLIENT_H_
+#ifndef OT_CORE_CONFIG_SRP_CLIENT_H_
+#define OT_CORE_CONFIG_SRP_CLIENT_H_
 
 /**
  * @addtogroup config-srp-client
@@ -360,4 +360,4 @@
  * @}
  */
 
-#endif // CONFIG_SRP_CLIENT_H_
+#endif // OT_CORE_CONFIG_SRP_CLIENT_H_

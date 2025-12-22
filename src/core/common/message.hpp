@@ -31,8 +31,8 @@
  *   This file includes definitions for the message buffer pool and message buffers.
  */
 
-#ifndef MESSAGE_HPP_
-#define MESSAGE_HPP_
+#ifndef OT_CORE_COMMON_MESSAGE_HPP_
+#define OT_CORE_COMMON_MESSAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1949,4 +1949,4 @@ DefineMapEnum(otMessageOrigin, Message::Origin);
 
 } // namespace ot
 
-#endif // MESSAGE_HPP_
+#endif // OT_CORE_COMMON_MESSAGE_HPP_

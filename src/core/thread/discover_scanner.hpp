@@ -31,8 +31,8 @@
  *   This file includes definitions for MLE Discover Scan process.
  */
 
-#ifndef DISCOVER_SCANNER_HPP_
-#define DISCOVER_SCANNER_HPP_
+#ifndef OT_CORE_THREAD_DISCOVER_SCANNER_HPP_
+#define OT_CORE_THREAD_DISCOVER_SCANNER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -187,4 +187,4 @@ private:
 } // namespace Mle
 } // namespace ot
 
-#endif // DISCOVER_SCANNER_HPP_
+#endif // OT_CORE_THREAD_DISCOVER_SCANNER_HPP_

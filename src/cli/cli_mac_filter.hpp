@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to MAC Filter.
  */
 
-#ifndef CLI_MAC_FILTER_HPP_
-#define CLI_MAC_FILTER_HPP_
+#ifndef OT_CLI_CLI_MAC_FILTER_HPP_
+#define OT_CLI_CLI_MAC_FILTER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -98,4 +98,4 @@ private:
 
 #endif // OPENTHREAD_CLI_DNS_ENABLE
 
-#endif // CLI_MAC_FILTER_HPP_
+#endif // OT_CLI_CLI_MAC_FILTER_HPP_

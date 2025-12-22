@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 network interfaces.
  */
 
-#ifndef NET_NETIF_HPP_
-#define NET_NETIF_HPP_
+#ifndef OT_CORE_NET_NETIF_HPP_
+#define OT_CORE_NET_NETIF_HPP_
 
 #include "openthread-core-config.h"
 
@@ -654,4 +654,4 @@ DefineCoreType(otNetifMulticastAddress, Ip6::Netif::MulticastAddress);
 
 } // namespace ot
 
-#endif // NET_NETIF_HPP_
+#endif // OT_CORE_NET_NETIF_HPP_
