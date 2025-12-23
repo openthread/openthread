@@ -160,10 +160,25 @@ protected:
 };
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+/**
+ * Represents a function pointer which is called when a CoAP message with a block-wise transfer option is received.
+ *
+ * Please see `otCoapBlockwiseReceiveHook` for details.
+ */
+typedef otCoapBlockwiseReceiveHook BlockwiseReceiveHook;
+
+/**
+ * Represents a function pointer which is called before the next block in a block-wise transfer is sent.
+ *
+ * Please see `otCoapBlockwiseTransmitHook` for details.
+ */
+typedef otCoapBlockwiseTransmitHook BlockwiseTransmitHook;
+
 /**
  * Implements CoAP block-wise resource handling.
  */
-class ResourceBlockWise : public otCoapBlockwiseResource
+class ResourceBlockWise : public otCoapBlockwiseResource, public LinkedListEntry<ResourceBlockWise>
 {
     friend class CoapBase;
 
@@ -179,11 +194,11 @@ public:
      * @param[in]  aTransmitHook    A function pointer that is called when transmitting a CoAP block message from @p
      *                              aUriPath.
      */
-    ResourceBlockWise(const char                 *aUriPath,
-                      otCoapRequestHandler        aHandler,
-                      void                       *aContext,
-                      otCoapBlockwiseReceiveHook  aReceiveHook,
-                      otCoapBlockwiseTransmitHook aTransmitHook)
+    ResourceBlockWise(const char           *aUriPath,
+                      RequestHandler        aHandler,
+                      void                 *aContext,
+                      BlockwiseReceiveHook  aReceiveHook,
+                      BlockwiseTransmitHook aTransmitHook)
     {
         mUriPath      = aUriPath;
         mHandler      = aHandler;
@@ -192,47 +207,6 @@ public:
         mTransmitHook = aTransmitHook;
         mNext         = nullptr;
     }
-
-    Error HandleBlockReceive(const uint8_t *aBlock,
-                             uint32_t       aPosition,
-                             uint16_t       aBlockLength,
-                             bool           aMore,
-                             uint32_t       aTotalLength) const
-    {
-        return mReceiveHook(otCoapBlockwiseResource::mContext, aBlock, aPosition, aBlockLength, aMore, aTotalLength);
-    }
-
-    Error HandleBlockTransmit(uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore) const
-    {
-        return mTransmitHook(otCoapBlockwiseResource::mContext, aBlock, aPosition, aBlockLength, aMore);
-    }
-
-    /**
-     * Gets the next entry in the linked list.
-     *
-     * @returns A pointer to the next entry in the linked list or `nullptr` if at the end of the list.
-     */
-    const ResourceBlockWise *GetNext(void) const
-    {
-        return static_cast<const ResourceBlockWise *>(static_cast<const ResourceBlockWise *>(this)->mNext);
-    }
-
-    /**
-     * Gets the next entry in the linked list.
-     *
-     * @returns A pointer to the next entry in the linked list or `nullptr` if at the end of the list.
-     */
-    ResourceBlockWise *GetNext(void)
-    {
-        return static_cast<ResourceBlockWise *>(static_cast<ResourceBlockWise *>(this)->mNext);
-    }
-
-    /**
-     * Sets the next pointer on the entry.
-     *
-     * @param[in] aNext  A pointer to the next entry.
-     */
-    void SetNext(ResourceBlockWise *aNext) { static_cast<ResourceBlockWise *>(this)->mNext = aNext; }
 
     /**
      * Returns a pointer to the URI path.
@@ -246,7 +220,22 @@ protected:
     {
         mHandler(mContext, &aMessage, &aMessageInfo);
     }
+
+    Error HandleBlockReceive(const uint8_t *aBlock,
+                             uint32_t       aPosition,
+                             uint16_t       aBlockLength,
+                             bool           aMore,
+                             uint32_t       aTotalLength) const
+    {
+        return mReceiveHook(mContext, aBlock, aPosition, aBlockLength, aMore, aTotalLength);
+    }
+
+    Error HandleBlockTransmit(uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore) const
+    {
+        return mTransmitHook(mContext, aBlock, aPosition, aBlockLength, aMore);
+    }
 };
+
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 /**
@@ -770,8 +759,8 @@ private:
         bool mObserve : 1; // Information that this request involves Observations.
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        otCoapBlockwiseReceiveHook  mBlockwiseReceiveHook;  // Function pointer called on Block2 response reception.
-        otCoapBlockwiseTransmitHook mBlockwiseTransmitHook; // Function pointer called on Block1 response reception.
+        BlockwiseReceiveHook  mBlockwiseReceiveHook;  // Function pointer called on Block2 response reception.
+        BlockwiseTransmitHook mBlockwiseTransmitHook; // Function pointer called on Block1 response reception.
 #endif
     };
 
@@ -827,6 +816,7 @@ private:
     Error       Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(Message::BlockType aType,
@@ -851,7 +841,10 @@ private:
                                 const Metadata         &aCoapMetadata,
                                 uint32_t                aTotalLength,
                                 bool                    aBeginBlock1Transfer);
-#endif
+
+    static Error DetermineBlockSzxFromSize(uint16_t aSize, BlockSzx &aBlockSzx);
+
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     MessageQueue      mPendingRequests;
     uint16_t          mMessageId;

@@ -100,19 +100,16 @@ otError otCoapMessageAppendUriQueryOptions(otMessage *aMessage, const char *aUri
     return AsCoapMessage(aMessage).AppendUriQueryOptions(aUriQuery);
 }
 
-uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize)
-{
-    return static_cast<uint16_t>(1 << (static_cast<uint8_t>(aSize) + Coap::Message::kBlockSzxBase));
-}
+uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize) { return Coap::BlockSizeFromExponent(MapEnum(aSize)); }
 
 otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
-    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType2, aNum, aMore, aSize);
+    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType2, aNum, aMore, MapEnum(aSize));
 }
 
 otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
-    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType1, aNum, aMore, aSize);
+    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType1, aNum, aMore, MapEnum(aSize));
 }
 
 otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
