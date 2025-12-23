@@ -849,6 +849,12 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    Error ProcessObserveSend(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, bool &aShouldObserve);
+
+    static bool IsObserveSubscription(const Message &aMessage, const Metadata &aMetadata);
+#endif
+
     MessageQueue      mPendingRequests;
     uint16_t          mMessageId;
     TimerMilliContext mRetransmissionTimer;
