@@ -38,6 +38,16 @@
 namespace ot {
 namespace Coap {
 
+uint16_t BlockSizeFromExponent(BlockSzx aBlockSzxq)
+{
+    static constexpr uint8_t kBlockSzxBase = 4;
+
+    return static_cast<uint16_t>(1 << (static_cast<uint8_t>(aBlockSzxq) + kBlockSzxBase));
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Message`
+
 void Message::Init(void)
 {
     GetHelpData().Clear();
@@ -49,7 +59,7 @@ void Message::Init(void)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     SetBlockWiseBlockNumber(0);
     SetMoreBlocksFlag(false);
-    SetBlockWiseBlockSize(OT_COAP_OPTION_BLOCK_SZX_16);
+    SetBlockWiseBlockSize(kBlockSzx16);
 #endif
 }
 
@@ -285,13 +295,13 @@ exit:
     return error;
 }
 
-Error Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
+Error Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, BlockSzx aSize)
 {
     Error    error   = kErrorNone;
     uint32_t encoded = aSize;
 
     VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = kErrorInvalidArgs);
-    VerifyOrExit(aSize <= OT_COAP_OPTION_BLOCK_SZX_1024, error = kErrorInvalidArgs);
+    VerifyOrExit(aSize <= kBlockSzx1024, error = kErrorInvalidArgs);
     VerifyOrExit(aNum < kBlockNumMax, error = kErrorInvalidArgs);
 
     encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
@@ -324,17 +334,17 @@ Error Message::ReadBlockOptionValues(uint16_t aBlockType)
     case 1:
         SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] & 0xf0) >> 4));
         SetMoreBlocksFlag(static_cast<bool>((buf[0] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[0] & 0x07));
+        SetBlockWiseBlockSize(static_cast<BlockSzx>(buf[0] & 0x07));
         break;
     case 2:
         SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 4) + ((buf[1] & 0xf0) >> 4)));
         SetMoreBlocksFlag(static_cast<bool>((buf[1] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[1] & 0x07));
+        SetBlockWiseBlockSize(static_cast<BlockSzx>(buf[1] & 0x07));
         break;
     case 3:
         SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 12) + (buf[1] << 4) + ((buf[2] & 0xf0) >> 4)));
         SetMoreBlocksFlag(static_cast<bool>((buf[2] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[2] & 0x07));
+        SetBlockWiseBlockSize(static_cast<BlockSzx>(buf[2] & 0x07));
         break;
     default:
         error = kErrorInvalidArgs;
@@ -491,9 +501,15 @@ const char *Message::CodeToString(void) const
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
+//---------------------------------------------------------------------------------------------------------------------
+// `Message::Iterator`
+
 Message::Iterator MessageQueue::begin(void) { return Message::Iterator(GetHead()); }
 
 Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIterator(GetHead()); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Option::Iterator`
 
 Error Option::Iterator::Init(const Message &aMessage)
 {
