@@ -196,11 +196,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
     Error    error;
     Message *storedCopy = nullptr;
     uint16_t copyLength = 0;
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    uint8_t  buf[kMaxBlockLength] = {0};
-    uint16_t bufLen               = kMaxBlockLength;
-    bool     moreBlocks           = false;
-#endif
+    Metadata metadata;
 
     if (aTxParameters == nullptr)
     {
@@ -211,51 +207,22 @@ Error CoapBase::SendMessage(Message                &aMessage,
         SuccessOrExit(error = aTxParameters->ValidateFor(aMessage));
     }
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    metadata.mBlockwiseReceiveHook  = aReceiveHook;
+    metadata.mBlockwiseTransmitHook = aTransmitHook;
+
+    SuccessOrExit(error = ProcessBlockwiseSend(aMessage, aTransmitHook, aContext));
+#endif
+
     switch (aMessage.GetType())
     {
     case kTypeAck:
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        // Check for block-wise transfer
-        if ((aTransmitHook != nullptr) && (aMessage.ReadBlockOptionValues(kOptionBlock2) == kErrorNone) &&
-            (aMessage.GetBlockWiseBlockNumber() == 0))
-        {
-            // Set payload for first block of the transfer
-            VerifyOrExit((bufLen = BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
-                         error = kErrorNoBufs);
-            SuccessOrExit(error = aTransmitHook(aContext, buf, aMessage.GetBlockWiseBlockNumber() * bufLen, &bufLen,
-                                                &moreBlocks));
-            SuccessOrExit(error = aMessage.AppendBytes(buf, bufLen));
-
-            SuccessOrExit(error = CacheLastBlockResponse(&aMessage));
-        }
-#endif
-
         mResponseCache.Add(aMessage, aMessageInfo, aTxParameters->CalculateExchangeLifetime());
         break;
     case kTypeReset:
         OT_ASSERT(aMessage.GetCode() == kCodeEmpty);
         break;
     default:
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        // Check for block-wise transfer
-        if ((aTransmitHook != nullptr) && (aMessage.ReadBlockOptionValues(kOptionBlock1) == kErrorNone) &&
-            (aMessage.GetBlockWiseBlockNumber() == 0))
-        {
-            // Set payload for first block of the transfer
-            VerifyOrExit((bufLen = BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
-                         error = kErrorNoBufs);
-            SuccessOrExit(error = aTransmitHook(aContext, buf, aMessage.GetBlockWiseBlockNumber() * bufLen, &bufLen,
-                                                &moreBlocks));
-            SuccessOrExit(error = aMessage.AppendBytes(buf, bufLen));
-
-            // Block-Wise messages always have to be confirmable
-            if (aMessage.IsNonConfirmable())
-            {
-                aMessage.SetType(kTypeConfirmable);
-            }
-        }
-#endif
-
         aMessage.SetMessageId(mMessageId++);
         break;
     }
@@ -275,8 +242,6 @@ Error CoapBase::SendMessage(Message                &aMessage,
 
     if (copyLength > 0)
     {
-        Metadata metadata;
-
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         // Whether or not to turn on special "Observe" handling.
         Option::Iterator iterator;
@@ -323,10 +288,6 @@ Error CoapBase::SendMessage(Message                &aMessage,
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         metadata.mHopLimit        = aMessageInfo.GetHopLimit();
         metadata.mIsHostInterface = aMessageInfo.IsHostInterface();
-#endif
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        metadata.mBlockwiseReceiveHook  = aReceiveHook;
-        metadata.mBlockwiseTransmitHook = aTransmitHook;
 #endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         metadata.mObserve = observe;
@@ -1133,6 +1094,55 @@ void CoapBase::RemoveBlockWiseResource(ResourceBlockWise &aResource)
 {
     IgnoreError(mBlockWiseResources.Remove(aResource));
     aResource.SetNext(nullptr);
+}
+
+Error CoapBase::SendMessage(Message                &aMessage,
+                            const Ip6::MessageInfo &aMessageInfo,
+                            const TxParameters     *aTxParameters,
+                            ResponseHandler         aHandler,
+                            void                   *aContext)
+{
+    return SendMessage(aMessage, aMessageInfo, aTxParameters, aHandler, aContext, nullptr, nullptr);
+}
+
+Error CoapBase::ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aTransmitHook, void *aContext)
+{
+    Error    error      = kErrorNone;
+    uint8_t  type       = aMessage.GetType();
+    bool     moreBlocks = false;
+    uint16_t bufLen;
+    uint8_t  buf[kMaxBlockLength];
+
+    VerifyOrExit(type != kTypeReset);
+
+    VerifyOrExit(aTransmitHook != nullptr);
+    VerifyOrExit(aMessage.GetBlockWiseBlockNumber() == 0);
+
+    SuccessOrExit(aMessage.ReadBlockOptionValues(type == kTypeAck ? kOptionBlock2 : kOptionBlock1));
+
+    bufLen = BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize());
+    VerifyOrExit(bufLen <= kMaxBlockLength, error = kErrorNoBufs);
+
+    SuccessOrExit(error = aTransmitHook(aContext, buf, 0, &bufLen, &moreBlocks));
+    SuccessOrExit(error = aMessage.AppendBytes(buf, bufLen));
+
+    switch (type)
+    {
+    case kTypeAck:
+        SuccessOrExit(error = CacheLastBlockResponse(&aMessage));
+        break;
+
+    case kTypeNonConfirmable:
+        // Block-Wise messages always have to be confirmable
+        aMessage.SetType(kTypeConfirmable);
+        break;
+
+    default:
+        break;
+    }
+
+exit:
+    return error;
 }
 
 void CoapBase::FreeLastBlockResponse(void)
