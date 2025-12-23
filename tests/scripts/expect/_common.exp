@@ -66,6 +66,7 @@ proc expect_line {line} {
 proc spawn_node {id {type ""} {radio_url ""}} {
     global spawn_id
     global spawn_ids
+    global dispose_commands
     global argv0
 
     if {${type} == ""} {
@@ -107,6 +108,8 @@ proc spawn_node {id {type ""} {radio_url ""}} {
         set ot_simulation_local_host "127.0.0.1"
     }
 
+    set dispose_commands($id) "\x04"
+
     switch -regexp ${type} {
         {rcp|rcp-cli} {
             # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
@@ -134,6 +137,39 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
+        }
+        adb {
+            spawn /usr/bin/env adb shell ot-ctl
+            send "factoryreset\n"
+            sleep 0.5
+            # the ot-ctl connection will broken after run the factoryreset command
+            # re-start the ot-ctl again here
+            spawn /usr/bin/env adb shell ot-ctl
+            wait_for "state" "disabled"
+            expect_line "Done"
+        }
+        serial {
+            if {[info exists ::env(OT_SERIAL_PORT_PREFIX)]} {
+                set serial_port_prefix $::env(OT_SERIAL_PORT_PREFIX)
+            } else {
+                set serial_port_prefix "/dev/ttyACM"
+            }
+
+            if {[info exists ::env(OT_SERIAL_PORT_OFFSET)]} {
+                set serial_port_offset $::env(OT_SERIAL_PORT_OFFSET)
+            } else {
+                set serial_port_offset -1
+            }
+
+            set index [expr $id+$serial_port_offset]
+            set serial_port "$serial_port_prefix$index"
+
+            spawn /usr/bin/env screen $serial_port 115200
+            send "\r\n"
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect_line "Done"
+            set dispose_commands($id) "\x01ky"
         }
     }
 
@@ -174,8 +210,10 @@ proc setup_leader {} {
 }
 
 proc dispose_node {id} {
+    global dispose_commands
+
     switch_node $id
-    send "\x04"
+    send $dispose_commands($id)
     expect eof
 }
 
@@ -257,6 +295,8 @@ proc setup_default_network {} {
     expect_line "Done"
     send "dataset pskc c23a76e98f1a6483639b1ac1271e2e27\n"
     expect_line "Done"
+    send "dataset wakeupchannel 11\n"
+    expect_line "Done"
     send "dataset commit active\n"
     expect_line "Done"
 }
@@ -295,6 +335,16 @@ proc dispose_tcat_client {id} {
     switch_tcat_client_for_node $id
     send "exit\n"
     expect eof
+}
+
+proc run_command {cmd {output ""}} {
+    send "$cmd\n"
+
+    if {$output != ""} {
+        expect $output
+    }
+
+    expect_line "Done"
 }
 
 set timeout 10

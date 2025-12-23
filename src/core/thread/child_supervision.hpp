@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include <openthread/child_supervision.h>
+#include <openthread/p2p.h>
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -82,7 +83,7 @@ class ThreadNetif;
  * child table.
  */
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 /**
  * Implements a child supervisor.
@@ -105,29 +106,38 @@ public:
      *
      * @param[in] aMessage The message for which to get the destination.
      *
-     * @returns  A pointer to the destination child of the message, or `nullptr` if @p aMessage is not of supervision
-     *           type.
+     * @returns  A pointer to the destination CSL neighbor of the message, or `nullptr` if @p aMessage is not of
+     * supervision type.
      */
-    Child *GetDestination(const Message &aMessage) const;
+    CslNeighbor *GetDestination(const Message &aMessage) const;
 
     /**
-     * Updates the supervision state for a child. It informs the child supervisor that a message was
-     * successfully sent to the child.
+     * Updates the supervision state for a child. It informs the CSL neighbor supervisor that a message was
+     * successfully sent to the CSL neighbor.
      *
-     * @param[in] aChild     The child to which a message was successfully sent.
+     * @param[in] aNeighbor   The CSL neighbor to which a message was successfully sent.
      */
-    void UpdateOnSend(Child &aChild);
+    void UpdateOnSend(CslNeighbor &aNeighbor);
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    /**
+     * Receives the P2P event.
+     *
+     * @param[in]  aEvent  The P2P event.
+     */
+    void HandleP2pEvent(otP2pEvent aEvent);
+#endif
 
 private:
     static constexpr uint16_t kDefaultSupervisionInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL; // (seconds)
 
-    void SendMessage(Child &aChild);
+    void SendMessage(CslNeighbor &aNeighbor);
     void CheckState(void);
     void HandleTimeTick(void);
     void HandleNotifierEvents(Events aEvents);
 };
 
-#endif // #if OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 /**
  * Implements a child supervision listener.

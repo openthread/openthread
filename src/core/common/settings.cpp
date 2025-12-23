@@ -276,7 +276,41 @@ void Settings::SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen
 }
 #endif
 
-#if OPENTHREAD_FTD
+Error Settings::AddMacFilterEntry(const SettingsBase::MacFilterEntry &aMacFilterEntry)
+{
+    return Get<SettingsDriver>().Add(kKeyMacFilterEntry, &aMacFilterEntry, sizeof(aMacFilterEntry));
+}
+
+Error Settings::DeleteAllMacFilterEntry(void) { return Get<SettingsDriver>().Delete(kKeyMacFilterEntry); }
+
+Error Settings::ReadMacFilterEntry(uint16_t &aIterator, SettingsBase::MacFilterEntry &aMacFilterEntry)
+{
+    Error    error;
+    uint16_t length = sizeof(MacFilterEntry);
+
+    SuccessOrExit(error = Get<SettingsDriver>().Get(kKeyMacFilterEntry, aIterator,
+                                                    reinterpret_cast<uint8_t *>(&aMacFilterEntry), &length));
+    aIterator++;
+
+exit:
+    return error;
+}
+
+Error Settings::DeleteMacFilterConfig(void) { return Get<SettingsDriver>().Delete(kKeyMacFilterConfig); }
+
+Error Settings::WriteMacFilterConfig(const SettingsBase::MacFilterConfig &aMacFilterConfig)
+{
+    return Get<SettingsDriver>().Set(kKeyMacFilterConfig, &aMacFilterConfig, sizeof(aMacFilterConfig));
+}
+
+Error Settings::ReadMacFilterConfig(SettingsBase::MacFilterConfig &aMacFilterConfig)
+{
+    uint16_t length = sizeof(aMacFilterConfig);
+
+    return Get<SettingsDriver>().Get(kKeyMacFilterConfig, reinterpret_cast<uint8_t *>(&aMacFilterConfig), &length);
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
 {
     Error error = Get<SettingsDriver>().Add(kKeyChildInfo, &aChildInfo, sizeof(aChildInfo));
@@ -337,7 +371,7 @@ exit:
     Log(kActionRead, error, kKeyChildInfo, &mChildInfo);
     mIsDone = (error != kErrorNone);
 }
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 Error Settings::AddOrUpdateBrOnLinkPrefix(const BrOnLinkPrefix &aBrOnLinkPrefix)
@@ -480,7 +514,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
             actionText = "deleting";
             break;
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
         case kActionAdd:
             actionText = "adding";
             break;

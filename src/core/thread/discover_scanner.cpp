@@ -99,6 +99,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandDiscoveryRequest)) != nullptr, error = kErrorNoBufs);
     message->SetPanId(aPanId);
+    message->SetCslIeSuppressed(true);
 
     // Prepare sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();

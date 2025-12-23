@@ -44,6 +44,10 @@
 #include <openthread/thread_ftd.h>
 #endif
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+#include <openthread/p2p.h>
+#endif
+
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
@@ -152,7 +156,11 @@ enum Command : uint8_t
     kCommandLinkMetricsManagementRequest  = 18, ///< Link Metrics Management Request command
     kCommandLinkMetricsManagementResponse = 19, ///< Link Metrics Management Response command
     kCommandLinkProbe                     = 20, ///< Link Probe command
-    kCommandTimeSync                      = 99, ///< Time Sync command
+    kCommandLinkTearDown                  = 21, ///< Link Tear Down command
+    kCommandLinkDataUpdate                = 22, ///< Link data update command
+    kCommandLinkDataRequest               = 23, ///< Link data request command
+    kCommandLinkDataResponse              = 24, ///< Link data request command
+    kCommandTimeSync                      = 99, ///< Time Sync commanda
 };
 
 constexpr uint16_t kAloc16Leader                      = 0xfc00;
@@ -703,6 +711,22 @@ inline bool IsChildRloc16(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) 
  */
 const char *RoleToString(DeviceRole aRole);
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+/**
+ * Represents a P2P request.
+ */
+class P2pRequest : public otP2pRequest
+{
+public:
+    /**
+     * Gets the wake-up request.
+     *
+     * @returns The wake-up request.
+     */
+    const Mac::WakeupRequest &GetWakeupRequest(void) const { return AsCoreType(&mWakeupRequest); }
+};
+#endif // OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
 /**
  * @}
  */
@@ -714,6 +738,9 @@ DefineMapEnum(otDeviceRole, Mle::DeviceRole);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 DefineCoreType(otDeviceProperties, Mle::DeviceProperties);
 DefineMapEnum(otPowerSupply, Mle::DeviceProperties::PowerSupply);
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+DefineCoreType(otP2pRequest, Mle::P2pRequest);
 #endif
 
 } // namespace ot

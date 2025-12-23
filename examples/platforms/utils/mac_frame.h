@@ -337,6 +337,8 @@ uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData
  */
 void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, uint8_t aDataLen);
 
+#define kMaxNumPeerExtAddress 10
+
 /**
  * Represents the context for radio layer.
  */
@@ -347,6 +349,8 @@ typedef struct otRadioContext
     uint32_t         mPrevMacFrameCounter;
     uint32_t         mCslSampleTime; ///< The sample time based on the microsecond timer.
     uint16_t         mCslPeriod;     ///< In unit of 10 symbols.
+    otShortAddress   mCslShortAddress;
+    otExtAddress     mCslExtAddress;
     otShortAddress   mShortAddress;
     otShortAddress   mAlternateShortAddress;
     otRadioKeyType   mKeyType;
@@ -354,6 +358,16 @@ typedef struct otRadioContext
     otMacKeyMaterial mPrevKey;
     otMacKeyMaterial mCurrKey;
     otMacKeyMaterial mNextKey;
+    uint8_t          mNumBits;
+    uint32_t         mRamBits;
+    uint32_t         mRamStartTime;
+    uint32_t         mECslSampleTime; ///< The sample time based on the microsecond timer.
+    uint16_t         mECslPeriod;     ///< In unit of 1250 microsecond.
+    otExtAddress     mECslPeerAddresses[kMaxNumPeerExtAddress];
+    uint8_t          mNumECslPeerAddress;
+
+    bool mCslPresent : 1;
+    bool mScaPresent : 1;
 } otRadioContext;
 
 /**
@@ -386,6 +400,86 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
  */
 otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *aRadioContext);
 
+/**
+ * Write SCA (Scheduled Channel Access) IE to a buffer (without setting IE value).
+ *
+ * @param[out]  aDest  A pointer to the output buffer.
+ *
+ * @returns  The total count of bytes (total length of SCA IE) written to the buffer.
+ */
+uint8_t otMacFrameGenerateScaIeTemplate(uint8_t *aDest);
+
+/**
+ * Write RAM (Radio Availability Map) and the ECSL period and phase to the SCA IE.
+ *
+ * @param[in,out] aFrame      The target frame. MUST NOT be `NULL`.
+ * @param[in]     aRamPhase   The time of the first symbol of the frame relative to start of the 1st slot, ranging in
+ *                            [0, 2047] us, in unit of microseconds.
+ * @param[in]     aNumBits    The number of the RAM bits, ranging in [0, 32].
+ * @param[in]     aRamBits    The bits of RAM in little-endian, the maximum of length is 4 bytes.
+ * @param[in]     aECslPhase  The time from start of RAM to the next RX window in unit of 1.25ms.
+ *                            The accurate RX time is: start time of this frame + RAM Phase + eCSL Phase.
+ * @param[in]     aECslPeriod The intervals of RX window in 1.25ms,  multiple of RAM Duration.
+ */
+void otMacFrameSetScaIe(otRadioFrame *aFrame,
+                        uint16_t      aRamPhase,
+                        uint8_t       aNumBits,
+                        uint32_t      aRamBits,
+                        uint16_t      aECslPhase,
+                        uint16_t      aECslPeriod);
+
+/**
+ * Check if the source address of @p aFrame matches CSL transmitter's short address or extended address.
+ *
+ * @param[in] aFrame          A pointer to the frame.
+ * @param[in] aRadioContext   The radio context accessible in ISR.
+ *
+ * @retval  true    The @p aFrame cames from the CSL transmitter.
+ * @retval  false   It doesn't match.
+ */
+bool otMacFrameDoesSrcAddrMatchCslTransmitter(const otRadioFrame *aFrame, const otRadioContext *aRadioContext);
+
+/**
+ * Check if the source address of @p aFrame matches enhanced CSL peer's extended address.
+ *
+ * @param[in] aFrame          A pointer to the frame.
+ * @param[in] aRadioContext   The radio context accessible in ISR.
+ *
+ * @retval  true    The @p aFrame cames from the enhanced CSL peer.
+ * @retval  false   It doesn't match.
+ */
+bool otMacFrameDoesSrcAddrMatchECslPeers(const otRadioFrame *aFrame, const otRadioContext *aRadioContext);
+
+/**
+ * Add an extended address to the enhanced CSL peer address match table.
+ *
+ * @note Platforms should use eCSL peer addresses to include eCSL IE when generating enhanced acks.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aExtAddr    The extended address of the eCSL peer to be added stored in little-endian byte order.
+ *
+ * @retval OT_ERROR_NONE      Successfully added extended address to the eCSL peer address match table.
+ * @retval OT_ERROR_NO_BUFS   No available entry in the eCSL peer address match table.
+ */
+otError otMacFrameAddEnhancedCslPeerAddress(otRadioContext *aRadioContext, const otExtAddress *aExtAddr);
+
+/**
+ * Remove an extended address from the enhanced CSL peer address match table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aExtAddr    The extended address of the eCSL peer to be removed.
+ *
+ * @retval OT_ERROR_NONE        Successfully removed extended address from the eCSL peer address match table.
+ * @retval OT_ERROR_NO_ADDRESS  The extended address is not in eCSL peer address  match table.
+ */
+otError otMacFrameClearEnhancedCslPeerAddress(otRadioContext *aRadioContext, const otExtAddress *aExtAddr);
+
+/**
+ * Clear all extended addresses in the enhanced CSL peer address match table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ */
+void otMacFrameClearEnhancedCslPeerAddresses(otRadioContext *aRadioContext);
 #ifdef __cplusplus
 } // extern "C"
 #endif

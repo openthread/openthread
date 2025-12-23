@@ -36,8 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/logging.h>
 #include <openthread/radio_stats.h>
 #include <openthread/platform/crypto.h>
+#include <openthread/platform/provisional/radio.h>
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -52,6 +54,8 @@ static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< Time fo
 static constexpr uint32_t kRadioHeaderShrDuration = 160;            ///< Duration of SHR in us
 static constexpr uint32_t kRadioHeaderPhrDuration = 32;             ///< Duration of PHR in us
 static constexpr uint32_t kOctetDuration          = 32;             ///< Duration of one octet in us
+static constexpr uint32_t kECslSlotSize =
+    OT_RADIO_ECSL_SLOT_SIZE; ///< The size of the enchanced CSL slot in units of microseconds
 
 static constexpr int8_t kRadioPowerInvalid = OT_RADIO_POWER_INVALID; ///< Invalid TX power value
 
@@ -261,7 +265,8 @@ public:
         void ResetTime(void);
 
     private:
-        enum Status : uint8_t{
+        enum Status : uint8_t
+        {
             kDisabled,
             kSleep,
             kReceive,
@@ -551,6 +556,14 @@ public:
      */
     Error ResetCsl(void);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    Error SetECslPeriod(uint32_t aCslPeriod);
+    void  SetECslSampleTime(uint32_t aCslSampleTime);
+    Error AddECslPeerAddress(const otExtAddress &aExtAddr);
+    Error ClearECslPeerAddress(const otExtAddress &aExtAddr);
+    void  ClearECslPeerAddresses(void);
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -988,6 +1001,30 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, Mac::ShortAddress aShortAddr,
 inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()); }
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+inline Error Radio::SetECslPeriod(uint32_t aCslPeriod)
+{
+    return otPlatRadioSetEnhancedCslPeriod(GetInstancePtr(), aCslPeriod);
+}
+
+inline void Radio::SetECslSampleTime(uint32_t aCslSampleTime)
+{
+    otPlatRadioSetEnhancedCslSampleTime(GetInstancePtr(), aCslSampleTime);
+}
+
+inline Error Radio::AddECslPeerAddress(const otExtAddress &aExtAddr)
+{
+    return otPlatRadioAddEnhancedCslPeerAddress(GetInstancePtr(), &aExtAddr);
+}
+
+inline Error Radio::ClearECslPeerAddress(const otExtAddress &aExtAddr)
+{
+    return otPlatRadioClearEnhancedCslPeerAddress(GetInstancePtr(), &aExtAddr);
+}
+
+inline void Radio::ClearECslPeerAddresses(void) { otPlatRadioClearEnhancedCslPeerAddresses(GetInstancePtr()); }
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
     OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 inline uint64_t Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
@@ -1093,6 +1130,18 @@ inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress aShortAddr, const Mac:
 }
 
 inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+inline Error Radio::SetECslPeriod(uint32_t) { return kErrorNotImplemented; }
+
+inline void Radio::SetECslSampleTime(uint32_t) {}
+
+inline Error Radio::AddECslPeerAddress(const otExtAddress &) { return kErrorNotImplemented; }
+
+inline Error Radio::ClearECslPeerAddress(const otExtAddress &) { return kErrorNotImplemented; }
+
+inline void Radio::ClearECslPeerAddresses(void) {}
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \

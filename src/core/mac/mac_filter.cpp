@@ -40,8 +40,9 @@
 namespace ot {
 namespace Mac {
 
-Filter::Filter(void)
-    : mMode(kModeRssInOnly)
+Filter::Filter(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mMode(kModeRssInOnly)
     , mDefaultRssIn(kFixedRssDisabled)
 {
     for (FilterEntry &entry : mFilterEntries)
@@ -49,6 +50,73 @@ Filter::Filter(void)
         entry.mFiltered = false;
         entry.mRssIn    = kFixedRssDisabled;
     }
+}
+
+void Filter::Restore(void)
+{
+    uint16_t iterator = 0;
+    uint16_t index    = 0;
+
+    SettingsBase::MacFilterEntry  macFilterEntry;
+    SettingsBase::MacFilterConfig macFilterConfig;
+
+    while (Get<Settings>().ReadMacFilterEntry(iterator, macFilterEntry) == kErrorNone)
+    {
+        mFilterEntries[index].mFiltered = macFilterEntry.mFiltered;
+        mFilterEntries[index].mRssIn    = macFilterEntry.mRssIn;
+        mFilterEntries[index].mExtAddress.Set(macFilterEntry.mExtAddress.m8);
+
+        index++;
+        if (index >= kMaxEntries)
+        {
+            break;
+        }
+    }
+
+    SuccessOrExit(Get<Settings>().ReadMacFilterConfig(macFilterConfig));
+    mMode         = static_cast<Mode>(macFilterConfig.mMode);
+    mDefaultRssIn = macFilterConfig.mDefaultRssIn;
+
+exit:
+    return;
+}
+
+void Filter::Refresh(void)
+{
+    Error                         error;
+    SettingsBase::MacFilterEntry  macFilterEntry;
+    SettingsBase::MacFilterConfig macFilterConfig;
+
+    Get<Settings>().DeleteAllMacFilterEntry();
+
+    for (const FilterEntry &entry : mFilterEntries)
+    {
+        if (!entry.IsInUse())
+        {
+            continue;
+        }
+
+        macFilterEntry.mFiltered = entry.mFiltered;
+        macFilterEntry.mRssIn    = entry.mRssIn;
+        macFilterEntry.mExtAddress.Set(entry.mExtAddress.m8);
+
+        SuccessOrExit(error = Get<Settings>().AddMacFilterEntry(macFilterEntry));
+    }
+
+    Get<Settings>().DeleteMacFilterConfig();
+
+    macFilterConfig.mMode         = mMode;
+    macFilterConfig.mDefaultRssIn = mDefaultRssIn;
+    error                         = Get<Settings>().WriteMacFilterConfig(macFilterConfig);
+
+exit:
+    if (error != kErrorNone)
+    {
+        Get<Settings>().DeleteAllMacFilterEntry();
+        Get<Settings>().DeleteMacFilterConfig();
+    }
+
+    return;
 }
 
 const Filter::FilterEntry *Filter::FindEntry(const ExtAddress &aExtAddress) const
@@ -95,6 +163,7 @@ Error Filter::AddAddress(const ExtAddress &aExtAddress)
     }
 
     entry->mFiltered = true;
+    Refresh();
 
 exit:
     return error;
@@ -107,6 +176,7 @@ void Filter::RemoveAddress(const ExtAddress &aExtAddress)
     if (entry != nullptr)
     {
         entry->mFiltered = false;
+        Refresh();
     }
 }
 
@@ -116,6 +186,8 @@ void Filter::ClearAddresses(void)
     {
         entry.mFiltered = false;
     }
+
+    Refresh();
 }
 
 Error Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
@@ -154,6 +226,8 @@ Error Filter::AddRssIn(const ExtAddress &aExtAddress, int8_t aRss)
 
     entry->mRssIn = aRss;
 
+    Refresh();
+
 exit:
     return error;
 }
@@ -165,6 +239,7 @@ void Filter::RemoveRssIn(const ExtAddress &aExtAddress)
     VerifyOrExit(entry != nullptr);
 
     entry->mRssIn = kFixedRssDisabled;
+    Refresh();
 
 exit:
     return;
@@ -178,6 +253,7 @@ void Filter::ClearAllRssIn(void)
     }
 
     mDefaultRssIn = kFixedRssDisabled;
+    Refresh();
 }
 
 Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry) const

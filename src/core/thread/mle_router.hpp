@@ -48,7 +48,6 @@
 #include "net/icmp6.hpp"
 #include "net/udp6.hpp"
 #include "thread/child.hpp"
-#include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/router.hpp"
@@ -706,7 +705,6 @@ private:
 #endif
 
     TrickleTimer               mAdvertiseTrickleTimer;
-    ChildTable                 mChildTable;
     RouterTable                mRouterTable;
     RouterRoleRestorer         mRouterRoleRestorer;
     RouterRoleTransition       mRouterRoleTransition;

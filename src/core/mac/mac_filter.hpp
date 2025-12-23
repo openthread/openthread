@@ -60,7 +60,7 @@ namespace Mac {
 /**
  * Implements Mac Filter on IEEE 802.15.4 frames.
  */
-class Filter : private NonCopyable
+class Filter : public InstanceLocator, private NonCopyable
 {
 public:
     /**
@@ -90,7 +90,7 @@ public:
     /**
      * Initializes the filter.
      */
-    Filter(void);
+    explicit Filter(Instance &aInstance);
 
     /**
      * Gets the MAC Filter mode.
@@ -222,6 +222,7 @@ public:
      * @retval kErrorAddressFiltered  Address filter (allowlist or denylist) is enabled and @p aExtAddress is filtered.
      */
     Error ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, Neighbor *aNeighbor = nullptr) const;
+    void  Restore(void);
 
 private:
     static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE;
@@ -238,6 +239,7 @@ private:
     FilterEntry       *FindAvailableEntry(void);
     const FilterEntry *FindEntry(const ExtAddress &aExtAddress) const;
     FilterEntry *FindEntry(const ExtAddress &aExtAddress) { return AsNonConst(AsConst(this)->FindEntry(aExtAddress)); }
+    void         Refresh(void);
 
     Mode        mMode;
     int8_t      mDefaultRssIn;

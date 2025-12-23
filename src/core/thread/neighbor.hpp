@@ -108,6 +108,7 @@ public:
         kInStateAnyExceptInvalid,          ///< Accept neighbor in any state except `kStateInvalid`.
         kInStateAnyExceptValidOrRestoring, ///< Accept neighbor in any state except `IsStateValidOrRestoring()`.
         kInStateAny,                       ///< Accept neighbor in any state.
+        kInStateLinkRequest,               ///< Sent an MLE Link Request message
     };
 
     /**
@@ -171,6 +172,30 @@ public:
          * @retval FALSE  Neighbor @p aNeighbor does not match the address or state filter.
          */
         bool Matches(const Neighbor &aNeighbor) const;
+
+        static constexpr uint16_t kInfoStringSize = 100; ///< Max chars for the info string (`ToString()`).
+        /**
+         * Defines the fixed-length `String` object returned from `ToString()`.
+         */
+        typedef String<kInfoStringSize> InfoString;
+
+        InfoString ToString(void) const
+        {
+            InfoString string;
+
+            string.Append("state:%u ", mStateFilter);
+
+            if (mShortAddress != Mac::kShortAddrInvalid)
+            {
+                string.Append(",shortaddr:%u ", mShortAddress);
+            }
+
+            if (mExtAddress != nullptr)
+            {
+                string.Append(",extaddr:%s ", mExtAddress->ToString().AsCString());
+            }
+            return string;
+        }
 
     private:
         AddressMatcher(StateFilter aStateFilter, Mac::ShortAddress aShortAddress, const Mac::ExtAddress *aExtAddress)
@@ -783,6 +808,99 @@ class CslNeighbor : public Neighbor
                     public CslTxScheduler::NeighborInfo
 #endif
 {
+public:
+    static constexpr uint8_t kMaxRequestTlvs = 6;
+
+    /**
+     * Gets the CSL neighbor timeout.
+     *
+     * @returns The CSL neighbor timeout.
+     */
+    uint32_t GetTimeout(void) const { return mTimeout; }
+
+    /**
+     * Sets the CSL neighbor timeout.
+     *
+     * @param[in]  aTimeout  The CSL neighbor timeout.
+     */
+    void SetTimeout(uint32_t aTimeout) { mTimeout = aTimeout; }
+
+    /**
+     * Generates a new challenge value to use during a child attach or P2P link establish.
+     */
+    void GenerateChallenge(void) { mAttachChallenge.GenerateRandom(); }
+
+    /**
+     * Gets the current challenge value used during attach.
+     *
+     * @returns The current challenge value.
+     */
+    const Mle::TxChallenge &GetChallenge(void) const { return mAttachChallenge; }
+
+    /**
+     * Clears the requested TLV list.
+     */
+    void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
+
+    /**
+     * Returns the requested TLV at index @p aIndex.
+     *
+     * @param[in]  aIndex  The index into the requested TLV list.
+     *
+     * @returns The requested TLV at index @p aIndex.
+     */
+    uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
+
+    /**
+     * Sets the requested TLV at index @p aIndex.
+     *
+     * @param[in]  aIndex  The index into the requested TLV list.
+     * @param[in]  aType   The TLV type.
+     */
+    void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
+
+    /**
+     * Returns the supervision interval (in seconds).
+     *
+     * @returns The supervision interval (in seconds).
+     */
+    uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
+
+    /**
+     * Sets the supervision interval.
+     *
+     * @param[in] aInterval  The supervision interval (in seconds).
+     */
+    void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
+
+    /**
+     * Increments the number of seconds since last supervision of the CSL neighbor.
+     */
+    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
+
+    /**
+     * Returns the number of seconds since last supervision of the CSL neighbor (last message to the CSL neighbor)
+     *
+     * @returns Number of seconds since last supervision of the CSL neighbor.
+     */
+    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
+
+    /**
+     * Resets the number of seconds since last supervision of the CSL neighbor to zero.
+     */
+    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
+
+private:
+    uint32_t mTimeout;
+
+    union
+    {
+        uint8_t          mRequestTlvs[kMaxRequestTlvs];
+        Mle::TxChallenge mAttachChallenge;
+    };
+
+    uint16_t mSupervisionInterval;
+    uint16_t mSecondsSinceSupervision;
 };
 
 } // namespace ot

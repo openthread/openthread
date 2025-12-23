@@ -309,9 +309,16 @@ private:
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
 #endif
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    static void HandleWakeupAndLinkDone(void *aContext);
+    void        HandleWakeupAndLinkDone(void);
     static void HandleWakeupResult(otError aError, void *aContext);
     void        HandleWakeupResult(otError aError);
+#endif
+
+    static void HandleP2pEvent(otP2pEvent aEvent, const otExtAddress *aExtAddress, void *aContext);
+    void        HandleP2pEvent(otP2pEvent aEvent, const otExtAddress *aExtAddress);
 #endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

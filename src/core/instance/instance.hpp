@@ -646,7 +646,7 @@ private:
 #endif
 #endif
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     ChildSupervisor mChildSupervisor;
 #endif
     SupervisionListener mSupervisionListener;
@@ -804,6 +804,10 @@ template <> inline ChildTable &Instance::Get(void) { return mMleRouter.mChildTab
 template <> inline RouterTable &Instance::Get(void) { return mMleRouter.mRouterTable; }
 #endif
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+template <> inline PeerTable &Instance::Get(void) { return mMleRouter.mPeerTable; }
+#endif
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 template <> inline WakeupTxScheduler &Instance::Get(void) { return mMleRouter.mWakeupTxScheduler; }
 #endif
@@ -817,6 +821,10 @@ template <> inline Ip6::Ip6 &Instance::Get(void) { return mIp6; }
 template <> inline Mac::Mac &Instance::Get(void) { return mMac; }
 
 template <> inline Mac::SubMac &Instance::Get(void) { return mMac.mLinks.mSubMac; }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+template <> inline Mac::RadioSampleScheduler &Instance::Get(void) { return mMac.mLinks.mSubMac.mSampleScheduler; }
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> inline Trel::Link &Instance::Get(void) { return mMac.mLinks.mTrel; }
@@ -852,7 +860,9 @@ template <> inline SourceMatchController &Instance::Get(void)
 }
 
 template <> inline DataPollHandler &Instance::Get(void) { return mMeshForwarder.mIndirectSender.mDataPollHandler; }
+#endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_FTD
 template <> inline MeshCoP::Leader &Instance::Get(void) { return mLeader; }
 
 template <> inline MeshCoP::JoinerRouter &Instance::Get(void) { return mJoinerRouter; }
@@ -986,7 +996,7 @@ template <> inline Utils::JamDetector &Instance::Get(void) { return mJamDetector
 template <> inline Sntp::Client &Instance::Get(void) { return mSntpClient; }
 #endif
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 template <> inline ChildSupervisor &Instance::Get(void) { return mChildSupervisor; }
 #endif
 template <> inline SupervisionListener &Instance::Get(void) { return mSupervisionListener; }
@@ -1115,6 +1125,10 @@ template <> inline Mac::LinkRaw &Instance::Get(void) { return mLinkRaw; }
 
 #if OPENTHREAD_RADIO
 template <> inline Mac::SubMac &Instance::Get(void) { return mLinkRaw.mSubMac; }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+template <> inline Mac::RadioSampleScheduler &Instance::Get(void) { return mLinkRaw.mSubMac.mSampleScheduler; }
+#endif
 #endif
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

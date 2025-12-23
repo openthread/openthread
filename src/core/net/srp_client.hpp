@@ -69,7 +69,7 @@ namespace Srp {
 /**
  * Implements SRP client.
  */
-class Client : public InstanceLocator, private NonCopyable
+class Client : public InstanceLocator //, private NonCopyable
 {
     friend class ot::Notifier;
     friend class ot::Ip6::Netif;
@@ -297,7 +297,7 @@ public:
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      */
-    explicit Client(Instance &aInstance);
+    Client(Instance &aInstance);
 
     /**
      * Starts the SRP client operation.
@@ -745,6 +745,11 @@ public:
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    Error P2pSrpClientStart(Mac::ExtAddress &aExtAddress, uint16_t aSrpServerPort);
+    Error P2pSrpClientStop(Mac::ExtAddress &aExtAddress);
+#endif
+
 private:
     // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
     static constexpr uint8_t kFastPollsAfterUpdateTx = 11;
@@ -1016,7 +1021,7 @@ private:
     void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
     void         HandleHostInfoOrServiceChange(void);
     void         SendUpdate(void);
-    Error        PrepareUpdateMessage(MsgInfo &aInfo);
+    Error        PrepareUpdateMessage(MsgInfo &aInfo, uint16_t aNextMessageId);
     Error        ReadOrGenerateKey(KeyInfo &aKeyInfo);
     Error        AppendServiceInstructions(MsgInfo &aInfo);
     bool         CanAppendService(const Service &aService);
@@ -1052,6 +1057,36 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
 #endif
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    void HandleP2pUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleP2pTimer(void);
+
+    using P2pClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
+    using P2pUpdateTimer  = TimerMilliIn<Client, &Client::HandleP2pTimer>;
+
+    class ServerEntry
+    {
+    public:
+        ServerEntry(Instance &aInstance, Client &aClient)
+            : mSocket(aInstance, aClient)
+            , mNextMessageId(0)
+            , mResponseMessageId(0)
+            , mIsValid(false)
+            , mSingleServiceMode(false)
+        {
+        }
+
+        P2pClientSocket mSocket;
+        uint16_t        mNextMessageId;
+        uint16_t        mResponseMessageId;
+        bool            mIsValid : 1;
+        bool            mSingleServiceMode : 1;
+        Mac::ExtAddress mExtAddress;
+    };
+
+    void SendUpdate(ServerEntry &aServer);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -1101,9 +1136,13 @@ private:
     HostInfo                 mHostInfo;
     LinkedList<Service>      mServices;
     DelayTimer               mTimer;
+    bool                     mLinkLocalOnly = false;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     GuardTimer mGuardTimer;
     AutoStart  mAutoStart;
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    ServerEntry mSrpServers[OPENTHREAD_CONFIG_PEER_TABLE_SZIE];
 #endif
 };
 

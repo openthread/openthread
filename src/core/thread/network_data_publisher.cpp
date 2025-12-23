@@ -641,7 +641,7 @@ void Publisher::DnsSrpServiceEntry::Process(void)
 
     // Do not make any changes if device is not attached, and wait
     // for role change event.
-    VerifyOrExit(Get<Mle::Mle>().IsAttached());
+    // VerifyOrExit(Get<Mle::Mle>().IsAttached());
 
     VerifyOrExit(GetState() != kNoEntry);
 

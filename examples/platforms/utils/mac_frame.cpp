@@ -401,17 +401,219 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+uint8_t otMacFrameGenerateScaIeTemplate(uint8_t *aDest)
+{
+    uint8_t len = sizeof(Mac::ScaIe);
+
+    assert(aDest != nullptr);
+
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::ThreadIe::kHeaderIeId);
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(len);
+
+    aDest += sizeof(Mac::HeaderIe);
+
+    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetVendorOui(Mac::ThreadIe::kVendorOuiThreadCompanyId);
+    reinterpret_cast<Mac::VendorIeHeader *>(aDest)->SetSubType(Mac::ScaIe::kThreadIeSubtype);
+
+    return sizeof(Mac::HeaderIe) + len;
+}
+
+void otMacFrameSetScaIe(otRadioFrame *aFrame,
+                        uint16_t      aRamPhase,
+                        uint8_t       aNumBits,
+                        uint32_t      aRamBits,
+                        uint16_t      aECslPhase,
+                        uint16_t      aECslPeriod)
+{
+    static_cast<Mac::Frame *>(aFrame)->SetScaIe(aRamPhase, aNumBits, aRamBits, aECslPhase, aECslPeriod);
+}
+
+static void ComputeRamPhaseAndBits(uint32_t        aRadioTime,
+                                   otRadioContext *aRadioContext,
+                                   uint16_t       &aRamPhase,
+                                   uint32_t       &aRamBits,
+                                   uint16_t       &aECslPhase)
+{
+    uint32_t startSlot;
+    uint32_t slotOffset;
+    uint32_t ramMask;
+    uint32_t nextRamStartTime;
+
+    if (aRadioContext->mNumBits != 0)
+    {
+        startSlot = (aRadioTime - aRadioContext->mRamStartTime + OT_RADIO_ECSL_SLOT_SIZE - 1) / OT_RADIO_ECSL_SLOT_SIZE;
+        slotOffset       = startSlot % aRadioContext->mNumBits;
+        ramMask          = 0xffffffff >> (32 - aRadioContext->mNumBits);
+        aRamBits         = (aRadioContext->mRamBits | (aRadioContext->mRamBits << aRadioContext->mNumBits));
+        aRamBits         = (aRamBits >> slotOffset) & ramMask;
+        nextRamStartTime = aRadioContext->mRamStartTime + startSlot * OT_RADIO_ECSL_SLOT_SIZE;
+        aRamPhase        = nextRamStartTime - aRadioTime;
+    }
+    else
+    {
+        aRamPhase = 0;
+        aRamBits  = 0;
+    }
+
+    if (aRadioContext->mECslPeriod > 0)
+    {
+        if (aRadioContext->mNumBits != 0)
+        {
+            aECslPhase = (aRadioContext->mECslSampleTime - nextRamStartTime) / OT_RADIO_ECSL_SLOT_SIZE;
+        }
+        else
+        {
+            uint32_t delay;
+            uint32_t phase;
+
+            delay = aRadioContext->mECslSampleTime - aRadioTime;
+
+            phase      = delay % (aRadioContext->mECslPeriod * OT_RADIO_ECSL_SLOT_SIZE);
+            aRamPhase  = phase % OT_RADIO_ECSL_SLOT_SIZE;
+            aECslPhase = phase / OT_RADIO_ECSL_SLOT_SIZE;
+        }
+    }
+    else
+    {
+        aECslPhase = 0;
+    }
+}
+#endif
+
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aRadioContext->mCslPeriod > 0) // CSL IE should be filled for every transmit attempt
+    if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
     {
         otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
     }
 #endif
+
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    if (aRadioContext->mScaPresent)
+    {
+        uint16_t ramPhase  = 0;
+        uint16_t ecslPhase = 0;
+        uint32_t ramBits   = 0;
+
+        ComputeRamPhaseAndBits(aRadioTime, aRadioContext, ramPhase, ramBits, ecslPhase);
+        otMacFrameSetScaIe(aFrame, ramPhase, aRadioContext->mNumBits, ramBits, ecslPhase, aRadioContext->mECslPeriod);
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
 #endif
+
     aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
     return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
 }
+
+bool otMacFrameDoesSrcAddrMatchCslTransmitter(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)
+{
+    const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
+    bool              rval  = true;
+    Mac::Address      src;
+
+    VerifyOrExit(frame.GetSrcAddr(src) == kErrorNone, rval = false);
+
+    switch (src.GetType())
+    {
+    case Mac::Address::kTypeShort:
+        VerifyOrExit(src.GetShort() == aRadioContext->mCslShortAddress, rval = false);
+        break;
+
+    case Mac::Address::kTypeExtended:
+        VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress),
+                     rval = false);
+        break;
+
+    case Mac::Address::kTypeNone:
+        rval = false;
+        break;
+    }
+
+exit:
+    return rval;
+}
+
+bool otMacFrameDoesSrcAddrMatchECslPeers(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)
+{
+    const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
+    bool              rval  = true;
+    Mac::Address      src;
+
+    VerifyOrExit(aRadioContext->mNumECslPeerAddress > 0, rval = false);
+    VerifyOrExit(frame.GetSrcAddr(src) == kErrorNone, rval = false);
+
+    switch (src.GetType())
+    {
+    case Mac::Address::kTypeExtended:
+        for (uint8_t i = 0; i < aRadioContext->mNumECslPeerAddress; i++)
+        {
+            VerifyOrExit(src.GetExtended() != *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress),
+                         rval = true);
+        }
+        break;
+
+    case Mac::Address::kTypeShort:
+    case Mac::Address::kTypeNone:
+        rval = false;
+        break;
+    }
+
+exit:
+    return rval;
+}
+
+otError otMacFrameAddEnhancedCslPeerAddress(otRadioContext *aRadioContext, const otExtAddress *aExtAddr)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aExtAddr != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aRadioContext->mNumECslPeerAddress < kMaxNumPeerExtAddress, error = OT_ERROR_NO_BUFS);
+
+    memcpy(&aRadioContext->mECslPeerAddresses[aRadioContext->mNumECslPeerAddress], aExtAddr, sizeof(otExtAddress));
+    aRadioContext->mNumECslPeerAddress++;
+
+exit:
+    return error;
+}
+
+otError otMacFrameClearEnhancedCslPeerAddress(otRadioContext *aRadioContext, const otExtAddress *aExtAddr)
+{
+    otError error = OT_ERROR_NONE;
+    bool    found = false;
+    uint8_t index;
+    uint8_t num;
+
+    VerifyOrExit(aExtAddr != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    for (uint8_t i = 0; i < aRadioContext->mNumECslPeerAddress; i++)
+    {
+        if (memcmp(aExtAddr->m8, aRadioContext->mECslPeerAddresses[i].m8, OT_EXT_ADDRESS_SIZE) == 0)
+        {
+            index = i;
+            found = true;
+            break;
+        }
+    }
+
+    VerifyOrExit(found, error = OT_ERROR_NOT_FOUND);
+
+    num = aRadioContext->mNumECslPeerAddress - index - 1;
+    if (num != 0)
+    {
+        memmove(&aRadioContext->mECslPeerAddresses[index], &aRadioContext->mECslPeerAddresses[index + 1],
+                num * sizeof(otExtAddress));
+    }
+
+    aRadioContext->mNumECslPeerAddress--;
+
+exit:
+    return error;
+}
+
+void otMacFrameClearEnhancedCslPeerAddresses(otRadioContext *aRadioContext) { aRadioContext->mNumECslPeerAddress = 0; }
+

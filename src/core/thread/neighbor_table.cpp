@@ -37,6 +37,147 @@
 
 namespace ot {
 
+RegisterLogModule("NeighborTable");
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+NeighborTable::CslNeighborIterator::CslNeighborIterator(Instance &aInstance, Neighbor::StateFilter aFilter)
+    : InstanceLocator(aInstance)
+    , ItemPtrIterator(nullptr)
+    , mFilter(aFilter)
+{
+    Reset();
+}
+
+void NeighborTable::CslNeighborIterator::Reset(void)
+{
+#if OPENTHREAD_FTD
+    mItem = &Get<ChildTable>().mChildren[0];
+#else
+    mItem = &Get<PeerTable>().mPeers[0];
+#endif
+
+    if (!mItem->MatchesFilter(mFilter))
+    {
+        Advance();
+    }
+}
+
+void NeighborTable::CslNeighborIterator::Advance(void)
+{
+    VerifyOrExit(mItem != nullptr);
+
+#if OPENTHREAD_FTD
+    if (Get<ChildTable>().Contains(*mItem))
+    {
+        do
+        {
+            mItem = Next<Child>(mItem);
+            if (Get<ChildTable>().Contains(*mItem) && mItem->MatchesFilter(mFilter))
+            {
+                ExitNow();
+            }
+        } while (Get<ChildTable>().Contains(*mItem));
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+        mItem = &Get<PeerTable>().mPeers[0];
+        VerifyOrExit(!mItem->MatchesFilter(mFilter));
+#else
+        mItem = nullptr;
+#endif
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    VerifyOrExit(Get<PeerTable>().Contains(*mItem));
+
+    do
+    {
+        mItem = Next<Peer>(mItem);
+        VerifyOrExit(Get<PeerTable>().Contains(*mItem), mItem = nullptr);
+    } while (!mItem->MatchesFilter(mFilter));
+#endif
+
+exit:
+    return;
+}
+
+uint16_t NeighborTable::GetCslNeighborIndex(const CslNeighbor &aNeighbor) const
+{
+    uint16_t neighborIndex  = NumericLimits<uint16_t>::kMax;
+#if  OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    uint16_t maxNumChildren = 0;
+#endif
+
+#if OPENTHREAD_FTD
+    if (Get<ChildTable>().Contains(aNeighbor))
+    {
+        neighborIndex = Get<ChildTable>().GetChildIndex(static_cast<const Child &>(aNeighbor));
+        ExitNow();
+    }
+#if  OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    maxNumChildren = Get<ChildTable>().GetMaxChildren();
+#endif
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    VerifyOrExit(Get<PeerTable>().Contains(aNeighbor));
+    neighborIndex = maxNumChildren + Get<PeerTable>().GetPeerIndex(static_cast<const Peer &>(aNeighbor));
+#endif
+
+exit:
+    OT_ASSERT(neighborIndex != NumericLimits<uint16_t>::kMax);
+
+    return neighborIndex;
+}
+
+CslNeighbor *NeighborTable::GetCslNeighborAtIndex(uint16_t aCslNeighborIndex)
+{
+    CslNeighbor *neighbor = nullptr;
+
+#if OPENTHREAD_FTD
+    if (aCslNeighborIndex < Get<ChildTable>().GetMaxChildren())
+    {
+        neighbor = Get<ChildTable>().GetChildAtIndex(aCslNeighborIndex);
+        ExitNow();
+    }
+    aCslNeighborIndex -= Get<ChildTable>().GetMaxChildren();
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    VerifyOrExit(aCslNeighborIndex < Get<PeerTable>().GetMaxPeers());
+    neighbor = Get<PeerTable>().GetPeerAtIndex(aCslNeighborIndex);
+#endif
+
+exit:
+    return neighbor;
+}
+
+bool NeighborTable::IsChild(const CslNeighbor &aNeighbor) const
+{
+    bool ret = false;
+
+#if OPENTHREAD_FTD
+    ret = Get<ChildTable>().Contains(aNeighbor);
+#else
+    OT_UNUSED_VARIABLE(aNeighbor);
+#endif
+
+    return ret;
+}
+
+bool NeighborTable::IsPeer(const CslNeighbor &aNeighbor) const
+{
+    bool ret = false;
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    ret = Get<PeerTable>().Contains(aNeighbor);
+#else
+    OT_UNUSED_VARIABLE(aNeighbor);
+#endif
+
+    return ret;
+}
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+
 NeighborTable::NeighborTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCallback(nullptr)
@@ -91,6 +232,13 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
         neighbor = FindParent(aMatcher);
     }
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = FindPeer(aMatcher);
+    }
+#endif
+
     return neighbor;
 }
 
@@ -115,22 +263,14 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
 
-#if OPENTHREAD_FTD
-
-Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher)
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
 {
-    Neighbor *neighbor;
-
-    neighbor = Get<ChildTable>().FindChild(aMatcher);
-
-    if (neighbor == nullptr)
-    {
-        neighbor = Get<RouterTable>().FindRouter(aMatcher);
-    }
-
-    return neighbor;
+    return Get<PeerTable>().FindPeer(aMatcher);
 }
+#endif
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
 {
     Neighbor    *neighbor = nullptr;
@@ -152,6 +292,7 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor:
         ExitNow();
     }
 
+#if OPENTHREAD_FTD
     for (Child &child : Get<ChildTable>().Iterate(aFilter))
     {
         if (child.HasIp6Address(aIp6Address))
@@ -159,8 +300,25 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor:
             ExitNow(neighbor = &child);
         }
     }
+#endif
 
 exit:
+    return neighbor;
+}
+#endif
+
+#if OPENTHREAD_FTD
+Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher)
+{
+    Neighbor *neighbor;
+
+    neighbor = Get<ChildTable>().FindChild(aMatcher);
+
+    if (neighbor == nullptr)
+    {
+        neighbor = Get<RouterTable>().FindRouter(aMatcher);
+    }
+
     return neighbor;
 }
 

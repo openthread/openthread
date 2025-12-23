@@ -221,7 +221,7 @@ public:
      */
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     typedef IndirectSender::MessageChecker MessageChecker; ///< General predicate function checking a message.
 
     /**
@@ -550,8 +550,10 @@ private:
 
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    void FinalizeMessageIndirectTxs(Message &aMessage);
+#endif
 #if OPENTHREAD_FTD
-    void          FinalizeMessageIndirectTxs(Message &aMessage);
     FwdFrameInfo *FindFwdFrameInfoEntry(uint16_t aSrcRloc16, uint16_t aDatagramTag);
     bool          UpdateFwdFrameInfoArrayOnTimeTick(void);
 
@@ -613,6 +615,9 @@ private:
                                                      Error          aError);
     void AppendMacAddrToLogString(StringWriter &aString, MessageAction aAction, const Mac::Address *aMacAddress);
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    bool IsParentAddress(const Mac::Address &aAddress);
+#endif
 
     using TxTask = TaskletIn<MeshForwarder, &MeshForwarder::ScheduleTransmissionTask>;
 

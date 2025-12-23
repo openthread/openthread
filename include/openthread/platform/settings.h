@@ -73,6 +73,8 @@ enum
     OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES  = 0x0010, ///< BR local on-link prefixes.
     OT_SETTINGS_KEY_BORDER_AGENT_ID      = 0x0011, ///< Unique Border Agent/Router ID.
     OT_SETTINGS_KEY_TCAT_COMMR_CERT      = 0x0012, ///< TCAT Commissioner certificate
+    OT_SETTINGS_KEY_MAC_FILTER_ENTRY     = 0x0013, ///< Mac filter entries
+    OT_SETTINGS_KEY_MAC_FILTER_CONFIG    = 0x0014, ///< Mac filter config
 
     // Deprecated and reserved key values:
     //

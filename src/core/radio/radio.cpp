@@ -118,7 +118,6 @@ Error Radio::Transmit(Mac::TxFrame &aFrame)
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitTransmit(aFrame);
 #endif
-
     return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
 }
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

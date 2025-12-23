@@ -166,6 +166,8 @@ class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
     friend class Message;
 
 public:
+    typedef otMessageTxCallback TxCallback; ///< Message TX callback.
+
     /**
      * Returns a pointer to the next message buffer.
      *
@@ -205,6 +207,8 @@ protected:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         bool mTimeSync : 1; // Whether the message is also used for time sync purpose.
 #endif
+        bool    mCslIeSuppressed : 1;
+        bool    mEnhAckRequested : 1;
         uint8_t mPriority : 2; // The message priority level (higher value is higher priority).
         uint8_t mOrigin : 2;   // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -232,10 +236,12 @@ protected:
         Message     *mPrev;        // Previous message in a doubly linked list.
         MessagePool *mMessagePool; // Message pool for this message.
         void        *mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
+        TxCallback  mTxCallback;  // The callback to inform message TX success or failure.
+        void       *mTxContext;   // The arbitrary context associated with `mTxCallback`.
         RssAverager  mRssAverager; // The averager maintaining the received signal strength (RSS) average.
         LqiAverager  mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
-#if OPENTHREAD_FTD
-        ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+        CslNeighborMask mCslNeighborMask; // CslNeighborMask to indicate which sleepy neighbor need to receive this.
 #endif
     };
 
@@ -625,6 +631,12 @@ public:
      */
     Priority GetPriority(void) const { return static_cast<Priority>(GetMetadata().mPriority); }
 
+    bool IsCslIeSuppressed(void) const { return GetMetadata().mCslIeSuppressed; }
+    void SetCslIeSuppressed(bool aSuppressed) { GetMetadata().mCslIeSuppressed = aSuppressed; }
+
+    bool IsEnhAckRequested(void) const { return GetMetadata().mEnhAckRequested; }
+    void SetEnhAckRequested(bool aEnhAckRequested) { GetMetadata().mEnhAckRequested = aEnhAckRequested; }
+
     /**
      * Sets the messages priority.
      * If the message is already queued in a priority queue, changing the priority ensures to
@@ -645,6 +657,35 @@ public:
      * @returns A string representation of @p aPriority.
      */
     static const char *PriorityToString(Priority aPriority);
+
+    /**
+     * Registers a callback to be notified of a message's transmission outcome.
+     *
+     * The registered `TxCallback` provides notification of the transmission status of the message from this device to
+     * an immediate neighbor (one hop). It doesn't indicate delivery to the final multi-hop destination.
+     *
+     * For unicast messages, `kErrorNone` callback error signifies successful delivery and MAC acknowledgment for all
+     * fragments of the message to an immediate neighbor, irrespective of whether direct or indirect TX is used. For
+     * multicast messages, `kErrorNone` indicates successful broadcast of all fragments. Note that no MAC-level ack
+     * is expected for broadcast frame transmissions.
+     *
+     * Only one callback can be registered per `Message`. Subsequent calls replace any existing callback. If the
+     * message is never actually sent, the callback will still be invoked when the message is freed, with `kErrorDrop`
+     * as the error.
+     *
+     * @param[in] aCallback   The `TxCallback` function to register with the message.
+     * @param[in] aContext    An arbitrary context that will be passed when @p aCallback is invoked.
+     */
+    void RegisterTxCallback(TxCallback aCallback, void *aContext);
+
+    /**
+     * Invokes the registered `TxCallback` on the `Message` with the given error status.
+     *
+     * The `TxCallback` is a one-time callback, meaning it's automatically cleared once it's invoked.
+     *
+     * @param[in] aError The error to report.
+     */
+    void InvokeTxCallback(Error aError);
 
     /**
      * Prepends bytes to the front of the message.
@@ -1055,24 +1096,26 @@ public:
      */
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
-     * Gets the indirect transmission `ChildMask` associated with this `Message`.
+     * Gets the indirect transmission `CslNeighborMask` associated with this `Message`.
      *
-     * The `ChildMask` indicates the set of children for which this message is scheduled for indirect transmission.
+     * The `CslNeighborMask` indicates the set of CSL neighbors for which this message is scheduled for indirect
+     * transmission.
      *
-     * @returns A reference to the indirect transmission `ChildMask`.
+     * @returns A reference to the indirect transmission `CslNeighborMask`.
      */
-    ChildMask &GetIndirectTxChildMask(void) { return GetMetadata().mChildMask; }
+    CslNeighborMask &GetIndirectTxCslNeighborMask(void) { return GetMetadata().mCslNeighborMask; }
 
     /**
-     * Gets the indirect transmission `ChildMask` associated with this `Message`.
+     * Gets the indirect transmission `CslNeighborMask` associated with this `Message`.
      *
-     * The `ChildMask` indicates the set of children for which this message is scheduled for indirect transmission.
+     * The `CslNeighborMask` indicates the set of CSL neighbors for which this message is scheduled for indirect
+     * transmission.
      *
-     * @returns A reference to the indirect transmission `ChildMask`.
+     * @returns A reference to the indirect transmission `CslNeighborMask`.
      */
-    const ChildMask &GetIndirectTxChildMask(void) const { return GetMetadata().mChildMask; }
+    const CslNeighborMask &GetIndirectTxCslNeighborMask(void) const { return GetMetadata().mCslNeighborMask; }
 #endif
 
     /**

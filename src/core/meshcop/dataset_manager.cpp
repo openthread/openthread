@@ -196,7 +196,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
         {
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
-            error           = Get<Mac::Mac>().SetWakeupChannel(channel);
+            //error           = Get<Mac::Mac>().SetWakeupChannel(channel);
 
             if (error != kErrorNone)
             {

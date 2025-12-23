@@ -90,6 +90,24 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL
+ *
+ * The default time interval between (start of) wake-up frame transmissions in microseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL
+#define OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL 7500
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION
+ *
+ * The default duration of time that wake-up frames are periodically transmitted in milliseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION
+#define OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION 1090
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL
  *
  * The default wake-up listen interval in microseconds.
@@ -124,6 +142,33 @@
  */
 #ifndef OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE
 #define OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+ *
+ * Define to 1 to enable the peer to peer feature.
+ */
+#ifndef OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+#define OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE
+ *
+ * Specifies the capacity of Wake-up Identifier table.
+ */
+#ifndef OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE
+#define OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PEER_TABLE_SZIE
+ *
+ * Specifies the capacity of peer to peer table.
+ */
+#ifndef OPENTHREAD_CONFIG_PEER_TABLE_SZIE
+#define OPENTHREAD_CONFIG_PEER_TABLE_SZIE 3
 #endif
 
 /**

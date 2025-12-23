@@ -37,14 +37,17 @@
 #include "openthread-core-config.h"
 
 #include <openthread/link.h>
+#include <openthread/provisional/link.h>
 
 #include <openthread/platform/crypto.h>
 
 #include "common/callback.hpp"
+#include "common/heap_array.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/radio_sample_scheduler.hpp"
 #include "radio/radio.hpp"
 
 namespace ot {
@@ -103,6 +106,8 @@ class LinkRaw;
  */
 class SubMac : public InstanceLocator, private NonCopyable
 {
+    friend class Instance;
+    friend class RadioSampleScheduler;
     friend class Radio::Callbacks;
     friend class LinkRaw;
 
@@ -496,30 +501,34 @@ public:
      * @param[in]  aChannel   The wake-up channel.
      */
     void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
+
+    Error AddWakeupId(WakeupId aWakeupId);
+    Error RemoveWakeupId(WakeupId aWakeupId);
+    void  ClearWakeupIds(void);
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    void  SetECslParams(uint16_t aDuration, uint16_t aPeriod, uint8_t aChannel);
+    void  GetECslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+    Error AddECslPeerAddress(const ExtAddress &aExtAddr);
+    Error ClearECslPeerAddress(const ExtAddress &aExtAddr);
+    void  ClearECslPeerAddresses(void);
 #endif
 
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    void        CslInit(void);
-    void        CslSample(void);
-    void        UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
-    void        UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
-    static void HandleCslTimer(Timer &aTimer);
-    void        HandleCslTimer(void);
-    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
-    uint32_t    GetLocalTime(void);
-    bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
+    void CslInit(void);
+    void UpdateCslLastSyncTimestamp(TxFrame &aFrame, RxFrame *aAckFrame);
+    void UpdateCslLastSyncTimestamp(RxFrame *aFrame, Error aError);
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
     void LogReceived(RxFrame *aFrame);
 #endif
-    void HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
-    void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
+    void GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
 #endif
+
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    void        WedInit(void);
-    static void HandleWedTimer(Timer &aTimer);
-    void        HandleWedTimer(void);
+    bool ShouldHandleWakeupFrame(const RxFrame &aFrame);
+    void GetWedWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
@@ -550,11 +559,12 @@ private:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         kStateDelayBeforeRetx, // Delay before retx
 #endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        kStateCslSample, // CSL receive.
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
+                           // sample state.
 #endif
     };
 
@@ -572,6 +582,7 @@ private:
     // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
     // The value is in usec.
     static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
+    static constexpr uint16_t kWakeupIdTableSize   = OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -596,7 +607,12 @@ private:
     bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
     bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
-    bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
+    bool RadioSupportsReceiveTiming(void) const
+    {
+        // Notes: reduce the radio platform's requirement.
+        return false;
+    }
+
     bool RadioSupportsRxOnWhenIdle(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
@@ -628,6 +644,10 @@ private:
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    void RadioSample(void);
+#endif
+
     using SubMacTimer =
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         TimerMicroIn<SubMac, &SubMac::HandleTimer>;
@@ -655,6 +675,7 @@ private:
     KeyMaterial                  mCurrKey;
     KeyMaterial                  mNextKey;
     uint32_t                     mFrameCounter;
+    uint8_t                      mPanChannel;
     uint8_t                      mKeyId;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
@@ -662,25 +683,17 @@ private:
     SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;             // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7;        // The CSL sample channel.
-    bool     mIsCslSampling : 1;     // Indicates that the radio is receiving in CSL state for platforms not supporting
-                                     // delayed reception.
-    uint16_t    mCslPeerShort;       // The CSL peer short address.
-    uint32_t    mCslSampleTimeRadio; // The CSL sample time of the current period based on radio time (lower 32-bit).
-    TimeMicro   mCslSampleTimeLocal; // The CSL sample time of the current period based on local time.
-    TimeMicro   mCslLastSync;        // The timestamp of the last successful CSL synchronization.
-    CslAccuracy mCslParentAccuracy;  // The parent's CSL accuracy (clock accuracy and uncertainty).
-    TimerMicro  mCslTimer;
+    uint16_t    mCslPeerShort;      // The CSL peer short address.
+    TimeMicro   mCslLastSync;       // The timestamp of the last successful CSL synchronization.
+    CslAccuracy mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
-    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
-    uint8_t    mWakeupChannel;        // The wake-up sample channel.
-    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
-    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
-    TimerMicro mWedTimer;
+    Array<uint64_t, kWakeupIdTableSize> mWakeupIdTable;
+#endif
+public:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    RadioSampleScheduler mSampleScheduler;
 #endif
 };
 

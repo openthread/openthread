@@ -861,6 +861,15 @@ public:
      */
     void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    /**
+     * Receives the P2P events.
+     *
+     * @param[in]  aEvent  The P2P event.
+     */
+    void HandleP2pEvents(otP2pEvent aEvent);
+#endif
+
 private:
     static constexpr uint8_t kSrpVersion = 0;
 
@@ -1010,6 +1019,7 @@ private:
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
     void        HandleOutstandingUpdatesTimer(void);
     void        ProcessCompletedUpdates(void);
+    void        SrpServerDisable(void);
 
     const UpdateMetadata *FindOutstandingUpdate(const MessageMetadata &aMessageMetadata) const;
     static const char    *AddressModeToString(AddressMode aMode);

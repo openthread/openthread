@@ -68,6 +68,8 @@ void DataPollSender::StartPolling(void)
 
     OT_ASSERT(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
 
+    VerifyOrExit(GetParent().IsStateValid());
+
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
 
@@ -133,7 +135,6 @@ Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
     const Neighbor &parent = GetParent();
 
     VerifyOrExit(parent.IsStateValidOrRestoring(), error = kErrorAbort);
-
     // Use extended address attaching to a new parent (i.e. parent is the parent candidate).
     if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) ||
         (&parent == &Get<Mle::MleRouter>().GetParentCandidate()))
@@ -144,7 +145,6 @@ Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
     {
         aDest.SetShort(parent.GetRloc16());
     }
-
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     aRadioType = Get<RadioSelector>().SelectPollFrameRadio(parent);
 #endif

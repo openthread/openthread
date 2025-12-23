@@ -55,6 +55,17 @@ namespace ot {
 typedef BitSet<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
 
 /**
+ * Represents a bit-set of CSL neighbor mask.
+ */
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+typedef BitSet<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN + OPENTHREAD_CONFIG_PEER_TABLE_SZIE> CslNeighborMask;
+#elif OPENTHREAD_FTD
+typedef BitSet<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> CslNeighborMask;
+#elif OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+typedef BitSet<OPENTHREAD_CONFIG_PEER_TABLE_SZIE> CslNeighborMask;
+#endif
+
+/**
  * @}
  */
 

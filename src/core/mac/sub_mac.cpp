@@ -52,11 +52,8 @@ SubMac::SubMac(Instance &aInstance)
     , mTransmitFrame(Get<Radio>().GetTransmitBuffer())
     , mCallbacks(aInstance)
     , mTimer(aInstance)
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslTimer(aInstance, SubMac::HandleCslTimer)
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    , mWedTimer(aInstance, SubMac::HandleWedTimer)
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    , mSampleScheduler(aInstance)
 #endif
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -95,9 +92,6 @@ void SubMac::Init(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    WedInit();
 #endif
 }
 
@@ -220,11 +214,8 @@ Error SubMac::Disable(void)
 {
     Error error;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslTimer.Stop();
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    mWedTimer.Stop();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    mSampleScheduler.Stop();
 #endif
 
     mTimer.Stop();
@@ -240,10 +231,10 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (IsCslEnabled())
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if (mSampleScheduler.IsRadioSampleEnabled())
     {
-        CslSample();
+        RadioSample();
     }
     else
 #endif
@@ -279,6 +270,8 @@ Error SubMac::Receive(uint8_t aChannel)
 {
     Error error;
 
+    mPanChannel = aChannel;
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)
     {
@@ -298,6 +291,10 @@ Error SubMac::Receive(uint8_t aChannel)
 
     SetState(kStateReceive);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    mSampleScheduler.UpdateRadioSampleState();
+#endif
+
 exit:
     return error;
 }
@@ -314,6 +311,14 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
         SignalFrameCounterUsed(aFrame->mInfo.mRxInfo.mAckFrameCounter, aFrame->mInfo.mRxInfo.mAckKeyId);
     }
 
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    if ((aFrame != nullptr) && (aFrame->IsWakeupFrame()))
+    {
+        VerifyOrExit(ShouldHandleWakeupFrame(*aFrame));
+        LogInfo("WakeupFrameIsReceived ---------------------------->");
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     UpdateCslLastSyncTimestamp(aFrame, aError);
 #endif
@@ -324,6 +329,11 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
     {
         mCallbacks.ReceiveDone(aFrame, aError);
     }
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+exit:
+    return;
+#endif
 }
 
 Error SubMac::Send(void)
@@ -334,7 +344,7 @@ Error SubMac::Send(void)
     {
     case kStateDisabled:
     case kStateCsmaBackoff:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
     case kStateTransmit:
@@ -343,8 +353,8 @@ Error SubMac::Send(void)
 #endif
     case kStateSleep:
     case kStateReceive:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kStateCslSample:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kStateRadioSample:
 #endif
         break;
 
@@ -430,7 +440,7 @@ void SubMac::StartCsmaBackoff(void)
 {
     uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0 || mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime != 0)
     {
         SetState(kStateCslTransmit);
@@ -503,7 +513,7 @@ void SubMac::BeginTransmit(void)
 {
     Error error;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
     VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
 #else
     VerifyOrExit(mState == kStateCsmaBackoff);
@@ -710,7 +720,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
 #endif
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -721,8 +731,8 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     case kStateReceive:
     case kStateSleep:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kStateCslSample:
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    case kStateRadioSample:
 #endif
         break;
     }
@@ -788,7 +798,7 @@ void SubMac::HandleTimer(void)
 {
     switch (mState)
     {
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
         BeginTransmit();
         break;
@@ -1029,6 +1039,27 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+void SubMac::RadioSample(void)
+{
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    VerifyOrExit(!mRadioFilterEnabled, IgnoreError(Get<Radio>().Sleep()));
+#endif
+
+    SetState(kStateRadioSample);
+
+    if (!RadioSupportsReceiveTiming())
+    {
+        mSampleScheduler.UpdateRadioSampleState();
+    }
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+exit:
+#endif
+    return;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 // LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)
@@ -1043,11 +1074,11 @@ const char *SubMac::StateToString(State aState)
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         "DelayBeforeRetx", // (6) kStateDelayBeforeRetx
 #endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
         "CslTransmit", // (7) kStateCslTransmit
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        "CslSample", // (8) kStateCslSample
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        "RadioSample", // (8) kStateRadioSample
 #endif
     };
 
@@ -1064,11 +1095,11 @@ const char *SubMac::StateToString(State aState)
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         ValidateNextEnum(kStateDelayBeforeRetx);
 #endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (!OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
         ValidateNextEnum(kStateCslTransmit);
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        ValidateNextEnum(kStateCslSample);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        ValidateNextEnum(kStateRadioSample);
 #endif
     };
 

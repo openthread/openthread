@@ -1,0 +1,316 @@
+#!/usr/bin/expect -f
+#
+# Test topology:
+#
+# WC1 (SSED) <------\
+#                    +---> WED (SSED) <----------> LEADER (FTD)
+# WC2 (FED)  <------/
+#
+# Test Steps:
+# 1. Setup LEADER and wait for it becoming a leader
+# 2. Setup WED as a thread sleepy child and wait for the WED becoming a child
+#
+# 3. Setup WC1
+# 4. WC1 wakes up WED and establishs a P2P link with WED
+# 5. WED pings WC1
+# 6. WC1 checks the registered SRP server hosts
+#
+# 7. Setup WC2
+# 8. WC2 wakes up WED and establishs a P2P link with WED
+# 9. WED pings WC2
+# 10. WC2 checks the registered SRP server hosts
+#
+# 11. WC1 tears down the P2P link from WED
+# 12. WC2 tears down the P2P link from WED
+#
+
+log_file test.log
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+set WC1 1
+set WC2 2
+set WED 3
+set LEADER 4
+set wc1_ext_address "deadbeefcafe0001"
+set wc2_ext_address "deadbeefcafe0002"
+set wed_ext_address "deadbeefcafe0003"
+set leader_ext_address "deadbeefcafe0004"
+set WAKEUP_ID "0xdeadbeefcafe"
+
+#-----------------------------LEADER-------------------------------------
+send_user "\n\n>>> setup LEADER\n"
+spawn_node $LEADER
+
+setup_default_network
+
+send "childsupervision checktimeout 20\n"
+expect "Done"
+
+send "childsupervision interval 10\n"
+expect "Done"
+
+send "pollperiod 200000\n "
+expect "Done"
+
+send "extaddr $leader_ext_address\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+send "channel\n"
+expect_line "Done"
+
+wait_for "state" "leader"
+
+send "dataset tlvs\n"
+expect "dataset tlvs"
+expect -re {[^0-9a-f]([0-9a-f]+)[\r\n]}
+set dataset $expect_out(1,string)
+send_user "dataset is: $dataset\n"
+
+#-----------------------------WED-------------------------------------
+send_user "\n\n>>> setup WED\n"
+spawn_node $WED mtd
+
+send "dataset init tlvs $dataset\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+
+send "mode -\n"
+expect_line "Done"
+
+send "csl period 640000\n"
+expect_line "Done"
+
+send "csl timeout 10\n"
+expect_line "Done"
+
+send "childsupervision checktimeout 20\n"
+expect "Done"
+
+send "childsupervision interval 10\n"
+expect "Done"
+
+send "pollperiod 200000\n "
+expect "Done"
+
+send "ecsl period 201250\n"
+expect_line "Done"
+
+send "csl timeout 10\n"
+expect_line "Done"
+
+send "extaddr $wed_ext_address\n"
+expect_line "Done"
+
+send "wakeup channel 12\n"
+expect_line "Done"
+
+send "wakeup wakeupid add $WAKEUP_ID\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+wait_for "state" "child"
+
+send "ipaddr\n"
+expect_line "Done"
+
+send "wakeup listen enable\n"
+expect_line "Done"
+
+set wed_link_local_addr [get_ipaddr linklocal]
+
+send "srp client host name wed\n"
+expect_line "Done"
+
+send "srp client host address $wed_link_local_addr\n"
+expect_line "Done"
+
+send "srp client service add ins1 _matter._tcp 5540\n"
+expect_line "Done"
+
+send "srp client autostart enable\n"
+expect_line "Done"
+
+#-----------------------------WC1-------------------------------------
+send_user "\n\n>>> Setup WC1\n"
+spawn_node $WC1
+
+send "dataset init tlvs $dataset\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+
+send "mode -\n"
+expect_line "Done"
+
+send "extaddr $wc1_ext_address\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "wakeup channel 12\n"
+expect_line "Done"
+
+send "ecsl period 201250\n"
+expect_line "Done"
+
+send "csl timeout 10\n"
+expect_line "Done"
+
+send "srp server faststart enable\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+set wc1_link_local_addr [get_ipaddr linklocal]
+
+send_user "\n\n>>> WC1 establishs a P2P link with WED\n"
+
+send "p2p link -i $WAKEUP_ID\n"
+expect_line "Done"
+
+sleep 0.4
+
+send "ping $wed_link_local_addr 20 5\n"
+expect_line "Done"
+
+send "p2p unlink $wed_ext_address\n"
+expect_line "Done"
+
+sleep 0.4
+
+# re-establish the p2p link
+
+send "p2p link -i $WAKEUP_ID\n"
+expect_line "Done"
+
+sleep 0.4
+
+send "ping $wed_link_local_addr 20 5\n"
+expect_line "Done"
+
+
+sleep 2
+
+#-----------------------------WED-------------------------------------
+send_user "\n\n>>> WED pings WC1\n"
+switch_node $WED
+
+send "ping $wc1_link_local_addr\n"
+expect_line "Done"
+
+sleep 2
+
+send "wakeup listen enable\n"
+expect_line "Done"
+
+#-----------------------------WC1-------------------------------------
+send_user "\n\n>>> WC1 checks all registered srp server hosts \n"
+switch_node $WC1
+
+sleep 5
+
+send "srp server state\n"
+expect_line "Done"
+
+send "srp server host\n"
+expect_line "Done"
+
+
+#-----------------------------WC2-------------------------------------
+send_user "\n\n>>> Setup WC2\n"
+spawn_node $WC2
+
+send "dataset init tlvs $dataset\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $wc2_ext_address\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "wakeup channel 12\n"
+expect_line "Done"
+
+send "srp server faststart enable\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+set wc2_link_local_addr [get_ipaddr linklocal]
+
+send_user "\n\n>>> WC2 establishs a P2P link with WED\n"
+
+send "p2p link -i $WAKEUP_ID\n"
+expect_line "Done"
+
+send "ping $wed_link_local_addr\n"
+expect_line "Done"
+
+sleep 2
+
+#-----------------------------WED-------------------------------------
+send_user "\n\n>>> WED pings WC2\n"
+switch_node $WED
+
+send "ping $wc2_link_local_addr\n"
+expect_line "Done"
+
+sleep 2
+
+#-----------------------------WC2-------------------------------------
+send_user "\n\n>>> WC2 checks all registered srp server hosts \n"
+switch_node $WC2
+
+send "srp server state\n"
+expect_line "Done"
+
+send "srp server host\n"
+expect_line "Done"
+
+sleep 1
+
+#-----------------------------WC1-------------------------------------
+send_user "\n\n>>> WC1 tears down the P2P link from WED\n"
+switch_node $WC1
+
+send "p2p unlink $wed_ext_address\n"
+expect_line "Done"
+
+#-----------------------------WC2-------------------------------------
+send_user "\n\n>>> WC2 tears down the P2P link from WED\n"
+switch_node $WC2
+
+send "p2p unlink $wed_ext_address\n"
+expect_line "Done"
+
+sleep 2

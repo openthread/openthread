@@ -450,6 +450,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_ECSL_MIN_PERIOD
+ *
+ * This setting configures the minimum enhanced CSL period that could be used, in units of 1.25 milliseconds.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_ECSL_MIN_PERIOD
+#define OPENTHREAD_CONFIG_MAC_ECSL_MIN_PERIOD 6
+#endif
+
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
  *
  * This setting configures the maximum CSL timeout that could be used, in units of seconds.
@@ -556,6 +566,33 @@
  */
 #ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
 #define OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT 100
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+ *
+ * Define as 1 to enable Coexistence Constrained feature.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+#define OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
+ *
+ * Define to 1 to enable csl transmitter logic.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
+#define OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+ *
+ * This setting configures the ECSL receiver feature in Thread 1.5.
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+#define OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE 0
 #endif
 
 /**

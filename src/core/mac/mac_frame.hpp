@@ -774,6 +774,13 @@ public:
         return fcf;
     }
 
+#if OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    void SetScaIe(uint16_t aPhase, uint8_t aNumBits, uint32_t aRamBits, uint16_t aECslPhase, uint16_t aECslPeriod);
+
+    const ScaIe *GetScaIe(void) const;
+    ScaIe       *GetScaIe(void) { return AsNonConst(AsConst(this)->GetScaIe()); }
+#endif
+
 protected:
     static constexpr uint8_t kShortFcfSize        = sizeof(uint8_t);
     static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
@@ -1065,7 +1072,16 @@ public:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         bool mAppendCslIe : 1; ///< Whether to append CSL IE.
 #endif
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+        bool mAppendScaIe : 1; ///< Whether to append SCA IE.
+#endif
         bool mEmptyPayload : 1; ///< Whether payload is empty (to decide about appending Termination2 IE).
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        bool    mAppendRendezvousTimeIe : 1;
+        bool    mAppendConnectionIe : 1;
+        bool    mIsWakeupFrame : 1;
+        uint8_t mWakeupIdLength : 4;
+#endif
 #endif
     };
 
@@ -1233,6 +1249,7 @@ public:
      * @retval FALSE  The frame does not contain the CSL IE.
      */
     bool IsCslIePresent(void) const { return mInfo.mTxInfo.mCslPresent; }
+    bool IsScaIePresent(void) const { return mInfo.mTxInfo.mScaPresent; }
 
     /**
      * Sets the CSL IE present flag.
@@ -1240,6 +1257,8 @@ public:
      * @param[in]  aCslPresent  TRUE if the frame contains the CSL IE.
      */
     void SetCslIePresent(bool aCslPresent) { mInfo.mTxInfo.mCslPresent = aCslPresent; }
+
+    void SetScaIePresent(bool aScaPresent) { mInfo.mTxInfo.mScaPresent = aScaPresent; }
 
     /**
      * Indicates whether or not the frame header is updated.
@@ -1314,14 +1333,14 @@ public:
     /**
      * Generate IEE 802.15.4 Wake-up frame.
      *
-     * @param[in]    aPanId     A destination PAN identifier
-     * @param[in]    aDest      A destination address (short or extended)
-     * @param[in]    aSource    A source address (short or extended)
+     * @param[in]    aPanId          A destination PAN identifier.
+     * @param[in]    aWakeupRequest  A reference to the wake-up request.
+     * @param[in]    aSource         A source address (short or extended).
      *
      * @retval  kErrorNone        Successfully generated Wake-up frame.
      * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
      */
-    Error GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource);
+    Error GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource);
 #endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2

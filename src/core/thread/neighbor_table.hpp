@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "thread/neighbor.hpp"
@@ -47,6 +48,8 @@ namespace ot {
  */
 class NeighborTable : public InstanceLocator, private NonCopyable
 {
+    class CslNeighborIteratorBuilder;
+
 public:
     /**
      * Pointer is called to notify that a child or router neighbor is being added to or removed from
@@ -75,6 +78,121 @@ public:
         kRouterAdded      = OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED,       ///< A router is being added.
         kRouterRemoved    = OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED,     ///< A router is being removed.
     };
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    /**
+     * Represents an iterator for iterating through the CSL neighbor entries in the neighbor table.
+     */
+    class CslNeighborIterator : public InstanceLocator, public ItemPtrIterator<CslNeighbor, CslNeighborIterator>
+    {
+        friend class ItemPtrIterator<CslNeighbor, CslNeighborIterator>;
+        friend class CslNeighborIteratorBuilder;
+
+    public:
+        /**
+         * Initializes an `Iterator` instance.
+         *
+         * @param[in] aInstance  A reference to the OpenThread instance.
+         * @param[in] aFilter    A neighbor state filter.
+         */
+        CslNeighborIterator(Instance &aInstance, Neighbor::StateFilter aFilter);
+
+        /**
+         * Resets the iterator to start over.
+         */
+        void Reset(void);
+
+        /**
+         * Gets the `CslNeighbor` entry to which the iterator is currently pointing.
+         *
+         * @returns A pointer to the `CslNeighbor` entry, or `nullptr` if the iterator is done and/or empty.
+         */
+        CslNeighbor *GetCslNeighbor(void) { return mItem; }
+
+    private:
+        explicit CslNeighborIterator(Instance &aInstance)
+            : InstanceLocator(aInstance)
+            , mFilter(Neighbor::StateFilter::kInStateValid)
+        {
+        }
+
+        void Advance(void);
+
+        template <typename NeighborType> CslNeighbor *Next(CslNeighbor *aNeighbor)
+        {
+            NeighborType *neighbor = static_cast<NeighborType *>(aNeighbor);
+            return (++neighbor);
+        }
+
+        Neighbor::StateFilter mFilter;
+    };
+
+    /**
+     * Returns the neighbor table index for a given `CslNeighbor` instance.
+     *
+     * @param[in]  aNeighbor  A reference to a `CslNeighbor`
+     *
+     * @returns The index corresponding to @p aNeighbor.
+     */
+    uint16_t GetCslNeighborIndex(const CslNeighbor &aNeighbor) const;
+
+    /**
+     * Returns a pointer to a `CslNeighbor` entry at a given index, or `nullptr` if the index is out of bounds.
+     *
+     * @param[in]  aCslNeighborIndex  A CSL neighbor index.
+     *
+     * @returns A pointer to the `CslNeighbor` corresponding to the given index, or `nullptr` if the index is out of
+     * bounds.
+     */
+    CslNeighbor *GetCslNeighborAtIndex(uint16_t aCslNeighborIndex);
+
+    /**
+     * Indicates whether the neighbor table contains a given `CslNeighbor` instance.
+     *
+     * @param[in]  aNeighbor  A reference to a `CslNeighbor`.
+     *
+     * @retval TRUE  if @p aNeighbor is a `CslNeighbor` in the neighbor table.
+     * @retval FALSE if @p aNeighbor is not a `CslNeighbor` in the neighbor table.
+     */
+    bool ContainsCslNeighbor(const CslNeighbor &aNeighbor) const { return IsChild(aNeighbor) || IsPeer(aNeighbor); }
+
+    /**
+     * Enables range-based `for` loop iteration over all CSL neighbor entries in the neighbor table matching a given
+     * state filter.
+     *
+     * Should be used as follows:
+     *
+     *     for (CslNeighbor &neighbor : aNeighborTable.IterateCslNeighbor(aFilter)) { ... }
+     *
+     * @param[in] aFilter  A neighbor state filter.
+     *
+     * @returns An CslNeighborIteratorBuilder instance.
+     */
+    CslNeighborIteratorBuilder IterateCslNeighbor(Neighbor::StateFilter aFilter)
+    {
+        return CslNeighborIteratorBuilder(GetInstance(), aFilter);
+    }
+
+    /**
+     * Indicates whether the CSL neighbor is a child.
+     *
+     * @param[in]  aNeighbor  A reference to a `CslNeighbor`.
+     *
+     * @retval TRUE  if @p aNeighbor is a `Child` in the child table.
+     * @retval FALSE if @p aNeighbor is not a `Child` in the child table.
+     */
+    bool IsChild(const CslNeighbor &aNeighbor) const;
+
+    /**
+     * Indicates whether the CSL neighbor is a peer.
+     *
+     * @param[in]  aNeighbor  A reference to a `CslNeighbor`.
+     *
+     * @retval TRUE  if @p aNeighbor is a `Peer` in the peer table.
+     * @retval FALSE if @p aNeighbor is not a `Peer` in the peer table.
+     */
+    bool IsPeer(const CslNeighbor &aNeighbor) const;
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
     /**
      * Initializes the `NeighborTable` instance.
@@ -152,7 +270,7 @@ public:
     Neighbor *FindNeighbor(const Mac::Address   &aMacAddress,
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
     /**
      * Searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address.
@@ -184,8 +302,7 @@ public:
      * @returns A pointer to the Neighbor corresponding to @p aMacAddress, `nullptr` otherwise.
      */
     Neighbor *FindRxOnlyNeighborRouter(const Mac::Address &aMacAddress);
-
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
     /**
      * Gets the next neighbor information. It is used to iterate through the entries of
@@ -221,10 +338,31 @@ public:
     void Signal(Event aEvent, const Neighbor &aNeighbor);
 
 private:
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    class CslNeighborIteratorBuilder : public InstanceLocator
+    {
+    public:
+        CslNeighborIteratorBuilder(Instance &aInstance, Neighbor::StateFilter aFilter)
+            : InstanceLocator(aInstance)
+            , mFilter(aFilter)
+        {
+        }
+
+        CslNeighborIterator begin(void) { return CslNeighborIterator(GetInstance(), mFilter); }
+        CslNeighborIterator end(void) { return CslNeighborIterator(GetInstance()); }
+
+    private:
+        Neighbor::StateFilter mFilter;
+    };
+#endif
+
     Neighbor *FindParent(const Neighbor::AddressMatcher &aMatcher);
     Neighbor *FindNeighbor(const Neighbor::AddressMatcher &aMatcher);
 #if OPENTHREAD_FTD
     Neighbor *FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher);
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    Neighbor *FindPeer(const Neighbor::AddressMatcher &aMatcher);
 #endif
 
     Callback mCallback;

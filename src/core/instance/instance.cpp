@@ -201,7 +201,7 @@ Instance::Instance(void)
     , mSrpAdvertisingProxy(*this)
 #endif
 #endif
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     , mChildSupervisor(*this)
 #endif
     , mSupervisionListener(*this)

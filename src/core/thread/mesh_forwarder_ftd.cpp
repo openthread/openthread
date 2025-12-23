@@ -33,7 +33,7 @@
 
 #include "mesh_forwarder.hpp"
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -50,6 +50,7 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
     message.SetTimestampToNow();
     mSendQueue.Enqueue(message);
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     switch (message.GetType())
     {
     case Message::kTypeIp6:
@@ -77,8 +78,11 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
                 // (only the first MPL transmission is forwarded to
                 // sleepy children).
 
-                bool destinedForAll = ((destination == Get<Mle::Mle>().GetLinkLocalAllThreadNodesAddress()) ||
-                                       (destination == Get<Mle::Mle>().GetRealmLocalAllThreadNodesAddress()));
+                bool destinedForAll;
+
+#if OPENTHREAD_FTD
+                destinedForAll = ((destination == Get<Mle::Mle>().GetLinkLocalAllThreadNodesAddress()) ||
+                                  (destination == Get<Mle::Mle>().GetRealmLocalAllThreadNodesAddress()));
 
                 for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
                 {
@@ -87,6 +91,18 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
                         mIndirectSender.AddMessageForSleepyChild(message, child);
                     }
                 }
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+                destinedForAll = (destination == Get<Mle::Mle>().GetLinkLocalAllThreadNodesAddress());
+
+                for (Peer &peer : Get<PeerTable>().Iterate(Peer::kInStateValidOrRestoring))
+                {
+                    if (!peer.IsRxOnWhenIdle() && destinedForAll)
+                    {
+                        mIndirectSender.AddMessageForSleepyChild(message, peer);
+                    }
+                }
+#endif
             }
         }
         else // Destination is unicast
@@ -94,9 +110,9 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
             Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(destination);
 
             if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !message.IsDirectTransmission() &&
-                Get<ChildTable>().Contains(*neighbor))
+                Get<NeighborTable>().ContainsCslNeighbor(*static_cast<CslNeighbor *>(neighbor)))
             {
-                mIndirectSender.AddMessageForSleepyChild(message, *static_cast<Child *>(neighbor));
+                mIndirectSender.AddMessageForSleepyChild(message, *static_cast<CslNeighbor *>(neighbor));
             }
             else
             {
@@ -109,9 +125,9 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
     case Message::kTypeSupervision:
     {
-        Child *child = Get<ChildSupervisor>().GetDestination(message);
-        OT_ASSERT((child != nullptr) && !child->IsRxOnWhenIdle());
-        mIndirectSender.AddMessageForSleepyChild(message, *child);
+        CslNeighbor *neighbor = Get<ChildSupervisor>().GetDestination(message);
+        OT_ASSERT((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle());
+        mIndirectSender.AddMessageForSleepyChild(message, *neighbor);
         break;
     }
 
@@ -127,6 +143,9 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
     {
         ExitNow();
     }
+#else
+    message.SetDirectTransmission();
+#endif
 
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
     ApplyDirectTxQueueLimit(message);
@@ -134,10 +153,13 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
     mScheduleTransmissionTask.Post();
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 exit:
+#endif
     return;
 }
 
+#if OPENTHREAD_FTD
 void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 {
     Ip6::Address ip6Dst;
@@ -196,6 +218,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
         mScheduleTransmissionTask.Post();
     }
 }
+#endif // OPENTHREAD_FTD
 
 Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 {
@@ -206,6 +229,12 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
     error = RemoveAgedMessages();
     VerifyOrExit(error == kErrorNotFound);
 #endif
+
+#if OPENTHREAD_MTD
+    VerifyOrExit((evict = mSendQueue.GetTail()) != nullptr && evict->GetPriority() < static_cast<uint8_t>(aPriority));
+
+    error = kErrorNone;
+#else
 
     // Search for a lower priority message to evict
     for (uint8_t priority = 0; priority < aPriority; priority++)
@@ -244,13 +273,14 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
                 continue;
             }
 
-            if (!message->GetIndirectTxChildMask().IsEmpty())
+            if (!message->GetIndirectTxCslNeighborMask().IsEmpty())
             {
                 evict = message;
                 ExitNow(error = kErrorNone);
             }
         }
     }
+#endif
 
 exit:
     if ((error == kErrorNone) && (evict != nullptr))
@@ -261,6 +291,23 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
+{
+    VerifyOrExit(!aMessage.GetIndirectTxCslNeighborMask().IsEmpty());
+
+    for (CslNeighbor &neighbor : Get<NeighborTable>().IterateCslNeighbor(Neighbor::kInStateAnyExceptInvalid))
+    {
+        IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, neighbor));
+        VerifyOrExit(!aMessage.GetIndirectTxCslNeighborMask().IsEmpty());
+    }
+
+exit:
+    return;
+}
+#endif
+
+#if OPENTHREAD_FTD
 void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessageChecker)
 {
     for (Message &message : mSendQueue)
@@ -297,20 +344,6 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessa
 
         RemoveMessageIfNoPendingTx(message);
     }
-}
-
-void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
-{
-    VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
-
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
-    {
-        IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
-        VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
-    }
-
-exit:
-    return;
 }
 
 void MeshForwarder::RemoveDataResponseMessages(void)
@@ -945,6 +978,7 @@ exit:
 
 // LCOV_EXCL_STOP
 
+#endif // OPENTHREAD_FTD
 } // namespace ot
 
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE

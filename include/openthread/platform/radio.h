@@ -372,6 +372,7 @@ typedef struct otRadioFrame
             bool mCsmaCaEnabled : 1;
             bool mCslPresent : 1;          ///< Set to true if CSL header IE is present.
             bool mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
+            bool mScaPresent : 1;          ///< Set to true if Sca header IE is present.
 
             /**
              * The time of the local radio clock in microseconds when the end of

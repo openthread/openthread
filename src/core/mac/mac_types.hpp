@@ -41,6 +41,7 @@
 
 #include <openthread/link.h>
 #include <openthread/thread.h>
+#include <openthread/platform/provisional/radio.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
@@ -72,6 +73,11 @@ typedef otShortAddress ShortAddress;
 
 constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///< Broadcast Short Address.
 constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
+
+/**
+ * Represents the wake-up identifier.
+ */
+typedef otWakeupId WakeupId;
 
 /**
  * Generates a random IEEE 802.15.4 PAN ID.
@@ -936,6 +942,157 @@ private:
     uint8_t mUncertainty;
 };
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * Gets the length of the wake-up identifier.
+ *
+ * @param[in]  aWakeupId  The wake-up identifier.
+ *
+ * @returns The length of the @p aWakeupId.
+ */
+uint8_t GetWakeupIdLength(WakeupId aWakeupId);
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+/**
+ * Represents a wake-up request.
+ */
+class WakeupRequest : public otWakeupRequest
+{
+public:
+    static constexpr uint16_t kInfoStringSize = 50; ///< Max chars for the info string (`ToString()`).
+    /**
+     * Defines the fixed-length `String` object returned from `ToString()`.
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * Represents a wake-up request type.
+     */
+    enum Type : uint8_t
+    {
+        kTypeExtAddress    = OT_WAKEUP_TYPE_EXT_ADDRESS,
+        kTypeWakeupId      = OT_WAKEUP_TYPE_IDENTIFIER,
+        kTypeWakeupGroupId = OT_WAKEUP_TYPE_GROUP_IDENTIFIER,
+    };
+
+    /**
+     * Indicates whether the wake-up request is a valid request.
+     *
+     * @retval TRUE   If the request is a valid request.
+     * @retval FALSE  If the request is an invalid request.
+     */
+    bool IsValid(void) const;
+
+    /**
+     * Gets the Wake-up Identifier of the wake-up request.
+     *
+     * MUST be used only if the wake-up request type is kTypeWakeupId.
+     *
+     * @returns The Wake-up Identifier.
+     */
+    WakeupId GetWakeupId(void) const { return *static_cast<const WakeupId *>(&mShared.mWakeupId); }
+
+    /**
+     * Gets the Wake-up Identifier of the wake-up request.
+     *
+     * MUST be used only if the wake-up request type is kTypeWakeupId.
+     *
+     * @returns The Wake-up Identifier.
+     */
+    WakeupId GetWakeupId(void) { return *static_cast<WakeupId *>(&mShared.mWakeupId); }
+
+    /**
+     * Sets the wake-up request with an Extended Address.
+     *
+     * The type is also updated to indicate that the wake-up request type is kTypeExtAddress.
+     *
+     * @param[in]  aExtAddress  An Extended Address.
+     */
+    void SetExtAddress(const ExtAddress &aExtAddress);
+
+    /**
+     * Gets the Extended Address of the wake-up request.
+     *
+     * MUST be used only if the wake-up request type is kTypeExtAddress.
+     *
+     * @returns A constant reference to the Extended Address.
+     */
+    const ExtAddress &GetExtAddress(void) const;
+
+    /**
+     * Gets the Extended Address of the wake-up request.
+     *
+     * MUST be used only if the wake-up request type is kTypeExtAddress.
+     *
+     * @returns A reference to the Extended Address.
+     */
+    ExtAddress &GetExtAddress(void);
+
+    /**
+     * Sets the wake-up request type.
+     *
+     * @param[in]  aType  The wake-up request type.
+     */
+    void SetType(Type aType);
+
+    /**
+     * Indicates whether wake up the peer by the extended address.
+     *
+     * @returns  TRUE if wake up the peer by the extended address, FALSE if not.
+     */
+    bool IsWakeupByExtAddress(void) const;
+
+    /**
+     * Indicates whether wake up the peer by the wake-up identifier.
+     *
+     * @returns  TRUE if wake up the peer by the wake-up identifier, FALSE if not.
+     */
+    bool IsWakeupById(void) const;
+
+    /**
+     * Indicates whether wake up the peer by the group wake-up identifier.
+     *
+     * @returns  TRUE if wake up the peer by the group wake-up identifier, FALSE if not.
+     */
+    bool IsWakeupByGroupId(void) const;
+
+    /**
+     * Converts a wake-up request to a string.
+     *
+     * @returns An `InfoString` containing the string representation of the wake-up request.
+     */
+    InfoString ToString(void) const;
+};
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+/**
+ * Represents MAC wake-up frame information.
+ */
+struct WakeupInfo
+{
+    static constexpr uint16_t kInfoStringSize = 100; ///< Max chars for the info string (`ToString()`).
+    /**
+     * Defines the fixed-length `String` object returned from `ToString()`.
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    InfoString ToString(void) const;
+
+    ExtAddress mWcAddress;
+    uint32_t   mFrameCounter;
+    uint32_t   mAttachDelayMs;
+    uint8_t    mWakeupTarget : 2;
+    uint8_t    mRetryInterval : 2;
+    uint8_t    mRetryCount : 2;
+    uint8_t    mIsGroupWakeup : 1;
+    uint8_t    mIsAttached : 1;
+    uint8_t    mIsRouter : 1;
+    uint8_t    mIsNetworkDataCapable : 1;
+};
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
 /**
  * @}
  */
@@ -944,7 +1101,10 @@ private:
 
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
-
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+DefineCoreType(otWakeupRequest, Mac::WakeupRequest);
+DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
+#endif
 } // namespace ot
 
 #endif // MAC_TYPES_HPP_

@@ -57,10 +57,10 @@ namespace ot {
  * @{
  */
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 class CslNeighbor;
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 class Child;
 #endif
 
@@ -166,62 +166,64 @@ public:
      */
     void Stop(void);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
-     * Adds a message for indirect transmission to a sleepy child.
+     * Adds a message for indirect transmission to a sleepy neighbor.
      *
      * @param[in] aMessage  The message to add.
-     * @param[in] aChild    The (sleepy) child for indirect transmission.
+     * @param[in] aNeighbor The (sleepy) neighbor for indirect transmission.
      */
-    void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
+    void AddMessageForSleepyChild(Message &aMessage, CslNeighbor &aNeighbor);
 
     /**
-     * Removes a message for indirect transmission to a sleepy child.
+     * Removes a message for indirect transmission to a sleepy neighbor.
      *
      * @param[in] aMessage  The message to update.
-     * @param[in] aChild    The (sleepy) child for indirect transmission.
+     * @param[in] aNeighbor The (sleepy) neighbor for indirect transmission.
      *
      * @retval kErrorNone          Successfully removed the message for indirect transmission.
-     * @retval kErrorNotFound      The message was not scheduled for indirect transmission to the child.
+     * @retval kErrorNotFound      The message was not scheduled for indirect transmission to the neighbor.
      */
-    Error RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
+    Error RemoveMessageFromSleepyChild(Message &aMessage, CslNeighbor &aNeighbor);
 
     /**
-     * Removes all added messages for a specific child and frees message (with no indirect/direct tx).
+     * Removes all added messages for a specific neighbor and frees message (with no indirect/direct tx).
      *
-     * @param[in]  aChild  A reference to a child whose messages shall be removed.
+     * @param[in]  aNeighbor  A reference to a neighbor whose messages shall be removed.
      */
-    void ClearAllMessagesForSleepyChild(Child &aChild);
+    void ClearAllMessagesForSleepyChild(CslNeighbor &aNeighbor);
 
     /**
-     * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
+     * Finds the first queued message for a given sleepy neighbor that also satisfies the conditions of a given
      * `MessageChecker`.
      *
-     * The caller MUST ensure that @p aChild is sleepy.
+     * The caller MUST ensure that the neighbor indicated by @p aNeighborIndex is sleepy.
      *
-     * @param[in] aChild     The sleepy child to check.
-     * @param[in] aChecker   The predicate function to apply.
+     * @param[in] aChecker       The predicate function to apply.
+     * @param[in] aNeighborIndex The index of the sleepy neighbor to check.
      *
      * @returns A pointer to the matching queued message, or `nullptr` if none is found.
      */
-    Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker)
+    Message *FindQueuedMessageForSleepyChild(MessageChecker aChecker, uint16_t aNeighborIndex)
     {
-        return AsNonConst(AsConst(this)->FindQueuedMessageForSleepyChild(aChild, aChecker));
+        return AsNonConst(AsConst(this)->FindQueuedMessageForSleepyChild(aChecker, aNeighborIndex));
     }
 
     /**
-     * Finds the first queued message for a given sleepy child that also satisfies the conditions of a given
+     * Finds the first queued message for a given sleepy neighbor that also satisfies the conditions of a given
      * `MessageChecker`.
      *
-     * The caller MUST ensure that @p aChild is sleepy.
+     * The caller MUST ensure that the neighbor indicated by @p aNeighborIndex is sleepy.
      *
-     * @param[in] aChild     The sleepy child to check.
-     * @param[in] aChecker   The predicate function to apply.
+     * @param[in] aChecker       The predicate function to apply.
+     * @param[in] aNeighborIndex The index of the sleepy neighbor to check.
      *
      * @returns A pointer to the matching queued message, or `nullptr` if none is found.
      */
-    const Message *FindQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const;
+    const Message *FindQueuedMessageForSleepyChild(MessageChecker aChecker, uint16_t aNeighborIndex) const;
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
+#if OPENTHREAD_FTD
     /**
      * Indicates whether there is any queued message for a given sleepy child that also satisfies the conditions of a
      * given `MessageChecker`.
@@ -234,10 +236,7 @@ public:
      * @retval TRUE   There is a queued message satisfying @p aChecker for sleepy child @p aChild.
      * @retval FALSE  There is no queued message satisfying @p aChecker for sleepy child @p aChild.
      */
-    bool HasQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const
-    {
-        return (FindQueuedMessageForSleepyChild(aChild, aChecker) != nullptr);
-    }
+    bool HasQueuedMessageForSleepyChild(const Child &aChild, MessageChecker aChecker) const;
 
     /**
      * Sets whether to use the extended or short address for a child.
@@ -254,34 +253,39 @@ public:
      * @param[in]  aOldMode  The old device mode of the child.
      */
     void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
-
 #endif // OPENTHREAD_FTD
 
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     // Callbacks from `CslTxScheduler`
-    Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aCslNeighbor);
+    Error PrepareFrameForCslNeighbor(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aNeighbor);
     void  HandleSentFrameToCslNeighbor(const Mac::TxFrame &aFrame,
                                        const FrameContext &aContext,
                                        Error               aError,
-                                       CslNeighbor        &aCslNeighbor);
+                                       CslNeighbor        &aNeighbor);
 #endif
 
-#if OPENTHREAD_FTD
-    // Callbacks from `DataPollHandler`
-    Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
-    void  HandleFrameChangeDone(Child &aChild);
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    uint16_t GetCslNeighborIndex(const CslNeighbor &aNeighbor) const;
 
-    void     UpdateIndirectMessage(Child &aChild);
-    void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
-    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
+    // Callbacks from `DataPollHandler`
+    Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, CslNeighbor &aNeighbor);
+    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame,
+                                 const FrameContext &aContext,
+                                 Error               aError,
+                                 CslNeighbor        &aNeighbor);
+#if OPENTHREAD_FTD
+    void HandleFrameChangeDone(Child &aChild);
+#endif
+    void     UpdateIndirectMessage(CslNeighbor &aNeighbor, uint16_t aNeighborIndex);
+    void     RequestMessageUpdate(CslNeighbor &aNeighbor, uint16_t aNeighborIndex);
+    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, CslNeighbor &aNeighbor, Message &aMessage);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, CslNeighbor &aNeighbor, bool aAckRequest);
     void     ClearMessagesForRemovedChildren(void);
 
     static bool AcceptAnyMessage(const Message &aMessage);
     static bool AcceptSupervisionMessage(const Message &aMessage);
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
     bool mEnabled;
 #if OPENTHREAD_FTD
@@ -293,7 +297,7 @@ private:
 #endif
 };
 
-#endif // #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 /**
  * @}

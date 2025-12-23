@@ -90,12 +90,14 @@ void TimeTicker::HandleTimer(void)
         Get<NetworkData::Notifier>().HandleTimeTick();
     }
 #endif
+#endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     if (mReceivers & Mask(kChildSupervisor))
     {
         Get<ChildSupervisor>().HandleTimeTick();
     }
-#endif // OPENTHREAD_FTD
+#endif
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     if (mReceivers & Mask(kIp6FragmentReassembler))

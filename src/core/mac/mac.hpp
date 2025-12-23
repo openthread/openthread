@@ -93,7 +93,8 @@ constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of 
  */
 constexpr uint16_t kCslRequestAhead = OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US;
 
-constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
+constexpr uint16_t kMinCslIePeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
+constexpr uint16_t kMinECslIePeriod = OPENTHREAD_CONFIG_MAC_ECSL_MIN_PERIOD;
 
 constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTERVAL;
 constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
@@ -204,7 +205,7 @@ public:
      */
     void RequestDirectFrameTransmission(void);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * Requests an indirect data frame transmission.
      */
@@ -356,7 +357,7 @@ public:
      */
     void SetMaxFrameRetriesDirect(uint8_t aMaxFrameRetriesDirect) { mMaxFrameRetriesDirect = aMaxFrameRetriesDirect; }
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * Returns the maximum number of frame retries during indirect transmission.
      *
@@ -431,7 +432,7 @@ public:
      */
     bool IsEnergyScanInProgress(void) const { return IsActiveOrPending(kOperationEnergyScan); }
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * Indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
      *
@@ -571,14 +572,14 @@ public:
      *
      * @returns CSL channel.
      */
-    uint8_t GetCslChannel(void) const { return mCslChannel; }
+    uint8_t GetCslChannel(void) const { return mCsl.mChannel; }
 
     /**
      * Sets the CSL channel.
      *
      * @param[in]  aChannel  The CSL channel.
      */
-    void SetCslChannel(uint8_t aChannel);
+    void SetCslChannel(uint8_t aChannel) { SetCslChannel(mCsl, aChannel); }
 
     /**
      * Sets whether the MLE layer is capable of starting CSL.
@@ -586,14 +587,14 @@ public:
      * @retval TRUE   If MLE layer is capable of starting CSL.
      * @retval FALSE  If MLE layer is not capable of starting CSL.
      */
-    void SetCslCapable(bool aIsCslCapable);
+    void SetCslCapable(bool aIsCslCapable) { SetCslCapable(mCsl, aIsCslCapable); }
 
     /**
      * Gets the CSL period.
      *
      * @returns CSL period in units of 10 symbols.
      */
-    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+    uint16_t GetCslPeriod(void) const { return mCsl.mPeriod; }
 
     /**
      * Gets the CSL period in milliseconds.
@@ -610,7 +611,7 @@ public:
      *
      * @param[in]  aPeriod  The CSL period in 10 symbols.
      */
-    void SetCslPeriod(uint16_t aPeriod);
+    void SetCslPeriod(uint16_t aPeriod) { SetCslPeriod(mCsl, aPeriod); }
 
     /**
      * This method converts a given CSL period in units of 10 symbols to microseconds.
@@ -627,7 +628,7 @@ public:
      * @retval TRUE   If CSL is enabled.
      * @retval FALSE  If CSL is not enabled.
      */
-    bool IsCslEnabled(void) const { return mIsCslEnabled; }
+    bool IsCslEnabled(void) const { return mCsl.mIsEnabled; }
 
     /**
      * Returns parent CSL accuracy (clock accuracy and uncertainty).
@@ -667,6 +668,19 @@ public:
      */
     bool IsRadioFilterEnabled(void) const { return mLinks.GetSubMac().IsRadioFilterEnabled(); }
 #endif
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    uint8_t  GetECslChannel(void) const { return mECsl.mChannel; }
+    void     SetECslChannel(uint8_t aChannel) { SetCslChannel(mECsl, aChannel); }
+    void     SetECslCapable(bool aIsCapable) { SetCslCapable(mECsl, aIsCapable); }
+    bool     IsECslCapable(void) { return mECsl.mIsCapable; }
+    uint16_t GetECslPeriod(void) const { return mECsl.mPeriod; }
+    void     SetECslPeriod(uint16_t aPeriod) { SetCslPeriod(mECsl, aPeriod); }
+    bool     IsECslEnabled(void) const { return mECsl.mIsEnabled; }
+    Error    AddECslPeerAddress(const ExtAddress &aExtAddr) { return mLinks.AddECslPeerAddress(aExtAddr); }
+    Error    ClearECslPeerAddress(const ExtAddress &aExtAddr) { return mLinks.ClearECslPeerAddress(aExtAddr); }
+    void     ClearECslPeerAddresses(void) { mLinks.ClearECslPeerAddresses(); }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * Sets the region code.
@@ -756,7 +770,45 @@ public:
      * @retval FALSE  If listening for wake-up frames is not enabled.
      */
     bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
+
+    /**
+     * Add a wake-up identifier to wake-up identifier table.
+     *
+     * @param[in]  aWakeupId    The wake-up identifier to be added.
+     *
+     * @retval kErrorNone    Successfully added wake-up identifier to the wake-up identifier table.
+     * @retval kErrorNoBuf   No available entry in the wake-up identifier table.
+     */
+    Error AddWakeupId(WakeupId aWakeupId) { return mLinks.AddWakeupId(aWakeupId); }
+
+    /**
+     * Remove a wake-up identifier from the wake-up identifier table.
+     *
+     * @param[in]  aWakeupId    The wake-up identifier to be removed.
+     *
+     * @retval kErrorNone       Successfully removed the wake-up identifier from the wake-up identifier table.
+     * @retval kErrorNotFound   The wake-up identifier was not in wake-up identifier table.
+     */
+    Error RemoveWakeupId(WakeupId aWakeupId) { return mLinks.AddWakeupId(aWakeupId); }
+
+    /**
+     * Clear all wake-up identifiers from the wake-up identifier table.
+     *
+     */
+    void ClearWakeupIds(void) { mLinks.ClearWakeupIds(); }
+
+    // For debugging
+    typedef otWakeupFrameReceivedCallback
+         WakeupFrameReceivedCallback; ///< Callback to signal that the wake up frame is received
+    void SetWakeupFrameReceivedCallback(WakeupFrameReceivedCallback aCallback, void *aContext)
+    {
+        mWakeupFrameReceivedCallback.Set(aCallback, aContext);
+    }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    bool IsRamEnabled(void) const { return false; }
+#endif
 
     /**
      * Calculates the radio bus transfer time (in microseconds) for a given frame size based on `Radio::GetBusSpeed()`
@@ -770,6 +822,10 @@ public:
 
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
+    static constexpr uint16_t kWakeupIdTableSize = OPENTHREAD_CONFIG_WAKEUP_ID_TABLE_SZIE;
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    static constexpr uint16_t kECslListenWindowDuration = 4000; // In unit of microseconds.
+#endif
 
     enum Operation : uint8_t
     {
@@ -780,7 +836,7 @@ private:
         kOperationTransmitDataDirect,
         kOperationTransmitPoll,
         kOperationWaitingForData,
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
         kOperationTransmitDataIndirect,
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -813,6 +869,50 @@ private:
         uint32_t mTxIndirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT];
     };
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    struct Csl
+    {
+        explicit Csl(bool aIsEcsl)
+            : mIsEnabled(false)
+            , mIsCapable(false)
+            , mIsECsl(aIsEcsl)
+            , mChannel(0)
+            , mPeriod(0)
+        {
+        }
+
+        static constexpr uint16_t       kInfoStringSize = 100;
+        typedef String<kInfoStringSize> InfoString;
+
+        InfoString ToString(void) const
+        {
+            InfoString string;
+
+            string.Append("Enabled:%u, Capable:%u, IsECsl: %u, Ch:%u, Period:%u", mIsEnabled, mIsCapable, mIsECsl,
+                          mChannel, mPeriod);
+
+            return string;
+        }
+
+        bool     mIsEnabled : 1;
+        bool     mIsCapable : 1;
+        bool     mIsECsl : 1;
+        uint8_t  mChannel; // Value 0 indicates that CSL channel has not been specified by the upper layer.
+        uint16_t mPeriod;
+    };
+
+    void SetCslCapable(Csl &aCsl, bool aIsCslCapable);
+    void SetCslChannel(Csl &aCsl, uint8_t aChannel);
+    void SetCslPeriod(Csl &aCsl, uint16_t aPeriod);
+    void UpdateCslState(Csl &aCsl);
+    void UpdateCslParameters(Csl &aCsl);
+    void SetCslParams(bool              aIsECsl,
+                      uint16_t          aPeriod,
+                      uint8_t           aChannel,
+                      ShortAddress      aShortAddr,
+                      const ExtAddress &aExtAddr);
+#endif
 
     Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void  ProcessTransmitSecurity(TxFrame &aFrame);
@@ -850,12 +950,19 @@ private:
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    uint8_t GetCurWakeupChannel(void) const { return mWakeupChannel ? mWakeupChannel : mPanChannel; }
+#endif
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+#endif
+#if OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
+    void ProcessSca(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     void UpdateCslParameters(void);
@@ -901,23 +1008,25 @@ private:
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;
     uint8_t     mMaxFrameRetriesDirect;
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     uint8_t mMaxFrameRetriesIndirect;
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    bool mIsCslEnabled : 1;
-    bool mIsCslCapable : 1;
-    // When Mac::mCslChannel is 0, it indicates that CSL channel has not been specified by the upper layer.
-    uint8_t  mCslChannel;
-    uint16_t mCslPeriod;
+    Csl mCsl;
 #endif
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    Csl mECsl;
+#endif
+
     uint8_t mWakeupChannel;
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     uint32_t mWakeupListenInterval;
     uint32_t mWakeupListenDuration;
+
+    Callback<WakeupFrameReceivedCallback> mWakeupFrameReceivedCallback;
 #endif
     union
     {

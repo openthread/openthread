@@ -41,7 +41,7 @@
 
 namespace ot {
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
 #error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
@@ -100,7 +100,7 @@ public:
          */
         bool Matches(const Ip6::Address &aAddress) const { return (*this == aAddress); }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
         /**
          * Gets the MLR state of the IPv6 address entry.
          *
@@ -244,20 +244,6 @@ public:
 #endif
 
     /**
-     * Gets the child timeout.
-     *
-     * @returns The child timeout.
-     */
-    uint32_t GetTimeout(void) const { return mTimeout; }
-
-    /**
-     * Sets the child timeout.
-     *
-     * @param[in]  aTimeout  The child timeout.
-     */
-    void SetTimeout(uint32_t aTimeout) { mTimeout = aTimeout; }
-
-    /**
      * Gets the network data version.
      *
      * @returns The network data version.
@@ -270,71 +256,6 @@ public:
      * @param[in]  aVersion  The network data version.
      */
     void SetNetworkDataVersion(uint8_t aVersion) { mNetworkDataVersion = aVersion; }
-
-    /**
-     * Generates a new challenge value to use during a child attach.
-     */
-    void GenerateChallenge(void) { mAttachChallenge.GenerateRandom(); }
-
-    /**
-     * Gets the current challenge value used during attach.
-     *
-     * @returns The current challenge value.
-     */
-    const Mle::TxChallenge &GetChallenge(void) const { return mAttachChallenge; }
-
-    /**
-     * Clears the requested TLV list.
-     */
-    void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
-
-    /**
-     * Returns the requested TLV at index @p aIndex.
-     *
-     * @param[in]  aIndex  The index into the requested TLV list.
-     *
-     * @returns The requested TLV at index @p aIndex.
-     */
-    uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
-
-    /**
-     * Sets the requested TLV at index @p aIndex.
-     *
-     * @param[in]  aIndex  The index into the requested TLV list.
-     * @param[in]  aType   The TLV type.
-     */
-    void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
-
-    /**
-     * Returns the supervision interval (in seconds).
-     *
-     * @returns The supervision interval (in seconds).
-     */
-    uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
-
-    /**
-     * Sets the supervision interval.
-     *
-     * @param[in] aInterval  The supervision interval (in seconds).
-     */
-    void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
-
-    /**
-     * Increments the number of seconds since last supervision of the child.
-     */
-    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
-
-    /**
-     * Returns the number of seconds since last supervision of the child (last message to the child)
-     *
-     * @returns Number of seconds since last supervision of the child.
-     */
-    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
-
-    /**
-     * Resets the number of seconds since last supervision of the child to zero.
-     */
-    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
@@ -367,8 +288,6 @@ public:
 private:
     typedef BitSet<kNumIp6Addresses> ChildIp6AddressSet;
 
-    uint32_t mTimeout;
-
     Ip6::InterfaceIdentifier mMeshLocalIid;
     Ip6AddressArray          mIp6Addresses;
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
@@ -377,20 +296,11 @@ private:
 #endif
 
     uint8_t mNetworkDataVersion;
-
-    union
-    {
-        uint8_t          mRequestTlvs[kMaxRequestTlvs];
-        Mle::TxChallenge mAttachChallenge;
-    };
-
-    uint16_t mSupervisionInterval;
-    uint16_t mSecondsSinceSupervision;
 };
 
 DefineCoreType(otChildInfo, Child::Info);
 
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 } // namespace ot
 

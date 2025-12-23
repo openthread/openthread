@@ -296,4 +296,4 @@ void DataPollHandler::ResetTxAttempts(Child &aChild)
 
 } // namespace ot
 
-#endif // #if OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD

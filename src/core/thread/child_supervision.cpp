@@ -39,33 +39,33 @@ namespace ot {
 
 RegisterLogModule("ChildSupervsn");
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
 
-Child *ChildSupervisor::GetDestination(const Message &aMessage) const
+CslNeighbor *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child   *child = nullptr;
-    uint16_t childIndex;
+    CslNeighbor *cslNeighbor = nullptr;
+    uint16_t     cslNeighborIndex;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
-    IgnoreError(aMessage.Read(0, childIndex));
-    child = Get<ChildTable>().GetChildAtIndex(childIndex);
+    IgnoreError(aMessage.Read(0, cslNeighborIndex));
+    cslNeighbor = Get<NeighborTable>().GetCslNeighborAtIndex(cslNeighborIndex);
 
 exit:
-    return child;
+    return cslNeighbor;
 }
 
-void ChildSupervisor::SendMessage(Child &aChild)
+void ChildSupervisor::SendMessage(CslNeighbor &aNeighbor)
 {
     OwnedPtr<Message> messagePtr;
-    uint16_t          childIndex;
+    uint16_t          cslNeighborIndex;
 
-    VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
+    VerifyOrExit(aNeighbor.GetIndirectMessageCount() == 0);
 
     messagePtr.Reset(Get<MessagePool>().Allocate(Message::kTypeSupervision, sizeof(uint8_t)));
     VerifyOrExit(messagePtr != nullptr);
@@ -75,33 +75,56 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // the destination of the message to be later retrieved using
     // `ChildSupervisor::GetDestination(message)`.
 
-    childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    SuccessOrExit(messagePtr->Append(childIndex));
+    cslNeighborIndex = Get<NeighborTable>().GetCslNeighborIndex(aNeighbor);
+    SuccessOrExit(messagePtr->Append(cslNeighborIndex));
 
     Get<MeshForwarder>().SendMessage(messagePtr.PassOwnership());
 
-    LogInfo("Sending supervision message to child 0x%04x", aChild.GetRloc16());
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    {
+        char         buf[100];
+        StringWriter writer(buf, sizeof(buf));
+
+        writer.Append("Sending supervision message to ");
+
+#if OPENTHREAD_FTD
+        if (Get<NeighborTable>().IsChild(aNeighbor))
+        {
+            writer.Append("child 0x%04x", aNeighbor.GetRloc16());
+        }
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+        if (Get<NeighborTable>().IsPeer(aNeighbor))
+        {
+            writer.Append("peer %s", aNeighbor.GetExtAddress().ToString().AsCString());
+        }
+#endif
+
+        LogInfo("%s", buf);
+    }
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 exit:
     return;
 }
 
-void ChildSupervisor::UpdateOnSend(Child &aChild) { aChild.ResetSecondsSinceLastSupervision(); }
+void ChildSupervisor::UpdateOnSend(CslNeighbor &aNeighbor) { aNeighbor.ResetSecondsSinceLastSupervision(); }
 
 void ChildSupervisor::HandleTimeTick(void)
 {
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    for (CslNeighbor &neighbor : Get<NeighborTable>().IterateCslNeighbor(Neighbor::kInStateValid))
     {
-        if (child.IsRxOnWhenIdle() || (child.GetSupervisionInterval() == 0))
+        if (neighbor.IsRxOnWhenIdle() || (neighbor.GetSupervisionInterval() == 0))
         {
             continue;
         }
 
-        child.IncrementSecondsSinceLastSupervision();
+        neighbor.IncrementSecondsSinceLastSupervision();
 
-        if (child.GetSecondsSinceLastSupervision() >= child.GetSupervisionInterval())
+        if (neighbor.GetSecondsSinceLastSupervision() >= neighbor.GetSupervisionInterval())
         {
-            SendMessage(child);
+            SendMessage(neighbor);
         }
     }
 }
@@ -112,7 +135,15 @@ void ChildSupervisor::CheckState(void)
     // enabled, and there is at least one "valid" child in the
     // child table.
 
-    bool shouldRun = (!Get<Mle::Mle>().IsDisabled() && Get<ChildTable>().HasChildren(Child::kInStateValid));
+    bool shouldRun = false;
+
+#if OPENTHREAD_FTD
+    shouldRun = (!Get<Mle::Mle>().IsDisabled() && Get<ChildTable>().HasChildren(Child::kInStateValid));
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    shouldRun = shouldRun | Get<PeerTable>().HasPeers(Neighbor::kInStateValid);
+#endif
 
     if (shouldRun && !Get<TimeTicker>().IsReceiverRegistered(TimeTicker::kChildSupervisor))
     {
@@ -135,7 +166,15 @@ void ChildSupervisor::HandleNotifierEvents(Events aEvents)
     }
 }
 
-#endif // #if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+void ChildSupervisor::HandleP2pEvent(otP2pEvent aEvent)
+{
+    OT_UNUSED_VARIABLE(aEvent);
+
+    CheckState();
+}
+#endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)

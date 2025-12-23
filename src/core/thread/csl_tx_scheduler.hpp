@@ -98,13 +98,43 @@ public:
         uint64_t GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
         void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
+#if OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
+        bool IsECsl(void) const { return mIsECsl; }
+        void SetECsl(bool aIsECsl) { mIsECsl = aIsECsl; }
+
+        uint16_t GetRamPhase(void) const { return mRamPhase; }
+        void     SetRamPhase(uint16_t aRamPhase) { mRamPhase = aRamPhase; }
+
+        uint8_t GetNumBits(void) const { return mNumBits; }
+        void    SetNumBits(uint8_t aNumBits) { mNumBits = aNumBits; }
+
+        uint32_t GetRamBits(void) const { return mRamBits; }
+        void     SetRamBits(uint32_t aRamBits) { mRamBits = aRamBits; }
+
+        uint32_t GetCslPhaseUs(void) const
+        {
+            return mIsECsl ? (mRamPhase + mCslPhase * kECslSlotSize) : mCslPhase * kUsPerTenSymbols;
+        }
+
+        uint32_t GetCslPeriodUs(void) const { return mCslPeriod * (mIsECsl ? kECslSlotSize : kUsPerTenSymbols); }
+#else
+        uint32_t GetCslPhaseUs(void) const { return mCslPhase * kUsPerTenSymbols; }
+        uint32_t GetCslPeriodUs(void) const { return mCslPeriod * kUsPerTenSymbols; }
+#endif
+
     private:
-        uint8_t  mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
-        bool     mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
-        uint8_t  mCslChannel;          ///< The channel the device will listen on.
-        uint32_t mCslTimeout;          ///< The sync timeout, in seconds.
-        uint16_t mCslPeriod; ///< CSL sampled listening period between consecutive channel samples in units of 10
-                             ///< symbols (160 microseconds).
+        uint8_t mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
+        bool    mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
+#if OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
+        bool     mIsECsl : 1; ///< Indicates whether or not the neighbor is using ECSL.
+        uint16_t mRamPhase;
+        uint32_t mRamBits;
+        uint8_t  mNumBits;
+#endif
+        uint8_t  mCslChannel; ///< The channel the device will listen on.
+        uint32_t mCslTimeout; ///< The sync timeout, in seconds.
+        uint16_t mCslPeriod;  ///< CSL sampled listening period between consecutive channel samples in units of 10
+                              ///< symbols (160 microseconds).
 
         /**
          * The time in units of 10 symbols from the first symbol of the frame

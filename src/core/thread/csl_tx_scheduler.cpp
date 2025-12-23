@@ -74,16 +74,21 @@ void CslTxScheduler::Update(void)
 
 void CslTxScheduler::Clear(void)
 {
-#if OPENTHREAD_FTD
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    for (CslNeighbor &neighbor : Get<NeighborTable>().IterateCslNeighbor(Neighbor::kInStateAnyExceptInvalid))
     {
-        child.ResetCslTxAttempts();
-        child.SetCslSynchronized(false);
-        child.SetCslChannel(0);
-        child.SetCslTimeout(0);
-        child.SetCslPeriod(0);
-        child.SetCslPhase(0);
-        child.SetCslLastHeard(TimeMilli(0));
+        neighbor.ResetCslTxAttempts();
+        neighbor.SetCslSynchronized(false);
+        neighbor.SetCslChannel(0);
+        neighbor.SetCslTimeout(0);
+        neighbor.SetCslPeriod(0);
+        neighbor.SetCslPhase(0);
+        neighbor.SetCslLastHeard(TimeMilli(0));
+#if OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE
+        neighbor.SetECsl(false);
+        neighbor.SetNumBits(0);
+        neighbor.SetRamPhase(0);
+#endif
     }
 #endif
 
@@ -102,23 +107,23 @@ void CslTxScheduler::RescheduleCslTx(void)
     uint32_t     minDelayTime = Time::kMaxDuration;
     CslNeighbor *bestNeighbor = nullptr;
 
-#if OPENTHREAD_FTD
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    for (CslNeighbor &neighbor : Get<NeighborTable>().IterateCslNeighbor(Neighbor::kInStateAnyExceptInvalid))
     {
         uint32_t delay;
         uint32_t cslTxDelay;
 
-        if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0)
+        if (!neighbor.IsCslSynchronized() || neighbor.GetIndirectMessageCount() == 0)
         {
             continue;
         }
 
-        delay = GetNextCslTransmissionDelay(child, cslTxDelay, mCslFrameRequestAheadUs);
+        delay = GetNextCslTransmissionDelay(neighbor, cslTxDelay, mCslFrameRequestAheadUs);
 
         if (delay < minDelayTime)
         {
             minDelayTime = delay;
-            bestNeighbor = &child;
+            bestNeighbor = &neighbor;
         }
     }
 #endif
@@ -136,10 +141,10 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const CslNeighbor &aCslNeig
                                                      uint32_t           aAheadUs) const
 {
     uint64_t radioNow   = Get<Radio>().GetNow();
-    uint32_t periodInUs = aCslNeighbor.GetCslPeriod() * kUsPerTenSymbols;
+    uint32_t periodInUs = aCslNeighbor.GetCslPeriodUs();
 
     /* see CslTxScheduler::NeighborInfo::mCslPhase */
-    uint64_t firstTxWindow = aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhase() * kUsPerTenSymbols;
+    uint64_t firstTxWindow = aCslNeighbor.GetLastRxTimestamp() + aCslNeighbor.GetCslPhaseUs();
     uint64_t nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
     while (nextTxWindow < radioNow + aAheadUs)

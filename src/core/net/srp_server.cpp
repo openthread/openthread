@@ -268,6 +268,47 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+void Server::HandleP2pEvents(otP2pEvent aEvent)
+{
+    VerifyOrExit(mFastStartMode);
+
+    if (aEvent == OT_P2P_EVENT_LINKED)
+    {
+        if (Get<PeerTable>().GetNumPeers(Peer::kInStateValid) > 0)
+        {
+            LogInfo("FastStartMode - Start SRP server for P2P links");
+            Enable();
+        }
+    }
+    else if (aEvent == OT_P2P_EVENT_UNLINKED)
+    {
+        if (Get<PeerTable>().GetNumPeers(Peer::kInStateValid) == 0)
+        {
+            LogInfo("FastStartMode - Stop SRP server for P2P links");
+            SrpServerDisable();
+        }
+    }
+
+exit:
+    return;
+}
+#endif
+
+void Server::SrpServerDisable(void)
+{
+    bool hasNoP2pLinks = false;
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    hasNoP2pLinks = (Get<PeerTable>().GetNumPeers(Peer::kInStateValid) == 0);
+#endif
+
+    if (NetDataContainsOtherSrpServers() && hasNoP2pLinks)
+    {
+        Disable();
+    }
+}
+
 void Server::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(mFastStartMode);
@@ -290,7 +331,7 @@ void Server::HandleNotifierEvents(Events aEvents)
         if (NetDataContainsOtherSrpServers())
         {
             LogInfo("FastStartMode - New SRP server entry in NetData");
-            Disable();
+            SrpServerDisable();
         }
     }
 
@@ -782,6 +823,13 @@ void Server::Start(void)
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
     Get<AdvertisingProxy>().HandleServerStateChange();
+#endif
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE
+    if (mFastStartMode)
+    {
+        Get<Mle::Mle>().HandleServerStateChange();
+    }
 #endif
 
 exit:

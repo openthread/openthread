@@ -71,6 +71,7 @@ set(COMMON_SOURCES
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
+    api/p2p_api.cpp
     api/ping_sender_api.cpp
     api/radio_stats_api.cpp
     api/random_crypto_api.cpp
@@ -143,6 +144,7 @@ set(COMMON_SOURCES
     mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
+    mac/radio_sample_scheduler.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
@@ -224,6 +226,7 @@ set(COMMON_SOURCES
     thread/mesh_forwarder_ftd.cpp
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
+    thread/mle_peer.cpp
     thread/mle_router.cpp
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
@@ -242,6 +245,8 @@ set(COMMON_SOURCES
     thread/network_diagnostic.cpp
     thread/network_diagnostic_tlvs.cpp
     thread/panid_query_server.cpp
+    thread/peer.cpp
+    thread/peer_table.cpp
     thread/radio_selector.cpp
     thread/router.cpp
     thread/router_table.cpp
@@ -295,6 +300,7 @@ set(RADIO_COMMON_SOURCES
     mac/mac_frame.cpp
     mac/mac_header_ie.cpp
     mac/mac_types.cpp
+    mac/radio_sample_scheduler.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp

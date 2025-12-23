@@ -68,7 +68,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreferredLeaderPartitionId(0)
 #endif
     , mAdvertiseTrickleTimer(aInstance, MleRouter::HandleAdvertiseTrickleTimer)
-    , mChildTable(aInstance)
     , mRouterTable(aInstance)
     , mRouterRoleRestorer(aInstance)
 {

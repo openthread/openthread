@@ -247,7 +247,15 @@ exit:
     return error;
 }
 
-void Message::Free(void) { GetMessagePool()->Free(this); }
+void Message::Free(void)
+{
+    // `TxCallback` is cleared once it is invoked. If the message is
+    // freed before we know the TX outcome, it's treated as a dropped
+    // message, signaling `kErrorDrop`.
+
+    InvokeTxCallback(kErrorDrop);
+    Get<MessagePool>().Free(this);
+}
 
 Message *Message::GetNext(void) const
 {
@@ -373,6 +381,23 @@ const char *Message::PriorityToString(Priority aPriority)
     };
 
     return kPriorityStrings[aPriority];
+}
+
+void Message::RegisterTxCallback(TxCallback aCallback, void *aContext)
+{
+    GetMetadata().mTxCallback = aCallback;
+    GetMetadata().mTxContext  = aContext;
+}
+
+void Message::InvokeTxCallback(Error aError)
+{
+    TxCallback callback = GetMetadata().mTxCallback;
+
+    if (callback != nullptr)
+    {
+        GetMetadata().mTxCallback = nullptr;
+        callback(this, aError, GetMetadata().mTxContext);
+    }
 }
 
 Error Message::AppendBytes(const void *aBuf, uint16_t aLength)

@@ -88,6 +88,7 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
+- [p2p](#p2p-event-enable)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -2985,6 +2986,61 @@ Done
 
 nexthop 0x8001
 0x2000 cost:3
+Done
+```
+
+### p2p event enable
+
+Enables the cli to show the P2P link event.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE | OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` are required.
+
+```bash
+> p2p event enable
+Done
+```
+
+### p2p event enable
+
+Disables the cli from showing the P2P link event.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE | OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` are required.
+
+```bash
+> p2p event disable
+Done
+```
+
+### p2p link -e \<extaddress\>
+
+Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+
+```bash
+> p2p link -e dead00beef00cafe
+Done
+```
+
+### p2p link -i \<wakeupid\>
+
+Wakes up the peer identified by the wake-up identifier and establishes a peer-to-peer link with the peer.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
+
+```bash
+> p2p link -i 0xdeadbeefcafe
+Done
+```
+
+### p2p unlink \<extaddress\>
+
+Tears down the peer-to-peer link identified by the extended address.
+
+`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE | OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` are required.
+
+```bash
+> p2p unlink dead00beef00cafe
 Done
 ```
 

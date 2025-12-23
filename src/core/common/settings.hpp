@@ -72,7 +72,7 @@ protected:
         kActionSave,
         kActionResave,
         kActionDelete,
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
         kActionAdd,
         kActionRemove,
         kActionDeleteAll,
@@ -120,12 +120,35 @@ public:
         kKeyBrOnLinkPrefixes  = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
         kKeyBorderAgentId     = OT_SETTINGS_KEY_BORDER_AGENT_ID,
         kKeyTcatCommrCert     = OT_SETTINGS_KEY_TCAT_COMMR_CERT,
+        kKeyMacFilterEntry    = OT_SETTINGS_KEY_MAC_FILTER_ENTRY,
+        kKeyMacFilterConfig   = OT_SETTINGS_KEY_MAC_FILTER_CONFIG,
     };
 
     static constexpr Key kLastKey = kKeyTcatCommrCert; ///< The last (numerically) enumerator value in `Key`.
 
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with vendor reserved keys");
+
+    OT_TOOL_PACKED_BEGIN
+    class MacFilterEntry
+    {
+        friend class Settings;
+
+    public:
+        bool            mFiltered;   // Indicates whether or not this entry is filtered (allowlist/denylist modes).
+        int8_t          mRssIn;      // The RssIn value for this entry or `kFixedRssDisabled`.
+        Mac::ExtAddress mExtAddress; // IEEE 802.15.4 Extended Address.
+    } OT_TOOL_PACKED_END;
+
+    OT_TOOL_PACKED_BEGIN
+    class MacFilterConfig
+    {
+        friend class Settings;
+
+    public:
+        uint8_t mMode;         // Mac filter mode.
+        int8_t  mDefaultRssIn; // Default RssIn value;
+    } OT_TOOL_PACKED_END;
 
     /**
      * Represents the device's own network information for settings storage.
@@ -368,7 +391,7 @@ public:
         uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * Represents the child information for settings storage.
      */
@@ -468,7 +491,7 @@ public:
         uint8_t         mMode;       ///< The MLE device mode
         uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     /**
@@ -943,7 +966,14 @@ public:
      */
     template <typename EntryType> Error Delete(void) { return DeleteEntry(EntryType::kKey); }
 
-#if OPENTHREAD_FTD
+    Error AddMacFilterEntry(const MacFilterEntry &aMacFilterEntry);
+    Error DeleteAllMacFilterEntry(void);
+    Error ReadMacFilterEntry(uint16_t &aIterator, MacFilterEntry &aMacFilterEntry);
+    Error DeleteMacFilterConfig(void);
+    Error WriteMacFilterConfig(const MacFilterConfig &aMacFilterConfig);
+    Error ReadMacFilterConfig(MacFilterConfig &aMacFilterConfig);
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * Adds a Child Info entry to settings.
      *
@@ -1078,7 +1108,7 @@ public:
         uint16_t  mIndex;
         bool      mIsDone;
     };
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
@@ -1127,7 +1157,7 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 private:
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     class ChildInfoIteratorBuilder : public InstanceLocator
     {
     public:

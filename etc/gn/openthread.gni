@@ -240,6 +240,9 @@ if (openthread_enable_core_config_args) {
 
     # Enable radio coexistence
     openthread_config_coexistence_enable = false
+
+    # Enable peer to peer link
+    openthread_config_peer_to_peer_enable = false
   }
 }
 

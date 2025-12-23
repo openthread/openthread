@@ -48,6 +48,7 @@
 namespace ot {
 namespace Mac {
 
+RegisterLogModule("MacFrame");
 void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 {
     uint16_t     fcf;
@@ -59,7 +60,11 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
     fcf |= DetermineFcfAddrType(mAddrs.mSource, kFcfSrcAddrShift);
     fcf |= DetermineFcfAddrType(mAddrs.mDestination, kFcfDstAddrShift);
 
-    if (!mAddrs.mDestination.IsNone() && !mAddrs.mDestination.IsBroadcast() && (mType != kTypeAck))
+    if (!mAddrs.mDestination.IsNone() && !mAddrs.mDestination.IsBroadcast() && (mType != kTypeAck)
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        && (!mIsWakeupFrame)
+#endif
+    )
     {
         fcf |= kFcfAckRequest;
     }
@@ -181,6 +186,13 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     fcf |= (mAppendCslIe ? kFcfIePresent : 0);
 #endif
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    fcf |= (mAppendScaIe ? kFcfIePresent : 0);
+#endif
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    fcf |= (mAppendRendezvousTimeIe ? kFcfIePresent : 0);
+    fcf |= (mAppendConnectionIe ? kFcfIePresent : 0);
+#endif
 #endif
 
     builder.Init(aTxFrame.mPsdu, aTxFrame.GetMtu());
@@ -236,6 +248,30 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
     }
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE
+    if (mAppendScaIe)
+    {
+        builder.Append<HeaderIe>()->Init(ScaIe::kHeaderIeId, sizeof(ScaIe));
+        builder.Append<ScaIe>()->Init();
+        aTxFrame.SetScaIePresent(true);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    if (mAppendRendezvousTimeIe)
+    {
+        builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
+        builder.Append<RendezvousTimeIe>();
+    }
+
+    if (mAppendConnectionIe)
+    {
+        builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe) + mWakeupIdLength);
+        builder.Append<ConnectionIe>()->Init();
+        builder.AppendLength(mWakeupIdLength);
+    }
+#endif
+
     if ((fcf & kFcfIePresent) && ((mType == kTypeMacCmd) || !mEmptyPayload))
     {
         builder.Append<HeaderIe>()->Init(Termination2Ie::kHeaderIeId, Termination2Ie::kIeContentSize);
@@ -283,15 +319,16 @@ exit:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 bool Frame::IsWakeupFrame(void) const
 {
-    const uint16_t fcf    = GetFrameControlField();
-    bool           result = false;
-    uint8_t        keyIdMode;
-    uint8_t        firstIeIndex;
-    Address        srcAddress;
+    const uint16_t      fcf    = GetFrameControlField();
+    bool                result = false;
+    uint8_t             keyIdMode;
+    uint8_t             firstIeIndex;
+    Address             srcAddress;
+    const ConnectionIe *connectionIe;
 
     // Wake-up frame is a Multipurpose frame without Ack Request...
-    VerifyOrExit((fcf & kFcfFrameTypeMask) == kTypeMultipurpose);
-    VerifyOrExit((fcf & kMpFcfAckRequest) == 0);
+    VerifyOrExit((fcf & kFcfFrameTypeMask) == kTypeData);
+    VerifyOrExit((fcf & kFcfAckRequest) == 0);
 
     // ... with extended source address...
     SuccessOrExit(GetSrcAddr(srcAddress));
@@ -303,12 +340,14 @@ bool Frame::IsWakeupFrame(void) const
 
     // ... that has Rendezvous Time IE and Connection IE...
     VerifyOrExit(GetRendezvousTimeIe() != nullptr);
-    VerifyOrExit(GetConnectionIe() != nullptr);
+
+    connectionIe = GetConnectionIe();
+    VerifyOrExit(connectionIe != nullptr);
 
     // ... but no other IEs nor payload.
     firstIeIndex = FindHeaderIeIndex();
     VerifyOrExit(mPsdu + firstIeIndex + sizeof(HeaderIe) + RendezvousTimeIe::kIeContentSize + sizeof(HeaderIe) +
-                     ConnectionIe::kIeContentSize ==
+                     connectionIe->GetHeaderIe()->GetLength() + sizeof(HeaderIe) ==
                  GetFooter());
 
     result = true;
@@ -1211,6 +1250,37 @@ exit:
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_ECSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+void Frame::SetScaIe(uint16_t aPhase, uint8_t aNumBits, uint32_t aRamBits, uint16_t aECslPhase, uint16_t aECslPeriod)
+{
+    ScaIe *sca = GetScaIe();
+
+    VerifyOrExit(sca != nullptr);
+
+    sca->SetRamPhase(aPhase);
+    sca->SetNumBits(aNumBits);
+    sca->SetRamBits(aRamBits);
+    sca->SetPeriod(aECslPeriod);
+    sca->SetPhase(aECslPhase);
+
+exit:
+    return;
+}
+
+const ScaIe *Frame::GetScaIe(void) const
+{
+    const uint8_t *cur;
+    const ScaIe   *scaIe = nullptr;
+
+    cur = GetHeaderIe(ScaIe::kHeaderIeId);
+    VerifyOrExit(cur != nullptr);
+    scaIe = reinterpret_cast<const ScaIe *>(cur + sizeof(HeaderIe));
+
+exit:
+    return scaIe;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
 {
@@ -1469,26 +1539,38 @@ exit:
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource)
+Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource)
 {
-    Error        error = kErrorNone;
+    Error        error          = kErrorNone;
+    uint8_t      wakeupIdLength = 0;
     uint16_t     fcf;
     uint8_t      secCtl;
     FrameBuilder builder;
+    Address      dest;
 
     fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
           kMpFcfIePresent;
 
-    VerifyOrExit(!aDest.IsNone() && !aSource.IsNone(), error = kErrorInvalidArgs);
+    VerifyOrExit(aWakeupRequest.IsValid() && !aSource.IsNone(), error = kErrorInvalidArgs);
 
-    fcf |= DetermineFcfAddrType(aDest, kMpFcfDstAddrShift);
+    if (aWakeupRequest.IsWakeupById() || aWakeupRequest.IsWakeupByGroupId())
+    {
+        wakeupIdLength = GetWakeupIdLength(aWakeupRequest.GetWakeupId());
+        dest.SetShort(OT_RADIO_BROADCAST_SHORT_ADDR);
+    }
+    else
+    {
+        dest.SetExtended(aWakeupRequest.GetExtAddress());
+    }
+
+    fcf |= DetermineFcfAddrType(dest, kMpFcfDstAddrShift);
     fcf |= DetermineFcfAddrType(aSource, kMpFcfSrcAddrShift);
 
     builder.Init(mPsdu, GetMtu());
 
     IgnoreError(builder.AppendLittleEndianUint16(fcf));
     IgnoreError(builder.AppendLittleEndianUint16(aPanId));
-    IgnoreError(builder.AppendMacAddress(aDest));
+    IgnoreError(builder.AppendMacAddress(dest));
     IgnoreError(builder.AppendMacAddress(aSource));
 
     secCtl = kKeyIdMode2 | kSecurityEncMic32;
@@ -1497,9 +1579,9 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
 
     builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
     builder.Append<RendezvousTimeIe>();
-
-    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe));
+    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe) + wakeupIdLength);
     builder.Append<ConnectionIe>()->Init();
+    builder.AppendLength(wakeupIdLength);
 
     builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
 

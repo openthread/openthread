@@ -530,4 +530,70 @@ otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterva
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
 }
+
+otError otLinkAddWakeupId(otInstance *aInstance, otWakeupId aWakeupId)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().AddWakeupId(aWakeupId);
+}
+
+otError otLinkRemoveWakeupId(otInstance *aInstance, otWakeupId aWakeupId)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().RemoveWakeupId(aWakeupId);
+}
+
+void otLinkClearWakeupIds(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Mac>().ClearWakeupIds(); }
+
+void otLinkSetWakeupFrameReceivedCallback(otInstance                   *aInstance,
+                                          otWakeupFrameReceivedCallback aCallback,
+                                          void                         *aContext)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupFrameReceivedCallback(aCallback, aContext);
+}
+
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+uint8_t otLinkGetEnhancedCslChannel(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetECslChannel();
+}
+
+otError otLinkSetEnhancedCslChannel(otInstance *aInstance, uint8_t aChannel)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = kErrorInvalidArgs);
+
+    AsCoreType(aInstance).Get<Mac::Mac>().SetECslChannel(aChannel);
+
+exit:
+    return error;
+}
+
+uint32_t otLinkGetEnhancedCslPeriod(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetECslPeriod() * kECslSlotSize;
+}
+
+otError otLinkSetEnhancedCslPeriod(otInstance *aInstance, uint32_t aPeriod)
+{
+    Error    error = kErrorNone;
+    uint16_t periodInSlotUnit;
+
+    if (aPeriod == 0)
+    {
+        periodInSlotUnit = 0;
+    }
+    else
+    {
+        VerifyOrExit((aPeriod % kECslSlotSize) == 0, error = kErrorInvalidArgs);
+        periodInSlotUnit = ClampToUint16(aPeriod / kECslSlotSize);
+        VerifyOrExit(periodInSlotUnit >= ot::Mac::kMinECslIePeriod, error = kErrorInvalidArgs);
+    }
+
+    AsCoreType(aInstance).Get<Mac::Mac>().SetECslPeriod(periodInSlotUnit);
+
+exit:
+    return error;
+}
+#endif

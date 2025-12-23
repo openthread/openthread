@@ -178,6 +178,9 @@ public:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         mTxFrame802154.SetCslIePresent(false);
 #endif
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+        mTxFrame802154.SetScaIePresent(false);
+#endif
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTxFrameTrel.SetLength(0);
@@ -480,6 +483,56 @@ public:
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    /**
+     * Sets ECSL parameters in all radios.
+     *
+     * @param[in]  aDuration  The ECSL listen window duration in microseconds.
+     * @param[in]  aPeriod    The ECSL period in 1250 microseconds.
+     * @param[in]  aChannel   The ECSL channel.
+     */
+    void SetECslParams(uint16_t aDuration, uint16_t aPeriod, uint8_t aChannel)
+    {
+        OT_UNUSED_VARIABLE(aDuration);
+        OT_UNUSED_VARIABLE(aPeriod);
+        OT_UNUSED_VARIABLE(aChannel);
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.SetECslParams(aDuration, aPeriod, aChannel);
+#endif
+    }
+
+    Error AddECslPeerAddress(const ExtAddress &aExtAddr)
+    {
+        OT_UNUSED_VARIABLE(aExtAddr);
+
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.AddECslPeerAddress(aExtAddr);
+#else
+            kErrorNotImplemented;
+#endif
+    }
+
+    Error ClearECslPeerAddress(const ExtAddress &aExtAddr)
+    {
+        OT_UNUSED_VARIABLE(aExtAddr);
+
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.ClearECslPeerAddress(aExtAddr);
+#else
+            kErrorNotImplemented;
+#endif
+    }
+
+    void ClearECslPeerAddresses(void)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.ClearECslPeerAddresses();
+#endif
+    }
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
      * Configures wake-up listening parameters in all radios.
@@ -497,6 +550,37 @@ public:
         OT_UNUSED_VARIABLE(aChannel);
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         mSubMac.UpdateWakeupListening(aEnable, aInterval, aDuration, aChannel);
+#endif
+    }
+
+    Error AddWakeupId(WakeupId aWakeupId)
+    {
+        OT_UNUSED_VARIABLE(aWakeupId);
+
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.AddWakeupId(aWakeupId);
+#else
+            kErrorNotImplemented;
+#endif
+    }
+
+    Error RemoveWakeupId(WakeupId aWakeupId)
+    {
+        OT_UNUSED_VARIABLE(aWakeupId);
+
+        return
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+            mSubMac.RemoveWakeupId(aWakeupId);
+#else
+            kErrorNotImplemented;
+#endif
+    }
+
+    void ClearWakeupIds(void)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        mSubMac.ClearWakeupIds();
 #endif
     }
 #endif

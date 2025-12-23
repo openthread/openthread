@@ -59,6 +59,7 @@
 #include <openthread/trel.h>
 #include <openthread/verhoeff_checksum.h>
 #include <openthread/platform/misc.h>
+#include <openthread/provisional/link.h>
 
 #include "common/new.hpp"
 #include "common/num_utils.hpp"
@@ -991,7 +992,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         };
         static const uint8_t     kNat64CounterTableHeaderColumns[] = {15, 25, 25};
         static const char *const kNat64CounterTableSubHeader[]     = {
-                "Protocol", "Pkts", "Bytes", "Pkts", "Bytes",
+            "Protocol", "Pkts", "Bytes", "Pkts", "Bytes",
         };
         static const uint8_t kNat64CounterTableSubHeaderColumns[] = {
             15, 10, 14, 10, 14,
@@ -2655,6 +2656,69 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
     else if (aArgs[0] == "timeout")
     {
         error = ProcessSet(aArgs + 1, otLinkSetCslTimeout);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+template <> otError Interpreter::Process<Cmd("ecsl")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli ecsl
+     * @code
+     * ecsl
+     * Channel: 11
+     * Period: 160000us
+     * Timeout: 1000s
+     * Done
+     * @endcode
+     * @par
+     * Gets the Enhanced CSL configuration.
+     * @sa otLinkGetEnhancedCslChannel
+     * @sa otLinkGetEnhancedCslPeriod
+     * @sa otLinkGetEnhancedCslPeriod
+     * @sa otLinkGetEnhancedCslTimeout
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("channel: %u", otLinkGetEnhancedCslChannel(GetInstancePtr()));
+        OutputLine("period: %luus", ToUlong(otLinkGetEnhancedCslPeriod(GetInstancePtr())));
+    }
+    /**
+     * @cli ecsl channel
+     * @code
+     * ecsl channel 20
+     * Done
+     * @endcode
+     * @cparam ecsl channel @ca{channel}
+     * @par api_copy
+     * #otLinkSetEnhancedCslChannel
+     */
+    else if (aArgs[0] == "channel")
+    {
+        error = ProcessSet(aArgs + 1, otLinkSetEnhancedCslChannel);
+    }
+    /**
+     * @cli ecsl period
+     * @code
+     * ecsl period 3000000
+     * Done
+     * @endcode
+     * @cparam ecsl period @ca{period}
+     * @par api_copy
+     * #otLinkSetEnhancedCslPeriod
+     */
+    else if (aArgs[0] == "period")
+    {
+        error = ProcessSet(aArgs + 1, otLinkSetEnhancedCslPeriod);
     }
     else
     {
@@ -6993,6 +7057,43 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
 template <> otError Interpreter::Process<Cmd("commissioner")>(Arg aArgs[]) { return mCommissioner.Process(aArgs); }
 #endif
 
+#if OPENTHREAD_CONFIG_JLINK_CLI_ENABLE
+template <> otError Interpreter::Process<Cmd("jlink")>(Arg aArgs[])
+{
+    otError     error        = OT_ERROR_NONE;
+    uint32_t    startAddress = 0x20000000;
+    uint32_t    endAddress   = 0x20040000;
+    const char  acID[]       = "SEGGER RTT";
+    bool        found        = false;
+    const char *id;
+
+    if (!aArgs[0].IsEmpty())
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(startAddress));
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(endAddress));
+    }
+
+    for (uint32_t addr = startAddress; addr < endAddress; addr++)
+    {
+        id = reinterpret_cast<const char *>(addr);
+
+        if (memcmp(id, acID, 10) == 0)
+        {
+            found = true;
+            OutputLine("Found RTT acID, Address=0x%08lx", ToUlong(addr));
+        }
+    }
+
+    if (!found)
+    {
+        OutputLine("Not Found RTT Address");
+    }
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 template <> otError Interpreter::Process<Cmd("joiner")>(Arg aArgs[]) { return mJoiner.Process(aArgs); }
 #endif
@@ -7952,6 +8053,122 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    if (aArgs[0] == "link")
+    {
+        otP2pRequest p2pRequest;
+
+        if (aArgs[1] == "-i")
+        {
+            /**
+             * @cli link -i 0xdeadbeefcafe
+             * @code
+             * link -i 0xdeadbeefcafe
+             * Done
+             * @endcode
+             * @cparam link -i @ca{wakeup-identifier}
+             * @par
+             * Wakes a Wake-up Listener identified by the wake-up identifier and establishes a peer-to-peer link with
+             * the WL.
+             */
+            SuccessOrExit(error = aArgs[2].ParseAsUint64(p2pRequest.mWakeupRequest.mShared.mWakeupId));
+            VerifyOrExit(p2pRequest.mWakeupRequest.mShared.mWakeupId != 0, error = OT_ERROR_INVALID_ARGS);
+            p2pRequest.mWakeupRequest.mType = OT_WAKEUP_TYPE_IDENTIFIER;
+        }
+        else if (aArgs[1] == "-e")
+        {
+            /**
+             * @cli link -e 1ece0a6c4653a7c1
+             * @code
+             * link -e 1ece0a6c4653a7c1
+             * Done
+             * @endcode
+             * @cparam link -e @ca{wakeup-identifier}
+             * @par
+             * Wakes a Wake-up Listener identified by the Extended Address and establishes a peer-to-peer link with
+             * the WL.
+             */
+            SuccessOrExit(error = aArgs[2].ParseAsHexString(p2pRequest.mWakeupRequest.mShared.mExtAddress.m8));
+            p2pRequest.mWakeupRequest.mType = OT_WAKEUP_TYPE_EXT_ADDRESS;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+        SuccessOrExit(error = otP2pWakeupAndLink(GetInstancePtr(), &p2pRequest, HandleWakeupAndLinkDone, this));
+        error = OT_ERROR_PENDING;
+    }
+    else
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+        if (aArgs[0] == "unlink")
+        {
+            /**
+             * @cli unlink 1ece0a6c4653a7c1
+             * @code
+             * unlink 1ece0a6c4653a7c1
+             * Done
+             * @endcode
+             * @cparam unlink @ca{ext-address}
+             * @par
+             *  Tear down the peer-to-peer link identified by the Extended Address.
+             */
+            otExtAddress extAddress;
+
+            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
+            SuccessOrExit(error = otP2pUnlink(GetInstancePtr(), &extAddress));
+        }
+        else if (aArgs[0] == "event")
+        {
+            if (aArgs[1] == "enable")
+            {
+                otP2pSetEventCallback(GetInstancePtr(), HandleP2pEvent, this);
+            }
+            else if (aArgs[1] == "disable")
+            {
+                otP2pSetEventCallback(GetInstancePtr(), nullptr, nullptr);
+            }
+            else
+            {
+                error = OT_ERROR_INVALID_ARGS;
+            }
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void Interpreter::HandleWakeupAndLinkDone(void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleWakeupAndLinkDone();
+}
+
+void Interpreter::HandleWakeupAndLinkDone(void) { OutputResult(OT_ERROR_NONE); }
+#endif
+
+void Interpreter::HandleP2pEvent(otP2pEvent aEvent, const otExtAddress *aExtAddress, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleP2pEvent(aEvent, aExtAddress);
+}
+
+void Interpreter::HandleP2pEvent(otP2pEvent aEvent, const otExtAddress *aExtAddress)
+{
+    OutputExtAddress(*aExtAddress);
+    OutputLine(" was %s", aEvent == OT_P2P_EVENT_LINKED ? "linked" : "torn down");
+}
+
+#endif // OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 {
@@ -7980,6 +8197,68 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
         error = ProcessGetSet(aArgs + 1, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
     }
 #if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    else if (aArgs[0] == "wakeupid")
+    {
+        /**
+         * @cli wakeup wakeupid add
+         * @code
+         * wakeup wakeupid add 0xdeadbeefcafe
+         * Done
+         * @endcode
+         * @cparam wakeup wakeupid add @ca{wakeupid}
+         * @par
+         * Adds a wake-up identifier to the Wake-up Identifier table.
+         * @sa otLinkAddWakeupId
+         */
+        if (aArgs[1] == "add")
+        {
+            uint64_t wakeupId;
+
+            VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[2].ParseAsUint64(wakeupId));
+
+            error = otLinkAddWakeupId(GetInstancePtr(), wakeupId);
+        }
+        /**
+         * @cli wakeup wakeupid rm
+         * @code
+         * wakeup wakeupid rm 0xdeadbeefcafe
+         * Done
+         * @endcode
+         * @cparam wakeup wakeupid remove @ca{wakeupid}
+         * @par
+         * Removes the wake-up identifier from the Wake-up Identifier table.
+         * @sa otLinkRemoveWakeupId
+         */
+        else if (aArgs[1] == "rm")
+        {
+            uint64_t wakeupId;
+
+            VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[2].ParseAsUint64(wakeupId));
+
+            error = otLinkRemoveWakeupId(GetInstancePtr(), wakeupId);
+        }
+        /**
+         * @cli wakeup wakeupid clear
+         * @code
+         * wakeup wakeupid clear
+         * Done
+         * @endcode
+         * @cparam wakeup wakeupid clear
+         * @par
+         * Clears all wakeup identifers in the Wake-up Identifier table.
+         * @sa otLinkClearWakeupIds
+         */
+        else if (aArgs[1] == "clear")
+        {
+            otLinkClearWakeupIds(GetInstancePtr());
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
     /**
      * @cli wakeup parameters (get,set)
      * @code
@@ -8043,7 +8322,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
         error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
     }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE && OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     /**
      * @cli wakeup wake
      * @code
@@ -8080,7 +8359,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE && OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
 void Interpreter::HandleWakeupResult(otError aError, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleWakeupResult(aError);
@@ -8088,7 +8367,6 @@ void Interpreter::HandleWakeupResult(otError aError, void *aContext)
 
 void Interpreter::HandleWakeupResult(otError aError) { OutputResult(aError); }
 #endif
-
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
@@ -8142,10 +8420,7 @@ void Interpreter::SetCommandTimeout(uint32_t aTimeoutMilli)
 
 otError Interpreter::ProcessCommand(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                   \
-    {                                                              \
-        aCommandString, &Interpreter::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Interpreter::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -8219,6 +8494,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_DUA_ENABLE
         CmdEntry("dua"),
 #endif
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+        CmdEntry("ecsl"),
+#endif
 #if OPENTHREAD_FTD
         CmdEntry("eidcache"),
 #endif
@@ -8239,6 +8517,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("instanceid"),
         CmdEntry("ipaddr"),
         CmdEntry("ipmaddr"),
+#if OPENTHREAD_CONFIG_JLINK_CLI_ENABLE
+        CmdEntry("jlink"),
+#endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
         CmdEntry("joiner"),
 #endif
@@ -8305,6 +8586,11 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_FTD
         CmdEntry("nexthop"),
+#endif
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+        CmdEntry("p2p"),
+#endif
 #endif
         CmdEntry("panid"),
         CmdEntry("parent"),

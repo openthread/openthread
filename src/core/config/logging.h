@@ -114,7 +114,7 @@
  * Define to enable dump logs (of packets).
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PKT_DUMP
-#define OPENTHREAD_CONFIG_LOG_PKT_DUMP 1
+#define OPENTHREAD_CONFIG_LOG_PKT_DUMP 0
 #endif
 
 /**

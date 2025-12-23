@@ -303,7 +303,7 @@ public:
     {
         const Child *child = static_cast<const Child *>(&aNeighbor);
 
-        return (mChildren <= child) && (child < GetArrayEnd(mChildren));
+        return (mChildren <= child) && (child < &mChildren[mMaxChildrenAllowed]);
     }
 
 private:

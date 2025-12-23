@@ -42,46 +42,112 @@ namespace Mac {
 
 RegisterLogModule("SubMac");
 
-void SubMac::WedInit(void)
-{
-    mWakeupListenInterval = 0;
-    mWedTimer.Stop();
-}
-
 void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel)
 {
-    VerifyOrExit(RadioSupportsReceiveTiming());
-
-    mWakeupListenInterval = aInterval;
-    mWakeupListenDuration = aDuration;
-    mWakeupChannel        = aChannel;
-    mWedTimer.Stop();
-
     if (aEnable)
     {
-        mWedSampleTime      = TimerMicro::GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
-        mWedSampleTimeRadio = Get<Radio>().GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
+        mSampleScheduler.StartWedSample(aChannel, aDuration, aInterval);
+    }
+    else
+    {
+        mSampleScheduler.StopWedSample();
+    }
+}
 
-        HandleWedTimer();
+void SubMac::GetWedWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
+{
+    aAhead = kMinReceiveOnAhead + kCslReceiveTimeAhead;
+    aAfter = kMinReceiveOnAfter;
+}
+
+//-------------------------------------------------------------------------
+
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+void SubMac::SetECslParams(uint16_t aDuration, uint16_t aPeriod, uint8_t aChannel)
+{
+    bool diffPeriod  = aPeriod != mSampleScheduler.GetECslScheduler().mPeriod / kECslSlotSize;
+    bool diffChannel = aChannel != mSampleScheduler.GetECslScheduler().mChannel;
+
+    LogInfo("SetECslParams() Enabled:%u, period(%lu, %lu), channel(%u,%u)", (aPeriod > 0),
+            ToUlong(mSampleScheduler.GetECslScheduler().mPeriod), ToUlong(aPeriod * kECslSlotSize),
+            mSampleScheduler.GetECslScheduler().mChannel, aChannel);
+
+    VerifyOrExit(diffPeriod || diffChannel);
+
+    Get<Radio>().SetECslPeriod(aPeriod);
+
+    if (aPeriod > 0)
+    {
+        mSampleScheduler.StartECslSample(aChannel, aDuration, aPeriod * kECslSlotSize);
+    }
+    else
+    {
+        mSampleScheduler.StopECslSample();
     }
 
 exit:
     return;
 }
 
-void SubMac::HandleWedTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWedTimer(); }
+Error SubMac::AddECslPeerAddress(const ExtAddress &aExtAddr) { return Get<Radio>().AddECslPeerAddress(aExtAddr); }
 
-void SubMac::HandleWedTimer(void)
+Error SubMac::ClearECslPeerAddress(const ExtAddress &aExtAddr) { return Get<Radio>().ClearECslPeerAddress(aExtAddr); }
+
+void SubMac::ClearECslPeerAddresses(void) { Get<Radio>().ClearECslPeerAddresses(); }
+
+void SubMac::GetECslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 {
-    mWedSampleTime += mWakeupListenInterval;
-    mWedSampleTimeRadio += mWakeupListenInterval;
-    mWedTimer.FireAt(mWedSampleTime + mWakeupListenDuration + kWedReceiveTimeAfter);
+    aAhead = kMinReceiveOnAhead + kCslReceiveTimeAhead;
+    aAfter = kMinReceiveOnAfter;
+}
+#endif
 
-    if (mState != kStateDisabled)
-    {
-        IgnoreError(
-            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio), mWakeupListenDuration));
-    }
+//-------------------------------------------------------------------------
+
+Error SubMac::AddWakeupId(WakeupId aWakeupId)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mWakeupIdTable.IsFull(), error = kErrorNoBufs);
+    error = mWakeupIdTable.PushBack(aWakeupId);
+exit:
+    return error;
+}
+
+Error SubMac::RemoveWakeupId(WakeupId aWakeupId)
+{
+    Error     error = kErrorNone;
+    WakeupId *wakeupId;
+
+    wakeupId = mWakeupIdTable.Find(aWakeupId);
+    VerifyOrExit(wakeupId != nullptr, error = kErrorNotFound);
+    mWakeupIdTable.Remove(*wakeupId);
+
+exit:
+    return error;
+}
+
+void SubMac::ClearWakeupIds(void) { mWakeupIdTable.Clear(); }
+
+bool SubMac::ShouldHandleWakeupFrame(const RxFrame &aFrame)
+{
+    bool                ret = false;
+    Address             dstAddr;
+    WakeupId            wakeupId;
+    const ConnectionIe *connectionIe;
+
+    VerifyOrExit(mSampleScheduler.GetWedScheduler().mIsEnabled);
+
+    SuccessOrExit(aFrame.GetDstAddr(dstAddr));
+    VerifyOrExit(dstAddr.IsBroadcast(), ret = true);
+
+    VerifyOrExit((connectionIe = aFrame.GetConnectionIe()) != nullptr);
+    SuccessOrExit(connectionIe->GetWakeupId(wakeupId));
+    VerifyOrExit(mWakeupIdTable.Contains(wakeupId));
+    ret = true;
+
+exit:
+    return ret;
 }
 
 } // namespace Mac

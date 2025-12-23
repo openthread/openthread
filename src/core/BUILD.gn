@@ -271,6 +271,12 @@ if (openthread_enable_core_config_args) {
     if (openthread_config_coexistence_enable) {
       defines += [ "OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1" ]
     }
+
+    if (openthread_config_peer_to_peer_enable) {
+      defines += [ "OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE=1" ]
+      defines += [ "OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE=1" ]
+      defines += [ "OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE=1" ]
+    }
   }
 }
 
@@ -346,6 +352,7 @@ openthread_core_files = [
   "api/netdiag_api.cpp",
   "api/network_time_api.cpp",
   "api/ping_sender_api.cpp",
+  "api/p2p_api.cpp",
   "api/radio_stats_api.cpp",
   "api/random_crypto_api.cpp",
   "api/random_noncrypto_api.cpp",
@@ -657,9 +664,9 @@ openthread_core_files = [
   "thread/mesh_forwarder.cpp",
   "thread/mesh_forwarder.hpp",
   "thread/mesh_forwarder_ftd.cpp",
-  "thread/mesh_forwarder_mtd.cpp",
   "thread/mle.cpp",
   "thread/mle.hpp",
+  "thread/mle_peer.cpp",
   "thread/mle_router.cpp",
   "thread/mle_router.hpp",
   "thread/mle_tlvs.cpp",

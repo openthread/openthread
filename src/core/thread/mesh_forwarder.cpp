@@ -124,11 +124,15 @@ void MeshForwarder::Start(void)
     if (!mEnabled)
     {
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
         mIndirectSender.Start();
 #endif
 
         mEnabled = true;
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+        Get<Mac::Filter>().Restore();
+#endif
     }
 }
 
@@ -143,8 +147,11 @@ void MeshForwarder::Stop(void)
     mSendQueue.DequeueAndFreeAll();
     mReassemblyList.DequeueAndFreeAll();
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     mIndirectSender.Stop();
+#endif
+
+#if OPENTHREAD_FTD
     mFwdFrameInfoArray.Clear();
 #endif
 
@@ -758,15 +765,8 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
             frame = Get<Mle::DiscoverScanner>().PrepareDiscoveryRequestFrame(*frame);
             VerifyOrExit(frame != nullptr);
         }
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        else if (Get<Mac::Mac>().IsCslEnabled() && mSendMessage->IsSubTypeMle())
-        {
-            mSendMessage->SetLinkSecurityEnabled(true);
-        }
-#endif
         mMessageNextOffset =
             PrepareDataFrame(*frame, *mSendMessage, mMacAddrs, mAddMeshHeader, mMeshSource, mMeshDest, addFragHeader);
-
         if (mSendMessage->IsMleCommand(Mle::kCommandChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
         {
             LogNote("Child ID Request requires fragmentation, aborting tx");
@@ -813,14 +813,80 @@ exit:
     return frame;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+bool MeshForwarder::IsParentAddress(const Mac::Address &aAddress)
+{
+    bool ret;
+
+    if (aAddress.IsShort())
+    {
+        ret = aAddress.GetShort() == Get<Mle::Mle>().GetParent().GetRloc16();
+    }
+    else
+    {
+        ret = aAddress.GetExtended() == Get<Mle::Mle>().GetParent().GetExtAddress();
+    }
+
+    return ret;
+}
+#endif
+
 void MeshForwarder::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info &aTxFrameInfo, const Message *aMessage)
 {
+    const Neighbor *neighbor;
+
     aTxFrameInfo.mVersion = Mac::Frame::kVersion2006;
 
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Determine Header IE entries
-
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || \
+    OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MAC_COEX_CONSTRAINED_ENABLE ||          \
+    OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Determine frame version and Header IE entries
+
+    neighbor = Get<NeighborTable>().FindNeighbor(aTxFrameInfo.mAddrs.mDestination);
+
+    if (neighbor == nullptr)
+    {
+    }
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    else if (Get<Mac::Mac>().IsCslEnabled() && IsParentAddress(aTxFrameInfo.mAddrs.mDestination))
+    {
+        aTxFrameInfo.mAppendCslIe = true;
+        aTxFrameInfo.mVersion     = Mac::Frame::kVersion2015;
+    }
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    else if ((Get<ChildTable>().Contains(*neighbor) && static_cast<const Child *>(neighbor)->IsCslSynchronized()))
+    {
+        aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
+    }
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    else if (neighbor->IsEnhAckProbingActive())
+    {
+        aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
+    }
+#endif
+#if OPENTHREAD_CONFIG_MAC_ECSL_RECEIVER_ENABLE
+    else if (Get<Mac::Mac>().IsRamEnabled() ||
+             (Get<Mac::Mac>().IsECslEnabled() && Get<PeerTable>().Contains(*neighbor)))
+    {
+        aTxFrameInfo.mAppendScaIe = true;
+        aTxFrameInfo.mVersion     = Mac::Frame::kVersion2015;
+    }
+#endif
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    else if (Get<PeerTable>().Contains(*neighbor))
+    {
+        aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
+    }
+#endif
+
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+       // || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if ((aMessage != nullptr) && aMessage->IsTimeSync())
@@ -829,45 +895,16 @@ void MeshForwarder::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info
         aTxFrameInfo.mVersion      = Mac::Frame::kVersion2015;
     }
 #endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled() &&
-        !(aMessage != nullptr && aMessage->IsMleCommand(Mle::kCommandDiscoveryRequest)))
+    if (aMessage != nullptr && aMessage->IsEnhAckRequested())
     {
-        aTxFrameInfo.mAppendCslIe = true;
-        aTxFrameInfo.mVersion     = Mac::Frame::kVersion2015;
+        aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
     }
 #endif
-
     aTxFrameInfo.mEmptyPayload = (aMessage == nullptr) || (aMessage->GetLength() == 0);
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || \
-    OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Determine frame version
-
-    if (aTxFrameInfo.mVersion == Mac::Frame::kVersion2006)
-    {
-        const Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aTxFrameInfo.mAddrs.mDestination);
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        if ((neighbor != nullptr) && Get<ChildTable>().Contains(*neighbor) &&
-            static_cast<const Child *>(neighbor)->IsCslSynchronized())
-        {
-            aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
-        }
-#endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-        if ((neighbor != nullptr) && neighbor->IsEnhAckProbingActive())
-        {
-            aTxFrameInfo.mVersion = Mac::Frame::kVersion2015;
-        }
-#endif
-    }
-
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Prepare MAC headers
@@ -875,7 +912,9 @@ void MeshForwarder::PrepareMacHeaders(Mac::TxFrame &aTxFrame, Mac::TxFrame::Info
     aTxFrameInfo.PrepareHeadersIn(aTxFrame);
 
     OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(neighbor);
 }
+
 
 // This method constructs a MAC data from from a given IPv6 message.
 //
@@ -1332,6 +1371,8 @@ void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
         Get<Mle::Mle>().HandleChildIdRequestTxDone(aMessage);
     }
 
+    aMessage.InvokeTxCallback(aError);
+
 exit:
     return;
 }
@@ -1340,7 +1381,7 @@ void MeshForwarder::FinalizeAndRemoveMessage(Message &aMessage, Error aError, Me
 {
     LogMessage(aAction, aMessage, aError);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
     FinalizeMessageIndirectTxs(aMessage);
 #endif
 
@@ -1352,8 +1393,8 @@ bool MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
 {
     bool didRemove = false;
 
-#if OPENTHREAD_FTD
-    VerifyOrExit(!aMessage.IsDirectTransmission() && aMessage.GetIndirectTxChildMask().IsEmpty());
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+    VerifyOrExit(!aMessage.IsDirectTransmission() && aMessage.GetIndirectTxCslNeighborMask().IsEmpty());
 #else
     VerifyOrExit(!aMessage.IsDirectTransmission());
 #endif

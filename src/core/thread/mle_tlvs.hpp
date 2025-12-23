@@ -106,6 +106,7 @@ public:
         kLinkMetricsManagement = 88, ///< Link Metrics Management TLV
         kLinkMetricsReport     = 89, ///< Link Metrics Report TLV
         kLinkProbe             = 90, ///< Link Probe TLV
+        kLinkData              = 91, ///< Link Data TLV
 
         /**
          * Applicable/Required only when time synchronization service
@@ -1158,6 +1159,36 @@ public:
 private:
     uint8_t mCslClockAccuracy;
     uint8_t mCslUncertainty;
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+#if OPENTHREAD_CONFIG_PEER_TO_PEER_ENABLE
+/**
+ * Implements P2P link data TLV generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class LinkDataTlv : public Tlv, public TlvInfo<Tlv::kLinkData>
+{
+public:
+    /**
+     * Initializes the TLV.
+     */
+    void Init(void)
+    {
+        SetType(kLinkData);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    bool IsLocalSrpServer(void) const { return mIsLocalSrpServer; }
+    void SetLocalSrpServer(bool aIsLocalSrpServer) { mIsLocalSrpServer = aIsLocalSrpServer; }
+
+    uint16_t GetSrpServerPort(void) const { return BigEndian::HostSwap16(mSrpServerPort); }
+    void     SetSrpServerPort(uint16_t aSrpServerPort) { mSrpServerPort = BigEndian::HostSwap16(aSrpServerPort); }
+
+private:
+    bool     mIsLocalSrpServer : 1;
+    uint16_t mSrpServerPort;
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
