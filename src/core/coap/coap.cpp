@@ -682,10 +682,6 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     bool responseObserve = false;
 #endif
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    uint8_t  blockOptionType   = 0;
-    uint32_t totalTransferSize = 0;
-#endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
     VerifyOrExit(request != nullptr);
@@ -761,89 +757,13 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
             }
             else
 #endif
+            {
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-            {
-                if (metadata.mBlockwiseTransmitHook != nullptr || metadata.mBlockwiseReceiveHook != nullptr)
-                {
-                    // Search for CoAP Block-Wise Option [RFC7959]
-                    Option::Iterator iterator;
-
-                    SuccessOrExit(error = iterator.Init(aMessage));
-                    while (!iterator.IsDone())
-                    {
-                        switch (iterator.GetOption()->GetNumber())
-                        {
-                        case kOptionBlock1:
-                            blockOptionType += 1;
-                            break;
-
-                        case kOptionBlock2:
-                            blockOptionType += 2;
-                            break;
-
-                        case kOptionSize2:
-                            // ToDo: wait for method to read uint option values
-                            totalTransferSize = 0;
-                            break;
-
-                        default:
-                            break;
-                        }
-
-                        SuccessOrExit(error = iterator.Advance());
-                    }
-                }
-                switch (blockOptionType)
-                {
-                case 0:
-                    // Piggybacked response.
-                    FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, kErrorNone);
-                    break;
-                case 1: // Block1 option
-                    if (aMessage.GetCode() == kCodeContinue && metadata.mBlockwiseTransmitHook != nullptr)
-                    {
-                        error = SendNextBlock1Request(*request, aMessage, aMessageInfo, metadata);
-                    }
-
-                    if (aMessage.GetCode() != kCodeContinue || metadata.mBlockwiseTransmitHook == nullptr ||
-                        error != kErrorNone)
-                    {
-                        FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, error);
-                    }
-                    break;
-                case 2: // Block2 option
-                    if (aMessage.GetCode() < kCodeBadRequest && metadata.mBlockwiseReceiveHook != nullptr)
-                    {
-                        error =
-                            SendNextBlock2Request(*request, aMessage, aMessageInfo, metadata, totalTransferSize, false);
-                    }
-
-                    if (aMessage.GetCode() >= kCodeBadRequest || metadata.mBlockwiseReceiveHook == nullptr ||
-                        error != kErrorNone)
-                    {
-                        FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, error);
-                    }
-                    break;
-                case 3: // Block1 & Block2 option
-                    if (aMessage.GetCode() < kCodeBadRequest && metadata.mBlockwiseReceiveHook != nullptr)
-                    {
-                        error =
-                            SendNextBlock2Request(*request, aMessage, aMessageInfo, metadata, totalTransferSize, true);
-                    }
-
-                    FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, error);
-                    break;
-                default:
-                    error = kErrorAbort;
-                    FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, error);
-                    break;
-                }
-            }
-#else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-            {
+                SuccessOrExit(error = ProcessBlockwiseResponse(aMessage, aMessageInfo, *request, metadata));
+#else
                 FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, kErrorNone);
+#endif
             }
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
@@ -914,14 +834,8 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char  uriPath[Message::kMaxReceivedUriPath + 1];
-    Error error = kErrorNone;
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    Option::Iterator iterator;
-    char            *curUriPath        = uriPath;
-    uint8_t          blockOptionType   = 0;
-    uint32_t         totalTransferSize = 0;
-#endif
+    Message::UriPathStringBuffer uriPath;
+    Error                        error = kErrorNone;
 
     if (mInterceptor.IsSet())
     {
@@ -944,106 +858,15 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    SuccessOrExit(error = iterator.Init(aMessage));
-
-    while (!iterator.IsDone())
     {
-        switch (iterator.GetOption()->GetNumber())
-        {
-        case kOptionUriPath:
-            if (curUriPath != uriPath)
-            {
-                *curUriPath++ = '/';
-            }
+        bool didHandle = false;
 
-            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < GetArrayEnd(uriPath), error = kErrorParse);
-
-            IgnoreError(iterator.ReadOptionValue(curUriPath));
-            curUriPath += iterator.GetOption()->GetLength();
-            break;
-
-        case kOptionBlock1:
-            blockOptionType += 1;
-            break;
-
-        case kOptionBlock2:
-            blockOptionType += 2;
-            break;
-
-        case kOptionSize1:
-            // ToDo: wait for method to read uint option values
-            totalTransferSize = 0;
-            break;
-
-        default:
-            break;
-        }
-
-        SuccessOrExit(error = iterator.Advance());
-    }
-
-    curUriPath[0] = kNullChar;
-
-    for (const ResourceBlockWise &resource : mBlockWiseResources)
-    {
-        if (!StringMatch(resource.GetUriPath(), uriPath))
-        {
-            continue;
-        }
-
-        if ((resource.mReceiveHook != nullptr || resource.mTransmitHook != nullptr) && blockOptionType != 0)
-        {
-            switch (blockOptionType)
-            {
-            case 1:
-                if (resource.mReceiveHook != nullptr)
-                {
-                    switch (ProcessBlock1Request(aMessage, aMessageInfo, resource, totalTransferSize))
-                    {
-                    case kErrorNone:
-                        resource.HandleRequest(aMessage, aMessageInfo);
-                        OT_FALL_THROUGH;
-                    case kErrorBusy:
-                        error = kErrorNone;
-                        break;
-                    case kErrorNoBufs:
-                        IgnoreReturnValue(SendHeaderResponse(kCodeRequestTooLarge, aMessage, aMessageInfo));
-                        error = kErrorDrop;
-                        break;
-                    case kErrorNoFrameReceived:
-                        IgnoreReturnValue(SendHeaderResponse(kCodeRequestIncomplete, aMessage, aMessageInfo));
-                        error = kErrorDrop;
-                        break;
-                    default:
-                        IgnoreReturnValue(SendHeaderResponse(kCodeInternalError, aMessage, aMessageInfo));
-                        error = kErrorDrop;
-                        break;
-                    }
-                }
-                break;
-            case 2:
-                if (resource.mTransmitHook != nullptr)
-                {
-                    if ((error = ProcessBlock2Request(aMessage, aMessageInfo, resource)) != kErrorNone)
-                    {
-                        IgnoreReturnValue(SendHeaderResponse(kCodeInternalError, aMessage, aMessageInfo));
-                        error = kErrorDrop;
-                    }
-                }
-                break;
-            }
-            ExitNow();
-        }
-        else
-        {
-            resource.HandleRequest(aMessage, aMessageInfo);
-            error = kErrorNone;
-            ExitNow();
-        }
+        SuccessOrExit(error = ProcessBlockwiseRequest(aMessage, aMessageInfo, uriPath, didHandle));
+        VerifyOrExit(!didHandle);
     }
 #else
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+#endif
 
     if ((mResourceHandler != nullptr) && mResourceHandler(*this, uriPath, aMessage, aMessageInfo))
     {
@@ -1139,6 +962,209 @@ Error CoapBase::ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aT
 
     default:
         break;
+    }
+
+exit:
+    return error;
+}
+
+Error CoapBase::ProcessBlockwiseResponse(Message                &aResponse,
+                                         const Ip6::MessageInfo &aMessageInfo,
+                                         Message                &aRequest,
+                                         const Metadata         &aMetadata)
+{
+    Error    error             = kErrorNone;
+    uint8_t  blockOptionType   = 0;
+    uint32_t totalTransferSize = 0;
+
+    if (aMetadata.mBlockwiseTransmitHook != nullptr || aMetadata.mBlockwiseReceiveHook != nullptr)
+    {
+        // Search for CoAP Block-Wise Option [RFC7959]
+        Option::Iterator iterator;
+
+        SuccessOrExit(error = iterator.Init(aResponse));
+
+        while (!iterator.IsDone())
+        {
+            switch (iterator.GetOption()->GetNumber())
+            {
+            case kOptionBlock1:
+                blockOptionType += 1;
+                break;
+
+            case kOptionBlock2:
+                blockOptionType += 2;
+                break;
+
+            case kOptionSize2:
+                // ToDo: wait for method to read uint option values
+                totalTransferSize = 0;
+                break;
+
+            default:
+                break;
+            }
+
+            SuccessOrExit(error = iterator.Advance());
+        }
+    }
+
+    switch (blockOptionType)
+    {
+    case 0:
+        // Piggybacked response.
+        FinalizeCoapTransaction(aRequest, aMetadata, &aResponse, &aMessageInfo, kErrorNone);
+        break;
+    case 1: // Block1 option
+        if (aResponse.GetCode() == kCodeContinue && aMetadata.mBlockwiseTransmitHook != nullptr)
+        {
+            error = SendNextBlock1Request(aRequest, aResponse, aMessageInfo, aMetadata);
+        }
+
+        if (aResponse.GetCode() != kCodeContinue || aMetadata.mBlockwiseTransmitHook == nullptr || error != kErrorNone)
+        {
+            FinalizeCoapTransaction(aRequest, aMetadata, &aResponse, &aMessageInfo, error);
+        }
+        break;
+    case 2: // Block2 option
+        if (aResponse.GetCode() < kCodeBadRequest && aMetadata.mBlockwiseReceiveHook != nullptr)
+        {
+            error = SendNextBlock2Request(aRequest, aResponse, aMessageInfo, aMetadata, totalTransferSize, false);
+        }
+
+        if (aResponse.GetCode() >= kCodeBadRequest || aMetadata.mBlockwiseReceiveHook == nullptr || error != kErrorNone)
+        {
+            FinalizeCoapTransaction(aRequest, aMetadata, &aResponse, &aMessageInfo, error);
+        }
+        break;
+    case 3: // Block1 & Block2 option
+        if (aResponse.GetCode() < kCodeBadRequest && aMetadata.mBlockwiseReceiveHook != nullptr)
+        {
+            error = SendNextBlock2Request(aRequest, aResponse, aMessageInfo, aMetadata, totalTransferSize, true);
+        }
+
+        FinalizeCoapTransaction(aRequest, aMetadata, &aResponse, &aMessageInfo, error);
+        break;
+    default:
+        error = kErrorAbort;
+        FinalizeCoapTransaction(aRequest, aMetadata, &aResponse, &aMessageInfo, error);
+        break;
+    }
+
+exit:
+    return error;
+}
+
+Error CoapBase::ProcessBlockwiseRequest(Message                      &aMessage,
+                                        const Ip6::MessageInfo       &aMessageInfo,
+                                        Message::UriPathStringBuffer &aUriPath,
+                                        bool                         &aDidHandle)
+{
+    Error            error = kErrorNone;
+    Option::Iterator iterator;
+    char            *curUriPath        = aUriPath;
+    uint8_t          blockOptionType   = 0;
+    uint32_t         totalTransferSize = 0;
+
+    SuccessOrExit(error = iterator.Init(aMessage));
+
+    while (!iterator.IsDone())
+    {
+        switch (iterator.GetOption()->GetNumber())
+        {
+        case kOptionUriPath:
+            if (curUriPath != aUriPath)
+            {
+                *curUriPath++ = '/';
+            }
+
+            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < GetArrayEnd(aUriPath), error = kErrorParse);
+
+            IgnoreError(iterator.ReadOptionValue(curUriPath));
+            curUriPath += iterator.GetOption()->GetLength();
+            break;
+
+        case kOptionBlock1:
+            blockOptionType += 1;
+            break;
+
+        case kOptionBlock2:
+            blockOptionType += 2;
+            break;
+
+        case kOptionSize1:
+            // ToDo: wait for method to read uint option values
+            totalTransferSize = 0;
+            break;
+
+        default:
+            break;
+        }
+
+        SuccessOrExit(error = iterator.Advance());
+    }
+
+    curUriPath[0] = kNullChar;
+
+    for (const ResourceBlockWise &resource : mBlockWiseResources)
+    {
+        if (!StringMatch(resource.GetUriPath(), aUriPath))
+        {
+            continue;
+        }
+
+        if ((resource.mReceiveHook != nullptr || resource.mTransmitHook != nullptr) && blockOptionType != 0)
+        {
+            switch (blockOptionType)
+            {
+            case 1:
+                if (resource.mReceiveHook != nullptr)
+                {
+                    switch (ProcessBlock1Request(aMessage, aMessageInfo, resource, totalTransferSize))
+                    {
+                    case kErrorNone:
+                        resource.HandleRequest(aMessage, aMessageInfo);
+                        OT_FALL_THROUGH;
+                    case kErrorBusy:
+                        error = kErrorNone;
+                        break;
+                    case kErrorNoBufs:
+                        IgnoreError(SendHeaderResponse(kCodeRequestTooLarge, aMessage, aMessageInfo));
+                        error = kErrorDrop;
+                        break;
+                    case kErrorNoFrameReceived:
+                        IgnoreError(SendHeaderResponse(kCodeRequestIncomplete, aMessage, aMessageInfo));
+                        error = kErrorDrop;
+                        break;
+                    default:
+                        IgnoreError(SendHeaderResponse(kCodeInternalError, aMessage, aMessageInfo));
+                        error = kErrorDrop;
+                        break;
+                    }
+                }
+                break;
+            case 2:
+                if (resource.mTransmitHook != nullptr)
+                {
+                    if ((error = ProcessBlock2Request(aMessage, aMessageInfo, resource)) != kErrorNone)
+                    {
+                        IgnoreError(SendHeaderResponse(kCodeInternalError, aMessage, aMessageInfo));
+                        error = kErrorDrop;
+                    }
+                }
+                break;
+            }
+
+            aDidHandle = true;
+            ExitNow();
+        }
+        else
+        {
+            resource.HandleRequest(aMessage, aMessageInfo);
+            error      = kErrorNone;
+            aDidHandle = true;
+            ExitNow();
+        }
     }
 
 exit:

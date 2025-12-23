@@ -812,6 +812,14 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     Error ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aTransmitHook, void *aContext);
+    Error ProcessBlockwiseResponse(Message                &aResponse,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   Message                &aRequest,
+                                   const Metadata         &aMetadata);
+    Error ProcessBlockwiseRequest(Message                      &aMessage,
+                                  const Ip6::MessageInfo       &aMessageInfo,
+                                  Message::UriPathStringBuffer &aUriPath,
+                                  bool                         &aDidHandle);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(Message::BlockType aType,
