@@ -46,6 +46,13 @@ const char Server::kVendorModel[]     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL;
 const char Server::kVendorSwVersion[] = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION;
 const char Server::kVendorAppUrl[]    = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL;
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+static constexpr char kVendorNamePrefix[] = "RD:";
+
+static_assert(CheckConstStringPrefix(OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME, kVendorNamePrefix),
+              "VENDOR_NAME MUST start with 'RD:' prefix for a reference device.");
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // Server
 
@@ -70,7 +77,16 @@ Server::Server(Instance &aInstance)
 
 Error Server::SetVendorName(const char *aVendorName)
 {
-    return StringCopy(mVendorName, aVendorName, kStringCheckUtf8Encoding);
+    Error error;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(aVendorName != nullptr && StringStartsWith(aVendorName, kVendorNamePrefix), error = kErrorInvalidArgs);
+#endif
+
+    SuccessOrExit(error = StringCopy(mVendorName, aVendorName, kStringCheckUtf8Encoding));
+
+exit:
+    return error;
 }
 
 Error Server::SetVendorModel(const char *aVendorModel)

@@ -131,6 +131,10 @@ public:
      *
      * @param[in] aVendorName     The vendor name string.
      *
+     * Under `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` @p aVendorName is checked to start with the "RD:" prefix.
+     * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
+     * the name is rejected, and `kErrorInvalidArgs` is returned.
+     *
      * @retval kErrorNone         Successfully set the vendor name.
      * @retval kErrorInvalidArgs  @p aVendorName is not valid (too long or not UTF8).
      */

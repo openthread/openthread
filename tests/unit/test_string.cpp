@@ -466,6 +466,15 @@ static_assert(!ot::AreStringsInOrder("z", "abcd"), "AreStringsInOrder() failed")
 static_assert(!ot::AreStringsInOrder("0", ""), "AreStringsInOrder() failed");
 #endif
 
+static_assert(ot::CheckConstStringPrefix("abc", "a"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", "ab"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", "abc"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", ""), "CheckConstStringPrefix() failed");
+
+static_assert(!ot::CheckConstStringPrefix("abc", "b"), "CheckConstStringPrefix() failed");
+static_assert(!ot::CheckConstStringPrefix("abc", "abcd"), "CheckConstStringPrefix() failed");
+static_assert(!ot::CheckConstStringPrefix("", "a"), "CheckConstStringPrefix() failed");
+
 } // namespace ot
 
 int main(void)
