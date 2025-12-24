@@ -99,7 +99,7 @@ public:
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
 
-    void OutputV(const char *aFormat, va_list aArguments);
+    void OutputV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
     otCliOutputCallback mCallback;
     void               *mCallbackContext;
@@ -728,7 +728,7 @@ public:
     static const char *BorderRoutingStateToString(otBorderRoutingState aState);
 
 protected:
-    void OutputFormatV(const char *aFormat, va_list aArguments);
+    void OutputFormatV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void LogInput(const Arg *aArgs);

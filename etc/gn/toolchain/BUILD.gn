@@ -31,6 +31,7 @@ toolchain("toolchain") {
     "-Wall",
     "-Wextra",
     "-Wundef",
+    "-Wformat-nonliteral",
   ]
   if (use_clang) {
     cc = "clang"

@@ -312,7 +312,8 @@ public:
     static void LogAtLevel(const char *aModuleName, const char *aFormat, ...)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
-    static void LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, va_list aArgs);
+    static void LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, va_list aArgs)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     static void LogOnError(const char *aModuleName, Error aError, const char *aText);
