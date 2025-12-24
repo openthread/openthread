@@ -95,33 +95,11 @@ class TxParameters : public otCoapTxParameters
 
 public:
     /**
-     * Converts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
-     *
-     * If the pointer is `nullptr`, the default parameters are used instead.
-     *
-     * @param[in] aTxParameters   A pointer to tx parameter.
-     *
-     * @returns A reference to corresponding `TxParamters` if  @p aTxParameters is not `nullptr`, otherwise the default
-     *          tx parameters.
-     */
-    static const TxParameters &From(const otCoapTxParameters *aTxParameters)
-    {
-        return aTxParameters ? *static_cast<const TxParameters *>(aTxParameters) : GetDefault();
-    }
-
-    /**
-     * Validates whether the CoAP transmission parameters are valid.
-     *
-     * @returns Whether the parameters are valid.
-     */
-    bool IsValid(void) const;
-
-    /**
-     * Returns default CoAP tx parameters.
+     * Returns the default CoAP tx parameters.
      *
      * @returns The default tx parameters.
      */
-    static const TxParameters &GetDefault(void) { return static_cast<const TxParameters &>(kDefaultTxParameters); }
+    static const TxParameters &GetDefault(void);
 
 private:
     static constexpr uint32_t kDefaultAckTimeout                 = 2000; // in msec
@@ -132,6 +110,7 @@ private:
     static constexpr uint8_t  kMaxRetransmit                     = OT_COAP_MAX_RETRANSMIT;
     static constexpr uint32_t kMinAckTimeout                     = OT_COAP_MIN_ACK_TIMEOUT;
 
+    Error    ValidateFor(const Message &aMessage) const;
     uint32_t CalculateInitialRetransmissionTimeout(void) const;
     uint32_t CalculateExchangeLifetime(void) const;
     uint32_t CalculateMaxTransmitWait(void) const;
@@ -465,7 +444,7 @@ public:
      *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     * @param[in]  aTxParameters A reference to transmission parameters for this message.
+     * @param[in]  aTxParameters A pointer to `TxParameters`. If `nullptr`, default `TxParameters` will be used.
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
@@ -476,9 +455,9 @@ public:
      */
     Error SendMessage(Message                    &aMessage,
                       const Ip6::MessageInfo     &aMessageInfo,
-                      const TxParameters         &aTxParameters,
-                      otCoapResponseHandler       aHandler      = nullptr,
-                      void                       *aContext      = nullptr,
+                      const TxParameters         *aTxParameters,
+                      otCoapResponseHandler       aHandler,
+                      void                       *aContext,
                       otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -492,7 +471,7 @@ public:
      *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     * @param[in]  aTxParameters A reference to transmission parameters for this message.
+     * @param[in]  aTxParameters A pointer to `TxParameters`. If `nullptr`, default `TxParameters` will be used.
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
@@ -501,7 +480,7 @@ public:
      */
     Error SendMessage(Message                &aMessage,
                       const Ip6::MessageInfo &aMessageInfo,
-                      const TxParameters     &aTxParameters,
+                      const TxParameters     *aTxParameters,
                       ResponseHandler         aHandler,
                       void                   *aContext);
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
