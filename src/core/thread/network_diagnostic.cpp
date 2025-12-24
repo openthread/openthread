@@ -33,6 +33,7 @@
 
 #include "network_diagnostic.hpp"
 
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -41,7 +42,13 @@ RegisterLogModule("NetDiag");
 
 namespace NetworkDiagnostic {
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define REFERENCE_DEVICE_ID "RD:"
+// A Thread reference device MUST be externally detectable by its ID.
+const char Server::kVendorName[]      = REFERENCE_DEVICE_ID OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME;
+#else
 const char Server::kVendorName[]      = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME;
+#endif
 const char Server::kVendorModel[]     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL;
 const char Server::kVendorSwVersion[] = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION;
 const char Server::kVendorAppUrl[]    = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL;
@@ -70,7 +77,19 @@ Server::Server(Instance &aInstance)
 
 Error Server::SetVendorName(const char *aVendorName)
 {
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    char temp[sizeof(mVendorName)];
+    StringWriter writer(temp, sizeof(temp));
+
+    writer.Append(REFERENCE_DEVICE_ID);
+    if (aVendorName != nullptr)
+    {
+        writer.Append("%s", aVendorName);
+    }
+    return StringCopy(mVendorName, temp, kStringCheckUtf8Encoding);
+#else
     return StringCopy(mVendorName, aVendorName, kStringCheckUtf8Encoding);
+#endif
 }
 
 Error Server::SetVendorModel(const char *aVendorModel)
