@@ -154,6 +154,29 @@ enum OptionNumber : uint16_t
 };
 
 /**
+ * CoAP Block Size Exponents
+ */
+enum BlockSzx : uint8_t
+{
+    kBlockSzx16   = OT_COAP_OPTION_BLOCK_SZX_16,   ///< 16  bytes.
+    kBlockSzx32   = OT_COAP_OPTION_BLOCK_SZX_32,   ///< 32  bytes.
+    kBlockSzx64   = OT_COAP_OPTION_BLOCK_SZX_64,   ///< 64  bytes.
+    kBlockSzx128  = OT_COAP_OPTION_BLOCK_SZX_128,  ///< 128 bytes.
+    kBlockSzx256  = OT_COAP_OPTION_BLOCK_SZX_256,  ///< 256 bytes.
+    kBlockSzx512  = OT_COAP_OPTION_BLOCK_SZX_512,  ///< 512 bytes.
+    kBlockSzx1024 = OT_COAP_OPTION_BLOCK_SZX_1024, ///< 1024 bytes.
+};
+
+/**
+ * Converts a CoAP Block Size Exponent (SZX)  to the actual block size (in bytes).
+ *
+ * @param[in]   aBlockSzx     Block size exponent.
+ *
+ * @returns The actual size corresponding to @o aBlockSzx.
+ */
+uint16_t BlockSizeFromExponent(BlockSzx aBlockSzx);
+
+/**
  * Implements CoAP message generation and parsing.
  */
 class Message : public ot::Message
@@ -169,6 +192,8 @@ public:
     typedef ot::Coap::Type Type; ///< CoAP Type.
     typedef ot::Coap::Code Code; ///< CoAP Code.
 
+    typedef char UriPathStringBuffer[kMaxReceivedUriPath + 1]; ///< Buffer to store a received URI Path string.
+
     /**
      * CoAP Block1/Block2 Types
      */
@@ -177,8 +202,6 @@ public:
         kBlockType1 = 1,
         kBlockType2 = 2,
     };
-
-    static constexpr uint8_t kBlockSzxBase = 4;
 
     /**
      * Initializes the CoAP header.
@@ -436,15 +459,14 @@ public:
     Error AppendUriPathOptions(const char *aUriPath);
 
     /**
-     * Reads the Uri-Path options and constructs the URI path in the buffer referenced by @p `aUriPath`.
+     * Reads the Uri-Path options and constructs the URI path in the buffer referenced by @p aUriPath.
      *
      * @param[in] aUriPath  A reference to the buffer for storing URI path.
-     *                      NOTE: The buffer size must be `kMaxReceivedUriPath + 1`.
      *
      * @retval  kErrorNone   Successfully read the Uri-Path options.
      * @retval  kErrorParse  CoAP Option header not well-formed.
      */
-    Error ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
+    Error ReadUriPathOptions(UriPathStringBuffer &aUriPath) const;
 
     /**
      * Appends a Uri-Query option.
@@ -469,7 +491,7 @@ public:
      * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    Error AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize);
+    Error AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, BlockSzx aSize);
 
     /**
      * Appends a Proxy-Uri option.
@@ -558,7 +580,7 @@ public:
      *
      * @returns The block size.
      */
-    otCoapBlockSzx GetBlockWiseBlockSize(void) const { return GetHelpData().mBlockWiseData.mBlockSize; }
+    BlockSzx GetBlockWiseBlockSize(void) const { return GetHelpData().mBlockWiseData.mBlockSize; }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -625,7 +647,7 @@ public:
      *
      * @param[in]   aBlockSize    Block size value to set.
      */
-    void SetBlockWiseBlockSize(otCoapBlockSzx aBlockSize) { GetHelpData().mBlockWiseData.mBlockSize = aBlockSize; }
+    void SetBlockWiseBlockSize(BlockSzx aBlockSize) { GetHelpData().mBlockWiseData.mBlockSize = aBlockSize; }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -859,9 +881,9 @@ private:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     struct BlockWiseData
     {
-        uint32_t       mBlockNumber;
-        bool           mMoreBlocks;
-        otCoapBlockSzx mBlockSize;
+        uint32_t mBlockNumber;
+        bool     mMoreBlocks;
+        BlockSzx mBlockSize;
     };
 #endif
 
@@ -1187,6 +1209,7 @@ DefineCoreType(otCoapOption, Coap::Option);
 DefineCoreType(otCoapOptionIterator, Coap::Option::Iterator);
 DefineMapEnum(otCoapType, Coap::Type);
 DefineMapEnum(otCoapCode, Coap::Code);
+DefineMapEnum(otCoapBlockSzx, Coap::BlockSzx);
 
 /**
  * Casts an `otMessage` pointer to a `Coap::Message` reference.
