@@ -122,9 +122,10 @@ Error Joiner::Start(const char      *aPskd,
 
     LogInfo("Joiner starting");
 
-    VerifyOrExit(aProvisioningUrl == nullptr || IsValidUtf8String(aProvisioningUrl), error = kErrorInvalidArgs);
-    VerifyOrExit(aVendorName == nullptr || IsValidUtf8String(aVendorName), error = kErrorInvalidArgs);
-    VerifyOrExit(aVendorSwVersion == nullptr || IsValidUtf8String(aVendorSwVersion), error = kErrorInvalidArgs);
+    SuccessOrExit(error = Tlv::ValidateStringValue<ProvisioningUrlTlv>(aProvisioningUrl));
+    SuccessOrExit(error = Tlv::ValidateStringValue<VendorNameTlv>(aVendorName));
+    SuccessOrExit(error = Tlv::ValidateStringValue<VendorModelTlv>(aVendorModel));
+    SuccessOrExit(error = Tlv::ValidateStringValue<VendorSwVersionTlv>(aVendorSwVersion));
 
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
     VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,

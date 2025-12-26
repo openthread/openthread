@@ -257,6 +257,19 @@ Error Tlv::AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringL
     return AppendTlv(aMessage, aType, aValue, static_cast<uint8_t>(length));
 }
 
+Error Tlv::ValidateStringTlvValue(uint8_t aMaxStringLength, const char *aStringValue)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aStringValue != nullptr);
+
+    VerifyOrExit(StringLength(aStringValue, aMaxStringLength + 1) <= aMaxStringLength, error = kErrorInvalidArgs);
+    VerifyOrExit(IsValidUtf8String(aStringValue), error = kErrorInvalidArgs);
+
+exit:
+    return error;
+}
+
 template <typename UintType> Error Tlv::AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue)
 {
     UintType value = BigEndian::HostSwap<UintType>(aValue);
