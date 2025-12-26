@@ -693,7 +693,6 @@ void KeyManager::DestroyTemporaryKeys(void)
     mMleKey.Clear();
     mKek.Clear();
     Get<Mac::SubMac>().ClearMacKeys();
-    Get<Mac::Mac>().ClearMode2Key();
 }
 
 void KeyManager::DestroyPersistentKeys(void) { Get<Crypto::Storage::KeyRefManager>().DestroyPersistentKeys(); }
