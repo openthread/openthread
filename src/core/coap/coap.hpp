@@ -269,23 +269,6 @@ public:
      */
     void ClearRequests(const Ip6::Address &aAddress);
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
-    /**
-     * Adds a block-wise resource to the CoAP server.
-     *
-     * @param[in]  aResource  A reference to the resource.
-     */
-    void AddBlockWiseResource(ResourceBlockWise &aResource);
-
-    /**
-     * Removes a block-wise resource from the CoAP server.
-     *
-     * @param[in]  aResource  A reference to the resource.
-     */
-    void RemoveBlockWiseResource(ResourceBlockWise &aResource);
-#endif
-
     /**
      * Adds a resource to the CoAP server.
      *
@@ -423,34 +406,6 @@ public:
      */
     Message *NewResponseMessage(const Message &aRequest);
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    /**
-     * Sends a CoAP message block-wise with custom transmission parameters.
-     *
-     * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
-     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
-     *
-     * @param[in]  aMessage      A reference to the message to send.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     * @param[in]  aTxParameters A pointer to `TxParameters`. If `nullptr`, default `TxParameters` will be used.
-     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
-     * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
-     *
-     * @retval kErrorNone     Successfully sent CoAP message.
-     * @retval kErrorNoBufs   Failed to allocate retransmission data.
-     */
-    Error SendMessage(Message                    &aMessage,
-                      const Ip6::MessageInfo     &aMessageInfo,
-                      const TxParameters         *aTxParameters,
-                      otCoapResponseHandler       aHandler,
-                      void                       *aContext,
-                      otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
-                      otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
-#else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
     /**
      * Sends a CoAP message with custom transmission parameters.
      *
@@ -472,7 +427,6 @@ public:
                       const TxParameters     *aTxParameters,
                       ResponseHandler         aHandler,
                       void                   *aContext);
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
      * Sends a CoAP message with custom transmission parameters.
@@ -629,23 +583,6 @@ public:
      */
     Error SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    /**
-     * Sends a header-only CoAP message to indicate not all blocks have been sent or
-     * were sent out of order.
-     *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     */
-    Error SendRequestEntityIncomplete(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
-    {
-        return SendHeaderResponse(kCodeRequestIncomplete, aRequest, aMessageInfo);
-    }
-#endif
-
     /**
      * Aborts CoAP transactions associated with given handler and context.
      *
@@ -676,6 +613,63 @@ public:
      * @param[out] aQueueInfo     A `MessageQueue::Info` to populate with info about the queues.
      */
     void GetRequestAndCachedResponsesQueueInfo(MessageQueue::Info &aQueueInfo) const;
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    /**
+     * Adds a block-wise resource to the CoAP server.
+     *
+     * @param[in]  aResource  A reference to the resource.
+     */
+    void AddBlockWiseResource(ResourceBlockWise &aResource);
+
+    /**
+     * Removes a block-wise resource from the CoAP server.
+     *
+     * @param[in]  aResource  A reference to the resource.
+     */
+    void RemoveBlockWiseResource(ResourceBlockWise &aResource);
+
+    /**
+     * Sends a CoAP message block-wise with custom transmission parameters.
+     *
+     * If a response for a request is expected, respective function and context information should be provided.
+     * If no response is expected, these arguments should be NULL pointers.
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aTxParameters A pointer to `TxParameters`. If `nullptr`, default `TxParameters will be used.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
+     * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
+     *
+     * @retval kErrorNone     Successfully sent CoAP message.
+     * @retval kErrorNoBufs   Failed to allocate retransmission data.
+     */
+    Error SendMessage(Message                &aMessage,
+                      const Ip6::MessageInfo &aMessageInfo,
+                      const TxParameters     *aTxParameters,
+                      otCoapResponseHandler   aHandler,
+                      void                   *aContext,
+                      BlockwiseTransmitHook   aTransmitHook,
+                      BlockwiseReceiveHook    aReceiveHook);
+
+    /**
+     * Sends a header-only CoAP message to indicate not all blocks have been sent or
+     * were sent out of order.
+     *
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
+     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     */
+    Error SendRequestEntityIncomplete(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
+    {
+        return SendHeaderResponse(kCodeRequestIncomplete, aRequest, aMessageInfo);
+    }
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 protected:
     /**
@@ -817,6 +811,7 @@ private:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
+    Error ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aTransmitHook, void *aContext);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(Message::BlockType aType,
