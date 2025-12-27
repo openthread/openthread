@@ -229,7 +229,7 @@ private:
 /**
  * Represents Steering Data (bloom filter).
  */
-class SteeringData : public otSteeringData
+class SteeringData : public otSteeringData, public Unequatable<SteeringData>
 {
 public:
     static constexpr uint8_t kMinLength = OT_STEERING_DATA_MIN_LENGTH; ///< Minimum Steering Data length (in bytes).
@@ -391,6 +391,16 @@ public:
      * @returns TRUE if the bloom filter contains the Joiner ID mapping to @p aIndexes, FALSE otherwise.
      */
     bool Contains(const HashBitIndexes &aIndexes) const;
+
+    /**
+     * Overloads operator `==` to compare two Steering Data instances.
+     *
+     * @param[in] aOther  The other `SteeringData` to compare with.
+     *
+     * @retval TRUE   If the two Steering Data instances are equal.
+     * @retval FALSE  If the two Steering Data instances are not equal.
+     */
+    bool operator==(const SteeringData &aOther) const;
 
     /**
      * Converts the Steering Data to a human-readable string representation.
