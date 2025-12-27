@@ -44,8 +44,6 @@ RegisterLogModule("Joiner");
 
 Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mId()
-    , mDiscerner()
     , mState(kStateIdle)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
@@ -132,7 +130,6 @@ Error Joiner::Start(const char      *aPskd,
 
     SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
 
-    // Use random-generated extended address.
     randomAddress.GenerateRandom();
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::Mle>().UpdateLinkLocalAddress();
@@ -164,7 +161,7 @@ Error Joiner::Start(const char      *aPskd,
                                                                /* aJoiner */ true, /* aEnableFiltering */ true,
                                                                &filterIndexes, HandleDiscoverResult, this));
 
-    mCallback.Set(aCallback, aContext);
+    mCompletionCallback.Set(aCallback, aContext);
     SetState(kStateDiscover);
 
 exit:
@@ -182,7 +179,7 @@ void Joiner::Stop(void)
     LogInfo("Joiner stopped");
 
     // Callback is set to `nullptr` to skip calling it from `Finish()`
-    mCallback.Clear();
+    mCompletionCallback.Clear();
     Finish(kErrorAbort);
 }
 
@@ -211,7 +208,7 @@ void Joiner::Finish(Error aError)
     SetState(kStateIdle);
     FreeJoinerFinalizeMessage();
 
-    mCallback.InvokeIfSet(aError);
+    mCompletionCallback.InvokeIfSet(aError);
 
 exit:
     return;
@@ -226,7 +223,6 @@ uint8_t Joiner::CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny)
         aRssi = -127;
     }
 
-    // Clamp the RSSI to range [-127, -1]
     priority = Clamp<int8_t>(aRssi, -127, -1);
 
     // Assign higher priority to networks with an exact match of Joiner
