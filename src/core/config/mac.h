@@ -559,6 +559,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+ *
+ * Define to 1 to enable Data Poll Accelerator support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+#define OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE 0
+#endif
+/**
  * @}
  */
 
