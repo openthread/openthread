@@ -171,6 +171,15 @@ void platformRadioProcess(otInstance *aInstance, const otSysMainloopContext *aCo
 void platformRandomInit(void);
 
 /**
+ * Initializes the platform settings.
+ *
+ * @note This function is called before OpenThread instance is created.
+ *
+ * @param[in]  aDataPath   The data path to store setting files.
+ */
+void platformSettingsInit(const char *aDataPath);
+
+/**
  * Initializes the logging service used by OpenThread.
  *
  * @param[in] aName   A name string which will be prefixed to each log line.
