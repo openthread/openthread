@@ -42,6 +42,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/error.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/offset_range.hpp"
 #include "common/type_traits.hpp"
 
@@ -633,6 +634,27 @@ public:
         return AppendStringTlv(aMessage, StringTlvType::kType, StringTlvType::kMaxStringLength, aValue);
     }
 
+    /**
+     * Validates a given string value for a simple TLV with a UTF-8 string value.
+     *
+     * The @p aValue can be `nullptr` in which case it is treated as an empty string.
+     *
+     * @tparam     StringTlvType  The simple TLV type for which to validate the value (must be a sub-class of
+     *                            `StringTlvInfo`).
+     *
+     * @param[in]  aValue         A pointer to a C string to validate.
+     *
+     * @retval kErrorNone         The string value is valid for the given `StringTlvType`.
+     * @retval kErrorInvalidArgs  The string is not a valid UTF-8 string or its length is longer than the max allowed
+     *                            length specified by `StringTlvType::kMaxStringLength`.
+     */
+    template <typename StringTlvType> static Error ValidateStringValue(const char *aValue)
+    {
+        static_assert(StringTlvType::kMaxStringLength < NumericLimits<uint8_t>::kMax, "String TLV length is invalid");
+
+        return ValidateStringTlvValue(StringTlvType::kMaxStringLength, aValue);
+    }
+
     //------------------------------------------------------------------------------------------------------------------
     // Static methods for finding TLVs within a sequence of TLVs.
 
@@ -699,6 +721,7 @@ private:
     static Error ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue);
     static Error FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue);
     static Error AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue);
+    static Error ValidateStringTlvValue(uint8_t aMaxStringLength, const char *aStringValue);
     template <typename UintType> static Error ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue);
     template <typename UintType> static Error FindUintTlv(const Message &aMessage, uint8_t aType, UintType &aValue);
     template <typename UintType> static Error AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue);
