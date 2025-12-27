@@ -192,6 +192,8 @@ public:
     typedef ot::Coap::Type Type; ///< CoAP Type.
     typedef ot::Coap::Code Code; ///< CoAP Code.
 
+    typedef char UriPathStringBuffer[kMaxReceivedUriPath + 1]; ///< Buffer to store a received URI Path string.
+
     /**
      * CoAP Block1/Block2 Types
      */
@@ -457,15 +459,14 @@ public:
     Error AppendUriPathOptions(const char *aUriPath);
 
     /**
-     * Reads the Uri-Path options and constructs the URI path in the buffer referenced by @p `aUriPath`.
+     * Reads the Uri-Path options and constructs the URI path in the buffer referenced by @p aUriPath.
      *
-     * @param[in] aUriPath  A reference to the buffer for storing URI path.
-     *                      NOTE: The buffer size must be `kMaxReceivedUriPath + 1`.
+     * @param[out] aUriPath  A reference to the buffer to output the read URI path.
      *
      * @retval  kErrorNone   Successfully read the Uri-Path options.
      * @retval  kErrorParse  CoAP Option header not well-formed.
      */
-    Error ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
+    Error ReadUriPathOptions(UriPathStringBuffer &aUriPath) const;
 
     /**
      * Appends a Uri-Query option.
