@@ -35,19 +35,25 @@
 #include "instance/instance.hpp"
 
 #include "test_util.h"
+#include "test_util.hpp"
 
 namespace ot {
 
 void TestTlv(void)
 {
-    Instance   *instance = testInitInstance();
-    Message    *message;
-    Tlv         tlv;
-    ExtendedTlv extTlv;
-    uint16_t    offset;
-    OffsetRange offsetRange;
-    uint16_t    length;
-    uint8_t     buffer[4];
+    static constexpr uint16_t kMaxBufferSize = 300;
+
+    Instance     *instance = testInitInstance();
+    Message      *message;
+    Tlv           tlv;
+    ExtendedTlv   extTlv;
+    Tlv::Bookmark bookmark;
+    uint16_t      offset;
+    OffsetRange   offsetRange;
+    uint16_t      length;
+    uint16_t      prevLength;
+    uint16_t      index;
+    uint8_t       buffer[kMaxBufferSize];
 
     VerifyOrQuit(instance != nullptr);
 
@@ -178,6 +184,104 @@ void TestTlv(void)
 
     VerifyOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 7, offsetRange) != kErrorNone);
     VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1) == kErrorParse);
+
+    //- - - - - - - - - - - - - - - - - - - - - -
+    // Validate `StartTlv()`, `AdjustTlv()`, `EndTlv()`
+
+    SuccessOrQuit(message->SetLength(0));
+    offset = 0;
+
+    // Build a TLV with length 3
+
+    SuccessOrQuit(Tlv::StartTlv(*message, /* aType */ 1, bookmark));
+    SuccessOrQuit(message->Append<uint8_t>(0xab));
+    SuccessOrQuit(message->Append<uint8_t>(0xcd));
+    SuccessOrQuit(message->Append<uint8_t>(0xef));
+    SuccessOrQuit(Tlv::EndTlv(*message, bookmark));
+
+    SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 1, offsetRange));
+    VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(Tlv));
+    VerifyOrQuit(offsetRange.GetLength() == 3);
+    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 3));
+    VerifyOrQuit(buffer[0] == 0xab);
+    VerifyOrQuit(buffer[1] == 0xcd);
+    VerifyOrQuit(buffer[2] == 0xef);
+
+    offset = offsetRange.GetEndOffset();
+    VerifyOrQuit(offset == message->GetLength());
+
+    for (index = 0; index < kMaxBufferSize; index++)
+    {
+        buffer[index] = static_cast<uint8_t>(index);
+    }
+
+    // Build a TLV with length 254 (max for a regular TLV).
+
+    SuccessOrQuit(Tlv::StartTlv(*message, /* aType */ 2, bookmark));
+    SuccessOrQuit(message->AppendBytes(buffer, Tlv::kBaseTlvMaxLength));
+    SuccessOrQuit(Tlv::EndTlv(*message, bookmark));
+
+    SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 2, offsetRange));
+    VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(Tlv));
+    VerifyOrQuit(offsetRange.GetLength() == Tlv::kBaseTlvMaxLength);
+    VerifyOrQuit(message->CompareBytes(offsetRange, buffer));
+
+    offset = offsetRange.GetEndOffset();
+    VerifyOrQuit(offset == message->GetLength());
+
+    // Build a TLV with length 255 (ensure it is written as Extended TLV).
+
+    SuccessOrQuit(Tlv::StartTlv(*message, /* aType */ 3, bookmark));
+    SuccessOrQuit(message->AppendBytes(buffer, Tlv::kBaseTlvMaxLength + 1));
+    SuccessOrQuit(Tlv::EndTlv(*message, bookmark));
+
+    SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 3, offsetRange));
+    VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(ExtendedTlv));
+    VerifyOrQuit(offsetRange.GetLength() == Tlv::kBaseTlvMaxLength + 1);
+    VerifyOrQuit(message->CompareBytes(offsetRange, buffer));
+
+    offset = offsetRange.GetEndOffset();
+    VerifyOrQuit(offset == message->GetLength());
+
+    // Validate that `AdjustTlv()` copies the bytes only when we reach the
+    // TLV length limit.
+
+    SuccessOrQuit(Tlv::StartTlv(*message, /* aType */ 4, bookmark));
+
+    for (index = 0; index < Tlv::kBaseTlvMaxLength; index++)
+    {
+        SuccessOrQuit(message->Append<uint8_t>(buffer[index]));
+
+        prevLength = message->GetLength();
+        SuccessOrQuit(Tlv::AdjustTlv(*message, bookmark));
+        VerifyOrQuit(prevLength == message->GetLength());
+    }
+
+    SuccessOrQuit(message->Append<uint8_t>(buffer[index]));
+    index++;
+
+    prevLength = message->GetLength();
+    SuccessOrQuit(Tlv::AdjustTlv(*message, bookmark));
+    VerifyOrQuit(message->GetLength() == prevLength + sizeof(uint16_t));
+
+    for (; index < kMaxBufferSize; index++)
+    {
+        SuccessOrQuit(message->Append<uint8_t>(buffer[index]));
+
+        prevLength = message->GetLength();
+        SuccessOrQuit(Tlv::AdjustTlv(*message, bookmark));
+        VerifyOrQuit(prevLength == message->GetLength());
+    }
+
+    SuccessOrQuit(Tlv::EndTlv(*message, bookmark));
+
+    SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 4, offsetRange));
+    VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(ExtendedTlv));
+    VerifyOrQuit(offsetRange.GetLength() == kMaxBufferSize);
+    VerifyOrQuit(message->CompareBytes(offsetRange, buffer));
+
+    offset = offsetRange.GetEndOffset();
+    VerifyOrQuit(offset == message->GetLength());
 
     message->Free();
 

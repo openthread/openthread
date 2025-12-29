@@ -1413,21 +1413,15 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus)
 {
-    Error      error = kErrorNone;
-    TxMessage *message;
-    Tlv        tlv;
-    ot::Tlv    statusSubTlv;
+    Error         error = kErrorNone;
+    TxMessage    *message;
+    Tlv::Bookmark tlvBookmark;
 
     VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementResponse)) != nullptr, error = kErrorNoBufs);
 
-    tlv.SetType(Tlv::kLinkMetricsManagement);
-    statusSubTlv.SetType(LinkMetrics::SubTlv::kStatus);
-    statusSubTlv.SetLength(sizeof(aStatus));
-    tlv.SetLength(static_cast<uint8_t>(statusSubTlv.GetSize()));
-
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = message->Append(statusSubTlv));
-    SuccessOrExit(error = message->Append(aStatus));
+    SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kLinkMetricsManagement, tlvBookmark));
+    SuccessOrExit(error = Tlv::Append<LinkMetrics::StatusSubTlv>(*message, aStatus));
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
     SuccessOrExit(error = message->SendTo(aDestination));
 
@@ -1440,18 +1434,16 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength)
 {
-    Error      error = kErrorNone;
-    TxMessage *message;
-    Tlv        tlv;
+    Error         error = kErrorNone;
+    TxMessage    *message;
+    Tlv::Bookmark tlvBookmark;
 
     VerifyOrExit((message = NewMleMessage(kCommandLinkProbe)) != nullptr, error = kErrorNoBufs);
 
-    tlv.SetType(Tlv::kLinkProbe);
-    tlv.SetLength(sizeof(aSeriesId) + aLength);
-
-    SuccessOrExit(error = message->Append(tlv));
+    SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kLinkProbe, tlvBookmark));
     SuccessOrExit(error = message->Append(aSeriesId));
     SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
     SuccessOrExit(error = message->SendTo(aDestination));
 
@@ -3654,13 +3646,11 @@ Error Mle::TxMessage::AppendVersionTlv(void) { return Tlv::Append<VersionTlv>(*t
 
 Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode)
 {
-    Error    error = kErrorNone;
-    Tlv      tlv;
-    uint8_t  counter     = 0;
-    uint16_t startOffset = GetLength();
+    Error         error = kErrorNone;
+    Tlv::Bookmark tlvBookmark;
+    uint8_t       counter = 0;
 
-    tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = Append(tlv));
+    SuccessOrExit(error = Tlv::StartTlv(*this, Tlv::kAddressRegistration, tlvBookmark));
 
     // Prioritize ML-EID
     SuccessOrExit(error = AppendAddressRegistrationEntry(Get<Mle>().GetMeshLocalEid()));
@@ -3730,8 +3720,7 @@ exit:
 
     if (error == kErrorNone)
     {
-        tlv.SetLength(static_cast<uint8_t>(GetLength() - startOffset - sizeof(Tlv)));
-        Write(startOffset, tlv);
+        error = Tlv::EndTlv(*this, tlvBookmark);
     }
 
     return error;
@@ -3932,12 +3921,10 @@ Error Mle::TxMessage::AppendConnectivityTlv(void)
 
 Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
 {
-    Error    error;
-    Tlv      tlv;
-    uint16_t startOffset = GetLength();
+    Error         error;
+    Tlv::Bookmark tlvBookmark;
 
-    tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = Append(tlv));
+    SuccessOrExit(error = Tlv::StartTlv(*this, Tlv::kAddressRegistration, tlvBookmark));
 
     // The parent must echo back all registered IPv6 addresses except
     // for the ML-EID, which is excluded by `Child::GetIp6Addresses()`.
@@ -3947,8 +3934,7 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
         SuccessOrExit(error = AppendAddressRegistrationEntry(address));
     }
 
-    tlv.SetLength(static_cast<uint8_t>(GetLength() - startOffset - sizeof(Tlv)));
-    Write(startOffset, tlv);
+    error = Tlv::EndTlv(*this, tlvBookmark);
 
 exit:
     return error;
