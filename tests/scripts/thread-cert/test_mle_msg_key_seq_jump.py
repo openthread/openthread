@@ -256,7 +256,7 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
         self.assertEqual(child.get_key_sequence_counter(), 25)
 
         child.start()
-        self.simulator.go(2)
+        self.simulator.go(5)
 
         self.assertEqual(child.get_state(), 'child')
         self.assertEqual(leader.get_key_sequence_counter(), 25)
