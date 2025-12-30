@@ -80,6 +80,11 @@ typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
 typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
 
 /**
+ * Defines Query Option Sub-TLV constants and types.
+ */
+typedef TlvInfo<SubTlv::kQueryOptions> QueryOptionsSubTlv;
+
+/**
  * Implements Link Metrics Report Sub-TLV generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
@@ -158,32 +163,6 @@ private:
         uint8_t  m8;
         uint32_t m32;
     } mMetricsValue;
-} OT_TOOL_PACKED_END;
-
-/**
- * Implements Link Metrics Query Options Sub-TLV generation and parsing.
- */
-OT_TOOL_PACKED_BEGIN
-class QueryOptionsSubTlv : public Tlv, public TlvInfo<SubTlv::kQueryOptions>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(SubTlv::kQueryOptions);
-        SetLength(0);
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(uint8_t); }
-
 } OT_TOOL_PACKED_END;
 
 /**

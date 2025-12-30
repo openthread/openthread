@@ -102,12 +102,7 @@ Error Initiator::AppendLinkMetricsQueryTlv(Message &aMessage, const QueryInfo &a
 
     if (aInfo.mTypeIdCount != 0)
     {
-        QueryOptionsSubTlv queryOptionsTlv;
-
-        queryOptionsTlv.Init();
-        queryOptionsTlv.SetLength(aInfo.mTypeIdCount);
-        SuccessOrExit(error = aMessage.Append(queryOptionsTlv));
-        SuccessOrExit(error = aMessage.AppendBytes(aInfo.mTypeIds, aInfo.mTypeIdCount));
+        SuccessOrExit(error = Tlv::AppendTlv(aMessage, QueryOptionsSubTlv::kType, aInfo.mTypeIds, aInfo.mTypeIdCount));
     }
 
 exit:

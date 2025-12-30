@@ -606,17 +606,13 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
     Tmf::MessageInfo        messageInfo(GetInstance());
-    Tlv                     tlv;
 
     message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerGet));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aLength > 0)
     {
-        tlv.SetType(Tlv::kGet);
-        tlv.SetLength(aLength);
-        SuccessOrExit(error = message->Append(tlv));
-        SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kGet, aTlvs, aLength));
     }
 
     messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
