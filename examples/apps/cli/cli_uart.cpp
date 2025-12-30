@@ -34,6 +34,7 @@
 #include <openthread-system.h>
 #include <openthread/cli.h>
 #include <openthread/logging.h>
+#include <openthread/platform/debug_uart.h>
 
 #include "cli/cli_config.h"
 #include "common/code_utils.hpp"
@@ -221,7 +222,7 @@ static void Send(void)
     {
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
         /* duplicate the output to the debug uart */
-        otSysDebugUart_write_bytes(reinterpret_cast<uint8_t *>(sTxBuffer + sTxHead), sSendLength);
+        otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(sTxBuffer + sTxHead), sSendLength);
 #endif
         IgnoreError(otPlatUartSend(reinterpret_cast<uint8_t *>(sTxBuffer + sTxHead), sSendLength));
     }

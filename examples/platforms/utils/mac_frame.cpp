@@ -383,6 +383,7 @@ void otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioCo
     uint8_t *timeIe;
     uint64_t time;
 
+    OT_UNUSED_VARIABLE(aRadioContext);
     VerifyOrExit((aFrame->mInfo.mTxInfo.mIeInfo != nullptr) && (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0));
 
     timeIe  = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
@@ -434,7 +435,6 @@ bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otR
         break;
 
     case Mac::Address::kTypeExtended:
-        VerifyOrExit(*reinterpret_cast<const uint64_t *>(aRadioContext->mCslExtAddress.m8) != 0);
         VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress));
         matches = true;
         break;
