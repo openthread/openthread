@@ -251,10 +251,7 @@ Error Server::AppendChildTableAsChildTlvs(Message &aMessage)
         SuccessOrExit(error = childTlv.AppendTo(aMessage));
     }
 
-    // Add empty TLV to indicate end of the list
-
-    childTlv.InitAsEmpty();
-    SuccessOrExit(error = childTlv.AppendTo(aMessage));
+    error = Tlv::AppendEmpty<ChildTlv>(aMessage);
 
 exit:
     return error;
@@ -274,10 +271,7 @@ Error Server::AppendRouterNeighborTlvs(Message &aMessage)
         }
     }
 
-    // Add empty TLV to indicate end of the list
-
-    neighborTlv.InitAsEmpty();
-    SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
+    error = Tlv::AppendEmpty<RouterNeighborTlv>(aMessage);
 
 exit:
     return error;
@@ -286,18 +280,13 @@ exit:
 Error Server::AppendChildTableIp6AddressList(Message &aMessage)
 {
     Error error = kErrorNone;
-    Tlv   tlv;
 
     for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         SuccessOrExit(error = AppendChildIp6AddressListTlv(aMessage, child));
     }
 
-    // Add empty TLV to indicate end of the list
-
-    tlv.SetType(Tlv::kChildIp6AddressList);
-    tlv.SetLength(0);
-    SuccessOrExit(error = aMessage.Append(tlv));
+    error = Tlv::AppendEmpty<ChildIp6AddressListTlv>(aMessage);
 
 exit:
     return error;
@@ -952,10 +941,7 @@ Error Server::AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &a
         SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
     }
 
-    // Add empty TLV to indicate end of the list
-
-    childTlv.InitAsEmpty();
-    SuccessOrExit(error = childTlv.AppendTo(*aAnswer));
+    error = Tlv::AppendEmpty<ChildTlv>(*aAnswer);
 
 exit:
     return error;
@@ -979,10 +965,7 @@ Error Server::AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInf
         SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
     }
 
-    // Add empty TLV to indicate end of the list
-
-    neighborTlv.InitAsEmpty();
-    SuccessOrExit(error = neighborTlv.AppendTo(*aAnswer));
+    error = Tlv::AppendEmpty<RouterNeighborTlv>(*aAnswer);
 
 exit:
     return error;
@@ -991,7 +974,6 @@ exit:
 Error Server::AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 {
     Error error = kErrorNone;
-    Tlv   tlv;
 
     for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
@@ -999,11 +981,7 @@ Error Server::AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo
         SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
     }
 
-    // Add empty TLV to indicate end of the list
-
-    tlv.SetType(Tlv::kChildIp6AddressList);
-    tlv.SetLength(0);
-    SuccessOrExit(error = aAnswer->Append(tlv));
+    error = Tlv::AppendEmpty<ChildIp6AddressListTlv>(*aAnswer);
 
 exit:
     return error;

@@ -325,20 +325,10 @@ Error Server::AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, cons
         SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
     }
 
-    SuccessOrExit(error = AppendEmptyTlv(*aAnswer, Tlv::kNetworkInfo));
+    SuccessOrExit(error = Tlv::AppendEmpty<NetworkInfoTlv>(*aAnswer));
 
 exit:
     return error;
-}
-
-Error Server::AppendEmptyTlv(Coap::Message &aAnswer, Tlv::Type aTlvType)
-{
-    Tlv tlv;
-
-    tlv.SetType(aTlvType);
-    tlv.SetLength(0);
-
-    return aAnswer.Append(tlv);
 }
 
 } // namespace HistoryTracker

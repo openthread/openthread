@@ -282,6 +282,8 @@ template Error Tlv::AppendUintTlv<uint8_t>(Message &aMessage, uint8_t aType, uin
 template Error Tlv::AppendUintTlv<uint16_t>(Message &aMessage, uint8_t aType, uint16_t aValue);
 template Error Tlv::AppendUintTlv<uint32_t>(Message &aMessage, uint8_t aType, uint32_t aValue);
 
+Error Tlv::AppendEmptyTlv(Message &aMessage, uint8_t aType) { return AppendTlv(aMessage, aType, nullptr, 0); }
+
 Error Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint16_t aLength)
 {
     Error       error = kErrorNone;
