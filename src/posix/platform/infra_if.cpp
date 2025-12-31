@@ -574,14 +574,13 @@ exit:
 
 void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
 {
-    const struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
-    const struct ifaddrmsg *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
-
     switch (aNetlinkMessage->nlmsg_type)
     {
     case RTM_DELADDR:
     case RTM_NEWADDR:
     {
+        const struct ifaddrmsg *ifaddr = reinterpret_cast<const struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
+
         VerifyOrExit(ifaddr->ifa_index == mInfraIfIndex);
 
         // Address added/removed on current interface. This might indicate link local address is added/removed. We
@@ -593,6 +592,8 @@ void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
     }
     case RTM_DELLINK:
     {
+        const struct ifinfomsg *ifinfo = reinterpret_cast<const struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
+
         VerifyOrExit(ifinfo->ifi_index == static_cast<int>(mInfraIfIndex));
 
         // The current interface is deleted. We must update its running state to false.
@@ -605,6 +606,8 @@ void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
     }
     case RTM_NEWLINK:
     {
+        const struct ifinfomsg *ifinfo = reinterpret_cast<const struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
+
         // The interface is re-created:
         // 1. If the interface index stays the same, we simply check and update the running state.
         // 2. If the interface is re-created with a different index, we need to re-initialize the Border Routing state
@@ -616,7 +619,7 @@ void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
         if (ifinfo->ifi_index != static_cast<int>(mInfraIfIndex))
         {
             LogInfo("The infra interface index changed from %u to %d", mInfraIfIndex, ifinfo->ifi_index);
-            mInfraIfIndex = ifinfo->ifi_index;
+            mInfraIfIndex = static_cast<uint32_t>(ifinfo->ifi_index);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
             SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, IsRunning()));
 #endif

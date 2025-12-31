@@ -52,7 +52,7 @@ wait_for()
     local command="$1"
     local expect="$2"
 
-    local count=10
+    local count=15
     while [ ${count} -ne 0 ]; do
         count=$((count - 1))
         eval sudo "${OT_CTL_PATH}" "${command}" | grep -q "${expect}" && return 0
@@ -82,6 +82,15 @@ wait_for_onlinkprefix()
     return 1
 }
 
+setup_veth()
+{
+    sudo ip link add veth-a type veth peer name veth-b
+    sudo ip link set veth-a up
+    sudo ip link set veth-b up
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
+    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
+}
+
 do_build()
 {
     ./script/cmake-build simulation
@@ -98,11 +107,7 @@ do_check()
     sudo ip link del veth-a || true
     sudo ip link del veth-b || true
 
-    sudo ip link add veth-a type veth peer name veth-b
-    sudo ip link set veth-a up
-    sudo ip link set veth-b up
-    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
-    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
+    setup_veth
 
     RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
     RADIO_URL="spinel+hdlc+forkpty://${RADIO_NCP_PATH}?forkpty-arg=2"
@@ -112,11 +117,10 @@ do_check()
 
     # verify this reset and factoryreset end immediately
     sudo "${OT_CTL_PATH}" reset
-    # sleep a while for daemon ready
-    sleep 2
+    wait_for "state" "disabled" || die "daemon did not enter disabled state after reset"
+
     sudo "${OT_CTL_PATH}" factoryreset
-    # sleep a while for daemon ready
-    sleep 2
+    wait_for "state" "disabled" || die "daemon did not enter disabled state after factoryreset"
 
     # Bring up Thread network
     sudo "${OT_CTL_PATH}" dataset init new || die "failed to init new dataset"
@@ -131,11 +135,7 @@ do_check()
     sudo ip link del veth-a
     wait_for "br state" "stopped" || die "failed to stop br"
 
-    sudo ip link add veth-a type veth peer name veth-b
-    sudo ip link set veth-a up
-    sudo ip link set veth-b up
-    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra=2
-    sudo sysctl -w net.ipv6.conf.veth-a.accept_ra_rt_info_max_plen=128
+    setup_veth
 
     # Verify border routing is still functional by checking for a published prefix
     # The border router should re-detect the interface and re-establish routing.
