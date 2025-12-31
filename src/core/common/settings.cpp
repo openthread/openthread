@@ -117,90 +117,59 @@ void SettingsBase::BorderAgentId::Log(Action aAction, const MeshCoP::BorderAgent
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *SettingsBase::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Read",     // (0) kActionRead
-        "Saved",    // (1) kActionSave
-        "Re-saved", // (2) kActionResave
-        "Deleted",  // (3) kActionDelete
-#if OPENTHREAD_FTD
-        "Added",      // (4) kActionAdd,
-        "Removed",    // (5) kActionRemove,
-        "Deleted all" // (6) kActionDeleteAll
-#endif
-    };
+#define ActionMapList(_)         \
+    _(kActionRead, "Read")       \
+    _(kActionSave, "Saved")      \
+    _(kActionResave, "Re-saved") \
+    _(kActionDelete, "Deleted")  \
+    FtdActionMapList(_)
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kActionRead);
-        ValidateNextEnum(kActionSave);
-        ValidateNextEnum(kActionResave);
-        ValidateNextEnum(kActionDelete);
 #if OPENTHREAD_FTD
-        ValidateNextEnum(kActionAdd);
-        ValidateNextEnum(kActionRemove);
-        ValidateNextEnum(kActionDeleteAll);
+#define FtdActionMapList(_)     \
+    _(kActionAdd, "Added")      \
+    _(kActionRemove, "Removed") \
+    _(kActionDeleteAll, "Deleted all")
+#else
+#define FtdActionMapList(_)
 #endif
-    };
 
-    return kActionStrings[aAction];
+    DefineEnumStringArray(ActionMapList);
+
+    return kStrings[aAction];
 }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 const char *SettingsBase::KeyToString(Key aKey)
 {
-    static const char *const kKeyStrings[] = {
-        "",                  // (0)  (Unused)
-        "ActiveDataset",     // (1)  kKeyActiveDataset
-        "PendingDataset",    // (2)  kKeyPendingDataset
-        "NetworkInfo",       // (3)  kKeyNetworkInfo
-        "ParentInfo",        // (4)  kKeyParentInfo
-        "ChildInfo",         // (5)  kKeyChildInfo
-        "",                  // (6)  Removed (previously auto-start).
-        "SlaacIidSecretKey", // (7)  kKeySlaacIidSecretKey
-        "DadInfo",           // (8)  kKeyDadInfo
-        "",                  // (9)  Removed (previously OMR prefix).
-        "",                  // (10) Removed (previously on-link prefix).
-        "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
-        "SrpClientInfo",     // (12) kKeySrpClientInfo
-        "SrpServerInfo",     // (13) kKeySrpServerInfo
-        "",                  // (14) Removed (previously NAT64 prefix)
-        "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
-        "BrOnLinkPrefixes",  // (16) kKeyBrOnLinkPrefixes
-        "BorderAgentId",     // (17) kKeyBorderAgentId
-        "TcatCommrCert"      // (18) kKeyTcatCommrCert
-    };
+#define KeyMapList(_)                             \
+    _(0, "")                                      \
+    _(kKeyActiveDataset, "ActiveDataset")         \
+    _(kKeyPendingDataset, "PendingDataset")       \
+    _(kKeyNetworkInfo, "NetworkInfo")             \
+    _(kKeyParentInfo, "ParentInfo")               \
+    _(kKeyChildInfo, "ChildInfo")                 \
+    _(6, "")                                      \
+    _(kKeySlaacIidSecretKey, "SlaacIidSecretKey") \
+    _(kKeyDadInfo, "DadInfo")                     \
+    _(9, "")                                      \
+    _(10, "")                                     \
+    _(kKeySrpEcdsaKey, "SrpEcdsaKey")             \
+    _(kKeySrpClientInfo, "SrpClientInfo")         \
+    _(kKeySrpServerInfo, "SrpServerInfo")         \
+    _(14, "")                                     \
+    _(kKeyBrUlaPrefix, "BrUlaPrefix")             \
+    _(kKeyBrOnLinkPrefixes, "BrOnLinkPrefixes")   \
+    _(kKeyBorderAgentId, "BorderAgentId")         \
+    _(kKeyTcatCommrCert, "TcatCommrCert")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        SkipNextEnum();
-        ValidateNextEnum(kKeyActiveDataset);
-        ValidateNextEnum(kKeyPendingDataset);
-        ValidateNextEnum(kKeyNetworkInfo);
-        ValidateNextEnum(kKeyParentInfo);
-        ValidateNextEnum(kKeyChildInfo);
-        SkipNextEnum();
-        ValidateNextEnum(kKeySlaacIidSecretKey);
-        ValidateNextEnum(kKeyDadInfo);
-        SkipNextEnum();
-        SkipNextEnum();
-        ValidateNextEnum(kKeySrpEcdsaKey);
-        ValidateNextEnum(kKeySrpClientInfo);
-        ValidateNextEnum(kKeySrpServerInfo);
-        SkipNextEnum();
-        ValidateNextEnum(kKeyBrUlaPrefix);
-        ValidateNextEnum(kKeyBrOnLinkPrefixes);
-        ValidateNextEnum(kKeyBorderAgentId);
-        ValidateNextEnum(kKeyTcatCommrCert);
-    };
+    DefineEnumStringArray(KeyMapList);
 
     static_assert(kLastKey == kKeyTcatCommrCert, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
-    return kKeyStrings[aKey];
+    return kStrings[aKey];
 }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 

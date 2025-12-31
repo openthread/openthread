@@ -1069,51 +1069,43 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
+const char *AddressResolver::EntryChangeToString(EntryChange aChange)
+{
+#define EntryChangeMapList(_)   \
+    _(kEntryAdded, "added")     \
+    _(kEntryUpdated, "updated") \
+    _(kEntryRemoved, "removed")
+
+    DefineEnumStringArray(EntryChangeMapList);
+
+    return kStrings[aChange];
+}
+
+const char *AddressResolver::ReasonToString(Reason aReason)
+{
+#define ReasonMapList(_)                                        \
+    _(kReasonQueryRequest, "query request")                     \
+    _(kReasonSnoop, "snoop")                                    \
+    _(kReasonReceivedNotification, "rx notification")           \
+    _(kReasonRemovingRouterId, "removing router id")            \
+    _(kReasonRemovingRloc16, "removing rloc16")                 \
+    _(kReasonReceivedIcmpDstUnreachNoRoute, "rx icmp no route") \
+    _(kReasonEvictingForNewEntry, "evicting for new entry")     \
+    _(kReasonRemovingEid, "removing eid")
+
+    DefineEnumStringArray(ReasonMapList);
+
+    return kStrings[aReason];
+}
+
 void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
                                           Reason            aReason,
                                           const CacheEntry &aEntry,
                                           CacheEntryList   *aList)
 {
-    static const char *const kChangeStrings[] = {
-        "added",   // (0) kEntryAdded
-        "updated", // (1) kEntryUpdated
-        "removed", // (2) kEntryRemoved
-    };
-
-    static const char *const kReasonStrings[] = {
-        "query request",          // (0) kReasonQueryRequest
-        "snoop",                  // (1) kReasonSnoop
-        "rx notification",        // (2) kReasonReceivedNotification
-        "removing router id",     // (3) kReasonRemovingRouterId
-        "removing rloc16",        // (4) kReasonRemovingRloc16
-        "rx icmp no route",       // (5) kReasonReceivedIcmpDstUnreachNoRoute
-        "evicting for new entry", // (6) kReasonEvictingForNewEntry
-        "removing eid",           // (7) kReasonRemovingEid
-    };
-
-    struct ChangeEnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kEntryAdded);
-        ValidateNextEnum(kEntryUpdated);
-        ValidateNextEnum(kEntryRemoved);
-    };
-
-    struct ReasonEnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kReasonQueryRequest);
-        ValidateNextEnum(kReasonSnoop);
-        ValidateNextEnum(kReasonReceivedNotification);
-        ValidateNextEnum(kReasonRemovingRouterId);
-        ValidateNextEnum(kReasonRemovingRloc16);
-        ValidateNextEnum(kReasonReceivedIcmpDstUnreachNoRoute);
-        ValidateNextEnum(kReasonEvictingForNewEntry);
-        ValidateNextEnum(kReasonRemovingEid);
-    };
-
-    LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
-            aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
+    LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", EntryChangeToString(aChange),
+            aEntry.GetTarget().ToString().AsCString(), aEntry.GetRloc16(),
+            (aList == nullptr) ? "" : ", list:", ListToString(aList), ReasonToString(aReason));
 }
 
 const char *AddressResolver::ListToString(const CacheEntryList *aList) const

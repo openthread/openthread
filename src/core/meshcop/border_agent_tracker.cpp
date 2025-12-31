@@ -259,21 +259,14 @@ void Tracker::LogOnError(Error, const char *, const char *) {}
 
 const char *Tracker::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Stopped",
-        "PendingDnssd",
-        "Running",
-    };
+#define StateMapList(_)                   \
+    _(kStateStopped, "Stopped")           \
+    _(kStatePendingDnssd, "PendingDnssd") \
+    _(kStateRunning, "Running")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStatePendingDnssd);
-        ValidateNextEnum(kStateRunning);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
