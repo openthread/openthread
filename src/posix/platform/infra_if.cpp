@@ -575,12 +575,17 @@ exit:
 void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
 {
     const struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
+    const struct ifaddrmsg *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
 
     switch (aNetlinkMessage->nlmsg_type)
     {
     case RTM_DELADDR:
     case RTM_NEWADDR:
     {
+        VerifyOrExit(ifaddr->ifa_index == mInfraIfIndex);
+
+        // Address added/removed on current interface. This might indicate link local address is added/removed. We
+        // need to check and update its running state.
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
 #endif
@@ -590,6 +595,7 @@ void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
     {
         VerifyOrExit(ifinfo->ifi_index == static_cast<int>(mInfraIfIndex));
 
+        // The current interface is deleted. We must update its running state to false.
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, /* aIsRunning */ false));
 #endif
@@ -599,7 +605,11 @@ void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
     }
     case RTM_NEWLINK:
     {
-        char  ifname[IF_NAMESIZE] = {};
+        // The interface is re-created:
+        // 1. If the interface index stays the same, we simply check and update the running state.
+        // 2. If the interface is re-created with a different index, we need to re-initialize the Border Routing state
+        //    with the new index.
+        char ifname[IF_NAMESIZE] = {};
 
         VerifyOrExit(if_indextoname(ifinfo->ifi_index, ifname) != nullptr && strcmp(ifname, mInfraIfName) == 0);
 
