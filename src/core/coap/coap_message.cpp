@@ -246,7 +246,7 @@ exit:
     return error;
 }
 
-Error Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const
+Error Message::ReadUriPathOptions(UriPathStringBuffer &aUriPath) const
 {
     char            *curUriPath = aUriPath;
     Error            error      = kErrorNone;
