@@ -599,11 +599,9 @@ void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
     }
     case RTM_NEWLINK:
     {
-        char  nameBuffer[IF_NAMESIZE] = {};
-        char *ifname;
+        char  ifname[IF_NAMESIZE] = {};
 
-        ifname = if_indextoname(ifinfo->ifi_index, nameBuffer);
-        VerifyOrExit(ifname != nullptr && strcmp(ifname, mInfraIfName) == 0);
+        VerifyOrExit(if_indextoname(ifinfo->ifi_index, ifname) != nullptr && strcmp(ifname, mInfraIfName) == 0);
 
         if (ifinfo->ifi_index != static_cast<int>(mInfraIfIndex))
         {
