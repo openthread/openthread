@@ -575,13 +575,14 @@ exit:
 void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
 {
     const struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
-    const struct ifaddrmsg *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
 
     switch (aNetlinkMessage->nlmsg_type)
     {
     case RTM_DELADDR:
     case RTM_NEWADDR:
     {
+        const struct ifaddrmsg *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
+
         VerifyOrExit(ifaddr->ifa_index == mInfraIfIndex);
 
         // Address added/removed on current interface. This might indicate link local address is added/removed. We
