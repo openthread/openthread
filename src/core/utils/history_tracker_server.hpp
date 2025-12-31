@@ -90,7 +90,6 @@ private:
     void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
     Error AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, const RequestTlv &aRequestTlv);
-    Error AppendEmptyTlv(Coap::Message &aAnswer, Tlv::Type aTlvType);
 
     static void HandleAnswerResponse(void                *aContext,
                                      otMessage           *aMessage,

@@ -702,15 +702,6 @@ public:
     void InitFrom(const Child &aChild);
 
     /**
-     * Initializes the TLV as empty (zero length).
-     */
-    void InitAsEmpty(void)
-    {
-        SetType(kChild);
-        SetLength(0);
-    }
-
-    /**
      * Returns the Flags field (`kFlags*` constants define bits in flags).
      *
      * @returns The Flags field.
@@ -899,15 +890,6 @@ public:
      * @param[in] aRouter   The router to initialize the TLV from.
      */
     void InitFrom(const Router &aRouter);
-
-    /**
-     * Initializes the TLV as empty (zero length).
-     */
-    void InitAsEmpty(void)
-    {
-        SetType(kRouterNeighbor);
-        SetLength(0);
-    }
 
     /**
      * Returns the Flags field (`kFlags*` constants define bits in flags).

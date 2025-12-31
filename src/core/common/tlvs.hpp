@@ -538,6 +538,36 @@ public:
     }
 
     /**
+     * Appends an empty TLV (no value) with a given type to a message.
+     *
+     * On success this method grows the message by the size of the TLV.
+     *
+     * @param[in]  aMessage      The message to append to.
+     * @param[in]  aType         The TLV type to append.
+     *
+     * @retval kErrorNone     Successfully appended the TLV to the message.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     */
+    static Error AppendEmptyTlv(Message &aMessage, uint8_t aType);
+
+    /**
+     * Appends an empty TLV (no value) with a given type to a message.
+     *
+     * On success this method grows the message by the size of the TLV.
+     *
+     * @tparam     TlvType       The TLV type to append.
+     *
+     * @param[in]  aMessage      The message to append to.
+     *
+     * @retval kErrorNone     Successfully appended the TLV to the message.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     */
+    template <typename TlvType> static Error AppendEmpty(Message &aMessage)
+    {
+        return AppendEmptyTlv(aMessage, TlvType::kType);
+    }
+
+    /**
      * Appends a TLV with a given type and value to a message.
      *
      * If the TLV length is longer than maximum base TLV size defined by `kBaseTlvMaxLength` then
