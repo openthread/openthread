@@ -192,12 +192,8 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
 
     if (aNetworkData != nullptr)
     {
-        ThreadTlv tlv;
-
-        tlv.SetType(ThreadTlv::kThreadNetworkData);
-        tlv.SetLength(aNetworkData->GetLength());
-        SuccessOrExit(error = message->Append(tlv));
-        SuccessOrExit(error = message->AppendBytes(aNetworkData->GetBytes(), aNetworkData->GetLength()));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kThreadNetworkData, aNetworkData->GetBytes(),
+                                             aNetworkData->GetLength()));
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
         Get<Leader>().CheckForNetDataGettingFull(*aNetworkData, aOldRloc16);

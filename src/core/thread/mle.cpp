@@ -3041,15 +3041,11 @@ Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, co
 {
     Error      error   = kErrorNone;
     TxMessage *message = NewMleMessage(kCommandLinkMetricsManagementRequest);
-    Tlv        tlv;
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    tlv.SetType(Tlv::kLinkMetricsManagement);
-    tlv.SetLength(static_cast<uint8_t>(aSubTlv.GetSize()));
-
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = aSubTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kLinkMetricsManagement, &aSubTlv,
+                                         static_cast<uint16_t>(aSubTlv.GetSize())));
 
     error = message->SendTo(aDestination);
 
