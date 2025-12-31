@@ -61,7 +61,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 {
     Error                           error   = kErrorNone;
     Mle::TxMessage                 *message = nullptr;
-    Tlv                             tlv;
+    Tlv::Bookmark                   tlvBookmark;
     Ip6::Address                    destination;
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
     MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
@@ -100,31 +100,24 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandDiscoveryRequest)) != nullptr, error = kErrorNoBufs);
     message->SetPanId(aPanId);
 
-    // Prepare sub-TLV MeshCoP Discovery Request.
+    // Append Discovery TLV with one or two sub-TLVs.
+
+    SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kDiscovery, tlvBookmark));
+
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
-
-    if (mAdvDataLength != 0)
-    {
-        // Prepare sub-TLV MeshCoP Joiner Advertisement.
-        joinerAdvertisement.Init();
-        joinerAdvertisement.SetOui(mOui);
-        joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
-    }
-
-    // Append Discovery TLV with one or two sub-TLVs.
-    tlv.SetType(Tlv::kDiscovery);
-    tlv.SetLength(
-        static_cast<uint8_t>(discoveryRequest.GetSize() + ((mAdvDataLength != 0) ? joinerAdvertisement.GetSize() : 0)));
-
-    SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
     if (mAdvDataLength != 0)
     {
+        joinerAdvertisement.Init();
+        joinerAdvertisement.SetOui(mOui);
+        joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
         SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
     }
+
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
     message->RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
 

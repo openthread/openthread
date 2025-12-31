@@ -979,10 +979,8 @@ exit:
 
 Error TcatAgent::HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aResponse)
 {
-    Error   error = kErrorNone;
-    ot::Tlv tlv;
-    uint8_t replyLen = 0;
-    uint8_t count    = 0;
+    Error         error = kErrorNone;
+    Tlv::Bookmark tlvBookmark;
 
     static_assert((kApplicationLayerMaxCount * (kServiceNameMaxLength + 2)) <= 250,
                   "Unsupported TCAT application layers configuration");
@@ -990,23 +988,17 @@ Error TcatAgent::HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aRe
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
     VerifyOrExit(IsCommandClassAuthorized(kApplication), error = kErrorRejected);
 
+    SuccessOrExit(error = Tlv::StartTlv(aOutgoingMessage, kTlvResponseWithPayload, tlvBookmark));
+
     for (uint8_t i = 0; i < kApplicationLayerMaxCount && mVendorInfo->mApplicationServiceName[i] != nullptr; i++)
-    {
-        replyLen += sizeof(tlv);
-        replyLen += StringLength(mVendorInfo->mApplicationServiceName[i], kServiceNameMaxLength);
-        count++;
-    }
-
-    tlv.SetType(kTlvResponseWithPayload);
-    tlv.SetLength(replyLen);
-    SuccessOrExit(error = aOutgoingMessage.Append(tlv));
-
-    for (uint8_t i = 0; i < count; i++)
     {
         uint16_t length = StringLength(mVendorInfo->mApplicationServiceName[i], kServiceNameMaxLength);
         uint8_t  type   = mVendorInfo->mApplicationServiceIsTcp[i] ? kTlvServiceNameTcp : kTlvServiceNameUdp;
+
         SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, type, mVendorInfo->mApplicationServiceName[i], length));
     }
+
+    SuccessOrExit(error = Tlv::EndTlv(aOutgoingMessage, tlvBookmark));
 
     aResponse = true;
 

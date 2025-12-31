@@ -2795,8 +2795,7 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
 {
     Error                         error = kErrorNone;
     TxMessage                    *message;
-    uint16_t                      startOffset;
-    Tlv                           tlv;
+    Tlv::Bookmark                 tlvBookmark;
     MeshCoP::DiscoveryResponseTlv discoveryResponseTlv;
 
     VerifyOrExit((message = NewMleMessage(kCommandDiscoveryResponse)) != nullptr, error = kErrorNoBufs);
@@ -2806,10 +2805,7 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
     message->SetRadioType(aInfo.mRadioType);
 #endif
 
-    tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(tlv));
-
-    startOffset = message->GetLength();
+    SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kDiscovery, tlvBookmark));
 
     discoveryResponseTlv.Init();
     discoveryResponseTlv.SetVersion(kThreadVersion);
@@ -2854,8 +2850,7 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
     }
 #endif
 
-    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), tlv);
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
     SuccessOrExit(error = message->SendTo(aDestination));
 
