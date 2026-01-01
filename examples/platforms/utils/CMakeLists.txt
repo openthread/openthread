@@ -47,6 +47,10 @@ if(OT_RTT_UART)
     )
 endif()
 
+target_compile_options(openthread-platform-utils PRIVATE
+    ${OT_CFLAGS}
+)
+
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}
     $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>

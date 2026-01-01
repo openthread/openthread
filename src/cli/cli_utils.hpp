@@ -553,7 +553,10 @@ public:
         otError error = OT_ERROR_NONE;
 
         VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
         OutputLine(FormatStringFor<ValueType>(), aGetHandler(GetInstancePtr()));
+#pragma GCC diagnostic pop
 
     exit:
         return error;
@@ -755,13 +758,9 @@ template <> inline constexpr const char *Utils::FormatStringFor<uint8_t>(void) {
 
 template <> inline constexpr const char *Utils::FormatStringFor<uint16_t>(void) { return "%u"; }
 
-template <> inline constexpr const char *Utils::FormatStringFor<uint32_t>(void) { return "%lu"; }
-
 template <> inline constexpr const char *Utils::FormatStringFor<int8_t>(void) { return "%d"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<int16_t>(void) { return "%d"; }
-
-template <> inline constexpr const char *Utils::FormatStringFor<int32_t>(void) { return "%ld"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<const char *>(void) { return "%s"; }
 
@@ -772,7 +771,8 @@ template <> inline otError Utils::ProcessGet<uint32_t>(Arg aArgs[], GetHandler<u
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<uint32_t>(), ToUlong(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(unsigned long) >= sizeof(uint32_t), "OpenThread assumes unsigned long is at least 32bit");
+    OutputLine("%lu", ToUlong(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -783,7 +783,8 @@ template <> inline otError Utils::ProcessGet<int32_t>(Arg aArgs[], GetHandler<in
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<int32_t>(), static_cast<long int>(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(long) >= sizeof(int32_t), "OpenThread assumes long is at least 32bit");
+    OutputLine("%ld", static_cast<long int>(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;

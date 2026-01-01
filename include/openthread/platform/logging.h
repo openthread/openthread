@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_PLATFORM_LOGGING_H_
 #define OPENTHREAD_PLATFORM_LOGGING_H_
 
+#include <openthread/platform/toolchain.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -146,7 +148,8 @@ typedef enum otLogRegion
  * @param[in]  aFormat     A pointer to the format string.
  * @param[in]  ...         Arguments for the format specification.
  */
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
 /**
  * Handles OpenThread log level changes.
