@@ -930,24 +930,26 @@ Error CoapBase::SendMessage(Message                &aMessage,
 
 Error CoapBase::ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aTransmitHook, void *aContext)
 {
-    Error    error      = kErrorNone;
-    uint8_t  type       = aMessage.GetType();
-    bool     moreBlocks = false;
-    uint16_t bufLen;
-    uint8_t  buf[kMaxBlockLength];
+    Error     error      = kErrorNone;
+    uint8_t   type       = aMessage.GetType();
+    bool      moreBlocks = false;
+    uint16_t  blockSize;
+    uint8_t   buf[kMaxBlockSize];
+    BlockInfo blockInfo;
 
     VerifyOrExit(type != kTypeReset);
 
     VerifyOrExit(aTransmitHook != nullptr);
-    VerifyOrExit(aMessage.GetBlockWiseBlockNumber() == 0);
 
-    SuccessOrExit(aMessage.ReadBlockOptionValues(type == kTypeAck ? kOptionBlock2 : kOptionBlock1));
+    SuccessOrExit(aMessage.ReadBlockOptionValues(type == kTypeAck ? kOptionBlock2 : kOptionBlock1, blockInfo));
 
-    bufLen = BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize());
-    VerifyOrExit(bufLen <= kMaxBlockLength, error = kErrorNoBufs);
+    VerifyOrExit(blockInfo.mBlockNumber == 0);
 
-    SuccessOrExit(error = aTransmitHook(aContext, buf, 0, &bufLen, &moreBlocks));
-    SuccessOrExit(error = aMessage.AppendBytes(buf, bufLen));
+    blockSize = blockInfo.GetBlockSize();
+    VerifyOrExit(blockSize <= kMaxBlockSize, error = kErrorNoBufs);
+
+    SuccessOrExit(error = aTransmitHook(aContext, buf, 0, &blockSize, &moreBlocks));
+    SuccessOrExit(error = aMessage.AppendBytes(buf, blockSize));
 
     switch (type)
     {
@@ -1183,7 +1185,7 @@ void CoapBase::FreeLastBlockResponse(void)
 Error CoapBase::CacheLastBlockResponse(Message *aResponse)
 {
     Error error = kErrorNone;
-    // Save last response for block-wise transfer
+
     FreeLastBlockResponse();
 
     if ((mLastResponse = aResponse->Clone()) == nullptr)
@@ -1194,29 +1196,29 @@ Error CoapBase::CacheLastBlockResponse(Message *aResponse)
     return error;
 }
 
-Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
-                                        bool               aMoreBlocks,
-                                        Message           &aRequestOld,
-                                        Message           &aRequest,
-                                        Message           &aMessage)
+Error CoapBase::PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
+                                        Message         &aRequestOld,
+                                        Message         &aRequest,
+                                        const BlockInfo &aBlockInfo)
 {
     Error            error       = kErrorNone;
     bool             isOptionSet = false;
-    uint16_t         blockOption = 0;
     Option::Iterator iterator;
     Metadata         metadata;
 
-    blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
-
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
-    // Iterate after metadata copied and removed.
+
     metadata.ReadFrom(aRequestOld);
     metadata.RemoveFrom(aRequestOld);
-    // Per RFC 7959, all requests in a block-wise transfer MUST use the same token.
+
+    // Per RFC 7959, all requests in a block-wise transfer MUST use the
+    // same token.
     IgnoreError(aRequest.SetTokenFromMessage(aRequestOld));
-    SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
+
+    SuccessOrExit(error = iterator.Init(aRequestOld));
+
     for (; !iterator.IsDone() && iterator.GetOption()->GetLength() != 0; error = iterator.Advance())
     {
         uint16_t optionNumber = iterator.GetOption()->GetNumber();
@@ -1224,14 +1226,9 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         SuccessOrExit(error);
 
         // Check if option to copy next is higher than or equal to Block1 option
-        if (optionNumber >= blockOption && !isOptionSet)
+        if (optionNumber >= aBlockOptionNumber && !isOptionSet)
         {
-            // Write Block1 option to next message
-            SuccessOrExit(error = aRequest.AppendBlockOption(aType, aMessage.GetBlockWiseBlockNumber() + 1, aMoreBlocks,
-                                                             aMessage.GetBlockWiseBlockSize()));
-            aRequest.SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber() + 1);
-            aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
-            aRequest.SetMoreBlocksFlag(aMoreBlocks);
+            SuccessOrExit(error = aRequest.AppendBlockOption(aBlockOptionNumber, aBlockInfo));
 
             isOptionSet = true;
 
@@ -1250,12 +1247,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 
     if (!isOptionSet)
     {
-        // Write Block1 option to next message
-        SuccessOrExit(error = aRequest.AppendBlockOption(aType, aMessage.GetBlockWiseBlockNumber() + 1, aMoreBlocks,
-                                                         aMessage.GetBlockWiseBlockSize()));
-        aRequest.SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber() + 1);
-        aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
-        aRequest.SetMoreBlocksFlag(aMoreBlocks);
+        SuccessOrExit(error = aRequest.AppendBlockOption(aBlockOptionNumber, aBlockInfo));
     }
 
     error = metadata.AppendTo(aRequestOld);
@@ -1267,52 +1259,54 @@ exit:
 Error CoapBase::SendNextBlock1Request(Message                &aRequest,
                                       Message                &aMessage,
                                       const Ip6::MessageInfo &aMessageInfo,
-                                      const Metadata         &aCoapMetadata)
+                                      const Metadata         &aMetadata)
 {
-    Error    error                = kErrorNone;
-    Message *request              = nullptr;
-    bool     moreBlocks           = false;
-    uint8_t  buf[kMaxBlockLength] = {0};
-    uint16_t bufLen               = kMaxBlockLength;
+    Error     error              = kErrorNone;
+    Message  *request            = nullptr;
+    uint8_t   buf[kMaxBlockSize] = {0};
+    uint16_t  blockSize;
+    BlockInfo msgBlockInfo;
+    BlockInfo requestBlockInfo;
 
-    SuccessOrExit(error = aRequest.ReadBlockOptionValues(kOptionBlock1));
-    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock1));
+    SuccessOrExit(error = aRequest.ReadBlockOptionValues(kOptionBlock1, requestBlockInfo));
+    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock1, msgBlockInfo));
 
     // Conclude block-wise transfer if last block has been received
-    if (!aRequest.IsMoreBlocksFlagSet())
+    if (!requestBlockInfo.mMoreBlocks)
     {
-        FinalizeCoapTransaction(aRequest, aCoapMetadata, &aMessage, &aMessageInfo, kErrorNone);
+        FinalizeCoapTransaction(aRequest, aMetadata, &aMessage, &aMessageInfo, kErrorNone);
         ExitNow();
     }
 
-    // Get next block
-    VerifyOrExit((bufLen = BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
-                 error = kErrorNoBufs);
+    blockSize = msgBlockInfo.GetBlockSize();
+    VerifyOrExit(blockSize <= kMaxBlockSize, error = kErrorNoBufs);
 
-    SuccessOrExit(error = aCoapMetadata.mBlockwiseTransmitHook(aCoapMetadata.mResponseContext, buf,
-                                                               BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) *
-                                                                   (aMessage.GetBlockWiseBlockNumber() + 1),
-                                                               &bufLen, &moreBlocks));
+    requestBlockInfo.mBlockNumber = msgBlockInfo.mBlockNumber + 1;
+    requestBlockInfo.mBlockSzx    = msgBlockInfo.mBlockSzx;
+    requestBlockInfo.mMoreBlocks  = false;
 
-    // Check if block length is valid
-    VerifyOrExit(bufLen <= BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()), error = kErrorInvalidArgs);
+    SuccessOrExit(error = aMetadata.mBlockwiseTransmitHook(aMetadata.mResponseContext, buf,
+                                                           requestBlockInfo.GetBlockOffsetPosition(), &blockSize,
+                                                           &requestBlockInfo.mMoreBlocks));
 
-    // Init request for next block
+    VerifyOrExit(blockSize <= msgBlockInfo.GetBlockSize(), error = kErrorInvalidArgs);
+
     VerifyOrExit((request = NewMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = PrepareNextBlockRequest(Message::kBlockType1, moreBlocks, aRequest, *request, aMessage));
+
+    SuccessOrExit(error = PrepareNextBlockRequest(kOptionBlock1, aRequest, *request, requestBlockInfo));
 
     SuccessOrExit(error = request->SetPayloadMarker());
 
-    SuccessOrExit(error = request->AppendBytes(buf, bufLen));
+    SuccessOrExit(error = request->AppendBytes(buf, blockSize));
 
     DequeueMessage(aRequest);
 
-    LogInfo("Send Block1 Nr. %d, Size: %d bytes, More Blocks Flag: %d", request->GetBlockWiseBlockNumber(),
-            BlockSizeFromExponent(request->GetBlockWiseBlockSize()), request->IsMoreBlocksFlagSet());
+    LogInfo("Send Block1 Nr. %d, Size: %d bytes, More Blocks Flag: %d", requestBlockInfo.mBlockNumber,
+            requestBlockInfo.GetBlockSize(), requestBlockInfo.mMoreBlocks);
 
-    SuccessOrExit(error = SendMessage(*request, aMessageInfo, /* aTxParamters */ nullptr,
-                                      aCoapMetadata.mResponseHandler, aCoapMetadata.mResponseContext,
-                                      aCoapMetadata.mBlockwiseTransmitHook, aCoapMetadata.mBlockwiseReceiveHook));
+    SuccessOrExit(error = SendMessage(*request, aMessageInfo, /* aTxParamters */ nullptr, aMetadata.mResponseHandler,
+                                      aMetadata.mResponseContext, aMetadata.mBlockwiseTransmitHook,
+                                      aMetadata.mBlockwiseReceiveHook));
 
 exit:
     FreeMessageOnError(request, error);
@@ -1323,57 +1317,54 @@ exit:
 Error CoapBase::SendNextBlock2Request(Message                &aRequest,
                                       Message                &aMessage,
                                       const Ip6::MessageInfo &aMessageInfo,
-                                      const Metadata         &aCoapMetadata,
+                                      const Metadata         &aMetadata,
                                       uint32_t                aTotalLength,
                                       bool                    aBeginBlock1Transfer)
 {
-    Error    error                = kErrorNone;
-    Message *request              = nullptr;
-    uint8_t  buf[kMaxBlockLength] = {0};
-    uint16_t bufLen               = kMaxBlockLength;
+    Error       error   = kErrorNone;
+    Message    *request = nullptr;
+    uint8_t     buf[kMaxBlockSize];
+    OffsetRange offsetRange;
+    BlockInfo   msgBlockInfo;
+    BlockInfo   requestBlockInfo;
 
-    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock2));
+    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock2, msgBlockInfo));
 
-    // Check payload and block length
-    VerifyOrExit((aMessage.GetLength() - aMessage.GetOffset()) <=
-                         BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) &&
-                     (aMessage.GetLength() - aMessage.GetOffset()) <= kMaxBlockLength,
-                 error = kErrorNoBufs);
+    VerifyOrExit(msgBlockInfo.GetBlockSize() <= kMaxBlockSize, error = kErrorNoBufs);
 
-    // Read and then forward payload to receive hook function
-    bufLen = aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
-    SuccessOrExit(error = aCoapMetadata.mBlockwiseReceiveHook(aCoapMetadata.mResponseContext, buf,
-                                                              BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) *
-                                                                  aMessage.GetBlockWiseBlockNumber(),
-                                                              bufLen, aMessage.IsMoreBlocksFlagSet(), aTotalLength));
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
+    VerifyOrExit(offsetRange.GetLength() <= msgBlockInfo.GetBlockSize(), error = kErrorNoBufs);
 
-    // CoAP Block-Wise Transfer continues
-    LogInfo("Received Block2 Nr. %d , Size: %d bytes, More Blocks Flag: %d", aMessage.GetBlockWiseBlockNumber(),
-            BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()), aMessage.IsMoreBlocksFlagSet());
+    aMessage.ReadBytes(offsetRange, buf);
+    SuccessOrExit(
+        error = aMetadata.mBlockwiseReceiveHook(aMetadata.mResponseContext, buf, msgBlockInfo.GetBlockOffsetPosition(),
+                                                offsetRange.GetLength(), msgBlockInfo.mMoreBlocks, aTotalLength));
 
-    // Conclude block-wise transfer if last block has been received
-    if (!aMessage.IsMoreBlocksFlagSet())
+    LogInfo("Received Block2 Nr. %d , Size: %d bytes, More Blocks Flag: %d", msgBlockInfo.mBlockNumber,
+            msgBlockInfo.GetBlockSize(), msgBlockInfo.mMoreBlocks);
+
+    if (!msgBlockInfo.mMoreBlocks)
     {
-        FinalizeCoapTransaction(aRequest, aCoapMetadata, &aMessage, &aMessageInfo, kErrorNone);
+        FinalizeCoapTransaction(aRequest, aMetadata, &aMessage, &aMessageInfo, kErrorNone);
         ExitNow();
     }
 
-    // Init request for next block
     VerifyOrExit((request = NewMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = PrepareNextBlockRequest(Message::kBlockType2, aMessage.IsMoreBlocksFlagSet(), aRequest,
-                                                  *request, aMessage));
+
+    requestBlockInfo = msgBlockInfo;
+    requestBlockInfo.mBlockNumber++;
+
+    SuccessOrExit(error = PrepareNextBlockRequest(kOptionBlock2, aRequest, *request, requestBlockInfo));
 
     if (!aBeginBlock1Transfer)
     {
         DequeueMessage(aRequest);
     }
 
-    LogInfo("Request Block2 Nr. %d, Size: %d bytes", request->GetBlockWiseBlockNumber(),
-            BlockSizeFromExponent(request->GetBlockWiseBlockSize()));
+    LogInfo("Request Block2 Nr. %d, Size: %d bytes", requestBlockInfo.mBlockNumber, requestBlockInfo.GetBlockSize());
 
-    SuccessOrExit(error =
-                      SendMessage(*request, aMessageInfo, /* aTxParameters */ nullptr, aCoapMetadata.mResponseHandler,
-                                  aCoapMetadata.mResponseContext, nullptr, aCoapMetadata.mBlockwiseReceiveHook));
+    SuccessOrExit(error = SendMessage(*request, aMessageInfo, /* aTxParameters */ nullptr, aMetadata.mResponseHandler,
+                                      aMetadata.mResponseContext, nullptr, aMetadata.mBlockwiseReceiveHook));
 
 exit:
     FreeMessageOnError(request, error);
@@ -1386,40 +1377,35 @@ Error CoapBase::ProcessBlock1Request(Message                 &aMessage,
                                      const ResourceBlockWise &aResource,
                                      uint32_t                 aTotalLength)
 {
-    Error    error                = kErrorNone;
-    Message *response             = nullptr;
-    uint8_t  buf[kMaxBlockLength] = {0};
-    uint16_t bufLen               = kMaxBlockLength;
+    Error       error    = kErrorNone;
+    Message    *response = nullptr;
+    uint8_t     buf[kMaxBlockSize];
+    OffsetRange offsetRange;
+    BlockInfo   msgBlockInfo;
 
-    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock1));
+    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock1, msgBlockInfo));
 
-    // Read and then forward payload to receive hook function
-    VerifyOrExit((aMessage.GetLength() - aMessage.GetOffset()) <= kMaxBlockLength, error = kErrorNoBufs);
-    bufLen = aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
-    SuccessOrExit(error = aResource.HandleBlockReceive(
-                      buf, BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) * aMessage.GetBlockWiseBlockNumber(),
-                      bufLen, aMessage.IsMoreBlocksFlagSet(), aTotalLength));
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
+    VerifyOrExit(offsetRange.GetLength() <= kMaxBlockSize, error = kErrorNoBufs);
 
-    if (aMessage.IsMoreBlocksFlagSet())
+    aMessage.ReadBytes(offsetRange, buf);
+    SuccessOrExit(error =
+                      aResource.HandleBlockReceive(buf, msgBlockInfo.GetBlockOffsetPosition(), offsetRange.GetLength(),
+                                                   msgBlockInfo.mMoreBlocks, aTotalLength));
+
+    if (msgBlockInfo.mMoreBlocks)
     {
         // Set up next response
         VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorFailed);
         response->Init(kTypeAck, kCodeContinue);
         response->SetMessageId(aMessage.GetMessageId());
-        IgnoreReturnValue(response->SetToken(AsConst(aMessage).GetToken(), aMessage.GetTokenLength()));
+        IgnoreError(response->SetToken(AsConst(aMessage).GetToken(), aMessage.GetTokenLength()));
 
-        response->SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber());
-        response->SetMoreBlocksFlag(aMessage.IsMoreBlocksFlagSet());
-        response->SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
-
-        SuccessOrExit(error = response->AppendBlockOption(Message::kBlockType1, response->GetBlockWiseBlockNumber(),
-                                                          response->IsMoreBlocksFlagSet(),
-                                                          response->GetBlockWiseBlockSize()));
+        SuccessOrExit(error = response->AppendBlockOption(kOptionBlock1, msgBlockInfo));
 
         SuccessOrExit(error = CacheLastBlockResponse(response));
 
-        LogInfo("Acknowledge Block1 Nr. %d, Size: %d bytes", response->GetBlockWiseBlockNumber(),
-                BlockSizeFromExponent(response->GetBlockWiseBlockSize()));
+        LogInfo("Acknowledge Block1 Nr. %d, Size: %d bytes", msgBlockInfo.mBlockNumber, msgBlockInfo.GetBlockSize());
 
         SuccessOrExit(error = SendMessage(*response, aMessageInfo));
 
@@ -1445,57 +1431,49 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
                                      const Ip6::MessageInfo  &aMessageInfo,
                                      const ResourceBlockWise &aResource)
 {
-    Error            error                = kErrorNone;
-    Message         *response             = nullptr;
-    uint8_t          buf[kMaxBlockLength] = {0};
-    uint16_t         bufLen               = kMaxBlockLength;
-    bool             moreBlocks           = false;
-    uint64_t         optionBuf            = 0;
+    Error            error              = kErrorNone;
+    Message         *response           = nullptr;
+    uint64_t         optionBuf          = 0;
+    uint8_t          buf[kMaxBlockSize] = {0};
+    uint16_t         blockSize;
     Option::Iterator iterator;
+    BlockInfo        msgBlockInfo;
+    BlockInfo        responseBlockInfo;
 
-    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock2));
+    SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock2, msgBlockInfo));
 
-    LogInfo("Request for Block2 Nr. %d, Size: %d bytes received", aMessage.GetBlockWiseBlockNumber(),
-            BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()));
+    LogInfo("Request for Block2 Nr. %d, Size: %d bytes received", msgBlockInfo.mBlockNumber,
+            msgBlockInfo.GetBlockSize());
 
-    if (aMessage.GetBlockWiseBlockNumber() == 0)
+    if (msgBlockInfo.mBlockNumber == 0)
     {
         aResource.HandleRequest(aMessage, aMessageInfo);
         ExitNow();
     }
 
-    // Set up next response
     VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorNoBufs);
     response->Init(kTypeAck, kCodeContent);
     response->SetMessageId(aMessage.GetMessageId());
 
     SuccessOrExit(error = response->SetTokenFromMessage(aMessage));
 
-    VerifyOrExit((bufLen = BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
-                 error = kErrorNoBufs);
-    SuccessOrExit(error = aResource.HandleBlockTransmit(
-                      buf, BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) * aMessage.GetBlockWiseBlockNumber(),
-                      &bufLen, &moreBlocks));
+    responseBlockInfo.mMoreBlocks = false;
 
-    response->SetMoreBlocksFlag(moreBlocks);
+    VerifyOrExit((blockSize = msgBlockInfo.GetBlockSize()) <= kMaxBlockSize, error = kErrorNoBufs);
+    SuccessOrExit(error = aResource.HandleBlockTransmit(buf, msgBlockInfo.GetBlockOffsetPosition(), &blockSize,
+                                                        &responseBlockInfo.mMoreBlocks));
 
-    if (moreBlocks)
+    if (responseBlockInfo.mMoreBlocks)
     {
-        BlockSzx blockSzx;
-
-        SuccessOrExit(error = DetermineBlockSzxFromSize(bufLen, blockSzx));
-        response->SetBlockWiseBlockSize(blockSzx);
+        SuccessOrExit(error = DetermineBlockSzxFromSize(blockSize, responseBlockInfo.mBlockSzx));
     }
     else
     {
-        // Verify that buffer length is not larger than requested block size
-        VerifyOrExit(bufLen <= BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()), error = kErrorInvalidArgs);
-        response->SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
+        VerifyOrExit(blockSize <= msgBlockInfo.GetBlockSize(), error = kErrorInvalidArgs);
+        responseBlockInfo.mBlockSzx = msgBlockInfo.mBlockSzx;
     }
 
-    response->SetBlockWiseBlockNumber(
-        (BlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) * aMessage.GetBlockWiseBlockNumber()) /
-        (BlockSizeFromExponent(response->GetBlockWiseBlockSize())));
+    responseBlockInfo.mBlockNumber = msgBlockInfo.GetBlockOffsetPosition() / responseBlockInfo.GetBlockSize();
 
     // Copy options from last response
     SuccessOrExit(error = iterator.Init(*mLastResponse));
@@ -1506,9 +1484,7 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
 
         if (optionNumber == kOptionBlock2)
         {
-            SuccessOrExit(error = response->AppendBlockOption(Message::kBlockType2, response->GetBlockWiseBlockNumber(),
-                                                              response->IsMoreBlocksFlagSet(),
-                                                              response->GetBlockWiseBlockSize()));
+            SuccessOrExit(error = response->AppendBlockOption(kOptionBlock2, responseBlockInfo));
         }
         else if (optionNumber == kOptionBlock1)
         {
@@ -1520,9 +1496,9 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
     }
 
     SuccessOrExit(error = response->SetPayloadMarker());
-    SuccessOrExit(error = response->AppendBytes(buf, bufLen));
+    SuccessOrExit(error = response->AppendBytes(buf, blockSize));
 
-    if (response->IsMoreBlocksFlagSet())
+    if (responseBlockInfo.mMoreBlocks)
     {
         SuccessOrExit(error = CacheLastBlockResponse(response));
     }
@@ -1532,8 +1508,8 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
         FreeLastBlockResponse();
     }
 
-    LogInfo("Send Block2 Nr. %d, Size: %d bytes, More Blocks Flag %d", response->GetBlockWiseBlockNumber(),
-            BlockSizeFromExponent(response->GetBlockWiseBlockSize()), response->IsMoreBlocksFlagSet());
+    LogInfo("Send Block2 Nr. %d, Size: %d bytes, More Blocks Flag %d", responseBlockInfo.mBlockNumber,
+            responseBlockInfo.GetBlockSize(), responseBlockInfo.mMoreBlocks);
 
     SuccessOrExit(error = SendMessage(*response, aMessageInfo));
 

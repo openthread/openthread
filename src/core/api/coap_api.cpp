@@ -104,12 +104,24 @@ uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize) { return Coap::BlockS
 
 otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
-    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType2, aNum, aMore, MapEnum(aSize));
+    Coap::BlockInfo blockInfo;
+
+    blockInfo.mBlockNumber = aNum;
+    blockInfo.mBlockSzx    = MapEnum(aSize);
+    blockInfo.mMoreBlocks  = aMore;
+
+    return AsCoapMessage(aMessage).AppendBlockOption(Coap::kOptionBlock2, blockInfo);
 }
 
 otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
-    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType1, aNum, aMore, MapEnum(aSize));
+    Coap::BlockInfo blockInfo;
+
+    blockInfo.mBlockNumber = aNum;
+    blockInfo.mBlockSzx    = MapEnum(aSize);
+    blockInfo.mMoreBlocks  = aMore;
+
+    return AsCoapMessage(aMessage).AppendBlockOption(Coap::kOptionBlock1, blockInfo);
 }
 
 otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
