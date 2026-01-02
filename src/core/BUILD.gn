@@ -785,7 +785,7 @@ group("libopenthread_platform") {
 
 static_library("libopenthread-ftd") {
   sources = openthread_core_sources
-  if (openthread_config_tcp_enable) {
+  if (openthread_enable_core_config_args && openthread_config_tcp_enable) {
     deps = [ "../../third_party/tcplp" ]
   }
   public_deps = [ ":libopenthread_platform" ]
@@ -794,7 +794,7 @@ static_library("libopenthread-ftd") {
 
 static_library("libopenthread-mtd") {
   sources = openthread_core_sources
-  if (openthread_config_tcp_enable) {
+  if (openthread_enable_core_config_args && openthread_config_tcp_enable) {
     deps = [ "../../third_party/tcplp" ]
   }
   public_deps = [ ":libopenthread_platform" ]
