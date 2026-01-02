@@ -460,21 +460,14 @@ exit:
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Slaac::LogAddress(Action aAction, const SlaacAddress &aAddress)
 {
-    static const char *const kActionStrings[] = {
-        "Adding",      // (0) kAdding
-        "Removing",    // (1) kRemoving
-        "Deprecating", // (2) kDeprecating
-    };
+#define ActionMapList(_)     \
+    _(kAdding, "Adding")     \
+    _(kRemoving, "Removing") \
+    _(kDeprecating, "Deprecating")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAdding);
-        ValidateNextEnum(kRemoving);
-        ValidateNextEnum(kDeprecating);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    LogInfo("%s %s", kActionStrings[aAction], aAddress.GetAddress().ToString().AsCString());
+    LogInfo("%s %s", kStrings[aAction], aAddress.GetAddress().ToString().AsCString());
 }
 #else
 void Slaac::LogAddress(Action, const SlaacAddress &) {}

@@ -47,6 +47,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
+#include "common/enum_to_string.hpp"
 #include "common/error.hpp"
 #include "common/heap.hpp"
 #include "common/locator.hpp"

@@ -2303,45 +2303,37 @@ uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin
 
 const char *Mac::OperationToString(Operation aOperation)
 {
-    static const char *const kOperationStrings[] = {
-        "Idle",               // (0) kOperationIdle
-        "ActiveScan",         // (1) kOperationActiveScan
-        "EnergyScan",         // (2) kOperationEnergyScan
-        "TransmitBeacon",     // (3) kOperationTransmitBeacon
-        "TransmitDataDirect", // (4) kOperationTransmitDataDirect
-        "TransmitPoll",       // (5) kOperationTransmitPoll
-        "WaitingForData",     // (6) kOperationWaitingForData
+#define OperationMapList(_)                               \
+    _(kOperationIdle, "Idle")                             \
+    _(kOperationActiveScan, "ActiveScan")                 \
+    _(kOperationEnergyScan, "EnergyScan")                 \
+    _(kOperationTransmitBeacon, "TransmitBeacon")         \
+    _(kOperationTransmitDataDirect, "TransmitDataDirect") \
+    _(kOperationTransmitPoll, "TransmitPoll")             \
+    _(kOperationWaitingForData, "WaitingForData")         \
+    FtdOperationMapList(_) CslTxOperationMapList(_) WakeupOperationMapList(_)
+
 #if OPENTHREAD_FTD
-        "TransmitDataIndirect", // (7) kOperationTransmitDataIndirect
+#define FtdOperationMapList(_) _(kOperationTransmitDataIndirect, "TransmitDataIndirect")
+#else
+#define FtdOperationMapList(_)
 #endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "TransmitDataCsl", // (8) kOperationTransmitDataCsl
+#define CslTxOperationMapList(_) _(kOperationTransmitDataCsl, "TransmitDataCsl")
+#else
+#define CslTxOperationMapList(_)
 #endif
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        "TransmitWakeup", // kOperationTransmitWakeup
+#define WakeupOperationMapList(_) _(kOperationTransmitWakeup, "TransmitWakeup")
+#else
+#define WakeupOperationMapList(_)
 #endif
-    };
 
-    struct OperationChecker
-    {
-        InitEnumValidatorCounter();
+    DefineEnumStringArray(OperationMapList);
 
-        ValidateNextEnum(kOperationIdle);
-        ValidateNextEnum(kOperationActiveScan);
-        ValidateNextEnum(kOperationEnergyScan);
-        ValidateNextEnum(kOperationTransmitBeacon);
-        ValidateNextEnum(kOperationTransmitDataDirect);
-        ValidateNextEnum(kOperationTransmitPoll);
-        ValidateNextEnum(kOperationWaitingForData);
-#if OPENTHREAD_FTD
-        ValidateNextEnum(kOperationTransmitDataIndirect);
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        ValidateNextEnum(kOperationTransmitDataCsl);
-#endif
-    };
-
-    return kOperationStrings[aOperation];
+    return kStrings[aOperation];
 }
 
 void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const

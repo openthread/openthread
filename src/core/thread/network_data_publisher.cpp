@@ -462,25 +462,16 @@ void Publisher::Entry::LogUpdateTime(void) const
 
 const char *Publisher::Entry::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "NoEntry",  // (0) kNoEntry
-        "ToAdd",    // (1) kToAdd
-        "Adding",   // (2) kAdding
-        "Added",    // (3) kAdded
-        "Removing", // (4) kRemoving
-    };
+#define StateMapList(_)    \
+    _(kNoEntry, "NoEntry") \
+    _(kToAdd, "ToAdd")     \
+    _(kAdding, "Adding")   \
+    _(kAdded, "Added")     \
+    _(kRemoving, "Removing")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kNoEntry);
-        ValidateNextEnum(kToAdd);
-        ValidateNextEnum(kAdding);
-        ValidateNextEnum(kAdded);
-        ValidateNextEnum(kRemoving);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

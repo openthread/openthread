@@ -510,23 +510,15 @@ void Link::HandleNotifierEvents(Events aEvents)
 
 const char *Link::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled", // (0) kStateDisabled
-        "Sleep",    // (1) kStateSleep
-        "Receive",  // (2) kStateReceive
-        "Transmit", // (3) kStateTransmit
-    };
+#define StateMapList(_)           \
+    _(kStateDisabled, "Disabled") \
+    _(kStateSleep, "Sleep")       \
+    _(kStateReceive, "Receive")   \
+    _(kStateTransmit, "Transmit")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateSleep);
-        ValidateNextEnum(kStateReceive);
-        ValidateNextEnum(kStateTransmit);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 // LCOV_EXCL_STOP

@@ -1018,74 +1018,45 @@ exit:
 
 const char *Dhcp6PdClient::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Stopped",    // (0) kStateStopped
-        "ToSolicit",  // (1) kStateToSolicit
-        "Soliciting", // (2) kStateSoliciting
-        "Requesting", // (3) kStateRequesting
-        "ToRenew",    // (4) kStateToRenew
-        "Renewing",   // (5) kStateRenewing
-        "Rebinding",  // (6) kStateRebinding
-        "Releasing",  // (7) kStateReleasing
-    };
+#define StateMapList(_)               \
+    _(kStateStopped, "Stopped")       \
+    _(kStateToSolicit, "ToSolicit")   \
+    _(kStateSoliciting, "Soliciting") \
+    _(kStateRequesting, "Requesting") \
+    _(kStateToRenew, "ToRenew")       \
+    _(kStateRenewing, "Renewing")     \
+    _(kStateRebinding, "Rebinding")   \
+    _(kStateReleasing, "Releasing")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStateToSolicit);
-        ValidateNextEnum(kStateSoliciting);
-        ValidateNextEnum(kStateRequesting);
-        ValidateNextEnum(kStateToRenew);
-        ValidateNextEnum(kStateRenewing);
-        ValidateNextEnum(kStateRebinding);
-        ValidateNextEnum(kStateReleasing);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 const char *Dhcp6PdClient::MsgTypeToString(MsgType aMsgType)
 {
-    static const char *const kMsgTypeStrings[]{
-        "Solicit",            // (1) kMsgTypeSolicit
-        "Advertise",          // (2) kMsgTypeAdvertise
-        "Request",            // (3) kMsgTypeRequest
-        "Confirm",            // (4) kMsgTypeConfirm
-        "Renew",              // (5) kMsgTypeRenew
-        "Rebind",             // (6) kMsgTypeRebind
-        "Reply",              // (7) kMsgTypeReply
-        "Release",            // (8) kMsgTypeRelease
-        "Decline",            // (9) kMsgTypeDecline
-        "Reconfigure",        // (10) kMsgTypeReconfigure
-        "InformationRequest", // (11) kMsgTypeInformationRequest
-    };
+#define MsgTypeMapList(_)                 \
+    _(kMsgTypeNone, "UnknownMsg")         \
+    _(kMsgTypeSolicit, "Solicit")         \
+    _(kMsgTypeAdvertise, "Advertise")     \
+    _(kMsgTypeRequest, "Request")         \
+    _(kMsgTypeConfirm, "Confirm")         \
+    _(kMsgTypeRenew, "Renew")             \
+    _(kMsgTypeRebind, "Rebind")           \
+    _(kMsgTypeReply, "Reply")             \
+    _(kMsgTypeRelease, "Release")         \
+    _(kMsgTypeDecline, "Decline")         \
+    _(kMsgTypeReconfigure, "Reconfigure") \
+    _(kMsgTypeInformationRequest, "InformationRequest")
 
-    struct EnumCheck
+    DefineEnumStringArray(MsgTypeMapList);
+
+    if (aMsgType > kMsgTypeInformationRequest)
     {
-        InitEnumValidatorCounter();
-        SkipNextEnum();
-        ValidateNextEnum(kMsgTypeSolicit);
-        ValidateNextEnum(kMsgTypeAdvertise);
-        ValidateNextEnum(kMsgTypeRequest);
-        ValidateNextEnum(kMsgTypeConfirm);
-        ValidateNextEnum(kMsgTypeRenew);
-        ValidateNextEnum(kMsgTypeRebind);
-        ValidateNextEnum(kMsgTypeReply);
-        ValidateNextEnum(kMsgTypeRelease);
-        ValidateNextEnum(kMsgTypeDecline);
-        ValidateNextEnum(kMsgTypeReconfigure);
-        ValidateNextEnum(kMsgTypeInformationRequest);
-    };
+        aMsgType = kMsgTypeNone;
+    }
 
-    const char *string = "UnknownMsg";
-
-    VerifyOrExit(aMsgType != 0);
-    VerifyOrExit(aMsgType <= kMsgTypeInformationRequest);
-    string = kMsgTypeStrings[aMsgType - kMsgTypeSolicit];
-
-exit:
-    return string;
+    return kStrings[aMsgType];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

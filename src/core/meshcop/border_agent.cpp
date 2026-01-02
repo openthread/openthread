@@ -1074,22 +1074,14 @@ void Manager::CoapDtlsSession::HandleTimer(void)
 
 void Manager::CoapDtlsSession::LogUri(Action aAction, const char *aUriString, const char *aTxt)
 {
-    static const char *const kActionStrings[] = {
-        "Receive", // kReceive
-        "Send",    // kSend
-        "Forward", // kForward,
-    };
+#define ActionMapList(_)   \
+    _(kReceive, "Receive") \
+    _(kSend, "Send")       \
+    _(kForward, "Forward")
 
-    struct EnumChecker
-    {
-        InitEnumValidatorCounter();
+    DefineEnumStringArray(ActionMapList);
 
-        ValidateNextEnum(kReceive);
-        ValidateNextEnum(kSend);
-        ValidateNextEnum(kForward);
-    };
-
-    LogInfo("%s %s%s - session %u", kActionStrings[aAction], aUriString, aTxt, mIndex);
+    LogInfo("%s %s%s - session %u", kStrings[aAction], aUriString, aTxt, mIndex);
 }
 
 #endif

@@ -379,6 +379,11 @@ private:
 
     static AddressResolver::CacheEntry *GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList);
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static const char *EntryChangeToString(EntryChange aChange);
+    static const char *ReasonToString(Reason aReason);
+#endif
+
     CacheEntryPool     mCacheEntryPool;
     CacheEntryList     mCachedList;
     CacheEntryList     mSnoopedList;

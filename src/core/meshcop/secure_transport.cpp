@@ -611,25 +611,16 @@ void SecureSession::Process(void)
 
 const char *SecureSession::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disconnected",  // (0) kStateDisconnected
-        "Initializing",  // (1) kStateInitializing
-        "Connecting",    // (2) kStateConnecting
-        "Connected",     // (3) kStateConnected
-        "Disconnecting", // (4) kStateDisconnecting
-    };
+#define StateMapList(_)                   \
+    _(kStateDisconnected, "Disconnected") \
+    _(kStateInitializing, "Initializing") \
+    _(kStateConnecting, "Connecting")     \
+    _(kStateConnected, "Connected")       \
+    _(kStateDisconnecting, "Disconnecting")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisconnected);
-        ValidateNextEnum(kStateInitializing);
-        ValidateNextEnum(kStateConnecting);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateDisconnecting);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #endif

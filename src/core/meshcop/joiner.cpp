@@ -581,27 +581,17 @@ void Joiner::HandleTimer(void)
 
 const char *Joiner::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Idle",       // (0) kStateIdle
-        "Discover",   // (1) kStateDiscover
-        "Connecting", // (2) kStateConnect
-        "Connected",  // (3) kStateConnected
-        "Entrust",    // (4) kStateEntrust
-        "Joined",     // (5) kStateJoined
-    };
+#define StateMapList(_)             \
+    _(kStateIdle, "Idle")           \
+    _(kStateDiscover, "Discover")   \
+    _(kStateConnect, "Connecting")  \
+    _(kStateConnected, "Connected") \
+    _(kStateEntrust, "Entrust")     \
+    _(kStateJoined, "Joined")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateIdle);
-        ValidateNextEnum(kStateDiscover);
-        ValidateNextEnum(kStateConnect);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateEntrust);
-        ValidateNextEnum(kStateJoined);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 // LCOV_EXCL_STOP

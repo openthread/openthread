@@ -259,21 +259,14 @@ bool Peer::NameMatch(const Heap::String &aHeapString, const char *aName)
 
 const char *Peer::DnssdStateToString(DnssdState aState)
 {
-    static const char *const kStateStrings[] = {
-        "resolved",  // (0) kDnssdResolved
-        "removed",   // (1) kDnssdRemoved
-        "resolving", // (2) kDnssdResolving
-    };
+#define DnssdStateMapList(_)      \
+    _(kDnssdResolved, "resolved") \
+    _(kDnssdRemoved, "removed")   \
+    _(kDnssdResolving, "resolving")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDnssdResolved);
-        ValidateNextEnum(kDnssdRemoved);
-        ValidateNextEnum(kDnssdResolving);
-    };
+    DefineEnumStringArray(DnssdStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 void Peer::Log(Action aAction) const
@@ -316,25 +309,16 @@ void Peer::Log(Action aAction) const
 
 const char *Peer::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Added",    // (0) kAdded
-        "Re-added", // (1) kReAdded,
-        "Updated",  // (2) kUpdated
-        "Deleted",  // (3) kDeleted
-        "Evicting", // (4) kEvicting
-    };
+#define ActionMapList(_)    \
+    _(kAdded, "Added")      \
+    _(kReAdded, "Re-added") \
+    _(kUpdated, "Updated")  \
+    _(kDeleted, "Deleted")  \
+    _(kEvicting, "Evicting")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAdded);
-        ValidateNextEnum(kReAdded);
-        ValidateNextEnum(kUpdated);
-        ValidateNextEnum(kDeleted);
-        ValidateNextEnum(kEvicting);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    return kActionStrings[aAction];
+    return kStrings[aAction];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

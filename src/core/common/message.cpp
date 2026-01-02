@@ -336,23 +336,15 @@ exit:
 
 const char *Message::PriorityToString(Priority aPriority)
 {
-    static const char *const kPriorityStrings[] = {
-        "low",    // (0) kPriorityLow
-        "normal", // (1) kPriorityNormal
-        "high",   // (2) kPriorityHigh
-        "net",    // (3) kPriorityNet
-    };
+#define PriorityMapList(_)       \
+    _(kPriorityLow, "low")       \
+    _(kPriorityNormal, "normal") \
+    _(kPriorityHigh, "high")     \
+    _(kPriorityNet, "net")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kPriorityLow);
-        ValidateNextEnum(kPriorityNormal);
-        ValidateNextEnum(kPriorityHigh);
-        ValidateNextEnum(kPriorityNet);
-    };
+    DefineEnumStringArray(PriorityMapList);
 
-    return kPriorityStrings[aPriority];
+    return kStrings[aPriority];
 }
 
 void Message::RegisterTxCallback(TxCallback aCallback, void *aContext)

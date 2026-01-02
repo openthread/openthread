@@ -1363,42 +1363,32 @@ exit:
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {
-    static const char *const kMessageActionStrings[] = {
-        "Received",                    // (0) kMessageReceive
-        "Sent",                        // (1) kMessageTransmit
-        "Prepping indir tx",           // (2) kMessagePrepareIndirect
-        "Dropping",                    // (3) kMessageDrop
-        "Dropping (reassembly queue)", // (4) kMessageReassemblyDrop
-        "Evicting",                    // (5) kMessageEvict
+#define MessageActionMapList(_)                              \
+    _(kMessageReceive, "Received")                           \
+    _(kMessageTransmit, "Sent")                              \
+    _(kMessagePrepareIndirect, "Prepping indir tx")          \
+    _(kMessageDrop, "Dropping")                              \
+    _(kMessageReassemblyDrop, "Dropping (reassembly queue)") \
+    _(kMessageEvict, "Evicting")                             \
+    QueueMgmntMessageActionMapList(_) DropQueueFullMessageActionMapList(_)
+
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        "Marked ECN",            // (6) kMessageMarkEcn
-        "Dropping (queue mgmt)", // (7) kMessageQueueMgmtDrop
+#define QueueMgmntMessageActionMapList(_) \
+    _(kMessageMarkEcn, "Marked ECN")      \
+    _(kMessageQueueMgmtDrop, "Dropping (queue mgmt)")
+#else
+#define QueueMgmntMessageActionMapList(_)
 #endif
+
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        "Dropping (dir queue full)", // (8) kMessageFullQueueDrop
+#define DropQueueFullMessageActionMapList(_) _(kMessageFullQueueDrop, "Dropping (dir queue full)")
+#else
+#define DropQueueFullMessageActionMapList(_)
 #endif
-    };
 
-    const char *string = kMessageActionStrings[aAction];
+    DefineEnumStringArray(MessageActionMapList);
 
-    struct MessageActionChecker
-    {
-        InitEnumValidatorCounter();
-
-        ValidateNextEnum(kMessageReceive);
-        ValidateNextEnum(kMessageTransmit);
-        ValidateNextEnum(kMessagePrepareIndirect);
-        ValidateNextEnum(kMessageDrop);
-        ValidateNextEnum(kMessageReassemblyDrop);
-        ValidateNextEnum(kMessageEvict);
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        ValidateNextEnum(kMessageMarkEcn);
-        ValidateNextEnum(kMessageQueueMgmtDrop);
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        ValidateNextEnum(kMessageFullQueueDrop);
-#endif
-    };
+    const char *string = kStrings[aAction];
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {

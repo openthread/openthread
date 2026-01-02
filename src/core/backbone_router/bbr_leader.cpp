@@ -97,48 +97,30 @@ void Leader::LogBackboneRouterPrimary(State aState, const Config &aConfig) const
 
 const char *Leader::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "None",            //  (0) kStateNone
-        "Added",           //  (1) kStateAdded
-        "Removed",         //  (2) kStateRemoved
-        "Rereg triggered", //  (3) kStateToTriggerRereg
-        "Refreshed",       //  (4) kStateRefreshed
-        "Unchanged",       //  (5) kStateUnchanged
-    };
+#define StateMapList(_)                        \
+    _(kStateNone, "None")                      \
+    _(kStateAdded, "Added")                    \
+    _(kStateRemoved, "Removed")                \
+    _(kStateToTriggerRereg, "Rereg triggered") \
+    _(kStateRefreshed, "Refreshed")            \
+    _(kStateUnchanged, "Unchanged")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateNone);
-        ValidateNextEnum(kStateAdded);
-        ValidateNextEnum(kStateRemoved);
-        ValidateNextEnum(kStateToTriggerRereg);
-        ValidateNextEnum(kStateRefreshed);
-        ValidateNextEnum(kStateUnchanged);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
 {
-    static const char *const kEventStrings[] = {
-        "Added",     // (0) kDomainPrefixAdded
-        "Removed",   // (1) kDomainPrefixRemoved
-        "Refreshed", // (2) kDomainPrefixRefreshed
-        "Unchanged", // (3) kDomainPrefixUnchanged
-    };
+#define DomainPrefixEventMapList(_)        \
+    _(kDomainPrefixAdded, "Added")         \
+    _(kDomainPrefixRemoved, "Removed")     \
+    _(kDomainPrefixRefreshed, "Refreshed") \
+    _(kDomainPrefixUnchanged, "Unchanged")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDomainPrefixAdded);
-        ValidateNextEnum(kDomainPrefixRemoved);
-        ValidateNextEnum(kDomainPrefixRefreshed);
-        ValidateNextEnum(kDomainPrefixUnchanged);
-    };
+    DefineEnumStringArray(DomainPrefixEventMapList);
 
-    return kEventStrings[aEvent];
+    return kStrings[aEvent];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

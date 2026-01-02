@@ -1029,21 +1029,14 @@ exit:
 
 const char *Commissioner::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "disabled", // (0) kStateDisabled
-        "petition", // (1) kStatePetition
-        "active",   // (2) kStateActive
-    };
+#define StateMapList(_)           \
+    _(kStateDisabled, "disabled") \
+    _(kStatePetition, "petition") \
+    _(kStateActive, "active")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStatePetition);
-        ValidateNextEnum(kStateActive);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 void Commissioner::LogJoinerEntry(const char *aAction, const Joiner &aJoiner) const

@@ -35,53 +35,55 @@
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
+#include "common/enum_to_string.hpp"
 
 namespace ot {
 
 const char *ErrorToString(Error aError)
 {
-    static const char *const kErrorStrings[kNumErrors] = {
-        "OK",                         // (0)  kErrorNone
-        "Failed",                     // (1)  kErrorFailed
-        "Drop",                       // (2)  kErrorDrop
-        "NoBufs",                     // (3)  kErrorNoBufs
-        "NoRoute",                    // (4)  kErrorNoRoute
-        "Busy",                       // (5)  kErrorBusy
-        "Parse",                      // (6)  kErrorParse
-        "InvalidArgs",                // (7)  kErrorInvalidArgs
-        "Security",                   // (8)  kErrorSecurity
-        "AddressQuery",               // (9)  kErrorAddressQuery
-        "NoAddress",                  // (10) kErrorNoAddress
-        "Abort",                      // (11) kErrorAbort
-        "NotImplemented",             // (12) kErrorNotImplemented
-        "InvalidState",               // (13) kErrorInvalidState
-        "NoAck",                      // (14) kErrorNoAck
-        "ChannelAccessFailure",       // (15) kErrorChannelAccessFailure
-        "Detached",                   // (16) kErrorDetached
-        "FcsErr",                     // (17) kErrorFcs
-        "NoFrameReceived",            // (18) kErrorNoFrameReceived
-        "UnknownNeighbor",            // (19) kErrorUnknownNeighbor
-        "InvalidSourceAddress",       // (20) kErrorInvalidSourceAddress
-        "AddressFiltered",            // (21) kErrorAddressFiltered
-        "DestinationAddressFiltered", // (22) kErrorDestinationAddressFiltered
-        "NotFound",                   // (23) kErrorNotFound
-        "Already",                    // (24) kErrorAlready
-        "ReservedError25",            // (25) Error 25 is reserved
-        "Ipv6AddressCreationFailure", // (26) kErrorIp6AddressCreationFailure
-        "NotCapable",                 // (27) kErrorNotCapable
-        "ResponseTimeout",            // (28) kErrorResponseTimeout
-        "Duplicated",                 // (29) kErrorDuplicated
-        "ReassemblyTimeout",          // (30) kErrorReassemblyTimeout
-        "NotTmf",                     // (31) kErrorNotTmf
-        "NonLowpanDataFrame",         // (32) kErrorNotLowpanDataFrame
-        "ReservedError33",            // (33) Error 33 is reserved
-        "LinkMarginLow",              // (34) kErrorLinkMarginLow
-        "InvalidCommand",             // (35) kErrorInvalidCommand
-        "Pending",                    // (36) kErrorPending
-        "Rejected",                   // (37) kErrorRejected
-    };
+#define ErrorMapList(_)                                               \
+    _(kErrorNone, "OK")                                               \
+    _(kErrorFailed, "Failed")                                         \
+    _(kErrorDrop, "Drop")                                             \
+    _(kErrorNoBufs, "NoBufs")                                         \
+    _(kErrorNoRoute, "NoRoute")                                       \
+    _(kErrorBusy, "Busy")                                             \
+    _(kErrorParse, "Parse")                                           \
+    _(kErrorInvalidArgs, "InvalidArgs")                               \
+    _(kErrorSecurity, "Security")                                     \
+    _(kErrorAddressQuery, "AddressQuery")                             \
+    _(kErrorNoAddress, "NoAddress")                                   \
+    _(kErrorAbort, "Abort")                                           \
+    _(kErrorNotImplemented, "NotImplemented")                         \
+    _(kErrorInvalidState, "InvalidState")                             \
+    _(kErrorNoAck, "NoAck")                                           \
+    _(kErrorChannelAccessFailure, "ChannelAccessFailure")             \
+    _(kErrorDetached, "Detached")                                     \
+    _(kErrorFcs, "FcsErr")                                            \
+    _(kErrorNoFrameReceived, "NoFrameReceived")                       \
+    _(kErrorUnknownNeighbor, "UnknownNeighbor")                       \
+    _(kErrorInvalidSourceAddress, "InvalidSourceAddress")             \
+    _(kErrorAddressFiltered, "AddressFiltered")                       \
+    _(kErrorDestinationAddressFiltered, "DestinationAddressFiltered") \
+    _(kErrorNotFound, "NotFound")                                     \
+    _(kErrorAlready, "Already")                                       \
+    _(25, "ReservedError25")                                          \
+    _(kErrorIp6AddressCreationFailure, "Ipv6AddressCreationFailure")  \
+    _(kErrorNotCapable, "NotCapable")                                 \
+    _(kErrorResponseTimeout, "ResponseTimeout")                       \
+    _(kErrorDuplicated, "Duplicated")                                 \
+    _(kErrorReassemblyTimeout, "ReassemblyTimeout")                   \
+    _(kErrorNotTmf, "NotTmf")                                         \
+    _(kErrorNotLowpanDataFrame, "NonLowpanDataFrame")                 \
+    _(33, "ReservedError33")                                          \
+    _(kErrorLinkMarginLow, "LinkMarginLow")                           \
+    _(kErrorInvalidCommand, "InvalidCommand")                         \
+    _(kErrorPending, "Pending")                                       \
+    _(kErrorRejected, "Rejected")
 
-    return static_cast<size_t>(aError) < GetArrayLength(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";
+    DefineEnumStringArray(ErrorMapList);
+
+    return static_cast<size_t>(aError) < GetArrayLength(kStrings) ? kStrings[aError] : "UnknownErrorType";
 }
 
 } // namespace ot
