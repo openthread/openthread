@@ -39,6 +39,7 @@
 #include <openthread/coap.h>
 
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
@@ -269,53 +270,41 @@ public:
      *
      * @returns The Version value.
      */
-    uint8_t GetVersion(void) const
-    {
-        return (GetHelpData().mHeader.mVersionTypeToken & kVersionMask) >> kVersionOffset;
-    }
+    uint8_t GetVersion(void) const { return GetHelpData().mHeader.GetVersion(); }
 
     /**
      * Sets the Version value.
      *
      * @param[in]  aVersion  The Version value.
      */
-    void SetVersion(uint8_t aVersion)
-    {
-        GetHelpData().mHeader.mVersionTypeToken &= ~kVersionMask;
-        GetHelpData().mHeader.mVersionTypeToken |= aVersion << kVersionOffset;
-    }
+    void SetVersion(uint8_t aVersion) { GetHelpData().mHeader.SetVersion(aVersion); }
 
     /**
      * Returns the Type value.
      *
      * @returns The Type value.
      */
-    uint8_t GetType(void) const { return (GetHelpData().mHeader.mVersionTypeToken & kTypeMask) >> kTypeOffset; }
-
+    uint8_t GetType(void) const { return GetHelpData().mHeader.GetType(); }
     /**
      * Sets the Type value.
      *
      * @param[in]  aType  The Type value.
      */
-    void SetType(Type aType)
-    {
-        GetHelpData().mHeader.mVersionTypeToken &= ~kTypeMask;
-        GetHelpData().mHeader.mVersionTypeToken |= (static_cast<uint8_t>(aType) << kTypeOffset);
-    }
+    void SetType(Type aType) { GetHelpData().mHeader.SetType(aType); }
 
     /**
      * Returns the Code value.
      *
      * @returns The Code value.
      */
-    uint8_t GetCode(void) const { return static_cast<Code>(GetHelpData().mHeader.mCode); }
+    uint8_t GetCode(void) const { return GetHelpData().mHeader.GetCode(); }
 
     /**
      * Sets the Code value.
      *
      * @param[in]  aCode  The Code value.
      */
-    void SetCode(Code aCode) { GetHelpData().mHeader.mCode = static_cast<uint8_t>(aCode); }
+    void SetCode(Code aCode) { GetHelpData().mHeader.SetCode(aCode); }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
@@ -331,31 +320,28 @@ public:
      *
      * @returns The Message ID value.
      */
-    uint16_t GetMessageId(void) const { return BigEndian::HostSwap16(GetHelpData().mHeader.mMessageId); }
+    uint16_t GetMessageId(void) const { return GetHelpData().mHeader.GetMessageId(); }
 
     /**
      * Sets the Message ID value.
      *
      * @param[in]  aMessageId  The Message ID value.
      */
-    void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.mMessageId = BigEndian::HostSwap16(aMessageId); }
+    void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.SetMessageId(aMessageId); }
 
     /**
      * Returns the Token length.
      *
      * @returns The Token length.
      */
-    uint8_t GetTokenLength(void) const
-    {
-        return (GetHelpData().mHeader.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset;
-    }
+    uint8_t GetTokenLength(void) const { return GetHelpData().mHeader.GetTokenLength(); }
 
     /**
      * Returns a pointer to the Token value.
      *
      * @returns A pointer to the Token value.
      */
-    const uint8_t *GetToken(void) const { return GetHelpData().mHeader.mToken; }
+    const uint8_t *GetToken(void) const { return GetHelpData().mHeader.GetToken(); }
 
     /**
      * Sets the Token value and length.
@@ -778,22 +764,6 @@ public:
 
 private:
     /*
-     * Header field first byte (RFC 7252).
-     *
-     *    7 6 5 4 3 2 1 0
-     *   +-+-+-+-+-+-+-+-+
-     *   |Ver| T |  TKL  |  (Version, Type and Token Length).
-     *   +-+-+-+-+-+-+-+-+
-     */
-    static constexpr uint8_t kVersionOffset     = 6;
-    static constexpr uint8_t kVersionMask       = 0x3 << kVersionOffset;
-    static constexpr uint8_t kVersion1          = 1;
-    static constexpr uint8_t kTypeOffset        = 4;
-    static constexpr uint8_t kTypeMask          = 0x3 << kTypeOffset;
-    static constexpr uint8_t kTokenLengthOffset = 0;
-    static constexpr uint8_t kTokenLengthMask   = 0xf << kTokenLengthOffset;
-
-    /*
      *
      * Option Format (RFC 7252).
      *
@@ -838,16 +808,46 @@ private:
     static constexpr uint32_t kObserveMask = 0xffffff;
     static constexpr uint32_t kBlockNumMax = 0xffff;
 
-    /**
-     * Represents a CoAP header excluding CoAP options.
-     */
     OT_TOOL_PACKED_BEGIN
-    struct Header
+    class Header
     {
-        uint8_t  mVersionTypeToken;       ///< The CoAP Version, Type, and Token Length
-        uint8_t  mCode;                   ///< The CoAP Code
-        uint16_t mMessageId;              ///< The CoAP Message ID
-        uint8_t  mToken[kMaxTokenLength]; ///< The CoAP Token
+    public:
+        static constexpr uint8_t kVersion1 = 1;
+
+        uint8_t        GetSize(void) const { return kMinSize + GetTokenLength(); }
+        Error          ParseFrom(const Message &aMessage);
+        uint8_t        GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mVersionTypeToken); }
+        void           SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mVersionTypeToken, aVersion); }
+        uint8_t        GetType(void) const { return ReadBits<uint8_t, kTypeMask>(mVersionTypeToken); }
+        void           SetType(Type aType) { WriteBits<uint8_t, kTypeMask>(mVersionTypeToken, aType); }
+        uint8_t        GetCode(void) const { return mCode; }
+        void           SetCode(Code aCode) { mCode = aCode; }
+        uint16_t       GetMessageId(void) const { return BigEndian::HostSwap16(mMessageId); }
+        void           SetMessageId(uint16_t aMessageId) { mMessageId = BigEndian::HostSwap16(aMessageId); }
+        const uint8_t *GetToken(void) const { return mToken; }
+        uint8_t        GetTokenLength(void) const { return ReadBits<uint8_t, kTokenLengthMask>(mVersionTypeToken); }
+        Error          SetToken(const uint8_t *aToken, uint8_t aTokenLength);
+
+    private:
+        /*
+         * Header field first byte (RFC 7252).
+         *
+         *    7 6 5 4 3 2 1 0
+         *   +-+-+-+-+-+-+-+-+
+         *   |Ver| T |  TKL  |  (Version, Type and Token Length).
+         *   +-+-+-+-+-+-+-+-+
+         */
+        static constexpr uint8_t  kVersionMask     = 0x3 << 6;
+        static constexpr uint8_t  kTypeMask        = 0x3 << 4;
+        static constexpr uint8_t  kTokenLengthMask = 0xf << 0;
+        static constexpr uint16_t kMinSize         = 4;
+
+        void SetTokenLength(uint8_t aLength) { WriteBits<uint8_t, kTokenLengthMask>(mVersionTypeToken, aLength); }
+
+        uint8_t  mVersionTypeToken; // The CoAP Version, Type, and Token Length
+        uint8_t  mCode;
+        uint16_t mMessageId;
+        uint8_t  mToken[kMaxTokenLength];
     } OT_TOOL_PACKED_END;
 
     /**
@@ -896,14 +896,6 @@ private:
     }
 
     HelpData &GetHelpData(void) { return AsNonConst(AsConst(this)->GetHelpData()); }
-
-    uint8_t *GetToken(void) { return GetHelpData().mHeader.mToken; }
-
-    void SetTokenLength(uint8_t aTokenLength)
-    {
-        GetHelpData().mHeader.mVersionTypeToken &= ~kTokenLengthMask;
-        GetHelpData().mHeader.mVersionTypeToken |= ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
-    }
 
     uint8_t WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer);
 

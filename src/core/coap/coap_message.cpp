@@ -51,7 +51,7 @@ uint16_t BlockSizeFromExponent(BlockSzx aBlockSzxq)
 void Message::Init(void)
 {
     GetHelpData().Clear();
-    SetVersion(kVersion1);
+    SetVersion(Header::kVersion1);
     SetOffset(0);
     GetHelpData().mHeaderLength = kMinHeaderLength;
 
@@ -396,11 +396,7 @@ Error Message::ParseHeader(void)
 
     GetHelpData().mHeaderOffset = offset;
 
-    SuccessOrExit(error = Read(offset, &GetHelpData().mHeader, kMinHeaderLength));
-    offset += kMinHeaderLength;
-
-    VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = kErrorParse);
-    SuccessOrExit(error = Read(offset, GetHelpData().mHeader.mToken, GetTokenLength()));
+    SuccessOrExit(error = GetHelpData().mHeader.ParseFrom(*this));
 
     SuccessOrExit(error = iterator.Init(*this));
 
@@ -418,24 +414,28 @@ exit:
 
 Error Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
 {
-    OT_ASSERT(aTokenLength <= kMaxTokenLength);
+    Error error;
 
-    SetTokenLength(aTokenLength);
-    memcpy(GetToken(), aToken, aTokenLength);
+    SuccessOrExit(error = GetHelpData().mHeader.SetToken(aToken, aTokenLength));
     GetHelpData().mHeaderLength += aTokenLength;
+    error = SetLength(GetHelpData().mHeaderLength);
 
-    return SetLength(GetHelpData().mHeaderLength);
+exit:
+    return error;
 }
 
 Error Message::GenerateRandomToken(uint8_t aTokenLength)
 {
+    Error   error;
     uint8_t token[kMaxTokenLength];
 
-    OT_ASSERT(aTokenLength <= sizeof(token));
+    VerifyOrExit(aTokenLength <= kMaxTokenLength, error = kErrorInvalidArgs);
 
-    IgnoreError(Random::Crypto::FillBuffer(token, aTokenLength));
+    SuccessOrExit(error = Random::Crypto::FillBuffer(token, aTokenLength));
+    error = SetToken(token, aTokenLength);
 
-    return SetToken(token, aTokenLength);
+exit:
+    return error;
 }
 
 Error Message::SetTokenFromMessage(const Message &aMessage)
@@ -510,6 +510,38 @@ const char *Message::CodeToString(void) const
     return Stringify::Lookup(GetCode(), kCodeTable, "Unknown");
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Message::Header`
+
+Error Message::Header::ParseFrom(const Message &aMessage)
+{
+    Error    error;
+    uint16_t offset = aMessage.GetOffset();
+
+    SuccessOrExit(error = aMessage.Read(offset, this, kMinSize));
+
+    VerifyOrExit(GetVersion() == kVersion1, error = kErrorParse);
+    VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = kErrorParse);
+
+    SuccessOrExit(error = aMessage.Read(offset + kMinSize, mToken, GetTokenLength()));
+
+exit:
+    return error;
+}
+
+Error Message::Header::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aTokenLength <= kMaxTokenLength, error = kErrorInvalidArgs);
+
+    SetTokenLength(aTokenLength);
+    memcpy(mToken, aToken, aTokenLength);
+
+exit:
+    return error;
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 // `Message::Iterator`
