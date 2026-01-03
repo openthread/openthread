@@ -42,6 +42,7 @@
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/poll_accelerator.hpp"
 #include "thread/neighbor.hpp"
 
 namespace ot {
@@ -61,6 +62,11 @@ namespace ot {
 
 class DataPollSender : public InstanceLocator, private NonCopyable
 {
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    friend class Instance;
+    friend class Mac::Mac;
+#endif
+
 public:
     static constexpr uint8_t kDefaultFastPolls  = 8;  ///< Default number of fast poll tx (@sa StartFastPolls).
     static constexpr uint8_t kMaxFastPolls      = 15; ///< Maximum number of fast poll tx allowed.
@@ -131,7 +137,13 @@ public:
      * @param[in] aFrame     The data poll frame.
      * @param[in] aError     Error status of a data poll message transmission.
      */
-    void HandlePollSent(Mac::TxFrame &aFrame, Error aError);
+    void HandlePollSent(
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+        uint32_t aIterationsDone,
+        bool     rxExpected,
+#endif
+        Mac::TxFrame &aFrame,
+        Error         aError);
 
     /**
      * Informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
@@ -146,7 +158,12 @@ public:
      *
      * @param[in] aFrame     A reference to the received frame to process.
      */
-    void ProcessRxFrame(const Mac::RxFrame &aFrame);
+    void ProcessRxFrame(const Mac::RxFrame &aFrame
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+                        ,
+                        bool aPollingDone
+#endif
+    );
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
@@ -264,6 +281,11 @@ private:
     Error GetPollDestinationAddress(Mac::Address &aDest) const;
 #endif
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    bool StartPollAccelerator(Mac::TxFrame &aFrame, bool aOneIteration);
+    void StopPollAccelerator(void);
+#endif
+
     using PollTimer = TimerMilliIn<DataPollSender, &DataPollSender::HandlePollTimer>;
 
     TimeMilli mTimerStartTime;
@@ -279,6 +301,10 @@ private:
     uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimeout`).
     uint8_t mPollTxFailureCounter : 4; // Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   // Number of remaining fast polls when in transient fast polling mode.
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    PollAccelerator mPollAccelerator;
+#endif
 };
 
 /**

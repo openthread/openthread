@@ -891,6 +891,10 @@ template <> inline AnnounceBeginServer &Instance::Get(void) { return mAnnounceBe
 
 template <> inline DataPollSender &Instance::Get(void) { return mMeshForwarder.mDataPollSender; }
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+template <> inline PollAccelerator &Instance::Get(void) { return mMeshForwarder.mDataPollSender.mPollAccelerator; }
+#endif
+
 template <> inline EnergyScanServer &Instance::Get(void) { return mEnergyScan; }
 
 template <> inline PanIdQueryServer &Instance::Get(void) { return mPanIdQuery; }

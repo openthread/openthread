@@ -52,6 +52,9 @@ DataPollSender::DataPollSender(Instance &aInstance)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    , mPollAccelerator(aInstance)
+#endif
 {
 }
 
@@ -190,12 +193,49 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
+void DataPollSender::HandlePollSent(
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    uint32_t aIterationsDone,
+    bool     aRxExpected,
+#endif
+    Mac::TxFrame &aFrame,
+    Error         aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
 
     VerifyOrExit(mEnabled);
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    // the poll accelerator did several successful iterations
+    if (aIterationsDone)
+    {
+        if (!aFrame.IsEmpty())
+        {
+            IgnoreError(aFrame.GetDstAddr(macDest));
+            Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, kErrorNone, macDest, /* aIsDataPoll */ true);
+        }
+
+        if (mRemainingFastPolls)
+        {
+            if (mRemainingFastPolls > aIterationsDone)
+            {
+                mRemainingFastPolls -= aIterationsDone;
+            }
+            else
+            {
+                mRemainingFastPolls = 0;
+                mFastPollsUsers     = 0;
+            }
+        }
+
+        if (mRetxMode)
+        {
+            mRetxMode             = false;
+            mPollTxFailureCounter = 0;
+        }
+    }
+#endif
 
     if (!aFrame.IsEmpty())
     {
@@ -273,6 +313,12 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         break;
     }
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    // If the poll accelerator already did the reception,
+    // ProcessRxFrame() would be called by Mac::HandleReceivedFrame()
+    shouldRecalculatePollPeriod = !aRxExpected;
+#endif
+
     if (shouldRecalculatePollPeriod)
     {
         ScheduleNextPoll(kRecalculatePollPeriod);
@@ -307,13 +353,26 @@ exit:
     return;
 }
 
-void DataPollSender::ProcessRxFrame(const Mac::RxFrame &aFrame)
+void DataPollSender::ProcessRxFrame(const Mac::RxFrame &aFrame
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+                                    ,
+                                    bool aPollingDone
+#endif
+)
 {
     VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter = 0;
 
-    if (aFrame.GetFramePending())
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if (aPollingDone)
+    {
+        ScheduleNextPoll(kRecalculatePollPeriod);
+    }
+    else
+#endif
+
+        if (aFrame.GetFramePending())
     {
         IgnoreError(SendDataPoll());
     }
@@ -437,6 +496,9 @@ void DataPollSender::ResetKeepAliveTimer(void)
 
 void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    bool startPollAccelerator = true;
+#endif
     TimeMilli now;
     uint32_t  oldPeriod = mPollPeriod;
 
@@ -446,6 +508,29 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 
     now = TimerMilli::GetNow();
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (Get<Mac::Mac>().IsCslEnabled())
+    {
+        startPollAccelerator = false;
+    }
+#endif
+
+    if (mPollAccelerator.IsRunning() && ((oldPeriod != mPollPeriod) || !startPollAccelerator))
+    {
+        mPollAccelerator.Stop();
+        return;
+    }
+
+    if (startPollAccelerator && !mPollAccelerator.IsRunning())
+    {
+        mTimer.Stop();
+        mTimerStartTime = now + kMinPollPeriod;
+        Get<Mac::Mac>().RequestDataPollTransmission();
+        return;
+    }
+#endif
 
     if (mTimer.IsRunning())
     {
@@ -584,5 +669,41 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
 exit:
     return frame;
 }
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+bool DataPollSender::StartPollAccelerator(Mac::TxFrame &aFrame, bool aOneIteration)
+{
+    if (mTimer.IsRunning() || mPollAccelerator.IsRunning())
+    {
+        return false;
+    }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (Get<Mac::Mac>().IsCslEnabled())
+    {
+        return false;
+    }
+#endif
+
+    uint32_t cnt = mRemainingFastPolls;
+
+    if (aOneIteration || mRetxMode || mPollTimeoutCounter)
+    {
+        cnt = 1;
+    }
+
+    IgnoreError(mPollAccelerator.Start(aFrame, mPollPeriod, cnt, mTimerStartTime));
+
+    return true;
+}
+
+void DataPollSender::StopPollAccelerator(void)
+{
+    if (mPollAccelerator.IsRunning())
+    {
+        IgnoreError(mPollAccelerator.Stop());
+    }
+}
+#endif
 
 } // namespace ot
