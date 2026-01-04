@@ -141,7 +141,11 @@ public:
          *
          * @param[in] aNetifId   The network interface identifier.
          */
-        void SetNetifId(NetifIdentifier aNetifId) { mNetifId = static_cast<otNetifIdentifier>(aNetifId); }
+        void SetNetifId(NetifIdentifier aNetifId)
+        {
+            OT_ASSERT(!IsBound());
+            mNetifId = static_cast<otNetifIdentifier>(aNetifId);
+        }
 
         /**
          * Indicates whether or not the socket can use platform UDP.
@@ -217,11 +221,8 @@ public:
          * Opens the UDP socket.
          *
          * @param[in]  aNetifId   The network interface identifier.
-         *
-         * @retval kErrorNone     Successfully opened the socket.
-         * @retval kErrorFailed   Failed to open the socket.
          */
-        Error Open(NetifIdentifier aNetifId);
+        void Open(NetifIdentifier aNetifId);
 
         /**
          * Returns if the UDP socket is open.
@@ -498,11 +499,8 @@ public:
      * @param[in]  aNetifId  A network interface identifier.
      * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
      * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone     Successfully opened the socket.
-     * @retval kErrorFailed   Failed to open the socket.
      */
-    Error Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext);
+    void Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext);
 
     /**
      * Returns if a UDP socket is open.
