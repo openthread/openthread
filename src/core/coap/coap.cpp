@@ -243,37 +243,13 @@ Error CoapBase::SendMessage(Message                &aMessage,
     if (copyLength > 0)
     {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        // Whether or not to turn on special "Observe" handling.
-        Option::Iterator iterator;
-        bool             observe;
-
-        SuccessOrExit(error = iterator.Init(aMessage, kOptionObserve));
-        observe = !iterator.IsDone();
-
-        // Special case, if we're sending a GET with Observe=1, that is a cancellation.
-        if (observe && aMessage.IsGetRequest())
         {
-            uint64_t observeVal = 0;
+            bool shouldObserve = false;
 
-            SuccessOrExit(error = iterator.ReadOptionValue(observeVal));
-
-            if (observeVal == 1)
-            {
-                Metadata handlerMetadata;
-
-                // We're cancelling our subscription, so disable special-case handling on this request.
-                observe = false;
-
-                // If we can find the previous handler context, cancel that too.  Peer address
-                // and tokens, etc should all match.
-                Message *origRequest = FindRelatedRequest(aMessage, aMessageInfo, handlerMetadata);
-                if (origRequest != nullptr)
-                {
-                    FinalizeCoapTransaction(*origRequest, handlerMetadata, nullptr, nullptr, kErrorNone);
-                }
-            }
+            SuccessOrExit(error = ProcessObserveSend(aMessage, aMessageInfo, shouldObserve));
+            metadata.mObserve = shouldObserve;
         }
-#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+#endif
 
         metadata.mSourceAddress            = aMessageInfo.GetSockAddr();
         metadata.mDestinationPort          = aMessageInfo.GetPeerPort();
@@ -288,9 +264,6 @@ Error CoapBase::SendMessage(Message                &aMessage,
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         metadata.mHopLimit        = aMessageInfo.GetHopLimit();
         metadata.mIsHostInterface = aMessageInfo.IsHostInterface();
-#endif
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        metadata.mObserve = observe;
 #endif
         metadata.mNextTimerShot =
             TimerMilli::GetNow() +
@@ -446,7 +419,7 @@ void CoapBase::ScheduleRetransmissionTimer(void)
         metadata.ReadFrom(message);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        if (message.IsRequest() && metadata.mObserve && metadata.mAcknowledged)
+        if (IsObserveSubscription(message, metadata))
         {
             // This is an RFC7641 subscription which is already acknowledged.
             // We do not time it out, so skip it when determining the next
@@ -479,9 +452,8 @@ void CoapBase::HandleRetransmissionTimer(void)
         if (now >= metadata.mNextTimerShot)
         {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            if (message.IsRequest() && metadata.mObserve && metadata.mAcknowledged)
+            if (IsObserveSubscription(message, metadata))
             {
-                // This is a RFC7641 subscription.  Do not time out.
                 continue;
             }
 #endif
@@ -680,20 +652,23 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     Message *request = nullptr;
     Error    error   = kErrorNone;
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    bool responseObserve = false;
+    bool shouldObserve = false;
 #endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
     VerifyOrExit(request != nullptr);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    if (metadata.mObserve && request->IsRequest())
+    // If there's an Observe option present in both request and
+    // response, and we have a response handler; then we're dealing
+    // with RFC7641 rules here. If there is no response handler, then
+    // we're wasting our time!
+    if (metadata.mObserve && request->IsRequest() && (metadata.mResponseHandler != nullptr))
     {
-        // We sent Observe in our request, see if we received Observe in the response too.
         Option::Iterator iterator;
 
         SuccessOrExit(error = iterator.Init(aMessage, kOptionObserve));
-        responseObserve = !iterator.IsDone();
+        shouldObserve = !iterator.IsDone();
     }
 #endif
 
@@ -712,12 +687,15 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         if (aMessage.IsEmpty())
         {
             // Empty acknowledgment.
+
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (metadata.mObserve && !request->IsRequest())
             {
-                // This is the ACK to our RFC7641 CON notification.  There will be no
-                // "separate" response so pass it back as if it were a piggy-backed
-                // response so we can stop re-sending and the application can move on.
+                // This is the ACK to our RFC7641 CON notification.
+                // There will be no "separate" response so pass it back
+                // as if it were a piggy-backed response so we can stop
+                // re-sending and the application can move on.
+
                 FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, kErrorNone);
             }
             else
@@ -741,12 +719,10 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         }
         else if (aMessage.IsResponse() && aMessage.IsTokenEqual(*request))
         {
-            // Piggybacked response.  If there's an Observe option present in both
-            // request and response, and we have a response handler; then we're
-            // dealing with RFC7641 rules here.
-            // (If there is no response handler, then we're wasting our time!)
+            // Piggybacked response.
+
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            if (metadata.mObserve && responseObserve && (metadata.mResponseHandler != nullptr))
+            if (shouldObserve)
             {
                 // This is a RFC7641 notification.  The request is *not* done!
                 metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, kErrorNone);
@@ -774,29 +750,38 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         // Send empty ACK if it is a CON message.
         IgnoreError(SendAck(aMessage, aMessageInfo));
 
-        OT_FALL_THROUGH;
         // Handling of RFC7641 and multicast is below.
+
+        OT_FALL_THROUGH;
+
     case kTypeNonConfirmable:
-        // Separate response or observation notification.  If the request was to a multicast
-        // address, OR both the request and response carry Observe options, then this is NOT
-        // the final message, we may see multiples.
-        if ((metadata.mResponseHandler != nullptr) && (metadata.mDestinationAddress.IsMulticast()
+
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-                                                       || (metadata.mObserve && responseObserve)
-#endif
-                                                           ))
+        if (shouldObserve)
         {
             metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, kErrorNone);
 
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            // When any Observe response is seen, consider a NON observe request "acknowledged" at this point.
-            // This will keep the Observe request active indefinitely until it is canceled.
-            if (metadata.mObserve && !metadata.mConfirmable && responseObserve)
+            // When any Observe response is seen, consider a NON observe
+            // request "acknowledged" at this point. This will keep the
+            // Observe request active indefinitely until it is
+            // canceled.
+
+            if (!metadata.mConfirmable)
             {
                 metadata.mAcknowledged = true;
                 metadata.UpdateIn(*request);
             }
+
+            break;
+        }
 #endif
+
+        // If the request was to a multicast address, then this is NOT
+        // the final message, we may see more.
+
+        if ((metadata.mResponseHandler != nullptr) && metadata.mDestinationAddress.IsMulticast())
+        {
+            metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, kErrorNone);
         }
         else
         {
@@ -1564,6 +1549,62 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// `CoapBase` - Observe methods
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+
+Error CoapBase::ProcessObserveSend(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, bool &aShouldObserve)
+{
+    Error            error;
+    Option::Iterator iterator;
+
+    aShouldObserve = false;
+
+    SuccessOrExit(error = iterator.Init(aMessage, kOptionObserve));
+    aShouldObserve = !iterator.IsDone();
+
+    // Special case, if we're sending a GET with Observe=1, that is a
+    // cancellation.
+
+    if (aShouldObserve && aMessage.IsGetRequest())
+    {
+        uint64_t value = 0;
+
+        SuccessOrExit(error = iterator.ReadOptionValue(value));
+
+        if (value == 1)
+        {
+            Message *request;
+            Metadata metadata;
+
+            aShouldObserve = false;
+
+            // If we can find the previous matching request, cancel that too.
+
+            request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
+
+            if (request != nullptr)
+            {
+                FinalizeCoapTransaction(*request, metadata, nullptr, nullptr, kErrorNone);
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+
+bool CoapBase::IsObserveSubscription(const Message &aMessage, const Metadata &aMetadata)
+{
+    // Indicate whether the message is an RFC7641 subscription which
+    // is already acknowledged.
+
+    return aMessage.IsRequest() && aMetadata.mObserve && aMetadata.mAcknowledged;
+}
+
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // CoapBase::ResponseCache
