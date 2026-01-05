@@ -1371,21 +1371,14 @@ exit:
 
 const char *RxRaTracker::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 {
-    static const char *const kOriginStrings[] = {
-        "",                          // (0) kAnotherRouter
-        "(this BR routing-manager)", // (1) kThisBrRoutingManager
-        "(this BR other sw entity)", // (2) kThisBrOtherEntity
-    };
+#define RouterAdvOriginMapList(_)                         \
+    _(kAnotherRouter, "")                                 \
+    _(kThisBrRoutingManager, "(this BR routing-manager)") \
+    _(kThisBrOtherEntity, "(this BR other sw entity)")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAnotherRouter);
-        ValidateNextEnum(kThisBrRoutingManager);
-        ValidateNextEnum(kThisBrOtherEntity);
-    };
+    DefineEnumStringArray(RouterAdvOriginMapList);
 
-    return kOriginStrings[aRaOrigin];
+    return kStrings[aRaOrigin];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

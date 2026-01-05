@@ -228,31 +228,19 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 
 const char *Neighbor::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Invalid",        // (0) kStateInvalid
-        "Restored",       // (1) kStateRestored
-        "ParentReq",      // (2) kStateParentRequest
-        "ParentRes",      // (3) kStateParentResponse
-        "ChildIdReq",     // (4) kStateChildIdRequest
-        "LinkReq",        // (5) kStateLinkRequest
-        "ChildUpdateReq", // (6) kStateChildUpdateRequest
-        "Valid",          // (7) kStateValid
-    };
+#define StateMapList(_)                           \
+    _(kStateInvalid, "Invalid")                   \
+    _(kStateRestored, "Restored")                 \
+    _(kStateParentRequest, "ParentReq")           \
+    _(kStateParentResponse, "ParentRes")          \
+    _(kStateChildIdRequest, "ChildIdReq")         \
+    _(kStateLinkRequest, "LinkReq")               \
+    _(kStateChildUpdateRequest, "ChildUpdateReq") \
+    _(kStateValid, "Valid")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateInvalid);
-        ValidateNextEnum(kStateRestored);
-        ValidateNextEnum(kStateParentRequest);
-        ValidateNextEnum(kStateParentResponse);
-        ValidateNextEnum(kStateChildIdRequest);
-        ValidateNextEnum(kStateLinkRequest);
-        ValidateNextEnum(kStateChildUpdateRequest);
-        ValidateNextEnum(kStateValid);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 } // namespace ot

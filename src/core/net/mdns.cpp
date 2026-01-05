@@ -4101,25 +4101,16 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
 
 const char *Core::TxMessage::TypeToString(Type aType)
 {
-    static const char *const kTypeStrings[] = {
-        "multicast probe",         // kMulticastProbe
-        "multicast query",         // kMulticastQuery
-        "multicast response",      // kMulticastResponse
-        "unicast response",        // kUnicastResponse
-        "legacy-unicast response", // kLegacyUnicastResponse
-    };
+#define TypeMapList(_)                          \
+    _(kMulticastProbe, "multicast probe")       \
+    _(kMulticastQuery, "multicast query")       \
+    _(kMulticastResponse, "multicast response") \
+    _(kUnicastResponse, "unicast response")     \
+    _(kLegacyUnicastResponse, "legacy-unicast response")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kMulticastProbe);
-        ValidateNextEnum(kMulticastQuery);
-        ValidateNextEnum(kMulticastResponse);
-        ValidateNextEnum(kUnicastResponse);
-        ValidateNextEnum(kLegacyUnicastResponse);
-    };
+    DefineEnumStringArray(TypeMapList);
 
-    return kTypeStrings[aType];
+    return kStrings[aType];
 }
 
 //----------------------------------------------------------------------------------------------------------------------

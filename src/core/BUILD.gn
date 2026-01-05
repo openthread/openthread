@@ -276,6 +276,7 @@ openthread_core_files = [
   "common/data.hpp",
   "common/debug.hpp",
   "common/encoding.hpp",
+  "common/enum_to_string.hpp",
   "common/equatable.hpp",
   "common/error.cpp",
   "common/error.hpp",

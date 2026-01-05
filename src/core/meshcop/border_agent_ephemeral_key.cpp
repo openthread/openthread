@@ -377,54 +377,34 @@ exit:
 
 const char *EphemeralKeyManager::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled",  // (0) kStateDisabled
-        "Stopped",   // (1) kStateStopped
-        "Started",   // (2) kStateStarted
-        "Connected", // (3) kStateConnected
-        "Accepted",  // (4) kStateAccepted
-    };
+#define StateMapList(_)             \
+    _(kStateDisabled, "Disabled")   \
+    _(kStateStopped, "Stopped")     \
+    _(kStateStarted, "Started")     \
+    _(kStateConnected, "Connected") \
+    _(kStateAccepted, "Accepted")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStateStarted);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateAccepted);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *EphemeralKeyManager::DeactivationReasonToString(DeactivationReason aReason)
 {
-    static const char *const kReasonStrings[] = {
-        "LocalDisconnect",   // (0) kReasonLocalDisconnect
-        "PeerDisconnect",    // (1) kReasonPeerDisconnect
-        "SessionError",      // (2) kReasonSessionError
-        "SessionTimeout",    // (3) kReasonSessionTimeout
-        "MaxFailedAttempts", // (4) kReasonMaxFailedAttempts
-        "EpskcTimeout",      // (5) kReasonEpskcTimeout
-        "Unknown",           // (6) kReasonUnknown
-    };
+#define ReasonMapList(_)                             \
+    _(kReasonLocalDisconnect, "LocalDisconnect")     \
+    _(kReasonPeerDisconnect, "PeerDisconnect")       \
+    _(kReasonSessionError, "SessionError")           \
+    _(kReasonSessionTimeout, "SessionTimeout")       \
+    _(kReasonMaxFailedAttempts, "MaxFailedAttempts") \
+    _(kReasonEpskcTimeout, "EpskcTimeout")           \
+    _(kReasonUnknown, "Unknown")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kReasonLocalDisconnect);
-        ValidateNextEnum(kReasonPeerDisconnect);
-        ValidateNextEnum(kReasonSessionError);
-        ValidateNextEnum(kReasonSessionTimeout);
-        ValidateNextEnum(kReasonMaxFailedAttempts);
-        ValidateNextEnum(kReasonEpskcTimeout);
-        ValidateNextEnum(kReasonUnknown);
-    };
+    DefineEnumStringArray(ReasonMapList);
 
-    return kReasonStrings[aReason];
+    return kStrings[aReason];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
