@@ -98,6 +98,7 @@ public:
         kPendingDataset        = 25, ///< Pending Operational Dataset TLV
         kDiscovery             = 26, ///< Thread Discovery TLV
         kSupervisionInterval   = 27, ///< Supervision Interval TLV
+        kThreeWayChildUpdate   = 28, ///< Three Way Child Update TLV
         kWakeupChannel         = 74, ///< Wakeup Channel TLV
         kCslChannel            = 80, ///< CSL Channel TLV
         kCslTimeout            = 85, ///< CSL Timeout TLV
@@ -228,6 +229,11 @@ typedef UintTlvInfo<Tlv::kCslTimeout, uint32_t> CslTimeoutTlv;
  * Defines XTAL Accuracy TLV constants and types.
  */
 typedef UintTlvInfo<Tlv::kXtalAccuracy, uint16_t> XtalAccuracyTlv;
+
+/**
+ * Defines Three Way Child Update TLV constants and types.
+ */
+typedef TlvInfo<Tlv::kThreeWayChildUpdate> ThreeWayChildUpdateTlv;
 
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
