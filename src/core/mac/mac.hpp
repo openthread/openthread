@@ -135,6 +135,11 @@ public:
     explicit Mac(Instance &aInstance);
 
     /**
+     * Clears the Mode2Key on destruction.
+     */
+    ~Mac(void) { ClearMode2Key(); }
+
+    /**
      * Starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan. Zero is mapped to all channels.
