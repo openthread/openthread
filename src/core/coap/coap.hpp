@@ -728,7 +728,7 @@ protected:
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
-    static constexpr uint16_t kMaxBlockLength = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
+    static constexpr uint16_t kMaxBlockSize = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
 
     struct Metadata : public Message::FooterData<Metadata>
     {
@@ -822,11 +822,10 @@ private:
                                   bool                         &aDidHandle);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
-    Error PrepareNextBlockRequest(Message::BlockType aType,
-                                  bool               aMoreBlocks,
-                                  Message           &aRequestOld,
-                                  Message           &aRequest,
-                                  Message           &aMessage);
+    Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
+                                  Message         &aRequestOld,
+                                  Message         &aRequest,
+                                  const BlockInfo &aBlockInfo);
     Error ProcessBlock1Request(Message                 &aMessage,
                                const Ip6::MessageInfo  &aMessageInfo,
                                const ResourceBlockWise &aResource,
@@ -837,11 +836,11 @@ private:
     Error SendNextBlock1Request(Message                &aRequest,
                                 Message                &aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
-                                const Metadata         &aCoapMetadata);
+                                const Metadata         &aMetadata);
     Error SendNextBlock2Request(Message                &aRequest,
                                 Message                &aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
-                                const Metadata         &aCoapMetadata,
+                                const Metadata         &aMetadata,
                                 uint32_t                aTotalLength,
                                 bool                    aBeginBlock1Transfer);
 

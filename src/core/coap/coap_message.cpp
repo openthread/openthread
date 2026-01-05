@@ -56,11 +56,6 @@ void Message::Init(void)
     GetHelpData().mHeaderLength = kMinHeaderLength;
 
     IgnoreError(SetLength(GetHelpData().mHeaderLength));
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    SetBlockWiseBlockNumber(0);
-    SetMoreBlocksFlag(false);
-    SetBlockWiseBlockSize(kBlockSzx16);
-#endif
 }
 
 void Message::Init(Type aType, Code aCode)
@@ -295,56 +290,70 @@ exit:
     return error;
 }
 
-Error Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, BlockSzx aSize)
+Error Message::AppendBlockOption(uint16_t aBlockOptionNumber, const BlockInfo &aInfo)
 {
-    Error    error   = kErrorNone;
-    uint32_t encoded = aSize;
+    Error    error;
+    uint32_t encoded;
 
-    VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = kErrorInvalidArgs);
-    VerifyOrExit(aSize <= kBlockSzx1024, error = kErrorInvalidArgs);
-    VerifyOrExit(aNum < kBlockNumMax, error = kErrorInvalidArgs);
+    switch (aBlockOptionNumber)
+    {
+    case kOptionBlock1:
+    case kOptionBlock2:
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+    }
 
-    encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
-    encoded |= aNum << kBlockNumOffset;
+    VerifyOrExit(aInfo.mBlockSzx <= kBlockSzx1024, error = kErrorInvalidArgs);
+    VerifyOrExit(aInfo.mBlockNumber < kBlockNumMax, error = kErrorInvalidArgs);
 
-    error = AppendUintOption((aType == kBlockType1) ? kOptionBlock1 : kOptionBlock2, encoded);
+    encoded = aInfo.mBlockSzx;
+    encoded |= static_cast<uint32_t>(aInfo.mMoreBlocks << kBlockMOffset);
+    encoded |= aInfo.mBlockNumber << kBlockNumOffset;
+
+    error = AppendUintOption(aBlockOptionNumber, encoded);
 
 exit:
     return error;
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-Error Message::ReadBlockOptionValues(uint16_t aBlockType)
+
+Error Message::ReadBlockOptionValues(uint16_t aBlockOptionNumber, BlockInfo &aInfo) const
 {
-    Error            error                     = kErrorNone;
+    Error            error;
     uint8_t          buf[kMaxOptionHeaderSize] = {0};
     Option::Iterator iterator;
 
-    VerifyOrExit((aBlockType == kOptionBlock1) || (aBlockType == kOptionBlock2), error = kErrorInvalidArgs);
+    switch (aBlockOptionNumber)
+    {
+    case kOptionBlock1:
+    case kOptionBlock2:
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+    }
 
-    SuccessOrExit(error = iterator.Init(*this, aBlockType));
+    SuccessOrExit(error = iterator.Init(*this, aBlockOptionNumber));
     SuccessOrExit(error = iterator.ReadOptionValue(buf));
-
-    SetBlockWiseBlockNumber(0);
-    SetMoreBlocksFlag(false);
 
     switch (iterator.GetOption()->GetLength())
     {
     case 0:
     case 1:
-        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] & 0xf0) >> 4));
-        SetMoreBlocksFlag(static_cast<bool>((buf[0] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<BlockSzx>(buf[0] & 0x07));
+        aInfo.mBlockNumber = static_cast<uint32_t>((buf[0] & 0xf0) >> 4);
+        aInfo.mMoreBlocks  = (((buf[0] & 0x08) >> 3) == 1);
+        aInfo.mBlockSzx    = (static_cast<BlockSzx>(buf[0] & 0x07));
         break;
     case 2:
-        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 4) + ((buf[1] & 0xf0) >> 4)));
-        SetMoreBlocksFlag(static_cast<bool>((buf[1] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<BlockSzx>(buf[1] & 0x07));
+        aInfo.mBlockNumber = static_cast<uint32_t>((buf[0] << 4) + ((buf[1] & 0xf0) >> 4));
+        aInfo.mMoreBlocks  = ((buf[1] & 0x08) >> 3 == 1);
+        aInfo.mBlockSzx    = (static_cast<BlockSzx>(buf[1] & 0x07));
         break;
     case 3:
-        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 12) + (buf[1] << 4) + ((buf[2] & 0xf0) >> 4)));
-        SetMoreBlocksFlag(static_cast<bool>((buf[2] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<BlockSzx>(buf[2] & 0x07));
+        aInfo.mBlockNumber = static_cast<uint32_t>((buf[0] << 12) + (buf[1] << 4) + ((buf[2] & 0xf0) >> 4));
+        aInfo.mMoreBlocks  = ((buf[2] & 0x08) >> 3 == 1);
+        aInfo.mBlockSzx    = (static_cast<BlockSzx>(buf[2] & 0x07));
         break;
     default:
         error = kErrorInvalidArgs;
@@ -354,6 +363,7 @@ Error Message::ReadBlockOptionValues(uint16_t aBlockType)
 exit:
     return error;
 }
+
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 Error Message::SetPayloadMarker(void)
