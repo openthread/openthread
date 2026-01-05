@@ -228,21 +228,81 @@ Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler 
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(!IsOpen(aSocket));
+    VerifyOrExit(!IsOpen(aSocket), error = kErrorAlready);
 
     aSocket.Clear();
-    aSocket.SetNetifId(aNetifId);
+    aSocket.mNetifId = MapEnum(kNetifThreadInternal);
     aSocket.mHandler = aHandler;
     aSocket.mContext = aContext;
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    error = Plat::Open(aSocket);
-#endif
-    SuccessOrExit(error);
+    mSockets.Push(aSocket);
 
-    AddSocket(aSocket);
+    error = BindToNetif(aSocket, aNetifId);
+
+    if (error != kErrorNone)
+    {
+        IgnoreError(mSockets.Remove(aSocket));
+        aSocket.SetNext(nullptr);
+    }
 
 exit:
+    return error;
+}
+
+Error Udp::BindToNetif(SocketHandle &aSocket, NetifIdentifier aNetifId)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    NetifIdentifier oldNetif          = aSocket.GetNetifId();
+    bool            didOpenOnPlatform = false;
+
+    VerifyOrExit(IsOpen(aSocket), error = kErrorInvalidArgs);
+    VerifyOrExit(!aSocket.IsBound(), error = kErrorAlready);
+
+    VerifyOrExit(aNetifId != oldNetif);
+
+    // If binding to the internal Thread netif, platform UDP will not
+    // be used, so ensure any existing platform socket is closed.
+
+    if (aNetifId == kNetifThreadInternal)
+    {
+        SuccessOrExit(error = Plat::Close(aSocket));
+    }
+#endif
+
+    aSocket.mNetifId = MapEnum(aNetifId);
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    // When transitioning from the internal Thread netif (`oldNetif`)
+    // to an interface that uses platform UDP, we must open a
+    // platform socket. If a platform socket was already open, we
+    // simply proceed to bind it to the new network interface.
+
+    if (oldNetif == kNetifThreadInternal)
+    {
+        SuccessOrExit(error = Plat::Open(aSocket));
+        didOpenOnPlatform = true;
+    }
+
+    error = Plat::BindToNetif(aSocket);
+
+exit:
+    if (error != kErrorNone)
+    {
+        // On failure, if a new platform socket was opened in this
+        // call, ensure it is closed before we revert the netif
+        // change.
+
+        if (didOpenOnPlatform)
+        {
+            IgnoreError(Plat::Close(aSocket));
+        }
+
+        aSocket.mNetifId = MapEnum(oldNetif);
+    }
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
     return error;
 }
 
@@ -250,9 +310,8 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
     Error error = kErrorNone;
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    SuccessOrExit(error = Plat::BindToNetif(aSocket));
-#endif
+    VerifyOrExit(IsOpen(aSocket), error = kErrorInvalidArgs);
+    VerifyOrExit(!aSocket.IsBound(), error = kErrorAlready);
 
     VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || aSockAddr.GetAddress().IsMulticast() ||
                      Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
@@ -275,6 +334,11 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
     {
         error = Plat::Bind(aSocket);
     }
+
+    if (error != kErrorNone)
+    {
+        aSocket.GetSockName().Clear();
+    }
 #endif
 
 exit:
@@ -284,6 +348,8 @@ exit:
 Error Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
 {
     Error error = kErrorNone;
+
+    VerifyOrExit(IsOpen(aSocket), error = kErrorInvalidArgs);
 
     aSocket.mPeerName = aSockAddr;
 
@@ -306,11 +372,13 @@ Error Udp::Close(SocketHandle &aSocket)
 
     VerifyOrExit(IsOpen(aSocket));
 
+    IgnoreError(mSockets.Remove(aSocket));
+    aSocket.SetNext(nullptr);
+
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     SuccessOrExit(error = Plat::Close(aSocket));
 #endif
 
-    RemoveSocket(aSocket);
     aSocket.GetSockName().Clear();
     aSocket.GetPeerName().Clear();
 
@@ -322,6 +390,8 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
 {
     Error       error = kErrorNone;
     MessageInfo messageInfoLocal;
+
+    VerifyOrExit(IsOpen(aSocket), error = kErrorInvalidArgs);
 
     VerifyOrExit((aMessageInfo.GetSockPort() == 0) || (aSocket.GetSockName().mPort == aMessageInfo.GetSockPort()),
                  error = kErrorInvalidArgs);
@@ -371,21 +441,6 @@ exit:
 bool Udp::IsPortReserved(uint16_t aPort)
 {
     return aPort == Tmf::kUdpPort || (kSrpServerPortMin <= aPort && aPort <= kSrpServerPortMax);
-}
-
-void Udp::AddSocket(SocketHandle &aSocket) { IgnoreError(mSockets.Add(aSocket)); }
-
-void Udp::RemoveSocket(SocketHandle &aSocket)
-{
-    SocketHandle *prev;
-
-    SuccessOrExit(mSockets.Find(aSocket, prev));
-
-    mSockets.PopAfter(prev);
-    aSocket.SetNext(nullptr);
-
-exit:
-    return;
 }
 
 uint16_t Udp::GetEphemeralPort(void)

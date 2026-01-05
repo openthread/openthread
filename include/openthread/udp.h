@@ -157,13 +157,14 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
 /**
  * Open a UDP/IPv6 socket.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aSocket    A pointer to a UDP socket structure.
- * @param[in]  aCallback  A pointer to the application callback function.
- * @param[in]  aContext   A pointer to application-specific context.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aSocket    A pointer to a UDP socket structure.
+ * @param[in]      aCallback  A pointer to the application callback function.
+ * @param[in]      aContext   A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE    Successfully opened the socket.
- * @retval OT_ERROR_FAILED  Failed to open the socket.
+ * @retval OT_ERROR_NONE      Successfully opened the socket.
+ * @retval OT_ERROR_ALREADY   Socket is already open.
+ * @retval OT_ERROR_FAILED    Failed to open the socket.
  */
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
@@ -180,10 +181,12 @@ bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket);
 /**
  * Close a UDP/IPv6 socket.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aSocket    A pointer to a UDP socket structure.
+ * Calling `otUdpClose()` on a socket that is not open is safe and has no effect.
  *
- * @retval OT_ERROR_NONE   Successfully closed the socket.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aSocket    A pointer to a UDP socket structure.
+ *
+ * @retval OT_ERROR_NONE   Successfully closed the socket, or the socket was not open.
  * @retval OT_ERROR_FAILED Failed to close UDP Socket.
  */
 otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket);
@@ -191,25 +194,28 @@ otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket);
 /**
  * Bind a UDP/IPv6 socket.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aSocket    A pointer to a UDP socket structure.
- * @param[in]  aSockName  A pointer to an IPv6 socket address structure.
- * @param[in]  aNetif     The network interface to bind.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aSocket    A pointer to a UDP socket structure.
+ * @param[in]      aSockName  A pointer to an IPv6 socket address structure.
+ * @param[in]      aNetif     The network interface to bind.
  *
- * @retval OT_ERROR_NONE   Bind operation was successful.
- * @retval OT_ERROR_FAILED Failed to bind UDP socket.
+ * @retval OT_ERROR_NONE            Bind operation was successful.
+ * @retval OT_ERROR_INVALID_ARGS    The socket is not open.
+ * @retval OT_ERROR_ALREADY         The socket is already bound.
+ * @retval OT_ERROR_FAILED          Failed to bind UDP socket.
  */
 otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName, otNetifIdentifier aNetif);
 
 /**
  * Connect a UDP/IPv6 socket.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aSocket    A pointer to a UDP socket structure.
- * @param[in]  aSockName  A pointer to an IPv6 socket address structure.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aSocket    A pointer to a UDP socket structure.
+ * @param[in]      aSockName  A pointer to an IPv6 socket address structure.
  *
- * @retval OT_ERROR_NONE   Connect operation was successful.
- * @retval OT_ERROR_FAILED Failed to connect UDP socket.
+ * @retval OT_ERROR_NONE            Connect operation was successful.
+ * @retval OT_ERROR_INVALID_ARGS    The socket is not open.
+ * @retval OT_ERROR_FAILED          Failed to connect UDP socket.
  */
 otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName);
 
@@ -226,7 +232,7 @@ otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAd
  * including freeing @p aMessage if the message buffer is no longer needed.
  *
  * @retval OT_ERROR_NONE           The message is successfully scheduled for sending.
- * @retval OT_ERROR_INVALID_ARGS   Invalid arguments are given.
+ * @retval OT_ERROR_INVALID_ARGS   The socket is not open, or invalid arguments are given.
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffer to add the UDP and IPv6 headers.
  */
 otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);

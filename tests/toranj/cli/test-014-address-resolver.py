@@ -268,10 +268,11 @@ verify_within(check_cache_entry_ramp_down_to_initial_retry_delay, 60)
 
 # Send to r1 from all addresses on r2.
 
-r2.udp_open()
 for num in range(num_addresses):
+    r2.udp_open()
     r2.udp_bind(prefix + '2:' + str(num), port)
     r2.udp_send(prefix + '1', port, 'hi_r1_from_r2_snoop_me')
+    r2.udp_close()
 
 # Verify that we see all addresses from r2 as snooped in cache table.
 # At most two of them should be marked as non-evictable.
@@ -398,11 +399,11 @@ verify(len(cache_table) == max_cache_entries)
 # Send from c2 to r1 and verify that snoop optimization uses at most
 # `max_snooped_non_evictable` entries
 
-c2.udp_open()
-
 for num in range(num_addresses):
+    c2.udp_open()
     c2.udp_bind(prefix + 'c2:' + str(num), port)
     c2.udp_send(prefix + '1', port, 'hi_r1_from_c2_snoop_me')
+    c2.udp_close()
 
 
 def check_cache_entry_contains_max_allowed_snopped():

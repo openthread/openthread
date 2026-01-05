@@ -137,13 +137,6 @@ public:
         NetifIdentifier GetNetifId(void) const { return static_cast<NetifIdentifier>(mNetifId); }
 
         /**
-         * Sets the network interface identifier.
-         *
-         * @param[in] aNetifId   The network interface identifier.
-         */
-        void SetNetifId(NetifIdentifier aNetifId) { mNetifId = static_cast<otNetifIdentifier>(aNetifId); }
-
-        /**
          * Indicates whether or not the socket can use platform UDP.
          *
          * @retval TRUE    This socket should use platform UDP.
@@ -219,6 +212,7 @@ public:
          * @param[in]  aNetifId   The network interface identifier.
          *
          * @retval kErrorNone     Successfully opened the socket.
+         * @retval kErrorAlready  Socket is already open.
          * @retval kErrorFailed   Failed to open the socket.
          */
         Error Open(NetifIdentifier aNetifId);
@@ -236,7 +230,8 @@ public:
          * @param[in]  aSockAddr         A reference to the socket address.
          *
          * @retval kErrorNone            Successfully bound the socket.
-         * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
+         * @retval kErrorAlready         Socket is already bound.
+         * @retval kErrorInvalidArgs     Socket is not open, or unable to bind to the given address.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          */
         Error Bind(const SockAddr &aSockAddr);
@@ -247,6 +242,8 @@ public:
          * @param[in]  aPort             A port number.
          *
          * @retval kErrorNone            Successfully bound the socket.
+         * @retval kErrorAlready         Socket is already bound.
+         * @retval kErrorInvalidArgs     Socket is not open.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          */
         Error Bind(uint16_t aPort);
@@ -254,8 +251,10 @@ public:
         /**
          * Binds the UDP socket.
          *
-         * @retval kErrorNone    Successfully bound the socket.
-         * @retval kErrorFailed  Failed to bind UDP Socket.
+         * @retval kErrorNone            Successfully bound the socket.
+         * @retval kErrorAlready         Socket is already bound.
+         * @retval kErrorInvalidArgs     Socket is not open.
+         * @retval kErrorFailed          Failed to bind UDP Socket.
          */
         Error Bind(void) { return Bind(0); }
 
@@ -264,8 +263,9 @@ public:
          *
          * @param[in]  aSockAddr  A reference to the socket address.
          *
-         * @retval kErrorNone    Successfully connected the socket.
-         * @retval kErrorFailed  Failed to connect UDP Socket.
+         * @retval kErrorNone         Successfully connected the socket.
+         * @retval kErrorInvalidArgs  Socket is not open.
+         * @retval kErrorFailed       Failed to connect UDP Socket.
          */
         Error Connect(const SockAddr &aSockAddr);
 
@@ -274,23 +274,27 @@ public:
          *
          * @param[in]  aPort        A port number.
          *
-         * @retval kErrorNone    Successfully connected the socket.
-         * @retval kErrorFailed  Failed to connect UDP Socket.
+         * @retval kErrorNone         Successfully connected the socket.
+         * @retval kErrorInvalidArgs  Socket is not open.
+         * @retval kErrorFailed       Failed to connect UDP Socket.
          */
         Error Connect(uint16_t aPort);
 
         /**
          * Connects the UDP socket.
          *
-         * @retval kErrorNone    Successfully connected the socket.
-         * @retval kErrorFailed  Failed to connect UDP Socket.
+         * @retval kErrorNone         Successfully connected the socket.
+         * @retval kErrorInvalidArgs  Socket is not open.
+         * @retval kErrorFailed       Failed to connect UDP Socket.
          */
         Error Connect(void) { return Connect(0); }
 
         /**
          * Closes the UDP socket.
          *
-         * @retval kErrorNone    Successfully closed the UDP socket.
+         * Calling `Close()` on a socket that is not open is safe and has no effect.
+         *
+         * @retval kErrorNone    Successfully closed the UDP socket, or socket was not open.
          * @retval kErrorFailed  Failed to close UDP Socket.
          */
         Error Close(void);
@@ -302,7 +306,7 @@ public:
          * @param[in]  aMessageInfo  The message info associated with @p aMessage.
          *
          * @retval kErrorNone         Successfully sent the UDP message.
-         * @retval kErrorInvalidArgs  If no peer is specified in @p aMessageInfo or by Connect().
+         * @retval kErrorInvalidArgs  Socket is not open, or no peer is specified in @p aMessageInfo or by `Connect()`.
          * @retval kErrorNoBufs       Insufficient available buffer to add the UDP and IPv6 headers.
          */
         Error SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
@@ -494,12 +498,13 @@ public:
     /**
      * Opens a UDP socket.
      *
-     * @param[in]  aSocket   A reference to the socket.
-     * @param[in]  aNetifId  A network interface identifier.
-     * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in,out]  aSocket   A reference to the socket.
+     * @param[in]      aNetifId  A network interface identifier.
+     * @param[in]      aHandler  A pointer to a function that is called when receiving UDP messages.
+     * @param[in]      aContext  A pointer to arbitrary context information.
      *
      * @retval kErrorNone     Successfully opened the socket.
+     * @retval kErrorAlready  Socket is already open.
      * @retval kErrorFailed   Failed to open the socket.
      */
     Error Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler aHandler, void *aContext);
@@ -514,13 +519,31 @@ public:
     bool IsOpen(const SocketHandle &aSocket) const { return mSockets.Contains(aSocket); }
 
     /**
+     * Binds a UDP socket to a network interface identifier.
+     *
+     * `BindToNetif()` may be called multiple times after the socket is successfully opened but before the socket
+     * is bound (`Bind()` or `Connect()`). If `BindToNetif()` fails, it ensures that the socket reverts to its
+     * previous `NetifIdentifier`.
+     *
+     * @param[in,out]  aSocket     A reference to the socket.
+     * @param[in]      aNetifId    The network interface identifier.
+     *
+     * @retval kErrorNone          Successfully bound the socket to @p aNetifId.
+     * @retval kErrorInvalidArgs   Socket is not open.
+     * @retval kErrorAlready       Socket is already bound.
+     * @retval kErrorFailed        Failed to bind the socket to @p aNetifId.
+     */
+    Error BindToNetif(SocketHandle &aSocket, NetifIdentifier aNetifId);
+
+    /**
      * Binds a UDP socket.
      *
-     * @param[in]  aSocket          A reference to the socket.
-     * @param[in]  aSockAddr        A reference to the socket address.
+     * @param[in,out]  aSocket          A reference to the socket.
+     * @param[in]      aSockAddr        A reference to the socket address.
      *
      * @retval kErrorNone            Successfully bound the socket.
-     * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
+     * @retval kErrorAlready         Socket is already bound.
+     * @retval kErrorInvalidArgs     Socket is not open, or unable to bind to the given address.
      * @retval kErrorFailed          Failed to bind UDP Socket.
      */
     Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
@@ -528,20 +551,23 @@ public:
     /**
      * Connects a UDP socket.
      *
-     * @param[in]  aSocket    A reference to the socket.
-     * @param[in]  aSockAddr  A reference to the socket address.
+     * @param[in,out]  aSocket    A reference to the socket.
+     * @param[in]      aSockAddr  A reference to the socket address.
      *
-     * @retval kErrorNone    Successfully connected the socket.
-     * @retval kErrorFailed  Failed to connect UDP Socket.
+     * @retval kErrorNone         Successfully connected the socket.
+     * @retval kErrorInvalidArgs  Socket is not open.
+     * @retval kErrorFailed       Failed to connect UDP Socket.
      */
     Error Connect(SocketHandle &aSocket, const SockAddr &aSockAddr);
 
     /**
      * Closes the UDP socket.
      *
-     * @param[in]  aSocket    A reference to the socket.
+     * Calling `Close()` on a socket that is not open is safe and has no effect.
      *
-     * @retval kErrorNone    Successfully closed the UDP socket.
+     * @param[in,out]  aSocket    A reference to the socket.
+     *
+     * @retval kErrorNone    Successfully closed the UDP socket, or socket was not open.
      * @retval kErrorFailed  Failed to close UDP Socket.
      */
     Error Close(SocketHandle &aSocket);
@@ -554,7 +580,7 @@ public:
      * @param[in]  aMessageInfo  The message info associated with @p aMessage.
      *
      * @retval kErrorNone         Successfully sent the UDP message.
-     * @retval kErrorInvalidArgs  If no peer is specified in @p aMessageInfo or by Connect().
+     * @retval kErrorInvalidArgs  Socket is not open, or no peer is specified in @p aMessageInfo or by `Connect()`.
      * @retval kErrorNoBufs       Insufficient available buffer to add the UDP and IPv6 headers.
      */
     Error SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &aMessageInfo);
@@ -673,9 +699,6 @@ private:
 #endif
 
     static bool IsPortReserved(uint16_t aPort);
-
-    void AddSocket(SocketHandle &aSocket);
-    void RemoveSocket(SocketHandle &aSocket);
 
     uint16_t                 mEphemeralPort;
     LinkedList<Receiver>     mReceivers;

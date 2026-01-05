@@ -44,7 +44,8 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), Ip6::kNetifThreadHost, aCallback, aContext);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), Ip6::kNetifThreadInternal, aCallback,
+                                                      aContext);
 }
 
 bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket)
@@ -59,9 +60,13 @@ otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket)
 
 otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName, otNetifIdentifier aNetif)
 {
-    AsCoreType(aSocket).SetNetifId(MapEnum(aNetif));
+    Error error;
 
-    return AsCoreType(aInstance).Get<Ip6::Udp>().Bind(AsCoreType(aSocket), AsCoreType(aSockName));
+    SuccessOrExit(error = AsCoreType(aInstance).Get<Ip6::Udp>().BindToNetif(AsCoreType(aSocket), MapEnum(aNetif)));
+    error = AsCoreType(aInstance).Get<Ip6::Udp>().Bind(AsCoreType(aSocket), AsCoreType(aSockName));
+
+exit:
+    return error;
 }
 
 otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName)
