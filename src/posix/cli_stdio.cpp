@@ -50,6 +50,8 @@
 
 namespace {
 
+int OutputCallback(void *aContext, const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+
 int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
 {
     OT_UNUSED_VARIABLE(aContext);

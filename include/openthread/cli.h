@@ -76,7 +76,8 @@ typedef struct otCliCommand
  *
  * @returns                Number of bytes written by the callback.
  */
-typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list aArguments);
+typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list aArguments)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 /**
  * Initialize the CLI module.
