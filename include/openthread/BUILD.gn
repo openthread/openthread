@@ -108,6 +108,7 @@ source_set("openthread") {
     "platform/misc.h",
     "platform/multipan.h",
     "platform/otns.h",
+    "platform/poll_accelerator.h",
     "platform/radio.h",
     "platform/settings.h",
     "platform/spi-slave.h",

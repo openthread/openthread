@@ -426,6 +426,14 @@ public:
      */
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    void HandleTransmitDone(uint32_t aIterationsDone,
+                            RxFrame *aPrevAckFrame,
+                            TxFrame &aFrame,
+                            RxFrame *aAckFrame,
+                            Error    aError);
+#endif
+
     /**
      * Returns if an active scan is in progress.
      */
@@ -793,6 +801,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         kOperationTransmitWakeup,
+#endif
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+        kOperationPolling,
 #endif
     };
 
