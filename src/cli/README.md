@@ -596,6 +596,36 @@ Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
 Done
 ```
 
+### ba ephemeralkey generate-tap
+
+Generates a cryptographically secure random Thread Administration One-Time Passcode (TAP) string.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+
+The TAP is a string of 9 characters, generated as a sequence of eight cryptographically secure random numeric digits [`0`-`9`] followed by a single check digit determined using the Verhoeff algorithm.
+
+Note that this command simply generates and outputs a TAP. It does not start ephemeral key use with this TAP on the Border Agent.
+
+```bash
+> ba ephemeralkey generate-tap
+989710128
+Done
+```
+
+### ba ephemeralkey validate-tap \<keystring\>
+
+Validates a given Thread Administration One-Time Passcode (TAP) string.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+
+Validates that the TAP string has the proper length, contains digit characters [`0`-`9`], and validates the Verhoeff checksum.
+
+```bash
+> ba ephemeralkey validate-tap 989710128
+validated
+Done
+```
+
 ### ba counters
 
 Get the border agent counter values.
