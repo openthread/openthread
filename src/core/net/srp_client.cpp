@@ -378,9 +378,9 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
     VerifyOrExit(GetState() == kStateStopped,
                  error = (aServerSockAddr == GetServerAddress()) ? kErrorNone : kErrorBusy);
 
-    mSocket.Open(Ip6::kNetifThreadInternal);
+    mSocket.Open();
 
-    error = mSocket.Connect(aServerSockAddr);
+    error = mSocket.Connect(aServerSockAddr, Ip6::kNetifThreadInternal);
 
     if (error != kErrorNone)
     {

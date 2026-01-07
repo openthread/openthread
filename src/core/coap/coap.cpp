@@ -1855,10 +1855,10 @@ Error Coap::Start(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 
     VerifyOrExit(!mSocket.IsBound());
 
-    mSocket.Open(aNetifIdentifier);
+    mSocket.Open();
     socketOpened = true;
 
-    SuccessOrExit(error = mSocket.Bind(aPort));
+    SuccessOrExit(error = mSocket.Bind(aPort, aNetifIdentifier));
 
 exit:
     if (error != kErrorNone && socketOpened)

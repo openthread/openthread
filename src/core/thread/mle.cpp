@@ -164,8 +164,8 @@ Error Mle::Enable(void)
     Error error = kErrorNone;
 
     UpdateLinkLocalAddress();
-    mSocket.Open(Ip6::kNetifThreadInternal);
-    SuccessOrExit(error = mSocket.Bind(kUdpPort));
+    mSocket.Open();
+    SuccessOrExit(error = mSocket.Bind(kUdpPort, Ip6::kNetifThreadInternal));
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     mParentSearch.SetEnabled(true);

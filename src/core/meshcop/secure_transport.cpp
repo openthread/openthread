@@ -674,13 +674,13 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 }
 
-Error SecureTransport::Open(Ip6::NetifIdentifier aNetifIdentifier)
+Error SecureTransport::Open(void)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
-    mSocket.Open(aNetifIdentifier);
+    mSocket.Open();
     mIsOpen                      = true;
     mRemainingConnectionAttempts = mMaxConnectionAttempts;
 
@@ -731,7 +731,7 @@ exit:
     return;
 }
 
-Error SecureTransport::Bind(uint16_t aPort)
+Error SecureTransport::Bind(uint16_t aPort, Ip6::NetifIdentifier aNetifId)
 {
     Error error;
 
@@ -740,7 +740,7 @@ Error SecureTransport::Bind(uint16_t aPort)
 
     VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
 
-    error = mSocket.Bind(aPort);
+    error = mSocket.Bind(aPort, aNetifId);
 
 exit:
     return error;

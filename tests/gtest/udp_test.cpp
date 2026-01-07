@@ -196,7 +196,7 @@ TEST_F(UdpTest, shouldSuccessWhenBindingMulticastAddressAndNoReceiveIfNotSubscri
     ASSERT_EQ(OT_ERROR_NONE, otUdpClose(FakePlatform::CurrentInstance(), &receiver));
 }
 
-TEST_F(UdpTest, shouldAbortOnBindingToNetworkInterfaceOnBoundSocket)
+TEST_F(UdpTest, shouldFailOnBindingToOnBoundSocket)
 {
     otUdpSocket         sock;
     MockReceiveCallback receiverCallback;
@@ -208,8 +208,8 @@ TEST_F(UdpTest, shouldAbortOnBindingToNetworkInterfaceOnBoundSocket)
     listenAddr.SetPort(2121);
 
     ASSERT_EQ(OT_ERROR_NONE, otUdpBind(FakePlatform::CurrentInstance(), &sock, &listenAddr, OT_NETIF_UNSPECIFIED));
+    ASSERT_EQ(OT_ERROR_INVALID_ARGS,
+              otUdpBind(FakePlatform::CurrentInstance(), &sock, &listenAddr, OT_NETIF_THREAD_INTERNAL));
 
-    EXPECT_EXIT(AsCoreType(&sock).SetNetifId(Ip6::kNetifThreadInternal), ::testing::KilledBySignal(SIGABRT),
-                "Fake platform assertion failure");
     ASSERT_EQ(OT_ERROR_NONE, otUdpClose(FakePlatform::CurrentInstance(), &sock));
 }
