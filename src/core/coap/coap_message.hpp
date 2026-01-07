@@ -44,6 +44,7 @@
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
@@ -68,6 +69,7 @@ namespace Coap {
  * @{
  */
 
+class Message;
 class Option;
 
 /**
@@ -202,6 +204,66 @@ struct BlockInfo
 };
 
 /**
+ * Represents a CoAP message Token.
+ */
+class Token : public otCoapToken, public Clearable<Token>, public Unequatable<Token>
+{
+    friend class Message;
+
+public:
+    static const uint8_t kMaxLength     = OT_COAP_MAX_TOKEN_LENGTH;     ///< Maximum token length.
+    static const uint8_t kDefaultLength = OT_COAP_DEFAULT_TOKEN_LENGTH; ///< Default token length.
+
+    /**
+     * Indicates whether the Token is valid.
+     *
+     * A Token is valid if its length is less than or equal to `kMaxLength`.
+     *
+     * @retval TRUE  If the Token is valid.
+     * @retval FALSE If the Token is not valid.
+     */
+    bool IsValid(void) const { return mLength <= kMaxLength; }
+
+    /**
+     * Returns a pointer to the Token bytes.
+     *
+     * @returns A pointer to the Token bytes.
+     */
+    const uint8_t *GetBytes(void) const { return m8; }
+
+    /**
+     * Returns the Token length in bytes.
+     *
+     * @returns The Token length in bytes.
+     */
+    uint8_t GetLength(void) const { return mLength; }
+
+    /**
+     * Sets the Token bytes and length.
+     *
+     * @param[in] aBytes   A pointer to the Token bytes.
+     * @param[in] aLength  The Token length in bytes.
+     *
+     * @retval kErrorNone         Successfully set the Token.
+     * @retval kErrorInvalidArgs  The specified length @p aLength is greater than `kMaxLength`.
+     */
+    Error SetToken(const uint8_t *aBytes, uint8_t aLength);
+
+    /**
+     * Overloads the `==` operator to compare two CoAP Tokens.
+     *
+     * @param[in] aOther  The other Token to compare with.
+     *
+     * @retval TRUE   If the two Tokens are equal.
+     * @retval FALSE  If the two Tokens are not equal.
+     */
+    bool operator==(const Token &aOther) const;
+
+private:
+    Error GenerateRandom(uint8_t aLength);
+};
+
+/**
  * Implements CoAP message generation and parsing.
  */
 class Message : public ot::Message
@@ -313,7 +375,7 @@ public:
      * @ returns The CoAP Code as string.
      */
     const char *CodeToString(void) const;
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 
     /**
      * Returns the Message ID value.
@@ -330,59 +392,66 @@ public:
     void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.SetMessageId(aMessageId); }
 
     /**
-     * Returns the Token length.
+     * Reads the Token length from the message
      *
-     * @returns The Token length.
+     * @param[out] aLength   A reference to a `uint8_t` to return the read token length (in bytes).
+     *
+     * @retval kErrorNone   Successfully parsed the CoaP header and read the Token length.
+     * @retval kErrorParse  Failed to parse the CoAP header.
      */
-    uint8_t GetTokenLength(void) const { return GetHelpData().mHeader.GetTokenLength(); }
+    Error ReadTokenLength(uint8_t &aLength) const;
 
     /**
-     * Returns a pointer to the Token value.
+     * Reads the Token from the message
      *
-     * @returns A pointer to the Token value.
+     * @param[out] aToken   A reference to return the read `Token`.
+     *
+     * @retval kErrorNone   Successfully parsed the CoaP header and read the Token. @p aToken is updated.
+     * @retval kErrorParse  Failed to parse the CoAP header.
      */
-    const uint8_t *GetToken(void) const { return GetHelpData().mHeader.GetToken(); }
+    Error ReadToken(Token &aToken) const;
 
     /**
-     * Sets the Token value and length.
+     * Writes the Token in the message.
      *
-     * @param[in]  aToken        A pointer to the Token value.
-     * @param[in]  aTokenLength  The Length of @p aToken.
+     * @param[in]  aToken    The new token.
      *
-     * @retval kErrorNone    Successfully set the token value.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully wrote the Token.
+     * @retval kErrorNoBufs  Insufficient message buffers available to write.
      */
-    Error SetToken(const uint8_t *aToken, uint8_t aTokenLength);
+    Error WriteToken(const Token &aToken);
 
     /**
-     * Sets the Token value and length by copying it from another given message.
+     * Writes the Token by copying it from another given message.
      *
-     * @param[in] aMessage       The message to copy the Token from.
+     * @param[in] aMessage   The message to copy the Token from.
      *
-     * @retval kErrorNone    Successfully set the token value.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully wrote the Token.
+     * @retval kErrorNoBufs  Insufficient message buffers available to write.
      */
-    Error SetTokenFromMessage(const Message &aMessage);
+    Error WriteTokenFromMessage(const Message &aMessage);
 
     /**
-     * Sets the Token length and randomizes its value.
+     * Writes a randomly generated Token of a given length in the message.
      *
-     * @param[in]  aTokenLength  The Length of a Token to set.
+     * @param[in]  aTokenLength  The Token length (in bytes).
      *
-     * @retval kErrorNone    Successfully set the token value.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully wrote the Token.
+     * @retval kErrorNoBufs  Insufficient message buffers available to write.
      */
-    Error GenerateRandomToken(uint8_t aTokenLength);
+    Error WriteRandomToken(uint8_t aTokenLength);
 
     /**
-     * Checks if Tokens in two CoAP headers are equal.
+     * Checks whether the Token in the message is the same as the one from another message.
      *
-     * @param[in]  aMessage  A header to compare.
+     * If parsing/reading the Token fails for either message, the Tokens are considered unequal.
      *
-     * @retval TRUE   If two Tokens are equal.
-     * @retval FALSE  If Tokens differ in length or value.
+     * @param[in]  aMessage  The other message.
+     *
+     * @retval TRUE   If the two Tokens are equal.
+     * @retval FALSE  If the two Tokens are not equal.
      */
-    bool IsTokenEqual(const Message &aMessage) const;
+    bool HasSameTokenAs(const Message &aMessage) const;
 
     /**
      * Appends a CoAP option.
@@ -576,7 +645,7 @@ public:
      *
      * @returns The offset of the first CoAP option.
      */
-    uint16_t GetOptionStart(void) const { return kMinHeaderLength + GetTokenLength(); }
+    uint16_t GetOptionStart(void) const { return kMinHeaderLength + GetHelpData().mHeader.GetTokenLength(); }
 
     /**
      * Parses CoAP header and moves offset end of CoAP header.
@@ -815,6 +884,7 @@ private:
         static constexpr uint8_t kVersion1 = 1;
 
         uint8_t        GetSize(void) const { return kMinSize + GetTokenLength(); }
+        bool           IsValid(void) const;
         Error          ParseFrom(const Message &aMessage);
         uint8_t        GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mVersionTypeToken); }
         void           SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mVersionTypeToken, aVersion); }
@@ -826,7 +896,7 @@ private:
         void           SetMessageId(uint16_t aMessageId) { mMessageId = BigEndian::HostSwap16(aMessageId); }
         const uint8_t *GetToken(void) const { return mToken; }
         uint8_t        GetTokenLength(void) const { return ReadBits<uint8_t, kTokenLengthMask>(mVersionTypeToken); }
-        Error          SetToken(const uint8_t *aToken, uint8_t aTokenLength);
+        Error          SetToken(const Token &aToken);
 
     private:
         /*
@@ -1147,6 +1217,7 @@ public:
 
 DefineCoreType(otCoapOption, Coap::Option);
 DefineCoreType(otCoapOptionIterator, Coap::Option::Iterator);
+DefineCoreType(otCoapToken, Coap::Token);
 DefineMapEnum(otCoapType, Coap::Type);
 DefineMapEnum(otCoapCode, Coap::Code);
 DefineMapEnum(otCoapBlockSzx, Coap::BlockSzx);

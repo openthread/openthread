@@ -256,6 +256,15 @@ typedef void (*otCoapRequestHandler)(void *aContext, otMessage *aMessage, const 
 typedef bool (*otCoapResponseFallback)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
+ * Represents a CoAP message token.
+ */
+typedef struct otCoapToken
+{
+    uint8_t m8[OT_COAP_MAX_TOKEN_LENGTH]; ///< The token bytes.
+    uint8_t mLength;                      ///< The token length in bytes.
+} otCoapToken;
+
+/**
  * Represents a CoAP resource.
  */
 typedef struct otCoapResource
@@ -327,22 +336,21 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode);
 
 /**
- * Sets the Token value and length in a header.
+ * Writes the Token in the CoAP message.
  *
- * @param[in,out]  aMessage          A pointer to the CoAP message.
- * @param[in]      aToken            A pointer to the Token value.
- * @param[in]      aTokenLength      The Length of @p aToken.
+ * @param[in,out]  aMessage      The CoAP message.
+ * @param[in]      aToken        The Token to write.
  *
- * @retval OT_ERROR_NONE     Successfully set the Token value.
+ * @retval OT_ERROR_NONE     Successfully wrote the Token.
  * @retval OT_ERROR_NO_BUFS  Insufficient buffers to set the Token value.
  */
-otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength);
+otError otCoapMessageWriteToken(otMessage *aMessage, const otCoapToken *aToken);
 
 /**
- * Sets the Token length and randomizes its value.
+ * Writes a randomly generated Token of a given length in the CoAP message.
  *
- * @param[in,out]  aMessage      A pointer to the CoAP message.
- * @param[in]      aTokenLength  The Length of a Token to set.
+ * @param[in,out]  aMessage      The CoAP message.
+ * @param[in]      aTokenLength  The Length of a Token (in bytes).
  */
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength);
 
@@ -560,22 +568,26 @@ const char *otCoapMessageCodeToString(const otMessage *aMessage);
 uint16_t otCoapMessageGetMessageId(const otMessage *aMessage);
 
 /**
- * Returns the Token length.
+ * Reads the Token from the CoAP message.
  *
- * @param[in]  aMessage  A pointer to the CoAP message.
+ * @param[in]  aMessage  The CoAP message.
+ * @param[out] aToken    A pointer to a `otCoapToken` to output the read Token.
  *
- * @returns The Token length.
+ * @retval OT_ERROR_NONE    Successfully read the Token. @p aToken is updated.
+ * @retval OT_ERROR_PARSE   Failed to parse the header.
  */
-uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage);
+otError otCoapMessageReadToken(const otMessage *aMessage, otCoapToken *aToken);
 
 /**
- * Returns a pointer to the Token value.
+ * Indicates whether two given CoAP Tokens are equal.
  *
- * @param[in]  aMessage  A pointer to the CoAP message.
+ * @param[in] aFirstToken    The first Token to compare.
+ * @param[in] aSecondToken   The second Token to compare.
  *
- * @returns A pointer to the Token value.
+ * @retval TRUE   If the two Tokens are equal.
+ * @retval FALSE  If the two Tokens are not equal.
  */
-const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
+bool otCoapMessageAreTokensEqual(const otCoapToken *aFirstToken, const otCoapToken *aSecondToken);
 
 //---------------------------------------------------------------------------------------------------------------------
 // `otCoapOptionIterator*` APIs - Iterating over CoAP Options in a CoAP message.
@@ -1004,6 +1016,47 @@ otError otCoapSendResponseBlockWise(otInstance                 *aInstance,
                                     const otMessageInfo        *aMessageInfo,
                                     void                       *aContext,
                                     otCoapBlockwiseTransmitHook aTransmitHook);
+
+//----------------------------------------------------------------------------------------------------------------------
+// Deprecated APIs
+
+/**
+ * Sets the Token value and length in a CoAP message.
+ *
+ * @deprecated This function is deprecated. Use `otCoapMessageWriteToken()` instead.
+ *
+ * @param[in,out]  aMessage          A pointer to the CoAP message.
+ * @param[in]      aToken            A pointer to the Token value.
+ * @param[in]      aTokenLength      The Length of @p aToken.
+ *
+ * @retval OT_ERROR_NONE     Successfully set the Token value.
+ * @retval OT_ERROR_NO_BUFS  Insufficient buffers to set the Token value.
+ */
+otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength);
+
+/**
+ * Returns the Token length.
+ *
+ * @deprecated This function is deprecated. Use `otCoapMessageReadToken()` instead.
+ *
+ * @param[in]  aMessage  A pointer to the CoAP message.
+ *
+ * @returns The Token length.
+ */
+uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage);
+
+/**
+ * Returns a pointer to the Token value.
+ *
+ * @deprecated This function is deprecated. Use `otCoapMessageReadToken()` instead.
+ *
+ * @note A previously returned pointer (`const uint8_t *`) will be invalidated upon the next call to this function.
+ *
+ * @param[in]  aMessage  A pointer to the CoAP message.
+ *
+ * @returns A pointer to the Token value.
+ */
+const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
 
 /**
  * @}

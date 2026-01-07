@@ -57,17 +57,29 @@ otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aReques
     response.Init(MapEnum(aType), MapEnum(aCode));
     response.SetMessageId(request.GetMessageId());
 
-    return response.SetTokenFromMessage(request);
+    return response.WriteTokenFromMessage(request);
+}
+
+otError otCoapMessageWriteToken(otMessage *aMessage, const otCoapToken *aToken)
+{
+    return AsCoapMessage(aMessage).WriteToken(AsCoreType(aToken));
 }
 
 otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
 {
-    return AsCoapMessage(aMessage).SetToken(aToken, aTokenLength);
+    Error       error;
+    Coap::Token token;
+
+    SuccessOrExit(error = token.SetToken(aToken, aTokenLength));
+    error = AsCoapMessage(aMessage).WriteToken(token);
+
+exit:
+    return error;
 }
 
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength)
 {
-    IgnoreError(AsCoapMessage(aMessage).GenerateRandomToken(aTokenLength));
+    IgnoreError(AsCoapMessage(aMessage).WriteRandomToken(aTokenLength));
 }
 
 otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOptionContentFormat aContentFormat)
@@ -157,9 +169,39 @@ const char *otCoapMessageCodeToString(const otMessage *aMessage) { return AsCoap
 
 uint16_t otCoapMessageGetMessageId(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetMessageId(); }
 
-uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetTokenLength(); }
+otError otCoapMessageReadToken(const otMessage *aMessage, otCoapToken *aToken)
+{
+    return AsCoapMessage(aMessage).ReadToken(AsCoreType(aToken));
+}
 
-const uint8_t *otCoapMessageGetToken(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetToken(); }
+bool otCoapMessageAreTokensEqual(const otCoapToken *aFirstToken, const otCoapToken *aSecondToken)
+{
+    return AsCoreType(aFirstToken) == AsCoreType(aSecondToken);
+}
+
+uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage)
+{
+    uint8_t length;
+
+    if (AsCoapMessage(aMessage).ReadTokenLength(length) != kErrorNone)
+    {
+        length = 0;
+    }
+
+    return length;
+}
+
+const uint8_t *otCoapMessageGetToken(const otMessage *aMessage)
+{
+    static Coap::Token token;
+
+    if (AsCoapMessage(aMessage).ReadToken(token) != kErrorNone)
+    {
+        token.Clear();
+    }
+
+    return token.GetBytes();
+}
 
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
 {

@@ -670,6 +670,7 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMessage
     Tmf::MessageInfo         messageInfo(GetInstance());
     OwnedPtr<Coap::Message>  message;
     OffsetRange              offsetRange;
+    Coap::Token              token;
 
     switch (aUri)
     {
@@ -718,9 +719,9 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Message    &aMessage
 exit:
     LogWarnOnError(error, "forward to leader");
 
-    if (error != kErrorNone)
+    if ((error != kErrorNone) && (aMessage.ReadToken(token) == kErrorNone))
     {
-        SendErrorMessage(error, aMessage.GetToken(), aMessage.GetTokenLength());
+        SendErrorMessage(error, token);
     }
 
     return error;
@@ -794,7 +795,7 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
 
     forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->GetCode()));
 
-    SuccessOrExit(error = forwardMessage->SetToken(aForwardContext.mToken, aForwardContext.mTokenLength));
+    SuccessOrExit(error = forwardMessage->WriteToken(aForwardContext.mToken));
 
     if (aResponse->GetLength() > aResponse->GetOffset())
     {
@@ -824,7 +825,7 @@ exit:
         LogWarn("Forwarded %s failed - session %u, error:%s", uriString, mIndex, ErrorToString(error));
 #endif
 
-        SendErrorMessage(error, aForwardContext.mToken, aForwardContext.mTokenLength);
+        SendErrorMessage(error, aForwardContext.mToken);
     }
 }
 
@@ -894,7 +895,7 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength)
+void Manager::CoapDtlsSession::SendErrorMessage(Error aError, const Coap::Token &aToken)
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
@@ -906,7 +907,7 @@ void Manager::CoapDtlsSession::SendErrorMessage(Error aError, const uint8_t *aTo
     code = (aError == kErrorParse) ? Coap::kCodeBadRequest : Coap::kCodeInternalError;
 
     message->Init(Coap::kTypeNonConfirmable, code);
-    SuccessOrExit(error = message->SetToken(aToken, aTokenLength));
+    SuccessOrExit(error = message->WriteToken(aToken));
 
     SuccessOrExit(error = SendMessage(message.PassOwnership()));
 
@@ -1094,9 +1095,11 @@ Manager::CoapDtlsSession::ForwardContext::ForwardContext(CoapDtlsSession     &aS
                                                          Uri                  aUri)
     : mSession(aSession)
     , mUri(aUri)
-    , mTokenLength(aMessage.GetTokenLength())
 {
-    memcpy(mToken, aMessage.GetToken(), mTokenLength);
+    if (aMessage.ReadToken(mToken) != kErrorNone)
+    {
+        mToken.Clear();
+    }
 }
 
 } // namespace BorderAgent
