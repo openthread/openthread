@@ -56,7 +56,8 @@ char SettingsFile::sSettingsPath[] = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
 const char *SettingsFile::GetSettingsPath(void) { return sSettingsPath; }
 void        SettingsFile::SetSettingsPath(const char *aSettingsPath)
 {
-    snprintf(sSettingsPath, sizeof(sSettingsPath), "%s", aSettingsPath);
+    snprintf(sSettingsPath, sizeof(sSettingsPath), "%s",
+             aSettingsPath == nullptr ? OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH : aSettingsPath);
 }
 
 otError SettingsFile::Init(const char *aSettingsFileBaseName)
