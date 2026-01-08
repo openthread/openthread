@@ -62,6 +62,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+ *
+ * Define as 1 to enable including Joiner Advertisement TLV during discovery scan by the Joiner.
+ *
+ * This is an experimental feature. It is not part of the Thread specification. See `otThreadSetJoinerAdvertisement`
+ * for more details.
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+#define OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE 0
+#endif
+
+/**
  * @}
  */
 

@@ -1120,6 +1120,8 @@ private:
     uint8_t mReserved;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+
 /**
  * Implements Joiner Advertisement TLV generation and parsing.
  */
@@ -1192,6 +1194,8 @@ private:
     uint8_t mOui[3];
     uint8_t mAdvData[kAdvDataMaxLength];
 } OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
 
 } // namespace MeshCoP
 
