@@ -90,7 +90,7 @@ readonly OT_BUILD_OPTIONS
 
 OT_CFLAGS=(
     "-DMBEDTLS_DEBUG_C"
-    "-isystem $(pwd)/third_party/mbedtls"
+    "-isystem $(pwd)/src/third_party_config/mbedtls"
     "-isystem $(pwd)/third_party/mbedtls/repo/include"
     '-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"'
 )
