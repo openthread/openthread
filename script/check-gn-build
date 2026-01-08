@@ -45,6 +45,7 @@ check_build()
 
 main()
 {
+    check_build --args="use_clang=true openthread_project_core_config_file=\"../examples/platforms/simulation/openthread-core-simulation-config.h\""
     for thread_version in 1.4 1.1; do
         for use_clang in true false; do
             check_build --args="use_clang=$use_clang openthread_config_thread_version=\"$thread_version\""
