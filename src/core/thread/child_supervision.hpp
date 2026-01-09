@@ -51,8 +51,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  *
  * Child supervision feature provides a mechanism for parent

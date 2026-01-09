@@ -47,9 +47,6 @@
 #include "common/timer.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-
 namespace Utils {
 
 class JamDetector : public InstanceLocator, private NonCopyable

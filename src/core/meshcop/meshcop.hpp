@@ -55,9 +55,6 @@
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-
 namespace MeshCoP {
 
 /**
