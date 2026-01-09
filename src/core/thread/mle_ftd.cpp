@@ -2705,16 +2705,15 @@ void Mle::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 
 void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 {
-    Error                        error = kErrorNone;
-    Tlv::ParsedInfo              tlvInfo;
-    MeshCoP::DiscoveryRequestTlv discoveryRequestTlv;
-    MeshCoP::ExtendedPanId       extPanId;
-    OffsetRange                  offsetRange;
-    DiscoveryResponseInfo        responseInfo;
+    Error                             error                     = kErrorNone;
+    bool                              parsedDiscoveryRequestTlv = false;
+    Tlv::ParsedInfo                   tlvInfo;
+    MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
+    MeshCoP::ExtendedPanId            extPanId;
+    OffsetRange                       offsetRange;
+    DiscoveryResponseInfo             responseInfo;
 
     Log(kMessageReceive, kTypeDiscoveryRequest, aRxInfo.mMessageInfo.GetPeerAddr());
-
-    discoveryRequestTlv.SetLength(0);
 
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
 
@@ -2732,9 +2731,9 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
         switch (tlvInfo.mType)
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
-            SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryRequestTlv));
-            VerifyOrExit(discoveryRequestTlv.IsValid(), error = kErrorParse);
-
+            SuccessOrExit(error = Tlv::Read<MeshCoP::DiscoveryRequestTlv>(aRxInfo.mMessage, offsetRange.GetOffset(),
+                                                                          discoveryRequestTlvValue));
+            parsedDiscoveryRequestTlv = true;
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
@@ -2749,20 +2748,20 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
         }
     }
 
-    if (discoveryRequestTlv.IsValid())
+    if (parsedDiscoveryRequestTlv)
     {
         if (mDiscoveryRequestCallback.IsSet())
         {
             otThreadDiscoveryRequestInfo info;
 
             AsCoreType(&info.mExtAddress).SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
-            info.mVersion  = discoveryRequestTlv.GetVersion();
-            info.mIsJoiner = discoveryRequestTlv.IsJoiner();
+            info.mVersion  = discoveryRequestTlvValue.GetVersion();
+            info.mIsJoiner = discoveryRequestTlvValue.GetJoinerFlag();
 
             mDiscoveryRequestCallback.Invoke(&info);
         }
 
-        if (discoveryRequestTlv.IsJoiner())
+        if (discoveryRequestTlvValue.GetJoinerFlag())
         {
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
             if (!mSteeringData.IsEmpty())
@@ -2793,10 +2792,10 @@ exit:
 
 Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const DiscoveryResponseInfo &aInfo)
 {
-    Error                         error = kErrorNone;
-    TxMessage                    *message;
-    Tlv::Bookmark                 tlvBookmark;
-    MeshCoP::DiscoveryResponseTlv discoveryResponseTlv;
+    Error                              error = kErrorNone;
+    TxMessage                         *message;
+    Tlv::Bookmark                      tlvBookmark;
+    MeshCoP::DiscoveryResponseTlvValue discoveryResponseTlvValue;
 
     VerifyOrExit((message = NewMleMessage(kCommandDiscoveryResponse)) != nullptr, error = kErrorNoBufs);
     message->SetDirectTransmission();
@@ -2807,8 +2806,8 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
 
     SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kDiscovery, tlvBookmark));
 
-    discoveryResponseTlv.Init();
-    discoveryResponseTlv.SetVersion(kThreadVersion);
+    discoveryResponseTlvValue.Clear();
+    discoveryResponseTlvValue.SetVersion(kThreadVersion);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
@@ -2816,20 +2815,16 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
         SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(
                           *message, Get<MeshCoP::BorderAgent::Manager>().GetUdpPort()));
 
-        discoveryResponseTlv.SetNativeCommissioner(true);
+        discoveryResponseTlvValue.SetNativeCommissionerFlag();
     }
-    else
 #endif
-    {
-        discoveryResponseTlv.SetNativeCommissioner(false);
-    }
 
     if (Get<KeyManager>().GetSecurityPolicy().mCommercialCommissioningEnabled)
     {
-        discoveryResponseTlv.SetCommercialCommissioningMode(true);
+        discoveryResponseTlvValue.SetCcmFlag();
     }
 
-    SuccessOrExit(error = discoveryResponseTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::DiscoveryResponseTlv>(*message, discoveryResponseTlvValue));
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));

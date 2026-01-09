@@ -61,11 +61,11 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 Handler                 aCallback,
                                 void                   *aContext)
 {
-    Error                        error   = kErrorNone;
-    Mle::TxMessage              *message = nullptr;
-    Tlv::Bookmark                tlvBookmark;
-    Ip6::Address                 destination;
-    MeshCoP::DiscoveryRequestTlv discoveryRequest;
+    Error                             error   = kErrorNone;
+    Mle::TxMessage                   *message = nullptr;
+    Tlv::Bookmark                     tlvBookmark;
+    Ip6::Address                      destination;
+    MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
 
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 
@@ -105,10 +105,15 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
     SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kDiscovery, tlvBookmark));
 
-    discoveryRequest.Init();
-    discoveryRequest.SetVersion(kThreadVersion);
-    discoveryRequest.SetJoiner(aJoiner);
-    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
+    discoveryRequestTlvValue.Clear();
+    discoveryRequestTlvValue.SetVersion(kThreadVersion);
+
+    if (aJoiner)
+    {
+        discoveryRequestTlvValue.SetJoinerFlag();
+    }
+
+    SuccessOrExit(error = Tlv::Append<MeshCoP::DiscoveryRequestTlv>(*message, discoveryRequestTlvValue));
 
 #if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
     if (mAdvDataLength != 0)
@@ -312,12 +317,11 @@ exit:
 
 void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 {
-    Error                         error = kErrorNone;
-    MeshCoP::DiscoveryResponseTlv discoveryResponse;
-    ScanResult                    result;
-    OffsetRange                   offsetRange;
-    Tlv::ParsedInfo               tlvInfo;
-    bool                          didCheckSteeringData = false;
+    Error           error = kErrorNone;
+    ScanResult      result;
+    OffsetRange     offsetRange;
+    Tlv::ParsedInfo tlvInfo;
+    bool            didCheckSteeringData = false;
 
     Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -347,11 +351,15 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
         switch (tlvInfo.mType)
         {
         case MeshCoP::Tlv::kDiscoveryResponse:
-            SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryResponse));
-            VerifyOrExit(discoveryResponse.IsValid(), error = kErrorParse);
-            result.mVersion  = discoveryResponse.GetVersion();
-            result.mIsNative = discoveryResponse.IsNativeCommissioner();
+        {
+            MeshCoP::DiscoveryResponseTlvValue respTlvValue;
+
+            SuccessOrExit(error = Tlv::Read<MeshCoP::DiscoveryResponseTlv>(aRxInfo.mMessage, offsetRange.GetOffset(),
+                                                                           respTlvValue));
+            result.mVersion  = respTlvValue.GetVersion();
+            result.mIsNative = respTlvValue.GetNativeCommissionerFlag();
             break;
+        }
 
         case MeshCoP::Tlv::kExtendedPanId:
             SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, offsetRange.GetOffset(),
