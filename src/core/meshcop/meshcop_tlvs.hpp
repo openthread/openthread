@@ -50,6 +50,7 @@
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "meshcop/network_name.hpp"
+#include "meshcop/steering_data.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -318,8 +319,6 @@ typedef UintTlvInfo<Tlv::kNetworkKeySequence, uint32_t> NetworkKeySequenceTlv;
  */
 typedef SimpleTlvInfo<Tlv::kMeshLocalPrefix, Ip6::NetworkPrefix> MeshLocalPrefixTlv;
 
-class SteeringData;
-
 /**
  * Implements Steering Data TLV generation and parsing.
  */
@@ -371,7 +370,7 @@ public:
     Error CopyTo(SteeringData &aSteeringData) const;
 
 private:
-    uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
+    uint8_t mSteeringData[SteeringData::kMaxLength];
 } OT_TOOL_PACKED_END;
 
 /**

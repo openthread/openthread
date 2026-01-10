@@ -424,6 +424,8 @@ openthread_core_files = [
   "meshcop/panid_query_client.hpp",
   "meshcop/secure_transport.cpp",
   "meshcop/secure_transport.hpp",
+  "meshcop/steering_data.cpp",
+  "meshcop/steering_data.hpp",
   "meshcop/tcat_agent.cpp",
   "meshcop/tcat_agent.hpp",
   "meshcop/timestamp.cpp",
