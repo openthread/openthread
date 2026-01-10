@@ -55,9 +55,6 @@
 #include "meshcop/steering_data.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-
 namespace MeshCoP {
 
 /**
