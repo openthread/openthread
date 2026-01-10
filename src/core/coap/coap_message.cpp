@@ -46,6 +46,47 @@ uint16_t BlockSizeFromExponent(BlockSzx aBlockSzxq)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// `Token`
+
+Error Token::SetToken(const uint8_t *aBytes, uint8_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
+
+    mLength = aLength;
+    memcpy(m8, aBytes, aLength);
+
+exit:
+    return error;
+}
+
+bool Token::operator==(const Token &aOther) const
+{
+    bool isEqual = false;
+
+    VerifyOrExit(IsValid());
+    VerifyOrExit(mLength == aOther.mLength);
+
+    isEqual = (memcmp(m8, aOther.m8, mLength) == 0);
+
+exit:
+    return isEqual;
+}
+
+Error Token::GenerateRandom(uint8_t aLength)
+{
+    Error error;
+
+    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
+    mLength = aLength;
+    error   = Random::Crypto::FillBuffer(m8, mLength);
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // `Message`
 
 void Message::Init(void)
@@ -70,7 +111,7 @@ Error Message::Init(Type aType, Code aCode, Uri aUri)
     Error error;
 
     Init(aType, aCode);
-    SuccessOrExit(error = GenerateRandomToken(kDefaultTokenLength));
+    SuccessOrExit(error = WriteRandomToken(Token::kDefaultLength));
     SuccessOrExit(error = AppendUriPathOptions(PathForUri(aUri)));
 
 exit:
@@ -412,42 +453,70 @@ exit:
     return error;
 }
 
-Error Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
+Error Message::ReadTokenLength(uint8_t &aLength) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(GetHelpData().mHeader.IsValid(), error = kErrorParse);
+    aLength = GetHelpData().mHeader.GetTokenLength();
+
+exit:
+    return error;
+}
+
+Error Message::ReadToken(Token &aToken) const
+{
+    return aToken.SetToken(GetHelpData().mHeader.GetToken(), GetHelpData().mHeader.GetTokenLength());
+}
+
+Error Message::WriteToken(const Token &aToken)
 {
     Error error;
 
-    SuccessOrExit(error = GetHelpData().mHeader.SetToken(aToken, aTokenLength));
-    GetHelpData().mHeaderLength += aTokenLength;
+    SuccessOrExit(error = GetHelpData().mHeader.SetToken(aToken));
+    GetHelpData().mHeaderLength += aToken.GetLength();
     error = SetLength(GetHelpData().mHeaderLength);
 
 exit:
     return error;
 }
 
-Error Message::GenerateRandomToken(uint8_t aTokenLength)
+Error Message::WriteRandomToken(uint8_t aTokenLength)
 {
-    Error   error;
-    uint8_t token[kMaxTokenLength];
+    Error error;
+    Token token;
 
-    VerifyOrExit(aTokenLength <= kMaxTokenLength, error = kErrorInvalidArgs);
-
-    SuccessOrExit(error = Random::Crypto::FillBuffer(token, aTokenLength));
-    error = SetToken(token, aTokenLength);
+    SuccessOrExit(error = token.GenerateRandom(aTokenLength));
+    error = WriteToken(token);
 
 exit:
     return error;
 }
 
-Error Message::SetTokenFromMessage(const Message &aMessage)
+Error Message::WriteTokenFromMessage(const Message &aMessage)
 {
-    return SetToken(aMessage.GetToken(), aMessage.GetTokenLength());
+    Error error;
+    Token token;
+
+    SuccessOrExit(error = aMessage.ReadToken(token));
+    error = WriteToken(token);
+
+exit:
+    return error;
 }
 
-bool Message::IsTokenEqual(const Message &aMessage) const
+bool Message::HasSameTokenAs(const Message &aMessage) const
 {
-    uint8_t tokenLength = GetTokenLength();
+    bool  hasSame = false;
+    Token token;
+    Token msgToken;
 
-    return ((tokenLength == aMessage.GetTokenLength()) && (memcmp(GetToken(), aMessage.GetToken(), tokenLength) == 0));
+    SuccessOrExit(ReadToken(token));
+    SuccessOrExit(aMessage.ReadToken(msgToken));
+    hasSame = (token == msgToken);
+
+exit:
+    return hasSame;
 }
 
 Error Message::SetDefaultResponseHeader(const Message &aRequest)
@@ -456,7 +525,7 @@ Error Message::SetDefaultResponseHeader(const Message &aRequest)
 
     SetMessageId(aRequest.GetMessageId());
 
-    return SetTokenFromMessage(aRequest);
+    return WriteTokenFromMessage(aRequest);
 }
 
 Message *Message::Clone(uint16_t aLength) const
@@ -514,15 +583,18 @@ const char *Message::CodeToString(void) const
 //---------------------------------------------------------------------------------------------------------------------
 // `Message::Header`
 
+bool Message::Header::IsValid(void) const
+{
+    return (GetVersion() == kVersion1) && (GetTokenLength() <= Token::kMaxLength);
+}
+
 Error Message::Header::ParseFrom(const Message &aMessage)
 {
     Error    error;
     uint16_t offset = aMessage.GetOffset();
 
     SuccessOrExit(error = aMessage.Read(offset, this, kMinSize));
-
-    VerifyOrExit(GetVersion() == kVersion1, error = kErrorParse);
-    VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = kErrorParse);
+    VerifyOrExit(IsValid(), error = kErrorParse);
 
     SuccessOrExit(error = aMessage.Read(offset + kMinSize, mToken, GetTokenLength()));
 
@@ -530,14 +602,14 @@ exit:
     return error;
 }
 
-Error Message::Header::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
+Error Message::Header::SetToken(const Token &aToken)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aTokenLength <= kMaxTokenLength, error = kErrorInvalidArgs);
+    VerifyOrExit(aToken.IsValid(), error = kErrorInvalidArgs);
 
-    SetTokenLength(aTokenLength);
-    memcpy(mToken, aToken, aTokenLength);
+    SetTokenLength(aToken.mLength);
+    memcpy(mToken, aToken.GetBytes(), aToken.GetLength());
 
 exit:
     return error;

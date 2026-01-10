@@ -400,7 +400,7 @@ Error CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aRequest,
         ExitNow(error = kErrorInvalidArgs);
     }
 
-    SuccessOrExit(error = message->SetTokenFromMessage(aRequest));
+    SuccessOrExit(error = message->WriteTokenFromMessage(aRequest));
 
     SuccessOrExit(error = SendMessage(*message, aMessageInfo));
 
@@ -604,7 +604,7 @@ Message *CoapBase::FindRelatedRequest(const Message          &aResponse,
 
             case kTypeConfirmable:
             case kTypeNonConfirmable:
-                if (aResponse.IsTokenEqual(message))
+                if (aResponse.HasSameTokenAs(message))
                 {
                     request = &message;
                     ExitNow();
@@ -717,7 +717,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                 }
             }
         }
-        else if (aMessage.IsResponse() && aMessage.IsTokenEqual(*request))
+        else if (aMessage.IsResponse() && aMessage.HasSameTokenAs(*request))
         {
             // Piggybacked response.
 
@@ -1198,7 +1198,7 @@ Error CoapBase::PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
 
     // Per RFC 7959, all requests in a block-wise transfer MUST use the
     // same token.
-    IgnoreError(aRequest.SetTokenFromMessage(aRequestOld));
+    IgnoreError(aRequest.WriteTokenFromMessage(aRequestOld));
 
     // Copy options from last response to next message
 
@@ -1384,7 +1384,7 @@ Error CoapBase::ProcessBlock1Request(Message                 &aMessage,
         VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorFailed);
         response->Init(kTypeAck, kCodeContinue);
         response->SetMessageId(aMessage.GetMessageId());
-        IgnoreError(response->SetToken(AsConst(aMessage).GetToken(), aMessage.GetTokenLength()));
+        SuccessOrExit(error = response->WriteTokenFromMessage(aMessage));
 
         SuccessOrExit(error = response->AppendBlockOption(kOptionBlock1, msgBlockInfo));
 
@@ -1440,7 +1440,7 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
     response->Init(kTypeAck, kCodeContent);
     response->SetMessageId(aMessage.GetMessageId());
 
-    SuccessOrExit(error = response->SetTokenFromMessage(aMessage));
+    SuccessOrExit(error = response->WriteTokenFromMessage(aMessage));
 
     responseBlockInfo.mMoreBlocks = false;
 

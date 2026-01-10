@@ -297,8 +297,7 @@ private:
             CoapDtlsSession &mSession;
             ForwardContext  *mNext;
             Uri              mUri;
-            uint8_t          mTokenLength;
-            uint8_t          mToken[Coap::Message::kMaxTokenLength];
+            Coap::Token      mToken;
         };
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
@@ -309,7 +308,7 @@ private:
         void  HandleTmfProxyTx(Coap::Message &aMessage);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
         Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-        void  SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength);
+        void  SendErrorMessage(Error aError, const Coap::Token &aToken);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
