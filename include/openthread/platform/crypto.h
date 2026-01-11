@@ -60,10 +60,11 @@ extern "C" {
  */
 typedef enum
 {
-    OT_CRYPTO_KEY_TYPE_RAW,   ///< Key Type: Raw Data.
-    OT_CRYPTO_KEY_TYPE_AES,   ///< Key Type: AES.
-    OT_CRYPTO_KEY_TYPE_HMAC,  ///< Key Type: HMAC.
-    OT_CRYPTO_KEY_TYPE_ECDSA, ///< Key Type: ECDSA.
+    OT_CRYPTO_KEY_TYPE_RAW,    ///< Key Type: Raw Data.
+    OT_CRYPTO_KEY_TYPE_AES,    ///< Key Type: AES.
+    OT_CRYPTO_KEY_TYPE_HMAC,   ///< Key Type: HMAC.
+    OT_CRYPTO_KEY_TYPE_ECDSA,  ///< Key Type: ECDSA.
+    OT_CRYPTO_KEY_TYPE_DERIVE, ///< Key Type: Derive.
 } otCryptoKeyType;
 
 /**
@@ -75,6 +76,7 @@ typedef enum
     OT_CRYPTO_KEY_ALG_AES_ECB,      ///< Key Algorithm: AES ECB.
     OT_CRYPTO_KEY_ALG_HMAC_SHA_256, ///< Key Algorithm: HMAC SHA-256.
     OT_CRYPTO_KEY_ALG_ECDSA,        ///< Key Algorithm: ECDSA.
+    OT_CRYPTO_KEY_ALG_HKDF_SHA256,  ///< Key Algorithm: HKDF SHA-256.
 } otCryptoKeyAlgorithm;
 
 /**
@@ -88,6 +90,7 @@ enum
     OT_CRYPTO_KEY_USAGE_DECRYPT     = 1 << 2, ///< Key Usage: AES ECB.
     OT_CRYPTO_KEY_USAGE_SIGN_HASH   = 1 << 3, ///< Key Usage: Sign Hash.
     OT_CRYPTO_KEY_USAGE_VERIFY_HASH = 1 << 4, ///< Key Usage: Verify Hash.
+    OT_CRYPTO_KEY_USAGE_DERIVE      = 1 << 5, ///< Key Usage: Derive.
 };
 
 /**
