@@ -134,8 +134,8 @@
 #define MBEDTLS_ENTROPY_MAX_SOURCES        1 /**< Maximum number of sources supported */
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-#define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCAlloc /**< Default allocator to use, can be undefined */
-#define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
+#define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCryptoCAlloc /**< Default allocator to use, can be undefined */
+#define MBEDTLS_PLATFORM_STD_FREE        otPlatCryptoFree   /**< Default free to use, can be undefined */
 #else
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #endif

@@ -47,6 +47,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/crypto.h>
 #include <openthread/platform/entropy.h>
+#include <openthread/platform/memory.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -76,6 +77,11 @@ static mbedtls_entropy_context  sEntropyContext;
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 static constexpr uint16_t kEntropyMinThreshold = 16;
 #endif
+#endif
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return otPlatCAlloc(aNum, aSize); }
+OT_TOOL_WEAK void  otPlatCryptoFree(void *aPtr) { otPlatFree(aPtr); }
 #endif
 
 OT_TOOL_WEAK void otPlatCryptoInit(void)
