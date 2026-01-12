@@ -339,14 +339,9 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build
-        cd /tmp
-        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
-        unzip -o gn.zip
-        chmod a+x gn && mkdir -p bin && mv -f gn bin/
+        sudo apt-get --no-install-recommends install -y ninja-build gn
     - name: Build
       run: |
-        export PATH=/tmp/bin:$PATH
         script/check-gn-build
 
   macos:
