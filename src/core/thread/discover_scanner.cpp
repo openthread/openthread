@@ -45,9 +45,11 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     , mFilterIndexes()
     , mState(kStateIdle)
     , mScanChannel(0)
-    , mAdvDataLength(0)
     , mEnableFiltering(false)
     , mShouldRestorePanId(false)
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    , mAdvDataLength(0)
+#endif
 {
 }
 
@@ -59,12 +61,11 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 Handler                 aCallback,
                                 void                   *aContext)
 {
-    Error                           error   = kErrorNone;
-    Mle::TxMessage                 *message = nullptr;
-    Tlv::Bookmark                   tlvBookmark;
-    Ip6::Address                    destination;
-    MeshCoP::DiscoveryRequestTlv    discoveryRequest;
-    MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
+    Error                        error   = kErrorNone;
+    Mle::TxMessage              *message = nullptr;
+    Tlv::Bookmark                tlvBookmark;
+    Ip6::Address                 destination;
+    MeshCoP::DiscoveryRequestTlv discoveryRequest;
 
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 
@@ -109,13 +110,17 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     discoveryRequest.SetJoiner(aJoiner);
     SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
     if (mAdvDataLength != 0)
     {
-        joinerAdvertisement.Init();
-        joinerAdvertisement.SetOui(mOui);
-        joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
-        SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
+        MeshCoP::JoinerAdvertisementTlv joinerAdvTlv;
+
+        joinerAdvTlv.Init();
+        joinerAdvTlv.SetOui(mOui);
+        joinerAdvTlv.SetAdvData(mAdvData, mAdvDataLength);
+        SuccessOrExit(error = joinerAdvTlv.AppendTo(*message));
     }
+#endif
 
     SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
@@ -153,22 +158,23 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
 Error DiscoverScanner::SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit((aAdvData != nullptr) && (aAdvDataLength != 0) &&
-                     (aAdvDataLength <= MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength) && (aOui <= kMaxOui),
-                 error = kErrorInvalidArgs);
+    VerifyOrExit(aAdvData != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(IsValueInRange(aAdvDataLength, kMinAdvDataLength, kMaxAdvDataLength), error = kErrorInvalidArgs);
+    VerifyOrExit(aOui <= kMaxOui, error = kErrorInvalidArgs);
 
     mOui           = aOui;
     mAdvDataLength = aAdvDataLength;
-
     memcpy(mAdvData, aAdvData, aAdvDataLength);
 
 exit:
     return error;
 }
+#endif
 
 Mac::TxFrame *DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
 {

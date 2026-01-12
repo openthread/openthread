@@ -132,6 +132,7 @@ public:
      */
     bool IsInProgress(void) const { return (mState != kStateIdle); }
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
     /**
      * Sets Joiner Advertisement.
      *
@@ -143,16 +144,21 @@ public:
      * @retval kErrorInvalidArgs    Invalid AdvData.
      */
     Error SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
+#endif
 
 private:
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    static constexpr uint32_t kMaxOui           = 0xffffff;
+    static constexpr uint8_t  kMinAdvDataLength = 1;
+    static constexpr uint8_t  kMaxAdvDataLength = MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength;
+#endif
+
     enum State : uint8_t
     {
         kStateIdle,
         kStateScanning,
         kStateScanDone,
     };
-
-    static constexpr uint32_t kMaxOui = 0xffffff;
 
     // Methods used by `MeshForwarder`
     Mac::TxFrame *PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);
@@ -176,12 +182,14 @@ private:
     FilterIndexes     mFilterIndexes;
     Mac::ChannelMask  mScanChannels;
     State             mState;
-    uint32_t          mOui;
     uint8_t           mScanChannel;
-    uint8_t           mAdvDataLength;
-    uint8_t           mAdvData[MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength];
     bool              mEnableFiltering : 1;
     bool              mShouldRestorePanId : 1;
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    uint8_t  mAdvDataLength;
+    uint8_t  mAdvData[kMaxAdvDataLength];
+    uint32_t mOui;
+#endif
 };
 
 } // namespace Mle
