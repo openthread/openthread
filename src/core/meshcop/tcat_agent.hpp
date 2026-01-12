@@ -414,7 +414,7 @@ public:
      */
     bool GetApplicationResponsePending(void) const { return mApplicationResponsePending; }
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 private:
     void  NotifyApplicationResponseSent(void) { mApplicationResponsePending = false; }

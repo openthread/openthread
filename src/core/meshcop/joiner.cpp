@@ -494,19 +494,19 @@ exit:
     IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 
-template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
 {
     Error         error;
     Dataset::Info datasetInfo;
 
-    VerifyOrExit(mState == kStateEntrust && aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(mState == kStateEntrust && aMsg.mMessage.IsConfirmablePostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.ntf");
 
     datasetInfo.Clear();
 
-    SuccessOrExit(error = Tlv::Find<NetworkKeyTlv>(aMessage, datasetInfo.Update<Dataset::kNetworkKey>()));
+    SuccessOrExit(error = Tlv::Find<NetworkKeyTlv>(aMsg.mMessage, datasetInfo.Update<Dataset::kNetworkKey>()));
 
     datasetInfo.Set<Dataset::kChannel>(Get<Mac::Mac>().GetPanChannel());
     datasetInfo.Set<Dataset::kPanId>(Get<Mac::Mac>().GetPanId());
@@ -515,7 +515,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, c
 
     LogInfo("Joiner successful!");
 
-    SendJoinerEntrustResponse(aMessage, aMessageInfo);
+    SendJoinerEntrustResponse(aMsg);
 
     // Delay extended address configuration to allow DTLS wrap up.
     mTimer.Start(kConfigExtAddressDelay);
@@ -524,13 +524,13 @@ exit:
     LogWarnOnError(error, "process joiner entrust");
 }
 
-void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo)
+void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
 {
     Error            error = kErrorNone;
     Coap::Message   *message;
-    Ip6::MessageInfo responseInfo(aRequestInfo);
+    Ip6::MessageInfo responseInfo(aMsg.mMessageInfo);
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);

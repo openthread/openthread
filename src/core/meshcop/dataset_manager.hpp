@@ -279,7 +279,7 @@ private:
     bool  IsPendingDataset(void) const { return (mType == Dataset::kPending); }
     void  Restore(const Dataset &aDataset);
     Error ApplyConfiguration(const Dataset &aDataset) const;
-    void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void  HandleGet(const Coap::Msg &aMsg) const;
     void  HandleTimer(void);
     Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
     void  LocalSave(const Dataset &aDataset);
@@ -302,11 +302,9 @@ private:
 #endif
 
 #if OPENTHREAD_FTD
-    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Msg &aMsg);
     Error ProcessSetOrReplaceRequest(MgmtCommand aCommand, const Coap::Message &aMessage, RequestInfo &aInfo) const;
-    void  SendSetOrReplaceResponse(const Coap::Message    &aRequest,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   StateTlv::State         aState);
+    void  SendSetOrReplaceResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 #endif
 
     Type                      mType;
@@ -390,7 +388,7 @@ public:
 #endif
 
 private:
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
@@ -477,7 +475,7 @@ private:
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     void                     HandleDelayTimer(void);
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     using DelayTimer = TimerMilliIn<PendingDatasetManager, &PendingDatasetManager::HandleDelayTimer>;
 

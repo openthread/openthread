@@ -47,18 +47,19 @@ Server::Server(Instance &aInstance)
 {
 }
 
-template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMessage.IsPostRequest());
+    VerifyOrExit(aMsg.mMessage.IsPostRequest());
 
-    LogInfo("Received %s from %s", UriToString<kUriHistoryQuery>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
+    LogInfo("Received %s from %s", UriToString<kUriHistoryQuery>(),
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    if (aMessage.IsConfirmable())
+    if (aMsg.mMessage.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
     }
 
-    PrepareAndSendAnswers(aMessageInfo.GetPeerAddr(), aMessage);
+    PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 
 exit:
     return;

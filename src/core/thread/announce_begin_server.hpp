@@ -71,7 +71,7 @@ private:
     static constexpr uint16_t kDefaultPeriod = 1000;
     static constexpr uint16_t kDefaultJitter = 0;
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void HandleTimer(Timer &aTimer);
 };

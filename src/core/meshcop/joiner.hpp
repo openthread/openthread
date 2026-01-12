@@ -207,7 +207,7 @@ private:
                                              const char *aVendorData);
     void        FreeJoinerFinalizeMessage(void);
     void        SendJoinerFinalize(void);
-    void        SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
+    void        SendJoinerEntrustResponse(const Coap::Msg &aMsg);
     static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
     static void HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
@@ -215,7 +215,7 @@ private:
 
     DeclareTmfResponseHandlerIn(Joiner, HandleJoinerFinalizeResponse);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
 

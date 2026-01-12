@@ -63,6 +63,8 @@ namespace Coap {
  * @{
  */
 
+class CoapBase;
+
 /**
  * Represents a function pointer which is called when a CoAP response is received or on the request timeout.
  *
@@ -120,6 +122,25 @@ private:
 };
 
 /**
+ * Represents a CoAP message and its associated `Ip6::MessageInfo`.
+ */
+class Msg
+{
+    friend class CoapBase;
+
+public:
+    Message                &mMessage;     ///< The CoAP message.
+    const Ip6::MessageInfo &mMessageInfo; ///< The `Ip6::MessageInfo` associated with the message.
+
+private:
+    Msg(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+        : mMessage(aMessage)
+        , mMessageInfo(aMessageInfo)
+    {
+    }
+};
+
+/**
  * Implements CoAP resource handling.
  */
 class Resource : public otCoapResource, public LinkedListEntry<Resource>
@@ -153,10 +174,7 @@ public:
     const char *GetUriPath(void) const { return mUriPath; }
 
 protected:
-    void HandleRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
-    {
-        mHandler(mContext, &aMessage, &aMessageInfo);
-    }
+    void HandleRequest(Msg &aRxMsg) const { mHandler(mContext, &aRxMsg.mMessage, &aRxMsg.mMessageInfo); }
 };
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -216,10 +234,7 @@ public:
     const char *GetUriPath(void) const { return mUriPath; }
 
 protected:
-    void HandleRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
-    {
-        mHandler(mContext, &aMessage, &aMessageInfo);
-    }
+    void HandleRequest(Msg &aMsg) const { mHandler(mContext, &aMsg.mMessage, &aMsg.mMessageInfo); }
 
     Error HandleBlockReceive(const uint8_t *aBlock,
                              uint32_t       aPosition,
@@ -513,75 +528,69 @@ public:
     /**
      * Sends a CoAP reset message.
      *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg          The received CoAP request message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRequest is not of confirmable type.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not of confirmable type.
      */
-    Error SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error SendReset(const Msg &aRxMsg);
 
     /**
      * Sends header-only CoAP response message.
      *
      * @param[in]  aCode           The CoAP code of this response.
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg          The received request message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
      * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
      */
-    Error SendHeaderResponse(Message::Code aCode, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error SendHeaderResponse(Message::Code aCode, const Msg &aRxMsg);
 
     /**
      * Sends a CoAP ACK empty message which is used in Separate Response for confirmable requests.
      *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg         `Msg` for the received CoAP request message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
+     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
      */
-    Error SendAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error SendAck(const Msg &aRxMsg);
 
     /**
      * Sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
      *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg          The received CoAP request Message.
      * @param[in]  aCode           The CoAP code of the dummy CoAP response.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
+     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
      */
-    Error SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode);
+    Error SendEmptyAck(const Msg &aRxMsg, Code aCode);
 
     /**
      * Sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
      *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg          The received CoAP request Message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
+     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
      */
-    Error SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error SendEmptyAck(const Msg &aRxMsg);
 
     /**
      * Sends a header-only CoAP message to indicate no resource matched for the request.
      *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg          The received request CoAP Message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
      */
-    Error SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error SendNotFound(const Msg &aRxMsg);
 
     /**
      * Aborts CoAP transactions associated with given handler and context.
@@ -659,16 +668,12 @@ public:
      * Sends a header-only CoAP message to indicate not all blocks have been sent or
      * were sent out of order.
      *
-     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     * @param[in]  aRxMsg          The received CoAP request message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
      */
-    Error SendRequestEntityIncomplete(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
-    {
-        return SendHeaderResponse(kCodeRequestIncomplete, aRequest, aMessageInfo);
-    }
+    Error SendRequestEntityIncomplete(const Msg &aRxMsg) { return SendHeaderResponse(kCodeRequestIncomplete, aRxMsg); }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 protected:
@@ -680,16 +685,12 @@ protected:
      *
      * @param[in] aCoapBase     A reference the CoAP agent.
      * @param[in] aUriPath      The URI Path string.
-     * @param[in] aMessage      The received message.
-     * @param[in] aMessageInfo  The message info associated with @p aMessage.
+     * @param[in] aRxMsg        The received message
      *
      * @retval TRUE   Indicates that the URI path was known and the message was processed by the handler.
      * @retval FALSE  Indicates that URI path was not known and the message was not processed by the handler.
      */
-    typedef bool (*ResourceHandler)(CoapBase               &aCoapBase,
-                                    const char             *aUriPath,
-                                    Message                &aMessage,
-                                    const Ip6::MessageInfo &aMessageInfo);
+    typedef bool (*ResourceHandler)(CoapBase &aCoapBase, const char *aUriPath, Msg &aRxMsg);
 
     /**
      * Pointer is called to send a CoAP message.
@@ -732,6 +733,8 @@ private:
 
     struct Metadata : public Message::FooterData<Metadata>
     {
+        void InvokeResponseHandler(Msg *aMsg, Error aResult) const;
+
         Ip6::Address    mSourceAddress;            // IPv6 address of the message source.
         Ip6::Address    mDestinationAddress;       // IPv6 address of the message destination.
         uint16_t        mDestinationPort;          // UDP port of the message destination.
@@ -763,9 +766,9 @@ private:
     public:
         explicit ResponseCache(Instance &aInstance);
 
-        void  Add(const Message &aResponse, const Ip6::MessageInfo &aMessageInfo, uint32_t aExchangeLifetime);
+        void  Add(const Msg &aTxMsg, uint32_t aExchangeLifetime);
         void  RemoveAll(void);
-        Error SendCachedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, CoapBase &aCoapBase);
+        Error SendCachedResponse(const Msg &aRxMsg, CoapBase &aCoapBase);
         void  GetInfo(MessageQueue::Info &aInfo) const { return mResponses.GetInfo(aInfo); }
 
     private:
@@ -779,7 +782,7 @@ private:
             Ip6::MessageInfo mMessageInfo;
         };
 
-        const Message *FindMatching(uint16_t aMessageId, const Ip6::MessageInfo &aMessageInfo) const;
+        const Message *FindMatching(const Msg &aRxMsg) const;
         void           MaintainCacheSize(void);
         static void    HandleTimer(Timer &aTimer);
         void           HandleTimer(void);
@@ -796,60 +799,41 @@ private:
     void        ClearRequests(const Ip6::Address *aAddress);
     Message    *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata);
     void        DequeueMessage(Message &aMessage);
-    Message    *FindRelatedRequest(const Message &aResponse, const Ip6::MessageInfo &aMessageInfo, Metadata &aMetadata);
-    void        FinalizeCoapTransaction(Message                &aRequest,
-                                        const Metadata         &aMetadata,
-                                        Message                *aResponse,
-                                        const Ip6::MessageInfo *aMessageInfo,
-                                        Error                   aResult);
-    bool        InvokeResponseFallback(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
-    void        ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Message    *FindRelatedRequest(const Msg &aMsg, Metadata &aMetadata);
+    void        FinalizeCoapTransaction(Message &aRequest, const Metadata &aMetadata, Msg *aResponse, Error aResult);
+    bool        InvokeResponseFallback(Msg &aRxMsg) const;
+    void        ProcessReceivedRequest(Msg &aRxMsg);
+    void        ProcessReceivedResponse(Msg &aRxMsg);
     void        SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error       SendEmptyMessage(Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+    Error       SendEmptyMessage(Type aType, const Msg &aRxMsg);
     Error       Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     Error ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aTransmitHook, void *aContext);
-    Error ProcessBlockwiseResponse(Message                &aResponse,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   Message                &aRequest,
-                                   const Metadata         &aMetadata);
-    Error ProcessBlockwiseRequest(Message                      &aMessage,
-                                  const Ip6::MessageInfo       &aMessageInfo,
-                                  Message::UriPathStringBuffer &aUriPath,
-                                  bool                         &aDidHandle);
+    Error ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const Metadata &aMetadata);
+    Error ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
                                   Message         &aRequestOld,
                                   Message         &aRequest,
                                   const BlockInfo &aBlockInfo);
-    Error ProcessBlock1Request(Message                 &aMessage,
-                               const Ip6::MessageInfo  &aMessageInfo,
-                               const ResourceBlockWise &aResource,
-                               uint32_t                 aTotalLength);
-    Error ProcessBlock2Request(Message                 &aMessage,
-                               const Ip6::MessageInfo  &aMessageInfo,
-                               const ResourceBlockWise &aResource);
-    Error SendNextBlock1Request(Message                &aRequest,
-                                Message                &aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                const Metadata         &aMetadata);
-    Error SendNextBlock2Request(Message                &aRequest,
-                                Message                &aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                const Metadata         &aMetadata,
-                                uint32_t                aTotalLength,
-                                bool                    aBeginBlock1Transfer);
+    Error ProcessBlock1Request(Msg &aRxMsg, const ResourceBlockWise &aResource, uint32_t aTotalLength);
+    Error ProcessBlock2Request(Msg &aRxMsg, const ResourceBlockWise &aResource);
+    Error SendNextBlock1Request(Message &aRequest, Msg &aRxMsg, const Metadata &aMetadata);
+    Error SendNextBlock2Request(Message        &aRequest,
+                                Msg            &aRxMsg,
+                                const Metadata &aMetadata,
+                                uint32_t        aTotalLength,
+                                bool            aBeginBlock1Transfer);
 
     static Error DetermineBlockSzxFromSize(uint16_t aSize, BlockSzx &aBlockSzx);
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    Error ProcessObserveSend(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, bool &aShouldObserve);
+    Error ProcessObserveSend(Msg &aTxMsg, bool &aShouldObserve);
 
     static bool IsObserveSubscription(const Message &aMessage, const Metadata &aMetadata);
 #endif
