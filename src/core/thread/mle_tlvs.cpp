@@ -137,5 +137,23 @@ exit:
     return isValid;
 }
 
+LeaderDataTlvValue::LeaderDataTlvValue(const LeaderData &aLeaderData)
+    : mPartitionId(BigEndian::HostSwap32(aLeaderData.GetPartitionId()))
+    , mWeighting(aLeaderData.GetWeighting())
+    , mDataVersion(aLeaderData.GetDataVersion(NetworkData::kFullSet))
+    , mStableDataVersion(aLeaderData.GetDataVersion(NetworkData::kStableSubset))
+    , mLeaderRouterId(aLeaderData.GetLeaderRouterId())
+{
+}
+
+void LeaderDataTlvValue::Get(LeaderData &aLeaderData) const
+{
+    aLeaderData.SetPartitionId(BigEndian::HostSwap32(mPartitionId));
+    aLeaderData.SetWeighting(mWeighting);
+    aLeaderData.SetDataVersion(mDataVersion);
+    aLeaderData.SetStableDataVersion(mStableDataVersion);
+    aLeaderData.SetLeaderRouterId(mLeaderRouterId);
+}
+
 } // namespace Mle
 } // namespace ot

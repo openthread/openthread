@@ -336,23 +336,14 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Leader Data TLV generation and parsing.
+ * Represents a Leader Data TLV value.
  */
-OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv : public Mle::LeaderDataTlv
-{
-public:
-    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kLeaderData; ///< The TLV Type value.
+typedef Mle::LeaderDataTlvValue LeaderDataTlvValue;
 
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        Mle::LeaderDataTlv::Init();
-        ot::Tlv::SetType(kType);
-    }
-} OT_TOOL_PACKED_END;
+/**
+ * Defines Leader Data TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
 
 /**
  * Implements Mac Counters TLV generation and parsing.

@@ -473,14 +473,8 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kLeaderData:
-    {
-        LeaderDataTlv tlv;
-
-        tlv.Init();
-        tlv.Set(Get<Mle::Mle>().GetLeaderData());
-        error = tlv.AppendTo(aMessage);
+        error = Tlv::Append<LeaderDataTlv>(aMessage, LeaderDataTlvValue(Get<Mle::Mle>().GetLeaderData()));
         break;
-    }
 
     case Tlv::kNetworkData:
         error = Tlv::Append<NetworkDataTlv>(aMessage, Get<NetworkData::Leader>().GetBytes(),
@@ -1351,12 +1345,10 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kLeaderData:
         {
-            LeaderDataTlv leaderDataTlv;
+            LeaderDataTlvValue tlvValue;
 
-            VerifyOrExit(!tlv.IsExtended(), error = kErrorParse);
-            SuccessOrExit(error = aMessage.Read(offset, leaderDataTlv));
-            VerifyOrExit(leaderDataTlv.IsValid(), error = kErrorParse);
-            leaderDataTlv.Get(AsCoreType(&aTlvInfo.mData.mLeaderData));
+            SuccessOrExit(error = Tlv::Read<LeaderDataTlv>(aMessage, offset, tlvValue));
+            tlvValue.Get(AsCoreType(&aTlvInfo.mData.mLeaderData));
             break;
         }
 

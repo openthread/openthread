@@ -3558,15 +3558,10 @@ Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<
 
 Error Mle::TxMessage::AppendLeaderDataTlv(void)
 {
-    LeaderDataTlv leaderDataTlv;
-
     Get<Mle>().mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet));
     Get<Mle>().mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kStableSubset));
 
-    leaderDataTlv.Init();
-    leaderDataTlv.Set(Get<Mle>().mLeaderData);
-
-    return leaderDataTlv.AppendTo(*this);
+    return Tlv::Append<LeaderDataTlv>(*this, LeaderDataTlvValue(Get<Mle>().mLeaderData));
 }
 
 Error Mle::TxMessage::AppendNetworkDataTlv(NetworkData::Type aType)
@@ -4066,12 +4061,11 @@ exit:
 
 Error Mle::RxMessage::ReadLeaderDataTlv(LeaderData &aLeaderData) const
 {
-    Error         error;
-    LeaderDataTlv leaderDataTlv;
+    Error              error;
+    LeaderDataTlvValue tlvValue;
 
-    SuccessOrExit(error = Tlv::FindTlv(*this, leaderDataTlv));
-    VerifyOrExit(leaderDataTlv.IsValid(), error = kErrorParse);
-    leaderDataTlv.Get(aLeaderData);
+    SuccessOrExit(error = Tlv::Find<LeaderDataTlv>(*this, tlvValue));
+    tlvValue.Get(aLeaderData);
 
 exit:
     return error;

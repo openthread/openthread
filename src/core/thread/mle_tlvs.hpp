@@ -584,56 +584,30 @@ private:
 #endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
- * Implements Leader Data TLV generation and parsing.
+ * Represents Leader Data TLV value.
  */
 OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv : public Tlv, public TlvInfo<Tlv::kLeaderData>
+class LeaderDataTlvValue
 {
 public:
     /**
-     * Initializes the TLV.
+     * Default constructor.
      */
-    void Init(void)
-    {
-        SetType(kLeaderData);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+    LeaderDataTlvValue(void) = default;
 
     /**
-     * Indicates whether or not the TLV appears to be well-formed.
+     * Initializes the `LeaderDataTlvValue` from a given `LeaderData`.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[in] aLeaderData  The `LeaderData` info to use for initialization.
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    explicit LeaderDataTlvValue(const LeaderData &aLeaderData);
 
     /**
-     * Gets the Leader Data info from TLV.
+     * Gets the Leader Data info from TLV value.
      *
      * @param[out] aLeaderData   A reference to output Leader Data info.
      */
-    void Get(LeaderData &aLeaderData) const
-    {
-        aLeaderData.SetPartitionId(BigEndian::HostSwap32(mPartitionId));
-        aLeaderData.SetWeighting(mWeighting);
-        aLeaderData.SetDataVersion(mDataVersion);
-        aLeaderData.SetStableDataVersion(mStableDataVersion);
-        aLeaderData.SetLeaderRouterId(mLeaderRouterId);
-    }
-
-    /**
-     * Sets the Leader Data.
-     *
-     * @param[in] aLeaderData   A Leader Data.
-     */
-    void Set(const LeaderData &aLeaderData)
-    {
-        mPartitionId       = BigEndian::HostSwap32(aLeaderData.GetPartitionId());
-        mWeighting         = aLeaderData.GetWeighting();
-        mDataVersion       = aLeaderData.GetDataVersion(NetworkData::kFullSet);
-        mStableDataVersion = aLeaderData.GetDataVersion(NetworkData::kStableSubset);
-        mLeaderRouterId    = aLeaderData.GetLeaderRouterId();
-    }
+    void Get(LeaderData &aLeaderData) const;
 
 private:
     uint32_t mPartitionId;
@@ -642,6 +616,11 @@ private:
     uint8_t  mStableDataVersion;
     uint8_t  mLeaderRouterId;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Leader Data TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
 
 /**
  * Implements Scan Mask TLV generation and parsing.
