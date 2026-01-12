@@ -349,15 +349,12 @@ public:
      *
      * @returns The Steering Data length.
      */
-    uint8_t GetSteeringDataLength(void) const
-    {
-        return GetLength() <= sizeof(mSteeringData) ? GetLength() : sizeof(mSteeringData);
-    }
+    uint8_t GetSteeringDataLength(void) const { return Min<uint8_t>(GetLength(), SteeringData::kMaxLength); }
 
     /**
      * Sets all bits in the Bloom Filter to zero.
      */
-    void Clear(void) { memset(mSteeringData, 0, GetSteeringDataLength()); }
+    void Clear(void) { ClearAllBytes(mSteeringData); }
 
     /**
      * Copies the Steering Data from the TLV into a given `SteeringData` variable.
