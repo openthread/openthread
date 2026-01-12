@@ -389,7 +389,7 @@ template <> otError Ba::Process<Cmd("ephemeralkey")>(Arg aArgs[])
     {
     }
     /**
-     * @cli ba ephemeralkey start <keystring> [timeout-in-msec] [port]
+     * @cli ba ephemeralkey start
      * @code
      * ba ephemeralkey start Z10X20g3J15w1000P60m16 5000 1234
      * Done
@@ -481,6 +481,66 @@ template <> otError Ba::Process<Cmd("ephemeralkey")>(Arg aArgs[])
             otBorderAgentEphemeralKeySetCallback(GetInstancePtr(), nullptr, nullptr);
         }
     }
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+    /**
+     * @cli ba ephemeralkey generate-tap
+     * @code
+     * ba ephemeralkey generate-tap
+     * 989710128
+     * Done
+     * @endcode
+     * @par
+     * Generates a cryptographically secure random Thread Administration One-Time Passcode (TAP) string.
+     * @par
+     * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+     * @par
+     * The TAP is a string of 9 characters, generated as a sequence of eight cryptographically secure random
+     * numeric digits [`0`-`9`] followed by a single check digit determined using the Verhoeff algorithm.
+     * @par
+     * Note that this command simply generates and outputs a TAP. It does not start ephemeral key use with this TAP on
+     * the Border Agent.
+     * @sa otBorderAgentEphemeralKeyGenerateTap
+     */
+    else if (aArgs[0] == "generate-tap")
+    {
+        otBorderAgentEphemeralKeyTap tap;
+
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = otBorderAgentEphemeralKeyGenerateTap(&tap));
+        OutputLine("%s", tap.mTap);
+    }
+    /**
+     * @cli ba ephemeralkey validate-tap
+     * @code
+     * ba ephemeralkey validate-tap 989710128
+     * validated
+     * Done
+     * @endcode
+     * @cparam ba ephemeralkey validate-tap @ca{tapstring}
+     * @par
+     * Validates a given Thread Administration One-Time Passcode (TAP) string.
+     * @par
+     * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+     * @par
+     * Validates that the TAP string has the proper length, contains digit characters [`0`-`9`], and validates the
+     * Verhoeff checksum.
+     * @sa otBorderAgentEphemeralKeyValidateTap
+     */
+    else if (aArgs[0] == "validate-tap")
+    {
+        otBorderAgentEphemeralKeyTap tap;
+
+        ClearAllBytes(tap);
+
+        VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aArgs[1].GetLength() <= OT_BORDER_AGENT_EPHEMERAL_KEY_TAP_STRING_LENGTH,
+                     error = OT_ERROR_INVALID_ARGS);
+        memcpy(tap.mTap, aArgs[1].GetCString(), aArgs[1].GetLength());
+        SuccessOrExit(error = otBorderAgentEphemeralKeyValidateTap(&tap));
+        OutputLine("validated");
+    }
+#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
     else
     {
         error = OT_ERROR_INVALID_ARGS;

@@ -545,6 +545,12 @@ class Node(object):
     def ba_ephemeral_key_get_port(self):
         return self._cli_single_output('ba ephemeralkey port')
 
+    def ba_ephemeral_key_generate_tap(self):
+        return self._cli_single_output('ba ephemeralkey generate-tap')
+
+    def ba_ephemeral_key_validate_tap(self, tapstring):
+        return self._cli_single_output('ba ephemeralkey validate-tap', tapstring)
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
 
