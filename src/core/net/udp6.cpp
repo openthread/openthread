@@ -353,6 +353,19 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
 
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);
 
+#if OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS
+    if (messageInfoLocal.GetPeerAddr().IsMulticast() &&
+        messageInfoLocal.GetPeerAddr().GetScope() >= Address::kLinkLocalScope && !messageInfoLocal.IsHostInterface())
+    {
+        Message *loopback = aMessage.Clone();
+        VerifyOrExit(loopback != nullptr, error = kErrorNoBufs);
+        MessageInfo loopInfo = messageInfoLocal;
+        loopInfo.SetPeerAddr(messageInfoLocal.GetSockAddr());
+        loopInfo.mPeerPort = messageInfoLocal.mSockPort;
+        HandlePayload(*loopback, loopInfo);
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     if (aSocket.ShouldUsePlatformUdp())
     {
