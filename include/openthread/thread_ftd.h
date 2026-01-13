@@ -625,6 +625,16 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator);
 
 /**
+ * Clears the EID cache.
+ *
+ * Intended for testing only. 
+ *
+ * @param[in]     aInstance   A pointer to an OpenThread instance.
+ *
+ */
+void otThreadClearEidCache(otInstance *aInstance);
+
+/**
  * Get the Thread PSKc
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
