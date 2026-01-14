@@ -376,6 +376,10 @@ jobs:
       run: |
         script/check-posix-build
         script/check-simulation-build
+        git clean -dfx
+        ./tests/toranj/build.sh all
+        git clean -dfx
+        ./tests/nexus/build.sh
 
   android-ndk:
     name: android-ndk
