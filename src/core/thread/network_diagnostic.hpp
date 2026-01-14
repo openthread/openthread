@@ -302,7 +302,7 @@ class Client : public InstanceLocator, private NonCopyable
 
 public:
     typedef otNetworkDiagIterator          Iterator;    ///< Iterator to go through TLVs in `GetNextDiagTlv()`.
-    typedef otNetworkDiagTlv               TlvInfo;     ///< Parse info from a Network Diagnostic TLV.
+    typedef otNetworkDiagTlv               DiagTlv;     ///< Parse info from a Network Diagnostic TLV.
     typedef otNetworkDiagChildEntry        ChildInfo;   ///< Parsed info for child table entry.
     typedef otReceiveDiagnosticGetCallback GetCallback; ///< Diagnostic Get callback function pointer type.
 
@@ -345,13 +345,13 @@ public:
      *
      * @param[in]      aMessage    Message to read TLVs from.
      * @param[in,out]  aIterator   The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
-     * @param[out]     aTlvInfo    A reference to a `TlvInfo` to output the next TLV data.
+     * @param[out]     aDiagTlv    A reference to a `DiagTlv` to output the next TLV data.
      *
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
      * @retval kErrorParse      Parsing the next Network Diagnostic failed.
      */
-    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
+    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, DiagTlv &aDiagTlv);
 
     /**
      * This method returns the query ID used for the last Network Diagnostic Query command.
