@@ -112,20 +112,20 @@ exit:
     return error;
 }
 
-template <> void Client::HandleTmf<kUriHistoryAnswer>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Client::HandleTmf<kUriHistoryAnswer>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
 
     LogInfo("Received %s from %s", ot::UriToString<kUriHistoryAnswer>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    SuccessOrExit(ProcessAnswer(aMessage, aMessageInfo));
+    SuccessOrExit(ProcessAnswer(aMsg));
 
     switch (mTlvType)
     {
     case Tlv::kNetworkInfo:
-        ProcessNetInfoAnswer(aMessage);
+        ProcessNetInfoAnswer(aMsg.mMessage);
         break;
     default:
         ExitNow();
@@ -135,20 +135,20 @@ exit:
     return;
 }
 
-Error Client::ProcessAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Client::ProcessAnswer(const Coap::Msg &aMsg)
 {
     Error     error = kErrorFailed;
     AnswerTlv answerTlv;
     uint16_t  queryId;
 
     VerifyOrExit(mActive);
-    VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
-    VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().GetLocator() == mQueryRloc16);
+    VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMsg.mMessageInfo.GetPeerAddr()));
+    VerifyOrExit(aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator() == mQueryRloc16);
 
-    SuccessOrExit(Tlv::Find<QueryIdTlv>(aMessage, queryId));
+    SuccessOrExit(Tlv::Find<QueryIdTlv>(aMsg.mMessage, queryId));
     VerifyOrExit(queryId == mQueryId);
 
-    SuccessOrExit(Tlv::FindTlv(aMessage, answerTlv));
+    SuccessOrExit(Tlv::FindTlv(aMsg.mMessage, answerTlv));
 
     if (answerTlv.GetIndex() != mAnswerIndex)
     {

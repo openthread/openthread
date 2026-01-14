@@ -544,7 +544,7 @@ private:
 #endif
     };
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     void HandleTimer(void);
 
@@ -617,9 +617,7 @@ private:
     Error UpdateCommissioningData(uint16_t aDataLength, CommissioningDataTlv *&aDataTlv);
     Error SetCommissioningData(const Message &aMessage);
 
-    void SendCommissioningSetResponse(const Coap::Message     &aRequest,
-                                      const Ip6::MessageInfo  &aMessageInfo,
-                                      MeshCoP::StateTlv::State aState);
+    void SendCommissioningSetResponse(const Coap::Msg &aMsg, MeshCoP::StateTlv::State aState);
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 

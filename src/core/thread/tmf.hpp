@@ -49,13 +49,12 @@ namespace Tmf {
  *
  * The class `Type` MUST declare a template method of the following format:
  *
- *  template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+ *  template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
  *
  * @param[in] Type      The `Type` in which the TMF handler is declared.
  * @param[in] kUri      The `Uri` which is handled.
  */
-#define DeclareTmfHandler(Type, kUri) \
-    template <> void Type::HandleTmf<kUri>(Coap::Message & aMessage, const Ip6::MessageInfo &aMessageInfo)
+#define DeclareTmfHandler(Type, kUri) template <> void Type::HandleTmf<kUri>(Coap::Msg & aMsg)
 
 /**
  * Declares a TMF/CoAP response handler method in a given class `Type`.
@@ -106,6 +105,7 @@ namespace Tmf {
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
 typedef Coap::Message Message; ///< A TMF message.
+typedef Coap::Msg     Msg;     ///< A TMF message along with its `Ip6::MessageInfo`.
 
 /**
  * Represents message information for a TMF message.
@@ -228,13 +228,10 @@ public:
     static Message::Priority DscpToPriority(uint8_t aDscp);
 
 private:
-    template <Uri kUri> void HandleTmf(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Msg &aMsg);
 
-    static bool HandleResource(CoapBase               &aCoapBase,
-                               const char             *aUriPath,
-                               Message                &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool        HandleResource(const char *aUriPath, Msg &aMsg);
 
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
@@ -259,11 +256,8 @@ private:
     Coap::SecureSession           *HandleDtlsAccept(void);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    static bool HandleResource(CoapBase               &aCoapBase,
-                               const char             *aUriPath,
-                               Message                &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool        HandleResource(const char *aUriPath, Msg &aMsg);
 #endif
 };
 

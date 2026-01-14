@@ -613,24 +613,23 @@ exit:
     return error;
 }
 
-template <>
-void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMessage.IsPostRequest());
+    VerifyOrExit(aMsg.mMessage.IsPostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetQuery>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
     // DIAG_GET.qry may be sent as a confirmable request.
-    if (aMessage.IsConfirmable())
+    if (aMsg.mMessage.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
     }
 
 #if OPENTHREAD_MTD
-    SendAnswer(aMessageInfo.GetPeerAddr(), aMessage);
+    SendAnswer(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 #elif OPENTHREAD_FTD
-    PrepareAndSendAnswers(aMessageInfo.GetPeerAddr(), aMessage);
+    PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 #endif
 
 exit:
@@ -980,48 +979,47 @@ exit:
 
 #endif // OPENTHREAD_FTD
 
-template <>
-void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Msg &aMsg)
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    response = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    response = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
-    IgnoreError(response->SetPriority(aMessage.GetPriority()));
-    SuccessOrExit(error = AppendRequestedTlvs(aMessage, *response));
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    IgnoreError(response->SetPriority(aMsg.mMessage.GetPriority()));
+    SuccessOrExit(error = AppendRequestedTlvs(aMsg.mMessage, *response));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
 
 exit:
     FreeMessageOnError(response, error);
 }
 
-template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
 {
     uint16_t offset = 0;
     uint8_t  type;
     Tlv      tlv;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticReset>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), tlv));
+    SuccessOrExit(aMsg.mMessage.Read(aMsg.mMessage.GetOffset(), tlv));
 
     VerifyOrExit(tlv.GetType() == Tlv::kTypeList);
 
-    offset = aMessage.GetOffset() + sizeof(Tlv);
+    offset = aMsg.mMessage.GetOffset() + sizeof(Tlv);
 
     for (uint8_t i = 0; i < tlv.GetLength(); i++)
     {
-        SuccessOrExit(aMessage.Read(offset + i, type));
+        SuccessOrExit(aMsg.mMessage.Read(offset + i, type));
 
         switch (type)
         {
@@ -1042,7 +1040,7 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage,
         }
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
 
 exit:
     return;
@@ -1145,23 +1143,22 @@ exit:
     mGetCallback.InvokeIfSet(aResult, aMessage, aMessageInfo);
 }
 
-template <>
-void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
 
     LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
     // Let the `MeshDiag` process the message first.
-    if (!Get<Utils::MeshDiag>().HandleDiagnosticGetAnswer(aMessage, aMessageInfo))
+    if (!Get<Utils::MeshDiag>().HandleDiagnosticGetAnswer(aMsg.mMessage, aMsg.mMessageInfo))
 #endif
     {
-        mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
+        mGetCallback.InvokeIfSet(kErrorNone, &aMsg.mMessage, &aMsg.mMessageInfo);
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
 
 exit:
     return;

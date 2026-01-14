@@ -102,12 +102,12 @@ private:
     static constexpr uint16_t kResponseTimeout = 5000;
 
     Error SendQuery(Tlv::Type aTlvType, uint16_t aMaxEntries, uint32_t aMaxEntryAge, uint16_t aRloc16);
-    Error ProcessAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error ProcessAnswer(const Coap::Msg &aMsg);
     void  ProcessNetInfoAnswer(const Coap::Message &aMessage);
     void  Finalize(Error aError);
     void  HandleTimer(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     union Callbacks
     {

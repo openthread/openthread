@@ -401,7 +401,7 @@ private:
     static void HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext);
     void        HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     void HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

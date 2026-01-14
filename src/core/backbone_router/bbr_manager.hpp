@@ -166,23 +166,22 @@ private:
     static constexpr uint8_t  kDefaultHoplimit = 1;
     static constexpr uint32_t kTimerInterval   = 1000;
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleMulticastListenerRegistration(const Coap::Msg &aMsg);
 
-    void SendMulticastListenerRegistrationResponse(const Coap::Message    &aMessage,
-                                                   const Ip6::MessageInfo &aMessageInfo,
-                                                   MlrStatus               aStatus,
-                                                   Ip6::Address           *aFailedAddresses,
-                                                   uint8_t                 aFailedAddressNum);
+    void SendMulticastListenerRegistrationResponse(const Coap::Msg &aMsg,
+                                                   MlrStatus        aStatus,
+                                                   Ip6::Address    *aFailedAddresses,
+                                                   uint8_t          aFailedAddressNum);
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
                                                    uint8_t             aAddressNum,
                                                    uint32_t            aTimeout);
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    void  HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleDuaRegistration(const Coap::Msg &aMsg);
     Error SendBackboneAnswer(const Ip6::MessageInfo      &aQueryMessageInfo,
                              const Ip6::Address          &aDua,
                              uint16_t                     aSrcRloc16,
@@ -200,10 +199,7 @@ private:
     void  HandleProactiveBackboneNotification(const Ip6::Address             &aDua,
                                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                               uint32_t                        aTimeSinceLastTransaction);
-    void  SendDuaRegistrationResponse(const Coap::Message    &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      const Ip6::Address     &aTarget,
-                                      DuaStatus               aStatus);
+    void  SendDuaRegistrationResponse(const Coap::Msg &aMsg, const Ip6::Address &aTarget, DuaStatus aStatus);
 #endif
     void HandleNotifierEvents(Events aEvents);
 

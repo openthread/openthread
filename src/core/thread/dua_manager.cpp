@@ -571,21 +571,18 @@ exit:
     LogInfo("Received %s response: %s", UriToString<kUriDuaRegistrationRequest>(), ErrorToString(error));
 }
 
-template <>
-void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMsg)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error error;
 
-    VerifyOrExit(aMessage.IsPostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.mMessage.IsPostRequest(), error = kErrorParse);
 
-    if (aMessage.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+    if (aMsg.mMessage.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }
 
-    error = ProcessDuaResponse(aMessage);
+    error = ProcessDuaResponse(aMsg.mMessage);
 
 exit:
     OT_UNUSED_VARIABLE(error);

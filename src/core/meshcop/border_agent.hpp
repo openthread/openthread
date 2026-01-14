@@ -303,11 +303,11 @@ private:
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
 
         Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
-        void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        void  HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg);
         void  HandleTmfRelayTx(Coap::Message &aMessage);
         void  HandleTmfProxyTx(Coap::Message &aMessage);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
-        Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
+        Error ForwardToLeader(const Coap::Msg &aMsg, Uri aUri);
         void  SendErrorMessage(Error aError, const Coap::Token &aToken);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
@@ -319,11 +319,8 @@ private:
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
                                                  const Coap::Message  *aResponse,
                                                  Error                 aResult);
-        static bool HandleResource(CoapBase               &aCoapBase,
-                                   const char             *aUriPath,
-                                   Coap::Message          &aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo);
-        bool        HandleResource(const char *aUriPath, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Coap::Msg &aMsg);
+        bool        HandleResource(const char *aUriPath, Coap::Msg &aMsg);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
@@ -350,7 +347,7 @@ private:
     // Callback from Notifier
     void HandleNotifierEvents(Events aEvents);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     // Callbacks used with `Dtls::Transport`.
     static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);

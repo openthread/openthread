@@ -2416,7 +2416,7 @@ private:
     void     HandleAdvertiseTrickleTimer(void);
     void     HandleTimeTick(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     DeclareTmfResponseHandlerFullParamIn(Mle, HandleAddressSolicitResponse);
 

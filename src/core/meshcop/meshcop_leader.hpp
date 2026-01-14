@@ -98,15 +98,11 @@ private:
 
     void HandleTimer(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    void SendPetitionResponse(const Coap::Message    &aRequest,
-                              const Ip6::MessageInfo &aMessageInfo,
-                              StateTlv::State         aState);
+    void SendPetitionResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 
-    void SendKeepAliveResponse(const Coap::Message    &aRequest,
-                               const Ip6::MessageInfo &aMessageInfo,
-                               StateTlv::State         aState);
+    void SendKeepAliveResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

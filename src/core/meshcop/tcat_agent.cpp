@@ -1111,7 +1111,7 @@ void TcatAgent::NotifyStateChange(void)
                                                    mState == kStateConnected);
 }
 
-template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Msg &aMsg)
 {
     Error          error        = kErrorNone;
     Coap::Message *message      = nullptr;
@@ -1119,13 +1119,14 @@ template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Message &aMessage, c
     uint16_t       durationSec  = 0;
     uint32_t       durationMs;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
-    LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
-    message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(),
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
+    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMessage, delayTimerMs));
-    switch (Tlv::Find<DurationTlv>(aMessage, durationSec))
+    SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMsg.mMessage, delayTimerMs));
+    switch (Tlv::Find<DurationTlv>(aMsg.mMessage, durationSec))
     {
     case kErrorNone:
         break;
@@ -1149,7 +1150,7 @@ exit:
             Tlv::Append<StateTlv>(*message, error == kErrorNone ? StateTlv::State::kAccept : StateTlv::State::kReject);
         if (error == kErrorNone)
         {
-            error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo);
+            error = Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo);
         }
         FreeMessageOnError(message, error);
     }

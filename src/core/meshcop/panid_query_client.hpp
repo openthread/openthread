@@ -80,7 +80,7 @@ public:
                     void                               *aContext);
 
 private:
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     Callback<otCommissionerPanIdConflictCallback> mCallback;
 };
