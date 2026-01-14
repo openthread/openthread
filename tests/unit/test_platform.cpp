@@ -106,6 +106,10 @@ extern "C" {
 OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 OT_TOOL_WEAK void otPlatFree(void *aPtr) { free(aPtr); }
+
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
+
+OT_TOOL_WEAK void otPlatCryptoFree(void *aPtr) { free(aPtr); }
 #endif
 
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}

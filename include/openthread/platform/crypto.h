@@ -292,6 +292,31 @@ otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
 bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef);
 
 /**
+ * Dynamically allocates new memory for the Crypto subsystem. On platforms that support it, they should redirect to
+ * `calloc`. For those that don't support `calloc`, they should implement the standard `calloc` behavior.
+ *
+ * See: https://man7.org/linux/man-pages/man3/calloc.3.html
+ *
+ * Is required for `OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE`.
+ *
+ * @param[in] aNum   The number of blocks to allocate
+ * @param[in] aSize  The size of each block to allocate
+ *
+ * @retval void*  The pointer to the front of the memory allocated
+ * @retval NULL   Failed to allocate the memory requested.
+ */
+void *otPlatCryptoCAlloc(size_t aNum, size_t aSize);
+
+/**
+ * Frees memory that was dynamically allocated by `otPlatCryptoCAlloc()`.
+ *
+ * Is required for `OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE`.
+ *
+ * @param[in] aPtr  A pointer the memory blocks to free. The pointer may be NULL.
+ */
+void otPlatCryptoFree(void *aPtr);
+
+/**
  * Initialize the HMAC operation.
  *
  * @param[in]  aContext          Context for HMAC operation.
