@@ -288,11 +288,185 @@ void TestTlv(void)
     testFreeInstance(instance);
 }
 
+void TestTlvInfo(void)
+{
+    Instance   *instance;
+    Message    *message;
+    uint16_t    offset;
+    uint16_t    len;
+    Tlv         tlv;
+    ExtendedTlv extTlv;
+    Tlv::Info   info;
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+    message = instance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    // Append TLV 1: Standard TLV with 1-byte value.
+    tlv.SetType(1);
+    tlv.SetLength(1);
+    SuccessOrQuit(message->Append(tlv));
+    SuccessOrQuit(message->Append<uint8_t>(0xaa));
+
+    // Append TLV 2: Extended TLV with 2-byte value.
+    extTlv.SetType(2);
+    extTlv.SetLength(2);
+    SuccessOrQuit(message->Append(extTlv));
+    SuccessOrQuit(message->Append<uint16_t>(0xcafe));
+
+    // Append TLV 3: Standard empty TLV.
+    tlv.SetType(3);
+    tlv.SetLength(0);
+    SuccessOrQuit(message->Append(tlv));
+
+    // Append TLV 4: Extended empty TLV.
+    extTlv.SetType(4);
+    extTlv.SetLength(0);
+    SuccessOrQuit(message->Append(extTlv));
+
+    // Append TLV 5: Malformed standard TLV (claims length 2, but has only 1).
+    tlv.SetType(5);
+    tlv.SetLength(2);
+    SuccessOrQuit(message->Append(tlv));
+    SuccessOrQuit(message->Append<uint8_t>(0x12));
+
+    for (uint8_t testIter = 0; testIter <= 1; testIter++)
+    {
+        offset = 0;
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TLV 1 (standard, len=1)
+
+        len = 1;
+
+        if (testIter == 0)
+        {
+            SuccessOrQuit(info.ParseFrom(*message, offset));
+        }
+        else
+        {
+            SuccessOrQuit(info.FindIn(*message, 1));
+        }
+
+        VerifyOrQuit(info.GetType() == 1);
+        VerifyOrQuit(info.GetLength() == len);
+        VerifyOrQuit(!info.IsExtended());
+        VerifyOrQuit(info.GetSize() == sizeof(Tlv) + len);
+        VerifyOrQuit(info.GetTlvOffset() == offset);
+        VerifyOrQuit(info.GetValueOffset() == offset + sizeof(Tlv));
+        VerifyOrQuit(info.GetTlvOffsetRange().GetOffset() == offset);
+        VerifyOrQuit(info.GetTlvOffsetRange().GetLength() == sizeof(Tlv) + len);
+        VerifyOrQuit(info.GetValueOffsetRange().GetOffset() == offset + sizeof(Tlv));
+        VerifyOrQuit(info.GetValueOffsetRange().GetLength() == len);
+
+        offset = info.GetTlvOffsetRange().GetEndOffset();
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TLV 2 (extended, len=2)
+
+        len = 2;
+
+        if (testIter == 0)
+        {
+            SuccessOrQuit(info.ParseFrom(*message, offset));
+        }
+        else
+        {
+            SuccessOrQuit(info.FindIn(*message, 2));
+        }
+
+        VerifyOrQuit(info.GetType() == 2);
+        VerifyOrQuit(info.GetLength() == len);
+        VerifyOrQuit(info.IsExtended());
+        VerifyOrQuit(info.GetSize() == sizeof(ExtendedTlv) + len);
+        VerifyOrQuit(info.GetTlvOffset() == offset);
+        VerifyOrQuit(info.GetValueOffset() == offset + sizeof(ExtendedTlv));
+        VerifyOrQuit(info.GetTlvOffsetRange().GetOffset() == offset);
+        VerifyOrQuit(info.GetTlvOffsetRange().GetLength() == sizeof(ExtendedTlv) + len);
+        VerifyOrQuit(info.GetValueOffsetRange().GetOffset() == offset + sizeof(ExtendedTlv));
+        VerifyOrQuit(info.GetValueOffsetRange().GetLength() == len);
+
+        offset = info.GetTlvOffsetRange().GetEndOffset();
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TLV 3 (standard, empty)
+
+        len = 0;
+
+        if (testIter == 0)
+        {
+            SuccessOrQuit(info.ParseFrom(*message, offset));
+        }
+        else
+        {
+            SuccessOrQuit(info.FindIn(*message, 3));
+        }
+
+        VerifyOrQuit(info.GetType() == 3);
+        VerifyOrQuit(info.GetLength() == len);
+        VerifyOrQuit(!info.IsExtended());
+        VerifyOrQuit(info.GetSize() == sizeof(Tlv) + len);
+        VerifyOrQuit(info.GetTlvOffset() == offset);
+        VerifyOrQuit(info.GetValueOffset() == offset + sizeof(Tlv));
+        VerifyOrQuit(info.GetTlvOffsetRange().GetOffset() == offset);
+        VerifyOrQuit(info.GetTlvOffsetRange().GetLength() == sizeof(Tlv) + len);
+        VerifyOrQuit(info.GetValueOffsetRange().GetOffset() == offset + sizeof(Tlv));
+        VerifyOrQuit(info.GetValueOffsetRange().GetLength() == len);
+
+        offset = info.GetTlvOffsetRange().GetEndOffset();
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TLV 4 (extended, empty)
+
+        len = 0;
+
+        if (testIter == 0)
+        {
+            SuccessOrQuit(info.ParseFrom(*message, offset));
+        }
+        else
+        {
+            SuccessOrQuit(info.FindIn(*message, 4));
+        }
+
+        VerifyOrQuit(info.GetType() == 4);
+        VerifyOrQuit(info.GetLength() == len);
+        VerifyOrQuit(info.IsExtended());
+        VerifyOrQuit(info.GetSize() == sizeof(ExtendedTlv) + len);
+        VerifyOrQuit(info.GetTlvOffset() == offset);
+        VerifyOrQuit(info.GetValueOffset() == offset + sizeof(ExtendedTlv));
+        VerifyOrQuit(info.GetTlvOffsetRange().GetOffset() == offset);
+        VerifyOrQuit(info.GetTlvOffsetRange().GetLength() == sizeof(ExtendedTlv) + len);
+        VerifyOrQuit(info.GetValueOffsetRange().GetOffset() == offset + sizeof(ExtendedTlv));
+        VerifyOrQuit(info.GetValueOffsetRange().GetLength() == len);
+
+        offset = info.GetTlvOffsetRange().GetEndOffset();
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // Test TLV 5 (malformed)
+
+        if (testIter == 0)
+        {
+            VerifyOrQuit(info.ParseFrom(*message, offset) == kErrorParse);
+        }
+        else
+        {
+            VerifyOrQuit(info.FindIn(*message, 5) != kErrorNone);
+        }
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    message->Free();
+    testFreeInstance(instance);
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestTlv();
+    ot::TestTlvInfo();
     printf("All tests passed\n");
     return 0;
 }

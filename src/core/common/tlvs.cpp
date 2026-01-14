@@ -65,14 +65,14 @@ Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tl
 
 Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv, uint16_t &aOffset)
 {
-    Error      error;
-    ParsedInfo info;
+    Error error;
+    Info  info;
 
     SuccessOrExit(error = info.FindIn(aMessage, aType));
 
     info.mTlvOffsetRange.ShrinkLength(aMaxSize);
     aMessage.ReadBytes(info.mTlvOffsetRange, &aTlv);
-    aOffset = info.mTlvOffsetRange.GetOffset();
+    aOffset = info.GetTlvOffset();
 
 exit:
     return error;
@@ -80,17 +80,17 @@ exit:
 
 Error Tlv::FindTlvValueOffsetRange(const Message &aMessage, uint8_t aType, OffsetRange &aOffsetRange)
 {
-    Error      error;
-    ParsedInfo info;
+    Error error;
+    Info  info;
 
     SuccessOrExit(error = info.FindIn(aMessage, aType));
-    aOffsetRange = info.mValueOffsetRange;
+    aOffsetRange = info.GetValueOffsetRange();
 
 exit:
     return error;
 }
 
-Error Tlv::ParsedInfo::ParseFrom(const Message &aMessage, uint16_t aOffset)
+Error Tlv::Info::ParseFrom(const Message &aMessage, uint16_t aOffset)
 {
     OffsetRange offsetRange;
 
@@ -98,7 +98,7 @@ Error Tlv::ParsedInfo::ParseFrom(const Message &aMessage, uint16_t aOffset)
     return ParseFrom(aMessage, offsetRange);
 }
 
-Error Tlv::ParsedInfo::ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+Error Tlv::Info::ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
 {
     Error       error;
     Tlv         tlv;
@@ -138,7 +138,7 @@ exit:
     return error;
 }
 
-Error Tlv::ParsedInfo::FindIn(const Message &aMessage, uint8_t aType)
+Error Tlv::Info::FindIn(const Message &aMessage, uint8_t aType)
 {
     Error       error = kErrorNotFound;
     OffsetRange offsetRange;
@@ -164,8 +164,8 @@ exit:
 
 Error Tlv::ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue)
 {
-    Error      error = kErrorNone;
-    ParsedInfo info;
+    Error error = kErrorNone;
+    Info  info;
 
     SuccessOrExit(error = info.ParseFrom(aMessage, aOffset));
 
@@ -195,8 +195,8 @@ template Error Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOff
 
 Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
 {
-    Error      error;
-    ParsedInfo info;
+    Error error;
+    Info  info;
 
     SuccessOrExit(error = info.ParseFrom(aMessage, aOffset));
 
@@ -211,11 +211,11 @@ exit:
 
 Error Tlv::FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue)
 {
-    Error      error;
-    ParsedInfo info;
+    Error error;
+    Info  info;
 
     SuccessOrExit(error = info.FindIn(aMessage, aType));
-    error = ReadStringTlv(aMessage, info.mTlvOffsetRange.GetOffset(), aMaxStringLength, aValue);
+    error = ReadStringTlv(aMessage, info.GetTlvOffset(), aMaxStringLength, aValue);
 
 exit:
     return error;
@@ -223,11 +223,11 @@ exit:
 
 template <typename UintType> Error Tlv::FindUintTlv(const Message &aMessage, uint8_t aType, UintType &aValue)
 {
-    Error      error;
-    ParsedInfo info;
+    Error error;
+    Info  info;
 
     SuccessOrExit(error = info.FindIn(aMessage, aType));
-    error = ReadUintTlv<UintType>(aMessage, info.mTlvOffsetRange.GetOffset(), aValue);
+    error = ReadUintTlv<UintType>(aMessage, info.GetTlvOffset(), aValue);
 
 exit:
     return error;
