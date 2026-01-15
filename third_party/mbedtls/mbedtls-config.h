@@ -38,7 +38,7 @@
 
 #include <openthread/config.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/memory.h>
+#include <openthread/platform/crypto.h>
 
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
 
