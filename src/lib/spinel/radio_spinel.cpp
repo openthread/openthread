@@ -2188,7 +2188,7 @@ void RadioSpinel::RestoreProperties(void)
                          otLinkGetFrameCounter(mInstance) + kFrameCounterGuard));
     }
 
-    IgnoreError(Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
+    SuccessOrDie(Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
     {
@@ -2196,7 +2196,7 @@ void RadioSpinel::RestoreProperties(void)
             Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, mSrcMatchShortEntries[i]));
     }
 
-    IgnoreError(Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
+    SuccessOrDie(Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
 
     for (int i = 0; i < mSrcMatchExtEntryCount; ++i)
     {
