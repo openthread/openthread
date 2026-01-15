@@ -206,7 +206,7 @@ public:
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      */
-    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false);
+    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false, bool aIsMulticastLoop = false);
 
     /**
      * Sets the callback to provide received raw IPv6 datagrams.
