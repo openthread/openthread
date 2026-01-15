@@ -1183,7 +1183,7 @@ exit:
     return;
 }
 
-Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
+Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, bool aIsMulticastLoop)
 {
     Error   error;
     Header  header;
@@ -1200,6 +1200,12 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
     }
 
     DetermineAction(*aMessagePtr, header, forwardThread, forwardHost, receive);
+
+    // If the message is the multicast loopback, dont forward to Thread
+    if (aIsMulticastLoop)
+    {
+        forwardThread = false;
+    }
 
     aMessagePtr->SetOffset(sizeof(header));
 
@@ -1225,7 +1231,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, *messagePtr);
 
-        IgnoreError(HandleDatagram(messagePtr.PassOwnership(), aIsReassembled));
+        IgnoreError(HandleDatagram(messagePtr.PassOwnership(), aIsReassembled, multicastLoop));
 
         receive     = false;
         forwardHost = false;
