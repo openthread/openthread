@@ -627,7 +627,7 @@ exit:
 
 void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *aMessage, Error aResult)
 {
-    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged);
+    VerifyOrExit(aResult == kErrorNone && aMessage->ReadCode() == Coap::kCodeChanged);
     LogInfo("Received %s response", UriToString<kUriCommissionerGet>());
 
 exit:
@@ -688,7 +688,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *aMessage, Er
     uint8_t state;
 
     SuccessOrExit(error = aResult);
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged && Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone &&
+    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged && Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone &&
                      state != StateTlv::kPending,
                  error = kErrorParse);
 
@@ -727,7 +727,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *aMessage, Error a
     bool    retransmit = false;
 
     VerifyOrExit(mState != kStateActive);
-    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged,
+    VerifyOrExit(aResult == kErrorNone && aMessage->ReadCode() == Coap::kCodeChanged,
                  retransmit = (mState == kStatePetition));
 
     LogInfo("Received %s response", UriToString<kUriLeaderPetition>());
@@ -799,7 +799,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *aMessage, Error 
     uint8_t state;
 
     VerifyOrExit(mState == kStateActive);
-    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged,
+    VerifyOrExit(aResult == kErrorNone && aMessage->ReadCode() == Coap::kCodeChanged,
                  IgnoreError(Stop(kDoNotSendKeepAlive)));
 
     LogInfo("Received %s response", UriToString<kUriLeaderKeepAlive>());
@@ -824,7 +824,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    VerifyOrExit(aMsg.mMessage.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
 
     SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMsg.mMessage, joinerPort));
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMsg.mMessage, joinerIid));
@@ -893,7 +893,7 @@ void Commissioner::HandleJoinerSessionTimer(void)
 template <> void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Msg &aMsg)
 {
     VerifyOrExit(mState == kStateActive);
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
 

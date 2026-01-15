@@ -55,6 +55,8 @@
 
 namespace ot {
 
+class UnitTester;
+
 namespace Coap {
 
 /**
@@ -63,6 +65,7 @@ namespace Coap {
  * @{
  */
 
+class Msg;
 class CoapBase;
 
 /**
@@ -112,7 +115,7 @@ private:
     static constexpr uint8_t  kMaxRetransmit                     = OT_COAP_MAX_RETRANSMIT;
     static constexpr uint32_t kMinAckTimeout                     = OT_COAP_MIN_ACK_TIMEOUT;
 
-    Error    ValidateFor(const Message &aMessage) const;
+    Error    ValidateFor(const Msg &aMsg) const;
     uint32_t CalculateInitialRetransmissionTimeout(void) const;
     uint32_t CalculateExchangeLifetime(void) const;
     uint32_t CalculateMaxTransmitWait(void) const;
@@ -122,11 +125,12 @@ private:
 };
 
 /**
- * Represents a CoAP message and its associated `Ip6::MessageInfo`.
+ * Represents a CoAP message and its associated `Ip6::MessageInfo` along with parse CoAP Header information.
  */
-class Msg
+class Msg : public HeaderInfo
 {
     friend class CoapBase;
+    friend class ot::UnitTester;
 
 public:
     Message                &mMessage;     ///< The CoAP message.
@@ -138,6 +142,17 @@ private:
         , mMessageInfo(aMessageInfo)
     {
     }
+
+    enum PayloadMarkerMode : uint8_t
+    {
+        kRejectIfNoPayloadWithPayloadMarker,
+        kRemovePayloadMarkerIfNoPayload,
+    };
+
+    Error    ParseHeaderAndOptions(PayloadMarkerMode aPayloadMarkerMode);
+    uint16_t GetHeaderSize(void) const;
+    void     UpdateType(Type aType);
+    void     UpdateMessageId(uint16_t aMessageId);
 };
 
 /**
@@ -342,9 +357,9 @@ public:
      * Allocates and initializes a new CoAP Confirmable Post message with Network Control priority level.
      *
      * The CoAP header is initialized as `kTypeConfirmable` and `kCodePost` with a given URI path and a randomly
-     * generated token (of default length). This method also sets the payload marker (`SetPayloadMarker()` on message.
-     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
-     * remove the payload marker when there is no payload.
+     * generated token (of default length). This method also sets the payload marker (`AppendPayloadMarker()` on
+     * message. Even if message has no payload, calling `AppendPayloadMarker()` is harmless, since `SendMessage()` will
+     * check and remove the payload marker when there is no payload.
      *
      * @param[in] aUri      The URI.
      *
@@ -356,8 +371,8 @@ public:
      * Allocates and initializes a new CoAP Confirmable Post message with normal priority level.
      *
      * The CoAP header is initialized as `kTypeConfirmable` and `kCodePost` with a given URI and a randomly
-     * generated token (of default length). This method also sets the payload marker (calling `SetPayloadMarker()`).
-     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * generated token (of default length). This method also sets the payload marker (calling `AppendPayloadMarker()`).
+     * Even if message has no payload, calling `AppendPayloadMarker()` is harmless, since `SendMessage()` will check and
      * remove the payload marker when there is no payload.
      *
      * @param[in] aUri      The URI.
@@ -371,8 +386,8 @@ public:
      * level.
      *
      * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI and a randomly
-     * generated token (of default length). This method also sets the payload marker (calling `SetPayloadMarker()`).
-     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * generated token (of default length). This method also sets the payload marker (calling `AppendPayloadMarker()`).
+     * Even if message has no payload, calling `AppendPayloadMarker()` is harmless, since `SendMessage()` will check and
      * remove the payload marker when there is no payload.
      *
      * @param[in] aUri      The URI.
@@ -385,8 +400,8 @@ public:
      * Allocates and initializes a new CoAP Non-confirmable Post message with normal priority level.
      *
      * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI and a randomly
-     * generated token (of default length). This method also sets the payload marker (calling `SetPayloadMarker()`).
-     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * generated token (of default length). This method also sets the payload marker (calling `AppendPayloadMarker()`).
+     * Even if message has no payload, calling `AppendPayloadMarker()` is harmless, since `SendMessage()` will check and
      * remove the payload marker when there is no payload.
      *
      * @param[in] aUri      The URI.
@@ -400,8 +415,8 @@ public:
      * given request message.
      *
      * The CoAP header is initialized as `kTypeAck` with `kCodeChanged`. The token and message ID is copied from
-     * @p aRequest. This method also sets the payload marker (calling `SetPayloadMarker()`). Even if message has
-     * no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and remove the payload
+     * @p aRequest. This method also sets the payload marker (calling `AppendPayloadMarker()`). Even if message has
+     * no payload, calling `AppendPayloadMarker()` is harmless, since `SendMessage()` will check and remove the payload
      * marker when there is no payload.
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
@@ -413,8 +428,8 @@ public:
      * request message.
      *
      * The CoAP header is initialized as `kTypeAck` with `kCodeChanged`. The token and message ID is copied from
-     * @p aRequest. This method also sets the payload marker (calling `SetPayloadMarker()`). Even if message has
-     * no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and remove the payload
+     * @p aRequest. This method also sets the payload marker (calling `AppendPayloadMarker()`). Even if message has
+     * no payload, calling `AppendPayloadMarker()` is harmless, since `SendMessage()` will check and remove the payload
      * marker when there is no payload.
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
@@ -754,6 +769,7 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         bool mObserve : 1; // Information that this request involves Observations.
+        bool mIsRequest : 1;
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         BlockwiseReceiveHook  mBlockwiseReceiveHook;  // Function pointer called on Block2 response reception.
@@ -810,7 +826,7 @@ private:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-    Error ProcessBlockwiseSend(Message &aMessage, BlockwiseTransmitHook aTransmitHook, void *aContext);
+    Error ProcessBlockwiseSend(Msg &aMsg, BlockwiseTransmitHook aTransmitHook, void *aContext);
     Error ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const Metadata &aMetadata);
     Error ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
     void  FreeLastBlockResponse(void);
@@ -835,7 +851,7 @@ private:
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     Error ProcessObserveSend(Msg &aTxMsg, bool &aShouldObserve);
 
-    static bool IsObserveSubscription(const Message &aMessage, const Metadata &aMetadata);
+    static bool IsObserveSubscription(const Metadata &aMetadata);
 #endif
 
     MessageQueue      mPendingRequests;

@@ -49,12 +49,12 @@ Server::Server(Instance &aInstance)
 
 template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMsg.mMessage.IsPostRequest());
+    VerifyOrExit(aMsg.IsPostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriHistoryQuery>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    if (aMsg.mMessage.IsConfirmable())
+    if (aMsg.IsConfirmable())
     {
         IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
     }
@@ -282,7 +282,7 @@ void Server::HandleAnswerResponse(Coap::Message          &aNextAnswer,
 
     SuccessOrExit(error);
     VerifyOrExit(aResponse != nullptr && aMessageInfo != nullptr, error = kErrorDrop);
-    VerifyOrExit(aResponse->GetCode() == Coap::kCodeChanged, error = kErrorDrop);
+    VerifyOrExit(aResponse->ReadCode() == Coap::kCodeChanged, error = kErrorDrop);
 
     SendNextAnswer(aNextAnswer, aMessageInfo->GetPeerAddr());
 

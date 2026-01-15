@@ -89,7 +89,7 @@ otError Coap::CancelResourceSubscription(bool aSendCancelMessage)
         message = otCoapNewMessage(GetInstancePtr(), nullptr);
         VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET);
+        SuccessOrExit(error = otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET));
 
         SuccessOrExit(error = otCoapMessageWriteToken(message, &mRequestToken));
         SuccessOrExit(error = otCoapMessageAppendObserveOption(message, 1));
@@ -268,9 +268,10 @@ template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
             notificationMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
             VerifyOrExit(notificationMessage != nullptr, error = OT_ERROR_NO_BUFS);
 
-            otCoapMessageInit(notificationMessage,
-                              (isConNotification ? OT_COAP_TYPE_CONFIRMABLE : OT_COAP_TYPE_NON_CONFIRMABLE),
-                              OT_COAP_CODE_CONTENT);
+            SuccessOrExit(
+                error = otCoapMessageInit(notificationMessage,
+                                          (isConNotification ? OT_COAP_TYPE_CONFIRMABLE : OT_COAP_TYPE_NON_CONFIRMABLE),
+                                          OT_COAP_CODE_CONTENT));
 
             SuccessOrExit(error = otCoapMessageWriteToken(notificationMessage, &mSubscriberToken));
             SuccessOrExit(error = otCoapMessageAppendObserveOption(notificationMessage, mObserveSerial++));
@@ -704,7 +705,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     message = otCoapNewMessage(GetInstancePtr(), nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-    otCoapMessageInit(message, coapType, aCoapCode);
+    SuccessOrExit(error = otCoapMessageInit(message, coapType, aCoapCode));
     otCoapMessageGenerateToken(message, OT_COAP_DEFAULT_TOKEN_LENGTH);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE

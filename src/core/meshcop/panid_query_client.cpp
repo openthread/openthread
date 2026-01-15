@@ -60,7 +60,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriPanIdQuery));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
@@ -86,7 +86,7 @@ template <> void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Coap::Msg &aMsg)
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriPanIdConflict>());
 

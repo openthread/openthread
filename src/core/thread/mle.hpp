@@ -1683,7 +1683,7 @@ private:
 
     struct AddrSolicitInfo
     {
-        Error ParseFrom(const Coap::Message &aMessage);
+        Error ParseFrom(const Coap::Msg &aMsg);
 
         Mac::ExtAddress mExtAddress;
         uint16_t        mRequestedRloc16;

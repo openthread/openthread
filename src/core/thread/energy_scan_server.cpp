@@ -58,7 +58,7 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
     uint32_t     mask;
     MeshCoP::Tlv tlv;
 
-    VerifyOrExit(aMsg.mMessage.IsPostRequest());
+    VerifyOrExit(aMsg.IsPostRequest());
 
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
     count = Clamp(count, kMinCount, kMaxCount);
@@ -87,7 +87,7 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
 
     mCommissioner = aMsg.mMessageInfo.GetPeerAddr();
 
-    if (aMsg.mMessage.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
+    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
         LogInfo("Sent %s ack", UriToString<kUriEnergyScan>());

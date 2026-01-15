@@ -3333,7 +3333,7 @@ void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::Messa
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr && aMessageInfo != nullptr);
 
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged);
+    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged);
 
     Log(kMessageReceive, kTypeAddressReply, aMessageInfo->GetPeerAddr());
 
@@ -3459,18 +3459,18 @@ exit:
     return willBecomeRouter;
 }
 
-Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Message &aMessage)
+Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Msg &aMsg)
 {
     // Parses a `kUriAddressSolicit` request message.
 
     Error error;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorParse);
 
-    SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, mExtAddress));
-    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, mReason));
+    SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMsg.mMessage, mExtAddress));
+    SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMsg.mMessage, mReason));
 
-    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, mRequestedRloc16))
+    switch (Tlv::Find<ThreadRloc16Tlv>(aMsg.mMessage, mRequestedRloc16))
     {
     case kErrorNone:
         break;
@@ -3482,7 +3482,7 @@ Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Message &aMessage)
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    switch (Tlv::Find<XtalAccuracyTlv>(aMessage, mXtalAccuracy))
+    switch (Tlv::Find<XtalAccuracyTlv>(aMsg.mMessage, mXtalAccuracy))
     {
     case kErrorNone:
         break;
@@ -3576,7 +3576,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Msg &aMsg)
 
     Log(kMessageReceive, kTypeAddressSolicit, aMsg.mMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(info.ParseFrom(aMsg.mMessage));
+    SuccessOrExit(info.ParseFrom(aMsg));
 
     ProcessAddressSolicit(info);
 
@@ -3637,7 +3637,7 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Msg &aMsg)
 
     VerifyOrExit(mRole == kRoleLeader);
 
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
     Log(kMessageReceive, kTypeAddressRelease, aMsg.mMessageInfo.GetPeerAddr());
 

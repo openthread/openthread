@@ -468,7 +468,7 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
     aStatus = kMlrGeneralFailure;
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr, error = kErrorParse);
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, error = kErrorParse);
+    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged, error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(*aMessage, aStatus));
 

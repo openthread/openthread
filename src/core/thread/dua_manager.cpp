@@ -557,7 +557,7 @@ void DuaManager::HandleDuaResponse(Coap::Message *aMessage, Error aResult)
     VerifyOrExit(aResult == kErrorNone, error = kErrorParse);
     OT_ASSERT(aMessage != nullptr);
 
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged || aMessage->GetCode() >= Coap::kCodeBadRequest,
+    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged || aMessage->ReadCode() >= Coap::kCodeBadRequest,
                  error = kErrorParse);
 
     error = ProcessDuaResponse(*aMessage);
@@ -575,9 +575,9 @@ template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMs
 {
     Error error;
 
-    VerifyOrExit(aMsg.mMessage.IsPostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
 
-    if (aMsg.mMessage.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }
@@ -595,7 +595,7 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
     Ip6::Address target;
     uint8_t      status;
 
-    if (aMessage.GetCode() >= Coap::kCodeBadRequest)
+    if (aMessage.ReadCode() >= Coap::kCodeBadRequest)
     {
         status = kDuaGeneralFailure;
         target = mRegisteringDua;

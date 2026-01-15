@@ -62,7 +62,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriEnergyScan));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
@@ -90,7 +90,7 @@ template <> void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
     uint32_t               mask;
     MeshCoP::EnergyListTlv energyListTlv;
 
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriEnergyReport>());
 

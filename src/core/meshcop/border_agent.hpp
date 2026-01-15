@@ -304,8 +304,8 @@ private:
 
         Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
         void  HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg);
-        void  HandleTmfRelayTx(Coap::Message &aMessage);
-        void  HandleTmfProxyTx(Coap::Message &aMessage);
+        void  HandleTmfRelayTx(Coap::Msg &aMsg);
+        void  HandleTmfProxyTx(Coap::Msg &aMsg);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
         Error ForwardToLeader(const Coap::Msg &aMsg, Uri aUri);
         void  SendErrorMessage(Error aError, const Coap::Token &aToken);

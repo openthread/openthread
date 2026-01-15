@@ -44,20 +44,14 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
     return AsCoreType(aInstance).Get<Coap::ApplicationCoap>().NewMessage(Message::Settings::From(aSettings));
 }
 
-void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
+otError otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
 {
-    AsCoapMessage(aMessage).Init(MapEnum(aType), MapEnum(aCode));
+    return AsCoapMessage(aMessage).Init(MapEnum(aType), MapEnum(aCode));
 }
 
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
 {
-    Coap::Message       &response = AsCoapMessage(aResponse);
-    const Coap::Message &request  = AsCoapMessage(aRequest);
-
-    response.Init(MapEnum(aType), MapEnum(aCode));
-    response.SetMessageId(request.GetMessageId());
-
-    return response.WriteTokenFromMessage(request);
+    return AsCoapMessage(aResponse).InitAsResponse(MapEnum(aType), MapEnum(aCode), AsCoapMessage(aRequest));
 }
 
 otError otCoapMessageWriteToken(otMessage *aMessage, const otCoapToken *aToken)
@@ -151,23 +145,23 @@ otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQ
     return AsCoapMessage(aMessage).AppendUriQueryOption(aUriQuery);
 }
 
-otError otCoapMessageSetPayloadMarker(otMessage *aMessage) { return AsCoapMessage(aMessage).SetPayloadMarker(); }
+otError otCoapMessageSetPayloadMarker(otMessage *aMessage) { return AsCoapMessage(aMessage).AppendPayloadMarker(); }
 
 otCoapType otCoapMessageGetType(const otMessage *aMessage)
 {
-    return static_cast<otCoapType>(AsCoapMessage(aMessage).GetType());
+    return static_cast<otCoapType>(AsCoapMessage(aMessage).ReadType());
 }
 
 otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
 {
-    return static_cast<otCoapCode>(AsCoapMessage(aMessage).GetCode());
+    return static_cast<otCoapCode>(AsCoapMessage(aMessage).ReadCode());
 }
 
-void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode) { AsCoapMessage(aMessage).SetCode(MapEnum(aCode)); }
+void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode) { AsCoapMessage(aMessage).WriteCode(MapEnum(aCode)); }
 
 const char *otCoapMessageCodeToString(const otMessage *aMessage) { return AsCoapMessage(aMessage).CodeToString(); }
 
-uint16_t otCoapMessageGetMessageId(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetMessageId(); }
+uint16_t otCoapMessageGetMessageId(const otMessage *aMessage) { return AsCoapMessage(aMessage).ReadMessageId(); }
 
 otError otCoapMessageReadToken(const otMessage *aMessage, otCoapToken *aToken)
 {
