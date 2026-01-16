@@ -549,11 +549,10 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
     case Tlv::kConnectivity:
     {
-        ConnectivityTlv tlv;
+        ConnectivityTlvValue tlvValue;
 
-        tlv.Init();
-        Get<Mle::Mle>().FillConnectivityTlv(tlv);
-        error = tlv.AppendTo(aMessage);
+        Get<Mle::Mle>().FillConnectivityTlvValue(tlvValue);
+        error = Tlv::Append<ConnectivityTlv>(aMessage, &tlvValue, sizeof(tlvValue));
         break;
     }
 
@@ -1298,12 +1297,10 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kConnectivity:
         {
-            ConnectivityTlv connectivityTlv;
+            ConnectivityTlvValue tlvValue;
 
-            VerifyOrExit(!tlvInfo.mIsExtended, error = kErrorParse);
-            SuccessOrExit(error = aMessage.Read(offset, connectivityTlv));
-            VerifyOrExit(connectivityTlv.IsValid(), error = kErrorParse);
-            connectivityTlv.GetConnectivity(aDiagTlv.mData.mConnectivity);
+            SuccessOrExit(error = tlvValue.ParseFrom(aMessage, tlvInfo.mValueOffsetRange));
+            tlvValue.GetConnectivity(AsCoreType(&aDiagTlv.mData.mConnectivity));
             break;
         }
 

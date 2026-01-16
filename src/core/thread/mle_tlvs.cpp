@@ -41,6 +41,9 @@
 namespace ot {
 namespace Mle {
 
+//---------------------------------------------------------------------------------------------------------------------
+// RouteTlv
+
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 void RouteTlv::Init(void)
@@ -69,33 +72,68 @@ exit:
 
 #endif // #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
-void ConnectivityTlv::IncrementLinkQuality(LinkQuality aLinkQuality)
+//---------------------------------------------------------------------------------------------------------------------
+// ConnectivityTlvValue
+
+void ConnectivityTlvValue::InitFrom(const Connectivity &aConnectivity)
 {
-    switch (aLinkQuality)
+    mFlags = 0;
+
+    WriteBits<uint8_t, kFlagsParentPriorityMask>(mFlags, Preference::To2BitUint(aConnectivity.GetParentPriority()));
+    mLinkQuality3     = aConnectivity.GetNumLinkQuality3();
+    mLinkQuality2     = aConnectivity.GetNumLinkQuality2();
+    mLinkQuality1     = aConnectivity.GetNumLinkQuality1();
+    mLeaderCost       = aConnectivity.GetLeaderCost();
+    mIdSequence       = aConnectivity.GetIdSequence();
+    mActiveRouters    = aConnectivity.GetActiveRouterCount();
+    mSedBufferSize    = BigEndian::HostSwap16(aConnectivity.GetSedBufferSize());
+    mSedDatagramCount = aConnectivity.GetSedDatagramCount();
+}
+
+void ConnectivityTlvValue::GetConnectivity(Connectivity &aConnectivity) const
+{
+    aConnectivity.Clear();
+
+    aConnectivity.mParentPriority   = Preference::From2BitUint(ReadBits<uint8_t, kFlagsParentPriorityMask>(mFlags));
+    aConnectivity.mLinkQuality3     = mLinkQuality3;
+    aConnectivity.mLinkQuality2     = mLinkQuality2;
+    aConnectivity.mLinkQuality1     = mLinkQuality1;
+    aConnectivity.mLeaderCost       = mLeaderCost;
+    aConnectivity.mIdSequence       = mIdSequence;
+    aConnectivity.mActiveRouters    = mActiveRouters;
+    aConnectivity.mSedBufferSize    = BigEndian::HostSwap16(mSedBufferSize);
+    aConnectivity.mSedDatagramCount = mSedDatagramCount;
+}
+
+Error ConnectivityTlvValue::ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    Error    error = kErrorNone;
+    uint16_t size  = aOffsetRange.GetLength();
+
+    // The `mSedBufferSize` and `mSedDatagramCount` fields are
+    // optional and are included as a pair. If the received TLV size
+    // indicates they are not present, we read the partial TLV value
+    // and then set the fields to their default minimum values.
+    // Otherwise, we read the full structure.
+
+    if (size == kMinSize)
     {
-    case kLinkQuality0:
-        break;
-    case kLinkQuality1:
-        mLinkQuality1++;
-        break;
-    case kLinkQuality2:
-        mLinkQuality2++;
-        break;
-    case kLinkQuality3:
-        mLinkQuality3++;
-        break;
+        SuccessOrExit(error = aMessage.Read(aOffsetRange, this, size));
+
+        mSedBufferSize    = BigEndian::HostSwap16(kMinSedBufferSize);
+        mSedDatagramCount = kMinSedDatagramCount;
     }
+    else
+    {
+        SuccessOrExit(error = aMessage.Read(aOffsetRange, *this));
+    }
+
+exit:
+    return error;
 }
 
-int8_t ConnectivityTlv::GetParentPriority(void) const
-{
-    return Preference::From2BitUint(mFlags >> kFlagsParentPriorityOffset);
-}
-
-void ConnectivityTlv::SetParentPriority(int8_t aParentPriority)
-{
-    mFlags = static_cast<uint8_t>(Preference::To2BitUint(aParentPriority) << kFlagsParentPriorityOffset);
-}
+//---------------------------------------------------------------------------------------------------------------------
+// ChannelTlvValue
 
 void ChannelTlvValue::SetChannelAndPage(uint16_t aChannel)
 {
@@ -136,6 +174,9 @@ bool ChannelTlvValue::IsValid(void) const
 exit:
     return isValid;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// LeaderDataTlvValue
 
 LeaderDataTlvValue::LeaderDataTlvValue(const LeaderData &aLeaderData)
     : mPartitionId(BigEndian::HostSwap32(aLeaderData.GetPartitionId()))

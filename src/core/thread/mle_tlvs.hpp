@@ -653,206 +653,54 @@ public:
 };
 
 /**
- * Implements Connectivity TLV generation and parsing.
+ * Represents a Connectivity TLV value.
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv : public Tlv, public TlvInfo<Tlv::kConnectivity>
+class ConnectivityTlvValue
 {
 public:
     /**
-     * Initializes the TLV.
+     * Initializes the Connectivity TLV value from a given `Connectivity` object.
+     *
+     * @param[in] aConnectivity   The `Connectivity` to use for initialization.
      */
-    void Init(void)
-    {
-        SetType(kConnectivity);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+    void InitFrom(const Connectivity &aConnectivity);
 
     /**
-     * Indicates whether or not the TLV appears to be well-formed.
+     * Gets the connectivity information from the TLV value.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[out] aConnectivity  A reference to a `Connectivity` object to output the information.
      */
-    bool IsValid(void) const
-    {
-        return IsSedBufferingIncluded() ||
-               (GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
-    }
+    void GetConnectivity(Connectivity &aConnectivity) const;
 
     /**
-     * Indicates whether or not the sed buffer size and datagram count are included.
+     * Parses a Connectivity TLV value from a given message.
      *
-     * @retval TRUE   If the sed buffer size and datagram count are included.
-     * @retval FALSE  If the sed buffer size and datagram count are not included.
+     * The SED Buffer Size and Datagram Count fields are optional in the Connectivity TLV. If not present in the
+     * message, this method populates them with their default minimum values defined by Thread specification.
+     *
+     * @param[in] aMessage        The message to parse from.
+     * @param[in] aOffsetRange    The offset range within the message containing the TLV value.
+     *
+     * @retval kErrorNone   Successfully parsed the TLV value.
+     * @retval kErrorParse  Failed to parse the TLV value from the message.
      */
-    bool IsSedBufferingIncluded(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the Parent Priority value.
-     *
-     * @returns The Parent Priority value.
-     */
-    int8_t GetParentPriority(void) const;
-
-    /**
-     * Sets the Parent Priority value.
-     *
-     * @param[in] aParentPriority  The Parent Priority value.
-     */
-    void SetParentPriority(int8_t aParentPriority);
-
-    /**
-     * Returns the Link Quality 3 value.
-     *
-     * @returns The Link Quality 3 value.
-     */
-    uint8_t GetLinkQuality3(void) const { return mLinkQuality3; }
-
-    /**
-     * Sets the Link Quality 3 value.
-     *
-     * @param[in]  aLinkQuality  The Link Quality 3 value.
-     */
-    void SetLinkQuality3(uint8_t aLinkQuality) { mLinkQuality3 = aLinkQuality; }
-
-    /**
-     * Returns the Link Quality 2 value.
-     *
-     * @returns The Link Quality 2 value.
-     */
-    uint8_t GetLinkQuality2(void) const { return mLinkQuality2; }
-
-    /**
-     * Sets the Link Quality 2 value.
-     *
-     * @param[in]  aLinkQuality  The Link Quality 2 value.
-     */
-    void SetLinkQuality2(uint8_t aLinkQuality) { mLinkQuality2 = aLinkQuality; }
-
-    /**
-     * Sets the Link Quality 1 value.
-     *
-     * @returns The Link Quality 1 value.
-     */
-    uint8_t GetLinkQuality1(void) const { return mLinkQuality1; }
-
-    /**
-     * Sets the Link Quality 1 value.
-     *
-     * @param[in]  aLinkQuality  The Link Quality 1 value.
-     */
-    void SetLinkQuality1(uint8_t aLinkQuality) { mLinkQuality1 = aLinkQuality; }
-
-    /**
-     * Increments the Link Quality N field in TLV for a given Link Quality N (1,2,3).
-     *
-     * The Link Quality N field specifies the number of neighboring router devices with which the sender shares a link
-     * of quality N.
-     *
-     * @param[in] aLinkQuality  The Link Quality N (1,2,3) field to update.
-     */
-    void IncrementLinkQuality(LinkQuality aLinkQuality);
-
-    /**
-     * Sets the Active Routers value.
-     *
-     * @returns The Active Routers value.
-     */
-    uint8_t GetActiveRouters(void) const { return mActiveRouters; }
-
-    /**
-     * Indicates whether or not the partition is a singleton based on Active Routers value.
-     *
-     * @retval TRUE   The partition is a singleton.
-     * @retval FALSE  The partition is not a singleton.
-     */
-    bool IsSingleton(void) const { return (mActiveRouters <= 1); }
-
-    /**
-     * Sets the Active Routers value.
-     *
-     * @param[in]  aActiveRouters  The Active Routers value.
-     */
-    void SetActiveRouters(uint8_t aActiveRouters) { mActiveRouters = aActiveRouters; }
-
-    /**
-     * Returns the Leader Cost value.
-     *
-     * @returns The Leader Cost value.
-     */
-    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
-
-    /**
-     * Sets the Leader Cost value.
-     *
-     * @param[in]  aCost  The Leader Cost value.
-     */
-    void SetLeaderCost(uint8_t aCost) { mLeaderCost = aCost; }
-
-    /**
-     * Returns the ID Sequence value.
-     *
-     * @returns The ID Sequence value.
-     */
-    uint8_t GetIdSequence(void) const { return mIdSequence; }
-
-    /**
-     * Sets the ID Sequence value.
-     *
-     * @param[in]  aSequence  The ID Sequence value.
-     */
-    void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
-
-    /**
-     * Returns the SED Buffer Size value.
-     *
-     * @returns The SED Buffer Size value.
-     */
-    uint16_t GetSedBufferSize(void) const
-    {
-        uint16_t buffersize = OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE;
-
-        if (IsSedBufferingIncluded())
-        {
-            buffersize = BigEndian::HostSwap16(mSedBufferSize);
-        }
-        return buffersize;
-    }
-
-    /**
-     * Sets the SED Buffer Size value.
-     *
-     * @param[in]  aSedBufferSize  The SED Buffer Size value.
-     */
-    void SetSedBufferSize(uint16_t aSedBufferSize) { mSedBufferSize = BigEndian::HostSwap16(aSedBufferSize); }
-
-    /**
-     * Returns the SED Datagram Count value.
-     *
-     * @returns The SED Datagram Count value.
-     */
-    uint8_t GetSedDatagramCount(void) const
-    {
-        uint8_t count = OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT;
-
-        if (IsSedBufferingIncluded())
-        {
-            count = mSedDatagramCount;
-        }
-        return count;
-    }
-
-    /**
-     * Sets the SED Datagram Count value.
-     *
-     * @param[in]  aSedDatagramCount  The SED Datagram Count value.
-     */
-    void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
+    Error ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
 private:
     static constexpr uint8_t kFlagsParentPriorityOffset = 6;
     static constexpr uint8_t kFlagsParentPriorityMask   = (3 << kFlagsParentPriorityOffset);
+
+    static constexpr uint8_t kMinSize = 7; // Exclude the optional `mSedBufferSize` and `mSedDatagramCount`.
+
+    // The default minimum values to use when the optional fields
+    // `mSedBufferSize`, `mSedDatagramCount` are not included. These
+    // numbers are from Thread Conformance Specification 1.4.1-dr3:
+    // "A Thread Router MUST be able to buffer at least one 1280-octet
+    // IPv6 datagram destined for an attached SED".
+
+    static constexpr uint16_t kMinSedBufferSize    = 1280;
+    static constexpr uint8_t  kMinSedDatagramCount = 1;
 
     uint8_t  mFlags;
     uint8_t  mLinkQuality3;
@@ -864,6 +712,11 @@ private:
     uint16_t mSedBufferSize;
     uint8_t  mSedDatagramCount;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Connectivity TLV constants.
+ */
+typedef TlvInfo<Tlv::kConnectivity> ConnectivityTlv;
 
 /**
  * Provides constants and methods for generation and parsing of Address Registration TLV.

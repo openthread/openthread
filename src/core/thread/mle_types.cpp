@@ -191,6 +191,27 @@ bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// Connectivity
+
+void Connectivity::IncrementNumForLinkQuality(uint8_t aLinkQuality)
+{
+    switch (aLinkQuality)
+    {
+    case kLinkQuality1:
+        mLinkQuality1++;
+        break;
+    case kLinkQuality2:
+        mLinkQuality2++;
+        break;
+    case kLinkQuality3:
+        mLinkQuality3++;
+        break;
+    default:
+        break;
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 const char *RoleToString(DeviceRole aRole)
 {
