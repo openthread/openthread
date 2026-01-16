@@ -71,8 +71,8 @@ expect -re {\tVALUE:\t0x2242([0-9a-fA-F]{132})}
 
 send "diagnostic_tlvs channelpages maxchildtimeout eui64 vendorname vendormodel vendorswversion vendorappurl\n"
 expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
-expect_line "\tLEN:\t27"
-expect_line "\tVALUE:\t0x1101001304000000f0170818b430000000000119001a001b002300"
+expect_line "\tLEN:\t30"
+expect_line "\tVALUE:\t0x1101001304000000f0170818b4300000000001190352443a1a001b002300"
 
 send "diagnostic_tlvs childtable\n"
 expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"

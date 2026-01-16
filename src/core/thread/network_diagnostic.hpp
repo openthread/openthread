@@ -131,8 +131,13 @@ public:
      *
      * @param[in] aVendorName     The vendor name string.
      *
+     * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, @p aVendorName must start with the "RD:" prefix.
+     * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
+     * the name is rejected, and `kErrorInvalidArgs` is returned.
+     *
      * @retval kErrorNone         Successfully set the vendor name.
-     * @retval kErrorInvalidArgs  @p aVendorName is not valid (too long or not UTF8).
+     * @retval kErrorInvalidArgs  @p aVendorName is not valid. It is too long, is not UTF-8, or does not start with
+     *                            the "RD:" prefix when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
      */
     Error SetVendorName(const char *aVendorName);
 

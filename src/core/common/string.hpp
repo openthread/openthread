@@ -397,6 +397,25 @@ inline constexpr bool AreConstStringsEqual(const char *aFirst, const char *aSeco
 }
 
 /**
+ * This `constexpr` function checks whether a given C string starts with a given prefix string.
+ *
+ * This is intended for use in `static_assert`, e.g., checking the hardcoded vendor name on a reference device. It is
+ * not recommended to use this function in other situations as it uses recursion so that it can be `constexpr`.
+ *
+ * @param[in] aString   The string to check.
+ * @param[in] aPrefix   The prefix string.
+ *
+ * @retval TRUE   If @p aString starts with @p aPrefix.
+ * @retval FALSE  If @p aString does not start with @p aPrefix.
+ */
+inline constexpr bool CheckConstStringPrefix(const char *aString, const char *aPrefix)
+{
+    return (*aPrefix == kNullChar)
+               ? true
+               : ((*aString == *aPrefix) ? CheckConstStringPrefix(aString + 1, aPrefix + 1) : false);
+}
+
+/**
  * Implements writing to a string buffer.
  */
 class StringWriter
