@@ -441,10 +441,6 @@ OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-OT_TOOL_WEAK void otPlatOtnsStatus(const char *) {}
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 OT_TOOL_WEAK void otPlatTrelEnable(otInstance *, uint16_t *) {}
 

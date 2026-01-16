@@ -220,6 +220,15 @@ exit:
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of OTNS platform APIs
+
+extern "C" OT_TOOL_WEAK void otPlatOtnsStatus(const char *aStatus)
+{
+    OT_UNUSED_VARIABLE(aStatus);
+    LogAt(kLogLevelNone, "%s", aStatus);
+}
+
 } // namespace Utils
 } // namespace ot
 

@@ -31,7 +31,6 @@ add_library(openthread-platform-utils OBJECT
     link_metrics.cpp
     logging_rtt.c
     mac_frame.cpp
-    otns_utils.cpp
     settings_ram.c
     soft_source_match_table.c
     uart_rtt.c
