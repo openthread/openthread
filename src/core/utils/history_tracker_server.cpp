@@ -129,13 +129,13 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
 
 void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Coap::Message  *answer;
-    Error           error;
-    AnswerInfo      info;
-    OffsetRange     offsetRange;
-    Tlv::ParsedInfo tlvInfo;
-    RequestTlv      requestTlv;
-    AnswerTlv       answerTlv;
+    Coap::Message *answer;
+    Error          error;
+    AnswerInfo     info;
+    OffsetRange    offsetRange;
+    Tlv::Info      tlvInfo;
+    RequestTlv     requestTlv;
+    AnswerTlv      answerTlv;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
     {
@@ -152,12 +152,12 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
     {
         SuccessOrExit(error = tlvInfo.ParseFrom(aRequest, offsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        if (tlvInfo.mType == Tlv::kRequest)
+        if (tlvInfo.GetType() == Tlv::kRequest)
         {
             SuccessOrExit(error = aRequest.Read(offsetRange, requestTlv));
             VerifyOrExit(requestTlv.IsValid(), error = kErrorParse);

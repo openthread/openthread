@@ -2707,7 +2707,7 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 {
     Error                             error                     = kErrorNone;
     bool                              parsedDiscoveryRequestTlv = false;
-    Tlv::ParsedInfo                   tlvInfo;
+    Tlv::Info                         tlvInfo;
     MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
     MeshCoP::ExtendedPanId            extPanId;
     OffsetRange                       offsetRange;
@@ -2723,12 +2723,12 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
     {
         SuccessOrExit(error = tlvInfo.ParseFrom(aRxInfo.mMessage, offsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
             SuccessOrExit(error = Tlv::Read<MeshCoP::DiscoveryRequestTlv>(aRxInfo.mMessage, offsetRange.GetOffset(),

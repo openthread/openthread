@@ -230,51 +230,96 @@ public:
     // Static methods for reading/finding/appending TLVs in a `Message`.
 
     /**
-     * Represents information for a parsed TLV from a message.
+     * Represents metdata information about a TLV within a message.
+     *
+     * An `Info` object is populated by the `ParseFrom()` or `FindIn()` methods. It holds metadata about a validated
+     * TLV, including its type, length, whether it is extended, and its offset and value ranges within the message.
      */
-    struct ParsedInfo
+    class Info
     {
+        friend class Tlv;
+
+    public:
         /**
-         * Parses the TLV from a given message at given offset, ensures the TLV is well-formed and its header and
-         * value are fully contained in the message.
+         * Parses and validates a TLV from a message at a given offset, populating this `Info` object.
          *
-         * Can be used independent of whether the TLV is an Extended TLV or not.
+         * On success, this `Info` object is updated with the TLV's metadata, such as its type, length, and offset
+         * ranges. This method ensures the TLV header and value are well-formed and fully contained within the message.
+         * It can parse both standard and extended TLVs.
          *
-         * @param[in] aMessage      The message to read from.
-         * @param[in] aOffset       The offset in @p aMessage.
+         * @param[in] aMessage  The message from which to parse the TLV.
+         * @param[in] aOffset   The starting offset of the TLV within the message.
          *
-         * @retval kErrorNone   Successfully parsed the TLV.
-         * @retval kErrorParse  The TLV was not well-formed or not fully contained in @p aMessage.
+         * @retval kErrorNone   Successfully parsed the TLV and populated the `Info` object.
+         * @retval kErrorParse  The TLV was malformed or not fully contained in the message.
          */
         Error ParseFrom(const Message &aMessage, uint16_t aOffset);
 
         /**
-         * Parses the TLV from a given message for a given offset range, ensures the TLV is well-formed and its header
-         * and value are fully contained in the offset range and the message.
+         * Parses and validates a TLV from a message within an offset range, populating this `Info` object.
          *
-         * Can be used independent of whether the TLV is an Extended TLV or not.
+         * On success, this `Info` object is updated with the TLV's metadata, such as its type, length, and offset
+         * ranges. This method ensures the TLV header and value are well-formed and fully contained within the given
+         * offset range and the message. It can parse both standard and extended TLVs.
          *
-         * @param[in] aMessage      The message to read from.
-         * @param[in] aOffsetRange  The offset range in @p aMessage.
+         * @param[in] aMessage      The message from which to parse the TLV.
+         * @param[in] aOffsetRange  The offset range within which the TLV must be contained.
          *
-         * @retval kErrorNone   Successfully parsed the TLV.
-         * @retval kErrorParse  The TLV was not well-formed or not contained in @p aOffsetRange or @p aMessage.
+         * @retval kErrorNone   Successfully parsed the TLV and populated the `Info` object.
+         * @retval kErrorParse  The TLV was malformed or not contained within the specified range.
          */
         Error ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
         /**
-         * Searches in a given message starting from message offset for a TLV of given type and if found, parses
-         * the TLV and validates that the entire TLV is present in the message.
+         * Finds and parses a TLV of a given type within a message, populating this `Info` object.
          *
-         * Can be used independent of whether the TLV is an Extended TLV or not.
+         * This method searches the message from its `aMessage.GetOffset()`. On success, this `Info` object is updated
+         * with the found TLV's metadata, such as its type, length, and offset ranges. The found TLV is validated to
+         * ensure it is well-formed and fully contained in the message.
          *
-         * @param[in] aMessage  The message to search in.
-         * @param[in] aType     The TLV type to search for.
+         * @param[in] aMessage  The message to search within.
+         * @param[in] aType     The TLV type to find.
          *
-         * @retval kErrorNone      Successfully found and parsed the TLV.
-         * @retval kErrorNotFound  Could not find the TLV, or the TLV was not well-formed.
+         * @retval kErrorNone      Successfully found and parsed the TLV, and populated the `Info` object.
+         * @retval kErrorNotFound  No valid TLV of the given type was found.
          */
         Error FindIn(const Message &aMessage, uint8_t aType);
+
+        /**
+         * Gets the TLV type.
+         *
+         * @returns The TLV type.
+         */
+        uint8_t GetType(void) const { return mType; }
+
+        /**
+         * Gets the TLV's value length.
+         *
+         * @returns The TLV's value length (in bytes).
+         */
+        uint16_t GetLength(void) const { return mValueOffsetRange.GetLength(); }
+
+        /**
+         * Indicates whether the TLV is an Extended TLV.
+         *
+         * @retval TRUE   If it is an Extended TLV.
+         * @retval FALSE  If it is not an Extended TLV.
+         */
+        bool IsExtended(void) const { return mIsExtended; }
+
+        /**
+         * Gets the offset range of the entire TLV (header and value).
+         *
+         * @returns The offset range of the entire TLV.
+         */
+        const OffsetRange &GetTlvOffsetRange(void) const { return mTlvOffsetRange; }
+
+        /**
+         * Gets the start offset of the TLV.
+         *
+         * @returns The start offset of the TLV.
+         */
+        uint16_t GetTlvOffset(void) const { return mTlvOffsetRange.GetOffset(); }
 
         /**
          * Returns the full TLV size in bytes.
@@ -283,10 +328,25 @@ public:
          */
         uint16_t GetSize(void) const { return mTlvOffsetRange.GetLength(); }
 
-        uint8_t     mType;             ///< The TLV type
-        bool        mIsExtended;       ///< Whether the TLV is extended or not.
-        OffsetRange mTlvOffsetRange;   ///< Offset range containing the full TLV.
-        OffsetRange mValueOffsetRange; ///< Offset range containing the TLV's value.
+        /**
+         * Gets the offset range of the TLV's value.
+         *
+         * @returns The offset range of the TLV's value.
+         */
+        const OffsetRange &GetValueOffsetRange(void) const { return mValueOffsetRange; }
+
+        /**
+         * Gets the start offset of the TLV's value.
+         *
+         * @returns The start offset of the TLV's value.
+         */
+        uint16_t GetValueOffset(void) const { return mValueOffsetRange.GetOffset(); }
+
+    private:
+        uint8_t     mType;
+        bool        mIsExtended;
+        OffsetRange mTlvOffsetRange;
+        OffsetRange mValueOffsetRange;
     };
 
     /**

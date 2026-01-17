@@ -1277,9 +1277,9 @@ void Client::ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, O
 
 Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, DiagTlv &aDiagTlv)
 {
-    Error           error;
-    uint16_t        offset = (aIterator == 0) ? aMessage.GetOffset() : aIterator;
-    Tlv::ParsedInfo tlvInfo;
+    Error     error;
+    uint16_t  offset = (aIterator == 0) ? aMessage.GetOffset() : aIterator;
+    Tlv::Info tlvInfo;
 
     while (offset < aMessage.GetLength())
     {
@@ -1287,7 +1287,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         SuccessOrExit(error = tlvInfo.ParseFrom(aMessage, offset));
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case Tlv::kExtMacAddress:
             SuccessOrExit(error =
@@ -1315,7 +1315,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         {
             ConnectivityTlvValue tlvValue;
 
-            SuccessOrExit(error = tlvValue.ParseFrom(aMessage, tlvInfo.mValueOffsetRange));
+            SuccessOrExit(error = tlvValue.ParseFrom(aMessage, tlvInfo.GetValueOffsetRange()));
             tlvValue.GetConnectivity(AsCoreType(&aDiagTlv.mData.mConnectivity));
             break;
         }
@@ -1325,7 +1325,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             RouteTlv routeTlv;
             uint16_t bytesToRead = Min<uint16_t>(tlvInfo.GetSize(), sizeof(routeTlv));
 
-            VerifyOrExit(!tlvInfo.mIsExtended, error = kErrorParse);
+            VerifyOrExit(!tlvInfo.IsExtended(), error = kErrorParse);
             SuccessOrExit(error = aMessage.Read(offset, &routeTlv, bytesToRead));
             VerifyOrExit(routeTlv.IsValid(), error = kErrorParse);
             ParseRoute(routeTlv, aDiagTlv.mData.mRoute);
@@ -1349,14 +1349,13 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             static_assert(sizeof(aDiagTlv.mData.mNetworkData.m8) >= NetworkData::NetworkData::kMaxSize,
                           "NetworkData array in `otNetworkDiagTlv` is too small");
 
-            VerifyOrExit(tlvInfo.mValueOffsetRange.GetLength() <= NetworkData::NetworkData::kMaxSize,
-                         error = kErrorParse);
-            aDiagTlv.mData.mNetworkData.mCount = static_cast<uint8_t>(tlvInfo.mValueOffsetRange.GetLength());
-            aMessage.ReadBytes(tlvInfo.mValueOffsetRange, aDiagTlv.mData.mNetworkData.m8);
+            VerifyOrExit(tlvInfo.GetLength() <= NetworkData::NetworkData::kMaxSize, error = kErrorParse);
+            aDiagTlv.mData.mNetworkData.mCount = static_cast<uint8_t>(tlvInfo.GetLength());
+            aMessage.ReadBytes(tlvInfo.GetValueOffsetRange(), aDiagTlv.mData.mNetworkData.m8);
             break;
 
         case Tlv::kIp6AddressList:
-            ParseIp6AddrList(aDiagTlv.mData.mIp6AddrList, aMessage, tlvInfo.mValueOffsetRange);
+            ParseIp6AddrList(aDiagTlv.mData.mIp6AddrList, aMessage, tlvInfo.GetValueOffsetRange());
             break;
 
         case Tlv::kMacCounters:
@@ -1389,23 +1388,25 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kChildTable:
         {
-            uint16_t   childInfoLength = GetArrayLength(aDiagTlv.mData.mChildTable.mTable);
-            ChildInfo *childInfo       = &aDiagTlv.mData.mChildTable.mTable[0];
-            uint8_t   &childCount      = aDiagTlv.mData.mChildTable.mCount;
+            uint16_t    childInfoLength = GetArrayLength(aDiagTlv.mData.mChildTable.mTable);
+            ChildInfo  *childInfo       = &aDiagTlv.mData.mChildTable.mTable[0];
+            uint8_t    &childCount      = aDiagTlv.mData.mChildTable.mCount;
+            OffsetRange offsetRange;
 
-            VerifyOrExit((tlvInfo.mValueOffsetRange.GetLength() % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
+            VerifyOrExit((tlvInfo.GetLength() % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
 
             // `DiagTlv` has a fixed array Child Table entries. If there
             // are more entries in the message, we read and return as
             // many as can fit in array and ignore the rest.
 
-            childCount = 0;
+            childCount  = 0;
+            offsetRange = tlvInfo.GetValueOffsetRange();
 
-            while (!tlvInfo.mValueOffsetRange.IsEmpty() && (childCount < childInfoLength))
+            while (!offsetRange.IsEmpty() && (childCount < childInfoLength))
             {
                 ChildTableEntry entry;
 
-                SuccessOrExit(error = aMessage.Read(tlvInfo.mValueOffsetRange, entry));
+                SuccessOrExit(error = aMessage.Read(offsetRange, entry));
 
                 childInfo->mTimeout     = entry.GetTimeout();
                 childInfo->mLinkQuality = entry.GetLinkQuality();
@@ -1414,16 +1415,16 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
                 childCount++;
                 childInfo++;
-                tlvInfo.mValueOffsetRange.AdvanceOffset(sizeof(ChildTableEntry));
+                offsetRange.AdvanceOffset(sizeof(ChildTableEntry));
             }
 
             break;
         }
 
         case Tlv::kChannelPages:
-            aDiagTlv.mData.mChannelPages.mCount = static_cast<uint8_t>(
-                Min(tlvInfo.mValueOffsetRange.GetLength(), GetArrayLength(aDiagTlv.mData.mChannelPages.m8)));
-            aMessage.ReadBytes(tlvInfo.mValueOffsetRange.GetOffset(), aDiagTlv.mData.mChannelPages.m8,
+            aDiagTlv.mData.mChannelPages.mCount =
+                static_cast<uint8_t>(Min(tlvInfo.GetLength(), GetArrayLength(aDiagTlv.mData.mChannelPages.m8)));
+            aMessage.ReadBytes(tlvInfo.GetValueOffset(), aDiagTlv.mData.mChannelPages.m8,
                                aDiagTlv.mData.mChannelPages.mCount);
             break;
 
@@ -1461,7 +1462,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             break;
 
         case Tlv::kNonPreferredChannels:
-            SuccessOrExit(error = MeshCoP::ChannelMaskTlv::ParseValue(aMessage, tlvInfo.mValueOffsetRange,
+            SuccessOrExit(error = MeshCoP::ChannelMaskTlv::ParseValue(aMessage, tlvInfo.GetValueOffsetRange(),
                                                                       aDiagTlv.mData.mNonPreferredChannels));
             break;
 
@@ -1475,14 +1476,14 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         }
 
         case Tlv::kBrIfAddrs:
-            ParseIp6AddrList(aDiagTlv.mData.mBrIfAddrList, aMessage, tlvInfo.mValueOffsetRange);
+            ParseIp6AddrList(aDiagTlv.mData.mBrIfAddrList, aMessage, tlvInfo.GetValueOffsetRange());
             break;
 
         case Tlv::kBrLocalOmrPrefix:
         case Tlv::kBrLocalOnlinkPrefix:
         case Tlv::kBrFavoredOnLinkPrefix:
         case Tlv::kBrDhcp6PdOmrPrefix:
-            SuccessOrExit(error = aMessage.Read(tlvInfo.mValueOffsetRange, aDiagTlv.mData.mBrPrefix));
+            SuccessOrExit(error = aMessage.Read(tlvInfo.GetValueOffsetRange(), aDiagTlv.mData.mBrPrefix));
             break;
 
         default:
@@ -1496,7 +1497,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         if (!skipTlv)
         {
             // Exit if a TLV is recognized and parsed successfully.
-            aDiagTlv.mType = tlvInfo.mType;
+            aDiagTlv.mType = tlvInfo.GetType();
             aIterator      = offset;
             error          = kErrorNone;
             ExitNow();
