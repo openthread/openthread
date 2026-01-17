@@ -217,6 +217,9 @@ ot_option(OT_EXTERNAL_HEAP OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE "external heap
 ot_option(OT_FIREWALL OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE "firewall")
 ot_option(OT_HISTORY_TRACKER OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE "history tracker")
 ot_option(OT_IP6_FRAGM OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE "ipv6 fragmentation")
+# ================================================================================  
+ot_option(OT_IPFIX OPENTHREAD_CONFIG_IPFIX_ENABLE "IPFIX Functionality")
+# ================================================================================  
 ot_option(OT_JAM_DETECTION OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE "jam detection")
 ot_option(OT_JOINER OPENTHREAD_CONFIG_JOINER_ENABLE "joiner")
 ot_option(OT_LINK_METRICS_INITIATOR OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE "link metrics initiator")

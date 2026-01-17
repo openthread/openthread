@@ -1233,6 +1233,12 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     if ((forwardHost || receive) && !aIsReassembled)
     {
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+
+        Get<Ipfix::IpfixFlowCapture>().MeterLayer3FlowTraffic(*aMessagePtr, OT_IPFIX_OBSERVATION_POINT_RCP_TO_WPAN);
+
+#endif // OPENTHREAD_CONFIG_IPFIX_ENABLE
+
         error = PassToHost(aMessagePtr, header, nextHeader, receive,
                            (receive || forwardThread) ? kCopyMessageToUse : kTakeMessageCustody);
     }
@@ -1244,6 +1250,12 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     if (forwardThread)
     {
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+
+        Get<Ipfix::IpfixFlowCapture>().MeterLayer3FlowTraffic(*aMessagePtr, OT_IPFIX_OBSERVATION_POINT_WPAN_TO_RCP);
+
+#endif // OPENTHREAD_CONFIG_IPFIX_ENABLE
+
         if (aMessagePtr->IsOriginThreadNetif())
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());

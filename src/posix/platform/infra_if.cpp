@@ -58,6 +58,10 @@
 #include <openthread/border_routing.h>
 #include <openthread/platform/infra_if.h>
 
+/*============================================================*/
+#include <openthread/ipfix.h>
+/*============================================================*/
+
 #include "infra_if.hpp"
 #include "utils.hpp"
 #include "common/code_utils.hpp"
@@ -231,6 +235,17 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
     ssize_t             rval;
     struct sockaddr_in6 dest;
 
+    /******************************************************************************* */
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    otIp6Address        src;
+    const otIp6Address *dst;
+    char                srcStr[OT_IP6_ADDRESS_STRING_SIZE];
+    char                dstStr[OT_IP6_ADDRESS_STRING_SIZE];
+#endif
+
+    /******************************************************************************* */
+
     VerifyOrExit(mInfraIfIcmp6Socket >= 0, error = OT_ERROR_FAILED);
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
 
@@ -270,6 +285,19 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
     cmsgPointer->cmsg_type  = IPV6_HOPLIMIT;
     cmsgPointer->cmsg_len   = CMSG_LEN(sizeof(hopLimit));
     memcpy(CMSG_DATA(cmsgPointer), &hopLimit, sizeof(hopLimit));
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    if (!GetLinkLocalAddressForIfIndex(mInfraIfIndex, src))
+    {
+        memset(&src, 0, sizeof(src));
+    }
+    dst = &aDestAddress;
+    otIp6AddressToString(&src, srcStr, sizeof(srcStr));
+    otIp6AddressToString(dst, dstStr, sizeof(dstStr));
+
+    otIpfixMeterLayer3InfraFlowTraffic(gInstance, &src, dst, aBuffer, aBufferLength,
+                                       OT_IPFIX_OBSERVATION_POINT_OTBR_TO_AIL);
+#endif
 
     rval = sendmsg(mInfraIfIcmp6Socket, &msgHeader, 0);
 
@@ -708,6 +736,14 @@ void InfraNetif::ReceiveIcmp6Message(void)
     msg.msg_control    = cmsgbuf;
     msg.msg_controllen = sizeof(cmsgbuf);
 
+    /* ========================================================================================================== */
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    const otIp6Address *src;
+    const otIp6Address *dst;
+#endif
+    /* ========================================================================================================== */
+
     rval = recvmsg(mInfraIfIcmp6Socket, &msg, 0);
     if (rval < 0)
     {
@@ -740,6 +776,17 @@ void InfraNetif::ReceiveIcmp6Message(void)
     // We currently accept only RA & RS messages for the Border Router and it requires that
     // the hoplimit must be 255 and the source address must be a link-local address.
     VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr), error = OT_ERROR_DROP);
+
+    /* ========================================================================================================== */
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    src = reinterpret_cast<const otIp6Address *>(&srcAddr.sin6_addr);
+    dst = reinterpret_cast<const otIp6Address *>(&dstAddr);
+
+    otIpfixMeterLayer3InfraFlowTraffic(gInstance, src, dst, buffer, bufferLength,
+                                       OT_IPFIX_OBSERVATION_POINT_AIL_TO_OTBR);
+#endif
+    /* ============================================================================================================ */
 
     otPlatInfraIfRecvIcmp6Nd(gInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
                              bufferLength);
@@ -806,6 +853,41 @@ InfraNetif &InfraNetif::Get(void)
 
     return sInstance;
 }
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+
+bool InfraNetif::GetLinkLocalAddressForIfIndex(uint32_t aInfraIfIndex, otIp6Address &aAddress)
+{
+    bool            found   = false;
+    struct ifaddrs *ifAddrs = nullptr;
+
+    if (getifaddrs(&ifAddrs) != 0)
+    {
+        return false;
+    }
+
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        if (addr->ifa_addr == nullptr || addr->ifa_addr->sa_family != AF_INET6)
+        {
+            continue;
+        }
+        if (if_nametoindex(addr->ifa_name) != aInfraIfIndex)
+        {
+            continue;
+        }
+        auto *ip6Addr = reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr);
+        if (IN6_IS_ADDR_LINKLOCAL(&ip6Addr->sin6_addr))
+        {
+            memcpy(&aAddress, &ip6Addr->sin6_addr, sizeof(aAddress));
+            found = true;
+            break;
+        }
+    }
+    freeifaddrs(ifAddrs);
+    return found;
+}
+#endif
 
 } // namespace Posix
 } // namespace ot

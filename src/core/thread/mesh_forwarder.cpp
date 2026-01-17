@@ -1119,6 +1119,12 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
 
         SuccessOrExit(error = Get<Ip6::Filter>().Apply(*message));
 
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+
+        Get<Ipfix::IpfixFlowCapture>().MeterLayer2FlowTraffic(aRxInfo.mMacAddrs, *message,
+                                                              OT_IPFIX_OBSERVATION_POINT_RCP_TO_WPAN);
+#endif
+
 #if OPENTHREAD_FTD
         CheckReachabilityToSendIcmpError(*message, aRxInfo.mMacAddrs);
 #endif
@@ -1164,6 +1170,12 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         }
 
         VerifyOrExit(message != nullptr, error = kErrorDrop);
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+
+        Get<Ipfix::IpfixFlowCapture>().MeterLayer2FlowTraffic(aRxInfo.mMacAddrs, *message,
+                                                              OT_IPFIX_OBSERVATION_POINT_RCP_TO_WPAN);
+#endif
 
         message->WriteData(message->GetOffset(), aRxInfo.mFrameData);
         message->MoveOffset(aRxInfo.mFrameData.GetLength());
@@ -1275,6 +1287,12 @@ exit:
 
     if (error == kErrorNone)
     {
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+
+        Get<Ipfix::IpfixFlowCapture>().MeterLayer2FlowTraffic(aRxInfo.mMacAddrs, *message,
+                                                              OT_IPFIX_OBSERVATION_POINT_RCP_TO_WPAN);
+#endif
+
         IgnoreError(HandleDatagram(*message, aRxInfo.GetSrcAddr()));
     }
     else

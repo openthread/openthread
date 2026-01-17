@@ -155,6 +155,7 @@
 #include "utils/mesh_diag.hpp"
 #include "utils/ping_sender.hpp"
 #include "utils/srp_client_buffers.hpp"
+#include "utils/ipfix.hpp"
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
@@ -729,6 +730,10 @@ private:
     AnnounceSender mAnnounceSender;
 #endif
 
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    Ipfix::IpfixFlowCapture mIpfixFlowCapture;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     BorderRouter::InfraIf        mInfraIf;
     BorderRouter::RxRaTracker    mRxRaTracker;
@@ -1073,6 +1078,10 @@ template <> inline MeshCoP::BorderAgent::EphemeralKeyManager &Instance::Get(void
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
 template <> inline MeshCoP::BorderAgent::Tracker &Instance::Get(void) { return mBorderAgentTracker; }
+#endif
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+template <> inline Ipfix::IpfixFlowCapture &Instance::Get(void) { return mIpfixFlowCapture; }
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
