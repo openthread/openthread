@@ -222,6 +222,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+ *
+ * Define as 1 to enable Time Exceeded detection functionality.
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+#define OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
+
+
+/**
  * @}
  */
 

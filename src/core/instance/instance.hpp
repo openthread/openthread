@@ -155,6 +155,7 @@
 #include "utils/mesh_diag.hpp"
 #include "utils/ping_sender.hpp"
 #include "utils/srp_client_buffers.hpp"
+#include "utils/time_exceeded_detector.hpp"
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
@@ -729,6 +730,10 @@ private:
     AnnounceSender mAnnounceSender;
 #endif
 
+#if OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+    TimeExceededDetector::TimeExceededDetector mTimeExceededDetector;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     BorderRouter::InfraIf        mInfraIf;
     BorderRouter::RxRaTracker    mRxRaTracker;
@@ -1070,6 +1075,11 @@ template <> inline MeshCoP::BorderAgent::EphemeralKeyManager &Instance::Get(void
     return mBorderAgentEphemeralKeyManager;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+template <> inline TimeExceededDetector::TimeExceededDetector &Instance::Get(void) { return mTimeExceededDetector; }
+#endif
+
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
 template <> inline MeshCoP::BorderAgent::Tracker &Instance::Get(void) { return mBorderAgentTracker; }

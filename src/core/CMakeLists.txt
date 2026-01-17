@@ -293,6 +293,7 @@ set(COMMON_SOURCES
     utils/ping_sender.cpp
     utils/power_calibration.cpp
     utils/srp_client_buffers.cpp
+    utils/time_exceeded_detector.cpp
     utils/verhoeff_checksum.cpp
 )
 

@@ -1244,6 +1244,59 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
     if (forwardThread)
     {
+#if OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+
+        // Detection of IPv6 packets flow that come from the infrastructure network towards the Thread network
+        if (!aMessagePtr->IsOriginThreadNetif())
+        {
+            //  IPv6 address of the router where the potential hop limit expiration will happen
+            ot::Ip6::Address dyingAtAddress;
+            dyingAtAddress.Clear();
+
+            if (Get<TimeExceededDetector::TimeExceededDetector>().IsHopLimitInsufficient(header, dyingAtAddress))
+            {
+                // Hop limit expiration has been predicted at router with address = dyingAtAddress
+                //  Creation of a ICMPv6 Time Exceeded message with spoofed source IP address = dyingAtAddress
+                Message *icmpMsg = Get<Ip6>().NewMessage(0);
+                if (icmpMsg != nullptr)
+                {
+                    Icmp::Header icmpHeader;
+                    icmpHeader.Clear();
+                    icmpHeader.SetType(Icmp::Header::kTypeTimeExceeded);
+                    icmpHeader.SetCode(static_cast<Icmp::Header::Code>(0));
+                    icmpMsg->Append(icmpHeader);
+                    uint16_t bytesToCopy = aMessagePtr->GetLength();
+                    if (bytesToCopy > 128)
+                        bytesToCopy = 128;
+
+                    icmpMsg->AppendBytesFromMessage(*aMessagePtr, 0, bytesToCopy);
+                    Header ip6Header;
+                    ip6Header.InitVersionTrafficClassFlow();
+                    ip6Header.SetNextHeader(kProtoIcmp6);
+                    ip6Header.SetHopLimit(64);
+                    ip6Header.SetPayloadLength(icmpMsg->GetLength());
+                    ip6Header.SetSource(dyingAtAddress);
+                    ip6Header.SetDestination(header.GetSource());
+                    icmpMsg->Prepend(ip6Header);
+
+                    Checksum::UpdateMessageChecksum(*icmpMsg, ip6Header.GetSource(), ip6Header.GetDestination(),
+                                                    kProtoIcmp6);
+
+                    char dyingIpStr[ot::Ip6::Address::kInfoStringSize];
+                    dyingAtAddress.ToString(dyingIpStr, sizeof(dyingIpStr));
+                    LogInfo("Time Exceeded Detected : Sending ICMPv6 Time Exceeded message from %s to %s", dyingIpStr,
+                            header.GetSource().ToString().AsCString());
+
+                    // Sending the Time Exceeded message to the source of the original packet
+                    icmpMsg->SetOrigin(Message::kOriginThreadNetif);
+                    IgnoreError(HandleDatagram(OwnedPtr<Message>(icmpMsg)));
+                }
+                // Discarding the original packet
+                ExitNow(error = kErrorDrop);
+            }
+        }
+#endif // OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+
         if (aMessagePtr->IsOriginThreadNetif())
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
