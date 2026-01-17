@@ -358,7 +358,7 @@ Error Tlv::UpdateTlv(Message &aMessage, Bookmark aBookmark, bool aShouldWriteLen
             // need to move the written value bytes forward to make
             // room for the Extended TLV header.
 
-            SuccessOrExit(error = aMessage.SetLength(aMessage.GetLength() + sizeof(ExtendedTlv) - sizeof(Tlv)));
+            SuccessOrExit(error = aMessage.IncreaseLength(sizeof(ExtendedTlv) - sizeof(Tlv)));
 
             aMessage.WriteBytesFromMessage(/* aWriteOffset */ startOffset + sizeof(ExtendedTlv), aMessage,
                                            /* aReadOffset */ startOffset + sizeof(Tlv), length);

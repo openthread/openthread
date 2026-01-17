@@ -500,6 +500,16 @@ public:
     Error SetLength(uint16_t aLength);
 
     /**
+     * Increases the message length by a given number of bytes.
+     *
+     * @param[in]  aSize     The number of bytes to increase the message length by.
+     *
+     * @retval kErrorNone    Successfully increased the length of the message.
+     * @retval kErrorNoBufs  Failed to allocate new buffers to grow the message.
+     */
+    Error IncreaseLength(uint16_t aSize);
+
+    /**
      * Returns the number of buffers in the message.
      */
     uint8_t GetBufferCount(void) const;
