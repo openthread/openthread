@@ -82,6 +82,19 @@ typedef struct otJoinerDiscerner
 } otJoinerDiscerner;
 
 /**
+ * Pointer is called to notify the completion of a join operation or
+ * the status of the ongoing join attempts with retries.
+ *
+ * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
+ *                       OT_ERROR_SECURITY if the join process failed due to security credentials, will retry.
+ *                       OT_ERROR_NOT_FOUND if no joinable network was discovered, will retry.
+ *                       OT_ERROR_RESPONSE_TIMEOUT if a response timed out, will retry.
+ *                       OT_ERROR_FAILED if the overall join process with retries has failed.
+ * @param[in]  aContext  A pointer to application-specific context.
+ */
+typedef void (*otJoinerRetryCallback)(otError aError, void *aContext);
+
+/**
  * Pointer is called to notify the completion of a join operation.
  *
  * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
@@ -91,6 +104,42 @@ typedef struct otJoinerDiscerner
  * @param[in]  aContext  A pointer to application-specific context.
  */
 typedef void (*otJoinerCallback)(otError aError, void *aContext);
+
+/**
+ * Enables the Thread Joiner role with retries.
+ *
+ * The progressively longer delays between retries follows an exponential back-off strategy.
+ * The callback may be called multiple times and notify about the status after each join attempt.
+ * When the join timeout is reached, `OT_ERROR_FAILED` is passed to the callback to indicate the overall failure.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aPskd             A pointer to the PSKd.
+ * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ * @param[in]  aRetryBaseDelay   The minimal delay (in milliseconds) used between join attempts.
+ * @param[in]  aJoinTimeout      The overall timeout (in milliseconds) after the retrying joiner stops attempts.
+ * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
+ * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
+ * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
+ * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
+ * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
+ * @param[in]  aContext          A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE              Successfully started the Joiner role.
+ * @retval OT_ERROR_BUSY              The previous attempt is still on-going.
+ * @retval OT_ERROR_INVALID_ARGS      @p aPskd or @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_INVALID_STATE     The IPv6 stack is not enabled or Thread stack is fully enabled.
+ */
+otError otJoinerStartWithRetries(otInstance           *aInstance,
+                                 const char           *aPskd,
+                                 const char           *aProvisioningUrl,
+                                 uint16_t              aRetryBaseDelay,
+                                 uint32_t              aJoinTimeout,
+                                 const char           *aVendorName,
+                                 const char           *aVendorModel,
+                                 const char           *aVendorSwVersion,
+                                 const char           *aVendorData,
+                                 otJoinerRetryCallback aCallback,
+                                 void                 *aContext);
 
 /**
  * Enables the Thread Joiner role.

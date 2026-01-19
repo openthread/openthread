@@ -39,6 +39,23 @@
 
 using namespace ot;
 
+otError otJoinerStartWithRetries(otInstance           *aInstance,
+                                 const char           *aPskd,
+                                 const char           *aProvisioningUrl,
+                                 uint16_t              aRetryBaseDelay,
+                                 uint32_t              aJoinTimeout,
+                                 const char           *aVendorName,
+                                 const char           *aVendorModel,
+                                 const char           *aVendorSwVersion,
+                                 const char           *aVendorData,
+                                 otJoinerRetryCallback aCallback,
+                                 void                 *aContext)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Joiner>().StartWithRetries(
+        aPskd, aProvisioningUrl, aRetryBaseDelay, aJoinTimeout, aVendorName, aVendorModel, aVendorSwVersion,
+        aVendorData, aCallback, aContext);
+}
+
 otError otJoinerStart(otInstance      *aInstance,
                       const char      *aPskd,
                       const char      *aProvisioningUrl,

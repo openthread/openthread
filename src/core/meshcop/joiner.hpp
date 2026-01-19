@@ -68,7 +68,8 @@ class Joiner : public InstanceLocator, private NonCopyable
     friend class Tmf::Agent;
 
 public:
-    typedef otJoinerCallback CompletionCallback; ///< Callback to notify the completion of join operation.
+    typedef otJoinerRetryCallback RetryCallback;      ///< Callback to notify the state of retrying join operation.
+    typedef otJoinerCallback      CompletionCallback; ///< Callback to notify the completion of join operation.
 
     /**
      * Represents the Joiner State.
@@ -89,6 +90,39 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
     explicit Joiner(Instance &aInstance);
+
+    /**
+     * Starts the Joiner service with retries.
+     *
+     * The progressively longer delays between retries follows an exponential back-off strategy.
+     * The callback may be called multiple times and notify about the status after each join attempt.
+     * When the join timeout is reached, `kErrorFailed` is passed to the callback to indicate the overall failure.
+     *
+     * @param[in]  aPskd             A pointer to the PSKd.
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be `nullptr`).
+     * @param[in]  aRetryBaseDelay   The minimal delay (in milliseconds) used between join attempts.
+     * @param[in]  aJoinTimeout      The overall timeout (in milliseconds) after the retrying joiner stops attempts.
+     * @param[in]  aVendorName       A pointer to the Vendor Name (may be `nullptr`).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be `nullptr`).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be `nullptr`).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (may be `nullptr`).
+     * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
+     * @param[in]  aContext          A pointer to application-specific context.
+     *
+     * @retval kErrorNone          Successfully started the Joiner service.
+     * @retval kErrorBusy          The previous attempt is still on-going.
+     * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is fully enabled.
+     */
+    Error StartWithRetries(const char   *aPskd,
+                           const char   *aProvisioningUrl,
+                           uint16_t      aRetryBaseDelay,
+                           uint32_t      aJoinTimeout,
+                           const char   *aVendorName,
+                           const char   *aVendorModel,
+                           const char   *aVendorSwVersion,
+                           const char   *aVendorData,
+                           RetryCallback aCallback,
+                           void         *aContext);
 
     /**
      * Starts the Joiner service.
@@ -181,7 +215,9 @@ private:
     static constexpr uint16_t kMaxJoinerRouterCandidates = OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES;
     static constexpr uint16_t kJoinerUdpPort             = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     static constexpr uint32_t kConfigExtAddressDelay     = 100;  // in msec.
-    static constexpr uint32_t kResponseTimeout           = 4000; // in msec
+    static constexpr uint32_t kResponseTimeout           = 4000; // in msec.
+    static constexpr uint16_t kMinJoinerBaseTimeout      = 500;  // in msec.
+    static constexpr uint16_t kMaxJoinerBaseTimeout      = 3500; // in msec.
 
     struct JoinerRouter
     {
@@ -212,12 +248,15 @@ private:
     void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
     static void HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
     void        HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
+    void        StartNewJoinAttempt(void);
+    static void CallbackWhenRetrying(otError aError, void *aContext);
 
     DeclareTmfResponseHandlerIn(Joiner, HandleJoinerFinalizeResponse);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
+    using JoinerTimer       = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
+    using RetryTimeoutTimer = TimerMilliIn<Joiner, &Joiner::StartNewJoinAttempt>;
 
     Mac::ExtAddress              mId;
     JoinerDiscerner              mDiscerner;
@@ -227,6 +266,19 @@ private:
     uint16_t                     mJoinerRouterIndex;
     Coap::Message               *mFinalizeMessage;
     JoinerTimer                  mTimer;
+    uint16_t                     mRetryBaseDelay;
+    uint32_t                     mJoinTimeout;
+    uint8_t                      mRetryDelayFactor;
+    uint8_t                      mRetryRandomOffset;
+    RetryTimeoutTimer            mRetryTimeoutTimer;
+    Callback<RetryCallback>      mRetryingCallback;
+    uint32_t                     mRetryStartTimestamp;
+    const char                  *mPskd;
+    const char                  *mProvisioningUrl;
+    const char                  *mVendorName;
+    const char                  *mVendorModel;
+    const char                  *mVendorSwVersion;
+    const char                  *mVendorData;
 };
 
 DeclareTmfHandler(Joiner, kUriJoinerEntrust);

@@ -48,6 +48,7 @@ Joiner::Joiner(Instance &aInstance)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
+    , mRetryTimeoutTimer(aInstance)
 {
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
@@ -102,6 +103,82 @@ void Joiner::SetState(State aState)
     LogInfo("JoinerState: %s -> %s", StateToString(oldState), StateToString(aState));
 exit:
     return;
+}
+
+void Joiner::CallbackWhenRetrying(otError aError, void *aContext)
+{
+    Joiner  *thisInstance = static_cast<Joiner *>(aContext);
+    Error    error        = aError;
+    uint32_t elapsedTime;
+
+    elapsedTime = TimerMilli::GetNow().GetValue() - thisInstance->mRetryStartTimestamp;
+    if (thisInstance->mJoinTimeout < elapsedTime)
+    {
+        LogWarn("Joiner with retries reached timeout, join process failed after %lu ms",
+                ToUlong(elapsedTime));
+
+        // No OT_ERROR_RESPONSE_TIMEOUT is returned, so application can distinguish
+        // between normal joiner timeout and joiner retry timeout.
+        error = kErrorFailed;
+    }
+
+    if (error == kErrorResponseTimeout || error == kErrorNotFound || error == kErrorSecurity)
+    {
+        uint16_t timeout =
+            (thisInstance->mRetryBaseDelay + thisInstance->mRetryRandomOffset) * thisInstance->mRetryDelayFactor;
+        LogInfo("Joiner retrying in %u ms. Delay factor: %u, random offset: %u", timeout,
+                thisInstance->mRetryDelayFactor, thisInstance->mRetryRandomOffset);
+
+        thisInstance->mRetryTimeoutTimer.Start(timeout);
+        if (thisInstance->mRetryDelayFactor < 16)
+        {
+            thisInstance->mRetryDelayFactor *= 2;
+        }
+    }
+
+    // Invoke callback every time to keep application informed about retry attempts
+    thisInstance->mRetryingCallback.InvokeIfSet(error);
+}
+
+Error Joiner::StartWithRetries(const char   *aPskd,
+                               const char   *aProvisioningUrl,
+                               uint16_t      aRetryBaseDelay,
+                               uint32_t      aJoinTimeout,
+                               const char   *aVendorName,
+                               const char   *aVendorModel,
+                               const char   *aVendorSwVersion,
+                               const char   *aVendorData,
+                               RetryCallback aCallback,
+                               void         *aContext)
+{
+    LogInfo("Joiner with retries starting");
+
+    Error error = kErrorNone;
+
+    mPskd            = aPskd;
+    mProvisioningUrl = aProvisioningUrl;
+    mVendorName      = aVendorName;
+    mVendorModel     = aVendorModel;
+    mVendorSwVersion = aVendorSwVersion;
+    mVendorData      = aVendorData;
+
+    mRetryBaseDelay    = Clamp(aRetryBaseDelay, kMinJoinerBaseTimeout, kMaxJoinerBaseTimeout);
+    mJoinTimeout       = aJoinTimeout;
+    mRetryDelayFactor  = 1;
+    mRetryRandomOffset = Random::NonCrypto::GetUint8();
+    mRetryingCallback.Set(aCallback, aContext);
+    mRetryStartTimestamp = TimerMilli::GetNow().GetValue();
+
+    SuccessOrExit(error = Start(mPskd, mProvisioningUrl, mVendorName, mVendorModel, mVendorSwVersion, mVendorData,
+                                this->CallbackWhenRetrying, this));
+
+exit:
+    if (error != kErrorNone)
+    {
+        mRetryingCallback.Clear();
+    }
+
+    return error;
 }
 
 Error Joiner::Start(const char      *aPskd,
@@ -181,6 +258,9 @@ void Joiner::Stop(void)
 
     // Callback is set to `nullptr` to skip calling it from `Finish()`
     mCompletionCallback.Clear();
+    mRetryingCallback.Clear();
+    mRetryTimeoutTimer.Stop();
+    mRetryDelayFactor = 1;
     Finish(kErrorAbort);
 }
 
@@ -575,6 +655,31 @@ void Joiner::HandleTimer(void)
     }
 
     Finish(error);
+}
+
+void Joiner::StartNewJoinAttempt(void)
+{
+    Error    error;
+    uint16_t timeout;
+
+    if (mState != kStateJoined)
+    {
+        LogInfo("Retry timer expired, starting new joining attempt");
+        error = Start(mPskd, mProvisioningUrl, mVendorName, mVendorModel, mVendorSwVersion, mVendorData,
+                      ot::MeshCoP::Joiner::CallbackWhenRetrying, this);
+
+        if (error == kErrorBusy)
+        {
+            if (mRetryDelayFactor < 16)
+            {
+                mRetryDelayFactor *= 2;
+            }
+
+            timeout = (mRetryBaseDelay + mRetryRandomOffset) * mRetryDelayFactor;
+            LogInfo("Joiner is already in progress, re-start timer for new attempt in %u ms", timeout);
+            mRetryTimeoutTimer.Start(timeout);
+        }
+    }
 }
 
 // LCOV_EXCL_START
