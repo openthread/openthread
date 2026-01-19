@@ -1045,6 +1045,8 @@ exit:
     return error;
 }
 
+void Ip6::PassToProxy(OwnedPtr<Message> aMessagePtr) { Get<AddressProxy>().HandleDatagram(*aMessagePtr); }
+
 Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
 {
     Error  error = kErrorNone;
@@ -1086,15 +1088,18 @@ void Ip6::DetermineAction(const Message &aMessage,
                           const Header  &aHeader,
                           bool          &aForwardThread,
                           bool          &aForwardHost,
+                          bool          &aForwardProxy,
                           bool          &aReceive) const
 {
-    // Determine `aForwardThread`, `aForwardHost` and `aReceive`
+    // Determine `aForwardThread`, `aForwardHost`, `aForwardProxy` and `aReceive`
     // based on the destination address and message origin.
 
-    uint16_t rloc16;
+    uint16_t       rloc16;
+    const Address *lookupSource = &aHeader.GetSource();
 
     aForwardThread = false;
     aForwardHost   = false;
+    aForwardProxy  = false;
     aReceive       = false;
 
     if (aHeader.GetDestination().IsMulticast())
@@ -1167,6 +1172,12 @@ void Ip6::DetermineAction(const Message &aMessage,
         ExitNow();
     }
 
+    if (Get<AddressProxy>().IsProxyAddress(aHeader.GetDestination()))
+    {
+        aForwardProxy = true;
+        ExitNow();
+    }
+
     if (aHeader.GetDestination().IsLinkLocalUnicast())
     {
         // Forward a message with a link-local destination address
@@ -1188,7 +1199,12 @@ void Ip6::DetermineAction(const Message &aMessage,
         ExitNow();
     }
 
-    if (Get<NetworkData::Leader>().RouteLookup(aHeader.GetSource(), aHeader.GetDestination(), rloc16) != kErrorNone)
+    if (Get<AddressProxy>().IsProxyAddress(*lookupSource))
+    {
+        lookupSource = &Get<Mle::Mle>().GetMeshLocalEid();
+    }
+
+    if (Get<NetworkData::Leader>().RouteLookup(*lookupSource, aHeader.GetDestination(), rloc16) != kErrorNone)
     {
         // No route in mesh, forward to host (as a last resort).
         LogInfo("Failed to find valid route for: %s", aHeader.GetDestination().ToString().AsCString());
@@ -1220,6 +1236,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
     bool    receive;
     bool    forwardThread;
     bool    forwardHost;
+    bool    forwardProxy;
     uint8_t nextHeader;
 
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
@@ -1229,13 +1246,19 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
         VerifyOrExit(!header.GetSource().IsLoopback() && !header.GetDestination().IsLoopback(), error = kErrorDrop);
     }
 
-    DetermineAction(*aMessagePtr, header, forwardThread, forwardHost, receive);
+    DetermineAction(*aMessagePtr, header, forwardThread, forwardHost, forwardProxy, receive);
 
     aMessagePtr->SetOffset(sizeof(header));
 
     // Process IPv6 Extension Headers
     nextHeader = header.GetNextHeader();
     SuccessOrExit(error = HandleExtensionHeaders(aMessagePtr, header, nextHeader, receive));
+
+    if (forwardProxy)
+    {
+        PassToProxy(aMessagePtr.PassOwnership());
+        ExitNow(error = kErrorNone);
+    }
 
     if (receive && (nextHeader == kProtoIp6))
     {

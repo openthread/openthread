@@ -63,7 +63,7 @@ proc expect_line {line} {
     return $expect_out(1,string)
 }
 
-proc spawn_node {id {type ""} {args ""}} {
+proc spawn_node {id {type ""} args} {
     global spawn_id
     global spawn_ids
     global argv0
@@ -104,20 +104,20 @@ proc spawn_node {id {type ""} {args ""}} {
 
     switch -regexp ${type} {
         {rcp|rcp-cli} {
-            if {${args} == ""} {
-                set radio_url "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"
+            if {[llength $args] == 0} {
+                set radio_args [list "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"]
             } else {
+                set radio_args $args
                 if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
-                    set radio_url "$args&forkpty-arg=-L$ot_simulation_local_host"
-                } else {
-                    set radio_url "$args"
+                    set radio_url [lindex $radio_args end]
+                    set radio_args [lreplace $radio_args end end "$radio_url&forkpty-arg=-L$ot_simulation_local_host"]
                 }
             }
 
             # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
             # avoid the error: "bind(sTxFd): Address already in use"
             sleep 0.2
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_posix_apps/ot-cli $radio_url
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_posix_apps/ot-cli {*}$radio_args
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
@@ -143,8 +143,8 @@ proc spawn_node {id {type ""} {args ""}} {
         adb {
             set adb_cmd [list /usr/bin/env adb]
 
-            if {${args} != ""} {
-                lappend adb_cmd -s $args
+            if {[llength $args] != 0} {
+                lappend adb_cmd -s [lindex $args 0]
             }
 
             set adb_root_cmd [concat $adb_cmd root]
@@ -178,6 +178,8 @@ proc spawn_node {id {type ""} {args ""}} {
 
     return $spawn_id
 }
+
+
 
 proc switch_node {id} {
     global spawn_ids

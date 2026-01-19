@@ -156,6 +156,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS
+ *
+ * Specifies the maximum number of simultaneous Border Agent sessions.
+ *
+ * If set to 0, there is no limit other than available heap memory.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS
+#define OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS 0
+#endif
+
+/**
  * @}
  */
 

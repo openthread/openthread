@@ -57,6 +57,7 @@ const char TxtData::Key::kBbrSeqNum[]       = "sq";
 const char TxtData::Key::kBbrPort[]         = "bb";
 const char TxtData::Key::kOmrPrefix[]       = "omr";
 const char TxtData::Key::kExtAddress[]      = "xa";
+const char TxtData::Key::kSessionCount[]    = "sc";
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 const char TxtData::Key::kVendorName[] = "vn";
 const char TxtData::Key::kModelName[]  = "mn";
@@ -92,6 +93,20 @@ Error TxtData::Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength
     SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kStateBitmap, StateBitmap::Determine(GetInstance())));
     SuccessOrExit(error = encoder.AppendStringEntry(Key::kThreadVersion, kThreadVersionString));
     SuccessOrExit(error = encoder.AppendEntry(Key::kExtAddress, Get<Mac::Mac>().GetExtAddress()));
+
+    {
+        constexpr uint8_t maxSessions = OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS;
+        static_assert(OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS <= 255,
+                      "max DTLS session should be no more than 255");
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS > 0
+        uint32_t currentSessions = Get<Manager>().mDtlsTransport.GetSessions().CountAllEntries();
+        uint8_t  remaining = (maxSessions > currentSessions ? static_cast<uint8_t>(maxSessions - currentSessions) : 0);
+
+        SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kSessionCount, remaining));
+#else
+        SuccessOrExit(error = encoder.AppendBytesEntry(Key::kSessionCount, nullptr, maxSessions));
+#endif
+    }
 
     if (Get<MeshCoP::ActiveDatasetManager>().IsComplete() &&
         (Get<MeshCoP::ActiveDatasetManager>().Read(datasetInfo) == kErrorNone))
@@ -370,6 +385,10 @@ void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
     else if (StringMatch(aEntry.mKey, Key::kExtAddress))
     {
         mHasExtAddress = ReadValue(aEntry, mExtAddress);
+    }
+    else if (StringMatch(aEntry.mKey, Key::kSessionCount))
+    {
+        mHasSessionCount = ReadBigEndianUintValue(aEntry, mSessionCount);
     }
     else if (StringMatch(aEntry.mKey, Key::kVendorName))
     {

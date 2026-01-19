@@ -105,6 +105,7 @@ Instance::Instance(void)
     , mCryptoStorageKeyRefManager(*this)
 #endif
     , mIp6(*this)
+    , mAddressProxy(*this)
     , mThreadNetif(*this)
     , mTmfAgent(*this)
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

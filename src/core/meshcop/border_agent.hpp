@@ -56,6 +56,7 @@
 #include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
+#include "net/address_proxy.hpp"
 #include "net/dns_types.hpp"
 #include "net/dnssd.hpp"
 #include "net/socket.hpp"
@@ -334,10 +335,15 @@ private:
         template <Uri kUri> void Log(Action, const char *) {}
 #endif
 
+        static void       HandleProxyReceive(otMessage *aMessage, void *aContext);
+        void              HandleProxyReceive(Message &aMessage);
+        Ip6::ProxyAddress mProxyAddress;
+
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
         UptimeMsec                 mAllocationTime;
-        uint16_t                   mIndex;
+
+        uint16_t mIndex;
     };
 
     void UpdateState(void);

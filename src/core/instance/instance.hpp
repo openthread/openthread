@@ -100,6 +100,7 @@
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop_leader.hpp"
 #include "meshcop/network_name.hpp"
+#include "net/address_proxy.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
 #include "net/dhcp6_types.hpp"
@@ -509,9 +510,10 @@ private:
     Crypto::Storage::KeyRefManager mCryptoStorageKeyRefManager;
 #endif
 
-    Ip6::Ip6    mIp6;
-    ThreadNetif mThreadNetif;
-    Tmf::Agent  mTmfAgent;
+    Ip6::Ip6          mIp6;
+    Ip6::AddressProxy mAddressProxy;
+    ThreadNetif       mThreadNetif;
+    Tmf::Agent        mTmfAgent;
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
@@ -838,6 +840,8 @@ template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupT
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }
+
+template <> inline Ip6::AddressProxy &Instance::Get(void) { return mAddressProxy; }
 
 template <> inline ThreadNetif &Instance::Get(void) { return mThreadNetif; }
 

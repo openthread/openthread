@@ -430,6 +430,8 @@ openthread_core_files = [
   "meshcop/tcat_agent.hpp",
   "meshcop/timestamp.cpp",
   "meshcop/timestamp.hpp",
+  "net/address_proxy.cpp",
+  "net/address_proxy.hpp",
   "net/checksum.cpp",
   "net/checksum.hpp",
   "net/dhcp6_client.cpp",

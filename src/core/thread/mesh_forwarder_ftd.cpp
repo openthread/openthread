@@ -522,6 +522,12 @@ bool MeshForwarder::IsReachable(uint16_t aMeshDest, const Ip6::Header &aIp6Heade
     {
         isReachable = Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()) ||
                       (Get<NeighborTable>().FindNeighbor(aIp6Header.GetDestination()) != nullptr);
+
+        if (!isReachable)
+        {
+            isReachable = Get<Ip6::AddressProxy>().IsProxyAddress(aIp6Header.GetDestination());
+        }
+
         ExitNow();
     }
 

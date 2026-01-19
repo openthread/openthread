@@ -887,7 +887,27 @@ const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstan
 void otIp6ResetBorderRoutingCounters(otInstance *aInstance);
 
 /**
+ * This function pointer is called when iterating over proxy addresses.
+ *
+ * @param[in]  aAddress  A pointer to the IPv6 address.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (*otIp6ProxyAddressCallback)(const otIp6Address *aAddress, void *aContext);
+
+/**
+ * Iterates over all proxy addresses.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to the callback function.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+void otIp6ForEachProxyAddress(otInstance *aInstance, otIp6ProxyAddressCallback aCallback, void *aContext);
+
+/**
  * @}
+ *
  */
 
 #ifdef __cplusplus

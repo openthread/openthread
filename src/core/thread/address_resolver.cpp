@@ -857,6 +857,13 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
         ExitNow();
     }
 
+    if (Get<Ip6::AddressProxy>().IsProxyAddress(target))
+    {
+        SendAddressQueryResponse(target, Get<Mle::Mle>().GetMeshLocalEid().GetIid(), nullptr,
+                                 aMsg.mMessageInfo.GetPeerAddr());
+        ExitNow();
+    }
+
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         if (child.IsFullThreadDevice() || child.GetLinkFailures() >= Mle::kFailedChildTransmissions)

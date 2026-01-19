@@ -1,0 +1,107 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+
+set ot_simulation_apps "build/simulation/examples/apps"
+if {[info exists env(OT_SIMULATION_APPS)]} {
+    set ot_simulation_apps $env(OT_SIMULATION_APPS)
+}
+
+spawn_node 1 "rcp" "-Ilo" "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=1"
+spawn_node 2 "cli"
+
+switch_node 1
+send "dataset init new\n"
+expect_line "Done"
+send "dataset networkkey 00112233445566778899aabbccddeeff\n"
+expect_line "Done"
+send "dataset pskc 00112233445566778899aabbccddeeff\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+send "ifconfig up\n"
+expect_line "Done"
+send "thread start\n"
+expect_line "Done"
+wait_for "state" "leader"
+
+switch_node 2
+send "dataset networkkey 00112233445566778899aabbccddeeff\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+send "ifconfig up\n"
+expect_line "Done"
+send "thread start\n"
+expect_line "Done"
+send "routerselectionjitter 1\n"
+expect_line "Done"
+wait_for "state" "router"
+
+set node2_mleid [get_ipaddr mleid]
+set node2_rloc16 [get_rloc16]
+
+switch_node 1
+send "ba port\n"
+set ba_port [expect_line {[0-9]{1,5}}]
+expect_line "Done"
+
+set commissioner_cli "../ot-commissioner/build/src/app/cli/commissioner-cli"
+
+spawn $commissioner_cli
+set commissioner_id $spawn_id
+
+send "config set pskc 00112233445566778899aabbccddeeff\n"
+expect "done"
+send "start 127.0.0.1 $ba_port --connect-only\n"
+expect "done"
+
+send "state\n"
+expect "connected"
+expect "done"
+
+switch_node 1
+send "ipaddr proxy\n"
+expect -re {([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}}
+expect_line "Done"
+
+set spawn_id $commissioner_id
+send "netdiag query rloc16 $node2_mleid\n"
+set expected_macaddr [expr 0x$node2_rloc16]
+expect -re "MacAddr.*$expected_macaddr"
+expect "done"
+
+send "stop\n"
+expect "done"
+
+send "exit\n"
+expect eof
+
+dispose_all
