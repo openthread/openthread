@@ -284,9 +284,12 @@ public:
 #endif
 
     /**
-     * Indicates whether or not the instance is valid/initialized and not yet finalized.
+     * Indicates whether or not the instance is fully initialized and not yet being finalized.
      *
-     * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
+     * This is only meant for core modules (e.g. logging) that may run while the instance is being constructed or
+     * destructed. It MUST NOT be used to check whether an `Instance` object is alive.
+     *
+     * @returns TRUE if the instance is initialized, FALSE otherwise.
      */
     bool IsInitialized(void) const { return mIsInitialized; }
 
@@ -574,6 +577,12 @@ private:
     //
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
+
+    // `mIsInitialized` is the very first member so that it is
+    // initialized before any other member. This allows modules
+    // (e.g. logging) to safely call `IsInitialized()` while the
+    // other members are being constructed or destructed.
+    bool mIsInitialized;
 
     ActiveInstanceTracker mActiveInstanceTracker;
 
@@ -907,8 +916,6 @@ private:
     bool mIsLogLevelSet;
 #endif
 #endif
-
-    bool mIsInitialized;
 
     uint32_t mId;
 };
