@@ -157,7 +157,10 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-Error MessagePool::ReclaimBuffers(Message::Priority aPriority) { return Get<MeshForwarder>().EvictMessage(aPriority); }
+Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
+{
+    return Get<MeshForwarder>().EvictMessage(aPriority, MeshForwarder::kEvictReasonNoMessageBuffer);
+}
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
