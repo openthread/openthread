@@ -88,16 +88,6 @@ otInstance *otInstanceGetSingle(void) { return &Instance::Get(); }
 
 uint32_t otInstanceGetId(otInstance *aInstance) { return AsCoreType(aInstance).GetId(); }
 
-bool otInstanceIsInitialized(otInstance *aInstance)
-{
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    return AsCoreType(aInstance).IsInitialized();
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-    return true;
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-}
-
 void otInstanceFinalize(otInstance *aInstance) { AsCoreType(aInstance).Finalize(); }
 
 void otInstanceReset(otInstance *aInstance) { AsCoreType(aInstance).Reset(); }

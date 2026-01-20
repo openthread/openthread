@@ -48,8 +48,6 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     Instance     &instance = AsCoreType(aInstance);
     Mac::RxFrame *rxFrame  = static_cast<Mac::RxFrame *>(aFrame);
 
-    VerifyOrExit(instance.IsInitialized());
-
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (rxFrame != nullptr)
     {
@@ -67,26 +65,17 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     {
         instance.Get<Radio::Callbacks>().HandleReceiveDone(rxFrame, aError);
     }
-
-exit:
-    return;
 }
 
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    Instance     &instance = AsCoreType(aInstance);
-    Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
-
-    VerifyOrExit(instance.IsInitialized());
+    Mac::TxFrame &txFrame = *static_cast<Mac::TxFrame *>(aFrame);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
 #endif
 
-    instance.Get<Radio::Callbacks>().HandleTransmitStarted(txFrame);
-
-exit:
-    return;
+    AsCoreType(aInstance).Get<Radio::Callbacks>().HandleTransmitStarted(txFrame);
 }
 
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
@@ -94,8 +83,6 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     Instance     &instance = AsCoreType(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
     Mac::RxFrame *ackFrame = static_cast<Mac::RxFrame *>(aAckFrame);
-
-    VerifyOrExit(instance.IsInitialized());
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (ackFrame != nullptr)
@@ -126,30 +113,16 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     {
         instance.Get<Radio::Callbacks>().HandleTransmitDone(txFrame, ackFrame, aError);
     }
-exit:
-    return;
 }
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.IsInitialized());
-    instance.Get<Radio::Callbacks>().HandleEnergyScanDone(aEnergyScanMaxRssi);
-
-exit:
-    return;
+    AsCoreType(aInstance).Get<Radio::Callbacks>().HandleEnergyScanDone(aEnergyScanMaxRssi);
 }
 
 extern "C" void otPlatRadioBusLatencyChanged(otInstance *aInstance)
 {
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.IsInitialized());
-    instance.Get<Radio::Callbacks>().HandleBusLatencyChanged();
-
-exit:
-    return;
+    AsCoreType(aInstance).Get<Radio::Callbacks>().HandleBusLatencyChanged();
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

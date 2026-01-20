@@ -311,6 +311,21 @@ extern "C" {
 #endif
 
 /**
+ * @def OT_DEPRECATED
+ *
+ * Mark an API is deprecated with a message.
+ */
+#if defined(__cplusplus) && __cplusplus >= 201402L || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
+#define OT_DEPRECATED(msg) [[deprecated(msg)]]
+#elif defined(_MSC_VER)
+#define OT_DEPRECATED(msg) __declspec(deprecated(msg))
+#elif defined(__GNUC__) || defined(__clang__)
+#define OT_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#else
+#define OT_DEPRECATED(msg)
+#endif
+
+/**
  * @}
  */
 

@@ -306,7 +306,6 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     , mPowerCalibration(*this)
 #endif
-    , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
 {
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -335,15 +334,12 @@ Utils::Heap &Instance::GetHeap(void)
 
 Instance &Instance::InitSingle(void)
 {
-    Instance *instance = &Get();
-
-    VerifyOrExit(!instance->mIsInitialized);
+    Instance *instance;
 
     instance = new (&gInstanceRaw) Instance();
 
     instance->AfterInit();
 
-exit:
     return *instance;
 }
 
@@ -361,10 +357,9 @@ Instance *Instance::InitMultiple(uint8_t aIdx)
 {
     size_t    bufferSize;
     uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
-    Instance *instance       = reinterpret_cast<Instance *>(instanceBuffer);
+    Instance *instance;
 
-    VerifyOrExit(aIdx < OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM);
-    VerifyOrExit(!instance->mIsInitialized);
+    VerifyOrExit(aIdx < OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM, instance = nullptr);
 
     bufferSize = (&gMultiInstanceRaw[MULTI_INSTANCE_SIZE] - instanceBuffer) * sizeof(uint64_t);
     instance   = Instance::Init(instanceBuffer, &bufferSize);
@@ -423,7 +418,6 @@ void Instance::ResetRadioStack(void)
 
 void Instance::AfterInit(void)
 {
-    mIsInitialized = true;
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
     // Restore datasets and network information
@@ -448,10 +442,6 @@ void Instance::AfterInit(void)
 
 void Instance::Finalize(void)
 {
-    VerifyOrExit(mIsInitialized);
-
-    mIsInitialized = false;
-
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     Get<Mle::Mle>().Stop();
     Get<ThreadNetif>().Down();
@@ -474,9 +464,6 @@ void Instance::Finalize(void)
     this->~Instance();
 
 #endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-exit:
-    return;
 }
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

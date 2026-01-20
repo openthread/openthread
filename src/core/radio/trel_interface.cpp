@@ -177,13 +177,7 @@ extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
                                          uint16_t          aLength,
                                          const otSockAddr *aSenderAddress)
 {
-    Instance &instance = AsCoreType(aInstance);
-
-    VerifyOrExit(instance.IsInitialized());
-    instance.Get<Interface>().HandleReceived(aBuffer, aLength, AsCoreType(aSenderAddress));
-
-exit:
-    return;
+    AsCoreType(aInstance).Get<Interface>().HandleReceived(aBuffer, aLength, AsCoreType(aSenderAddress));
 }
 
 void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr)
