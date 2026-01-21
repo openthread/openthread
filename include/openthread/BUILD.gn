@@ -65,6 +65,7 @@ source_set("openthread") {
     "dns_client.h",
     "dnssd_server.h",
     "error.h",
+    "ext_network_diagnostic.h",
     "heap.h",
     "history_tracker.h",
     "icmp6.h",

@@ -187,6 +187,17 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriTcatEnable, MeshCoP::TcatAgent);
 #endif
 
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+        Case(kUriExtDiagnosticEndDeviceRequest, ExtNetworkDiagnostic::Server);
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_SERVER_ENABLE
+        Case(kUriExtDiagnosticEndDeviceUpdate, ExtNetworkDiagnostic::Server);
+        Case(kUriExtDiagnosticServerRequest, ExtNetworkDiagnostic::Server);
+#endif
+#if OPENTHREAD_CONFIG_EXT_NETWORK_DIAGNOSTIC_CLIENT_ENABLE
+        Case(kUriExtDiagnosticServerUpdate, ExtNetworkDiagnostic::Client);
+#endif
+
     default:
         didHandle = false;
         break;

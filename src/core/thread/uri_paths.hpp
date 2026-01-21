@@ -45,50 +45,54 @@ namespace ot {
  */
 enum Uri : uint8_t
 {
-    kUriAddressError,           ///< Address Error ("a/ae")
-    kUriAddressNotify,          ///< Address Notify ("a/an")
-    kUriAddressQuery,           ///< Address Query ("a/aq")
-    kUriAddressRelease,         ///< Address Release ("a/ar")
-    kUriAddressSolicit,         ///< Address Solicit ("a/as")
-    kUriServerData,             ///< Server Data Registration ("a/sd")
-    kUriAnycastLocate,          ///< Anycast Locate ("a/yl")
-    kUriBackboneAnswer,         ///< Backbone Answer / Backbone Notification ("b/ba")
-    kUriBackboneMlr,            ///< Backbone Multicast Listener Report ("b/bmr")
-    kUriBackboneQuery,          ///< Backbone Query ("b/bq")
-    kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
-    kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
-    kUriActiveReplace,          ///< MGMT_ACTIVE_REPLACE ("c/ar")
-    kUriActiveSet,              ///< MGMT_ACTIVE_SET ("c/as")
-    kUriCommissionerKeepAlive,  ///< Commissioner Keep Alive ("c/ca")
-    kUriCommissionerGet,        ///< MGMT_COMMISSIONER_GET ("c/cg")
-    kUriCommissionerPetition,   ///< Commissioner Petition ("c/cp")
-    kUriCommissionerSet,        ///< MGMT_COMMISSIONER_SET ("c/cs")
-    kUriDatasetChanged,         ///< MGMT_DATASET_CHANGED ("c/dc")
-    kUriEnergyReport,           ///< Energy Report ("c/er")
-    kUriEnergyScan,             ///< Energy Scan ("c/es")
-    kUriJoinerEntrust,          ///< Joiner Entrust  ("c/je")
-    kUriJoinerFinalize,         ///< Joiner Finalize ("c/jf")
-    kUriLeaderKeepAlive,        ///< Leader Keep Alive ("c/la")
-    kUriLeaderPetition,         ///< Leader Petition ("c/lp")
-    kUriPanIdConflict,          ///< PAN ID Conflict ("c/pc")
-    kUriPendingGet,             ///< MGMT_PENDING_GET ("c/pg")
-    kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
-    kUriPendingSet,             ///< MGMT_PENDING_SET ("c/ps")
-    kUriRelayRx,                ///< Relay RX ("c/rx")
-    kUriTcatEnable,             ///< TCAT Enable ("c/te")
-    kUriRelayTx,                ///< Relay TX ("c/tx")
-    kUriProxyRx,                ///< Proxy RX ("c/ur")
-    kUriProxyTx,                ///< Proxy TX ("c/ut")
-    kUriDiagnosticGetAnswer,    ///< Network Diagnostic Get Answer ("d/da")
-    kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
-    kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
-    kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
-    kUriHistoryAnswer,          ///< History Answer ("h/an")
-    kUriHistoryQuery,           ///< History Query ("h/qy")
-    kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
-    kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
-    kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
-    kUriUnknown,                ///< Unknown URI
+    kUriAddressError,                  ///< Address Error ("a/ae")
+    kUriAddressNotify,                 ///< Address Notify ("a/an")
+    kUriAddressQuery,                  ///< Address Query ("a/aq")
+    kUriAddressRelease,                ///< Address Release ("a/ar")
+    kUriAddressSolicit,                ///< Address Solicit ("a/as")
+    kUriServerData,                    ///< Server Data Registration ("a/sd")
+    kUriAnycastLocate,                 ///< Anycast Locate ("a/yl")
+    kUriBackboneAnswer,                ///< Backbone Answer / Backbone Notification ("b/ba")
+    kUriBackboneMlr,                   ///< Backbone Multicast Listener Report ("b/bmr")
+    kUriBackboneQuery,                 ///< Backbone Query ("b/bq")
+    kUriAnnounceBegin,                 ///< Announce Begin ("c/ab")
+    kUriActiveGet,                     ///< MGMT_ACTIVE_GET "c/ag"
+    kUriActiveReplace,                 ///< MGMT_ACTIVE_REPLACE ("c/ar")
+    kUriActiveSet,                     ///< MGMT_ACTIVE_SET ("c/as")
+    kUriCommissionerKeepAlive,         ///< Commissioner Keep Alive ("c/ca")
+    kUriCommissionerGet,               ///< MGMT_COMMISSIONER_GET ("c/cg")
+    kUriCommissionerPetition,          ///< Commissioner Petition ("c/cp")
+    kUriCommissionerSet,               ///< MGMT_COMMISSIONER_SET ("c/cs")
+    kUriDatasetChanged,                ///< MGMT_DATASET_CHANGED ("c/dc")
+    kUriEnergyReport,                  ///< Energy Report ("c/er")
+    kUriEnergyScan,                    ///< Energy Scan ("c/es")
+    kUriJoinerEntrust,                 ///< Joiner Entrust  ("c/je")
+    kUriJoinerFinalize,                ///< Joiner Finalize ("c/jf")
+    kUriLeaderKeepAlive,               ///< Leader Keep Alive ("c/la")
+    kUriLeaderPetition,                ///< Leader Petition ("c/lp")
+    kUriPanIdConflict,                 ///< PAN ID Conflict ("c/pc")
+    kUriPendingGet,                    ///< MGMT_PENDING_GET ("c/pg")
+    kUriPanIdQuery,                    ///< PAN ID Query ("c/pq")
+    kUriPendingSet,                    ///< MGMT_PENDING_SET ("c/ps")
+    kUriRelayRx,                       ///< Relay RX ("c/rx")
+    kUriTcatEnable,                    ///< TCAT Enable ("c/te")
+    kUriRelayTx,                       ///< Relay TX ("c/tx")
+    kUriProxyRx,                       ///< Proxy RX ("c/ur")
+    kUriProxyTx,                       ///< Proxy TX ("c/ut")
+    kUriDiagnosticGetAnswer,           ///< Network Diagnostic Get Answer ("d/da")
+    kUriDiagnosticGetRequest,          ///< Network Diagnostic Get Request ("d/dg")
+    kUriDiagnosticGetQuery,            ///< Network Diagnostic Get Query ("d/dq")
+    kUriDiagnosticReset,               ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,                 ///< History Answer ("h/an")
+    kUriHistoryQuery,                  ///< History Query ("h/qy")
+    kUriDuaRegistrationNotify,         ///< DUA Registration Notification ("n/dn")
+    kUriDuaRegistrationRequest,        ///< DUA Registration Request ("n/dr")
+    kUriMlr,                           ///< Multicast Listener Registration ("n/mr")
+    kUriExtDiagnosticEndDeviceRequest, ///< Extended Network Diagnostic End Device Request ("x/er")
+    kUriExtDiagnosticEndDeviceUpdate,  ///< Extended Network Diagnostic End Device Update ("x/eu")
+    kUriExtDiagnosticServerRequest,    ///< Extended Network Diagnostic Server Request ("x/sr")
+    kUriExtDiagnosticServerUpdate,     ///< Extended Network Diagnostic Server Update ("x/su")
+    kUriUnknown,                       ///< Unknown URI
 };
 
 /**
@@ -160,6 +164,10 @@ template <> const char *UriToString<kUriDiagnosticReset>(void);
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void);
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void);
 template <> const char *UriToString<kUriMlr>(void);
+template <> const char *UriToString<kUriExtDiagnosticEndDeviceRequest>(void);
+template <> const char *UriToString<kUriExtDiagnosticEndDeviceUpdate>(void);
+template <> const char *UriToString<kUriExtDiagnosticServerRequest>(void);
+template <> const char *UriToString<kUriExtDiagnosticServerUpdate>(void);
 
 } // namespace ot
 
