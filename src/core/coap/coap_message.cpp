@@ -38,19 +38,65 @@
 namespace ot {
 namespace Coap {
 
+uint16_t BlockSizeFromExponent(BlockSzx aBlockSzxq)
+{
+    static constexpr uint8_t kBlockSzxBase = 4;
+
+    return static_cast<uint16_t>(1 << (static_cast<uint8_t>(aBlockSzxq) + kBlockSzxBase));
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Token`
+
+Error Token::SetToken(const uint8_t *aBytes, uint8_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
+
+    mLength = aLength;
+    memcpy(m8, aBytes, aLength);
+
+exit:
+    return error;
+}
+
+bool Token::operator==(const Token &aOther) const
+{
+    bool isEqual = false;
+
+    VerifyOrExit(IsValid());
+    VerifyOrExit(mLength == aOther.mLength);
+
+    isEqual = (memcmp(m8, aOther.m8, mLength) == 0);
+
+exit:
+    return isEqual;
+}
+
+Error Token::GenerateRandom(uint8_t aLength)
+{
+    Error error;
+
+    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
+    mLength = aLength;
+    error   = Random::Crypto::FillBuffer(m8, mLength);
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Message`
+
 void Message::Init(void)
 {
     GetHelpData().Clear();
-    SetVersion(kVersion1);
+    SetVersion(Header::kVersion1);
     SetOffset(0);
     GetHelpData().mHeaderLength = kMinHeaderLength;
 
     IgnoreError(SetLength(GetHelpData().mHeaderLength));
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    SetBlockWiseBlockNumber(0);
-    SetMoreBlocksFlag(false);
-    SetBlockWiseBlockSize(OT_COAP_OPTION_BLOCK_SZX_16);
-#endif
 }
 
 void Message::Init(Type aType, Code aCode)
@@ -65,7 +111,7 @@ Error Message::Init(Type aType, Code aCode, Uri aUri)
     Error error;
 
     Init(aType, aCode);
-    SuccessOrExit(error = GenerateRandomToken(kDefaultTokenLength));
+    SuccessOrExit(error = WriteRandomToken(Token::kDefaultLength));
     SuccessOrExit(error = AppendUriPathOptions(PathForUri(aUri)));
 
 exit:
@@ -236,7 +282,7 @@ exit:
     return error;
 }
 
-Error Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const
+Error Message::ReadUriPathOptions(UriPathStringBuffer &aUriPath) const
 {
     char            *curUriPath = aUriPath;
     Error            error      = kErrorNone;
@@ -285,56 +331,70 @@ exit:
     return error;
 }
 
-Error Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
+Error Message::AppendBlockOption(uint16_t aBlockOptionNumber, const BlockInfo &aInfo)
 {
-    Error    error   = kErrorNone;
-    uint32_t encoded = aSize;
+    Error    error;
+    uint32_t encoded;
 
-    VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = kErrorInvalidArgs);
-    VerifyOrExit(aSize <= OT_COAP_OPTION_BLOCK_SZX_1024, error = kErrorInvalidArgs);
-    VerifyOrExit(aNum < kBlockNumMax, error = kErrorInvalidArgs);
+    switch (aBlockOptionNumber)
+    {
+    case kOptionBlock1:
+    case kOptionBlock2:
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+    }
 
-    encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
-    encoded |= aNum << kBlockNumOffset;
+    VerifyOrExit(aInfo.mBlockSzx <= kBlockSzx1024, error = kErrorInvalidArgs);
+    VerifyOrExit(aInfo.mBlockNumber < kBlockNumMax, error = kErrorInvalidArgs);
 
-    error = AppendUintOption((aType == kBlockType1) ? kOptionBlock1 : kOptionBlock2, encoded);
+    encoded = aInfo.mBlockSzx;
+    encoded |= static_cast<uint32_t>(aInfo.mMoreBlocks << kBlockMOffset);
+    encoded |= aInfo.mBlockNumber << kBlockNumOffset;
+
+    error = AppendUintOption(aBlockOptionNumber, encoded);
 
 exit:
     return error;
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-Error Message::ReadBlockOptionValues(uint16_t aBlockType)
+
+Error Message::ReadBlockOptionValues(uint16_t aBlockOptionNumber, BlockInfo &aInfo) const
 {
-    Error            error                     = kErrorNone;
+    Error            error;
     uint8_t          buf[kMaxOptionHeaderSize] = {0};
     Option::Iterator iterator;
 
-    VerifyOrExit((aBlockType == kOptionBlock1) || (aBlockType == kOptionBlock2), error = kErrorInvalidArgs);
+    switch (aBlockOptionNumber)
+    {
+    case kOptionBlock1:
+    case kOptionBlock2:
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+    }
 
-    SuccessOrExit(error = iterator.Init(*this, aBlockType));
+    SuccessOrExit(error = iterator.Init(*this, aBlockOptionNumber));
     SuccessOrExit(error = iterator.ReadOptionValue(buf));
-
-    SetBlockWiseBlockNumber(0);
-    SetMoreBlocksFlag(false);
 
     switch (iterator.GetOption()->GetLength())
     {
     case 0:
     case 1:
-        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] & 0xf0) >> 4));
-        SetMoreBlocksFlag(static_cast<bool>((buf[0] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[0] & 0x07));
+        aInfo.mBlockNumber = static_cast<uint32_t>((buf[0] & 0xf0) >> 4);
+        aInfo.mMoreBlocks  = (((buf[0] & 0x08) >> 3) == 1);
+        aInfo.mBlockSzx    = (static_cast<BlockSzx>(buf[0] & 0x07));
         break;
     case 2:
-        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 4) + ((buf[1] & 0xf0) >> 4)));
-        SetMoreBlocksFlag(static_cast<bool>((buf[1] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[1] & 0x07));
+        aInfo.mBlockNumber = static_cast<uint32_t>((buf[0] << 4) + ((buf[1] & 0xf0) >> 4));
+        aInfo.mMoreBlocks  = ((buf[1] & 0x08) >> 3 == 1);
+        aInfo.mBlockSzx    = (static_cast<BlockSzx>(buf[1] & 0x07));
         break;
     case 3:
-        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 12) + (buf[1] << 4) + ((buf[2] & 0xf0) >> 4)));
-        SetMoreBlocksFlag(static_cast<bool>((buf[2] & 0x08) >> 3 == 1));
-        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[2] & 0x07));
+        aInfo.mBlockNumber = static_cast<uint32_t>((buf[0] << 12) + (buf[1] << 4) + ((buf[2] & 0xf0) >> 4));
+        aInfo.mMoreBlocks  = ((buf[2] & 0x08) >> 3 == 1);
+        aInfo.mBlockSzx    = (static_cast<BlockSzx>(buf[2] & 0x07));
         break;
     default:
         error = kErrorInvalidArgs;
@@ -344,6 +404,7 @@ Error Message::ReadBlockOptionValues(uint16_t aBlockType)
 exit:
     return error;
 }
+
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 Error Message::SetPayloadMarker(void)
@@ -376,11 +437,7 @@ Error Message::ParseHeader(void)
 
     GetHelpData().mHeaderOffset = offset;
 
-    SuccessOrExit(error = Read(offset, &GetHelpData().mHeader, kMinHeaderLength));
-    offset += kMinHeaderLength;
-
-    VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = kErrorParse);
-    SuccessOrExit(error = Read(offset, GetHelpData().mHeader.mToken, GetTokenLength()));
+    SuccessOrExit(error = GetHelpData().mHeader.ParseFrom(*this));
 
     SuccessOrExit(error = iterator.Init(*this));
 
@@ -396,38 +453,70 @@ exit:
     return error;
 }
 
-Error Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
+Error Message::ReadTokenLength(uint8_t &aLength) const
 {
-    OT_ASSERT(aTokenLength <= kMaxTokenLength);
+    Error error = kErrorNone;
 
-    SetTokenLength(aTokenLength);
-    memcpy(GetToken(), aToken, aTokenLength);
-    GetHelpData().mHeaderLength += aTokenLength;
+    VerifyOrExit(GetHelpData().mHeader.IsValid(), error = kErrorParse);
+    aLength = GetHelpData().mHeader.GetTokenLength();
 
-    return SetLength(GetHelpData().mHeaderLength);
+exit:
+    return error;
 }
 
-Error Message::GenerateRandomToken(uint8_t aTokenLength)
+Error Message::ReadToken(Token &aToken) const
 {
-    uint8_t token[kMaxTokenLength];
-
-    OT_ASSERT(aTokenLength <= sizeof(token));
-
-    IgnoreError(Random::Crypto::FillBuffer(token, aTokenLength));
-
-    return SetToken(token, aTokenLength);
+    return aToken.SetToken(GetHelpData().mHeader.GetToken(), GetHelpData().mHeader.GetTokenLength());
 }
 
-Error Message::SetTokenFromMessage(const Message &aMessage)
+Error Message::WriteToken(const Token &aToken)
 {
-    return SetToken(aMessage.GetToken(), aMessage.GetTokenLength());
+    Error error;
+
+    SuccessOrExit(error = GetHelpData().mHeader.SetToken(aToken));
+    GetHelpData().mHeaderLength += aToken.GetLength();
+    error = SetLength(GetHelpData().mHeaderLength);
+
+exit:
+    return error;
 }
 
-bool Message::IsTokenEqual(const Message &aMessage) const
+Error Message::WriteRandomToken(uint8_t aTokenLength)
 {
-    uint8_t tokenLength = GetTokenLength();
+    Error error;
+    Token token;
 
-    return ((tokenLength == aMessage.GetTokenLength()) && (memcmp(GetToken(), aMessage.GetToken(), tokenLength) == 0));
+    SuccessOrExit(error = token.GenerateRandom(aTokenLength));
+    error = WriteToken(token);
+
+exit:
+    return error;
+}
+
+Error Message::WriteTokenFromMessage(const Message &aMessage)
+{
+    Error error;
+    Token token;
+
+    SuccessOrExit(error = aMessage.ReadToken(token));
+    error = WriteToken(token);
+
+exit:
+    return error;
+}
+
+bool Message::HasSameTokenAs(const Message &aMessage) const
+{
+    bool  hasSame = false;
+    Token token;
+    Token msgToken;
+
+    SuccessOrExit(ReadToken(token));
+    SuccessOrExit(aMessage.ReadToken(msgToken));
+    hasSame = (token == msgToken);
+
+exit:
+    return hasSame;
 }
 
 Error Message::SetDefaultResponseHeader(const Message &aRequest)
@@ -436,7 +525,7 @@ Error Message::SetDefaultResponseHeader(const Message &aRequest)
 
     SetMessageId(aRequest.GetMessageId());
 
-    return SetTokenFromMessage(aRequest);
+    return WriteTokenFromMessage(aRequest);
 }
 
 Message *Message::Clone(uint16_t aLength) const
@@ -491,9 +580,50 @@ const char *Message::CodeToString(void) const
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
+//---------------------------------------------------------------------------------------------------------------------
+// `Message::Header`
+
+bool Message::Header::IsValid(void) const
+{
+    return (GetVersion() == kVersion1) && (GetTokenLength() <= Token::kMaxLength);
+}
+
+Error Message::Header::ParseFrom(const Message &aMessage)
+{
+    Error    error;
+    uint16_t offset = aMessage.GetOffset();
+
+    SuccessOrExit(error = aMessage.Read(offset, this, kMinSize));
+    VerifyOrExit(IsValid(), error = kErrorParse);
+
+    SuccessOrExit(error = aMessage.Read(offset + kMinSize, mToken, GetTokenLength()));
+
+exit:
+    return error;
+}
+
+Error Message::Header::SetToken(const Token &aToken)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aToken.IsValid(), error = kErrorInvalidArgs);
+
+    SetTokenLength(aToken.mLength);
+    memcpy(mToken, aToken.GetBytes(), aToken.GetLength());
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Message::Iterator`
+
 Message::Iterator MessageQueue::begin(void) { return Message::Iterator(GetHead()); }
 
 Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIterator(GetHead()); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Option::Iterator`
 
 Error Option::Iterator::Init(const Message &aMessage)
 {

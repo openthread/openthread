@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Joiner.
  */
 
-#ifndef CONFIG_JOINER_H_
-#define CONFIG_JOINER_H_
+#ifndef OT_CORE_CONFIG_JOINER_H_
+#define OT_CORE_CONFIG_JOINER_H_
 
 /**
  * @addtogroup config-joiner
@@ -62,7 +62,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+ *
+ * Define as 1 to enable including Joiner Advertisement TLV during discovery scan by the Joiner.
+ *
+ * This is an experimental feature. It is not part of the Thread specification. See `otThreadSetJoinerAdvertisement`
+ * for more details.
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+#define OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
-#endif // CONFIG_JOINER_H_
+#endif // OT_CORE_CONFIG_JOINER_H_

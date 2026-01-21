@@ -31,8 +31,8 @@
  *  This file defines OpenThread instance class.
  */
 
-#ifndef INSTANCE_HPP_
-#define INSTANCE_HPP_
+#ifndef OT_CORE_INSTANCE_INSTANCE_HPP_
+#define OT_CORE_INSTANCE_INSTANCE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,6 +47,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
+#include "common/enum_to_string.hpp"
 #include "common/error.hpp"
 #include "common/heap.hpp"
 #include "common/locator.hpp"
@@ -147,6 +148,8 @@
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
+#include "utils/history_tracker_client.hpp"
+#include "utils/history_tracker_server.hpp"
 #include "utils/jam_detector.hpp"
 #include "utils/link_metrics_manager.hpp"
 #include "utils/mesh_diag.hpp"
@@ -475,7 +478,7 @@ private:
     Radio mRadio;
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    Uptime mUptime;
+    UptimeTracker mUptimeTracker;
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
@@ -706,6 +709,12 @@ private:
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     HistoryTracker::Local mHistoryTrackerLocal;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    HistoryTracker::Server mHistoryTrackerServer;
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    HistoryTracker::Client mHistoryTrackerClient;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
@@ -777,7 +786,7 @@ template <> inline Radio::Statistics &Instance::Get(void) { return mRadio.mStati
 #endif
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-template <> inline Uptime &Instance::Get(void) { return mUptime; }
+template <> inline UptimeTracker &Instance::Get(void) { return mUptimeTracker; }
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
@@ -1030,7 +1039,16 @@ template <> inline Utils::MeshDiag &Instance::Get(void) { return mMeshDiag; }
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
 template <> inline HistoryTracker::Local &Instance::Get(void) { return mHistoryTrackerLocal; }
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+template <> inline HistoryTracker::Server &Instance::Get(void) { return mHistoryTrackerServer; }
+#endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+template <> inline HistoryTracker::Client &Instance::Get(void) { return mHistoryTrackerClient; }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
@@ -1214,4 +1232,4 @@ void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
 
 } // namespace ot
 
-#endif // INSTANCE_HPP_
+#endif // OT_CORE_INSTANCE_INSTANCE_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for Primary Backbone Router service management in the Thread Network.
  */
 
-#ifndef BACKBONE_ROUTER_LEADER_HPP_
-#define BACKBONE_ROUTER_LEADER_HPP_
+#ifndef OT_CORE_BACKBONE_ROUTER_BBR_LEADER_HPP_
+#define OT_CORE_BACKBONE_ROUTER_BBR_LEADER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -200,4 +200,4 @@ private:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#endif // BACKBONE_ROUTER_LEADER_HPP_
+#endif // OT_CORE_BACKBONE_ROUTER_BBR_LEADER_HPP_

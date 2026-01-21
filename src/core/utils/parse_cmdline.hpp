@@ -31,8 +31,8 @@
  *   This file includes definitions for command line parser.
  */
 
-#ifndef PARSE_CMD_LINE_HPP_
-#define PARSE_CMD_LINE_HPP_
+#ifndef OT_CORE_UTILS_PARSE_CMDLINE_HPP_
+#define OT_CORE_UTILS_PARSE_CMDLINE_HPP_
 
 #include <stdint.h>
 #include <string.h>
@@ -652,4 +652,4 @@ template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const { return Pars
 } // namespace Utils
 } // namespace ot
 
-#endif // PARSE_CMD_LINE_HPP_
+#endif // OT_CORE_UTILS_PARSE_CMDLINE_HPP_

@@ -62,27 +62,21 @@ exit:
     return error;
 }
 
-bool BackboneTmfAgent::HandleResource(CoapBase               &aCoapBase,
-                                      const char             *aUriPath,
-                                      ot::Coap::Message      &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+bool BackboneTmfAgent::HandleResource(CoapBase &aCoapBase, const char *aUriPath, ot::Coap::Msg &aMsg)
 {
-    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMsg);
 }
 
-bool BackboneTmfAgent::HandleResource(const char             *aUriPath,
-                                      ot::Coap::Message      &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+bool BackboneTmfAgent::HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg)
 {
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aMsg);
 
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+#define Case(kUri, Type)                   \
+    case kUri:                             \
+        Get<Type>().HandleTmf<kUri>(aMsg); \
         break
 
     switch (uri)

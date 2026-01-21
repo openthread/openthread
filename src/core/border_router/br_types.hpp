@@ -31,8 +31,8 @@
  *   This file includes common type definitions for Border Router modules.
  */
 
-#ifndef BR_TYPES_HPP_
-#define BR_TYPES_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_
+#define OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,6 +47,7 @@
 #include "common/string.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
+#include "common/uptime.hpp"
 #include "net/ip6_address.hpp"
 #include "net/nd6.hpp"
 #include "thread/network_data.hpp"
@@ -493,7 +494,7 @@ public:
      * @param[in] aAddress    The IPv6 address.
      * @param[in] aUptimeNow  The current uptime (in seconds).
      */
-    void SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow);
+    void SetFrom(const Ip6::Address &aAddress, UptimeSec aUptimeNow);
 
     /**
      * Indicates whether this interface address entry matches a given IPv6 address.
@@ -521,11 +522,11 @@ public:
      * @param[out] aEntry      The `IfAddrEntry` to copy information to.
      * @param[in]  aUptimeNow  The current uptime.
      */
-    void CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const;
+    void CopyInfoTo(IfAddrEntry &aEntry, UptimeSec aUptimeNow) const;
 
 private:
     Ip6::Address mAddress;
-    uint32_t     mLastUseUptime;
+    UptimeSec    mLastUseUptime;
 };
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -670,4 +671,4 @@ TimeMilli CalculateClampedExpirationTime(TimeMilli aUpdateTime, uint32_t aLifeti
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // BR_TYPES_HPP_
+#endif // OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_

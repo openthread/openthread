@@ -33,35 +33,27 @@
 
 #include "nat64_translator.hpp"
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #include "instance/instance.hpp"
 
 namespace ot {
 namespace Nat64 {
 
-RegisterLogModule("Nat64");
-
 const char *StateToString(State aState)
 {
-    static const char *const kStateString[] = {
-        "Disabled",
-        "NotRunning",
-        "Idle",
-        "Active",
-    };
+#define StateMapList(_)               \
+    _(kStateDisabled, "Disabled")     \
+    _(kStateNotRunning, "NotRunning") \
+    _(kStateIdle, "Idle")             \
+    _(kStateActive, "Active")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateNotRunning);
-        ValidateNextEnum(kStateIdle);
-        ValidateNextEnum(kStateActive);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateString[aState];
+    return kStrings[aState];
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+RegisterLogModule("Nat64");
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -914,7 +906,7 @@ void Translator::SetEnabled(bool aEnable)
     }
 }
 
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 } // namespace Nat64
 } // namespace ot
-
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Link Metrics Manager.
  */
 
-#ifndef CONFIG_LINK_METRICS_MANAGER_H_
-#define CONFIG_LINK_METRICS_MANAGER_H_
+#ifndef OT_CORE_CONFIG_LINK_METRICS_MANAGER_H_
+#define OT_CORE_CONFIG_LINK_METRICS_MANAGER_H_
 
 /**
  * @addtogroup config-link-metrics-manager
@@ -65,4 +65,4 @@
  * @}
  */
 
-#endif // CONFIG_LINK_METRICS_MANAGER_H_
+#endif // OT_CORE_CONFIG_LINK_METRICS_MANAGER_H_

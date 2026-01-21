@@ -88,7 +88,7 @@ void Peer::SetDnssdState(DnssdState aState)
 
     if (mDnssdState == kDnssdRemoved)
     {
-        uint32_t delay = DetermineExpirationDelay(Get<Uptime>().GetUptimeInSeconds());
+        uint32_t delay = DetermineExpirationDelay(Get<UptimeTracker>().GetUptimeInSeconds());
 
         Get<PeerTable>().mTimer.FireAtIfEarlier(TimerMilli::GetNow() + Time::SecToMsec(delay));
 
@@ -113,14 +113,14 @@ exit:
     return;
 }
 
-void Peer::UpdateLastInteractionTime(void) { mLastInteractionTime = Get<Uptime>().GetUptimeInSeconds(); }
+void Peer::UpdateLastInteractionTime(void) { mLastInteractionTime = Get<UptimeTracker>().GetUptimeInSeconds(); }
 
 uint32_t Peer::DetermineSecondsSinceLastInteraction(void) const
 {
-    return Get<Uptime>().GetUptimeInSeconds() - mLastInteractionTime;
+    return Get<UptimeTracker>().GetUptimeInSeconds() - mLastInteractionTime;
 }
 
-uint32_t Peer::DetermineExpirationDelay(uint32_t aUptimeNow) const
+uint32_t Peer::DetermineExpirationDelay(UptimeSec aUptimeNow) const
 {
     // Determines the remaining expiration delay (in seconds) relative
     // to the current time of `aUptimeNow`.
@@ -134,8 +134,8 @@ uint32_t Peer::DetermineExpirationDelay(uint32_t aUptimeNow) const
     // `uint32_t` max value, indicating that the peer is not
     // considered as expired.
 
-    uint32_t delay;
-    uint32_t expireTime;
+    uint32_t  delay;
+    UptimeSec expireTime;
 
     SetToUintMax(delay);
 
@@ -259,21 +259,14 @@ bool Peer::NameMatch(const Heap::String &aHeapString, const char *aName)
 
 const char *Peer::DnssdStateToString(DnssdState aState)
 {
-    static const char *const kStateStrings[] = {
-        "resolved",  // (0) kDnssdResolved
-        "removed",   // (1) kDnssdRemoved
-        "resolving", // (2) kDnssdResolving
-    };
+#define DnssdStateMapList(_)      \
+    _(kDnssdResolved, "resolved") \
+    _(kDnssdRemoved, "removed")   \
+    _(kDnssdResolving, "resolving")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDnssdResolved);
-        ValidateNextEnum(kDnssdRemoved);
-        ValidateNextEnum(kDnssdResolving);
-    };
+    DefineEnumStringArray(DnssdStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 void Peer::Log(Action aAction) const
@@ -316,25 +309,16 @@ void Peer::Log(Action aAction) const
 
 const char *Peer::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Added",    // (0) kAdded
-        "Re-added", // (1) kReAdded,
-        "Updated",  // (2) kUpdated
-        "Deleted",  // (3) kDeleted
-        "Evicting", // (4) kEvicting
-    };
+#define ActionMapList(_)    \
+    _(kAdded, "Added")      \
+    _(kReAdded, "Re-added") \
+    _(kUpdated, "Updated")  \
+    _(kDeleted, "Deleted")  \
+    _(kEvicting, "Evicting")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAdded);
-        ValidateNextEnum(kReAdded);
-        ValidateNextEnum(kUpdated);
-        ValidateNextEnum(kDeleted);
-        ValidateNextEnum(kEvicting);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    return kActionStrings[aAction];
+    return kStrings[aAction];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -424,7 +408,7 @@ Error PeerTable::EvictPeer(void)
         // Find the peer in the 'kDnssdRemoved' state that has been
         // inactive (no send/receive interaction) for the longest duration.
 
-        uint32_t    uptimeNow           = Get<Uptime>().GetUptimeInSeconds();
+        UptimeSec   uptimeNow           = Get<UptimeTracker>().GetUptimeInSeconds();
         uint32_t    longestInactiveTime = 0;
         const Peer *selectedPeer        = nullptr;
 
@@ -463,8 +447,8 @@ exit:
 
 void PeerTable::HandleTimer(void)
 {
-    uint32_t uptimeNow = Get<Uptime>().GetUptimeInSeconds();
-    uint32_t delay;
+    UptimeSec uptimeNow = Get<UptimeTracker>().GetUptimeInSeconds();
+    uint32_t  delay;
 
     SetToUintMax(delay);
 

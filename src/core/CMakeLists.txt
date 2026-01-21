@@ -35,6 +35,7 @@ set(COMMON_SOURCES
     api/backbone_router_ftd_api.cpp
     api/ble_secure_api.cpp
     api/border_agent_api.cpp
+    api/border_agent_ephemeral_key_api.cpp
     api/border_agent_tracker_api.cpp
     api/border_agent_txt_data_api.cpp
     api/border_router_api.cpp
@@ -84,6 +85,7 @@ set(COMMON_SOURCES
     api/srp_client_api.cpp
     api/srp_client_buffers_api.cpp
     api/srp_server_api.cpp
+    api/steering_data_api.cpp
     api/tasklet_api.cpp
     api/tcp_api.cpp
     api/tcp_ext_api.cpp
@@ -179,6 +181,7 @@ set(COMMON_SOURCES
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
     meshcop/secure_transport.cpp
+    meshcop/steering_data.cpp
     meshcop/tcat_agent.cpp
     meshcop/timestamp.cpp
     net/checksum.cpp
@@ -279,6 +282,9 @@ set(COMMON_SOURCES
     utils/flash.cpp
     utils/heap.cpp
     utils/history_tracker.cpp
+    utils/history_tracker_client.cpp
+    utils/history_tracker_server.cpp
+    utils/history_tracker_tlvs.cpp
     utils/jam_detector.cpp
     utils/link_metrics_manager.cpp
     utils/mesh_diag.cpp

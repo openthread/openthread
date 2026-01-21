@@ -30,8 +30,8 @@
  * @file This file includes definitions for spinel property encoding and decoding functions.
  */
 
-#ifndef SPINEL_PROP_CODEC_HPP_
-#define SPINEL_PROP_CODEC_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_
+#define OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_
 
 #include <openthread/platform/dnssd.h>
 
@@ -175,4 +175,4 @@ otError DecodeDnssdBrowseResult(Decoder                 &aDecoder,
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_PROP_CODEC_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_

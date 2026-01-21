@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 packet processing.
  */
 
-#ifndef IP6_HEADERS_HPP_
-#define IP6_HEADERS_HPP_
+#ifndef OT_CORE_NET_IP6_HEADERS_HPP_
+#define OT_CORE_NET_IP6_HEADERS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -666,4 +666,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // IP6_HEADERS_HPP_
+#endif // OT_CORE_NET_IP6_HEADERS_HPP_

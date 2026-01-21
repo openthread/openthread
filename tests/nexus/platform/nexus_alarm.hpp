@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_ALARM_HPP_
-#define OT_NEXUS_ALARM_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_ALARM_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_ALARM_HPP_
 
 #include "instance/instance.hpp"
 
@@ -47,4 +47,4 @@ struct Alarm
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_ALARM_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_ALARM_HPP_

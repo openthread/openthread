@@ -131,6 +131,8 @@ void SubMac::SetCslParams(uint16_t aPeriod, uint8_t aChannel, ShortAddress aShor
     {
         mCslSampleTimeRadio = static_cast<uint32_t>(Get<Radio>().GetNow());
         mCslSampleTimeLocal = TimerMicro::GetNow();
+        // Update CSL sync time whenever CSL parameters are re-initialized.
+        mCslLastSync = mCslSampleTimeLocal;
 
         HandleCslTimer();
     }
@@ -182,7 +184,7 @@ void SubMac::HandleCslReceiveAt(uint32_t aTimeAhead, uint32_t aTimeAfter)
     uint32_t winStart;
     uint32_t winDuration;
 
-    mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead + periodUs);
+    mCslTimer.FireAt(mCslSampleTimeLocal + periodUs - aTimeAhead - GetNextCycleDrift());
     aTimeAhead -= kCslReceiveTimeAhead;
     winStart    = mCslSampleTimeRadio - aTimeAhead;
     winDuration = aTimeAhead + aTimeAfter;
@@ -219,7 +221,7 @@ void SubMac::HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter)
     if (mIsCslSampling)
     {
         mIsCslSampling = false;
-        mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead);
+        mCslTimer.FireAt(mCslSampleTimeLocal - aTimeAhead - GetNextCycleDrift());
         if (mState == kStateRadioSample)
         {
             LogDebg("CSL sleep %lu", ToUlong(mCslTimer.GetNow().GetValue()));
@@ -264,13 +266,21 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
     curTime = GetLocalTime();
     elapsed = curTime - mCslLastSync.GetValue();
 
-    semiWindow =
-        static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
-                              (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
+    semiWindow = static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
+                                       (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) /
+                                       Time::kOneSecondInUsec);
     semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec() + Get<Radio>().GetCslUncertainty() * 10;
 
     aAhead = Min(semiPeriod, semiWindow + kMinReceiveOnAhead + kCslReceiveTimeAhead);
     aAfter = Min(semiPeriod, semiWindow + kMinReceiveOnAfter);
+}
+
+uint32_t SubMac::GetNextCycleDrift(void)
+{
+    uint64_t periodUs = mCslPeriod * kUsPerTenSymbols;
+
+    return static_cast<uint32_t>(periodUs * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) /
+                                 Time::kOneSecondInUsec);
 }
 
 uint32_t SubMac::GetLocalTime(void)

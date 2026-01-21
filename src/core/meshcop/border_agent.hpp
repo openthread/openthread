@@ -31,8 +31,8 @@
  *   This file includes definitions for the BorderAgent role.
  */
 
-#ifndef BORDER_AGENT_HPP_
-#define BORDER_AGENT_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,10 +47,12 @@
 #include "common/heap_allocatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/tasklet.hpp"
+#include "common/uptime.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
@@ -233,6 +235,21 @@ public:
     Error SetServiceBaseName(const char *aBaseName);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+    /**
+     * Forcefully evicts the current active Thread Commissioner.
+     *
+     * This is intended as an administrator tool to address a misbehaving or stale commissioner session that may be
+     * connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner
+     * role within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+     *
+     * @retval kErrorNone          Successfully sent the eviction request to the Leader.
+     * @retval kErrorNotFound      There is no active commissioner session to evict.
+     * @retval kErrorNoBufs        Could not allocate a message buffer to send the request.
+     */
+    Error EvictActiveCommissioner(void);
+#endif
+
     /**
      * Gets the set of border agent counters.
      *
@@ -256,12 +273,21 @@ private:
 
     public:
         Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
-        Error    ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
+        void     ForwardUdpProxyToCommissioner(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        void     ForwardUdpRelayToCommissioner(const Message &aMessage);
         void     Cleanup(void);
-        bool     IsActiveCommissioner(void) const { return mIsActiveCommissioner; }
+        bool     IsActiveCommissioner(void) const;
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
+        uint16_t GetIndex(void) const { return mIndex; }
 
     private:
+        enum Action : uint8_t
+        {
+            kReceive,
+            kSend,
+            kForward,
+        };
+
         struct ForwardContext : public ot::LinkedListEntry<ForwardContext>,
                                 public Heap::Allocatable<ForwardContext>,
                                 private ot::NonCopyable
@@ -271,18 +297,18 @@ private:
             CoapDtlsSession &mSession;
             ForwardContext  *mNext;
             Uri              mUri;
-            uint8_t          mTokenLength;
-            uint8_t          mToken[Coap::Message::kMaxTokenLength];
+            Coap::Token      mToken;
         };
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
 
-        void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
+        void  HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg);
         void  HandleTmfRelayTx(Coap::Message &aMessage);
         void  HandleTmfProxyTx(Coap::Message &aMessage);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
-        Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-        void  SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength);
+        Error ForwardToLeader(const Coap::Msg &aMsg, Uri aUri);
+        void  SendErrorMessage(Error aError, const Coap::Token &aToken);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
@@ -293,22 +319,25 @@ private:
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
                                                  const Coap::Message  *aResponse,
                                                  Error                 aResult);
-        static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
-        bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-        static bool HandleResource(CoapBase               &aCoapBase,
-                                   const char             *aUriPath,
-                                   Coap::Message          &aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo);
-        bool        HandleResource(const char *aUriPath, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Coap::Msg &aMsg);
+        bool        HandleResource(const char *aUriPath, Coap::Msg &aMsg);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
-        bool                       mIsActiveCommissioner;
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        void LogUri(Action aAction, const char *aUriString, const char *aTxt);
+
+        template <Uri kUri> void Log(Action aAction) { Log<kUri>(aAction, ""); }
+        template <Uri kUri> void Log(Action aAction, const char *aTxt) { LogUri(aAction, UriToString<kUri>(), aTxt); }
+#else
+        template <Uri kUri> void Log(Action) {}
+        template <Uri kUri> void Log(Action, const char *) {}
+#endif
+
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
-        Ip6::Udp::Receiver         mUdpReceiver;
-        Ip6::Netif::UnicastAddress mCommissionerAloc;
-        uint64_t                   mAllocationTime;
+        UptimeMsec                 mAllocationTime;
+        uint16_t                   mIndex;
     };
 
     void UpdateState(void);
@@ -318,17 +347,26 @@ private:
     // Callback from Notifier
     void HandleNotifierEvents(Events aEvents);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
+    // Callbacks used with `Dtls::Transport`.
     static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     CoapDtlsSession      *HandleAcceptSession(void);
     static void           HandleRemoveSession(void *aContext, SecureSession &aSession);
     void                  HandleRemoveSession(SecureSession &aSession);
-    CoapDtlsSession      *FindActiveCommissionerSession(void);
 
+    uint16_t            GetNextSessionIndex(void) { return ++mSessionIndex; }
+    const Ip6::Address &GetCommissionerAloc(void) const { return mCommissionerAloc.GetAddress(); }
+    CoapDtlsSession    *GetCommissionerSession(void) { return mCommissionerSession; }
+
+    bool IsCommissionerSession(const CoapDtlsSession &aSession) const { return mCommissionerSession == &aSession; }
     void HandleSessionConnected(CoapDtlsSession &aSession);
     void HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSession::ConnectEvent aEvent);
-    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession);
+    void HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession, uint16_t aSessionId);
+    void RevokeRoleIfActiveCommissioner(CoapDtlsSession &aSession);
+
+    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     // Callback from `BorderAgent::TxtData`.
@@ -349,9 +387,14 @@ private:
     static const char kDefaultBaseServiceName[];
 #endif
 
-    bool            mEnabled;
-    bool            mIsRunning;
-    Dtls::Transport mDtlsTransport;
+    bool                       mEnabled;
+    bool                       mIsRunning;
+    uint16_t                   mSessionIndex;
+    Dtls::Transport            mDtlsTransport;
+    CoapDtlsSession           *mCommissionerSession;
+    Ip6::Udp::Receiver         mCommissionerUdpReceiver;
+    Ip6::Netif::UnicastAddress mCommissionerAloc;
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
@@ -377,4 +420,4 @@ DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::Manager::Sess
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#endif // BORDER_AGENT_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_HPP_

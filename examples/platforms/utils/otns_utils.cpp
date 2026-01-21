@@ -43,6 +43,10 @@ using namespace ot;
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
 
 OT_TOOL_WEAK
-void otPlatOtnsStatus(const char *aStatus) { LogAlways("[OTNS] %s", aStatus); }
+void otPlatOtnsStatus(const char *aStatus)
+{
+    OT_UNUSED_VARIABLE(aStatus);
+    LogAlways("[OTNS] %s", aStatus);
+}
 
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE

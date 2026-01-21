@@ -31,8 +31,8 @@
  *   This file includes definitions for handle network diagnostic.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_HPP_
-#define NETWORK_DIAGNOSTIC_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -131,8 +131,13 @@ public:
      *
      * @param[in] aVendorName     The vendor name string.
      *
+     * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, @p aVendorName must start with the "RD:" prefix.
+     * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
+     * the name is rejected, and `kErrorInvalidArgs` is returned.
+     *
      * @retval kErrorNone         Successfully set the vendor name.
-     * @retval kErrorInvalidArgs  @p aVendorName is not valid (too long or not UTF8).
+     * @retval kErrorInvalidArgs  @p aVendorName is not valid. It is too long, is not UTF-8, or does not start with
+     *                            the "RD:" prefix when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
      */
     Error SetVendorName(const char *aVendorName);
 
@@ -270,7 +275,7 @@ private:
     Error AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage);
 #endif
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     VendorNameTlv::StringType      mVendorName;
@@ -302,7 +307,7 @@ class Client : public InstanceLocator, private NonCopyable
 
 public:
     typedef otNetworkDiagIterator          Iterator;    ///< Iterator to go through TLVs in `GetNextDiagTlv()`.
-    typedef otNetworkDiagTlv               TlvInfo;     ///< Parse info from a Network Diagnostic TLV.
+    typedef otNetworkDiagTlv               DiagTlv;     ///< Parse info from a Network Diagnostic TLV.
     typedef otNetworkDiagChildEntry        ChildInfo;   ///< Parsed info for child table entry.
     typedef otReceiveDiagnosticGetCallback GetCallback; ///< Diagnostic Get callback function pointer type.
 
@@ -345,13 +350,13 @@ public:
      *
      * @param[in]      aMessage    Message to read TLVs from.
      * @param[in,out]  aIterator   The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
-     * @param[out]     aTlvInfo    A reference to a `TlvInfo` to output the next TLV data.
+     * @param[out]     aDiagTlv    A reference to a `DiagTlv` to output the next TLV data.
      *
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
      * @retval kErrorParse      Parsing the next Network Diagnostic failed.
      */
-    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
+    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, DiagTlv &aDiagTlv);
 
     /**
      * This method returns the query ID used for the last Network Diagnostic Query command.
@@ -372,13 +377,9 @@ private:
                       Coap::ResponseHandler aHandler = nullptr,
                       void                 *aContext = nullptr);
 
-    static void HandleGetResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult);
-    void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerFullParamIn(Client, HandleGetResponse);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
     static void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, MacCounters &aMacCounters);
@@ -402,4 +403,4 @@ DeclareTmfHandler(Client, kUriDiagnosticReset);
 
 } // namespace ot
 
-#endif // NETWORK_DIAGNOSTIC_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_

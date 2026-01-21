@@ -31,8 +31,8 @@
  *   This file includes definitions for handling indirect transmission.
  */
 
-#ifndef INDIRECT_SENDER_HPP_
-#define INDIRECT_SENDER_HPP_
+#ifndef OT_CORE_THREAD_INDIRECT_SENDER_HPP_
+#define OT_CORE_THREAD_INDIRECT_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -299,4 +299,4 @@ private:
 
 } // namespace ot
 
-#endif // INDIRECT_SENDER_HPP_
+#endif // OT_CORE_THREAD_INDIRECT_SENDER_HPP_

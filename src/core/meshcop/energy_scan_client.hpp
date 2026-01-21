@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef ENERGY_SCAN_CLIENT_HPP_
-#define ENERGY_SCAN_CLIENT_HPP_
+#ifndef OT_CORE_MESHCOP_ENERGY_SCAN_CLIENT_HPP_
+#define OT_CORE_MESHCOP_ENERGY_SCAN_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -85,7 +85,7 @@ public:
                     void                              *aContext);
 
 private:
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     Callback<otCommissionerEnergyReportCallback> mCallback;
 };
@@ -100,4 +100,4 @@ DeclareTmfHandler(EnergyScanClient, kUriEnergyReport);
 
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
-#endif // ENERGY_SCAN_CLIENT_HPP_
+#endif // OT_CORE_MESHCOP_ENERGY_SCAN_CLIENT_HPP_

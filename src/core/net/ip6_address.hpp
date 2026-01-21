@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 addresses.
  */
 
-#ifndef IP6_ADDRESS_HPP_
-#define IP6_ADDRESS_HPP_
+#ifndef OT_CORE_NET_IP6_ADDRESS_HPP_
+#define OT_CORE_NET_IP6_ADDRESS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -976,4 +976,4 @@ DefineCoreType(otIp6Address, Ip6::Address);
 
 } // namespace ot
 
-#endif // IP6_ADDRESS_HPP_
+#endif // OT_CORE_NET_IP6_ADDRESS_HPP_

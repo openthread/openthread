@@ -30,8 +30,8 @@
  *   This file contains definitions of spinel.
  */
 
-#ifndef SPINEL_HEADER_INCLUDED
-#define SPINEL_HEADER_INCLUDED 1
+#ifndef OT_LIB_SPINEL_SPINEL_H_
+#define OT_LIB_SPINEL_SPINEL_H_
 
 /*
  *   Spinel is a host-controller protocol designed to enable
@@ -5014,6 +5014,32 @@ enum
 
     SPINEL_PROP_BACKBONE_ROUTER__END = 0x990,
 
+    SPINEL_PROP_BORDER_ROUTER__BEGIN = 0x990,
+
+    /// Enables or Disables DHCPv6 Prefix Delegation
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Enables or disables DHCPv6 Prefix Delegation
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE = SPINEL_PROP_BORDER_ROUTER__BEGIN + 1,
+
+    /// Process DHCPv6 Prefix Delegation Prefix
+    /**
+     * Format: `6CLL` - Write-Only
+     *
+     * This property is used to provide a DHCPv6 Prefix Delegation (PD) prefix to the OpenThread stack
+     * via the NCP interface. It calls `otPlatBorderRoutingProcessDhcp6PdPrefix()`.
+     *
+     * `6` : IPv6 prefix address
+     * `C` : Prefix length in bits
+     * `L` : Valid lifetime in seconds
+     * `L` : Preferred lifetime in seconds
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
+
+    SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
+
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
@@ -5292,4 +5318,4 @@ SPINEL_API_EXTERN const char *spinel_link_metrics_status_to_cstr(uint8_t status)
 }
 #endif
 
-#endif /* defined(SPINEL_HEADER_INCLUDED) */
+#endif // OT_LIB_SPINEL_SPINEL_H_

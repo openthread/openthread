@@ -477,9 +477,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         }
         else
         {
-            String<Uptime::kStringSize> string;
+            String<kUptimeStringSize> string;
 
-            Uptime::UptimeToString(duration, string, /* aIncludeMsec */ true);
+            UptimeToString(duration, string, /* aIncludeMsec */ true);
             LogInfo("Will evaluate routing policy in %s (%lu msec)", string.AsCString() + 3, ToUlong(duration));
         }
     }
@@ -1086,21 +1086,14 @@ RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::F
 
 const char *RoutingManager::OmrPrefixManager::OmrConfigToString(OmrConfig aConfig)
 {
-    static const char *const kConfigStrings[] = {
-        "auto",     // (0) kOmrConfigAuto
-        "custom",   // (1) kOmrConfigCustom
-        "disabled", // (2) kOmrConfigDisabled
-    };
+#define OmrConfigMapList(_)       \
+    _(kOmrConfigAuto, "auto")     \
+    _(kOmrConfigCustom, "custom") \
+    _(kOmrConfigDisabled, "disabled")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kOmrConfigAuto);
-        ValidateNextEnum(kOmrConfigCustom);
-        ValidateNextEnum(kOmrConfigDisabled);
-    };
+    DefineEnumStringArray(OmrConfigMapList);
 
-    return kConfigStrings[aConfig];
+    return kStrings[aConfig];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1680,23 +1673,15 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
 
 const char *RoutingManager::OnLinkPrefixManager::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Removed",     // (0) kIdle
-        "Publishing",  // (1) kPublishing
-        "Advertising", // (2) kAdvertising
-        "Deprecating", // (3) kDeprecating
-    };
+#define OnLinkPrefixManagerStateMapList(_) \
+    _(kIdle, "Removed")                    \
+    _(kPublishing, "Publishing")           \
+    _(kAdvertising, "Advertising")         \
+    _(kDeprecating, "Deprecating")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kIdle);
-        ValidateNextEnum(kPublishing);
-        ValidateNextEnum(kAdvertising);
-        ValidateNextEnum(kDeprecating);
-    };
+    DefineEnumStringArray(OnLinkPrefixManagerStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -2168,21 +2153,14 @@ exit:
 
 const char *RoutingManager::RoutePublisher::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "none",      // (0) kDoNotPublish
-        "def-route", // (1) kPublishDefault
-        "ula",       // (2) kPublishUla
-    };
+#define RoutePublisherStateMapList(_) \
+    _(kDoNotPublish, "none")          \
+    _(kPublishDefault, "def-route")   \
+    _(kPublishUla, "ula")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDoNotPublish);
-        ValidateNextEnum(kPublishDefault);
-        ValidateNextEnum(kPublishUla);
-    };
+    DefineEnumStringArray(RoutePublisherStateMapList)
 
-    return kStateStrings[aState];
+        return kStrings[aState];
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -2196,7 +2174,7 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     , mTimer(aInstance)
 {
     mRaTrackerPrefix.Clear();
-    mInfraIfPrefix.Clear();
+    mPlatformPrefix.Clear();
     mLocalPrefix.Clear();
     mPublishedPrefix.Clear();
 }
@@ -2237,7 +2215,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
     LogInfo("Stopping Nat64PrefixManager");
 
     Unpublish();
-    mInfraIfPrefix.Clear();
+    mPlatformPrefix.Clear();
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -2257,28 +2235,26 @@ void RoutingManager::Nat64PrefixManager::GenerateLocalPrefix(const Ip6::Prefix &
 
 const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePreference &aPreference) const
 {
-    const Ip6::Prefix *favoredPrefix;
+    const Ip6::Prefix *favoredPrefix = &mLocalPrefix;
 
     aPreference = NetworkData::kRoutePreferenceLow;
 
-    if (mRaTrackerPrefix.IsValidNat64() &&
-        Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
+    // To ensure routing coherency, only use a discovered NAT64 prefix if the
+    // OMR prefix is also from the infrastructure.
+    if (Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
     {
         // Per RFC 8781 section 5, discovered NAT64 prefixes from RAs should be favored.
-        favoredPrefix = &mRaTrackerPrefix;
-        aPreference   = NetworkData::kRoutePreferenceMedium;
-    }
-    else if (mInfraIfPrefix.IsValidNat64() &&
-             Get<RoutingManager>().mOmrPrefixManager.GetFavoredPrefix().IsInfrastructureDerived())
-    {
-        // We have a valid NAT64 prefix from infrastructure (e.g. using DNS - RFC 7050) and the network is aligned with
-        // an infrastructure-provided OMR prefix.
-        favoredPrefix = &mInfraIfPrefix;
-        aPreference   = NetworkData::kRoutePreferenceMedium;
-    }
-    else
-    {
-        favoredPrefix = &mLocalPrefix;
+        if (mRaTrackerPrefix.IsValidNat64())
+        {
+            favoredPrefix = &mRaTrackerPrefix;
+            aPreference   = NetworkData::kRoutePreferenceMedium;
+        }
+        // A valid NAT64 prefix from the platform (e.g. using DNS - RFC 7050) is the next choice.
+        else if (mPlatformPrefix.IsValidNat64())
+        {
+            favoredPrefix = &mPlatformPrefix;
+            aPreference   = NetworkData::kRoutePreferenceMedium;
+        }
     }
 
     return *favoredPrefix;
@@ -2309,11 +2285,11 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     // - The preferred NAT64 prefix in Network Data was published
     //   by this BR.
     // - The preferred NAT64 prefix in Network Data is same as the
-    //   discovered infrastructure prefix.
+    //   platform-provided prefix.
 
     shouldPublish =
         ((error == kErrorNotFound) || (netdataPrefixConfig.mPreference < preference) ||
-         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mInfraIfPrefix));
+         (netdataPrefixConfig.GetPrefix() == mPublishedPrefix) || (netdataPrefixConfig.GetPrefix() == mPlatformPrefix));
 
     if (shouldPublish)
     {
@@ -2418,12 +2394,12 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     }
 }
 
-void RoutingManager::Nat64PrefixManager::HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix)
+void RoutingManager::Nat64PrefixManager::HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix)
 {
-    mInfraIfPrefix = aPrefix;
+    mPlatformPrefix = aPrefix;
 
-    LogInfo("InfraIf Discovered NAT64 prefix: %s",
-            mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
+    LogInfo("Platform Discovered NAT64 prefix: %s",
+            mPlatformPrefix.IsValidNat64() ? mPlatformPrefix.ToString().AsCString() : "none");
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 
@@ -2853,23 +2829,15 @@ exit:
 
 const char *RoutingManager::PdPrefixManager::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled", // (0) kDisabled
-        "Stopped",  // (1) kStopped
-        "Running",  // (2) kRunning
-        "Idle",     // (3) kIdle
-    };
+#define PdPrefixManagerStateMapList(_)   \
+    _(kDhcp6PdStateDisabled, "Disabled") \
+    _(kDhcp6PdStateStopped, "Stopped")   \
+    _(kDhcp6PdStateRunning, "Running")   \
+    _(kDhcp6PdStateIdle, "Idle")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDhcp6PdStateDisabled);
-        ValidateNextEnum(kDhcp6PdStateStopped);
-        ValidateNextEnum(kDhcp6PdStateRunning);
-        ValidateNextEnum(kDhcp6PdStateIdle);
-    };
+    DefineEnumStringArray(PdPrefixManagerStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE

@@ -306,7 +306,7 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_WAKEUP_CHANNEL           = 74,  ///< meshcop Wake-up Channel TLV
     OT_MESHCOP_TLV_DISCOVERYREQUEST         = 128, ///< meshcop Discovery Request TLV
     OT_MESHCOP_TLV_DISCOVERYRESPONSE        = 129, ///< meshcop Discovery Response TLV
-    OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV
+    OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV (experimental)
 } otMeshcopTlvType;
 
 /**

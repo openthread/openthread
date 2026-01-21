@@ -1514,23 +1514,15 @@ const char *Ip6::IpProtoToString(uint8_t aIpProto)
 
 const char *Ip6::EcnToString(Ecn aEcn)
 {
-    static const char *const kEcnStrings[] = {
-        "no", // (0) kEcnNotCapable
-        "e1", // (1) kEcnCapable1  (ECT1)
-        "e0", // (2) kEcnCapable0  (ECT0)
-        "ce", // (3) kEcnMarked    (Congestion Encountered)
-    };
+#define EcnMapList(_)                \
+    _(kEcnNotCapable, "no")          \
+    _(kEcnCapable1, "e1") /* ECT1*/  \
+    _(kEcnCapable0, "e0") /* ECT0 */ \
+    _(kEcnMarked, "ce")   /* Congestion Encountered */
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kEcnNotCapable);
-        ValidateNextEnum(kEcnCapable1);
-        ValidateNextEnum(kEcnCapable0);
-        ValidateNextEnum(kEcnMarked);
-    };
+    DefineEnumStringArray(EcnMapList);
 
-    return kEcnStrings[aEcn];
+    return kStrings[aEcn];
 }
 
 // LCOV_EXCL_STOP

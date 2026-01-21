@@ -2696,25 +2696,24 @@ void Mle::SetSteeringData(const Mac::ExtAddress *aExtAddress)
     {
         Mac::ExtAddress joinerId;
 
-        mSteeringData.Init();
+        IgnoreError(mSteeringData.Init(MeshCoP::SteeringData::kMaxLength));
         MeshCoP::ComputeJoinerId(*aExtAddress, joinerId);
-        mSteeringData.UpdateBloomFilter(joinerId);
+        IgnoreError(mSteeringData.UpdateBloomFilter(joinerId));
     }
 }
 #endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
 void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 {
-    Error                        error = kErrorNone;
-    Tlv::ParsedInfo              tlvInfo;
-    MeshCoP::DiscoveryRequestTlv discoveryRequestTlv;
-    MeshCoP::ExtendedPanId       extPanId;
-    OffsetRange                  offsetRange;
-    DiscoveryResponseInfo        responseInfo;
+    Error                             error                     = kErrorNone;
+    bool                              parsedDiscoveryRequestTlv = false;
+    Tlv::Info                         tlvInfo;
+    MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
+    MeshCoP::ExtendedPanId            extPanId;
+    OffsetRange                       offsetRange;
+    DiscoveryResponseInfo             responseInfo;
 
     Log(kMessageReceive, kTypeDiscoveryRequest, aRxInfo.mMessageInfo.GetPeerAddr());
-
-    discoveryRequestTlv.SetLength(0);
 
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
 
@@ -2724,17 +2723,17 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
     {
         SuccessOrExit(error = tlvInfo.ParseFrom(aRxInfo.mMessage, offsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case MeshCoP::Tlv::kDiscoveryRequest:
-            SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, discoveryRequestTlv));
-            VerifyOrExit(discoveryRequestTlv.IsValid(), error = kErrorParse);
-
+            SuccessOrExit(error = Tlv::Read<MeshCoP::DiscoveryRequestTlv>(aRxInfo.mMessage, offsetRange.GetOffset(),
+                                                                          discoveryRequestTlvValue));
+            parsedDiscoveryRequestTlv = true;
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
@@ -2749,20 +2748,20 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
         }
     }
 
-    if (discoveryRequestTlv.IsValid())
+    if (parsedDiscoveryRequestTlv)
     {
         if (mDiscoveryRequestCallback.IsSet())
         {
             otThreadDiscoveryRequestInfo info;
 
             AsCoreType(&info.mExtAddress).SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
-            info.mVersion  = discoveryRequestTlv.GetVersion();
-            info.mIsJoiner = discoveryRequestTlv.IsJoiner();
+            info.mVersion  = discoveryRequestTlvValue.GetVersion();
+            info.mIsJoiner = discoveryRequestTlvValue.GetJoinerFlag();
 
             mDiscoveryRequestCallback.Invoke(&info);
         }
 
-        if (discoveryRequestTlv.IsJoiner())
+        if (discoveryRequestTlvValue.GetJoinerFlag())
         {
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
             if (!mSteeringData.IsEmpty())
@@ -2793,11 +2792,10 @@ exit:
 
 Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const DiscoveryResponseInfo &aInfo)
 {
-    Error                         error = kErrorNone;
-    TxMessage                    *message;
-    uint16_t                      startOffset;
-    Tlv                           tlv;
-    MeshCoP::DiscoveryResponseTlv discoveryResponseTlv;
+    Error                              error = kErrorNone;
+    TxMessage                         *message;
+    Tlv::Bookmark                      tlvBookmark;
+    MeshCoP::DiscoveryResponseTlvValue discoveryResponseTlvValue;
 
     VerifyOrExit((message = NewMleMessage(kCommandDiscoveryResponse)) != nullptr, error = kErrorNoBufs);
     message->SetDirectTransmission();
@@ -2806,13 +2804,10 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
     message->SetRadioType(aInfo.mRadioType);
 #endif
 
-    tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(tlv));
+    SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kDiscovery, tlvBookmark));
 
-    startOffset = message->GetLength();
-
-    discoveryResponseTlv.Init();
-    discoveryResponseTlv.SetVersion(kThreadVersion);
+    discoveryResponseTlvValue.Clear();
+    discoveryResponseTlvValue.SetVersion(kThreadVersion);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
@@ -2820,20 +2815,16 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
         SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(
                           *message, Get<MeshCoP::BorderAgent::Manager>().GetUdpPort()));
 
-        discoveryResponseTlv.SetNativeCommissioner(true);
+        discoveryResponseTlvValue.SetNativeCommissionerFlag();
     }
-    else
 #endif
-    {
-        discoveryResponseTlv.SetNativeCommissioner(false);
-    }
 
     if (Get<KeyManager>().GetSecurityPolicy().mCommercialCommissioningEnabled)
     {
-        discoveryResponseTlv.SetCommercialCommissioningMode(true);
+        discoveryResponseTlvValue.SetCcmFlag();
     }
 
-    SuccessOrExit(error = discoveryResponseTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::DiscoveryResponseTlv>(*message, discoveryResponseTlvValue));
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
@@ -2854,8 +2845,7 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
     }
 #endif
 
-    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), tlv);
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
     SuccessOrExit(error = message->SendTo(aDestination));
 
@@ -3332,15 +3322,6 @@ exit:
     LogSendError(kTypeAddressRelease, error);
 }
 
-void Mle::HandleAddressSolicitResponse(void                *aContext,
-                                       otMessage           *aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aResult)
-{
-    static_cast<Mle *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                               aResult);
-}
-
 void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
 {
     uint8_t             status;
@@ -3587,22 +3568,22 @@ exit:
     return;
 }
 
-template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Msg &aMsg)
 {
     Coap::Message  *response = nullptr;
     AddrSolicitInfo info;
 
     VerifyOrExit(IsLeader() && !IsAttaching());
 
-    Log(kMessageReceive, kTypeAddressSolicit, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressSolicit, aMsg.mMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(info.ParseFrom(aMessage));
+    SuccessOrExit(info.ParseFrom(aMsg.mMessage));
 
     ProcessAddressSolicit(info);
 
     // Prepare and send response
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
+    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
     VerifyOrExit(response != nullptr);
 
     SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*response, info.mResponse));
@@ -3620,10 +3601,10 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
         SuccessOrExit(routerMaskTlv.AppendTo(*response));
     }
 
-    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
     response = nullptr;
 
-    Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressReply, aMsg.mMessageInfo.GetPeerAddr());
 
     // If assigning a new RLOC16 (e.g., on promotion of a child to
     // router role) we clear any address cache entries associated
@@ -3636,8 +3617,8 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessage, con
     {
         uint16_t oldRloc16;
 
-        VerifyOrExit(IsRoutingLocator(aMessageInfo.GetPeerAddr()));
-        oldRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
+        VerifyOrExit(IsRoutingLocator(aMsg.mMessageInfo.GetPeerAddr()));
+        oldRloc16 = aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator();
 
         VerifyOrExit(oldRloc16 != info.mRouter->GetRloc16());
         VerifyOrExit(!RouterIdMatch(oldRloc16, GetRloc16()));
@@ -3648,7 +3629,7 @@ exit:
     FreeMessage(response);
 }
 
-template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Msg &aMsg)
 {
     uint16_t        rloc16;
     Mac::ExtAddress extAddress;
@@ -3657,12 +3638,12 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, con
 
     VerifyOrExit(mRole == kRoleLeader);
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
 
-    Log(kMessageReceive, kTypeAddressRelease, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressRelease, aMsg.mMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16));
-    SuccessOrExit(Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
+    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg.mMessage, rloc16));
+    SuccessOrExit(Tlv::Find<ThreadExtMacAddressTlv>(aMsg.mMessage, extAddress));
 
     routerId = RouterIdFromRloc16(rloc16);
     router   = mRouterTable.FindRouterById(routerId);
@@ -3671,46 +3652,38 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Message &aMessage, con
 
     IgnoreError(mRouterTable.Release(routerId));
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
 
-    Log(kMessageSend, kTypeAddressReleaseReply, aMessageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressReleaseReply, aMsg.mMessageInfo.GetPeerAddr());
 
 exit:
     return;
 }
 
-void Mle::FillConnectivityTlv(ConnectivityTlv &aTlv)
+void Mle::DetermineConnectivity(Connectivity &aConnectivity) const
 {
-    int8_t parentPriority = kParentPriorityMedium;
+    aConnectivity.Clear();
 
-    if (mParentPriority != kParentPriorityUnspecified)
-    {
-        parentPriority = mParentPriority;
-    }
-    else
+    aConnectivity.mParentPriority = GetAssignParentPriority();
+
+    if (aConnectivity.mParentPriority == kParentPriorityUnspecified)
     {
         uint16_t numChildren = mChildTable.GetNumChildren(Child::kInStateValid);
         uint16_t maxAllowed  = mChildTable.GetMaxChildrenAllowed();
 
         if ((maxAllowed - numChildren) < (maxAllowed / 3))
         {
-            parentPriority = kParentPriorityLow;
+            aConnectivity.mParentPriority = kParentPriorityLow;
         }
         else
         {
-            parentPriority = kParentPriorityMedium;
+            aConnectivity.mParentPriority = kParentPriorityMedium;
         }
     }
 
-    aTlv.SetParentPriority(parentPriority);
-
-    aTlv.SetLinkQuality1(0);
-    aTlv.SetLinkQuality2(0);
-    aTlv.SetLinkQuality3(0);
-
     if (IsChild())
     {
-        aTlv.IncrementLinkQuality(mParent.GetLinkQualityIn());
+        aConnectivity.IncrementNumForLinkQuality(mParent.GetLinkQualityIn());
     }
 
     for (const Router &router : Get<RouterTable>())
@@ -3725,14 +3698,22 @@ void Mle::FillConnectivityTlv(ConnectivityTlv &aTlv)
             continue;
         }
 
-        aTlv.IncrementLinkQuality(router.GetTwoWayLinkQuality());
+        aConnectivity.IncrementNumForLinkQuality(router.GetTwoWayLinkQuality());
     }
 
-    aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());
-    aTlv.SetLeaderCost(Min(mRouterTable.GetPathCostToLeader(), kMaxRouteCost));
-    aTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
-    aTlv.SetSedBufferSize(OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE);
-    aTlv.SetSedDatagramCount(OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT);
+    aConnectivity.mLeaderCost       = Min(mRouterTable.GetPathCostToLeader(), kMaxRouteCost);
+    aConnectivity.mIdSequence       = mRouterTable.GetRouterIdSequence();
+    aConnectivity.mActiveRouters    = mRouterTable.GetActiveRouterCount();
+    aConnectivity.mSedBufferSize    = Connectivity::kDefaultSedBufferSize;
+    aConnectivity.mSedDatagramCount = Connectivity::kDefaultSedDatagramCount;
+}
+
+void Mle::FillConnectivityTlvValue(ConnectivityTlvValue &aTlvValue) const
+{
+    Connectivity connectivity;
+
+    DetermineConnectivity(connectivity);
+    aTlvValue.InitFrom(connectivity);
 }
 
 bool Mle::ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COAP_SECURE_HPP_
-#define COAP_SECURE_HPP_
+#ifndef OT_CORE_COAP_COAP_SECURE_HPP_
+#define OT_CORE_COAP_COAP_SECURE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -169,4 +169,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
-#endif // COAP_SECURE_HPP_
+#endif // OT_CORE_COAP_COAP_SECURE_HPP_

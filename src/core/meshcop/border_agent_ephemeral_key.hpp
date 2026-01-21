@@ -31,8 +31,8 @@
  *   This file includes definitions for the Border Agent Ephemeral Key Manager.
  */
 
-#ifndef BORDER_AGENT_EPHEMERAL_KEY_HPP_
-#define BORDER_AGENT_EPHEMERAL_KEY_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_EPHEMERAL_KEY_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_EPHEMERAL_KEY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -77,6 +77,43 @@ public:
         kStateConnected = OT_BORDER_AGENT_STATE_CONNECTED, ///< Session connected, not full commissioner.
         kStateAccepted  = OT_BORDER_AGENT_STATE_ACCEPTED,  ///< Session connected and accepted as full commissioner.
     };
+
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+    /**
+     * Represents a Thread Administration One-Time Passcode (TAP).
+     */
+    class Tap : public otBorderAgentEphemeralKeyTap
+    {
+    public:
+        static constexpr uint8_t kLength = OT_BORDER_AGENT_EPHEMERAL_KEY_TAP_STRING_LENGTH; ///< TAP string length.
+
+        /**
+         * Generates a cryptographically secure random Thread Administration One-Time Passcode (TAP) string.
+         *
+         * The TAP is a string of 9 characters, generated as a sequence of eight cryptographically secure random
+         * numeric digits [`0`-`9`] followed by a single check digit determined using the Verhoeff algorithm.
+         *
+         * @retval kErrorNone    Successfully generated a random TAP.
+         * @retval kErrorFailed  Failed to generate a random TAP.
+         */
+        Error GenerateRandom(void);
+
+        /**
+         * Validates a given Thread Administration One-Time Passcode (TAP) string.
+         *
+         * Validates that the TAP string has the proper length, contains digit characters [`0`-`9`], and validates the
+         * Verhoeff checksum.
+         *
+         * @retval kErrorNone           Successfully validated the TAP.
+         * @retval kErrorInvalidArgs    The TAP string has an invalid length or contains non-digit characters.
+         * @retval kErrorFailed         Checksum validation failed.
+         */
+        Error Validate(void) const;
+
+    private:
+        Error GenerateRandomDigit(char &aChar);
+    };
+#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
     /**
      * Initializes the `EphemeralKeyManager`.
@@ -226,9 +263,12 @@ private:
 } // namespace MeshCoP
 
 DefineMapEnum(otBorderAgentEphemeralKeyState, MeshCoP::BorderAgent::EphemeralKeyManager::State);
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+DefineCoreType(otBorderAgentEphemeralKeyTap, MeshCoP::BorderAgent::EphemeralKeyManager::Tap);
+#endif
 
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
-#endif // BORDER_AGENT_EPHEMERAL_KEY_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_EPHEMERAL_KEY_HPP_

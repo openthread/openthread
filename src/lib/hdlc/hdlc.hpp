@@ -30,8 +30,8 @@
  *   This file includes definitions for an HDLC-lite encoder and decoder.
  */
 
-#ifndef HDLC_HPP_
-#define HDLC_HPP_
+#ifndef OT_LIB_HDLC_HDLC_HPP_
+#define OT_LIB_HDLC_HDLC_HPP_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -182,4 +182,4 @@ private:
 } // namespace Hdlc
 } // namespace ot
 
-#endif // HDLC_HPP_
+#endif // OT_LIB_HDLC_HDLC_HPP_

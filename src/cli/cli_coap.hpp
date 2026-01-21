@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI CoAP server and client.
  */
 
-#ifndef CLI_COAP_HPP_
-#define CLI_COAP_HPP_
+#ifndef OT_CLI_CLI_COAP_HPP_
+#define OT_CLI_CLI_COAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -166,15 +166,13 @@ private:
     otIp6Address mRequestAddr;
     otSockAddr   mSubscriberSock;
     char         mRequestUri[kMaxUriLength];
-    uint8_t      mRequestToken[OT_COAP_MAX_TOKEN_LENGTH];
-    uint8_t      mSubscriberToken[OT_COAP_MAX_TOKEN_LENGTH];
+    otCoapToken  mRequestToken;
+    otCoapToken  mSubscriberToken;
 #endif
     char mUriPath[kMaxUriLength];
     char mResourceContent[kMaxBufferSize];
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     uint32_t mObserveSerial;
-    uint8_t  mRequestTokenLength;
-    uint8_t  mSubscriberTokenLength;
     bool     mSubscriberConfirmableNotifications;
     bool     mValidateObserveClient;
     uint8_t  mNotificationSeriesCount;
@@ -189,4 +187,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-#endif // CLI_COAP_HPP_
+#endif // OT_CLI_CLI_COAP_HPP_

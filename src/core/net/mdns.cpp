@@ -4101,25 +4101,16 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
 
 const char *Core::TxMessage::TypeToString(Type aType)
 {
-    static const char *const kTypeStrings[] = {
-        "multicast probe",         // kMulticastProbe
-        "multicast query",         // kMulticastQuery
-        "multicast response",      // kMulticastResponse
-        "unicast response",        // kUnicastResponse
-        "legacy-unicast response", // kLegacyUnicastResponse
-    };
+#define TypeMapList(_)                          \
+    _(kMulticastProbe, "multicast probe")       \
+    _(kMulticastQuery, "multicast query")       \
+    _(kMulticastResponse, "multicast response") \
+    _(kUnicastResponse, "unicast response")     \
+    _(kLegacyUnicastResponse, "legacy-unicast response")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kMulticastProbe);
-        ValidateNextEnum(kMulticastQuery);
-        ValidateNextEnum(kMulticastResponse);
-        ValidateNextEnum(kUnicastResponse);
-        ValidateNextEnum(kLegacyUnicastResponse);
-    };
+    DefineEnumStringArray(TypeMapList);
 
-    return kTypeStrings[aType];
+    return kStrings[aType];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -4229,7 +4220,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     mStartOffset[kQuestionSection] = offset;
 
-    SuccessOrAssert(mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
+    SuccessOrExit(error = mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
 
     for (numRecords = mRecordCounts.GetFor(kQuestionSection); numRecords > 0; numRecords--)
     {
@@ -5147,6 +5138,7 @@ Error Core::Start(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
 
@@ -5172,6 +5164,7 @@ Error Core::Stop(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
     VerifyOrExit(cacheEntry != nullptr);
@@ -5221,6 +5214,8 @@ Error Core::StartRecordQuerier(const RecordQuerier &aQuerier)
     return error;
 }
 
+Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+
 Error Core::StopIp6AddressResolver(const AddressResolver &aResolver)
 {
     return Stop<Ip6AddrCache, AddressResolver>(aResolver);
@@ -5236,7 +5231,62 @@ Error Core::StopIp4AddressResolver(const AddressResolver &aResolver)
     return Stop<Ip4AddrCache, AddressResolver>(aResolver);
 }
 
-Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+Error Core::ValidateNamesIn(const Browser &aBrowser) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateName(aBrowser.mServiceType));
+
+    if (aBrowser.mSubTypeLabel != nullptr)
+    {
+        error = Name::ValidateLabel(aBrowser.mSubTypeLabel);
+    }
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const SrvResolver &aSrvResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aSrvResolver.mServiceInstance));
+    error = Name::ValidateName(aSrvResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const TxtResolver &aTxtResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aTxtResolver.mServiceInstance));
+    error = Name::ValidateName(aTxtResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const AddressResolver &aAddressResolver) const
+{
+    return Name::ValidateName(aAddressResolver.mHostName);
+}
+
+Error Core::ValidateNamesIn(const RecordQuerier &aRecordQuerier) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aRecordQuerier.mFirstLabel));
+
+    if (aRecordQuerier.mNextLabels != nullptr)
+    {
+        error = Name::ValidateName(aRecordQuerier.mNextLabels);
+    }
+
+exit:
+    return error;
+}
 
 void Core::AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType)
 {

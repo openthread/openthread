@@ -46,16 +46,28 @@
 #include "common/debug.hpp"
 #include "posix/platform/settings_file.hpp"
 
+void platformSettingsInit(const char *aDataPath) { ot::Posix::SettingsFile::SetSettingsPath(aDataPath); }
+
 namespace ot {
 namespace Posix {
+
+char SettingsFile::sSettingsPath[] = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+
+const char *SettingsFile::GetSettingsPath(void) { return sSettingsPath; }
+void        SettingsFile::SetSettingsPath(const char *aSettingsPath)
+{
+    snprintf(sSettingsPath, sizeof(sSettingsPath), "%s",
+             aSettingsPath == nullptr ? OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH : aSettingsPath);
+}
 
 otError SettingsFile::Init(const char *aSettingsFileBaseName)
 {
     otError     error     = OT_ERROR_NONE;
-    const char *directory = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    const char *directory = GetSettingsPath();
 
-    OT_ASSERT((aSettingsFileBaseName != nullptr) && (strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize));
-    strncpy(mSettingFileBaseName, aSettingsFileBaseName, sizeof(mSettingFileBaseName) - 1);
+    OT_ASSERT(strlen(directory) < kMaxFileBasePathNameSize);
+    OT_ASSERT((aSettingsFileBaseName != nullptr) && strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize);
+    snprintf(mSettingsFileFullPathName, sizeof(mSettingsFileFullPathName), "%s/%s", directory, aSettingsFileBaseName);
 
     {
         struct stat st;
@@ -306,8 +318,10 @@ void SettingsFile::Wipe(void) { VerifyOrDie(0 == ftruncate(mSettingsFd, 0), OT_E
 
 void SettingsFile::GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap)
 {
-    snprintf(aFileName, kMaxFilePathSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s.%s", mSettingFileBaseName,
-             (aSwap ? "Swap" : "data"));
+    int length;
+
+    length = snprintf(aFileName, kMaxFilePathSize, "%s.%s", mSettingsFileFullPathName, (aSwap ? "Swap" : "data"));
+    VerifyOrDie(length > 0 && static_cast<size_t>(length) < kMaxFilePathSize, OT_EXIT_FAILURE);
 }
 
 int SettingsFile::SwapOpen(void)

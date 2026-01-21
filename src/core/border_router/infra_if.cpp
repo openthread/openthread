@@ -155,7 +155,7 @@ void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPre
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
 
-    Get<RoutingManager>().HandleInfraIfDiscoverNat64PrefixDone(aPrefix);
+    Get<RoutingManager>().HandlePlatformDiscoveredNat64PrefixDone(aPrefix);
 
 exit:
     if (error != kErrorNone)

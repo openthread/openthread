@@ -38,6 +38,7 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
@@ -48,17 +49,63 @@ namespace Tmf {
  *
  * The class `Type` MUST declare a template method of the following format:
  *
- *  template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+ *  template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
  *
  * @param[in] Type      The `Type` in which the TMF handler is declared.
  * @param[in] kUri      The `Uri` which is handled.
  */
-#define DeclareTmfHandler(Type, kUri) \
-    template <> void Type::HandleTmf<kUri>(Coap::Message & aMessage, const Ip6::MessageInfo &aMessageInfo)
+#define DeclareTmfHandler(Type, kUri) template <> void Type::HandleTmf<kUri>(Coap::Msg & aMsg)
+
+/**
+ * Declares a TMF/CoAP response handler method in a given class `Type`.
+ *
+ * This macro simplifies the definition of a TMF/CoAP response handler. It defines a `static` handler method which
+ * can be used as a callback function pointer (`Coap::ResponseHandler`). The `static` handler acts as a wrapper,
+ * casting the `aContext` pointer back to a `Type` object and invoking its member method with the same `MethodName`.
+ *
+ * This macro is intended for cases where the response handler method does not require the `aMessageInfo`.
+ *
+ * The `Type` class MUST implement the following member method which will be invoked by the `static` handler:
+ *
+ *   void MethodName(Coap::Message *aMessage, Error aResult);
+ *
+ * @param[in] Type        The class `Type` in which the TMF response handler is declared.
+ * @param[in] MethodName  The handler method name.
+ */
+#define DeclareTmfResponseHandlerIn(Type, MethodName)                                                               \
+    static void MethodName(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult) \
+    {                                                                                                               \
+        OT_UNUSED_VARIABLE(aMessageInfo);                                                                           \
+        static_cast<Type *>(aContext)->MethodName(AsCoapMessagePtr(aMessage), aResult);                             \
+    }                                                                                                               \
+                                                                                                                    \
+    void MethodName(Coap::Message *aMessage, Error aResult)
+
+/**
+ * Declares a TMF/CoAP response handler with access to `MessageInfo` in a given class `Type`.
+ *
+ * This macro is a variant of `DeclareTmfResponseHandlerIn` and is intended for cases where the response handler needs
+ * access to the full parameters including `Ip6::MessageInfo`.
+ *
+ * The `Type` class MUST implement the following member method which will be invoked by the `static` handler:
+ *
+ *   void MethodName(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+ *
+ * @param[in] Type        The class `Type` in which the TMF response handler is declared.
+ * @param[in] MethodName  The handler method name.
+ */
+#define DeclareTmfResponseHandlerFullParamIn(Type, MethodName)                                                       \
+    static void MethodName(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)  \
+    {                                                                                                                \
+        static_cast<Type *>(aContext)->MethodName(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo), aResult); \
+    }                                                                                                                \
+                                                                                                                     \
+    void MethodName(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
 typedef Coap::Message Message; ///< A TMF message.
+typedef Coap::Msg     Msg;     ///< A TMF message along with its `Ip6::MessageInfo`.
 
 /**
  * Represents message information for a TMF message.
@@ -181,13 +228,10 @@ public:
     static Message::Priority DscpToPriority(uint8_t aDscp);
 
 private:
-    template <Uri kUri> void HandleTmf(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Msg &aMsg);
 
-    static bool HandleResource(CoapBase               &aCoapBase,
-                               const char             *aUriPath,
-                               Message                &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool        HandleResource(const char *aUriPath, Msg &aMsg);
 
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
@@ -212,11 +256,8 @@ private:
     Coap::SecureSession           *HandleDtlsAccept(void);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    static bool HandleResource(CoapBase               &aCoapBase,
-                               const char             *aUriPath,
-                               Message                &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
-    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool        HandleResource(const char *aUriPath, Msg &aMsg);
 #endif
 };
 
@@ -225,4 +266,4 @@ private:
 } // namespace Tmf
 } // namespace ot
 
-#endif //  OT_CORE_THREAD_TMF_HPP_
+#endif // OT_CORE_THREAD_TMF_HPP_

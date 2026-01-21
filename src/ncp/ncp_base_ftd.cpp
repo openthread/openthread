@@ -483,7 +483,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_AGENT_EPHEMERA
         break;
     case OT_BORDER_AGENT_STATE_DISABLED:
         error = OT_ERROR_NOT_CAPABLE;
-        // Fall through
+        OT_FALL_THROUGH;
     case OT_BORDER_AGENT_STATE_STOPPED:
         ExitNow();
     }
@@ -1647,6 +1647,44 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_SERVER_AUTO_ENABL
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enable));
+    otBorderRoutingDhcp6PdSetEnabled(mInstance, enable);
+
+exit:
+    return error;
+}
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX>(void)
+{
+    otError                         error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableEntry prefixEntry;
+    const otIp6Address             *prefixAddr;
+
+    memset(&prefixEntry, 0, sizeof(prefixEntry));
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(prefixAddr));
+    prefixEntry.mPrefix.mPrefix = *prefixAddr;
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixEntry.mPrefix.mLength));
+
+    SuccessOrExit(error = mDecoder.ReadUint32(prefixEntry.mValidLifetime));
+    SuccessOrExit(error = mDecoder.ReadUint32(prefixEntry.mPreferredLifetime));
+
+    otPlatBorderRoutingProcessDhcp6PdPrefix(mInstance, &prefixEntry);
+
+exit:
+    return error;
+}
+#endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 

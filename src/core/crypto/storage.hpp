@@ -31,8 +31,8 @@
  *   This file includes definitions for Crypto Internal Trusted Storage (ITS) APIs.
  */
 
-#ifndef STORAGE_HPP_
-#define STORAGE_HPP_
+#ifndef OT_CORE_CRYPTO_STORAGE_HPP_
+#define OT_CORE_CRYPTO_STORAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -57,10 +57,11 @@ namespace Storage {
  */
 enum KeyType : uint8_t
 {
-    kKeyTypeRaw   = OT_CRYPTO_KEY_TYPE_RAW,   ///< Key Type: Raw Data.
-    kKeyTypeAes   = OT_CRYPTO_KEY_TYPE_AES,   ///< Key Type: AES.
-    kKeyTypeHmac  = OT_CRYPTO_KEY_TYPE_HMAC,  ///< Key Type: HMAC.
-    kKeyTypeEcdsa = OT_CRYPTO_KEY_TYPE_ECDSA, ///< Key Type: ECDSA.
+    kKeyTypeRaw    = OT_CRYPTO_KEY_TYPE_RAW,    ///< Key Type: Raw Data.
+    kKeyTypeAes    = OT_CRYPTO_KEY_TYPE_AES,    ///< Key Type: AES.
+    kKeyTypeHmac   = OT_CRYPTO_KEY_TYPE_HMAC,   ///< Key Type: HMAC.
+    kKeyTypeEcdsa  = OT_CRYPTO_KEY_TYPE_ECDSA,  ///< Key Type: ECDSA.
+    kKeyTypeDerive = OT_CRYPTO_KEY_TYPE_DERIVE, ///< Key Type: Derive.
 };
 
 /**
@@ -72,6 +73,7 @@ enum KeyAlgorithm : uint8_t
     kKeyAlgorithmAesEcb     = OT_CRYPTO_KEY_ALG_AES_ECB,      ///< Key Algorithm: AES ECB.
     kKeyAlgorithmHmacSha256 = OT_CRYPTO_KEY_ALG_HMAC_SHA_256, ///< Key Algorithm: HMAC SHA-256.
     kKeyAlgorithmEcdsa      = OT_CRYPTO_KEY_ALG_ECDSA,        ///< Key Algorithm: ECDSA.
+    kKeyAlgorithmHkdfSha256 = OT_CRYPTO_KEY_ALG_HKDF_SHA256,  ///< Key Algorithm: HKDF SHA-256.
 };
 
 constexpr uint8_t kUsageNone       = OT_CRYPTO_KEY_USAGE_NONE;        ///< Key Usage: Key Usage is empty.
@@ -80,6 +82,7 @@ constexpr uint8_t kUsageEncrypt    = OT_CRYPTO_KEY_USAGE_ENCRYPT;     ///< Key U
 constexpr uint8_t kUsageDecrypt    = OT_CRYPTO_KEY_USAGE_DECRYPT;     ///< Key Usage: AES ECB.
 constexpr uint8_t kUsageSignHash   = OT_CRYPTO_KEY_USAGE_SIGN_HASH;   ///< Key Usage: Sign Hash.
 constexpr uint8_t kUsageVerifyHash = OT_CRYPTO_KEY_USAGE_VERIFY_HASH; ///< Key Usage: Verify Hash.
+constexpr uint8_t kUsageDerive     = OT_CRYPTO_KEY_USAGE_DERIVE;      ///< Key Usage: Derive.
 
 /**
  * Defines the key storage types.
@@ -394,4 +397,4 @@ DefineCoreType(otCryptoKey, Crypto::Key);
 
 } // namespace ot
 
-#endif // STORAGE_HPP_
+#endif // OT_CORE_CRYPTO_STORAGE_HPP_

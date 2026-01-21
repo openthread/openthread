@@ -31,8 +31,8 @@
  *   This file includes definitions for a Thread P2P `Peer`.
  */
 
-#ifndef PEER_HPP_
-#define PEER_HPP_
+#ifndef OT_CORE_THREAD_PEER_HPP_
+#define OT_CORE_THREAD_PEER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -120,4 +120,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_P2P_ENABLE
 
-#endif // PEER_HPP_
+#endif // OT_CORE_THREAD_PEER_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for radio selector (for multi radio links).
  */
 
-#ifndef RADIO_SELECTOR_HPP_
-#define RADIO_SELECTOR_HPP_
+#ifndef OT_CORE_THREAD_RADIO_SELECTOR_HPP_
+#define OT_CORE_THREAD_RADIO_SELECTOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -203,4 +203,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-#endif // RADIO_SELECTOR_HPP_
+#endif // OT_CORE_THREAD_RADIO_SELECTOR_HPP_

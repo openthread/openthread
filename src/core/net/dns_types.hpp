@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing DNS headers.
  */
 
-#ifndef DNS_HEADER_HPP_
-#define DNS_HEADER_HPP_
+#ifndef OT_CORE_NET_DNS_TYPES_HPP_
+#define OT_CORE_NET_DNS_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -3009,4 +3009,4 @@ DefineCoreType(otDnsTxtEntryIterator, Dns::TxtEntry::Iterator);
 
 } // namespace ot
 
-#endif // DNS_HEADER_HPP_
+#endif // OT_CORE_NET_DNS_TYPES_HPP_

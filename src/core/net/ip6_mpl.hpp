@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IP6_MPL_HPP_
-#define IP6_MPL_HPP_
+#ifndef OT_CORE_NET_IP6_MPL_HPP_
+#define OT_CORE_NET_IP6_MPL_HPP_
 
 /**
  * @file
@@ -260,4 +260,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // IP6_MPL_HPP_
+#endif // OT_CORE_NET_IP6_MPL_HPP_

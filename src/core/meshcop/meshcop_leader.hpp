@@ -31,8 +31,8 @@
  *   This file includes definitions for a MeshCoP Leader.
  */
 
-#ifndef MESHCOP_LEADER_HPP_
-#define MESHCOP_LEADER_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -76,23 +76,6 @@ public:
     void SendDatasetChanged(const Ip6::Address &aAddress);
 
     /**
-     * Sets minimal delay timer.
-     *
-     * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
-     *
-     * @retval  kErrorNone         Successfully set the minimal delay timer.
-     * @retval  kErrorInvalidArgs  If @p aDelayTimerMinimal is not valid.
-     */
-    Error SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
-
-    /**
-     * Gets minimal delay timer.
-     *
-     * @retval the minimal delay timer (in ms).
-     */
-    uint32_t GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
-
-    /**
      * Sets empty Commissioner Data TLV in the Thread Network Data.
      */
     void SetEmptyCommissionerData(void);
@@ -115,15 +98,11 @@ private:
 
     void HandleTimer(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    void SendPetitionResponse(const Coap::Message    &aRequest,
-                              const Ip6::MessageInfo &aMessageInfo,
-                              StateTlv::State         aState);
+    void SendPetitionResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 
-    void SendKeepAliveResponse(const Coap::Message    &aRequest,
-                               const Ip6::MessageInfo &aMessageInfo,
-                               StateTlv::State         aState);
+    void SendKeepAliveResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
@@ -132,7 +111,6 @@ private:
     using LeaderTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
 
     LeaderTimer                   mTimer;
-    uint32_t                      mDelayTimerMinimal;
     CommissionerIdTlv::StringType mCommissionerId;
     uint16_t                      mSessionId;
 };
@@ -145,4 +123,4 @@ DeclareTmfHandler(Leader, kUriLeaderKeepAlive);
 
 #endif // OPENTHREAD_FTD
 
-#endif // MESHCOP_LEADER_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_

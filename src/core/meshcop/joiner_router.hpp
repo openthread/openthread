@@ -31,8 +31,8 @@
  *  This file includes definitions for the Joiner Router role.
  */
 
-#ifndef JOINER_ROUTER_HPP_
-#define JOINER_ROUTER_HPP_
+#ifndef OT_CORE_MESHCOP_JOINER_ROUTER_HPP_
+#define OT_CORE_MESHCOP_JOINER_ROUTER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -96,13 +96,9 @@ private:
 
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    static void HandleJoinerEntrustResponse(void                *aContext,
-                                            otMessage           *aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aResult);
-    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerIn(JoinerRouter, HandleJoinerEntrustResponse);
 
     void HandleTimer(void);
 
@@ -132,4 +128,4 @@ DeclareTmfHandler(JoinerRouter, kUriRelayTx);
 
 #endif // OPENTHREAD_FTD
 
-#endif // JOINER_ROUTER_HPP_
+#endif // OT_CORE_MESHCOP_JOINER_ROUTER_HPP_

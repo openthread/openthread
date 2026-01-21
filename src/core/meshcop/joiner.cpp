@@ -44,8 +44,6 @@ RegisterLogModule("Joiner");
 
 Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mId()
-    , mDiscerner()
     , mState(kStateIdle)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
@@ -122,9 +120,10 @@ Error Joiner::Start(const char      *aPskd,
 
     LogInfo("Joiner starting");
 
-    VerifyOrExit(aProvisioningUrl == nullptr || IsValidUtf8String(aProvisioningUrl), error = kErrorInvalidArgs);
-    VerifyOrExit(aVendorName == nullptr || IsValidUtf8String(aVendorName), error = kErrorInvalidArgs);
-    VerifyOrExit(aVendorSwVersion == nullptr || IsValidUtf8String(aVendorSwVersion), error = kErrorInvalidArgs);
+    SuccessOrExit(error = Tlv::ValidateStringValue<ProvisioningUrlTlv>(aProvisioningUrl));
+    SuccessOrExit(error = Tlv::ValidateStringValue<VendorNameTlv>(aVendorName));
+    SuccessOrExit(error = Tlv::ValidateStringValue<VendorModelTlv>(aVendorModel));
+    SuccessOrExit(error = Tlv::ValidateStringValue<VendorSwVersionTlv>(aVendorSwVersion));
 
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
     VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
@@ -132,7 +131,6 @@ Error Joiner::Start(const char      *aPskd,
 
     SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
 
-    // Use random-generated extended address.
     randomAddress.GenerateRandom();
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::Mle>().UpdateLinkLocalAddress();
@@ -164,7 +162,7 @@ Error Joiner::Start(const char      *aPskd,
                                                                /* aJoiner */ true, /* aEnableFiltering */ true,
                                                                &filterIndexes, HandleDiscoverResult, this));
 
-    mCallback.Set(aCallback, aContext);
+    mCompletionCallback.Set(aCallback, aContext);
     SetState(kStateDiscover);
 
 exit:
@@ -182,7 +180,7 @@ void Joiner::Stop(void)
     LogInfo("Joiner stopped");
 
     // Callback is set to `nullptr` to skip calling it from `Finish()`
-    mCallback.Clear();
+    mCompletionCallback.Clear();
     Finish(kErrorAbort);
 }
 
@@ -211,7 +209,7 @@ void Joiner::Finish(Error aError)
     SetState(kStateIdle);
     FreeJoinerFinalizeMessage();
 
-    mCallback.InvokeIfSet(aError);
+    mCompletionCallback.InvokeIfSet(aError);
 
 exit:
     return;
@@ -226,7 +224,6 @@ uint8_t Joiner::CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny)
         aRssi = -127;
     }
 
-    // Clamp the RSSI to range [-127, -1]
     priority = Clamp<int8_t>(aRssi, -127, -1);
 
     // Assign higher priority to networks with an exact match of Joiner
@@ -472,19 +469,8 @@ exit:
     return;
 }
 
-void Joiner::HandleJoinerFinalizeResponse(void                *aContext,
-                                          otMessage           *aMessage,
-                                          const otMessageInfo *aMessageInfo,
-                                          otError              aResult)
+void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(AsCoapMessagePtr(aMessage), &AsCoreType(aMessageInfo),
-                                                                  aResult);
-}
-
-void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint8_t state;
 
     VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);
@@ -508,19 +494,19 @@ exit:
     IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 
-template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
 {
     Error         error;
     Dataset::Info datasetInfo;
 
-    VerifyOrExit(mState == kStateEntrust && aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(mState == kStateEntrust && aMsg.mMessage.IsConfirmablePostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.ntf");
 
     datasetInfo.Clear();
 
-    SuccessOrExit(error = Tlv::Find<NetworkKeyTlv>(aMessage, datasetInfo.Update<Dataset::kNetworkKey>()));
+    SuccessOrExit(error = Tlv::Find<NetworkKeyTlv>(aMsg.mMessage, datasetInfo.Update<Dataset::kNetworkKey>()));
 
     datasetInfo.Set<Dataset::kChannel>(Get<Mac::Mac>().GetPanChannel());
     datasetInfo.Set<Dataset::kPanId>(Get<Mac::Mac>().GetPanId());
@@ -529,7 +515,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, c
 
     LogInfo("Joiner successful!");
 
-    SendJoinerEntrustResponse(aMessage, aMessageInfo);
+    SendJoinerEntrustResponse(aMsg);
 
     // Delay extended address configuration to allow DTLS wrap up.
     mTimer.Start(kConfigExtAddressDelay);
@@ -538,13 +524,13 @@ exit:
     LogWarnOnError(error, "process joiner entrust");
 }
 
-void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo)
+void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
 {
     Error            error = kErrorNone;
     Coap::Message   *message;
-    Ip6::MessageInfo responseInfo(aRequestInfo);
+    Ip6::MessageInfo responseInfo(aMsg.mMessageInfo);
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);
@@ -595,27 +581,17 @@ void Joiner::HandleTimer(void)
 
 const char *Joiner::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Idle",       // (0) kStateIdle
-        "Discover",   // (1) kStateDiscover
-        "Connecting", // (2) kStateConnect
-        "Connected",  // (3) kStateConnected
-        "Entrust",    // (4) kStateEntrust
-        "Joined",     // (5) kStateJoined
-    };
+#define StateMapList(_)             \
+    _(kStateIdle, "Idle")           \
+    _(kStateDiscover, "Discover")   \
+    _(kStateConnect, "Connecting")  \
+    _(kStateConnected, "Connected") \
+    _(kStateEntrust, "Entrust")     \
+    _(kStateJoined, "Joined")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateIdle);
-        ValidateNextEnum(kStateDiscover);
-        ValidateNextEnum(kStateConnect);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateEntrust);
-        ValidateNextEnum(kStateJoined);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 // LCOV_EXCL_STOP

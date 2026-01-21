@@ -539,18 +539,8 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void DuaManager::HandleDuaResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult)
+void DuaManager::HandleDuaResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<DuaManager *>(aContext)->HandleDuaResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                           aResult);
-}
-
-void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
     Error error;
 
     mIsDuaPending = false;
@@ -581,21 +571,18 @@ exit:
     LogInfo("Received %s response: %s", UriToString<kUriDuaRegistrationRequest>(), ErrorToString(error));
 }
 
-template <>
-void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMsg)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error error;
 
-    VerifyOrExit(aMessage.IsPostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.mMessage.IsPostRequest(), error = kErrorParse);
 
-    if (aMessage.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+    if (aMsg.mMessage.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }
 
-    error = ProcessDuaResponse(aMessage);
+    error = ProcessDuaResponse(aMsg.mMessage);
 
 exit:
     OT_UNUSED_VARIABLE(error);

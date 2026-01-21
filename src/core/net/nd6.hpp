@@ -33,8 +33,8 @@
  * See RFC 4861 (https://tools.ietf.org/html/rfc4861) and RFC 4191 (https://tools.ietf.org/html/rfc4191).
  */
 
-#ifndef ND6_HPP_
-#define ND6_HPP_
+#ifndef OT_CORE_NET_ND6_HPP_
+#define OT_CORE_NET_ND6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1290,4 +1290,4 @@ static_assert(sizeof(NeighborAdvertMessage) == 24, "Invalid NeighborAdvertMessag
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // ND6_HPP_
+#endif // OT_CORE_NET_ND6_HPP_

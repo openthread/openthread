@@ -31,8 +31,8 @@
  *   This file includes definitions for the RA-based routing management.
  */
 
-#ifndef ROUTING_MANAGER_HPP_
-#define ROUTING_MANAGER_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_
+#define OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -409,14 +409,16 @@ public:
     Error GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference);
 
     /**
-     * Informs `RoutingManager` of the result of the discovery request of NAT64 prefix on infrastructure
-     * interface (`InfraIf::DiscoverNat64Prefix()`).
+    // Informs `RoutingManager` of a discovered NAT64 prefix from the platform.
+    //
+    // This is intended to be used by `InfraIf` to pass a NAT64 prefix that is discovered through a platform-specific
+    // mechanism (e.g., from DNS as per RFC 7050).
      *
-     * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
+     * @param[in]  aPrefix  The discovered NAT64 prefix.
      */
-    void HandleInfraIfDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix)
+    void HandlePlatformDiscoveredNat64PrefixDone(const Ip6::Prefix &aPrefix)
     {
-        mNat64PrefixManager.HandleInfraIfDiscoverDone(aPrefix);
+        mNat64PrefixManager.HandlePlatformDiscoveredPrefix(aPrefix);
     }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -826,7 +828,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
-        void               HandleInfraIfDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix);
         void               HandleRxRaTrackerChanged(void);
         void               HandleTimer(void);
 
@@ -839,7 +841,7 @@ private:
 
         bool            mEnabled;
         Ip6::Prefix     mRaTrackerPrefix;     // The best NAT64 prefix discovered from RAs (RFC 8781).
-        Ip6::Prefix     mInfraIfPrefix;       // The platform-provided NAT64 prefix (e.g., using DNS - RFC 7050).
+        Ip6::Prefix     mPlatformPrefix;      // The platform-provided NAT64 prefix (e.g., using DNS - RFC 7050).
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
         RoutePreference mPublishedPreference; // The published prefix preference.
@@ -1085,4 +1087,4 @@ DefineMapEnum(otBorderRoutingDhcp6PdState, BorderRouter::RoutingManager::Dhcp6Pd
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // ROUTING_MANAGER_HPP_
+#endif // OT_CORE_BORDER_ROUTER_ROUTING_MANAGER_HPP_

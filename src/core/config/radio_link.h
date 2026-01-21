@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the radio links.
  */
 
-#ifndef CONFIG_RADIO_LINK_H_
-#define CONFIG_RADIO_LINK_H_
+#ifndef OT_CORE_CONFIG_RADIO_LINK_H_
+#define OT_CORE_CONFIG_RADIO_LINK_H_
 
 /**
  * @addtogroup config-radio-link
@@ -101,4 +101,4 @@
  * @}
  */
 
-#endif // CONFIG_RADIO_LINK_H_
+#endif // OT_CORE_CONFIG_RADIO_LINK_H_

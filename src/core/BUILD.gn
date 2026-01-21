@@ -165,6 +165,7 @@ openthread_core_files = [
   "api/backbone_router_ftd_api.cpp",
   "api/ble_secure_api.cpp",
   "api/border_agent_api.cpp",
+  "api/border_agent_ephemeral_key_api.cpp",
   "api/border_agent_tracker_api.cpp",
   "api/border_agent_txt_data_api.cpp",
   "api/border_router_api.cpp",
@@ -214,6 +215,7 @@ openthread_core_files = [
   "api/srp_client_api.cpp",
   "api/srp_client_buffers_api.cpp",
   "api/srp_server_api.cpp",
+  "api/steering_data_api.cpp",
   "api/tasklet_api.cpp",
   "api/tcp_api.cpp",
   "api/tcp_ext_api.cpp",
@@ -274,6 +276,7 @@ openthread_core_files = [
   "common/data.hpp",
   "common/debug.hpp",
   "common/encoding.hpp",
+  "common/enum_to_string.hpp",
   "common/equatable.hpp",
   "common/error.cpp",
   "common/error.hpp",
@@ -421,6 +424,8 @@ openthread_core_files = [
   "meshcop/panid_query_client.hpp",
   "meshcop/secure_transport.cpp",
   "meshcop/secure_transport.hpp",
+  "meshcop/steering_data.cpp",
+  "meshcop/steering_data.hpp",
   "meshcop/tcat_agent.cpp",
   "meshcop/tcat_agent.hpp",
   "meshcop/timestamp.cpp",
@@ -620,6 +625,12 @@ openthread_core_files = [
   "utils/heap.hpp",
   "utils/history_tracker.cpp",
   "utils/history_tracker.hpp",
+  "utils/history_tracker_client.cpp",
+  "utils/history_tracker_client.hpp",
+  "utils/history_tracker_server.cpp",
+  "utils/history_tracker_server.hpp",
+  "utils/history_tracker_tlvs.cpp",
+  "utils/history_tracker_tlvs.hpp",
   "utils/jam_detector.cpp",
   "utils/jam_detector.hpp",
   "utils/link_metrics_manager.cpp",
@@ -776,12 +787,18 @@ group("libopenthread_platform") {
 
 static_library("libopenthread-ftd") {
   sources = openthread_core_sources
+  if (openthread_enable_core_config_args && openthread_config_tcp_enable) {
+    deps = [ "../../third_party/tcplp" ]
+  }
   public_deps = [ ":libopenthread_platform" ]
   public_configs = [ "../..:openthread_ftd_config" ]
 }
 
 static_library("libopenthread-mtd") {
   sources = openthread_core_sources
+  if (openthread_enable_core_config_args && openthread_config_tcp_enable) {
+    deps = [ "../../third_party/tcplp" ]
+  }
   public_deps = [ ":libopenthread_platform" ]
   public_configs = [ "../..:openthread_mtd_config" ]
 }

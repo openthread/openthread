@@ -91,11 +91,12 @@ class OtbrDocker:
         logging.info(f"socat running: device PTY: {rcp_device_pty}, device: {rcp_device}")
 
         ot_rcp_path = self._get_ot_rcp_path()
-        self._ot_rcp_proc = subprocess.Popen(f"{ot_rcp_path} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
-                                             shell=True,
-                                             stdin=subprocess.DEVNULL,
-                                             stdout=subprocess.DEVNULL,
-                                             stderr=subprocess.DEVNULL)
+        self._ot_rcp_proc = subprocess.Popen(
+            f"{ot_rcp_path} {'-U' if config.VIRTUAL_TIME else ''} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
+            shell=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
 
         try:
             self._ot_rcp_proc.wait(1)
@@ -644,8 +645,8 @@ class OtCli:
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
-                                                                                           nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
@@ -660,8 +661,8 @@ class OtCli:
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE_1_1' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
-                    os.environ['RADIO_DEVICE_1_1'], nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE_1_1'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
@@ -689,8 +690,8 @@ class OtCli:
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
-                                                                                        nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 args = ''
@@ -729,8 +730,8 @@ class OtCli:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
-                                                                                        nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE_1_1'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 args = ''

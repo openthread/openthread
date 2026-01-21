@@ -31,8 +31,8 @@
  *   This file includes definitions for the IEEE 802.15.4 MAC layer (sub-MAC).
  */
 
-#ifndef SUB_MAC_HPP_
-#define SUB_MAC_HPP_
+#ifndef OT_CORE_MAC_SUB_MAC_HPP_
+#define OT_CORE_MAC_SUB_MAC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -507,6 +507,7 @@ private:
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
     void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+    uint32_t    GetNextCycleDrift(void);
     uint32_t    GetLocalTime(void);
     bool        IsCslEnabled(void) const { return mCslPeriod > 0; }
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
@@ -703,4 +704,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // SUB_MAC_HPP_
+#endif // OT_CORE_MAC_SUB_MAC_HPP_

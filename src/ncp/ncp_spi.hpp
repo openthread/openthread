@@ -30,8 +30,8 @@
  *   This file contains definitions for a SPI interface to the OpenThread stack.
  */
 
-#ifndef NCP_SPI_HPP_
-#define NCP_SPI_HPP_
+#ifndef OT_NCP_NCP_SPI_HPP_
+#define OT_NCP_NCP_SPI_HPP_
 
 #include "openthread-core-config.h"
 
@@ -115,4 +115,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_SPI_HPP_
+#endif // OT_NCP_NCP_SPI_HPP_

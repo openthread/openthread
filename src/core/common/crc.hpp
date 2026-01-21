@@ -31,8 +31,8 @@
  *   This file includes definitions for CRC computations.
  */
 
-#ifndef CRC_HPP_
-#define CRC_HPP_
+#ifndef OT_CORE_COMMON_CRC_HPP_
+#define OT_CORE_COMMON_CRC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -133,4 +133,4 @@ private:
 
 } // namespace ot
 
-#endif // CRC_HPP_
+#endif // OT_CORE_COMMON_CRC_HPP_
