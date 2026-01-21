@@ -80,8 +80,9 @@ Error Server::Start(void)
 
     VerifyOrExit(!IsRunning());
 
-    SuccessOrExit(error = mSocket.Open(kBindUnspecifiedNetif ? Ip6::kNetifUnspecified : Ip6::kNetifThreadInternal));
-    SuccessOrExit(error = mSocket.Bind(kPort));
+    mSocket.Open();
+    SuccessOrExit(error =
+                      mSocket.Bind(kPort, kBindUnspecifiedNetif ? Ip6::kNetifUnspecified : Ip6::kNetifThreadInternal));
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Get<Srp::Server>().HandleDnssdServerStateChange();

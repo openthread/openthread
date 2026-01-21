@@ -793,12 +793,12 @@ Error Client::Start(void)
     Error error;
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadInternal));
+    mSocket.Open();
+    SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifThreadInternal));
 #else
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+    mSocket.Open();
+    SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifUnspecified));
 #endif
-
-    SuccessOrExit(error = mSocket.Bind(0));
 
 exit:
     return error;

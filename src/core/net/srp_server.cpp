@@ -812,8 +812,8 @@ Error Server::PrepareSocket(void)
 #endif
 
     VerifyOrExit(!mSocket.IsOpen());
-    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadInternal));
-    error = mSocket.Bind(mPort);
+    mSocket.Open();
+    error = mSocket.Bind(mPort, Ip6::kNetifThreadInternal);
 
 exit:
     if (error != kErrorNone)

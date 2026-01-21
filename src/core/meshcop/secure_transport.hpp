@@ -617,13 +617,10 @@ public:
     /**
      * Opens the transport.
      *
-     * @param[in] aNetifIdentifier A network interface identifier. If not explicitly provided, kNetifUnspecified will
-     *                             be used by default.
-     *
      * @retval kErrorNone     Successfully opened the socket.
      * @retval kErrorAlready  The connection is already open.
      */
-    Error Open(Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
+    Error Open(void);
 
     /**
      * Sets the maximum number of allowed connection requests before socket is automatically closed.
@@ -665,12 +662,13 @@ public:
      * Binds this DTLS to a UDP port.
      *
      * @param[in]  aPort              The port to bind.
+     * @param[in]  aNetifId           The network interface identifier.
      *
      * @retval kErrorNone           Successfully bound the socket.
      * @retval kErrorInvalidState   The socket is not open.
      * @retval kErrorAlready        Already bound.
      */
-    Error Bind(uint16_t aPort);
+    Error Bind(uint16_t aPort, Ip6::NetifIdentifier aNetifId = Ip6::NetifIdentifier::kNetifUnspecified);
 
     /**
      * Gets the UDP port of this session.
