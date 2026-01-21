@@ -100,6 +100,7 @@
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop_leader.hpp"
 #include "meshcop/network_name.hpp"
+#include "meshcop/seeker.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
 #include "net/dhcp6_types.hpp"
@@ -617,6 +618,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
+    MeshCoP::Seeker mSeeker;
     MeshCoP::Joiner mJoiner;
 #endif
 
@@ -959,6 +961,8 @@ template <> inline Dnssd &Instance::Get(void) { return mDnssd; }
 #endif
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
+template <> inline MeshCoP::Seeker &Instance::Get(void) { return mSeeker; }
+
 template <> inline MeshCoP::Joiner &Instance::Get(void) { return mJoiner; }
 #endif
 
