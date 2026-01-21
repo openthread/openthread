@@ -46,6 +46,7 @@ target_include_directories(openthread-cli-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRI
 target_sources(openthread-cli-radio
     PRIVATE
         cli.cpp
+        cli_logging.cpp
         cli_utils.cpp
 )
 
