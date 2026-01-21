@@ -45,13 +45,11 @@ RegisterLogModule("Joiner");
 Joiner::Joiner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateIdle)
-    , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
 {
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
-    ClearAllBytes(mJoinerRouters);
 }
 
 void Joiner::SetIdFromIeeeEui64(void)
@@ -113,10 +111,9 @@ Error Joiner::Start(const char      *aPskd,
                     otJoinerCallback aCallback,
                     void            *aContext)
 {
-    Error                        error;
-    JoinerPskd                   joinerPskd;
-    Mac::ExtAddress              randomAddress;
-    SteeringData::HashBitIndexes filterIndexes;
+    Error      error;
+    bool       shouldCleanup = false;
+    JoinerPskd joinerPskd;
 
     LogInfo("Joiner starting");
 
@@ -124,51 +121,36 @@ Error Joiner::Start(const char      *aPskd,
     SuccessOrExit(error = Tlv::ValidateStringValue<VendorNameTlv>(aVendorName));
     SuccessOrExit(error = Tlv::ValidateStringValue<VendorModelTlv>(aVendorModel));
     SuccessOrExit(error = Tlv::ValidateStringValue<VendorSwVersionTlv>(aVendorSwVersion));
-
-    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
-    VerifyOrExit(Get<ThreadNetif>().IsUp() && Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled,
-                 error = kErrorInvalidState);
-
     SuccessOrExit(error = joinerPskd.SetFrom(aPskd));
 
-    randomAddress.GenerateRandom();
-    Get<Mac::Mac>().SetExtAddress(randomAddress);
-    Get<Mle::Mle>().UpdateLinkLocalAddress();
+    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
+    VerifyOrExit(!Get<Seeker>().IsRunning(), error = kErrorBusy);
 
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Open(Ip6::NetifIdentifier::kNetifThreadInternal));
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(kJoinerUdpPort));
+
+    // After this, if any of the steps fails, we need to cleanup
+    // (free allocated message, stop seeker, close agent, etc).
+    shouldCleanup = true;
+
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(Seeker::kUdpPort));
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
-
-    for (JoinerRouter &router : mJoinerRouters)
-    {
-        router.mPriority = 0; // Priority zero means entry is not in-use.
-    }
 
     SuccessOrExit(error = PrepareJoinerFinalizeMessage(aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
                                                        aVendorData));
 
-    if (!mDiscerner.IsEmpty())
-    {
-        SteeringData::CalculateHashBitIndexes(mDiscerner, filterIndexes);
-    }
-    else
-    {
-        SetIdFromIeeeEui64();
-        SteeringData::CalculateHashBitIndexes(mId, filterIndexes);
-    }
-
-    SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
-                                                               /* aJoiner */ true, /* aEnableFiltering */ true,
-                                                               &filterIndexes, HandleDiscoverResult, this));
-
     mCompletionCallback.Set(aCallback, aContext);
     SetState(kStateDiscover);
 
+    error = Get<Seeker>().Start(EvaluateScanResult, this);
+
 exit:
-    if (error != kErrorNone)
+    if ((error != kErrorNone) && shouldCleanup)
     {
         FreeJoinerFinalizeMessage();
+        Get<Tmf::SecureAgent>().Close();
+        Get<Seeker>().Stop();
+        SetState(kStateIdle);
     }
 
     LogWarnOnError(error, "start joiner");
@@ -196,13 +178,13 @@ void Joiner::Finish(Error aError)
     case kStateEntrust:
     case kStateJoined:
         Get<Tmf::SecureAgent>().Disconnect();
-        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
         mTimer.Stop();
 
         OT_FALL_THROUGH;
 
     case kStateDiscover:
         Get<Tmf::SecureAgent>().Close();
+        Get<Seeker>().Stop();
         break;
     }
 
@@ -215,114 +197,74 @@ exit:
     return;
 }
 
-uint8_t Joiner::CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny)
+Seeker::Verdict Joiner::EvaluateScanResult(void *aContext, const Seeker::ScanResult *aResult)
 {
-    int16_t priority;
+    return static_cast<Joiner *>(aContext)->EvaluateScanResult(aResult);
+}
 
-    if (aRssi == Radio::kInvalidRssi)
+Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
+{
+    Seeker::Verdict     verdict = Seeker::kIgnore;
+    const SteeringData *steeringData;
+
+    if (aResult == nullptr)
     {
-        aRssi = -127;
+        HandleScanCompleted();
+        ExitNow();
     }
 
-    priority = Clamp<int8_t>(aRssi, -127, -1);
+    steeringData = AsCoreTypePtr(&aResult->mSteeringData);
 
-    // Assign higher priority to networks with an exact match of Joiner
-    // ID in the Steering Data (128 < priority < 256) compared to ones
-    // that allow all Joiners (0 < priority < 128). Sub-prioritize
-    // based on signal strength. Priority 0 is reserved for unused
-    // entry.
+    // We prefer networks with an exact match of Joiner ID or
+    // Discerner in the Steering Data compared to ones that allow all
+    // Joiners.
 
-    priority += aSteeringDataAllowsAny ? 128 : 256;
-
-    return static_cast<uint8_t>(priority);
-}
-
-void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext)
-{
-    static_cast<Joiner *>(aContext)->HandleDiscoverResult(aResult);
-}
-
-void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult)
-{
-    VerifyOrExit(mState == kStateDiscover);
-
-    if (aResult != nullptr)
+    if (steeringData->PermitsAllJoiners())
     {
-        SaveDiscoveredJoinerRouter(*aResult);
+        verdict = Seeker::kAccept;
+        ExitNow();
+    }
+
+    if (!mDiscerner.IsEmpty())
+    {
+        VerifyOrExit(steeringData->Contains(mDiscerner));
     }
     else
     {
-        Get<Mac::Mac>().SetExtAddress(mId);
-        Get<Mle::Mle>().UpdateLinkLocalAddress();
-
-        mJoinerRouterIndex = 0;
-        TryNextJoinerRouter(kErrorNone);
+        VerifyOrExit(steeringData->Contains(mId));
     }
+
+    verdict = Seeker::kAcceptPreferred;
+
+exit:
+    return verdict;
+}
+
+void Joiner::HandleScanCompleted(void)
+{
+    VerifyOrExit(mState == kStateDiscover);
+
+    Get<Mac::Mac>().SetExtAddress(mId);
+    Get<Mle::Mle>().UpdateLinkLocalAddress();
+
+    TryNextCandidate(kErrorNone);
 
 exit:
     return;
 }
 
-void Joiner::SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult)
+void Joiner::TryNextCandidate(Error aPrevError)
 {
-    uint8_t       priority;
-    bool          doesAllowAny;
-    JoinerRouter *end;
-    JoinerRouter *entry;
+    Error error;
 
-    VerifyOrExit(aResult.mJoinerUdpPort > 0);
-
-    doesAllowAny = AsCoreType(&aResult.mSteeringData).PermitsAllJoiners();
-
-    LogInfo("Joiner discover network: %s, pan:0x%04x, port:%d, chan:%d, rssi:%d, allow-any:%s",
-            AsCoreType(&aResult.mExtAddress).ToString().AsCString(), aResult.mPanId, aResult.mJoinerUdpPort,
-            aResult.mChannel, aResult.mRssi, ToYesNo(doesAllowAny));
-
-    priority = CalculatePriority(aResult.mRssi, doesAllowAny);
-
-    // We keep the list sorted based on priority. Find the place to
-    // add the new result.
-
-    end = GetArrayEnd(mJoinerRouters);
-
-    for (entry = &mJoinerRouters[0]; entry < end; entry++)
+    do
     {
-        if (priority > entry->mPriority)
+        error = ConnectToNextCandidate();
+
+        if (error == kErrorNone)
         {
-            break;
+            ExitNow();
         }
-    }
-
-    VerifyOrExit(entry < end);
-
-    // Shift elements in array to make room for the new one.
-    memmove(entry + 1, entry,
-            static_cast<size_t>(reinterpret_cast<uint8_t *>(end - 1) - reinterpret_cast<uint8_t *>(entry)));
-
-    entry->mExtAddr       = AsCoreType(&aResult.mExtAddress);
-    entry->mPanId         = aResult.mPanId;
-    entry->mJoinerUdpPort = aResult.mJoinerUdpPort;
-    entry->mChannel       = aResult.mChannel;
-    entry->mPriority      = priority;
-
-exit:
-    return;
-}
-
-void Joiner::TryNextJoinerRouter(Error aPrevError)
-{
-    for (; mJoinerRouterIndex < GetArrayLength(mJoinerRouters); mJoinerRouterIndex++)
-    {
-        JoinerRouter &router = mJoinerRouters[mJoinerRouterIndex];
-        Error         error;
-
-        if (router.mPriority == 0)
-        {
-            break;
-        }
-
-        error = Connect(router);
-        VerifyOrExit(error != kErrorNone, mJoinerRouterIndex++);
 
         // Save the error from `Connect` only if there is no previous
         // error from earlier attempts. This ensures that if there has
@@ -331,16 +273,9 @@ void Joiner::TryNextJoinerRouter(Error aPrevError)
         // emitted from `Finish()` call corresponds to the error from
         // that attempt.
 
-        if (aPrevError == kErrorNone)
-        {
-            aPrevError = error;
-        }
-    }
+        aPrevError = (aPrevError == kErrorNone) ? error : aPrevError;
 
-    if (aPrevError == kErrorNone)
-    {
-        aPrevError = kErrorNotFound;
-    }
+    } while (error != kErrorNotFound);
 
     Finish(aPrevError);
 
@@ -348,26 +283,16 @@ exit:
     return;
 }
 
-Error Joiner::Connect(JoinerRouter &aRouter)
+Error Joiner::ConnectToNextCandidate(void)
 {
-    Error         error = kErrorNotFound;
-    Ip6::SockAddr sockAddr(aRouter.mJoinerUdpPort);
+    Error         error;
+    Ip6::SockAddr sockAddr;
 
-    LogInfo("Joiner connecting to %s, pan:0x%04x, chan:%d", aRouter.mExtAddr.ToString().AsCString(), aRouter.mPanId,
-            aRouter.mChannel);
-
-    Get<Mac::Mac>().SetPanId(aRouter.mPanId);
-    SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(aRouter.mChannel));
-    SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(kJoinerUdpPort));
-
-    sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
-
+    SuccessOrExit(error = Get<Seeker>().SetUpNextConnection(sockAddr));
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr));
-
     SetState(kStateConnect);
 
 exit:
-    LogWarnOnError(error, "start secure joiner connection");
     return error;
 }
 
@@ -388,7 +313,7 @@ void Joiner::HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent)
     }
     else
     {
-        TryNextJoinerRouter(kErrorSecurity);
+        TryNextCandidate(kErrorSecurity);
     }
 
 exit:
@@ -491,7 +416,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Msg *aMsg, Error aResult)
 
 exit:
     Get<Tmf::SecureAgent>().Disconnect();
-    IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
+    Get<Seeker>().Stop();
 }
 
 template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)

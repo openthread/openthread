@@ -188,6 +188,7 @@ Instance::Instance(void)
     , mTmfSecureAgent(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
+    , mSeeker(*this)
     , mJoiner(*this)
 #endif
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
