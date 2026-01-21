@@ -1290,25 +1290,24 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         switch (tlvInfo.GetType())
         {
         case Tlv::kExtMacAddress:
-            SuccessOrExit(error =
-                              Tlv::Read<ExtMacAddressTlv>(aMessage, offset, AsCoreType(&aDiagTlv.mData.mExtAddress)));
+            SuccessOrExit(error = tlvInfo.Read<ExtMacAddressTlv>(aMessage, AsCoreType(&aDiagTlv.mData.mExtAddress)));
             break;
 
         case Tlv::kAddress16:
-            SuccessOrExit(error = Tlv::Read<Address16Tlv>(aMessage, offset, aDiagTlv.mData.mAddr16));
+            SuccessOrExit(error = tlvInfo.Read<Address16Tlv>(aMessage, aDiagTlv.mData.mAddr16));
             break;
 
         case Tlv::kMode:
         {
             uint8_t mode;
 
-            SuccessOrExit(error = Tlv::Read<ModeTlv>(aMessage, offset, mode));
+            SuccessOrExit(error = tlvInfo.Read<ModeTlv>(aMessage, mode));
             Mle::DeviceMode(mode).Get(aDiagTlv.mData.mMode);
             break;
         }
 
         case Tlv::kTimeout:
-            SuccessOrExit(error = Tlv::Read<TimeoutTlv>(aMessage, offset, aDiagTlv.mData.mTimeout));
+            SuccessOrExit(error = tlvInfo.Read<TimeoutTlv>(aMessage, aDiagTlv.mData.mTimeout));
             break;
 
         case Tlv::kConnectivity:
@@ -1340,7 +1339,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         {
             LeaderDataTlvValue tlvValue;
 
-            SuccessOrExit(error = Tlv::Read<LeaderDataTlv>(aMessage, offset, tlvValue));
+            SuccessOrExit(error = tlvInfo.Read<LeaderDataTlv>(aMessage, tlvValue));
             tlvValue.Get(AsCoreType(&aDiagTlv.mData.mLeaderData));
             break;
         }
@@ -1379,11 +1378,11 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         }
 
         case Tlv::kBatteryLevel:
-            SuccessOrExit(error = Tlv::Read<BatteryLevelTlv>(aMessage, offset, aDiagTlv.mData.mBatteryLevel));
+            SuccessOrExit(error = tlvInfo.Read<BatteryLevelTlv>(aMessage, aDiagTlv.mData.mBatteryLevel));
             break;
 
         case Tlv::kSupplyVoltage:
-            SuccessOrExit(error = Tlv::Read<SupplyVoltageTlv>(aMessage, offset, aDiagTlv.mData.mSupplyVoltage));
+            SuccessOrExit(error = tlvInfo.Read<SupplyVoltageTlv>(aMessage, aDiagTlv.mData.mSupplyVoltage));
             break;
 
         case Tlv::kChildTable:
@@ -1429,36 +1428,35 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             break;
 
         case Tlv::kMaxChildTimeout:
-            SuccessOrExit(error = Tlv::Read<MaxChildTimeoutTlv>(aMessage, offset, aDiagTlv.mData.mMaxChildTimeout));
+            SuccessOrExit(error = tlvInfo.Read<MaxChildTimeoutTlv>(aMessage, aDiagTlv.mData.mMaxChildTimeout));
             break;
 
         case Tlv::kEui64:
-            SuccessOrExit(error = Tlv::Read<Eui64Tlv>(aMessage, offset, AsCoreType(&aDiagTlv.mData.mEui64)));
+            SuccessOrExit(error = tlvInfo.Read<Eui64Tlv>(aMessage, AsCoreType(&aDiagTlv.mData.mEui64)));
             break;
 
         case Tlv::kVersion:
-            SuccessOrExit(error = Tlv::Read<VersionTlv>(aMessage, offset, aDiagTlv.mData.mVersion));
+            SuccessOrExit(error = tlvInfo.Read<VersionTlv>(aMessage, aDiagTlv.mData.mVersion));
             break;
 
         case Tlv::kVendorName:
-            SuccessOrExit(error = Tlv::Read<VendorNameTlv>(aMessage, offset, aDiagTlv.mData.mVendorName));
+            SuccessOrExit(error = tlvInfo.Read<VendorNameTlv>(aMessage, aDiagTlv.mData.mVendorName));
             break;
 
         case Tlv::kVendorModel:
-            SuccessOrExit(error = Tlv::Read<VendorModelTlv>(aMessage, offset, aDiagTlv.mData.mVendorModel));
+            SuccessOrExit(error = tlvInfo.Read<VendorModelTlv>(aMessage, aDiagTlv.mData.mVendorModel));
             break;
 
         case Tlv::kVendorSwVersion:
-            SuccessOrExit(error = Tlv::Read<VendorSwVersionTlv>(aMessage, offset, aDiagTlv.mData.mVendorSwVersion));
+            SuccessOrExit(error = tlvInfo.Read<VendorSwVersionTlv>(aMessage, aDiagTlv.mData.mVendorSwVersion));
             break;
 
         case Tlv::kVendorAppUrl:
-            SuccessOrExit(error = Tlv::Read<VendorAppUrlTlv>(aMessage, offset, aDiagTlv.mData.mVendorAppUrl));
+            SuccessOrExit(error = tlvInfo.Read<VendorAppUrlTlv>(aMessage, aDiagTlv.mData.mVendorAppUrl));
             break;
 
         case Tlv::kThreadStackVersion:
-            SuccessOrExit(error =
-                              Tlv::Read<ThreadStackVersionTlv>(aMessage, offset, aDiagTlv.mData.mThreadStackVersion));
+            SuccessOrExit(error = tlvInfo.Read<ThreadStackVersionTlv>(aMessage, aDiagTlv.mData.mThreadStackVersion));
             break;
 
         case Tlv::kNonPreferredChannels:
@@ -1470,7 +1468,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         {
             uint8_t state;
 
-            SuccessOrExit(error = Tlv::Read<BrStateTlv>(aMessage, offset, state));
+            SuccessOrExit(error = tlvInfo.Read<BrStateTlv>(aMessage, state));
             aDiagTlv.mData.mBrState = static_cast<BrState>(state);
             break;
         }

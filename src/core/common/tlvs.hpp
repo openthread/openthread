@@ -342,7 +342,97 @@ public:
          */
         uint16_t GetValueOffset(void) const { return mValueOffsetRange.GetOffset(); }
 
+        /**
+         * Reads the TLV's value in a message expecting a minimum length for the value.
+         *
+         * This method can parse both standard and extended TLVs. It uses the current `GetValueOffsetRange()` to read
+         * from. It ensures that the TLV value has at least `aMinLength` bytes, otherwise `kErrorParse` is returned.
+         *
+         * @param[in]   aMessage    The message to read from.
+         * @param[out]  aValue      A buffer to output the TLV's value, must contain (at least) @p aMinLength bytes.
+         * @param[in]   aMinLength  The minimum expected length of TLV and number of bytes to copy into @p aValue
+         * buffer.
+         *
+         * @retval kErrorNone        Successfully read the TLV and copied @p aMinLength into @p aValue.
+         * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
+         */
+        Error ReadValue(const Message &aMessage, void *aValue, uint8_t aMinLength) const;
+
+        /**
+         * Reads a simple TLV with a single non-integral value in a message.
+         *
+         * This method can parse both standard and extended TLVs. It uses the current `GetValueOffsetRange()` to read
+         * from. It ensures that the TLV value has at least the minimum expected length, otherwise `kErrorParse` is
+         * returned.
+         *
+         * @note This method does not check if `GetType()` matches the `SimpleTlvType`. It is caller's responsibility
+         *       to validate this before calling this method.
+         *
+         * @tparam      SimpleTlvType   The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
+         *
+         * @param[in]   aMessage        The message to read from.
+         * @param[out]  aValue          A reference to the value object to output the read value.
+         *
+         * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
+         * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
+         */
+        template <typename SimpleTlvType>
+        Error Read(const Message &aMessage, typename SimpleTlvType::ValueType &aValue) const
+        {
+            return ReadValue(aMessage, &aValue, sizeof(aValue));
+        }
+
+        /**
+         * Reads a simple TLV with a single integral value in a message.
+         *
+         * This method can parse both standard and extended TLVs. It uses the current `GetValueOffsetRange()` to read
+         * from. It ensures that the TLV value has at least the minimum expected length, otherwise `kErrorParse` is
+         * returned.
+         *
+         * @note This method does not check if `GetType()` matches the `UintTlvType`. It is caller's responsibility to
+         *       validate this before calling this method.
+         *
+         * @tparam      UintTlvType     The simple TLV type to read (must be a sub-class of `UintTlvInfo`).
+         *
+         * @param[in]   aMessage        The message to read from.
+         * @param[out]  aValue          A reference to an unsigned int to output the read value.
+         *
+         * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
+         * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
+         */
+        template <typename UintTlvType>
+        Error Read(const Message &aMessage, typename UintTlvType::UintValueType &aValue) const
+        {
+            return ReadUintValue(aMessage, aValue);
+        }
+
+        /**
+         * Reads a simple TLV with a UTF-8 string value in a message.
+         *
+         * This method can parse both standard and extended TLVs. It uses the current `GetValueOffsetRange()` to read
+         * from. The returned string in @p aValue is always null-terminated.
+         *
+         * @note This method does not check if `GetType()` matches the `StringTlvType`. It is caller's responsibility
+         *       to validate this before calling this method.
+         *
+         * @tparam      StringTlvType   The simple TLV type to read (must be a sub-class of `StringTlvInfo`).
+         *
+         * @param[in]   aMessage        The message to read from.
+         * @param[out]  aValue          A reference to the string buffer to output the read value.
+         *
+         * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
+         * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
+         */
+        template <typename StringTlvType>
+        Error Read(const Message &aMessage, typename StringTlvType::StringType &aValue) const
+        {
+            return ReadStringValue(aMessage, StringTlvType::kMaxStringLength, aValue);
+        }
+
     private:
+        template <typename UintType> Error ReadUintValue(const Message &aMessage, UintType &aValue) const;
+        Error ReadStringValue(const Message &aMessage, uint8_t aMaxStringLength, char *aValue) const;
+
         uint8_t     mType;
         bool        mIsExtended;
         OffsetRange mTlvOffsetRange;
@@ -363,60 +453,6 @@ public:
      * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
      */
     static Error ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
-
-    /**
-     * Reads a simple TLV with a single non-integral value in a message at a given offset.
-     *
-     * @tparam      SimpleTlvType   The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
-     *
-     * @param[in]   aMessage        The message to read from.
-     * @param[in]   aOffset         The offset into the message pointing to the start of the TLV.
-     * @param[out]  aValue          A reference to the value object to output the read value.
-     *
-     * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
-     * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
-     */
-    template <typename SimpleTlvType>
-    static Error Read(const Message &aMessage, uint16_t aOffset, typename SimpleTlvType::ValueType &aValue)
-    {
-        return ReadTlvValue(aMessage, aOffset, &aValue, sizeof(aValue));
-    }
-
-    /**
-     * Reads a simple TLV with a single integral value in a message at a given offset.
-     *
-     * @tparam      UintTlvType     The simple TLV type to read (must be a sub-class of `UintTlvInfo`).
-     *
-     * @param[in]   aMessage        The message to read from.
-     * @param[in]   aOffset         The offset into the message pointing to the start of the TLV.
-     * @param[out]  aValue          A reference to an unsigned int to output the read value.
-     *
-     * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
-     * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
-     */
-    template <typename UintTlvType>
-    static Error Read(const Message &aMessage, uint16_t aOffset, typename UintTlvType::UintValueType &aValue)
-    {
-        return ReadUintTlv(aMessage, aOffset, aValue);
-    }
-
-    /**
-     * Reads a simple TLV with a UTF-8 string value in a message at a given offset.
-     *
-     * @tparam      StringTlvType   The simple TLV type to read (must be a sub-class of `StringTlvInfo`).
-     *
-     * @param[in]   aMessage        The message to read from.
-     * @param[in]   aOffset         The offset into the message pointing to the start of the TLV.
-     * @param[out]  aValue          A reference to the string buffer to output the read value.
-     *
-     * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
-     * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
-     */
-    template <typename StringTlvType>
-    static Error Read(const Message &aMessage, uint16_t aOffset, typename StringTlvType::StringType &aValue)
-    {
-        return ReadStringTlv(aMessage, aOffset, StringTlvType::kMaxStringLength, aValue);
-    }
 
     /**
      * Searches for and reads a requested TLV out of a given message.
@@ -865,12 +901,10 @@ protected:
 
 private:
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint16_t aLength);
-    static Error ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue);
     static Error FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue);
     static Error AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue);
     static Error ValidateStringTlvValue(uint8_t aMaxStringLength, const char *aStringValue);
     static Error UpdateTlv(Message &aMessage, Bookmark aBookmark, bool aShouldWriteLength);
-    template <typename UintType> static Error ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue);
     template <typename UintType> static Error FindUintTlv(const Message &aMessage, uint8_t aType, UintType &aValue);
     template <typename UintType> static Error AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue);
 
@@ -961,7 +995,7 @@ public:
  * Defines constants and types for a simple TLV with an unsigned int value type.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<UintTlvType>()`, and
- * the related `Tlv::Find<UintTlvType>()` and `Tlv::Read<UintTlvType>()`.
+ * the related `Tlv::Find<UintTlvType>()` and `Tlv::Info::Read<UintTlvType>()`.
  *
  * @tparam kTlvTypeValue   The TLV Type value.
  * @tparam UintType        The TLV Value's type (must be an unsigned int, i.e. uint8_t, uint16_t, or uint32_t).
@@ -978,7 +1012,7 @@ public:
  * Defines constants and types for a simple TLV with a single value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<SimpleTlvType>()`,
- * and the related `Tlv::Find<SimpleTlvType>()` and `Tlv::Read<SimpleTlvType>()`.
+ * and the related `Tlv::Find<SimpleTlvType>()` and `Tlv::Info::Read<SimpleTlvType>()`.
  *
  * @tparam kTlvTypeValue   The TLV Type value.
  * @tparam TlvValueType    The TLV Value's type (must not be an integral type).
@@ -997,7 +1031,7 @@ public:
  * Defines constants and types for a simple TLV with a UTF-8 string value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<StringTlvType>()`,
- * and the related `Tlv::Find<StringTlvType>()` and `Tlv::Read<StringTlvType>()`.
+ * and the related `Tlv::Find<StringTlvType>()` and `Tlv::Info::Read<StringTlvType>()`.
  *
  * @tparam kTlvTypeValue        The TLV Type value.
  * @tparam kTlvMaxValueLength   The maximum allowed string length (as TLV value).
