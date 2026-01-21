@@ -119,6 +119,8 @@ Error Mpl::ProcessOption(Message &aMessage, const MplOption &aOption, bool &aRec
 {
     Error error;
 
+    VerifyOrExit(Get<Mle::Mle>().IsRxOnWhenIdle(), error = kErrorNone);
+
     // Check if the MPL Data Message is new.
     error = UpdateSeedSet(aOption.GetSeedId(), aOption.GetSequence());
 
@@ -136,6 +138,7 @@ Error Mpl::ProcessOption(Message &aMessage, const MplOption &aOption, bool &aRec
         error = kErrorNone;
     }
 
+exit:
     return error;
 }
 
