@@ -33,7 +33,11 @@
 
 #include "openthread-core-config.h"
 
+#include "common/as_core_type.hpp"
+#include "common/code_utils.hpp"
+#include "common/error.hpp"
 #include "instance/instance.hpp"
+#include "net/udp6.hpp"
 
 using namespace ot;
 
@@ -44,7 +48,9 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), Ip6::kNetifThreadHost, aCallback, aContext);
+    AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), Ip6::kNetifThreadHost, aCallback, aContext);
+
+    return kErrorNone;
 }
 
 bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket)
@@ -59,9 +65,23 @@ otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket)
 
 otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName, otNetifIdentifier aNetif)
 {
-    AsCoreType(aSocket).SetNetifId(MapEnum(aNetif));
+    Error                   error;
+    Ip6::Udp::SocketHandle &socketHandle = AsCoreType(aSocket);
+    Ip6::NetifIdentifier    oldNetif     = socketHandle.GetNetifId();
 
-    return AsCoreType(aInstance).Get<Ip6::Udp>().Bind(AsCoreType(aSocket), AsCoreType(aSockName));
+    VerifyOrExit(!socketHandle.IsBound(), error = kErrorInvalidArgs);
+
+    socketHandle.SetNetifId(MapEnum(aNetif));
+
+    error = AsCoreType(aInstance).Get<Ip6::Udp>().Bind(socketHandle, AsCoreType(aSockName));
+
+exit:
+    if (error != kErrorNone && socketHandle.GetNetifId() != oldNetif)
+    {
+        socketHandle.SetNetifId(oldNetif);
+    }
+
+    return error;
 }
 
 otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName)
