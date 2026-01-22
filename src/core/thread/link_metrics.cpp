@@ -142,7 +142,7 @@ void Initiator::HandleReport(const Message &aMessage, OffsetRange &aOffsetRange,
         {
         case StatusSubTlv::kType:
             VerifyOrExit(!hasStatus && !hasReport, error = kErrorDrop);
-            SuccessOrExit(error = Tlv::Read<StatusSubTlv>(aMessage, aOffsetRange.GetOffset(), status));
+            SuccessOrExit(error = tlvInfo.Read<StatusSubTlv>(aMessage, status));
             hasStatus = true;
             break;
 
@@ -310,7 +310,7 @@ Error Initiator::HandleManagementResponse(const Message &aMessage, const Ip6::Ad
         {
         case StatusSubTlv::kType:
             VerifyOrExit(!hasStatus, error = kErrorParse);
-            SuccessOrExit(error = Tlv::Read<StatusSubTlv>(aMessage, offsetRange.GetOffset(), status));
+            SuccessOrExit(error = tlvInfo.Read<StatusSubTlv>(aMessage, status));
             hasStatus = true;
             break;
 
@@ -431,7 +431,7 @@ Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, N
         switch (tlvInfo.GetType())
         {
         case SubTlv::kQueryId:
-            SuccessOrExit(error = Tlv::Read<QueryIdSubTlv>(aRequestMessage, tlvInfo.GetTlvOffset(), queryId));
+            SuccessOrExit(error = tlvInfo.Read<QueryIdSubTlv>(aRequestMessage, queryId));
             hasQueryId = true;
             break;
 

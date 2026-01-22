@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/message.hpp"
+#include "common/string.hpp"
 
 namespace ot {
 
@@ -162,26 +163,32 @@ exit:
     return error;
 }
 
-Error Tlv::ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue)
+Error Tlv::Info::ReadValue(const Message &aMessage, void *aValue, uint8_t aMinLength) const
 {
-    Error error = kErrorNone;
-    Info  info;
+    // The `Message::Read()` flavor used below (with an `OffsetRange`)
+    // handles the boundary check. It will return `kErrorParse` if
+    // the requested read length exceeds the `OffsetRange`.
 
-    SuccessOrExit(error = info.ParseFrom(aMessage, aOffset));
+    return aMessage.Read(mValueOffsetRange, aValue, aMinLength);
+}
 
-    info.mValueOffsetRange.ShrinkLength(aMaxStringLength);
-    aMessage.ReadBytes(info.mValueOffsetRange, aValue);
-    aValue[info.mValueOffsetRange.GetLength()] = kNullChar;
+Error Tlv::Info::ReadStringValue(const Message &aMessage, uint8_t aMaxStringLength, char *aValue) const
+{
+    Error    error;
+    uint16_t length = Min<uint16_t>(mValueOffsetRange.GetLength(), aMaxStringLength);
+
+    SuccessOrExit(error = aMessage.Read(mValueOffsetRange.GetOffset(), aValue, length));
+    aValue[length] = kNullChar;
 
 exit:
     return error;
 }
 
-template <typename UintType> Error Tlv::ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue)
+template <typename UintType> Error Tlv::Info::ReadUintValue(const Message &aMessage, UintType &aValue) const
 {
     Error error;
 
-    SuccessOrExit(error = ReadTlvValue(aMessage, aOffset, &aValue, sizeof(aValue)));
+    SuccessOrExit(error = ReadValue(aMessage, &aValue, sizeof(aValue)));
     aValue = BigEndian::HostSwap<UintType>(aValue);
 
 exit:
@@ -189,9 +196,9 @@ exit:
 }
 
 // Explicit instantiations of `ReadUintTlv<>()`
-template Error Tlv::ReadUintTlv<uint8_t>(const Message &aMessage, uint16_t aOffset, uint8_t &aValue);
-template Error Tlv::ReadUintTlv<uint16_t>(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
-template Error Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
+template Error Tlv::Info::ReadUintValue<uint8_t>(const Message &aMessage, uint8_t &aValue) const;
+template Error Tlv::Info::ReadUintValue<uint16_t>(const Message &aMessage, uint16_t &aValue) const;
+template Error Tlv::Info::ReadUintValue<uint32_t>(const Message &aMessage, uint32_t &aValue) const;
 
 Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
 {
@@ -199,11 +206,7 @@ Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue,
     Info  info;
 
     SuccessOrExit(error = info.ParseFrom(aMessage, aOffset));
-
-    VerifyOrExit(info.mValueOffsetRange.Contains(aMinLength), error = kErrorParse);
-    info.mValueOffsetRange.ShrinkLength(aMinLength);
-
-    aMessage.ReadBytes(info.mValueOffsetRange, aValue);
+    error = info.ReadValue(aMessage, aValue, aMinLength);
 
 exit:
     return error;
@@ -215,7 +218,7 @@ Error Tlv::FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStr
     Info  info;
 
     SuccessOrExit(error = info.FindIn(aMessage, aType));
-    error = ReadStringTlv(aMessage, info.GetTlvOffset(), aMaxStringLength, aValue);
+    error = info.ReadStringValue(aMessage, aMaxStringLength, aValue);
 
 exit:
     return error;
@@ -227,7 +230,7 @@ template <typename UintType> Error Tlv::FindUintTlv(const Message &aMessage, uin
     Info  info;
 
     SuccessOrExit(error = info.FindIn(aMessage, aType));
-    error = ReadUintTlv<UintType>(aMessage, info.GetTlvOffset(), aValue);
+    error = info.ReadUintValue<UintType>(aMessage, aValue);
 
 exit:
     return error;
