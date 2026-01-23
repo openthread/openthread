@@ -1436,6 +1436,7 @@ The generated output encompasses the following information:
 - Uptime and attach time
 - Channel
 - PAN IDs, extended MAC address, and RLOC16
+- Active Dataset (non-sensitive)
 - Unicast and multicast IPv6 address list
 - Network Data
 - Partition ID
