@@ -144,6 +144,7 @@
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
 #include "thread/tmf.hpp"
+#include "thread/vendor_info.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
 #include "utils/heap.hpp"
@@ -590,6 +591,8 @@ private:
 
     NetworkData::Service::Manager mNetworkDataServiceManager;
 
+    VendorInfo mVendorInfo;
+
     NetworkDiagnostic::Server mNetworkDiagnosticServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     NetworkDiagnostic::Client mNetworkDiagnosticClient;
@@ -985,6 +988,8 @@ template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
 #endif
+
+template <> inline VendorInfo &Instance::Get(void) { return mVendorInfo; }
 
 template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
 

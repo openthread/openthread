@@ -118,87 +118,6 @@ public:
         mNonPreferredChannelsResetCallback.Set(aCallback, aContext);
     }
 
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    /**
-     * Returns the vendor name string.
-     *
-     * @returns The vendor name string.
-     */
-    const char *GetVendorName(void) const { return mVendorName; }
-
-    /**
-     * Sets the vendor name string.
-     *
-     * @param[in] aVendorName     The vendor name string.
-     *
-     * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, @p aVendorName must start with the "RD:" prefix.
-     * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
-     * the name is rejected, and `kErrorInvalidArgs` is returned.
-     *
-     * @retval kErrorNone         Successfully set the vendor name.
-     * @retval kErrorInvalidArgs  @p aVendorName is not valid. It is too long, is not UTF-8, or does not start with
-     *                            the "RD:" prefix when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
-     */
-    Error SetVendorName(const char *aVendorName);
-
-    /**
-     * Returns the vendor model string.
-     *
-     * @returns The vendor model string.
-     */
-    const char *GetVendorModel(void) const { return mVendorModel; }
-
-    /**
-     * Sets the vendor model string.
-     *
-     * @param[in] aVendorModel     The vendor model string.
-     *
-     * @retval kErrorNone         Successfully set the vendor model.
-     * @retval kErrorInvalidArgs  @p aVendorModel is not valid (too long or not UTF8).
-     */
-    Error SetVendorModel(const char *aVendorModel);
-
-    /**
-     * Returns the vendor software version string.
-     *
-     * @returns The vendor software version string.
-     */
-    const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
-
-    /**
-     * Sets the vendor sw version string
-     *
-     * @param[in] aVendorSwVersion     The vendor sw version string.
-     *
-     * @retval kErrorNone         Successfully set the vendor sw version.
-     * @retval kErrorInvalidArgs  @p aVendorSwVersion is not valid (too long or not UTF8).
-     */
-    Error SetVendorSwVersion(const char *aVendorSwVersion);
-
-    /**
-     * Returns the vendor app URL string.
-     *
-     * @returns the vendor app URL string.
-     */
-    const char *GetVendorAppUrl(void) const { return mVendorAppUrl; }
-
-    /**
-     * Sets the vendor app URL string.
-     *
-     * @param[in] aVendorAppUrl     The vendor app URL string
-     *
-     * @retval kErrorNone         Successfully set the vendor app URL.
-     * @retval kErrorInvalidArgs  @p aVendorAppUrl is not valid (too long or not UTF8).
-     */
-    Error SetVendorAppUrl(const char *aVendorAppUrl);
-
-#else
-    const char *GetVendorName(void) const { return kVendorName; }
-    const char *GetVendorModel(void) const { return kVendorModel; }
-    const char *GetVendorSwVersion(void) const { return kVendorSwVersion; }
-    const char *GetVendorAppUrl(void) const { return kVendorAppUrl; }
-#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-
 private:
     static constexpr uint16_t kMaxChildEntries              = 398;
     static constexpr uint16_t kAnswerMessageLengthThreshold = 800;
@@ -223,11 +142,6 @@ private:
         Coap::Message    *mFirstAnswer;
     };
 #endif
-
-    static const char kVendorName[];
-    static const char kVendorModel[];
-    static const char kVendorSwVersion[];
-    static const char kVendorAppUrl[];
 
     Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
@@ -276,13 +190,6 @@ private:
 #endif
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
-
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    VendorNameTlv::StringType      mVendorName;
-    VendorModelTlv::StringType     mVendorModel;
-    VendorSwVersionTlv::StringType mVendorSwVersion;
-    VendorAppUrlTlv::StringType    mVendorAppUrl;
-#endif
 
 #if OPENTHREAD_FTD
     Coap::MessageQueue mAnswerQueue;

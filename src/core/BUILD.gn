@@ -613,6 +613,8 @@ openthread_core_files = [
   "thread/tmf.hpp",
   "thread/uri_paths.cpp",
   "thread/uri_paths.hpp",
+  "thread/vendor_info.cpp",
+  "thread/vendor_info.hpp",
   "thread/version.cpp",
   "thread/version.hpp",
   "utils/channel_manager.cpp",
