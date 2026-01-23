@@ -87,30 +87,43 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// `HeaderInfo`
+
+bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeDelete); }
+
+bool HeaderInfo::IsConfirmablePostRequest(void) const { return IsConfirmable() && IsPostRequest(); }
+
+bool HeaderInfo::IsNonConfirmablePostRequest(void) const { return IsNonConfirmable() && IsPostRequest(); }
+
+//---------------------------------------------------------------------------------------------------------------------
 // `Message`
 
-void Message::Init(void)
+Error Message::Init(Type aType, Code aCode) { return Init(aType, aCode, 0); }
+
+Error Message::Init(Type aType, Code aCode, uint16_t aMessageId)
 {
-    GetHelpData().Clear();
-    SetVersion(Header::kVersion1);
+    Header header;
+
+    // Erase any previously written content in the message.
+    IgnoreError(SetLength(0));
+
     SetOffset(0);
-    GetHelpData().mHeaderLength = kMinHeaderLength;
+    SetHeaderOffset(0);
 
-    IgnoreError(SetLength(GetHelpData().mHeaderLength));
-}
+    header.Clear();
+    header.SetVersion(Header::kVersion1);
+    header.SetType(aType);
+    header.SetCode(aCode);
+    header.SetMessageId(aMessageId);
 
-void Message::Init(Type aType, Code aCode)
-{
-    Init();
-    SetType(aType);
-    SetCode(aCode);
+    return Append(header);
 }
 
 Error Message::Init(Type aType, Code aCode, Uri aUri)
 {
     Error error;
 
-    Init(aType, aCode);
+    SuccessOrExit(error = Init(aType, aCode));
     SuccessOrExit(error = WriteRandomToken(Token::kDefaultLength));
     SuccessOrExit(error = AppendUriPathOptions(PathForUri(aUri)));
 
@@ -123,23 +136,120 @@ Error Message::InitAsPost(const Ip6::Address &aDestination, Uri aUri)
     return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUri);
 }
 
-bool Message::IsConfirmablePostRequest(void) const { return IsConfirmable() && IsPostRequest(); }
-
-bool Message::IsNonConfirmablePostRequest(void) const { return IsNonConfirmable() && IsPostRequest(); }
-
-void Message::Finish(void)
+Error Message::InitAsResponse(Type aType, Code aCode, const Message &aRequest)
 {
-    // If the payload marker is set but the message contains no
-    // payload, we remove the payload marker from the message. Note
-    // that the presence of a marker followed by a zero-length payload
-    // will be processed as a message format error on the receiver.
+    Error error;
 
-    if (GetHelpData().mPayloadMarkerSet && (GetHelpData().mHeaderLength == GetLength()))
-    {
-        RemoveFooter(sizeof(uint8_t));
-    }
+    SuccessOrExit(error = Init(aType, aCode, aRequest.ReadMessageId()));
+    error = WriteTokenFromMessage(aRequest);
 
-    WriteBytes(0, &GetHelpData().mHeader, GetOptionStart());
+exit:
+    return error;
+}
+
+Error Message::ReadHeader(Header &aHeader) const
+{
+    Error error;
+
+    SuccessOrExit(error = Read(GetHeaderOffset(), aHeader));
+    VerifyOrExit(aHeader.GetVersion() == Header::kVersion1, error = kErrorParse);
+    VerifyOrExit(aHeader.GetTokenLength() <= Token::kMaxLength, error = kErrorParse);
+
+exit:
+    return error;
+}
+
+void Message::WriteHeader(const Header &aHeader) { Write(GetHeaderOffset(), aHeader); }
+
+Error Message::ParseHeaderInfo(HeaderInfo &aInfo) const
+{
+    Error  error;
+    Header header;
+
+    aInfo.Clear();
+
+    SuccessOrExit(error = ReadHeader(header));
+
+    aInfo.mType      = header.GetType();
+    aInfo.mCode      = header.GetCode();
+    aInfo.mMessageId = header.GetMessageId();
+
+    error = ReadToken(header, aInfo.mToken);
+
+exit:
+    return error;
+}
+
+uint8_t Message::ReadType(void) const
+{
+    uint8_t type = 0;
+    Header  header;
+
+    SuccessOrExit(ReadHeader(header));
+    type = header.GetType();
+
+exit:
+    return type;
+}
+
+void Message::WriteType(Type aType)
+{
+    Header header;
+
+    SuccessOrExit(ReadHeader(header));
+    header.SetType(aType);
+    WriteHeader(header);
+
+exit:
+    return;
+}
+
+uint8_t Message::ReadCode(void) const
+{
+    uint8_t code = 0;
+    Header  header;
+
+    SuccessOrExit(ReadHeader(header));
+    code = header.GetCode();
+
+exit:
+    return code;
+}
+
+void Message::WriteCode(Code aCode)
+{
+    Header header;
+
+    SuccessOrExit(ReadHeader(header));
+    header.SetCode(aCode);
+    WriteHeader(header);
+
+exit:
+    return;
+}
+
+uint16_t Message::ReadMessageId(void) const
+{
+    uint16_t messageId = 0;
+    Header   header;
+
+    SuccessOrExit(ReadHeader(header));
+    messageId = header.GetMessageId();
+
+exit:
+    return messageId;
+}
+
+void Message::WriteMessageId(uint16_t aMessageId)
+{
+    Header header;
+
+    SuccessOrExit(ReadHeader(header));
+    header.SetMessageId(aMessageId);
+    WriteHeader(header);
+
+exit:
+    return;
 }
 
 uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
@@ -186,18 +296,34 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
 
 Error Message::AppendOptionHeader(uint16_t aNumber, uint16_t aLength)
 {
-    /*
-     * Appends a CoAP Option header field (Option Delta/Length) per RFC 7252.
-     */
+    // Appends a CoAP Option header field (Option Delta/Length) per RFC 7252.
 
-    Error    error = kErrorNone;
-    uint16_t delta;
-    uint8_t  header[kMaxOptionHeaderSize];
-    uint16_t headerLength;
-    uint8_t *cur;
+    Error            error;
+    Option::Iterator iterator;
+    uint16_t         lastNumber;
+    uint16_t         delta;
+    uint8_t          header[kMaxOptionHeaderSize];
+    uint16_t         headerLength;
+    uint8_t         *cur;
 
-    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
-    delta = aNumber - GetHelpData().mOptionLast;
+    // Parses the already appended options in the message
+    // to determine the last option number. Also ensures
+    // that "payload marker" is not appended.
+
+    SuccessOrExit(error = iterator.Init(*this));
+
+    lastNumber = 0;
+
+    while (!iterator.IsDone())
+    {
+        lastNumber = iterator.GetOption()->GetNumber();
+        SuccessOrExit(error = iterator.Advance());
+    }
+
+    VerifyOrExit(!iterator.HasPayloadMarker(), error = kErrorParse);
+
+    VerifyOrExit(aNumber >= lastNumber, error = kErrorInvalidArgs);
+    delta = aNumber - lastNumber;
 
     cur = &header[1];
 
@@ -206,11 +332,7 @@ Error Message::AppendOptionHeader(uint16_t aNumber, uint16_t aLength)
 
     headerLength = static_cast<uint16_t>(cur - header);
 
-    VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength, error = kErrorNoBufs);
-
     SuccessOrExit(error = AppendBytes(header, headerLength));
-
-    GetHelpData().mOptionLast = aNumber;
 
 exit:
     return error;
@@ -223,8 +345,6 @@ Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aVal
     SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
     SuccessOrExit(error = AppendBytes(aValue, aLength));
 
-    GetHelpData().mHeaderLength = GetLength();
-
 exit:
     return error;
 }
@@ -235,8 +355,6 @@ Error Message::AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const
 
     SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
     SuccessOrExit(error = AppendBytesFromMessage(aMessage, aOffset, aLength));
-
-    GetHelpData().mHeaderLength = GetLength();
 
 exit:
     return error;
@@ -407,37 +525,11 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-Error Message::SetPayloadMarker(void)
+Error Message::AppendPayloadMarker(void)
 {
-    Error   error  = kErrorNone;
-    uint8_t marker = kPayloadMarker;
-
-    VerifyOrExit(GetLength() < kMaxHeaderLength, error = kErrorNoBufs);
-    SuccessOrExit(error = Append(marker));
-    GetHelpData().mPayloadMarkerSet = true;
-    GetHelpData().mHeaderLength     = GetLength();
-
-    // Set offset to the start of payload.
-    SetOffset(GetHelpData().mHeaderLength);
-
-exit:
-    return error;
-}
-
-Error Message::ParseHeader(void)
-{
-    Error            error  = kErrorNone;
-    uint16_t         offset = GetOffset();
+    Error            error;
+    uint8_t          marker = kPayloadMarker;
     Option::Iterator iterator;
-
-    OT_ASSERT(GetReserved() >=
-              sizeof(HelpData) + static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - GetFirstData())));
-
-    GetHelpData().Clear();
-
-    GetHelpData().mHeaderOffset = offset;
-
-    SuccessOrExit(error = GetHelpData().mHeader.ParseFrom(*this));
 
     SuccessOrExit(error = iterator.Init(*this));
 
@@ -446,8 +538,51 @@ Error Message::ParseHeader(void)
         SuccessOrExit(error = iterator.Advance());
     }
 
-    GetHelpData().mHeaderLength = iterator.GetPayloadMessageOffset() - GetHelpData().mHeaderOffset;
-    MoveOffset(GetHelpData().mHeaderLength);
+    VerifyOrExit(!iterator.HasPayloadMarker());
+
+    SuccessOrExit(error = Append(marker));
+
+    SetOffset(GetLength());
+
+exit:
+    return error;
+}
+
+uint16_t Message::DetermineTokenOffset(void) const
+{
+    uint16_t offset;
+
+    if (CanAddSafely<uint16_t>(GetHeaderOffset(), sizeof(Header)))
+    {
+        offset = GetHeaderOffset() + sizeof(Header);
+    }
+    else
+    {
+        SetToUintMax(offset);
+    }
+
+    return offset;
+}
+
+Error Message::DetermineOptionStartOffset(uint16_t &aOffset) const
+{
+    Error    error;
+    uint8_t  tokenLength;
+    uint16_t offset;
+
+    SuccessOrExit(error = ReadTokenLength(tokenLength));
+    offset = DetermineTokenOffset();
+
+    if (CanAddSafely<uint16_t>(offset, tokenLength))
+    {
+        offset += tokenLength;
+    }
+    else
+    {
+        SetToUintMax(offset);
+    }
+
+    aOffset = offset;
 
 exit:
     return error;
@@ -455,10 +590,11 @@ exit:
 
 Error Message::ReadTokenLength(uint8_t &aLength) const
 {
-    Error error = kErrorNone;
+    Error  error = kErrorNone;
+    Header header;
 
-    VerifyOrExit(GetHelpData().mHeader.IsValid(), error = kErrorParse);
-    aLength = GetHelpData().mHeader.GetTokenLength();
+    SuccessOrExit(error = ReadHeader(header));
+    aLength = header.GetTokenLength();
 
 exit:
     return error;
@@ -466,16 +602,51 @@ exit:
 
 Error Message::ReadToken(Token &aToken) const
 {
-    return aToken.SetToken(GetHelpData().mHeader.GetToken(), GetHelpData().mHeader.GetTokenLength());
+    Error  error;
+    Header header;
+
+    SuccessOrExit(error = ReadHeader(header));
+    error = ReadToken(header, aToken);
+exit:
+    return error;
+}
+
+Error Message::ReadToken(const Header &aHeader, Token &aToken) const
+{
+    aToken.mLength = aHeader.GetTokenLength();
+
+    return Read(DetermineTokenOffset(), aToken.m8, aToken.mLength);
 }
 
 Error Message::WriteToken(const Token &aToken)
 {
-    Error error;
+    Error    error;
+    Header   header;
+    uint16_t tokenOffset = DetermineTokenOffset();
 
-    SuccessOrExit(error = GetHelpData().mHeader.SetToken(aToken));
-    GetHelpData().mHeaderLength += aToken.GetLength();
-    error = SetLength(GetHelpData().mHeaderLength);
+    VerifyOrExit(aToken.IsValid(), error = kErrorInvalidArgs);
+
+    SuccessOrExit(error = ReadHeader(header));
+
+    if (tokenOffset == GetLength())
+    {
+        // A token has not been written yet, so grow the message to make
+        // space for it.
+
+        SuccessOrExit(error = IncreaseLength(aToken.GetLength()));
+
+        header.SetTokenLength(aToken.GetLength());
+        WriteHeader(header);
+    }
+    else
+    {
+        // If a token was previously written, we only allow it to be
+        // overwritten by a new token of the same length.
+
+        VerifyOrExit(header.GetTokenLength() == aToken.GetLength(), error = kErrorInvalidArgs);
+    }
+
+    WriteBytes(tokenOffset, aToken.GetBytes(), aToken.GetLength());
 
 exit:
     return error;
@@ -519,22 +690,13 @@ exit:
     return hasSame;
 }
 
-Error Message::SetDefaultResponseHeader(const Message &aRequest)
-{
-    Init(kTypeAck, kCodeChanged);
-
-    SetMessageId(aRequest.GetMessageId());
-
-    return WriteTokenFromMessage(aRequest);
-}
-
 Message *Message::Clone(uint16_t aLength) const
 {
     Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
 
     VerifyOrExit(message != nullptr);
 
-    message->GetHelpData() = GetHelpData();
+    message->SetHeaderOffset(GetHeaderOffset());
 
 exit:
     return message;
@@ -576,44 +738,9 @@ const char *Message::CodeToString(void) const
 
     static_assert(Stringify::IsSorted(kCodeTable), "kCodeTable is not sorted");
 
-    return Stringify::Lookup(GetCode(), kCodeTable, "Unknown");
+    return Stringify::Lookup(ReadCode(), kCodeTable, "Unknown");
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
-// `Message::Header`
-
-bool Message::Header::IsValid(void) const
-{
-    return (GetVersion() == kVersion1) && (GetTokenLength() <= Token::kMaxLength);
-}
-
-Error Message::Header::ParseFrom(const Message &aMessage)
-{
-    Error    error;
-    uint16_t offset = aMessage.GetOffset();
-
-    SuccessOrExit(error = aMessage.Read(offset, this, kMinSize));
-    VerifyOrExit(IsValid(), error = kErrorParse);
-
-    SuccessOrExit(error = aMessage.Read(offset + kMinSize, mToken, GetTokenLength()));
-
-exit:
-    return error;
-}
-
-Error Message::Header::SetToken(const Token &aToken)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aToken.IsValid(), error = kErrorInvalidArgs);
-
-    SetTokenLength(aToken.mLength);
-    memcpy(mToken, aToken.GetBytes(), aToken.GetLength());
-
-exit:
-    return error;
-}
 
 //---------------------------------------------------------------------------------------------------------------------
 // `Message::Iterator`
@@ -627,23 +754,30 @@ Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIt
 
 Error Option::Iterator::Init(const Message &aMessage)
 {
-    Error    error  = kErrorParse;
-    uint32_t offset = static_cast<uint32_t>(aMessage.GetHelpData().mHeaderOffset) + aMessage.GetOptionStart();
+    Error    error;
+    uint16_t offset;
+
+    SuccessOrExit(error = aMessage.DetermineOptionStartOffset(offset));
 
     // Note that the case where `offset == aMessage.GetLength())` is
     // valid and indicates an empty payload (no CoAP Option and no
     // Payload Marker).
 
-    VerifyOrExit(offset <= aMessage.GetLength(), MarkAsParseErrored());
+    VerifyOrExit(offset <= aMessage.GetLength(), error = kErrorParse);
 
     mOption.mNumber   = 0;
     mOption.mLength   = 0;
     mMessage          = &aMessage;
-    mNextOptionOffset = static_cast<uint16_t>(offset);
+    mNextOptionOffset = offset;
 
     error = Advance();
 
 exit:
+    if (error != kErrorNone)
+    {
+        MarkAsDone();
+    }
+
     return error;
 }
 
@@ -658,22 +792,23 @@ Error Option::Iterator::Advance(void)
 
     error = Read(sizeof(uint8_t), &headerByte);
 
-    if ((error != kErrorNone) || (headerByte == Message::kPayloadMarker))
+    if (error != kErrorNone)
+    {
+        // Reached the end without seeing the payload marker.
+
+        MarkAsDone();
+        SetHasPayloadMarker(false);
+        ExitNow(error = kErrorNone);
+    }
+
+    if (headerByte == Message::kPayloadMarker)
     {
         // Payload Marker indicates end of options and start of payload.
         // Absence of a Payload Marker indicates a zero-length payload.
 
         MarkAsDone();
-
-        if (error == kErrorNone)
-        {
-            // The presence of a marker followed by a zero-length payload
-            // MUST be processed as a message format error.
-
-            VerifyOrExit(mNextOptionOffset < GetMessage().GetLength(), error = kErrorParse);
-        }
-
-        ExitNow(error = kErrorNone);
+        SetHasPayloadMarker(true);
+        ExitNow();
     }
 
     optionDelta = (headerByte & Message::kOptionDeltaMask) >> Message::kOptionDeltaOffset;
@@ -691,7 +826,7 @@ Error Option::Iterator::Advance(void)
 exit:
     if (error != kErrorNone)
     {
-        MarkAsParseErrored();
+        MarkAsDone();
     }
 
     return error;

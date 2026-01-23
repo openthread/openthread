@@ -360,7 +360,7 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mIsRunning);
 
-    VerifyOrExit(aMsg.mMessage.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriRelayRx>(), aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -597,7 +597,7 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
         HandleTmfCommissionerKeepAlive(aMsg);
         break;
     case kUriRelayTx:
-        HandleTmfRelayTx(aMsg.mMessage);
+        HandleTmfRelayTx(aMsg);
         break;
     case kUriCommissionerGet:
     case kUriActiveGet:
@@ -605,7 +605,7 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
         HandleTmfDatasetGet(aMsg.mMessage, uri);
         break;
     case kUriProxyTx:
-        HandleTmfProxyTx(aMsg.mMessage);
+        HandleTmfProxyTx(aMsg);
         break;
     default:
         didHandle = false;
@@ -756,7 +756,7 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
     forwardMessage.Reset(NewPriorityMessage());
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
-    if (aResponse->GetCode() == Coap::kCodeChanged)
+    if (aResponse->ReadCode() == Coap::kCodeChanged)
     {
         uint8_t state;
 
@@ -784,13 +784,13 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
         }
     }
 
-    forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->GetCode()));
-
+    SuccessOrExit(error =
+                      forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->ReadCode())));
     SuccessOrExit(error = forwardMessage->WriteToken(aForwardContext.mToken));
 
     if (aResponse->GetLength() > aResponse->GetOffset())
     {
-        SuccessOrExit(error = forwardMessage->SetPayloadMarker());
+        SuccessOrExit(error = forwardMessage->AppendPayloadMarker());
     }
 
     SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), *aResponse));
@@ -897,7 +897,7 @@ void Manager::CoapDtlsSession::SendErrorMessage(Error aError, const Coap::Token 
 
     code = (aError == kErrorParse) ? Coap::kCodeBadRequest : Coap::kCodeInternalError;
 
-    message->Init(Coap::kTypeNonConfirmable, code);
+    SuccessOrExit(error = message->Init(Coap::kTypeNonConfirmable, code));
     SuccessOrExit(error = message->WriteToken(aToken));
 
     SuccessOrExit(error = SendMessage(message.PassOwnership()));
@@ -906,7 +906,7 @@ exit:
     LogWarnOnError(error, "send error CoAP message");
 }
 
-void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
+void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Msg &aMsg)
 {
     Error                     error = kErrorNone;
     OwnedPtr<Message>         message;
@@ -918,9 +918,9 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
 
     VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kUdpEncapsulation, offsetRange));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kUdpEncapsulation, offsetRange));
 
-    SuccessOrExit(error = aMessage.Read(offsetRange, udpEncapHeader));
+    SuccessOrExit(error = aMsg.mMessage.Read(offsetRange, udpEncapHeader));
     offsetRange.AdvanceOffset(sizeof(UdpEncapsulationTlvHeader));
 
     VerifyOrExit(udpEncapHeader.GetSourcePort() > 0 && udpEncapHeader.GetDestinationPort() > 0, error = kErrorDrop);
@@ -928,13 +928,13 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Message &aMessage)
     message.Reset(Get<Ip6::Udp>().NewMessage());
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
+    SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 
     messageInfo.SetSockPort(udpEncapHeader.GetSourcePort());
     messageInfo.SetSockAddr(Get<Manager>().GetCommissionerAloc());
     messageInfo.SetPeerPort(udpEncapHeader.GetDestinationPort());
 
-    SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
+    SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMsg.mMessage, messageInfo.GetPeerAddr()));
 
     // On success the message ownership is transferred.
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo));
@@ -946,7 +946,7 @@ exit:
     LogWarnOnError(error, "send proxy stream");
 }
 
-void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
+void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Msg &aMsg)
 {
     Error                   error = kErrorNone;
     uint16_t                joinerRouterRloc;
@@ -954,19 +954,19 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Message &aMessage)
     Tmf::MessageInfo        messageInfo(GetInstance());
     OffsetRange             offsetRange;
 
-    VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
 
     VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
 
     Log<kUriRelayTx>(kReceive);
 
-    SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRouterRloc));
+    SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMsg.mMessage, joinerRouterRloc));
 
     message.Reset(Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayTx));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    offsetRange.InitFromMessageOffsetToEnd(aMessage);
-    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
+    offsetRange.InitFromMessageOffsetToEnd(aMsg.mMessage);
+    SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(joinerRouterRloc);
     messageInfo.SetSockPortToTmf();

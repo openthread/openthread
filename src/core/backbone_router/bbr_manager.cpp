@@ -149,7 +149,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
     bool         hasCommissionerSessionIdTlv = false;
     bool         processTimeoutTlv           = false;
 
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorParse);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     // Required by Test Specification 5.10.22 DUA-TC-26, only for certification purpose
@@ -366,7 +366,7 @@ void Manager::HandleDuaRegistration(const Coap::Msg &aMsg)
 #endif
 
     VerifyOrExit(aMsg.mMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator(), error = kErrorDrop);
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -542,7 +542,7 @@ template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Msg &aMsg)
     VerifyOrExit(aMsg.mMessageInfo.IsHostInterface(), error = kErrorDrop);
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
-    VerifyOrExit(aMsg.mMessage.IsNonConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsNonConfirmablePostRequest(), error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, dua));
 
@@ -574,9 +574,9 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Msg &aMsg)
     VerifyOrExit(aMsg.mMessageInfo.IsHostInterface(), error = kErrorDrop);
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
-    VerifyOrExit(aMsg.mMessage.IsPostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
 
-    proactive = !aMsg.mMessage.IsConfirmable();
+    proactive = !aMsg.IsConfirmable();
 
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, dua));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -637,7 +637,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
 
     SuccessOrExit(error = message->Init(proactive ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost,
                                         kUriBackboneAnswer));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
 

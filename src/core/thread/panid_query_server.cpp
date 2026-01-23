@@ -52,7 +52,7 @@ template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.mMessage.IsPostRequest());
+    VerifyOrExit(aMsg.IsPostRequest());
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
     SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));
@@ -62,7 +62,7 @@ template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
     mPanId        = panId;
     mTimer.Start(kScanDelay);
 
-    if (aMsg.mMessage.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
+    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
         LogInfo("Sent %s ack", UriToString<kUriPanIdQuery>());

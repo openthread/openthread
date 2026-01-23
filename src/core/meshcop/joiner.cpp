@@ -471,12 +471,15 @@ exit:
 
 void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, Error aResult)
 {
-    uint8_t state;
+    uint8_t          state;
+    Coap::HeaderInfo header;
 
     VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);
     OT_ASSERT(aMessage != nullptr);
 
-    VerifyOrExit(aMessage->IsAck() && aMessage->GetCode() == Coap::kCodeChanged);
+    SuccessOrExit(aMessage->ParseHeaderInfo(header));
+
+    VerifyOrExit(header.IsAck() && header.GetCode() == Coap::kCodeChanged);
 
     SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
 
@@ -499,7 +502,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
     Error         error;
     Dataset::Info datasetInfo;
 
-    VerifyOrExit(mState == kStateEntrust && aMsg.mMessage.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(mState == kStateEntrust && aMsg.IsConfirmablePostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.ntf");

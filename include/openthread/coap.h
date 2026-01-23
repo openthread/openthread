@@ -312,26 +312,33 @@ typedef struct otCoapTxParameters
 // `otCoapMessage*` APIs - Constructing or parsing a CoAP message.
 
 /**
- * Initializes the CoAP header.
+ * Initializes a CoAP message.
  *
- * @param[in,out] aMessage   A pointer to the CoAP message to initialize.
- * @param[in]     aType      CoAP message type.
- * @param[in]     aCode      CoAP message code.
+ * This function initializes the CoAP header, erasing any previously written content in the message. The Message ID is
+ * set to zero, and the token is empty (zero-length).
+ *
+ * @param[in,out] aMessage  A pointer to the CoAP message to initialize.
+ * @param[in]     aType     The CoAP Type.
+ * @param[in]     aCode     The CoAP Code.
+ *
+ * @retval OT_ERROR_NONE     Successfully initialized the message.
+ * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to write the CoAP header.
  */
-void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
+otError otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
 
 /**
- * Initializes a response message.
+ * Initializes a CoAP message as a response to a request.
  *
- * @note Both message ID and token are set according to @p aRequest.
+ * This function initializes the CoAP header, erasing any previously written content in the message. The Message ID and
+ * Token are copied from the request message.
  *
- * @param[in,out]  aResponse  A pointer to the CoAP response message.
- * @param[in]      aRequest   A pointer to the CoAP request message.
- * @param[in]      aType      CoAP message type.
- * @param[in]      aCode      CoAP message code.
+ * @param[in,out] aResponse  A pointer to the CoAP response message to initialize.
+ * @param[in]     aRequest   A pointer to the CoAP request message.
+ * @param[in]     aType      The CoAP Type for the response.
+ * @param[in]     aCode      The CoAP Code for the response.
  *
  * @retval OT_ERROR_NONE     Successfully initialized the response message.
- * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to initialize the response message.
+ * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to write the CoAP header.
  */
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode);
 

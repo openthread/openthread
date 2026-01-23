@@ -655,7 +655,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
     CacheEntry              *entry;
     CacheEntry              *prev;
 
-    VerifyOrExit(aMsg.mMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -725,9 +725,10 @@ void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
-    message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost);
+    SuccessOrExit(error = message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable,
+                                        Coap::kCodePost));
     SuccessOrExit(error = message->AppendUriPathOptions(PathForUri(kUriAddressError)));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
@@ -766,11 +767,11 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     Ip6::Address    destination;
 #endif
 
-    VerifyOrExit(aMsg.mMessage.IsPostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
-    if (aMsg.mMessage.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
+    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
         if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
         {
@@ -842,7 +843,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
     Ip6::Address target;
     uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMsg.mMessage.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
 

@@ -162,7 +162,7 @@ template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Msg &aMsg)
     Message::Settings        settings(kNoLinkSecurity, Message::kPriorityNet);
     Ip6::MessageInfo         messageInfo;
 
-    VerifyOrExit(aMsg.mMessage.IsNonConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMsg.IsNonConfirmablePostRequest(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriRelayTx>());
 
@@ -310,7 +310,7 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *aMessage, Error aR
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr);
 
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged);
+    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged);
 
     LogInfo("Receive %s response", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.rsp");
