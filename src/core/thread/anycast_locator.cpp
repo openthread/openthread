@@ -73,29 +73,18 @@ exit:
     return error;
 }
 
-void AnycastLocator::HandleResponse(void                *aContext,
-                                    otMessage           *aMessage,
-                                    const otMessageInfo *aMessageInfo,
-                                    otError              aError)
+void AnycastLocator::HandleResponse(Coap::Msg *aMsg, Error aError)
 {
-    static_cast<AnycastLocator *>(aContext)->HandleResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                            aError);
-}
-
-void AnycastLocator::HandleResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint16_t            rloc16  = Mle::kInvalidRloc16;
     const Ip6::Address *address = nullptr;
     Ip6::Address        meshLocalAddress;
 
     SuccessOrExit(aError);
-    OT_ASSERT(aMessage != nullptr);
+    OT_ASSERT(aMsg != nullptr);
 
     meshLocalAddress.SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
-    SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(*aMessage, meshLocalAddress.GetIid()));
-    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(*aMessage, rloc16));
+    SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMsg->mMessage, meshLocalAddress.GetIid()));
+    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg->mMessage, rloc16));
 
 #if OPENTHREAD_FTD
     Get<AddressResolver>().UpdateSnoopedCacheEntry(meshLocalAddress, rloc16, Get<Mac::Mac>().GetShortAddress());

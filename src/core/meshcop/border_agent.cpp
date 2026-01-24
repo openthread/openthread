@@ -718,20 +718,15 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(void                *aContext,
-                                                            otMessage           *aMessage,
-                                                            const otMessageInfo *aMessageInfo,
-                                                            otError              aResult)
+void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(void *aContext, Coap::Msg *aMsg, otError aResult)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     OwnedPtr<ForwardContext> forwardContext(static_cast<ForwardContext *>(aContext));
 
-    forwardContext->mSession.HandleLeaderResponseToFwdTmf(*forwardContext.Get(), AsCoapMessagePtr(aMessage), aResult);
+    forwardContext->mSession.HandleLeaderResponseToFwdTmf(*forwardContext.Get(), aMsg, aResult);
 }
 
 void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
-                                                            const Coap::Message  *aResponse,
+                                                            const Coap::Msg      *aResponse,
                                                             Error                 aResult)
 {
     OwnedPtr<Coap::Message> forwardMessage;
@@ -756,11 +751,11 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
     forwardMessage.Reset(NewPriorityMessage());
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
-    if (aResponse->ReadCode() == Coap::kCodeChanged)
+    if (aResponse->GetCode() == Coap::kCodeChanged)
     {
         uint8_t state;
 
-        SuccessOrExit(error = Tlv::Find<StateTlv>(*aResponse, state));
+        SuccessOrExit(error = Tlv::Find<StateTlv>(aResponse->mMessage, state));
 
         switch (state)
         {
@@ -769,7 +764,7 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
             {
                 uint16_t sessionId;
 
-                SuccessOrExit(error = Tlv::Find<CommissionerSessionIdTlv>(*aResponse, sessionId));
+                SuccessOrExit(error = Tlv::Find<CommissionerSessionIdTlv>(aResponse->mMessage, sessionId));
                 Get<Manager>().HandleCommissionerPetitionAccepted(*this, sessionId);
             }
 
@@ -785,15 +780,15 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
     }
 
     SuccessOrExit(error =
-                      forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->ReadCode())));
+                      forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->GetCode())));
     SuccessOrExit(error = forwardMessage->WriteToken(aForwardContext.mToken));
 
-    if (aResponse->GetLength() > aResponse->GetOffset())
+    if (aResponse->mMessage.GetLength() > aResponse->mMessage.GetOffset())
     {
         SuccessOrExit(error = forwardMessage->AppendPayloadMarker());
     }
 
-    SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), *aResponse));
+    SuccessOrExit(error = ForwardToCommissioner(forwardMessage.PassOwnership(), aResponse->mMessage));
 
 exit:
     if (error != kErrorNone)

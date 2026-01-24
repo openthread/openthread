@@ -460,7 +460,7 @@ void Joiner::SendJoinerFinalize(void)
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
 #endif
 
-    SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
+    SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, HandleJoinerFinalizeResponse, this));
     mFinalizeMessage = nullptr;
 
     LogInfo("Sent %s", UriToString<kUriJoinerFinalize>());
@@ -469,19 +469,16 @@ exit:
     return;
 }
 
-void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, Error aResult)
+void Joiner::HandleJoinerFinalizeResponse(Coap::Msg *aMsg, Error aResult)
 {
-    uint8_t          state;
-    Coap::HeaderInfo header;
+    uint8_t state;
 
     VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);
-    OT_ASSERT(aMessage != nullptr);
+    OT_ASSERT(aMsg != nullptr);
 
-    SuccessOrExit(aMessage->ParseHeaderInfo(header));
+    VerifyOrExit(aMsg->IsAck() && aMsg->GetCode() == Coap::kCodeChanged);
 
-    VerifyOrExit(header.IsAck() && header.GetCode() == Coap::kCodeChanged);
-
-    SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
+    SuccessOrExit(Tlv::Find<StateTlv>(aMsg->mMessage, state));
 
     SetState(kStateEntrust);
     mTimer.Start(kResponseTimeout);
@@ -489,7 +486,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, Error aResult
     LogInfo("Received %s %d", UriToString<kUriJoinerFinalize>(), state);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", *aMessage);
+    LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", aMsg->mMessage);
 #endif
 
 exit:

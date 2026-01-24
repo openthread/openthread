@@ -71,9 +71,26 @@ class CoapBase;
 /**
  * Represents a function pointer which is called when a CoAP response is received or on the request timeout.
  *
+ * This is the callback function definition used by the public `otCoap` APIs where the `aMessage` and `aMessageInfo`
+ * are passed as separate parameters. Core modules should use `ResponseHandler` callback instead which gets a single
+ * `Msg` input (encapsulating both message and its `Ip6::MessageInfo`).
+ *
  * Please see otCoapResponseHandler for details.
  */
-typedef otCoapResponseHandler ResponseHandler;
+typedef otCoapResponseHandler ResponseHandlerSeparateParams;
+
+/**
+ * Represents a function pointer which is called when a CoAP response is received or on the request timeout
+ *
+ * @param[in]  aContext      A pointer to application-specific context.
+ * @param[in]  aMessage      A pointer to the received `Msg` response. `nullptr` if no response was received.
+ * @param[in]  aResult       A result of the CoAP transaction.
+ *
+ * @retval  kErrorNone              A response was received successfully.
+ * @retval  kErrorAbort             The CoAP transaction was reset by peer.
+ * @retval  kErrorResponseTimeout   No response or acknowledgment received during timeout period.
+ */
+typedef void (*ResponseHandler)(void *aContext, Msg *aMsg, Error aResult);
 
 /**
  * Represents a function pointer which is called when a CoAP request associated with a given URI path is
@@ -636,6 +653,33 @@ public:
      */
     void GetRequestAndCachedResponsesQueueInfo(MessageQueue::Info &aQueueInfo) const;
 
+    /**
+     * Sends a CoAP message with custom transmission parameters using `ResponseHandlerSeparateParams` handle type.
+     *
+     * This version of `SendMessage()` is intended for use by the public OT CoAP APIs, `otCoap*` and should not be used
+     * within the OpenThread core modules.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aTxParameters A pointer to `TxParameters`. If `nullptr`, default `TxParameters will be used.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
+     * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     *
+     * @retval kErrorNone     Successfully sent CoAP message.
+     * @retval kErrorNoBufs   Failed to allocate retransmission data.
+     */
+    Error SendMessageWithResponseHandlerSeparateParams(Message                      &aMessage,
+                                                       const Ip6::MessageInfo       &aMessageInfo,
+                                                       const TxParameters           *aTxParameters,
+                                                       ResponseHandlerSeparateParams aHandler,
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+                                                       BlockwiseTransmitHook aTransmitHook,
+                                                       BlockwiseReceiveHook  aReceiveHook,
+#endif
+                                                       void *aContext);
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
      * Adds a block-wise resource to the CoAP server.
@@ -650,32 +694,6 @@ public:
      * @param[in]  aResource  A reference to the resource.
      */
     void RemoveBlockWiseResource(ResourceBlockWise &aResource);
-
-    /**
-     * Sends a CoAP message block-wise with custom transmission parameters.
-     *
-     * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be NULL pointers.
-     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
-     *
-     * @param[in]  aMessage      A reference to the message to send.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     * @param[in]  aTxParameters A pointer to `TxParameters`. If `nullptr`, default `TxParameters will be used.
-     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
-     * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
-     *
-     * @retval kErrorNone     Successfully sent CoAP message.
-     * @retval kErrorNoBufs   Failed to allocate retransmission data.
-     */
-    Error SendMessage(Message                &aMessage,
-                      const Ip6::MessageInfo &aMessageInfo,
-                      const TxParameters     *aTxParameters,
-                      otCoapResponseHandler   aHandler,
-                      void                   *aContext,
-                      BlockwiseTransmitHook   aTransmitHook,
-                      BlockwiseReceiveHook    aReceiveHook);
 
     /**
      * Sends a header-only CoAP message to indicate not all blocks have been sent or
@@ -744,18 +762,35 @@ protected:
 private:
     static constexpr uint16_t kMaxBlockSize = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
 
+    struct SendCallbacks
+    {
+        void Clear(void);
+        bool HasResponseHandler(void) const;
+        bool Matches(ResponseHandler aHandler, void *aContext) const;
+        void InvokeResponseHandler(Msg *aMsg, Error aResult) const;
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        bool HasBlockwiseReceiveHook(void) const { return mBlockwiseReceiveHook != nullptr; }
+        bool HasBlockwiseTransmitHook(void) const { return mBlockwiseTransmitHook != nullptr; }
+#endif
+
+        void                         *mContext;
+        ResponseHandler               mResponseHandler;
+        ResponseHandlerSeparateParams mResponseHandlerSeparateParams;
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        BlockwiseReceiveHook  mBlockwiseReceiveHook;
+        BlockwiseTransmitHook mBlockwiseTransmitHook;
+#endif
+    };
+
     struct Metadata : public Message::FooterData<Metadata>
     {
-        void InvokeResponseHandler(Msg *aMsg, Error aResult) const;
-
-        Ip6::Address    mSourceAddress;            // IPv6 address of the message source.
-        Ip6::Address    mDestinationAddress;       // IPv6 address of the message destination.
-        uint16_t        mDestinationPort;          // UDP port of the message destination.
-        ResponseHandler mResponseHandler;          // A function pointer that is called on response reception.
-        void           *mResponseContext;          // A pointer to arbitrary context information.
-        TimeMilli       mNextTimerShot;            // Time when the timer should shoot for this message.
-        uint32_t        mRetransmissionTimeout;    // Delay that is applied to next retransmission.
-        uint8_t         mRetransmissionsRemaining; // Number of retransmissions remaining.
+        Ip6::Address  mSourceAddress;            // IPv6 address of the message source.
+        Ip6::Address  mDestinationAddress;       // IPv6 address of the message destination.
+        uint16_t      mDestinationPort;          // UDP port of the message destination.
+        SendCallbacks mCallbacks;                // All callbacks, response handler and clockwise rx/tx hooks.
+        TimeMilli     mNextTimerShot;            // Time when the timer should shoot for this message.
+        uint32_t      mRetransmissionTimeout;    // Delay that is applied to next retransmission.
+        uint8_t       mRetransmissionsRemaining; // Number of retransmissions remaining.
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         uint8_t mHopLimit; // The hop limit.
 #endif
@@ -768,10 +803,6 @@ private:
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         bool mObserve : 1; // Information that this request involves Observations.
         bool mIsRequest : 1;
-#endif
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        BlockwiseReceiveHook  mBlockwiseReceiveHook;  // Function pointer called on Block2 response reception.
-        BlockwiseTransmitHook mBlockwiseTransmitHook; // Function pointer called on Block1 response reception.
 #endif
     };
 
@@ -818,13 +849,17 @@ private:
     bool        InvokeResponseFallback(Msg &aRxMsg) const;
     void        ProcessReceivedRequest(Msg &aRxMsg);
     void        ProcessReceivedResponse(Msg &aRxMsg);
+    Error       SendMessage(Message                &aMessage,
+                            const Ip6::MessageInfo &aMessageInfo,
+                            const TxParameters     *aTxParameters,
+                            const SendCallbacks    &aCallbacks);
     void        SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     Error       SendEmptyMessage(Type aType, const Msg &aRxMsg);
     Error       Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-    Error ProcessBlockwiseSend(Msg &aMsg, BlockwiseTransmitHook aTransmitHook, void *aContext);
+    Error ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks);
     Error ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const Metadata &aMetadata);
     Error ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
     void  FreeLastBlockResponse(void);

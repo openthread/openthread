@@ -67,40 +67,18 @@ namespace Tmf {
  *
  * The `Type` class MUST implement the following member method which will be invoked by the `static` handler:
  *
- *   void MethodName(Coap::Message *aMessage, Error aResult);
+ *   void MethodName(Coap::Msg *aMsg, Error aResult);
  *
  * @param[in] Type        The class `Type` in which the TMF response handler is declared.
  * @param[in] MethodName  The handler method name.
  */
-#define DeclareTmfResponseHandlerIn(Type, MethodName)                                                               \
-    static void MethodName(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult) \
-    {                                                                                                               \
-        OT_UNUSED_VARIABLE(aMessageInfo);                                                                           \
-        static_cast<Type *>(aContext)->MethodName(AsCoapMessagePtr(aMessage), aResult);                             \
-    }                                                                                                               \
-                                                                                                                    \
-    void MethodName(Coap::Message *aMessage, Error aResult)
-
-/**
- * Declares a TMF/CoAP response handler with access to `MessageInfo` in a given class `Type`.
- *
- * This macro is a variant of `DeclareTmfResponseHandlerIn` and is intended for cases where the response handler needs
- * access to the full parameters including `Ip6::MessageInfo`.
- *
- * The `Type` class MUST implement the following member method which will be invoked by the `static` handler:
- *
- *   void MethodName(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
- *
- * @param[in] Type        The class `Type` in which the TMF response handler is declared.
- * @param[in] MethodName  The handler method name.
- */
-#define DeclareTmfResponseHandlerFullParamIn(Type, MethodName)                                                       \
-    static void MethodName(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)  \
-    {                                                                                                                \
-        static_cast<Type *>(aContext)->MethodName(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo), aResult); \
-    }                                                                                                                \
-                                                                                                                     \
-    void MethodName(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+#define DeclareTmfResponseHandlerIn(Type, MethodName)                      \
+    static void MethodName(void *aContext, Coap::Msg *aMsg, Error aResult) \
+    {                                                                      \
+        static_cast<Type *>(aContext)->MethodName(aMsg, aResult);          \
+    }                                                                      \
+                                                                           \
+    void MethodName(Coap::Msg *aMsg, Error aResult)
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
