@@ -197,12 +197,12 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
     return didHandle;
 }
 
-Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
-{
-    OT_UNUSED_VARIABLE(aMessage);
+Error Agent::Filter(void *aContext, const Msg &aRxMsg) { return static_cast<Agent *>(aContext)->Filter(aRxMsg); }
 
-    return static_cast<Agent *>(aContext)->IsTmfMessage(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
-                                                        aMessageInfo.GetSockPort())
+Error Agent::Filter(const Msg &aRxMsg) const
+{
+    return IsTmfMessage(aRxMsg.mMessageInfo.GetPeerAddr(), aRxMsg.mMessageInfo.GetSockAddr(),
+                        aRxMsg.mMessageInfo.GetSockPort())
                ? kErrorNone
                : kErrorNotTmf;
 }

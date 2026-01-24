@@ -96,11 +96,14 @@ bool BackboneTmfAgent::HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg)
     return didHandle;
 }
 
-Error BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+Error BackboneTmfAgent::Filter(void *aContext, const ot::Coap::Msg &aRxMsg)
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    return static_cast<BackboneTmfAgent *>(aContext)->Filter(aRxMsg);
+}
 
-    return static_cast<BackboneTmfAgent *>(aContext)->IsBackboneTmfMessage(aMessageInfo) ? kErrorNone : kErrorNotTmf;
+Error BackboneTmfAgent::Filter(const ot::Coap::Msg &aRxMsg) const
+{
+    return IsBackboneTmfMessage(aRxMsg.mMessageInfo) ? kErrorNone : kErrorNotTmf;
 }
 
 bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const

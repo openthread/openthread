@@ -878,7 +878,7 @@ void CoapBase::ProcessReceivedRequest(Msg &aRxMsg)
 
     if (mInterceptor.IsSet())
     {
-        SuccessOrExit(error = mInterceptor.Invoke(aRxMsg.mMessage, aRxMsg.mMessageInfo));
+        SuccessOrExit(error = mInterceptor.Invoke(aRxMsg));
     }
 
     // Check if `mResponseCache` has a matching cached response for this

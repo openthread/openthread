@@ -230,10 +230,10 @@ public:
 private:
     template <Uri kUri> void HandleTmf(Msg &aMsg);
 
-    static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
-    bool        HandleResource(const char *aUriPath, Msg &aMsg);
-
-    static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static bool  HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool         HandleResource(const char *aUriPath, Msg &aMsg);
+    static Error Filter(void *aContext, const Msg &aRxMsg);
+    Error        Filter(const Msg &aRxMsg) const;
 };
 
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
