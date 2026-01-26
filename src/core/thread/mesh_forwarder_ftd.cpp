@@ -196,7 +196,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
     }
 }
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority)
+Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
 {
     Error    error = kErrorNotFound;
     Message *evict = nullptr;
@@ -222,11 +222,18 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
                 continue;
             }
 
+            if ((aEvictReason == kEvictReasonDirectTxQueueAtLimit) && !message->IsDirectTransmission())
+            {
+                continue;
+            }
+
             evict = message;
             error = kErrorNone;
             ExitNow();
         }
     }
+
+    VerifyOrExit(aEvictReason == kEvictReasonNoMessageBuffer);
 
     for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
     {
@@ -254,7 +261,16 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 exit:
     if ((error == kErrorNone) && (evict != nullptr))
     {
-        FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
+        switch (aEvictReason)
+        {
+        case kEvictReasonDirectTxQueueAtLimit:
+            FinalizeAndRemoveMessage(*evict, kErrorDrop, kMessageFullQueueEvict);
+            break;
+
+        case kEvictReasonNoMessageBuffer:
+            FinalizeAndRemoveMessage(*evict, kErrorNoBufs, kMessageEvict);
+            break;
+        }
     }
 
     return error;

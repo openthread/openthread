@@ -84,6 +84,7 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class Ip6::Ip6;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
+    friend class ot::MessagePool;
 
 public:
     /**
@@ -178,16 +179,6 @@ public:
      * Frees unicast/multicast MLE Data Responses from Send Message Queue if any.
      */
     void RemoveDataResponseMessages(void);
-
-    /**
-     * Evicts the message with lowest priority in the send queue.
-     *
-     * @param[in]  aPriority  The highest priority level of the evicted message.
-     *
-     * @retval kErrorNone       Successfully evicted a low priority message.
-     * @retval kErrorNotFound   No low priority messages available to evict.
-     */
-    Error EvictMessage(Message::Priority aPriority);
 
     /**
      * Retrieves information about the send queue and the reassembly queue.
@@ -299,6 +290,12 @@ private:
     static constexpr uint32_t kTimeInQueueDropMsg = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_DROP_MSG_INTERVAL;
 #endif
 
+    enum EvictReason : uint8_t // Used in EvictMessage()
+    {
+        kEvictReasonNoMessageBuffer,
+        kEvictReasonDirectTxQueueAtLimit,
+    };
+
     enum MessageAction : uint8_t
     {
         kMessageReceive,         // Indicates that the message was received.
@@ -306,13 +303,12 @@ private:
         kMessagePrepareIndirect, // Indicates that the message is being prepared for indirect tx.
         kMessageDrop,            // Indicates that the outbound message is dropped (e.g., dst unknown).
         kMessageReassemblyDrop,  // Indicates that the message is being dropped from reassembly list.
-        kMessageEvict,           // Indicates that the message was evicted.
+        kMessageEvict,           // Indicates that the message was evicted due to no available message buffers.
+        kMessageFullQueueEvict,  // Indicates that a lower priority message eviction due to direct tx queue at limit.
+        kMessageFullQueueDrop,   // Indicates message drop due to direct tx queue at limit.
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
         kMessageMarkEcn,       // Indicates that ECN is marked on an outbound message by delay-aware queue management.
         kMessageQueueMgmtDrop, // Indicates that an outbound message is dropped by delay-aware queue management.
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        kMessageFullQueueDrop, // Indicates message drop due to reaching max allowed frames in direct tx queue.
 #endif
     };
 
@@ -475,6 +471,7 @@ private:
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);
 
+    Error EvictMessage(Message::Priority aPriority, EvictReason aEvictReason);
     Error GetFramePriority(RxInfo &aRxInfo, Message::Priority &aPriority);
 
 #if OPENTHREAD_FTD
