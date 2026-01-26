@@ -367,12 +367,14 @@ private:
                           const Header  &aHeader,
                           bool          &aForwardThread,
                           bool          &aForwardHost,
+                          bool          &aForwardProxy,
                           bool          &aReceive) const;
     Error PassToHost(OwnedPtr<Message> &aMessagePtr,
                      const Header      &aHeader,
                      uint8_t            aIpProto,
                      bool               aReceive,
                      MessageOwnership   aMessageOwnership);
+    void  PassToProxy(OwnedPtr<Message> aMessagePtr);
     Error HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
                                  const Header      &aHeader,
                                  uint8_t           &aNextHeader,

@@ -296,3 +296,8 @@ void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
     AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
 }
 #endif
+
+void otIp6ForEachProxyAddress(otInstance *aInstance, otIp6ProxyAddressCallback aCallback, void *aContext)
+{
+    AsCoreType(aInstance).Get<Ip6::AddressProxy>().ForEachAddress(aCallback, aContext);
+}

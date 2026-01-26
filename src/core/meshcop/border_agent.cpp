@@ -37,6 +37,7 @@
 
 #include "instance/instance.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
+#include "net/address_proxy.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -238,7 +239,23 @@ SecureSession *Manager::HandleAcceptSession(void *aContext, const Ip6::MessageIn
 
 Manager::CoapDtlsSession *Manager::HandleAcceptSession(void)
 {
-    return CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
+    CoapDtlsSession *session = nullptr;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS > 0
+    VerifyOrExit(mDtlsTransport.GetSessions().CountAllEntries() < OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS);
+#endif
+
+    session = CoapDtlsSession::Allocate(GetInstance(), mDtlsTransport);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MAX_SESSIONS > 0
+exit:
+#endif
+    if (session != nullptr)
+    {
+        Get<TxtData>().Refresh();
+    }
+
+    return session;
 }
 
 void Manager::HandleRemoveSession(void *aContext, SecureSession &aSession)
@@ -254,6 +271,8 @@ void Manager::HandleRemoveSession(SecureSession &aSession)
 
     coapSession.Cleanup();
     coapSession.Free();
+
+    Get<TxtData>().Refresh();
 }
 
 void Manager::HandleSessionConnected(CoapDtlsSession &aSession)
@@ -576,6 +595,35 @@ void Manager::CoapDtlsSession::Cleanup(void)
     Coap::SecureSession::Cleanup();
 }
 
+void Manager::CoapDtlsSession::HandleProxyReceive(otMessage *aMessage, void *aContext)
+{
+    static_cast<CoapDtlsSession *>(aContext)->HandleProxyReceive(AsCoreType(aMessage));
+}
+
+void Manager::CoapDtlsSession::HandleProxyReceive(Message &aMessage)
+{
+    Error            error;
+    Ip6::Header      ip6Header;
+    Ip6::Udp::Header udpHeader;
+    Ip6::MessageInfo messageInfo;
+
+    SuccessOrExit(error = ip6Header.ParseFrom(aMessage));
+    aMessage.SetOffset(sizeof(Ip6::Header));
+
+    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), udpHeader));
+    aMessage.SetOffset(aMessage.GetOffset() + sizeof(Ip6::Udp::Header));
+
+    messageInfo.SetPeerAddr(ip6Header.GetSource());
+    messageInfo.SetPeerPort(udpHeader.GetSourcePort());
+    messageInfo.SetSockAddr(ip6Header.GetDestination());
+    messageInfo.SetSockPort(udpHeader.GetDestinationPort());
+
+    ForwardUdpProxyToCommissioner(aMessage, messageInfo);
+
+exit:
+    return;
+}
+
 bool Manager::CoapDtlsSession::HandleResource(CoapBase &aCoapBase, const char *aUriPath, Coap::Msg &aMsg)
 {
     return static_cast<CoapDtlsSession &>(aCoapBase).HandleResource(aUriPath, aMsg);
@@ -624,13 +672,29 @@ void Manager::CoapDtlsSession::HandleConnected(ConnectEvent aEvent)
 {
     if (aEvent == kConnected)
     {
+        Ip6::Address address;
+
         LogInfo("Session %u connected", mIndex);
+
+        address.SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+        address.GetIid().GenerateRandom();
+
+        mProxyAddress.Set(address, HandleProxyReceive, this);
+        Get<Ip6::AddressProxy>().AddAddress(mProxyAddress);
+
         mTimer.Start(kKeepAliveTimeout);
         Get<Manager>().HandleSessionConnected(*this);
     }
     else
     {
         LogInfo("Session %u disconnected", mIndex);
+
+        if (!mProxyAddress.GetAddress().IsUnspecified())
+        {
+            Get<Ip6::AddressProxy>().RemoveAddress(mProxyAddress);
+            mProxyAddress.GetAddress().Clear();
+        }
+
         Get<Manager>().HandleSessionDisconnected(*this, aEvent);
     }
 }
@@ -916,8 +980,6 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Msg &aMsg)
 
     Log<kUriProxyTx>(kReceive);
 
-    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
-
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kUdpEncapsulation, offsetRange));
 
     SuccessOrExit(error = aMsg.mMessage.Read(offsetRange, udpEncapHeader));
@@ -931,7 +993,7 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Msg &aMsg)
     SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 
     messageInfo.SetSockPort(udpEncapHeader.GetSourcePort());
-    messageInfo.SetSockAddr(Get<Manager>().GetCommissionerAloc());
+    messageInfo.SetSockAddr(mProxyAddress.GetAddress());
     messageInfo.SetPeerPort(udpEncapHeader.GetDestinationPort());
 
     SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMsg.mMessage, messageInfo.GetPeerAddr()));

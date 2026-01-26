@@ -569,7 +569,11 @@ class OtbrDocker:
             if entry == "":
                 continue
 
-            k, v = entry.split('=', 1)
+            if '=' in entry:
+                k, v = entry.split('=', 1)
+            else:
+                k = entry
+                v = None
             txt[k] = v
 
         return txt

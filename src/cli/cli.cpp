@@ -3259,6 +3259,23 @@ template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
         error = otIp6RemoveUnicastAddress(GetInstancePtr(), &address);
     }
     /**
+     * @cli ipaddr proxy
+     * @code
+     * ipaddr proxy
+     * 2001:db8::1
+     * Done
+     * @endcode
+     */
+    else if (aArgs[0] == "proxy")
+    {
+        otIp6ForEachProxyAddress(
+            GetInstancePtr(),
+            [](const otIp6Address *aAddress, void *aContext) {
+                static_cast<Interpreter *>(aContext)->OutputIp6AddressLine(*aAddress);
+            },
+            this);
+    }
+    /**
      * @cli ipaddr linklocal
      * @code
      * ipaddr linklocal

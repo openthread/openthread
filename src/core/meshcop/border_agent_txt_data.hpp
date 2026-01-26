@@ -257,6 +257,7 @@ private:
         static const char kBbrPort[];
         static const char kOmrPrefix[];
         static const char kExtAddress[];
+        static const char kSessionCount[];
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
         static const char kVendorName[];
         static const char kModelName[];

@@ -149,6 +149,7 @@ typedef struct otBorderAgentTxtDataInfo
     bool                     mHasBbrPort : 1;         ///< Indicates whether BBR Port is present.
     bool                     mHasOmrPrefix : 1;       ///< Indicates whether OMR Prefix is present.
     bool                     mHasExtAddress : 1;      ///< Indicates whether Extended Address is present.
+    bool                     mHasSessionCount : 1;    ///< Indicates whether Session Count is present.
     bool                     mHasVendorName : 1;      ///< Indicates whether Vendor Name is present.
     bool                     mHasModelName : 1;       ///< Indicates whether Model Name is present.
     char                     mRecordVersion[OT_BORDER_AGENT_RECORD_VERSION_SIZE]; ///< Record Version string.
@@ -164,8 +165,9 @@ typedef struct otBorderAgentTxtDataInfo
     uint16_t                 mBbrPort;                                            ///< BBR Port.
     otIp6Prefix              mOmrPrefix;                                          ///< OMR Prefix.
     otExtAddress             mExtAddress;                                         ///< Extended Address.
-    char                     mVendorName[OT_BORDER_AGENT_VENDOR_NAME_SIZE];       ///< Vendor Name string.
-    char                     mModelName[OT_BORDER_AGENT_MODEL_NAME_SIZE];         ///< Model Name string.
+    uint16_t                 mSessionCount; ///< Session Count (number of remaining sessions).
+    char                     mVendorName[OT_BORDER_AGENT_VENDOR_NAME_SIZE]; ///< Vendor Name string.
+    char                     mModelName[OT_BORDER_AGENT_MODEL_NAME_SIZE];   ///< Model Name string.
 } otBorderAgentTxtDataInfo;
 
 /**
