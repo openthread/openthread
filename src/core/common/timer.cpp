@@ -254,11 +254,7 @@ void Timer::Scheduler::RemoveAll(const AlarmApi &aAlarmApi)
 
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
     AsCoreType(aInstance).Get<TimerMilli::Scheduler>().ProcessTimers();
-
-exit:
-    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -291,11 +287,7 @@ void TimerMicro::RemoveAll(Instance &aInstance) { aInstance.Get<Scheduler>().Rem
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
     AsCoreType(aInstance).Get<TimerMicro::Scheduler>().ProcessTimers();
-
-exit:
-    return;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 

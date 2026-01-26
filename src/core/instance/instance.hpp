@@ -277,13 +277,6 @@ public:
 #endif
 
     /**
-     * Indicates whether or not the instance is valid/initialized and not yet finalized.
-     *
-     * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
-     */
-    bool IsInitialized(void) const { return mIsInitialized; }
-
-    /**
      * Triggers a platform reset.
      *
      * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that
@@ -767,8 +760,6 @@ private:
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     Utils::PowerCalibration mPowerCalibration;
 #endif
-
-    bool mIsInitialized;
 
     uint32_t mId;
 };

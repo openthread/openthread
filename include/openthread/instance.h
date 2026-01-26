@@ -40,6 +40,7 @@
 #include <stdlib.h>
 
 #include <openthread/error.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -167,8 +168,11 @@ uint32_t otInstanceGetId(otInstance *aInstance);
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @returns TRUE if the given instance is valid/initialized, FALSE otherwise.
+ *
+ * @deprecated It is challenging for OpenThread to safely track whether an instance is initialized or not. So this API
+ * is deprecated and its implementation is removed in OpenThread.
  */
-bool otInstanceIsInitialized(otInstance *aInstance);
+OT_DEPRECATED("This API is removed and please refactor its usage") bool otInstanceIsInitialized(otInstance *aInstance);
 
 /**
  * Disables the OpenThread library.

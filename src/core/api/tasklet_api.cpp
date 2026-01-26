@@ -39,21 +39,12 @@ using namespace ot;
 
 void otTaskletsProcess(otInstance *aInstance)
 {
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
     AsCoreType(aInstance).Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
-
-exit:
-    return;
 }
 
 bool otTaskletsArePending(otInstance *aInstance)
 {
-    bool retval = false;
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
-    retval = AsCoreType(aInstance).Get<Tasklet::Scheduler>().AreTaskletsPending();
-
-exit:
-    return retval;
+    return AsCoreType(aInstance).Get<Tasklet::Scheduler>().AreTaskletsPending();
 }
 
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}
