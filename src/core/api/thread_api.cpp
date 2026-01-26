@@ -419,6 +419,7 @@ otError otThreadDiscover(otInstance              *aInstance,
         /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aCallback, aCallbackContext);
 }
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
 otError otThreadSetJoinerAdvertisement(otInstance    *aInstance,
                                        uint32_t       aOui,
                                        const uint8_t *aAdvData,
@@ -426,6 +427,7 @@ otError otThreadSetJoinerAdvertisement(otInstance    *aInstance,
 {
     return AsCoreType(aInstance).Get<Mle::DiscoverScanner>().SetJoinerAdvertisement(aOui, aAdvData, aAdvDataLength);
 }
+#endif
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
 {

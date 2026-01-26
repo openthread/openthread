@@ -167,6 +167,7 @@ Instance::Instance(void)
     , mNetworkDataPublisher(*this)
 #endif
     , mNetworkDataServiceManager(*this)
+    , mVendorInfo(*this)
     , mNetworkDiagnosticServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     , mNetworkDiagnosticClient(*this)
@@ -260,6 +261,12 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     , mHistoryTrackerLocal(*this)
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    , mHistoryTrackerServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    , mHistoryTrackerClient(*this)
+#endif
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     , mLinkMetricsManager(*this)

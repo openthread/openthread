@@ -31,8 +31,8 @@
  *   This file includes definitions for tracking device's uptime.
  */
 
-#ifndef UPTIME_HPP_
-#define UPTIME_HPP_
+#ifndef OT_CORE_COMMON_UPTIME_HPP_
+#define OT_CORE_COMMON_UPTIME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -116,4 +116,4 @@ void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, bool aIncludeMsec
 
 #endif // OPENTHREAD_CONFIG_UPTIME_ENABLE
 
-#endif // UPTIME_HPP_
+#endif // OT_CORE_COMMON_UPTIME_HPP_

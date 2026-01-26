@@ -31,8 +31,8 @@
  *   This file includes definitions for channel monitoring module.
  */
 
-#ifndef CHANNEL_MONITOR_HPP_
-#define CHANNEL_MONITOR_HPP_
+#ifndef OT_CORE_UTILS_CHANNEL_MONITOR_HPP_
+#define OT_CORE_UTILS_CHANNEL_MONITOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -205,4 +205,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
-#endif // CHANNEL_MONITOR_HPP_
+#endif // OT_CORE_UTILS_CHANNEL_MONITOR_HPP_

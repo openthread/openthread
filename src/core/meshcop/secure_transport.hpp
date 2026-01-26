@@ -31,8 +31,8 @@
  *   This file includes definitions for using mbedTLS.
  */
 
-#ifndef SECURE_TRANSPORT_HPP_
-#define SECURE_TRANSPORT_HPP_
+#ifndef OT_CORE_MESHCOP_SECURE_TRANSPORT_HPP_
+#define OT_CORE_MESHCOP_SECURE_TRANSPORT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -938,4 +938,4 @@ private:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // SECURE_TRANSPORT_HPP_
+#endif // OT_CORE_MESHCOP_SECURE_TRANSPORT_HPP_

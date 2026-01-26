@@ -228,6 +228,7 @@ private:
     bool HasLinkLocalAddress(void) const;
 
 #ifdef __linux__
+    void ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage);
     void ReceiveNetLinkMessage(void);
 #endif
 

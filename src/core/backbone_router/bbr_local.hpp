@@ -31,8 +31,8 @@
  *   This file includes definitions for local Backbone Router service.
  */
 
-#ifndef BACKBONE_ROUTER_LOCAL_HPP_
-#define BACKBONE_ROUTER_LOCAL_HPP_
+#ifndef OT_CORE_BACKBONE_ROUTER_BBR_LOCAL_HPP_
+#define OT_CORE_BACKBONE_ROUTER_BBR_LOCAL_HPP_
 
 #include "openthread-core-config.h"
 
@@ -309,4 +309,4 @@ DefineMapEnum(otBackboneRouterState, BackboneRouter::Local::State);
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#endif // BACKBONE_ROUTER_LOCAL_HPP_
+#endif // OT_CORE_BACKBONE_ROUTER_BBR_LOCAL_HPP_

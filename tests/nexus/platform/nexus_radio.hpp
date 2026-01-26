@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_RADIO_HPP_
-#define OT_NEXUS_RADIO_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_
 
 #include "instance/instance.hpp"
 
@@ -79,4 +79,4 @@ struct Radio
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_RADIO_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_

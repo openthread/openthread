@@ -31,8 +31,8 @@
  *   This file includes definitions for Border Agent Tracker.
  */
 
-#ifndef BORDER_AGENT_TRACKER_HPP_
-#define BORDER_AGENT_TRACKER_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_TRACKER_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -245,4 +245,4 @@ DefineCoreType(otBorderAgentTrackerIterator, MeshCoP::BorderAgent::Tracker::Iter
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
 
-#endif // BORDER_AGENT_TRACKER_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_TRACKER_HPP_

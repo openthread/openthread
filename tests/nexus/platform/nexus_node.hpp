@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_NODE_HPP_
-#define OT_NEXUS_NODE_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
 
 #include "instance/instance.hpp"
 
@@ -121,4 +121,4 @@ inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_NODE_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_

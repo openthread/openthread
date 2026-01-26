@@ -31,8 +31,8 @@
  *   This file includes definitions for handle network diagnostic.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_HPP_
-#define NETWORK_DIAGNOSTIC_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -118,82 +118,6 @@ public:
         mNonPreferredChannelsResetCallback.Set(aCallback, aContext);
     }
 
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    /**
-     * Returns the vendor name string.
-     *
-     * @returns The vendor name string.
-     */
-    const char *GetVendorName(void) const { return mVendorName; }
-
-    /**
-     * Sets the vendor name string.
-     *
-     * @param[in] aVendorName     The vendor name string.
-     *
-     * @retval kErrorNone         Successfully set the vendor name.
-     * @retval kErrorInvalidArgs  @p aVendorName is not valid (too long or not UTF8).
-     */
-    Error SetVendorName(const char *aVendorName);
-
-    /**
-     * Returns the vendor model string.
-     *
-     * @returns The vendor model string.
-     */
-    const char *GetVendorModel(void) const { return mVendorModel; }
-
-    /**
-     * Sets the vendor model string.
-     *
-     * @param[in] aVendorModel     The vendor model string.
-     *
-     * @retval kErrorNone         Successfully set the vendor model.
-     * @retval kErrorInvalidArgs  @p aVendorModel is not valid (too long or not UTF8).
-     */
-    Error SetVendorModel(const char *aVendorModel);
-
-    /**
-     * Returns the vendor software version string.
-     *
-     * @returns The vendor software version string.
-     */
-    const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
-
-    /**
-     * Sets the vendor sw version string
-     *
-     * @param[in] aVendorSwVersion     The vendor sw version string.
-     *
-     * @retval kErrorNone         Successfully set the vendor sw version.
-     * @retval kErrorInvalidArgs  @p aVendorSwVersion is not valid (too long or not UTF8).
-     */
-    Error SetVendorSwVersion(const char *aVendorSwVersion);
-
-    /**
-     * Returns the vendor app URL string.
-     *
-     * @returns the vendor app URL string.
-     */
-    const char *GetVendorAppUrl(void) const { return mVendorAppUrl; }
-
-    /**
-     * Sets the vendor app URL string.
-     *
-     * @param[in] aVendorAppUrl     The vendor app URL string
-     *
-     * @retval kErrorNone         Successfully set the vendor app URL.
-     * @retval kErrorInvalidArgs  @p aVendorAppUrl is not valid (too long or not UTF8).
-     */
-    Error SetVendorAppUrl(const char *aVendorAppUrl);
-
-#else
-    const char *GetVendorName(void) const { return kVendorName; }
-    const char *GetVendorModel(void) const { return kVendorModel; }
-    const char *GetVendorSwVersion(void) const { return kVendorSwVersion; }
-    const char *GetVendorAppUrl(void) const { return kVendorAppUrl; }
-#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-
 private:
     static constexpr uint16_t kMaxChildEntries              = 398;
     static constexpr uint16_t kAnswerMessageLengthThreshold = 800;
@@ -218,11 +142,6 @@ private:
         Coap::Message    *mFirstAnswer;
     };
 #endif
-
-    static const char kVendorName[];
-    static const char kVendorModel[];
-    static const char kVendorSwVersion[];
-    static const char kVendorAppUrl[];
 
     Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
@@ -270,14 +189,7 @@ private:
     Error AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage);
 #endif
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    VendorNameTlv::StringType      mVendorName;
-    VendorModelTlv::StringType     mVendorModel;
-    VendorSwVersionTlv::StringType mVendorSwVersion;
-    VendorAppUrlTlv::StringType    mVendorAppUrl;
-#endif
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_FTD
     Coap::MessageQueue mAnswerQueue;
@@ -302,7 +214,7 @@ class Client : public InstanceLocator, private NonCopyable
 
 public:
     typedef otNetworkDiagIterator          Iterator;    ///< Iterator to go through TLVs in `GetNextDiagTlv()`.
-    typedef otNetworkDiagTlv               TlvInfo;     ///< Parse info from a Network Diagnostic TLV.
+    typedef otNetworkDiagTlv               DiagTlv;     ///< Parse info from a Network Diagnostic TLV.
     typedef otNetworkDiagChildEntry        ChildInfo;   ///< Parsed info for child table entry.
     typedef otReceiveDiagnosticGetCallback GetCallback; ///< Diagnostic Get callback function pointer type.
 
@@ -345,13 +257,13 @@ public:
      *
      * @param[in]      aMessage    Message to read TLVs from.
      * @param[in,out]  aIterator   The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
-     * @param[out]     aTlvInfo    A reference to a `TlvInfo` to output the next TLV data.
+     * @param[out]     aDiagTlv    A reference to a `DiagTlv` to output the next TLV data.
      *
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
      * @retval kErrorParse      Parsing the next Network Diagnostic failed.
      */
-    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
+    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, DiagTlv &aDiagTlv);
 
     /**
      * This method returns the query ID used for the last Network Diagnostic Query command.
@@ -372,13 +284,9 @@ private:
                       Coap::ResponseHandler aHandler = nullptr,
                       void                 *aContext = nullptr);
 
-    static void HandleGetResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult);
-    void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerFullParamIn(Client, HandleGetResponse);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
     static void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, MacCounters &aMacCounters);
@@ -402,4 +310,4 @@ DeclareTmfHandler(Client, kUriDiagnosticReset);
 
 } // namespace ot
 
-#endif // NETWORK_DIAGNOSTIC_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_

@@ -180,6 +180,8 @@ void platformInitNcpMode(otPlatformConfig *aPlatformConfig)
 
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
+    platformSettingsInit(aPlatformConfig->mDataPath);
+
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
     platformBacktraceInit();
 #endif
@@ -495,13 +497,14 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 bool IsSystemDryRun(void) { return gDryRun; }
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
-void otSysCliInitUsingDaemon(otInstance *aInstance)
+namespace {
+int OutputCallback(void *aContext, const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+
+int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
 {
-    otCliInit(
-        aInstance,
-        [](void *aContext, const char *aFormat, va_list aArguments) -> int {
-            return static_cast<ot::Posix::Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
-        },
-        &ot::Posix::Daemon::Get());
+    return static_cast<ot::Posix::Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
 }
+} // namespace
+
+void otSysCliInitUsingDaemon(otInstance *aInstance) { otCliInit(aInstance, OutputCallback, &ot::Posix::Daemon::Get()); }
 #endif

@@ -31,8 +31,8 @@
  *   This file includes definitions for the BorderAgent role.
  */
 
-#ifndef BORDER_AGENT_HPP_
-#define BORDER_AGENT_HPP_
+#ifndef OT_CORE_MESHCOP_BORDER_AGENT_HPP_
+#define OT_CORE_MESHCOP_BORDER_AGENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -235,6 +235,21 @@ public:
     Error SetServiceBaseName(const char *aBaseName);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+    /**
+     * Forcefully evicts the current active Thread Commissioner.
+     *
+     * This is intended as an administrator tool to address a misbehaving or stale commissioner session that may be
+     * connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner
+     * role within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+     *
+     * @retval kErrorNone          Successfully sent the eviction request to the Leader.
+     * @retval kErrorNotFound      There is no active commissioner session to evict.
+     * @retval kErrorNoBufs        Could not allocate a message buffer to send the request.
+     */
+    Error EvictActiveCommissioner(void);
+#endif
+
     /**
      * Gets the set of border agent counters.
      *
@@ -282,19 +297,18 @@ private:
             CoapDtlsSession &mSession;
             ForwardContext  *mNext;
             Uri              mUri;
-            uint8_t          mTokenLength;
-            uint8_t          mToken[Coap::Message::kMaxTokenLength];
+            Coap::Token      mToken;
         };
 
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
 
         Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
-        void  HandleTmfCommissionerKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-        void  HandleTmfRelayTx(Coap::Message &aMessage);
-        void  HandleTmfProxyTx(Coap::Message &aMessage);
+        void  HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg);
+        void  HandleTmfRelayTx(Coap::Msg &aMsg);
+        void  HandleTmfProxyTx(Coap::Msg &aMsg);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);
-        Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-        void  SendErrorMessage(Error aError, const uint8_t *aToken, uint8_t aTokenLength);
+        Error ForwardToLeader(const Coap::Msg &aMsg, Uri aUri);
+        void  SendErrorMessage(Error aError, const Coap::Token &aToken);
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
@@ -305,11 +319,8 @@ private:
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
                                                  const Coap::Message  *aResponse,
                                                  Error                 aResult);
-        static bool HandleResource(CoapBase               &aCoapBase,
-                                   const char             *aUriPath,
-                                   Coap::Message          &aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo);
-        bool        HandleResource(const char *aUriPath, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Coap::Msg &aMsg);
+        bool        HandleResource(const char *aUriPath, Coap::Msg &aMsg);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
@@ -336,7 +347,7 @@ private:
     // Callback from Notifier
     void HandleNotifierEvents(Events aEvents);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     // Callbacks used with `Dtls::Transport`.
     static SecureSession *HandleAcceptSession(void *aContext, const Ip6::MessageInfo &aMessageInfo);
@@ -409,4 +420,4 @@ DefineCoreType(otBorderAgentSessionIterator, MeshCoP::BorderAgent::Manager::Sess
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
-#endif // BORDER_AGENT_HPP_
+#endif // OT_CORE_MESHCOP_BORDER_AGENT_HPP_

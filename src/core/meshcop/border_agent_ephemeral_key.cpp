@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 #include "instance/instance.hpp"
+#include "utils/verhoeff_checksum.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -376,57 +377,98 @@ exit:
 
 const char *EphemeralKeyManager::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled",  // (0) kStateDisabled
-        "Stopped",   // (1) kStateStopped
-        "Started",   // (2) kStateStarted
-        "Connected", // (3) kStateConnected
-        "Accepted",  // (4) kStateAccepted
-    };
+#define StateMapList(_)             \
+    _(kStateDisabled, "Disabled")   \
+    _(kStateStopped, "Stopped")     \
+    _(kStateStarted, "Started")     \
+    _(kStateConnected, "Connected") \
+    _(kStateAccepted, "Accepted")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStateStarted);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateAccepted);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *EphemeralKeyManager::DeactivationReasonToString(DeactivationReason aReason)
 {
-    static const char *const kReasonStrings[] = {
-        "LocalDisconnect",   // (0) kReasonLocalDisconnect
-        "PeerDisconnect",    // (1) kReasonPeerDisconnect
-        "SessionError",      // (2) kReasonSessionError
-        "SessionTimeout",    // (3) kReasonSessionTimeout
-        "MaxFailedAttempts", // (4) kReasonMaxFailedAttempts
-        "EpskcTimeout",      // (5) kReasonEpskcTimeout
-        "Unknown",           // (6) kReasonUnknown
-    };
+#define ReasonMapList(_)                             \
+    _(kReasonLocalDisconnect, "LocalDisconnect")     \
+    _(kReasonPeerDisconnect, "PeerDisconnect")       \
+    _(kReasonSessionError, "SessionError")           \
+    _(kReasonSessionTimeout, "SessionTimeout")       \
+    _(kReasonMaxFailedAttempts, "MaxFailedAttempts") \
+    _(kReasonEpskcTimeout, "EpskcTimeout")           \
+    _(kReasonUnknown, "Unknown")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kReasonLocalDisconnect);
-        ValidateNextEnum(kReasonPeerDisconnect);
-        ValidateNextEnum(kReasonSessionError);
-        ValidateNextEnum(kReasonSessionTimeout);
-        ValidateNextEnum(kReasonMaxFailedAttempts);
-        ValidateNextEnum(kReasonEpskcTimeout);
-        ValidateNextEnum(kReasonUnknown);
-    };
+    DefineEnumStringArray(ReasonMapList);
 
-    return kReasonStrings[aReason];
+    return kStrings[aReason];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+//---------------------------------------------------------------------------------------------------------------------
+// EphemeralKeyManager::Tap
+
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
+Error EphemeralKeyManager::Tap::GenerateRandom(void)
+{
+    Error error;
+    char  checksum;
+
+    ClearAllBytes(mTap);
+
+    for (uint8_t index = 0; index < kLength - 1; index++)
+    {
+        SuccessOrExit(error = GenerateRandomDigit(mTap[index]));
+    }
+
+    IgnoreError(Utils::VerhoeffChecksum::Calculate(mTap, checksum));
+    mTap[kLength - 1] = checksum;
+
+exit:
+    return error;
+}
+
+Error EphemeralKeyManager::Tap::GenerateRandomDigit(char &aChar)
+{
+    static constexpr uint8_t kMaxValue = 250;
+
+    Error   error;
+    uint8_t byte;
+
+    // To ensure uniform random distribution and avoid bias toward
+    // certain digit values, we ignore random `uint8` values of 250 or
+    // larger (i.e., values in the range [250-255]). This ensures the
+    // random `byte` is uniformly distributed in `[0-249]`, which,
+    // when `% 10`, gives us a uniform probability of `[0-9]` values.
+
+    do
+    {
+        SuccessOrExit(error = Random::Crypto::Fill(byte));
+    } while (byte >= kMaxValue);
+
+    aChar = '0' + (byte % 10);
+
+exit:
+    return error;
+}
+
+Error EphemeralKeyManager::Tap::Validate(void) const
+{
+    Error error;
+
+    VerifyOrExit(StringLength(mTap, kLength + 1) == kLength, error = kErrorInvalidArgs);
+    error = Utils::VerhoeffChecksum::Validate(mTap);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
 } // namespace BorderAgent
 } // namespace MeshCoP

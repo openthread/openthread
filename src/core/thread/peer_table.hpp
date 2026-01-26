@@ -31,8 +31,8 @@
  *   This file includes definitions for the Thread Peer table.
  */
 
-#ifndef PEER_TABLE_HPP_
-#define PEER_TABLE_HPP_
+#ifndef OT_CORE_THREAD_PEER_TABLE_HPP_
+#define OT_CORE_THREAD_PEER_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -187,4 +187,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_P2P_ENABLE
 
-#endif // PEER_TABLE_HPP_
+#endif // OT_CORE_THREAD_PEER_TABLE_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for a MeshCoP Leader.
  */
 
-#ifndef MESHCOP_LEADER_HPP_
-#define MESHCOP_LEADER_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -98,15 +98,11 @@ private:
 
     void HandleTimer(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    void SendPetitionResponse(const Coap::Message    &aRequest,
-                              const Ip6::MessageInfo &aMessageInfo,
-                              StateTlv::State         aState);
+    void SendPetitionResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 
-    void SendKeepAliveResponse(const Coap::Message    &aRequest,
-                               const Ip6::MessageInfo &aMessageInfo,
-                               StateTlv::State         aState);
+    void SendKeepAliveResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
@@ -127,4 +123,4 @@ DeclareTmfHandler(Leader, kUriLeaderKeepAlive);
 
 #endif // OPENTHREAD_FTD
 
-#endif // MESHCOP_LEADER_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_LEADER_HPP_

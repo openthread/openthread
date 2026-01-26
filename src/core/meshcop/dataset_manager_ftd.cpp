@@ -188,16 +188,14 @@ exit:
     return error;
 }
 
-Error DatasetManager::HandleSetOrReplace(MgmtCommand             aCommand,
-                                         const Coap::Message    &aMessage,
-                                         const Ip6::MessageInfo &aMessageInfo)
+Error DatasetManager::HandleSetOrReplace(MgmtCommand aCommand, const Coap::Msg &aMsg)
 {
     StateTlv::State state = StateTlv::kReject;
     RequestInfo     info;
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader());
 
-    SuccessOrExit(ProcessSetOrReplaceRequest(aCommand, aMessage, info));
+    SuccessOrExit(ProcessSetOrReplaceRequest(aCommand, aMsg.mMessage, info));
 
     if (IsActiveDataset() && info.mAffectsConnectivity)
     {
@@ -228,24 +226,22 @@ Error DatasetManager::HandleSetOrReplace(MgmtCommand             aCommand,
     }
 
 exit:
-    SendSetOrReplaceResponse(aMessage, aMessageInfo, state);
+    SendSetOrReplaceResponse(aMsg, state);
 
     return (state == StateTlv::kAccept) ? kErrorNone : kErrorDrop;
 }
 
-void DatasetManager::SendSetOrReplaceResponse(const Coap::Message    &aRequest,
-                                              const Ip6::MessageInfo &aMessageInfo,
-                                              StateTlv::State         aState)
+void DatasetManager::SendSetOrReplaceResponse(const Coap::Msg &aMsg, StateTlv::State aState)
 {
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo));
 
     LogInfo("sent dataset set/replace response");
 
@@ -368,20 +364,18 @@ void ActiveDatasetManager::StartLeader(void) { IgnoreError(GenerateLocal()); }
 void ActiveDatasetManager::StartLeader(void) {}
 #endif // OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Coap::Msg &aMsg)
 {
-    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMsg));
     IgnoreError(ApplyConfiguration());
 
 exit:
     return;
 }
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveReplace>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveReplace>(Coap::Msg &aMsg)
 {
-    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtReplace, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtReplace, aMsg));
     IgnoreError(ApplyConfiguration());
 
 exit:
@@ -404,10 +398,9 @@ exit:
     return error;
 }
 
-template <>
-void PendingDatasetManager::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void PendingDatasetManager::HandleTmf<kUriPendingSet>(Coap::Msg &aMsg)
 {
-    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSetOrReplace(kMgmtSet, aMsg));
     StartDelayTimer();
 
 exit:

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_CORE_HPP_
-#define OT_NEXUS_CORE_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
@@ -97,4 +97,4 @@ void Log(const char *aFormat, ...);
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_CORE_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_

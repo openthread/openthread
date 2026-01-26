@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BR_TRACKER_HPP_
-#define BR_TRACKER_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_BR_TRACKER_HPP_
+#define OT_CORE_BORDER_ROUTER_BR_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -142,4 +142,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // BR_TRACKER_HPP_
+#endif // OT_CORE_BORDER_ROUTER_BR_TRACKER_HPP_

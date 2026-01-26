@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Service.
  */
 
-#ifndef DHCP6_TYPES_HPP_
-#define DHCP6_TYPES_HPP_
+#ifndef OT_CORE_NET_DHCP6_TYPES_HPP_
+#define OT_CORE_NET_DHCP6_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1089,4 +1089,4 @@ private:
 } // namespace Dhcp6
 } // namespace ot
 
-#endif // DHCP6_TYPES_HPP_
+#endif // OT_CORE_NET_DHCP6_TYPES_HPP_

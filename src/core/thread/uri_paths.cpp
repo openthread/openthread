@@ -91,6 +91,8 @@ static constexpr Entry kEntries[] = {
     {"d/dg"},  // kUriDiagnosticGetRequest
     {"d/dq"},  // kUriDiagnosticGetQuery
     {"d/dr"},  // kUriDiagnosticReset
+    {"h/an"},  // kUriHistoryAnswer
+    {"h/qy"},  // kUriHistoryQuery
     {"n/dn"},  // kUriDuaRegistrationNotify
     {"n/dr"},  // kUriDuaRegistrationRequest
     {"n/mr"},  // kUriMlr
@@ -137,55 +139,11 @@ static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetAnswer].mPath, "d/d
 static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetRequest].mPath, "d/dg"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticGetQuery].mPath, "d/dq"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDiagnosticReset].mPath, "d/dr"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriHistoryAnswer].mPath, "h/an"), "kEntries is invalid");
+static_assert(AreConstStringsEqual(kEntries[kUriHistoryQuery].mPath, "h/qy"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationNotify].mPath, "n/dn"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriDuaRegistrationRequest].mPath, "n/dr"), "kEntries is invalid");
 static_assert(AreConstStringsEqual(kEntries[kUriMlr].mPath, "n/mr"), "kEntries is invalid");
-
-struct UriEnumCheck
-{
-    InitEnumValidatorCounter();
-    ValidateNextEnum(kUriAddressError);
-    ValidateNextEnum(kUriAddressNotify);
-    ValidateNextEnum(kUriAddressQuery);
-    ValidateNextEnum(kUriAddressRelease);
-    ValidateNextEnum(kUriAddressSolicit);
-    ValidateNextEnum(kUriServerData);
-    ValidateNextEnum(kUriAnycastLocate);
-    ValidateNextEnum(kUriBackboneAnswer);
-    ValidateNextEnum(kUriBackboneMlr);
-    ValidateNextEnum(kUriBackboneQuery);
-    ValidateNextEnum(kUriAnnounceBegin);
-    ValidateNextEnum(kUriActiveGet);
-    ValidateNextEnum(kUriActiveReplace);
-    ValidateNextEnum(kUriActiveSet);
-    ValidateNextEnum(kUriCommissionerKeepAlive);
-    ValidateNextEnum(kUriCommissionerGet);
-    ValidateNextEnum(kUriCommissionerPetition);
-    ValidateNextEnum(kUriCommissionerSet);
-    ValidateNextEnum(kUriDatasetChanged);
-    ValidateNextEnum(kUriEnergyReport);
-    ValidateNextEnum(kUriEnergyScan);
-    ValidateNextEnum(kUriJoinerEntrust);
-    ValidateNextEnum(kUriJoinerFinalize);
-    ValidateNextEnum(kUriLeaderKeepAlive);
-    ValidateNextEnum(kUriLeaderPetition);
-    ValidateNextEnum(kUriPanIdConflict);
-    ValidateNextEnum(kUriPendingGet);
-    ValidateNextEnum(kUriPanIdQuery);
-    ValidateNextEnum(kUriPendingSet);
-    ValidateNextEnum(kUriRelayRx);
-    ValidateNextEnum(kUriTcatEnable);
-    ValidateNextEnum(kUriRelayTx);
-    ValidateNextEnum(kUriProxyRx);
-    ValidateNextEnum(kUriProxyTx);
-    ValidateNextEnum(kUriDiagnosticGetAnswer);
-    ValidateNextEnum(kUriDiagnosticGetRequest);
-    ValidateNextEnum(kUriDiagnosticGetQuery);
-    ValidateNextEnum(kUriDiagnosticReset);
-    ValidateNextEnum(kUriDuaRegistrationNotify);
-    ValidateNextEnum(kUriDuaRegistrationRequest);
-    ValidateNextEnum(kUriMlr);
-};
 
 } // namespace UriList
 
@@ -246,6 +204,8 @@ template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "Dia
 template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
 template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
 template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
+template <> const char *UriToString<kUriHistoryAnswer>(void) { return "HistAnswer"; }
+template <> const char *UriToString<kUriHistoryQuery>(void) { return "HistQuery"; }
 template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
 template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
 template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }

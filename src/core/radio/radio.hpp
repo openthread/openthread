@@ -31,8 +31,8 @@
  *   This file includes definitions for OpenThread radio abstraction.
  */
 
-#ifndef RADIO_HPP_
-#define RADIO_HPP_
+#ifndef OT_CORE_RADIO_RADIO_HPP_
+#define OT_CORE_RADIO_RADIO_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1168,4 +1168,4 @@ inline bool Radio::GetDiagMode(void) { return false; }
 
 } // namespace ot
 
-#endif // RADIO_HPP_
+#endif // OT_CORE_RADIO_RADIO_HPP_

@@ -1086,21 +1086,14 @@ RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::F
 
 const char *RoutingManager::OmrPrefixManager::OmrConfigToString(OmrConfig aConfig)
 {
-    static const char *const kConfigStrings[] = {
-        "auto",     // (0) kOmrConfigAuto
-        "custom",   // (1) kOmrConfigCustom
-        "disabled", // (2) kOmrConfigDisabled
-    };
+#define OmrConfigMapList(_)       \
+    _(kOmrConfigAuto, "auto")     \
+    _(kOmrConfigCustom, "custom") \
+    _(kOmrConfigDisabled, "disabled")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kOmrConfigAuto);
-        ValidateNextEnum(kOmrConfigCustom);
-        ValidateNextEnum(kOmrConfigDisabled);
-    };
+    DefineEnumStringArray(OmrConfigMapList);
 
-    return kConfigStrings[aConfig];
+    return kStrings[aConfig];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1680,23 +1673,15 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
 
 const char *RoutingManager::OnLinkPrefixManager::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Removed",     // (0) kIdle
-        "Publishing",  // (1) kPublishing
-        "Advertising", // (2) kAdvertising
-        "Deprecating", // (3) kDeprecating
-    };
+#define OnLinkPrefixManagerStateMapList(_) \
+    _(kIdle, "Removed")                    \
+    _(kPublishing, "Publishing")           \
+    _(kAdvertising, "Advertising")         \
+    _(kDeprecating, "Deprecating")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kIdle);
-        ValidateNextEnum(kPublishing);
-        ValidateNextEnum(kAdvertising);
-        ValidateNextEnum(kDeprecating);
-    };
+    DefineEnumStringArray(OnLinkPrefixManagerStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -2168,21 +2153,14 @@ exit:
 
 const char *RoutingManager::RoutePublisher::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "none",      // (0) kDoNotPublish
-        "def-route", // (1) kPublishDefault
-        "ula",       // (2) kPublishUla
-    };
+#define RoutePublisherStateMapList(_) \
+    _(kDoNotPublish, "none")          \
+    _(kPublishDefault, "def-route")   \
+    _(kPublishUla, "ula")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDoNotPublish);
-        ValidateNextEnum(kPublishDefault);
-        ValidateNextEnum(kPublishUla);
-    };
+    DefineEnumStringArray(RoutePublisherStateMapList)
 
-    return kStateStrings[aState];
+        return kStrings[aState];
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -2851,23 +2829,15 @@ exit:
 
 const char *RoutingManager::PdPrefixManager::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled", // (0) kDisabled
-        "Stopped",  // (1) kStopped
-        "Running",  // (2) kRunning
-        "Idle",     // (3) kIdle
-    };
+#define PdPrefixManagerStateMapList(_)   \
+    _(kDhcp6PdStateDisabled, "Disabled") \
+    _(kDhcp6PdStateStopped, "Stopped")   \
+    _(kDhcp6PdStateRunning, "Running")   \
+    _(kDhcp6PdStateIdle, "Idle")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDhcp6PdStateDisabled);
-        ValidateNextEnum(kDhcp6PdStateStopped);
-        ValidateNextEnum(kDhcp6PdStateRunning);
-        ValidateNextEnum(kDhcp6PdStateIdle);
-    };
+    DefineEnumStringArray(PdPrefixManagerStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE

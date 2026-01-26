@@ -443,6 +443,19 @@ ba sessions
 Done
 ```
 
+### ba evictcommissioner
+
+Forcefully evicts the current active Thread Commissioner.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE`.
+
+This command is intended as an administrator tool to address a misbehaving or stale commissioner session that may be connected through a different Border Agent. It provides a mechanism to clear the single Active Commissioner role within the Thread network, allowing a new candidate to be selected as the Active commissioner.
+
+```bash
+> ba evictcommissioner
+Done
+```
+
 ### ba ephemeralkey
 
 Print the Border Agent's Ephemeral Key Manager state.
@@ -580,6 +593,36 @@ Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
 
 ```bash
 > ba ephemeralkey callback disable
+Done
+```
+
+### ba ephemeralkey generate-tap
+
+Generates a cryptographically secure random Thread Administration One-Time Passcode (TAP) string.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+
+The TAP is a string of 9 characters, generated as a sequence of eight cryptographically secure random numeric digits [`0`-`9`] followed by a single check digit determined using the Verhoeff algorithm.
+
+Note that this command simply generates and outputs a TAP. It does not start ephemeral key use with this TAP on the Border Agent.
+
+```bash
+> ba ephemeralkey generate-tap
+989710128
+Done
+```
+
+### ba ephemeralkey validate-tap \<keystring\>
+
+Validates a given Thread Administration One-Time Passcode (TAP) string.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE` and `OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE`.
+
+Validates that the TAP string has the proper length, contains digit characters [`0`-`9`], and validates the Verhoeff checksum.
+
+```bash
+> ba ephemeralkey validate-tap 989710128
+validated
 Done
 ```
 

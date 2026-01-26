@@ -31,18 +31,20 @@
  *   This file includes definitions for generating and processing CoAP messages.
  */
 
-#ifndef COAP_HEADER_HPP_
-#define COAP_HEADER_HPP_
+#ifndef OT_CORE_COAP_COAP_MESSAGE_HPP_
+#define OT_CORE_COAP_COAP_MESSAGE_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/coap.h>
 
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
@@ -67,7 +69,10 @@ namespace Coap {
  * @{
  */
 
+class Msg;
+class Message;
 class Option;
+class CoapBase;
 
 /**
  * CoAP Type values.
@@ -154,130 +159,405 @@ enum OptionNumber : uint16_t
 };
 
 /**
- * Implements CoAP message generation and parsing.
+ * CoAP Block Size Exponents
  */
-class Message : public ot::Message
+enum BlockSzx : uint8_t
 {
-    friend class Option;
-    friend class MessageQueue;
+    kBlockSzx16   = OT_COAP_OPTION_BLOCK_SZX_16,   ///< 16  bytes.
+    kBlockSzx32   = OT_COAP_OPTION_BLOCK_SZX_32,   ///< 32  bytes.
+    kBlockSzx64   = OT_COAP_OPTION_BLOCK_SZX_64,   ///< 64  bytes.
+    kBlockSzx128  = OT_COAP_OPTION_BLOCK_SZX_128,  ///< 128 bytes.
+    kBlockSzx256  = OT_COAP_OPTION_BLOCK_SZX_256,  ///< 256 bytes.
+    kBlockSzx512  = OT_COAP_OPTION_BLOCK_SZX_512,  ///< 512 bytes.
+    kBlockSzx1024 = OT_COAP_OPTION_BLOCK_SZX_1024, ///< 1024 bytes.
+};
+
+/**
+ * Converts a CoAP Block Size Exponent (SZX) to the actual block size (in bytes).
+ *
+ * @param[in]   aBlockSzx     Block size exponent.
+ *
+ * @returns The actual size corresponding to @o aBlockSzx.
+ */
+uint16_t BlockSizeFromExponent(BlockSzx aBlockSzx);
+
+/**
+ * Represents information in a Block1 or Block2 Option (for block-wise transfer).
+ */
+struct BlockInfo
+{
+    /**
+     * Returns the block size in bytes.
+     *
+     * @returns The block size in bytes derived from block size exponent (`mBlockSzx`).
+     */
+    uint16_t GetBlockSize(void) const { return BlockSizeFromExponent(mBlockSzx); }
+
+    /**
+     * Returns the current block offset position.
+     *
+     * @returns The block offset position, i.e. the current block number multiplied by the block size.
+     */
+    uint32_t GetBlockOffsetPosition(void) const { return mBlockNumber * GetBlockSize(); }
+
+    uint32_t mBlockNumber; ///< The block number.
+    BlockSzx mBlockSzx;    ///< The block size exponent.
+    bool     mMoreBlocks;  ///< Whether more blocks are following (`M` flag).
+};
+
+/**
+ * Represents a CoAP message Token.
+ */
+class Token : public otCoapToken, public Clearable<Token>, public Unequatable<Token>
+{
+    friend class Message;
 
 public:
-    static constexpr uint8_t kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH; ///< Default token length.
-    static constexpr uint8_t kMaxReceivedUriPath = 32;                           ///< Max URI path length on rx msgs.
-    static constexpr uint8_t kMaxTokenLength     = OT_COAP_MAX_TOKEN_LENGTH;     ///< Maximum token length.
-
-    typedef ot::Coap::Type Type; ///< CoAP Type.
-    typedef ot::Coap::Code Code; ///< CoAP Code.
+    static const uint8_t kMaxLength     = OT_COAP_MAX_TOKEN_LENGTH;     ///< Maximum token length.
+    static const uint8_t kDefaultLength = OT_COAP_DEFAULT_TOKEN_LENGTH; ///< Default token length.
 
     /**
-     * CoAP Block1/Block2 Types
+     * Indicates whether the Token is valid.
+     *
+     * A Token is valid if its length is less than or equal to `kMaxLength`.
+     *
+     * @retval TRUE  If the Token is valid.
+     * @retval FALSE If the Token is not valid.
      */
-    enum BlockType : uint8_t
-    {
-        kBlockType1 = 1,
-        kBlockType2 = 2,
-    };
-
-    static constexpr uint8_t kBlockSzxBase = 4;
+    bool IsValid(void) const { return mLength <= kMaxLength; }
 
     /**
-     * Initializes the CoAP header.
+     * Returns a pointer to the Token bytes.
+     *
+     * @returns A pointer to the Token bytes.
      */
-    void Init(void);
+    const uint8_t *GetBytes(void) const { return m8; }
 
     /**
-     * Initializes the CoAP header with specific Type and Code.
+     * Returns the Token length in bytes.
      *
-     * @param[in]  aType  The Type value.
-     * @param[in]  aCode  The Code value.
+     * @returns The Token length in bytes.
      */
-    void Init(Type aType, Code aCode);
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * Initializes the CoAP header with specific Type and Code.
+     * Sets the Token bytes and length.
      *
-     * @param[in]  aType              The Type value.
-     * @param[in]  aCode              The Code value.
-     * @param[in]  aUri               The URI.
+     * @param[in] aBytes   A pointer to the Token bytes.
+     * @param[in] aLength  The Token length in bytes.
      *
-     * @retval kErrorNone         Successfully appended the option.
-     * @retval kErrorNoBufs       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully set the Token.
+     * @retval kErrorInvalidArgs  The specified length @p aLength is greater than `kMaxLength`.
      */
-    Error Init(Type aType, Code aCode, Uri aUri);
+    Error SetToken(const uint8_t *aBytes, uint8_t aLength);
 
     /**
-     * Initializes the CoAP header as `kCodePost` with a given URI Path with its type determined from a
-     * given destination IPv6 address.
+     * Overloads the `==` operator to compare two CoAP Tokens.
      *
-     * @param[in]  aDestination       The message destination IPv6 address used to determine the CoAP type,
-     *                                `kTypeNonConfirmable` if multicast address, `kTypeConfirmable` otherwise.
-     * @param[in]  aUri               The URI.
+     * @param[in] aOther  The other Token to compare with.
      *
-     * @retval kErrorNone         Successfully appended the option.
-     * @retval kErrorNoBufs       The option length exceeds the buffer size.
+     * @retval TRUE   If the two Tokens are equal.
+     * @retval FALSE  If the two Tokens are not equal.
      */
-    Error InitAsPost(const Ip6::Address &aDestination, Uri aUri);
+    bool operator==(const Token &aOther) const;
 
-    /**
-     * Writes header to the message. This must be called before sending the message.
-     *
-     * Also checks whether the payload marker is set (`SetPayloadMarker()`) but the message contains no
-     * payload, and if so it removes the payload marker from the message.
-     */
-    void Finish(void);
+private:
+    Error GenerateRandom(uint8_t aLength);
+};
 
-    /**
-     * Returns the Version value.
-     *
-     * @returns The Version value.
-     */
-    uint8_t GetVersion(void) const
-    {
-        return (GetHelpData().mHeader.mVersionTypeToken & kVersionMask) >> kVersionOffset;
-    }
+/**
+ * Represents information from a parsed CoAP Header in a CoAP message.
+ */
+class HeaderInfo : public Clearable<HeaderInfo>
+{
+    friend class Message;
+    friend class Msg;
 
-    /**
-     * Sets the Version value.
-     *
-     * @param[in]  aVersion  The Version value.
-     */
-    void SetVersion(uint8_t aVersion)
-    {
-        GetHelpData().mHeader.mVersionTypeToken &= ~kVersionMask;
-        GetHelpData().mHeader.mVersionTypeToken |= aVersion << kVersionOffset;
-    }
-
+public:
     /**
      * Returns the Type value.
      *
      * @returns The Type value.
      */
-    uint8_t GetType(void) const { return (GetHelpData().mHeader.mVersionTypeToken & kTypeMask) >> kTypeOffset; }
-
-    /**
-     * Sets the Type value.
-     *
-     * @param[in]  aType  The Type value.
-     */
-    void SetType(Type aType)
-    {
-        GetHelpData().mHeader.mVersionTypeToken &= ~kTypeMask;
-        GetHelpData().mHeader.mVersionTypeToken |= (static_cast<uint8_t>(aType) << kTypeOffset);
-    }
+    uint8_t GetType(void) const { return mType; }
 
     /**
      * Returns the Code value.
      *
      * @returns The Code value.
      */
-    uint8_t GetCode(void) const { return static_cast<Code>(GetHelpData().mHeader.mCode); }
+    uint8_t GetCode(void) const { return mCode; }
 
     /**
-     * Sets the Code value.
+     * Returns the Message ID value.
+     *
+     * @returns The Message ID value.
+     */
+    uint16_t GetMessageId(void) const { return mMessageId; }
+
+    /**
+     * Returns the Token.
+     *
+     * @returns The Token.
+     */
+    const Token &GetToken(void) const { return mToken; }
+
+    /**
+     * Checks if a header is an empty message header (`kCodeEmpty`).
+     *
+     * @retval TRUE   Message is an empty message header.
+     * @retval FALSE  Message is not an empty message header.
+     */
+    bool IsEmpty(void) const { return (mCode == kCodeEmpty); }
+
+    /**
+     * Checks if a header is a request header.
+     *
+     * @retval TRUE   Message is a request header.
+     * @retval FALSE  Message is not a request header.
+     */
+    bool IsRequest(void) const;
+
+    /**
+     * Indicates whether or not the CoAP code in header is "Get" request.
+     *
+     * @retval TRUE   Message is a Get request.
+     * @retval FALSE  Message is not a Get request.
+     */
+    bool IsGetRequest(void) const { return (mCode == kCodeGet); }
+
+    /**
+     * Indicates whether or not the CoAP code in header is "Post" request.
+     *
+     * @retval TRUE   Message is a Post request.
+     * @retval FALSE  Message is not a Post request.
+     */
+    bool IsPostRequest(void) const { return (mCode == kCodePost); }
+
+    /**
+     * Indicates whether or not the CoAP code in header is "Put" request.
+     *
+     * @retval TRUE   Message is a Put request.
+     * @retval FALSE  Message is not a Put request.
+     */
+    bool IsPutRequest(void) const { return (mCode == kCodePut); }
+
+    /**
+     * Indicates whether or not the CoAP code in header is "Delete" request.
+     *
+     * @retval TRUE   Message is a Delete request.
+     * @retval FALSE  Message is not a Delete request.
+     */
+    bool IsDeleteRequest(void) const { return (mCode == kCodeDelete); }
+
+    /**
+     * Checks if a header is a response header.
+     *
+     * @retval TRUE   Message is a response header.
+     * @retval FALSE  Message is not a response header.
+     */
+    bool IsResponse(void) const { return mCode >= kCodeResponseMin; }
+
+    /**
+     * Checks if a header is a CON message header.
+     *
+     * @retval TRUE   Message is a CON message header.
+     * @retval FALSE  Message is not is a CON message header.
+     */
+    bool IsConfirmable(void) const { return (GetType() == kTypeConfirmable); }
+
+    /**
+     * Checks if a header is a NON message header.
+     *
+     * @retval TRUE   Message is a NON message header.
+     * @retval FALSE  Message is not is a NON message header.
+     */
+    bool IsNonConfirmable(void) const { return (mType == kTypeNonConfirmable); }
+
+    /**
+     * Checks if a header is a ACK message header.
+     *
+     * @retval TRUE   Message is a ACK message header.
+     * @retval FALSE  Message is not is a ACK message header.
+     */
+    bool IsAck(void) const { return (mType == kTypeAck); }
+
+    /**
+     * Checks if a header is a RST message header.
+     *
+     * @retval TRUE   Message is a RST message header.
+     * @retval FALSE  Message is not is a RST message header.
+     */
+    bool IsReset(void) const { return (mType == kTypeReset); }
+
+    /**
+     * Indicates whether or not the header is a confirmable Post request (`kTypeConfirmable` with`kCodePost`).
+     *
+     * @retval TRUE   Message is a confirmable Post request.
+     * @retval FALSE  Message is not a confirmable Post request.
+     */
+    bool IsConfirmablePostRequest(void) const;
+
+    /**
+     * Indicates whether the message is a non-confirmable Post request (`kTypeNonConfirmable` with `kCodePost`).
+     *
+     * @retval TRUE   Message is a non-confirmable Post request.
+     * @retval FALSE  Message is not a non-confirmable Post request.
+     */
+    bool IsNonConfirmablePostRequest(void) const;
+
+    /**
+     * Checks if the message requires a reset response if an error during low level CoAP processing occurred.
+     *
+     * A reset message is expected to be sent for NON and CON messages if the message can not be processed or a
+     * duplicated message has been received.
+     *
+     * @retval  TRUE   Expect to respond with CoAP reset message on error.
+     * @retval  FALSE  No CoAP reset message should be sent on error.
+     */
+    bool RequireResetOnError(void) { return IsConfirmable() || IsNonConfirmable(); }
+
+private:
+    uint8_t  mType;
+    uint8_t  mCode;
+    uint16_t mMessageId;
+    Token    mToken;
+};
+
+/**
+ * Implements CoAP message generation and parsing.
+ */
+class Message : public ot::Message
+{
+    friend class Msg;
+    friend class Option;
+    friend class MessageQueue;
+    friend class CoapBase;
+
+public:
+    static constexpr uint8_t kMaxReceivedUriPath = 32; ///< Max URI path length on rx msgs.
+
+    typedef ot::Coap::Type Type; ///< CoAP Type.
+    typedef ot::Coap::Code Code; ///< CoAP Code.
+
+    typedef char UriPathStringBuffer[kMaxReceivedUriPath + 1]; ///< Buffer to store a received URI Path string.
+
+    /**
+     * Initializes the CoAP message with a given Type and Code.
+     *
+     * This method erases any previously written content in the message. The Message ID is set to zero, and the token
+     * is empty (zero-length).
+     *
+     * @param[in] aType  The CoAP Type value.
+     * @param[in] aCode  The CoAP Code value.
+     *
+     * @retval kErrorNone    Successfully initialized the message.
+     * @retval kErrorNoBufs  Could not grow the message to write the CoAP header.
+     */
+    Error Init(Type aType, Code aCode);
+
+    /**
+     * Initializes the CoAP message with a given Type, Code, and Message ID.
+     *
+     * This method erases any previously written content in the message. The token is empty (zero-length).
+     *
+     * @param[in] aType       The CoAP Type value.
+     * @param[in] aCode       The CoAP Code value.
+     * @param[in] aMessageId  The CoAP Message ID value.
+     *
+     * @retval kErrorNone    Successfully initialized the message.
+     * @retval kErrorNoBufs  Could not grow the message to write the CoAP header.
+     */
+    Error Init(Type aType, Code aCode, uint16_t aMessageId);
+
+    /**
+     * Initializes the message with a Type, Code, adds a random token, and appends a URI-path option.
+     *
+     * This method erases any previously written content in the message. The Message ID is set to zero. A random token
+     * of default length (`Token::kDefaultLength`) is generated and added to the message.
+     *
+     * @param[in] aType  The CoAP Type value.
+     * @param[in] aCode  The CoAP Code value.
+     * @param[in] aUri   The URI string.
+     *
+     * @retval kErrorNone    Successfully initialized the message and appended the URI-path option.
+     * @retval kErrorNoBufs  Could not grow the message to append the option.
+     */
+    Error Init(Type aType, Code aCode, Uri aUri);
+
+    /**
+     * Initializes a CoAP POST message, appends a URI Path, and adds a random token.
+     *
+     * This method erases any previously written content in the message.
+     *
+     * The CoAP Type is determined from the destination IPv6 address: `kTypeNonConfirmable` for multicast and
+     * `kTypeConfirmable` otherwise. The Message ID is set to zero. A random token of default length
+     * (`Token::kDefaultLength`) is generated and added.
+     *
+     * @param[in] aDestination  The message destination IPv6 address, used to determine the CoAP Type.
+     * @param[in] aUri          The URI string.
+     *
+     * @retval kErrorNone    Successfully initialized the message and appended the URI-path option.
+     * @retval kErrorNoBufs  Could not grow the message to append the option.
+     */
+    Error InitAsPost(const Ip6::Address &aDestination, Uri aUri);
+
+    /**
+     * Initializes a CoAP message as a response to a request message.
+     *
+     * This method erases any previously written content in the message. The Message ID and Token are copied from the
+     * request message.
+     *
+     * @param[in] aType     The CoAP Type value.
+     * @param[in] aCode     The CoAP Code value.
+     * @param[in] aRequest  The request message to respond to.
+     *
+     * @retval kErrorNone    Successfully initialized the message.
+     * @retval kErrorNoBufs  Could not grow the message to write the CoAP header.
+     */
+    Error InitAsResponse(Type aType, Code aCode, const Message &aRequest);
+
+    /**
+     * Parses the CoAP header and token.
+     *
+     * @param[out] aInfo   A reference to `HeaderInfo` to populate.
+     *
+     * @retval kErrorNone    Successfully parsed the CoAP header. @p aInfo is updated.
+     * @retval kErrorParse   Failed to parse.
+     */
+    Error ParseHeaderInfo(HeaderInfo &aInfo) const;
+
+    /**
+     * Reads the Type value.
+     *
+     * @returns The Type value, or zero if the CoAP header is invalid or cannot be parsed.
+     */
+    uint8_t ReadType(void) const;
+
+    /**
+     * Writes the Type value in CoAP header.
+     *
+     * This method requires that the message contains a valid CoAP header. Otherwise, no change is made.
+     *
+     * @param[in]  aType  The Type value.
+     */
+    void WriteType(Type aType);
+
+    /**
+     * Reads the Code value.
+     *
+     * @returns The Code value, or zero if the CoAP header is invalid or cannot be parsed.
+     */
+    uint8_t ReadCode(void) const;
+
+    /**
+     * Writes the Code value.
+     *
+     * This method requires that the message contains a valid CoAP header. Otherwise, no change is made.
      *
      * @param[in]  aCode  The Code value.
      */
-    void SetCode(Code aCode) { GetHelpData().mHeader.mCode = static_cast<uint8_t>(aCode); }
+    void WriteCode(Code aCode);
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
@@ -286,79 +566,85 @@ public:
      * @ returns The CoAP Code as string.
      */
     const char *CodeToString(void) const;
-#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#endif
 
     /**
-     * Returns the Message ID value.
+     * Reads the Message ID value.
      *
-     * @returns The Message ID value.
+     * @returns The Message ID value, or zero if the CoAP header is invalid or cannot be parsed.
      */
-    uint16_t GetMessageId(void) const { return BigEndian::HostSwap16(GetHelpData().mHeader.mMessageId); }
+    uint16_t ReadMessageId(void) const;
 
     /**
-     * Sets the Message ID value.
+     * Writes the Message ID value in CoAP header.
+     *
+     * This method requires that the message contains a valid CoAP header. Otherwise, no change is made.
      *
      * @param[in]  aMessageId  The Message ID value.
      */
-    void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.mMessageId = BigEndian::HostSwap16(aMessageId); }
+    void WriteMessageId(uint16_t aMessageId);
 
     /**
-     * Returns the Token length.
+     * Reads the Token length from the message
      *
-     * @returns The Token length.
+     * @param[out] aLength   A reference to a `uint8_t` to return the read token length (in bytes).
+     *
+     * @retval kErrorNone   Successfully parsed the CoaP header and read the Token length.
+     * @retval kErrorParse  Failed to parse the CoAP header.
      */
-    uint8_t GetTokenLength(void) const
-    {
-        return (GetHelpData().mHeader.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset;
-    }
+    Error ReadTokenLength(uint8_t &aLength) const;
 
     /**
-     * Returns a pointer to the Token value.
+     * Reads the Token from the message
      *
-     * @returns A pointer to the Token value.
+     * @param[out] aToken   A reference to return the read `Token`.
+     *
+     * @retval kErrorNone   Successfully parsed the CoaP header and read the Token. @p aToken is updated.
+     * @retval kErrorParse  Failed to parse the CoAP header.
      */
-    const uint8_t *GetToken(void) const { return GetHelpData().mHeader.mToken; }
+    Error ReadToken(Token &aToken) const;
 
     /**
-     * Sets the Token value and length.
+     * Writes the Token in the message.
      *
-     * @param[in]  aToken        A pointer to the Token value.
-     * @param[in]  aTokenLength  The Length of @p aToken.
+     * @param[in]  aToken    The new token.
      *
-     * @retval kErrorNone    Successfully set the token value.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully wrote the Token.
+     * @retval kErrorNoBufs  Insufficient message buffers available to write.
      */
-    Error SetToken(const uint8_t *aToken, uint8_t aTokenLength);
+    Error WriteToken(const Token &aToken);
 
     /**
-     * Sets the Token value and length by copying it from another given message.
+     * Writes the Token by copying it from another given message.
      *
-     * @param[in] aMessage       The message to copy the Token from.
+     * @param[in] aMessage   The message to copy the Token from.
      *
-     * @retval kErrorNone    Successfully set the token value.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully wrote the Token.
+     * @retval kErrorNoBufs  Insufficient message buffers available to write.
      */
-    Error SetTokenFromMessage(const Message &aMessage);
+    Error WriteTokenFromMessage(const Message &aMessage);
 
     /**
-     * Sets the Token length and randomizes its value.
+     * Writes a randomly generated Token of a given length in the message.
      *
-     * @param[in]  aTokenLength  The Length of a Token to set.
+     * @param[in]  aTokenLength  The Token length (in bytes).
      *
-     * @retval kErrorNone    Successfully set the token value.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully wrote the Token.
+     * @retval kErrorNoBufs  Insufficient message buffers available to write.
      */
-    Error GenerateRandomToken(uint8_t aTokenLength);
+    Error WriteRandomToken(uint8_t aTokenLength);
 
     /**
-     * Checks if Tokens in two CoAP headers are equal.
+     * Checks whether the Token in the message is the same as the one from another message.
      *
-     * @param[in]  aMessage  A header to compare.
+     * If parsing/reading the Token fails for either message, the Tokens are considered unequal.
      *
-     * @retval TRUE   If two Tokens are equal.
-     * @retval FALSE  If Tokens differ in length or value.
+     * @param[in]  aMessage  The other message.
+     *
+     * @retval TRUE   If the two Tokens are equal.
+     * @retval FALSE  If the two Tokens are not equal.
      */
-    bool IsTokenEqual(const Message &aMessage) const;
+    bool HasSameTokenAs(const Message &aMessage) const;
 
     /**
      * Appends a CoAP option.
@@ -436,15 +722,14 @@ public:
     Error AppendUriPathOptions(const char *aUriPath);
 
     /**
-     * Reads the Uri-Path options and constructs the URI path in the buffer referenced by @p `aUriPath`.
+     * Reads the Uri-Path options and constructs the URI path in the buffer referenced by @p aUriPath.
      *
-     * @param[in] aUriPath  A reference to the buffer for storing URI path.
-     *                      NOTE: The buffer size must be `kMaxReceivedUriPath + 1`.
+     * @param[out] aUriPath  A reference to the buffer to output the read URI path.
      *
      * @retval  kErrorNone   Successfully read the Uri-Path options.
      * @retval  kErrorParse  CoAP Option header not well-formed.
      */
-    Error ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
+    Error ReadUriPathOptions(UriPathStringBuffer &aUriPath) const;
 
     /**
      * Appends a Uri-Query option.
@@ -458,18 +743,30 @@ public:
     Error AppendUriQueryOptions(const char *aUriQuery);
 
     /**
-     * Appends a Block option
+     * Appends a Block1 or Block2 option.
      *
-     * @param[in]  aType              Type of block option, 1 or 2.
-     * @param[in]  aNum               Current block number.
-     * @param[in]  aMore              Boolean to indicate more blocks are to be sent.
-     * @param[in]  aSize              Maximum block size.
-     *
+     * @param[in]  aBlockOptionNumber  Block1 or Block2 option number.
+     * @param[out] aInfo               A `BlockInfo` specifying block number, size, and more blocks flags.
+
      * @retval kErrorNone         Successfully appended the option.
      * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    Error AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize);
+    Error AppendBlockOption(uint16_t aBlockOptionNumber, const BlockInfo &aInfo);
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    /**
+     * Reads the information contained in a Block1 or Block2 option from the CoAP message.
+     *
+     * @param[in] aBlockOptionNumber  Block1 or Block2 option number.
+     * @param[out] aInfo              A reference to `BlockInfo` to return the read Option
+     *
+     * @retval  kErrorNone          The option was read successfully. @p aInfo is updated.
+     * @retval  kErrorNotFound      The option has not been found.
+     * @retval  kErrorInvalidArgs   The option is invalid.
+     */
+    Error ReadBlockOptionValues(uint16_t aBlockOptionNumber, BlockInfo &aInfo) const;
+#endif
 
     /**
      * Appends a Proxy-Uri option.
@@ -518,232 +815,15 @@ public:
      */
     Error AppendUriQueryOption(const char *aUriQuery) { return AppendStringOption(kOptionUriQuery, aUriQuery); }
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
-     * Reads the information contained in a Block1 or Block2 option and set it in
-     * the HelpData of the message.
+     * Appends a Payload Marker indicating the beginning of the payload.
      *
-     * @param[in]   aBlockType  Block1 or Block2 option value.
+     * It also sets the offset to the start of the payload.
      *
-     * @retval  kErrorNone          The option has been found and is valid.
-     * @retval  kErrorNotFound      The option has not been found.
-     * @retval  kErrorInvalidArgs   The option is invalid.
+     * @retval kErrorNone    Payload Marker was successfully added.
+     * @retval kErrorNoBufs  Could not grow the message to append the payload marker.
      */
-    Error ReadBlockOptionValues(uint16_t aBlockType);
-
-    /**
-     * Returns the current header length of a message.
-     *
-     * @returns The length of the message header.
-     */
-    uint16_t GetHeaderLength(void) const { return GetHelpData().mHeaderLength; }
-
-    /**
-     * Returns the block number of a CoAP block-wise transfer message.
-     *
-     * @returns The block number.
-     */
-    uint32_t GetBlockWiseBlockNumber(void) const { return GetHelpData().mBlockWiseData.mBlockNumber; }
-
-    /**
-     * Checks if the More Blocks flag is set.
-     *
-     * @retval TRUE   More Blocks flag is set.
-     * @retval FALSE  More Blocks flag is not set.
-     */
-    bool IsMoreBlocksFlagSet(void) const { return GetHelpData().mBlockWiseData.mMoreBlocks; }
-
-    /**
-     * Returns the block size of a CoAP block-wise transfer message.
-     *
-     * @returns The block size.
-     */
-    otCoapBlockSzx GetBlockWiseBlockSize(void) const { return GetHelpData().mBlockWiseData.mBlockSize; }
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
-    /**
-     * Reads and reassembles the URI path string and fills it into @p aUriPath.
-     *
-     * @retval  kErrorNone      URI path string has been reassembled.
-     * @retval  kErrorNoBufs    URI path string is too long.
-     */
-    Error GetUriPath(char *aUriPath) const;
-
-    /**
-     * Adds Payload Marker indicating beginning of the payload to the CoAP header.
-     *
-     * It also set offset to the start of payload.
-     *
-     * @retval kErrorNone    Payload Marker successfully added.
-     * @retval kErrorNoBufs  Message Payload Marker exceeds the buffer size.
-     */
-    Error SetPayloadMarker(void);
-
-    /**
-     * Returns the offset of the first CoAP option.
-     *
-     * @returns The offset of the first CoAP option.
-     */
-    uint16_t GetOptionStart(void) const { return kMinHeaderLength + GetTokenLength(); }
-
-    /**
-     * Parses CoAP header and moves offset end of CoAP header.
-     *
-     * @retval  kErrorNone   Successfully parsed CoAP header from the message.
-     * @retval  kErrorParse  Failed to parse the CoAP header.
-     */
-    Error ParseHeader(void);
-
-    /**
-     * Sets a default response header based on request header.
-     *
-     * @param[in]  aRequest  The request message.
-     *
-     * @retval kErrorNone    Successfully set the default response header.
-     * @retval kErrorNoBufs  Insufficient message buffers available to set the default response header.
-     */
-    Error SetDefaultResponseHeader(const Message &aRequest);
-
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
-    /**
-     * Sets the block number value in the message HelpData.
-     *
-     * @param[in]   aBlockNumber    Block number value to set.
-     */
-    void SetBlockWiseBlockNumber(uint32_t aBlockNumber) { GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber; }
-
-    /**
-     * Sets the More Blocks flag in the message HelpData.
-     *
-     * @param[in]   aMoreBlocks    TRUE or FALSE.
-     */
-    void SetMoreBlocksFlag(bool aMoreBlocks) { GetHelpData().mBlockWiseData.mMoreBlocks = aMoreBlocks; }
-
-    /**
-     * Sets the block size value in the message HelpData.
-     *
-     * @param[in]   aBlockSize    Block size value to set.
-     */
-    void SetBlockWiseBlockSize(otCoapBlockSzx aBlockSize) { GetHelpData().mBlockWiseData.mBlockSize = aBlockSize; }
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
-    /**
-     * Checks if a header is an empty message header.
-     *
-     * @retval TRUE   Message is an empty message header.
-     * @retval FALSE  Message is not an empty message header.
-     */
-    bool IsEmpty(void) const { return (GetCode() == kCodeEmpty); }
-
-    /**
-     * Checks if a header is a request header.
-     *
-     * @retval TRUE   Message is a request header.
-     * @retval FALSE  Message is not a request header.
-     */
-    bool IsRequest(void) const { return (GetCode() >= kCodeGet) && (GetCode() <= kCodeDelete); }
-
-    /**
-     * Indicates whether or not the CoAP code in header is "Get" request.
-     *
-     * @retval TRUE   Message is a Get request.
-     * @retval FALSE  Message is not a Get request.
-     */
-    bool IsGetRequest(void) const { return GetCode() == kCodeGet; }
-
-    /**
-     * Indicates whether or not the CoAP code in header is "Post" request.
-     *
-     * @retval TRUE   Message is a Post request.
-     * @retval FALSE  Message is not a Post request.
-     */
-    bool IsPostRequest(void) const { return GetCode() == kCodePost; }
-
-    /**
-     * Indicates whether or not the CoAP code in header is "Put" request.
-     *
-     * @retval TRUE   Message is a Put request.
-     * @retval FALSE  Message is not a Put request.
-     */
-    bool IsPutRequest(void) const { return GetCode() == kCodePut; }
-
-    /**
-     * Indicates whether or not the CoAP code in header is "Delete" request.
-     *
-     * @retval TRUE   Message is a Delete request.
-     * @retval FALSE  Message is not a Delete request.
-     */
-    bool IsDeleteRequest(void) const { return GetCode() == kCodeDelete; }
-
-    /**
-     * Checks if a header is a response header.
-     *
-     * @retval TRUE   Message is a response header.
-     * @retval FALSE  Message is not a response header.
-     */
-    bool IsResponse(void) const { return GetCode() >= OT_COAP_CODE_RESPONSE_MIN; }
-
-    /**
-     * Checks if a header is a CON message header.
-     *
-     * @retval TRUE   Message is a CON message header.
-     * @retval FALSE  Message is not is a CON message header.
-     */
-    bool IsConfirmable(void) const { return (GetType() == kTypeConfirmable); }
-
-    /**
-     * Checks if a header is a NON message header.
-     *
-     * @retval TRUE   Message is a NON message header.
-     * @retval FALSE  Message is not is a NON message header.
-     */
-    bool IsNonConfirmable(void) const { return (GetType() == kTypeNonConfirmable); }
-
-    /**
-     * Checks if a header is a ACK message header.
-     *
-     * @retval TRUE   Message is a ACK message header.
-     * @retval FALSE  Message is not is a ACK message header.
-     */
-    bool IsAck(void) const { return (GetType() == kTypeAck); }
-
-    /**
-     * Checks if a header is a RST message header.
-     *
-     * @retval TRUE   Message is a RST message header.
-     * @retval FALSE  Message is not is a RST message header.
-     */
-    bool IsReset(void) const { return (GetType() == kTypeReset); }
-
-    /**
-     * Indicates whether or not the header is a confirmable Post request (i.e, `kTypeConfirmable` with
-     *  `kCodePost`).
-     *
-     * @retval TRUE   Message is a confirmable Post request.
-     * @retval FALSE  Message is not a confirmable Post request.
-     */
-    bool IsConfirmablePostRequest(void) const;
-
-    /**
-     * Indicates whether or not the header is a non-confirmable Post request (i.e, `kTypeNonConfirmable` with
-     *  `kCodePost`).
-     *
-     * @retval TRUE   Message is a non-confirmable Post request.
-     * @retval FALSE  Message is not a non-confirmable Post request.
-     */
-    bool IsNonConfirmablePostRequest(void) const;
-
-    /**
-     * Checks if the message requires an reset response if an error during low level CoAP processing occurred.
-     *
-     * A reset message is expected to be sent for NON and CON messages if the message can not be processed or a
-     * duplicated message has been received.
-     *
-     * @retval  TRUE   Expect to respond with CoAP reset message on error.
-     * @retval  FALSE  No CoAP reset message should be sent on error.
-     */
-    bool RequireResetOnError(void) { return IsConfirmable() || IsNonConfirmable(); }
+    Error AppendPayloadMarker(void);
 
     /**
      * Creates a copy of this CoAP message.
@@ -770,11 +850,6 @@ public:
     Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
-     * Returns the minimal reserved bytes required for CoAP message.
-     */
-    static uint16_t GetHelpDataReserved(void) { return sizeof(HelpData) + kHelpDataAlignment; }
-
-    /**
      * Returns a pointer to the next message after this as a `Coap::Message`.
      *
      * Should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
@@ -795,22 +870,6 @@ public:
     const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
 
 private:
-    /*
-     * Header field first byte (RFC 7252).
-     *
-     *    7 6 5 4 3 2 1 0
-     *   +-+-+-+-+-+-+-+-+
-     *   |Ver| T |  TKL  |  (Version, Type and Token Length).
-     *   +-+-+-+-+-+-+-+-+
-     */
-    static constexpr uint8_t kVersionOffset     = 6;
-    static constexpr uint8_t kVersionMask       = 0x3 << kVersionOffset;
-    static constexpr uint8_t kVersion1          = 1;
-    static constexpr uint8_t kTypeOffset        = 4;
-    static constexpr uint8_t kTypeMask          = 0x3 << kTypeOffset;
-    static constexpr uint8_t kTokenLengthOffset = 0;
-    static constexpr uint8_t kTokenLengthMask   = 0xf << kTokenLengthOffset;
-
     /*
      *
      * Option Format (RFC 7252).
@@ -841,11 +900,6 @@ private:
 
     static constexpr uint8_t kPayloadMarker = 0xff;
 
-    static constexpr uint8_t kHelpDataAlignment = sizeof(uint16_t); // Alignment of help data.
-
-    static constexpr uint16_t kMinHeaderLength = 4;
-    static constexpr uint16_t kMaxHeaderLength = 512;
-
     static constexpr uint16_t kOption1ByteExtensionOffset = 13;  // Delta/Length offset as specified (RFC 7252).
     static constexpr uint16_t kOption2ByteExtensionOffset = 269; // Delta/Length offset as specified (RFC 7252).
 
@@ -856,41 +910,40 @@ private:
     static constexpr uint32_t kObserveMask = 0xffffff;
     static constexpr uint32_t kBlockNumMax = 0xffff;
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    struct BlockWiseData
-    {
-        uint32_t       mBlockNumber;
-        bool           mMoreBlocks;
-        otCoapBlockSzx mBlockSize;
-    };
-#endif
-
-    /**
-     * Represents a CoAP header excluding CoAP options.
-     */
     OT_TOOL_PACKED_BEGIN
-    struct Header
+    class Header : public Clearable<Header>
     {
-        uint8_t  mVersionTypeToken;       ///< The CoAP Version, Type, and Token Length
-        uint8_t  mCode;                   ///< The CoAP Code
-        uint16_t mMessageId;              ///< The CoAP Message ID
-        uint8_t  mToken[kMaxTokenLength]; ///< The CoAP Token
-    } OT_TOOL_PACKED_END;
+    public:
+        static constexpr uint8_t kVersion1 = 1;
 
-    /**
-     * Represents a HelpData used by this CoAP message.
-     */
-    struct HelpData : public Clearable<HelpData>
-    {
-        Header   mHeader;
-        uint16_t mOptionLast;
-        uint16_t mHeaderOffset; ///< The byte offset for the CoAP Header
-        uint16_t mHeaderLength;
-        bool     mPayloadMarkerSet;
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        BlockWiseData mBlockWiseData;
-#endif
-    };
+        uint8_t  GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mVersionTypeToken); }
+        void     SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mVersionTypeToken, aVersion); }
+        uint8_t  GetType(void) const { return ReadBits<uint8_t, kTypeMask>(mVersionTypeToken); }
+        void     SetType(Type aType) { WriteBits<uint8_t, kTypeMask>(mVersionTypeToken, aType); }
+        uint8_t  GetCode(void) const { return mCode; }
+        void     SetCode(Code aCode) { mCode = aCode; }
+        uint16_t GetMessageId(void) const { return BigEndian::HostSwap16(mMessageId); }
+        void     SetMessageId(uint16_t aMessageId) { mMessageId = BigEndian::HostSwap16(aMessageId); }
+        uint8_t  GetTokenLength(void) const { return ReadBits<uint8_t, kTokenLengthMask>(mVersionTypeToken); }
+        void     SetTokenLength(uint8_t aLength) { WriteBits<uint8_t, kTokenLengthMask>(mVersionTypeToken, aLength); }
+
+    private:
+        /*
+         * Header field first byte (RFC 7252).
+         *
+         *    7 6 5 4 3 2 1 0
+         *   +-+-+-+-+-+-+-+-+
+         *   |Ver| T |  TKL  |  (Version, Type and Token Length).
+         *   +-+-+-+-+-+-+-+-+
+         */
+        static constexpr uint8_t kVersionMask     = 0x3 << 6;
+        static constexpr uint8_t kTypeMask        = 0x3 << 4;
+        static constexpr uint8_t kTokenLengthMask = 0xf << 0;
+
+        uint8_t  mVersionTypeToken; // The CoAP Version, Type, and Token Length
+        uint8_t  mCode;
+        uint16_t mMessageId;
+    } OT_TOOL_PACKED_END;
 
     class ConstIterator : public ot::Message::ConstIterator
     {
@@ -913,31 +966,15 @@ private:
         Message *operator->(void) { return static_cast<Message *>(ot::Message::Iterator::operator->()); }
     };
 
-    static_assert(sizeof(HelpData) <= sizeof(Ip6::Header) + sizeof(Ip6::HopByHopHeader) + sizeof(Ip6::MplOption) +
-                                          sizeof(Ip6::Udp::Header),
-                  "HelpData size exceeds the size of the reserved region in the message");
-
-    const HelpData &GetHelpData(void) const
-    {
-        static_assert(sizeof(HelpData) + kHelpDataAlignment <= kHeadBufferDataSize,
-                      "Insufficient buffer size for CoAP processing! Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
-
-        return *static_cast<const HelpData *>(OT_ALIGN(GetFirstData(), kHelpDataAlignment));
-    }
-
-    HelpData &GetHelpData(void) { return AsNonConst(AsConst(this)->GetHelpData()); }
-
-    uint8_t *GetToken(void) { return GetHelpData().mHeader.mToken; }
-
-    void SetTokenLength(uint8_t aTokenLength)
-    {
-        GetHelpData().mHeader.mVersionTypeToken &= ~kTokenLengthMask;
-        GetHelpData().mHeader.mVersionTypeToken |= ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
-    }
-
-    uint8_t WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer);
-
-    Error AppendOptionHeader(uint16_t aNumber, uint16_t aLength);
+    uint16_t GetHeaderOffset(void) const { return GetMeshDest(); }
+    void     SetHeaderOffset(uint16_t aOffset) { SetMeshDest(aOffset); }
+    uint16_t DetermineTokenOffset(void) const;
+    Error    DetermineOptionStartOffset(uint16_t &aOffset) const;
+    Error    ReadHeader(Header &aHeader) const;
+    void     WriteHeader(const Header &aHeader);
+    Error    ReadToken(const Header &aHeader, Token &aToken) const;
+    uint8_t  WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer);
+    Error    AppendOptionHeader(uint16_t aNumber, uint16_t aLength);
 };
 
 /**
@@ -1060,16 +1097,6 @@ public:
         bool IsDone(void) const { return mOption.mLength == kIteratorDoneLength; }
 
         /**
-         * Indicates whether or not there was a earlier parse error (i.e., whether the iterator is valid).
-         *
-         * After a parse errors, iterator would also be marked as done.
-         *
-         * @retval TRUE   There was an earlier parse error and the iterator is not valid.
-         * @retval FALSE  There was no earlier parse error and the iterator is valid.
-         */
-        bool HasParseErrored(void) const { return mNextOptionOffset == kNextOptionOffsetParseError; }
-
-        /**
          * Advances the iterator to the next CoAP Option in the header.
          *
          * The iterator is updated to point to the next option or marked as done when there are no more options.
@@ -1132,11 +1159,21 @@ public:
         /**
          * Gets the offset of beginning of the CoAP message payload (after the CoAP header).
          *
-         * MUST be used after the iterator is done (i.e. iterated through all options).
+         * MUST be used after the iterator is done (i.e. successfully iterated through all options).
          *
          * @returns The offset of beginning of the CoAP message payload
          */
         uint16_t GetPayloadMessageOffset(void) const { return mNextOptionOffset; }
+
+        /**
+         * Inidcated whether or not the option ended with a payload marker.
+         *
+         * MUST be used after the iterator is done (i.e. successfully iterated through all options).
+         *
+         * @retval TRUE  The message contains a payload marker.
+         * @retval FALAE The message does not contain a payload marker.
+         */
+        bool HasPayloadMarker(void) const { return IsDone() && (mOption.mNumber != 0); }
 
         /**
          * Gets the offset of beginning of the CoAP Option Value.
@@ -1151,12 +1188,8 @@ public:
         // `mOption.mLength` value to indicate iterator is done.
         static constexpr uint16_t kIteratorDoneLength = 0xffff;
 
-        // Special `mNextOptionOffset` value to indicate a parse error.
-        static constexpr uint16_t kNextOptionOffsetParseError = 0;
-
-        void MarkAsDone(void) { mOption.mLength = kIteratorDoneLength; }
-        void MarkAsParseErrored(void) { MarkAsDone(), mNextOptionOffset = kNextOptionOffsetParseError; }
-
+        void  MarkAsDone(void) { mOption.mLength = kIteratorDoneLength; }
+        void  SetHasPayloadMarker(bool aHasPayloadMarker) { mOption.mNumber = aHasPayloadMarker; }
         Error Read(uint16_t aLength, void *aBuffer);
         Error ReadExtendedOptionField(uint16_t &aValue);
         Error InitOrAdvance(const Message *aMessage, uint16_t aNumber);
@@ -1185,8 +1218,10 @@ public:
 
 DefineCoreType(otCoapOption, Coap::Option);
 DefineCoreType(otCoapOptionIterator, Coap::Option::Iterator);
+DefineCoreType(otCoapToken, Coap::Token);
 DefineMapEnum(otCoapType, Coap::Type);
 DefineMapEnum(otCoapCode, Coap::Code);
+DefineMapEnum(otCoapBlockSzx, Coap::BlockSzx);
 
 /**
  * Casts an `otMessage` pointer to a `Coap::Message` reference.
@@ -1232,4 +1267,4 @@ inline const Coap::Message *AsCoapMessagePtr(const otMessage *aMessage)
 
 } // namespace ot
 
-#endif // COAP_HEADER_HPP_
+#endif // OT_CORE_COAP_COAP_MESSAGE_HPP_

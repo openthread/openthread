@@ -82,16 +82,15 @@ exit:
 
 static otError settingsFileInit(otInstance *aInstance)
 {
-    static constexpr size_t kMaxFileBaseNameSize = 32;
-    char                    fileBaseName[kMaxFileBaseNameSize];
-    const char             *offset = getenv("PORT_OFFSET");
-    uint64_t                nodeId;
+    char        fileBaseName[ot::Posix::SettingsFile::kMaxFileBaseNameSize];
+    const char *offset = getenv("PORT_OFFSET");
+    uint64_t    nodeId;
 
     otPlatRadioGetIeeeEui64(aInstance, reinterpret_cast<uint8_t *>(&nodeId));
     nodeId = ot::BigEndian::HostSwap64(nodeId);
 
     snprintf(fileBaseName, sizeof(fileBaseName), "%s_%" PRIx64, offset == nullptr ? "0" : offset, nodeId);
-    VerifyOrDie(strlen(fileBaseName) < kMaxFileBaseNameSize, OT_EXIT_FAILURE);
+    VerifyOrDie(strlen(fileBaseName) < ot::Posix::SettingsFile::kMaxFileBaseNameSize, OT_EXIT_FAILURE);
 
     return sSettingsFile.Init(fileBaseName);
 }

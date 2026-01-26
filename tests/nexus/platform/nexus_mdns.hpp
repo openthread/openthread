@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_MDNS_HPP_
-#define OT_NEXUS_MDNS_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_MDNS_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_MDNS_HPP_
 
 #include "instance/instance.hpp"
 
@@ -68,4 +68,4 @@ public:
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_MDNS_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_MDNS_HPP_

@@ -66,7 +66,7 @@ Error SecureSession::SendMessage(Message                    &aMessage,
                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), TxParameters::GetDefault(), aHandler,
+    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), /* aTxParameters */ nullptr, aHandler,
                                                  aContext, aTransmitHook, aReceiveHook)
                          : kErrorInvalidState;
 }
@@ -125,7 +125,7 @@ void SecureSession::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr);
+    VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
     SuccessOrExit(message->AppendBytes(aBuf, aLength));
 
     CoapBase::Receive(*message, GetMessageInfo());

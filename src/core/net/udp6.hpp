@@ -31,8 +31,8 @@
  *   This file includes definitions for UDP/IPv6 sockets.
  */
 
-#ifndef UDP6_HPP_
-#define UDP6_HPP_
+#ifndef OT_CORE_NET_UDP6_HPP_
+#define OT_CORE_NET_UDP6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -697,4 +697,4 @@ DefineMapEnum(otNetifIdentifier, Ip6::NetifIdentifier);
 
 } // namespace ot
 
-#endif // UDP6_HPP_
+#endif // OT_CORE_NET_UDP6_HPP_

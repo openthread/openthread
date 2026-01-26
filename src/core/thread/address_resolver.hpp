@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread EID-to-RLOC mapping and caching.
  */
 
-#ifndef ADDRESS_RESOLVER_HPP_
-#define ADDRESS_RESOLVER_HPP_
+#ifndef OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_
+#define OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -358,7 +358,7 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_FTD
 
@@ -378,6 +378,11 @@ private:
     const char *ListToString(const CacheEntryList *aList) const;
 
     static AddressResolver::CacheEntry *GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static const char *EntryChangeToString(EntryChange aChange);
+    static const char *ReasonToString(Reason aReason);
+#endif
 
     CacheEntryPool     mCacheEntryPool;
     CacheEntryList     mCachedList;
@@ -405,4 +410,4 @@ DefineMapEnum(otCacheEntryState, AddressResolver::EntryInfo::State);
 
 } // namespace ot
 
-#endif // ADDRESS_RESOLVER_HPP_
+#endif // OT_CORE_THREAD_ADDRESS_RESOLVER_HPP_

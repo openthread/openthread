@@ -31,8 +31,8 @@
  *   This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles.
  */
 
-#ifndef MLE_HPP_
-#define MLE_HPP_
+#ifndef OT_CORE_THREAD_MLE_HPP_
+#define OT_CORE_THREAD_MLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1033,11 +1033,11 @@ public:
                                  const LeaderData &aLeaderDataB);
 
     /**
-     * Fills an ConnectivityTlv.
+     * Fills a `ConnectivityTlvValue`.
      *
-     * @param[out]  aTlv  A reference to the tlv to be filled.
+     * @param[out]  aTlvValue  A reference to a `ConnectivityTlvValue` be filled.
      */
-    void FillConnectivityTlv(ConnectivityTlv &aTlv);
+    void FillConnectivityTlvValue(ConnectivityTlvValue &aTlvValue) const;
 
     /**
      * Schedule tx of MLE Advertisement message (unicast) to the given neighboring router after a random delay.
@@ -1598,6 +1598,7 @@ private:
         Error ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
         Error ReadTlvRequestTlv(TlvList &aTlvList) const;
         Error ReadLeaderDataTlv(LeaderData &aLeaderData) const;
+        Error ReadConnectivityTlv(Connectivity &aConnectivity) const;
         Error ReadAndSetNetworkDataTlv(const LeaderData &aLeaderData) const;
         Error ReadAndSaveActiveDataset(const MeshCoP::Timestamp &aActiveTimestamp) const;
         Error ReadAndSavePendingDataset(const MeshCoP::Timestamp &aPendingTimestamp) const;
@@ -1682,7 +1683,7 @@ private:
 
     struct AddrSolicitInfo
     {
-        Error ParseFrom(const Coap::Message &aMessage);
+        Error ParseFrom(const Coap::Msg &aMsg);
 
         Mac::ExtAddress mExtAddress;
         uint16_t        mRequestedRloc16;
@@ -1795,16 +1796,10 @@ private:
         void Clear(void);
         void CopyTo(Parent &aParent) const;
 
-        RxChallenge mRxChallenge;
-        int8_t      mPriority;
-        uint8_t     mLinkQuality3;
-        uint8_t     mLinkQuality2;
-        uint8_t     mLinkQuality1;
-        uint16_t    mSedBufferSize;
-        uint8_t     mSedDatagramCount;
-        uint8_t     mLinkMargin;
-        LeaderData  mLeaderData;
-        bool        mIsSingleton;
+        RxChallenge  mRxChallenge;
+        Connectivity mConnectivity;
+        uint8_t      mLinkMargin;
+        LeaderData   mLeaderData;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1925,7 +1920,7 @@ private:
         bool  PrepareAnnounceState(void);
         bool  IsBetterParent(uint16_t                aRloc16,
                              uint8_t                 aTwoWayLinkMargin,
-                             const ConnectivityTlv  &aConnectivityTlv,
+                             const Connectivity     &aConnectivity,
                              uint16_t                aVersion,
                              const Mac::CslAccuracy &aCslAccuracy);
 
@@ -2364,6 +2359,7 @@ private:
     void     ClearAlternateRloc16(void);
     uint8_t  SelectLeaderId(void) const;
     uint32_t SelectPartitionId(void) const;
+    void     DetermineConnectivity(Connectivity &aConnectivity) const;
     void     HandleDetachStart(void);
     void     HandleChildStart(void);
     void     HandleSecurityPolicyChanged(void);
@@ -2414,10 +2410,11 @@ private:
     bool     ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
     bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
     void     HandleAdvertiseTrickleTimer(void);
-    void     HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
     void     HandleTimeTick(void);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
+
+    DeclareTmfResponseHandlerFullParamIn(Mle, HandleAddressSolicitResponse);
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;
@@ -2426,10 +2423,6 @@ private:
     static bool IsMessageMleSubType(const Message &aMessage);
     static bool IsMessageChildUpdateRequest(const Message &aMessage);
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
-    static void HandleAddressSolicitResponse(void                *aContext,
-                                             otMessage           *aMessage,
-                                             const otMessageInfo *aMessageInfo,
-                                             otError              aResult);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     const char *RouterUpgradeReasonToString(uint8_t aReason);
@@ -2552,4 +2545,4 @@ DeclareTmfHandler(Mle, kUriAddressRelease);
 
 } // namespace ot
 
-#endif // MLE_HPP_
+#endif // OT_CORE_THREAD_MLE_HPP_

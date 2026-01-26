@@ -199,13 +199,15 @@ void Otns::EmitCoapStatus(const char             *aAction,
                           const Ip6::MessageInfo &aMessageInfo,
                           Error                  *aError) const
 {
-    Error        error;
-    char         uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    StatusString string;
+    Error            error;
+    char             uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    StatusString     string;
+    Coap::HeaderInfo header;
 
+    SuccessOrExit(error = aMessage.ParseHeaderInfo(header));
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    string.Append("coap=%s,%d,%d,%d,%s,%s,%d", aAction, aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
+    string.Append("coap=%s,%d,%d,%d,%s,%s,%d", aAction, header.GetMessageId(), header.GetType(), header.GetCode(),
                   uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
 
     if (aError != nullptr)
@@ -219,6 +221,15 @@ exit:
     LogWarnOnError(error, "EmitCoapStatus");
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of OTNS platform APIs
+
+extern "C" OT_TOOL_WEAK void otPlatOtnsStatus(const char *aStatus)
+{
+    OT_UNUSED_VARIABLE(aStatus);
+    LogAt(kLogLevelNone, "%s", aStatus);
+}
 
 } // namespace Utils
 } // namespace ot

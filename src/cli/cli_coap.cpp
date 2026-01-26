@@ -50,8 +50,6 @@ Coap::Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer)
     , mUseDefaultResponseTxParameters(true)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     , mObserveSerial(0)
-    , mRequestTokenLength(0)
-    , mSubscriberTokenLength(0)
     , mSubscriberConfirmableNotifications(false)
     , mValidateObserveClient(false)
     , mNotificationSeriesCount(0)
@@ -84,16 +82,16 @@ otError Coap::CancelResourceSubscription(bool aSendCancelMessage)
     messageInfo.mPeerAddr = mRequestAddr;
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
 
-    VerifyOrExit(mRequestTokenLength != 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mRequestToken.mLength != 0, error = OT_ERROR_INVALID_STATE);
 
     if (aSendCancelMessage)
     {
         message = otCoapNewMessage(GetInstancePtr(), nullptr);
         VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET);
+        SuccessOrExit(error = otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET));
 
-        SuccessOrExit(error = otCoapMessageSetToken(message, mRequestToken, mRequestTokenLength));
+        SuccessOrExit(error = otCoapMessageWriteToken(message, &mRequestToken));
         SuccessOrExit(error = otCoapMessageAppendObserveOption(message, 1));
         SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, mRequestUri));
         SuccessOrExit(error = otCoapSendRequest(GetInstancePtr(), message, &messageInfo, &Coap::HandleResponse, this));
@@ -101,7 +99,7 @@ otError Coap::CancelResourceSubscription(bool aSendCancelMessage)
 
     ClearAllBytes(mRequestAddr);
     ClearAllBytes(mRequestUri);
-    mRequestTokenLength = 0;
+    ClearAllBytes(mRequestToken);
 
 exit:
 
@@ -118,7 +116,7 @@ void Coap::CancelSubscriber(void)
     OutputFormat("Removed subscriber ");
     OutputIp6AddressLine(mSubscriberSock.mAddress);
     ClearAllBytes(mSubscriberSock);
-    mSubscriberTokenLength = 0;
+    ClearAllBytes(mSubscriberToken);
 }
 #endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
@@ -253,7 +251,7 @@ template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
         mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        if (mSubscriberTokenLength > 0)
+        if (mSubscriberToken.mLength > 0)
         {
             // determine the type of notification to send
             const bool isConNotification = mSubscriberConfirmableNotifications || mValidateObserveClient;
@@ -270,11 +268,12 @@ template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
             notificationMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
             VerifyOrExit(notificationMessage != nullptr, error = OT_ERROR_NO_BUFS);
 
-            otCoapMessageInit(notificationMessage,
-                              (isConNotification ? OT_COAP_TYPE_CONFIRMABLE : OT_COAP_TYPE_NON_CONFIRMABLE),
-                              OT_COAP_CODE_CONTENT);
+            SuccessOrExit(
+                error = otCoapMessageInit(notificationMessage,
+                                          (isConNotification ? OT_COAP_TYPE_CONFIRMABLE : OT_COAP_TYPE_NON_CONFIRMABLE),
+                                          OT_COAP_CODE_CONTENT));
 
-            SuccessOrExit(error = otCoapMessageSetToken(notificationMessage, mSubscriberToken, mSubscriberTokenLength));
+            SuccessOrExit(error = otCoapMessageWriteToken(notificationMessage, &mSubscriberToken));
             SuccessOrExit(error = otCoapMessageAppendObserveOption(notificationMessage, mObserveSerial++));
             SuccessOrExit(error = otCoapMessageSetPayloadMarker(notificationMessage));
             SuccessOrExit(error = otMessageAppend(notificationMessage, mResourceContent,
@@ -695,7 +694,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    if (aCoapObserve && mRequestTokenLength)
+    if (aCoapObserve && mRequestToken.mLength)
     {
         // New observe request: cancel the existing observation silently, without sending an explicit cancel message.
         // Note: explicit cancellation MAY be sent by the user using 'coap cancel' per Section 3.6 of RFC7641.
@@ -706,7 +705,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     message = otCoapNewMessage(GetInstancePtr(), nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-    otCoapMessageInit(message, coapType, aCoapCode);
+    SuccessOrExit(error = otCoapMessageInit(message, coapType, aCoapCode));
     otCoapMessageGenerateToken(message, OT_COAP_DEFAULT_TOKEN_LENGTH);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -781,8 +780,8 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     {
         // Make a note of the message details for later so we can cancel it later.
         memcpy(&mRequestAddr, &coapDestinationIp, sizeof(mRequestAddr));
-        mRequestTokenLength = otCoapMessageGetTokenLength(message);
-        memcpy(mRequestToken, otCoapMessageGetToken(message), mRequestTokenLength);
+        SuccessOrExit(error = otCoapMessageReadToken(message, &mRequestToken));
+
         // Use `memcpy` instead of `strncpy` here because GCC will give warnings for `strncpy` when the dest's length is
         // not bigger than the src's length.
         memcpy(mRequestUri, coapUri, sizeof(mRequestUri) - 1);
@@ -940,7 +939,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
         otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
     {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        if (observePresent && (mSubscriberTokenLength > 0) && (observe == 0))
+        if (observePresent && (mSubscriberToken.mLength > 0) && (observe == 0))
         {
             // There is already a subscriber: ignore the Observe option per Section 4.1 of RFC7641.
             observePresent = false;
@@ -959,10 +958,9 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
                     OutputLine("Subscribing client");
                     mSubscriberSock.mAddress = aMessageInfo->mPeerAddr;
                     mSubscriberSock.mPort    = aMessageInfo->mPeerPort;
-                    mSubscriberTokenLength   = otCoapMessageGetTokenLength(aMessage);
                     mValidateObserveClient   = false;
                     mNotificationSeriesCount = 0;
-                    memcpy(mSubscriberToken, otCoapMessageGetToken(aMessage), mSubscriberTokenLength);
+                    SuccessOrExit(error = otCoapMessageReadToken(aMessage, &mSubscriberToken));
 
                     /*
                      * Implementer note.
@@ -977,10 +975,13 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
                 else if (observe == 1)
                 {
                     // See if it matches our subscriber token
-                    if ((otCoapMessageGetTokenLength(aMessage) == mSubscriberTokenLength) &&
-                        (memcmp(otCoapMessageGetToken(aMessage), mSubscriberToken, mSubscriberTokenLength) == 0))
+
+                    otCoapToken token;
+
+                    SuccessOrExit(error = otCoapMessageReadToken(aMessage, &token));
+
+                    if (otCoapMessageAreTokensEqual(&token, &mSubscriberToken))
                     {
-                        // Unsubscribe request
                         CancelSubscriber();
                     }
                 }

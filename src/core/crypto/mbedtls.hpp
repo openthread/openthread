@@ -31,8 +31,8 @@
  *   This file includes definitions for using mbedTLS.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#ifndef OT_CORE_CRYPTO_MBEDTLS_HPP_
+#define OT_CORE_CRYPTO_MBEDTLS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -107,4 +107,4 @@ public:
 } // namespace Crypto
 } // namespace ot
 
-#endif // OT_MBEDTLS_HPP_
+#endif // OT_CORE_CRYPTO_MBEDTLS_HPP_

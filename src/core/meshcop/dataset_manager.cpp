@@ -530,16 +530,16 @@ exit:
     mTimer.Start(kSendSetDelay);
 }
 
-void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void DatasetManager::HandleGet(const Coap::Msg &aMsg) const
 {
     Error          error    = kErrorNone;
-    Coap::Message *response = ProcessGetRequest(aMessage, kCheckSecurityPolicyFlags);
+    Coap::Message *response = ProcessGetRequest(aMsg.mMessage, kCheckSecurityPolicyFlags);
 
     VerifyOrExit(response != nullptr);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
 
     LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(response, error);
@@ -878,11 +878,7 @@ exit:
     return isValid;
 }
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
-}
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Msg &aMsg) { DatasetManager::HandleGet(aMsg); }
 
 void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
 
@@ -1002,11 +998,7 @@ exit:
     Clear();
 }
 
-template <>
-void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
-}
+template <> void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Msg &aMsg) { DatasetManager::HandleGet(aMsg); }
 
 void PendingDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<PendingDatasetManager>().HandleTimer(); }
 

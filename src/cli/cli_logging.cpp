@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,29 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#include <openthread-core-config.h>
-#include <openthread/config.h>
 
-#include <openthread/platform/otns.h>
-#include <openthread/platform/toolchain.h>
-
-#include "common/log.hpp"
-
-using namespace ot;
-
-/*
- * Implementation note:
- *   These are all "weak" so that a platform may if it chooses to override the instance.
+/**
+ * @file
+ *   This file implements default logging functionality for CLI apps.
  */
+#include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
+#include <stdarg.h>
 
-OT_TOOL_WEAK
-void otPlatOtnsStatus(const char *aStatus) { LogAlways("[OTNS] %s", aStatus); }
+#include <openthread/cli.h>
+#include <openthread/platform/logging.h>
 
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+#include "config/logging.h"
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+
+extern "C" OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+
+    va_start(ap, aFormat);
+    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
+    va_end(ap);
+}
+
+#endif

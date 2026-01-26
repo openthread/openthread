@@ -31,8 +31,8 @@
  *   This file includes definitions for manipulating Thread Network Data managed by the Thread Leader.
  */
 
-#ifndef NETWORK_DATA_LEADER_HPP_
-#define NETWORK_DATA_LEADER_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_LEADER_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_LEADER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -544,7 +544,7 @@ private:
 #endif
     };
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     void HandleTimer(void);
 
@@ -617,9 +617,7 @@ private:
     Error UpdateCommissioningData(uint16_t aDataLength, CommissioningDataTlv *&aDataTlv);
     Error SetCommissioningData(const Message &aMessage);
 
-    void SendCommissioningSetResponse(const Coap::Message     &aRequest,
-                                      const Ip6::MessageInfo  &aMessageInfo,
-                                      MeshCoP::StateTlv::State aState);
+    void SendCommissioningSetResponse(const Coap::Msg &aMsg, MeshCoP::StateTlv::State aState);
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
@@ -659,4 +657,4 @@ DeclareTmfHandler(Leader, kUriCommissionerSet);
 } // namespace NetworkData
 } // namespace ot
 
-#endif // NETWORK_DATA_LEADER_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_LEADER_HPP_

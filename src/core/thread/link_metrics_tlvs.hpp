@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Link Metrics TLVs.
  */
 
-#ifndef LINK_METRICS_TLVS_HPP_
-#define LINK_METRICS_TLVS_HPP_
+#ifndef OT_CORE_THREAD_LINK_METRICS_TLVS_HPP_
+#define OT_CORE_THREAD_LINK_METRICS_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -78,6 +78,11 @@ typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
  * Defines a Link Metrics Status Sub-Tlv.
  */
 typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
+
+/**
+ * Defines Query Option Sub-TLV constants and types.
+ */
+typedef TlvInfo<SubTlv::kQueryOptions> QueryOptionsSubTlv;
 
 /**
  * Implements Link Metrics Report Sub-TLV generation and parsing.
@@ -158,32 +163,6 @@ private:
         uint8_t  m8;
         uint32_t m32;
     } mMetricsValue;
-} OT_TOOL_PACKED_END;
-
-/**
- * Implements Link Metrics Query Options Sub-TLV generation and parsing.
- */
-OT_TOOL_PACKED_BEGIN
-class QueryOptionsSubTlv : public Tlv, public TlvInfo<SubTlv::kQueryOptions>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(SubTlv::kQueryOptions);
-        SetLength(0);
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(uint8_t); }
-
 } OT_TOOL_PACKED_END;
 
 /**
@@ -307,4 +286,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-#endif // LINK_METRICS_TLVS_HPP_
+#endif // OT_CORE_THREAD_LINK_METRICS_TLVS_HPP_

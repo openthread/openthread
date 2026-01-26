@@ -353,8 +353,8 @@ class TestOTCI(unittest.TestCase):
         logging.info('dataset active -x: %r', leader.get_dataset_bytes('active'))
         logging.info('dataset pending -x: %r', leader.get_dataset_bytes('pending'))
 
-        leader.set_vendor_name('OpenThread')
-        self.assertEqual('OpenThread', leader.get_vendor_name())
+        leader.set_vendor_name('RD:OpenThread')
+        self.assertEqual('RD:OpenThread', leader.get_vendor_name())
         leader.set_vendor_model('some_model')
         self.assertEqual('some_model', leader.get_vendor_model())
         leader.set_vendor_sw_version('1.0.0')

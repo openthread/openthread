@@ -31,8 +31,8 @@
  *   This file includes definitions for time instance.
  */
 
-#ifndef TIME_HPP_
-#define TIME_HPP_
+#ifndef OT_CORE_COMMON_TIME_HPP_
+#define OT_CORE_COMMON_TIME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -272,4 +272,4 @@ typedef Time TimeMicro;
 
 } // namespace ot
 
-#endif // TIME_HPP_
+#endif // OT_CORE_COMMON_TIME_HPP_

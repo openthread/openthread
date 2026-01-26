@@ -31,8 +31,8 @@
  *   This file includes definitions for a time ticker.
  */
 
-#ifndef TIME_TICKER_HPP_
-#define TIME_TICKER_HPP_
+#ifndef OT_CORE_COMMON_TIME_TICKER_HPP_
+#define OT_CORE_COMMON_TIME_TICKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -122,4 +122,4 @@ private:
 
 } // namespace ot
 
-#endif // TIMER_HPP_
+#endif // OT_CORE_COMMON_TIME_TICKER_HPP_

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Time Sync service.
  */
 
-#ifndef CONFIG_TIME_SYNC_H_
-#define CONFIG_TIME_SYNC_H_
+#ifndef OT_CORE_CONFIG_TIME_SYNC_H_
+#define OT_CORE_CONFIG_TIME_SYNC_H_
 
 /**
  * @addtogroup config-time-sync
@@ -101,4 +101,4 @@
  * @}
  */
 
-#endif // CONFIG_TIME_SYNC_H_
+#endif // OT_CORE_CONFIG_TIME_SYNC_H_

@@ -31,8 +31,8 @@
  *   This file includes common Border Router logging helper functions.
  */
 
-#ifndef BR_LOG_HPP_
-#define BR_LOG_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_BR_LOG_HPP_
+#define OT_CORE_BORDER_ROUTER_BR_LOG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -111,4 +111,4 @@ inline void LogRecursiveDnsServerOption(const Ip6::Address &, uint32_t) {}
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // BR_LOG_HPP_
+#endif // OT_CORE_BORDER_ROUTER_BR_LOG_HPP_

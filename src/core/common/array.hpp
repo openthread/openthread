@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic array.
  */
 
-#ifndef ARRAY_HPP_
-#define ARRAY_HPP_
+#ifndef OT_CORE_COMMON_ARRAY_HPP_
+#define OT_CORE_COMMON_ARRAY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -571,4 +571,4 @@ private:
 
 } // namespace ot
 
-#endif // ARRAY_HPP_
+#endif // OT_CORE_COMMON_ARRAY_HPP_

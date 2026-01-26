@@ -979,10 +979,8 @@ exit:
 
 Error TcatAgent::HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aResponse)
 {
-    Error   error = kErrorNone;
-    ot::Tlv tlv;
-    uint8_t replyLen = 0;
-    uint8_t count    = 0;
+    Error         error = kErrorNone;
+    Tlv::Bookmark tlvBookmark;
 
     static_assert((kApplicationLayerMaxCount * (kServiceNameMaxLength + 2)) <= 250,
                   "Unsupported TCAT application layers configuration");
@@ -990,23 +988,17 @@ Error TcatAgent::HandleGetApplicationLayers(Message &aOutgoingMessage, bool &aRe
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
     VerifyOrExit(IsCommandClassAuthorized(kApplication), error = kErrorRejected);
 
+    SuccessOrExit(error = Tlv::StartTlv(aOutgoingMessage, kTlvResponseWithPayload, tlvBookmark));
+
     for (uint8_t i = 0; i < kApplicationLayerMaxCount && mVendorInfo->mApplicationServiceName[i] != nullptr; i++)
-    {
-        replyLen += sizeof(tlv);
-        replyLen += StringLength(mVendorInfo->mApplicationServiceName[i], kServiceNameMaxLength);
-        count++;
-    }
-
-    tlv.SetType(kTlvResponseWithPayload);
-    tlv.SetLength(replyLen);
-    SuccessOrExit(error = aOutgoingMessage.Append(tlv));
-
-    for (uint8_t i = 0; i < count; i++)
     {
         uint16_t length = StringLength(mVendorInfo->mApplicationServiceName[i], kServiceNameMaxLength);
         uint8_t  type   = mVendorInfo->mApplicationServiceIsTcp[i] ? kTlvServiceNameTcp : kTlvServiceNameUdp;
+
         SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, type, mVendorInfo->mApplicationServiceName[i], length));
     }
+
+    SuccessOrExit(error = Tlv::EndTlv(aOutgoingMessage, tlvBookmark));
 
     aResponse = true;
 
@@ -1119,7 +1111,7 @@ void TcatAgent::NotifyStateChange(void)
                                                    mState == kStateConnected);
 }
 
-template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Msg &aMsg)
 {
     Error          error        = kErrorNone;
     Coap::Message *message      = nullptr;
@@ -1127,13 +1119,14 @@ template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Message &aMessage, c
     uint16_t       durationSec  = 0;
     uint32_t       durationMs;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
-    LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(), aMessageInfo.GetPeerAddr().ToString().AsCString());
-    message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(),
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
+    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMessage, delayTimerMs));
-    switch (Tlv::Find<DurationTlv>(aMessage, durationSec))
+    SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMsg.mMessage, delayTimerMs));
+    switch (Tlv::Find<DurationTlv>(aMsg.mMessage, durationSec))
     {
     case kErrorNone:
         break;
@@ -1157,7 +1150,7 @@ exit:
             Tlv::Append<StateTlv>(*message, error == kErrorNone ? StateTlv::State::kAccept : StateTlv::State::kReject);
         if (error == kErrorNone)
         {
-            error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo);
+            error = Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo);
         }
         FreeMessageOnError(message, error);
     }

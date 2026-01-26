@@ -204,27 +204,24 @@ void MultiAilDetector::HandleTimer(void)
     }
 
     mCallback.InvokeIfSet(mDetected);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent::TxtData>().Refresh();
+#endif
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *MultiAilDetector::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled", // (0) kStateDisabled
-        "Stopped",  // (1) kStateStopped
-        "Running",  // (2) kStateRunning
-    };
+#define StateMapList(_)           \
+    _(kStateDisabled, "Disabled") \
+    _(kStateStopped, "Stopped")   \
+    _(kStateRunning, "Running")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStateRunning);
-    };
+    DefineEnumStringArray(StateMapList)
 
-    return kStateStrings[aState];
+        return kStrings[aState];
 }
 
 #endif

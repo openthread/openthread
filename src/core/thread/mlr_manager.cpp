@@ -335,26 +335,15 @@ exit:
     return error;
 }
 
-void MlrManager::HandleRegisterResponse(void                *aContext,
-                                        otMessage           *aMessage,
-                                        const otMessageInfo *aMessageInfo,
-                                        otError              aResult)
+void MlrManager::HandleRegisterResponse(Coap::Message *aMessage, Error aResult)
 {
-    static_cast<MlrManager *>(aContext)->HandleRegisterResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                                aResult);
-}
-
-void MlrManager::HandleRegisterResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint8_t      status;
     Error        error;
     AddressArray failedAddresses;
 
     mRegisterPending = false;
 
-    error = ParseMlrResponse(aResult, AsCoapMessagePtr(aMessage), status, failedAddresses);
+    error = ParseMlrResponse(aResult, aMessage, status, failedAddresses);
 
     mRegisterCallback.InvokeAndClearIfSet(error, status, failedAddresses.GetArrayBuffer(), failedAddresses.GetLength());
 }
@@ -479,7 +468,7 @@ Error MlrManager::ParseMlrResponse(Error          aResult,
     aStatus = kMlrGeneralFailure;
 
     VerifyOrExit(aResult == kErrorNone && aMessage != nullptr, error = kErrorParse);
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, error = kErrorParse);
+    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged, error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(*aMessage, aStatus));
 

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPINEL_DRIVER_HPP_
-#define SPINEL_DRIVER_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_DRIVER_HPP_
+#define OT_LIB_SPINEL_SPINEL_DRIVER_HPP_
 
 #include <openthread/instance.h>
 
@@ -342,4 +342,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_DRIVER_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_DRIVER_HPP_

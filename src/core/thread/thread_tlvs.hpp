@@ -31,8 +31,8 @@
  *   This file includes definitions and methods for generating and processing Thread Network Layer TLVs.
  */
 
-#ifndef THREAD_TLVS_HPP_
-#define THREAD_TLVS_HPP_
+#ifndef OT_CORE_THREAD_THREAD_TLVS_HPP_
+#define OT_CORE_THREAD_THREAD_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -284,4 +284,4 @@ public:
 
 } // namespace ot
 
-#endif // THREAD_TLVS_HPP_
+#endif // OT_CORE_THREAD_THREAD_TLVS_HPP_

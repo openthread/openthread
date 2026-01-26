@@ -483,7 +483,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_AGENT_EPHEMERA
         break;
     case OT_BORDER_AGENT_STATE_DISABLED:
         error = OT_ERROR_NOT_CAPABLE;
-        // Fall through
+        OT_FALL_THROUGH;
     case OT_BORDER_AGENT_STATE_STOPPED:
         ExitNow();
     }

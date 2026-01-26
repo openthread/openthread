@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap::Array` (a heap allocated array of flexible length).
  */
 
-#ifndef HEAP_ARRAY_HPP_
-#define HEAP_ARRAY_HPP_
+#ifndef OT_CORE_COMMON_HEAP_ARRAY_HPP_
+#define OT_CORE_COMMON_HEAP_ARRAY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -533,4 +533,4 @@ private:
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_ARRAY_HPP_
+#endif // OT_CORE_COMMON_HEAP_ARRAY_HPP_

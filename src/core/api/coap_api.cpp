@@ -44,30 +44,36 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
     return AsCoreType(aInstance).Get<Coap::ApplicationCoap>().NewMessage(Message::Settings::From(aSettings));
 }
 
-void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
+otError otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
 {
-    AsCoapMessage(aMessage).Init(MapEnum(aType), MapEnum(aCode));
+    return AsCoapMessage(aMessage).Init(MapEnum(aType), MapEnum(aCode));
 }
 
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
 {
-    Coap::Message       &response = AsCoapMessage(aResponse);
-    const Coap::Message &request  = AsCoapMessage(aRequest);
+    return AsCoapMessage(aResponse).InitAsResponse(MapEnum(aType), MapEnum(aCode), AsCoapMessage(aRequest));
+}
 
-    response.Init(MapEnum(aType), MapEnum(aCode));
-    response.SetMessageId(request.GetMessageId());
-
-    return response.SetTokenFromMessage(request);
+otError otCoapMessageWriteToken(otMessage *aMessage, const otCoapToken *aToken)
+{
+    return AsCoapMessage(aMessage).WriteToken(AsCoreType(aToken));
 }
 
 otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
 {
-    return AsCoapMessage(aMessage).SetToken(aToken, aTokenLength);
+    Error       error;
+    Coap::Token token;
+
+    SuccessOrExit(error = token.SetToken(aToken, aTokenLength));
+    error = AsCoapMessage(aMessage).WriteToken(token);
+
+exit:
+    return error;
 }
 
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength)
 {
-    IgnoreError(AsCoapMessage(aMessage).GenerateRandomToken(aTokenLength));
+    IgnoreError(AsCoapMessage(aMessage).WriteRandomToken(aTokenLength));
 }
 
 otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOptionContentFormat aContentFormat)
@@ -100,19 +106,28 @@ otError otCoapMessageAppendUriQueryOptions(otMessage *aMessage, const char *aUri
     return AsCoapMessage(aMessage).AppendUriQueryOptions(aUriQuery);
 }
 
-uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize)
-{
-    return static_cast<uint16_t>(1 << (static_cast<uint8_t>(aSize) + Coap::Message::kBlockSzxBase));
-}
+uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize) { return Coap::BlockSizeFromExponent(MapEnum(aSize)); }
 
 otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
-    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType2, aNum, aMore, aSize);
+    Coap::BlockInfo blockInfo;
+
+    blockInfo.mBlockNumber = aNum;
+    blockInfo.mBlockSzx    = MapEnum(aSize);
+    blockInfo.mMoreBlocks  = aMore;
+
+    return AsCoapMessage(aMessage).AppendBlockOption(Coap::kOptionBlock2, blockInfo);
 }
 
 otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
-    return AsCoapMessage(aMessage).AppendBlockOption(Coap::Message::kBlockType1, aNum, aMore, aSize);
+    Coap::BlockInfo blockInfo;
+
+    blockInfo.mBlockNumber = aNum;
+    blockInfo.mBlockSzx    = MapEnum(aSize);
+    blockInfo.mMoreBlocks  = aMore;
+
+    return AsCoapMessage(aMessage).AppendBlockOption(Coap::kOptionBlock1, blockInfo);
 }
 
 otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
@@ -130,27 +145,57 @@ otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQ
     return AsCoapMessage(aMessage).AppendUriQueryOption(aUriQuery);
 }
 
-otError otCoapMessageSetPayloadMarker(otMessage *aMessage) { return AsCoapMessage(aMessage).SetPayloadMarker(); }
+otError otCoapMessageSetPayloadMarker(otMessage *aMessage) { return AsCoapMessage(aMessage).AppendPayloadMarker(); }
 
 otCoapType otCoapMessageGetType(const otMessage *aMessage)
 {
-    return static_cast<otCoapType>(AsCoapMessage(aMessage).GetType());
+    return static_cast<otCoapType>(AsCoapMessage(aMessage).ReadType());
 }
 
 otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
 {
-    return static_cast<otCoapCode>(AsCoapMessage(aMessage).GetCode());
+    return static_cast<otCoapCode>(AsCoapMessage(aMessage).ReadCode());
 }
 
-void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode) { AsCoapMessage(aMessage).SetCode(MapEnum(aCode)); }
+void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode) { AsCoapMessage(aMessage).WriteCode(MapEnum(aCode)); }
 
 const char *otCoapMessageCodeToString(const otMessage *aMessage) { return AsCoapMessage(aMessage).CodeToString(); }
 
-uint16_t otCoapMessageGetMessageId(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetMessageId(); }
+uint16_t otCoapMessageGetMessageId(const otMessage *aMessage) { return AsCoapMessage(aMessage).ReadMessageId(); }
 
-uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetTokenLength(); }
+otError otCoapMessageReadToken(const otMessage *aMessage, otCoapToken *aToken)
+{
+    return AsCoapMessage(aMessage).ReadToken(AsCoreType(aToken));
+}
 
-const uint8_t *otCoapMessageGetToken(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetToken(); }
+bool otCoapMessageAreTokensEqual(const otCoapToken *aFirstToken, const otCoapToken *aSecondToken)
+{
+    return AsCoreType(aFirstToken) == AsCoreType(aSecondToken);
+}
+
+uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage)
+{
+    uint8_t length;
+
+    if (AsCoapMessage(aMessage).ReadTokenLength(length) != kErrorNone)
+    {
+        length = 0;
+    }
+
+    return length;
+}
+
+const uint8_t *otCoapMessageGetToken(const otMessage *aMessage)
+{
+    static Coap::Token token;
+
+    if (AsCoapMessage(aMessage).ReadToken(token) != kErrorNone)
+    {
+        token.Clear();
+    }
+
+    return token.GetBytes();
+}
 
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
 {
@@ -199,35 +244,6 @@ otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void
     return AsCoreType(aIterator).ReadOptionValue(aValue);
 }
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError otCoapSendRequestBlockWiseWithParameters(otInstance                 *aInstance,
-                                                 otMessage                  *aMessage,
-                                                 const otMessageInfo        *aMessageInfo,
-                                                 otCoapResponseHandler       aHandler,
-                                                 void                       *aContext,
-                                                 const otCoapTxParameters   *aTxParameters,
-                                                 otCoapBlockwiseTransmitHook aTransmitHook,
-                                                 otCoapBlockwiseReceiveHook  aReceiveHook)
-{
-    Error                     error;
-    const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
-
-    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
-
-    if (aTxParameters != nullptr)
-    {
-        VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
-    }
-
-    error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), txParameters, aHandler, aContext, aTransmitHook,
-        aReceiveHook);
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
 otError otCoapSendRequestWithParameters(otInstance               *aInstance,
                                         otMessage                *aMessage,
                                         const otMessageInfo      *aMessageInfo,
@@ -237,20 +253,22 @@ otError otCoapSendRequestWithParameters(otInstance               *aInstance,
 {
     Error error;
 
-    const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
-
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
-    if (aTxParameters != nullptr)
-    {
-        VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
-    }
-
     error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), txParameters, aHandler, aContext);
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), aHandler, aContext);
 
 exit:
     return error;
+}
+
+otError otCoapSendRequest(otInstance           *aInstance,
+                          otMessage            *aMessage,
+                          const otMessageInfo  *aMessageInfo,
+                          otCoapResponseHandler aHandler,
+                          void                 *aContext)
+{
+    return otCoapSendRequestWithParameters(aInstance, aMessage, aMessageInfo, aHandler, aContext, nullptr);
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -259,18 +277,6 @@ otError otCoapStart(otInstance *aInstance, uint16_t aPort)
 }
 
 otError otCoapStop(otInstance *aInstance) { return AsCoreType(aInstance).Get<Coap::ApplicationCoap>().Stop(); }
-
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-void otCoapAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)
-{
-    AsCoreType(aInstance).Get<Coap::ApplicationCoap>().AddBlockWiseResource(AsCoreType(aResource));
-}
-
-void otCoapRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)
-{
-    AsCoreType(aInstance).Get<Coap::ApplicationCoap>().RemoveBlockWiseResource(AsCoreType(aResource));
-}
-#endif
 
 void otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
@@ -292,7 +298,74 @@ void otCoapSetResponseFallback(otInstance *aInstance, otCoapResponseFallback aHa
     AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SetResponseFallback(aHandler, aContext);
 }
 
+otError otCoapSendResponseWithParameters(otInstance               *aInstance,
+                                         otMessage                *aMessage,
+                                         const otMessageInfo      *aMessageInfo,
+                                         const otCoapTxParameters *aTxParameters)
+{
+    otError error;
+
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), nullptr, nullptr);
+
+exit:
+    return error;
+}
+
+otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    return otCoapSendResponseWithParameters(aInstance, aMessage, aMessageInfo, nullptr);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+void otCoapAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)
+{
+    AsCoreType(aInstance).Get<Coap::ApplicationCoap>().AddBlockWiseResource(AsCoreType(aResource));
+}
+
+void otCoapRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)
+{
+    AsCoreType(aInstance).Get<Coap::ApplicationCoap>().RemoveBlockWiseResource(AsCoreType(aResource));
+}
+
+otError otCoapSendRequestBlockWiseWithParameters(otInstance                 *aInstance,
+                                                 otMessage                  *aMessage,
+                                                 const otMessageInfo        *aMessageInfo,
+                                                 otCoapResponseHandler       aHandler,
+                                                 void                       *aContext,
+                                                 const otCoapTxParameters   *aTxParameters,
+                                                 otCoapBlockwiseTransmitHook aTransmitHook,
+                                                 otCoapBlockwiseReceiveHook  aReceiveHook)
+{
+    Error error;
+
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), aHandler, aContext,
+        aTransmitHook, aReceiveHook);
+
+exit:
+    return error;
+}
+
+otError otCoapSendRequestBlockWise(otInstance                 *aInstance,
+                                   otMessage                  *aMessage,
+                                   const otMessageInfo        *aMessageInfo,
+                                   otCoapResponseHandler       aHandler,
+                                   void                       *aContext,
+                                   otCoapBlockwiseTransmitHook aTransmitHook,
+                                   otCoapBlockwiseReceiveHook  aReceiveHook)
+{
+    return otCoapSendRequestBlockWiseWithParameters(aInstance, aMessage, aMessageInfo, aHandler, aContext, nullptr,
+                                                    aTransmitHook, aReceiveHook);
+}
+
 otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aInstance,
                                                   otMessage                  *aMessage,
                                                   const otMessageInfo        *aMessageInfo,
@@ -305,27 +378,22 @@ otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aI
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
     error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), Coap::TxParameters::From(aTxParameters), nullptr, aContext,
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), AsCoreTypePtr(aTxParameters), nullptr, aContext,
         aTransmitHook, nullptr);
 exit:
     return error;
 }
-#endif
 
-otError otCoapSendResponseWithParameters(otInstance               *aInstance,
-                                         otMessage                *aMessage,
-                                         const otMessageInfo      *aMessageInfo,
-                                         const otCoapTxParameters *aTxParameters)
+otError otCoapSendResponseBlockWise(otInstance                 *aInstance,
+                                    otMessage                  *aMessage,
+                                    const otMessageInfo        *aMessageInfo,
+                                    void                       *aContext,
+                                    otCoapBlockwiseTransmitHook aTransmitHook)
 {
-    otError error;
-
-    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
-
-    error = AsCoreType(aInstance).Get<Coap::ApplicationCoap>().SendMessage(
-        AsCoapMessage(aMessage), AsCoreType(aMessageInfo), Coap::TxParameters::From(aTxParameters), nullptr, nullptr);
-
-exit:
-    return error;
+    return otCoapSendResponseBlockWiseWithParameters(aInstance, aMessage, aMessageInfo, nullptr, aContext,
+                                                     aTransmitHook);
 }
+
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
