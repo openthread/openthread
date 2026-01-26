@@ -275,17 +275,15 @@ class CoapBase : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * Pointer is called before CoAP server processing a CoAP message.
+     * Function pointer callback invoked before CoAP processing a received CoAP message.
      *
-     * @param[in]   aMessage        A reference to the message.
-     @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
-     * @param[in]   aContext        A pointer to arbitrary context information.
+     * @param[in]   aContext    A pointer to arbitrary context information.
+     * @param[in]   aRxMsg      The received `Msg` (CoAP message and its associated `Ip6::MessageInfo`).
      *
-     * @retval  kErrorNone      Server should continue processing this message, other return values indicates the
-     *                          server should stop processing this message.
+     * @retval  kErrorNone      Continue processing this message
      * @retval  kErrorNotTmf    The message is not a TMF message.
      */
-    typedef Error (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    typedef Error (*Interceptor)(void *aContext, const Msg &aRxMsg);
 
     /**
      * Clears all requests and responses used by this CoAP agent and stops all timers.

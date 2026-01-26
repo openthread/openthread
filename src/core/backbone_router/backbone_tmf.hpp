@@ -93,7 +93,8 @@ private:
     static bool  HandleResource(CoapBase &aCoapBase, const char *aUriPath, ot::Coap::Msg &aMsg);
     bool         HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg);
     void         LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const;
-    static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static Error Filter(void *aContext, const ot::Coap::Msg &aRxMsg);
+    Error        Filter(const ot::Coap::Msg &aRxMsg) const;
 };
 
 } // namespace BackboneRouter
