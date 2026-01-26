@@ -122,6 +122,8 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
     return aLength;
 }
 
+otMessage *otMessageClone(const otMessage *aMessage) { return AsCoreType(aMessage).Clone(); }
+
 void otMessageQueueInit(otMessageQueue *aQueue) { AsCoreType(aQueue).Clear(); }
 
 void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
