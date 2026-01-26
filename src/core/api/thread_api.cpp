@@ -34,10 +34,18 @@
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-
 #include "instance/instance.hpp"
+#endif
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+#include "common/uptime.hpp"
+#endif
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_UPTIME_ENABLE
 using namespace ot;
+#endif
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 uint32_t otThreadGetChildTimeout(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::Mle>().GetTimeout(); }
 
