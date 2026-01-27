@@ -28,19 +28,19 @@
 
 #include "openthread-core-config.h"
 
-#include "cli/cli_utils.hpp"
-
 #include "cli/cli_tcat.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/string.hpp"
 
 #include <openthread/ble_secure.h>
-
-#include <mbedtls/oid.h>
 #include <openthread/error.h>
+#include <openthread/netdiag.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
+
+#include <mbedtls/oid.h>
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
 
@@ -123,7 +123,6 @@ otTcatGeneralDeviceId    sGeneralDeviceId;
 
 const char kPskdVendor[]              = "JJJJJJ";
 const char kInstallVendor[]           = "InstallCode";
-const char kUrl[]                     = "dummy_url";
 const char kApplicationServiceName1[] = "echo";
 const char kApplicationServiceName2[] = "discard";
 
@@ -356,7 +355,7 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
 
     ClearAllBytes(mVendorInfo);
     mVendorInfo.mPskdString                 = kPskdVendor;
-    mVendorInfo.mProvisioningUrl            = kUrl;
+    mVendorInfo.mProvisioningUrl            = otThreadGetVendorAppUrl(GetInstancePtr());
     mVendorInfo.mInstallCode                = kInstallVendor;
     mVendorInfo.mApplicationServiceName[0]  = kApplicationServiceName1;
     mVendorInfo.mApplicationServiceName[1]  = kApplicationServiceName2;
