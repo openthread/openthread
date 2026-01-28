@@ -998,6 +998,8 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
 /**
  * Sets a callback to receive MLE Discovery Request data.
  *
+ * Requires `OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE`.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Discovery Request message.
  * @param[in]  aContext   A pointer to callback application-specific context.
