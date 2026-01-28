@@ -48,7 +48,7 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
 
 const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
+    return &AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetExtPanId();
 }
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
@@ -59,7 +59,7 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
 
     VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
-    instance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(extPanId);
+    instance.Get<MeshCoP::NetworkIdentity>().SetExtPanId(extPanId);
 
     instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
     instance.Get<MeshCoP::PendingDatasetManager>().Clear();
@@ -197,7 +197,7 @@ exit:
 
 const char *otThreadGetNetworkName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsCString();
 }
 
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
@@ -212,7 +212,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != kNullChar, error = kErrorInvalidArgs);
 #endif
 
-    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().SetNetworkName(aNetworkName);
     AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
     AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
@@ -223,7 +223,7 @@ exit:
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 const char *otThreadGetDomainName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().GetDomainName().GetAsCString();
 }
 
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
@@ -232,7 +232,7 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
-    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetDomainName(aDomainName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkIdentity>().SetDomainName(aDomainName);
 
 exit:
     return error;

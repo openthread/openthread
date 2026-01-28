@@ -33,14 +33,8 @@
 
 #include "extended_panid.hpp"
 
-#include "instance/instance.hpp"
-
 namespace ot {
 namespace MeshCoP {
-
-const otExtendedPanId ExtendedPanIdManager::sExtendedPanidInit = {
-    {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
-};
 
 ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 {
@@ -49,18 +43,6 @@ ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
     string.AppendHexBytes(m8, sizeof(ExtendedPanId));
 
     return string;
-}
-
-ExtendedPanIdManager::ExtendedPanIdManager(Instance &aInstance)
-    : InstanceLocator(aInstance)
-{
-    mExtendedPanId.Clear();
-    SetExtPanId(AsCoreType(&sExtendedPanidInit));
-}
-
-void ExtendedPanIdManager::SetExtPanId(const ExtendedPanId &aExtendedPanId)
-{
-    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, kEventThreadExtPanIdChanged));
 }
 
 } // namespace MeshCoP

@@ -42,9 +42,8 @@ using BaTxtData            = MeshCoP::BorderAgent::TxtData;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
-using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
+using NetworkIdentity      = MeshCoP::NetworkIdentity;
 using NameData             = MeshCoP::NameData;
-using NetworkNameManager   = MeshCoP::NetworkNameManager;
 using TxtEntry             = Dns::TxtEntry;
 
 void TestBorderAgent(void)
@@ -1342,8 +1341,8 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
 
     if (aNode.Get<MeshCoP::ActiveDatasetManager>().IsComplete())
     {
-        const char                   *networkName = aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString();
-        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<ExtendedPanIdManager>().GetExtPanId();
+        const char                   *networkName = aNode.Get<NetworkIdentity>().GetNetworkName().GetAsCString();
+        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<NetworkIdentity>().GetExtPanId();
 
         aTxtData.ValidateKey("nn", networkName);
         VerifyOrQuit(info.mHasNetworkName);
