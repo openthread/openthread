@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
+#include <openthread/netdiag.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
@@ -473,7 +474,7 @@ private:
     uint8_t CheckAuthorizationRequirements(CommandClassFlags aFlagsChecked, Dataset::Info *aDatasetInfo) const;
 
     static constexpr uint16_t kPingPayloadMaxLength      = 512;
-    static constexpr uint16_t kProvisioningUrlMaxLength  = 64;
+    static constexpr uint16_t kProvisioningUrlMaxLength  = OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH;
     static constexpr uint16_t kMaxPskdLength             = OT_JOINER_MAX_PSKD_LENGTH;
     static constexpr uint16_t kTcatMaxDeviceIdSize       = OT_TCAT_MAX_DEVICEID_SIZE;
     static constexpr uint16_t kInstallCodeMaxSize        = 255;
