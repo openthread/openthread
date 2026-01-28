@@ -71,7 +71,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
 
     SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());
     SuccessOrExit(error = AsCoreType(&mPskc).GenerateRandom());
-    SuccessOrExit(error = Random::Crypto::Fill(mExtendedPanId));
+    SuccessOrExit(error = AsCoreType(&mExtendedPanId).GenerateRandom());
     SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
     nameWriter.Append("%s-%04x", NetworkName::kNetworkNameInit, mPanId);
