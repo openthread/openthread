@@ -646,7 +646,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, aTimeSinceLastTransaction));
 
     SuccessOrExit(error = Tlv::Append<ThreadNetworkNameTlv>(
-                      *message, Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString()));
+                      *message, Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsCString()));
 
     if (aSrcRloc16 != Mle::kInvalidRloc16)
     {

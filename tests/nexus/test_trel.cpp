@@ -125,7 +125,7 @@ void TestTrelBasic(void)
             bool found = false;
 
             VerifyOrQuit(peer.GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
-            VerifyOrQuit(peer.GetExtPanId() == node.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+            VerifyOrQuit(peer.GetExtPanId() == node.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
 
             for (Node &otherNode : nexus.GetNodes())
             {
@@ -283,7 +283,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node2.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -301,7 +301,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
-    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node1.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -328,7 +328,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdRemoved);
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node2.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -353,7 +353,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node2.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -371,7 +371,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
-    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node1.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -405,7 +405,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdRemoved);
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
 
@@ -496,7 +496,7 @@ void TestServiceNameConflict(void)
     {
         if (peer.GetDnssdState() == ot::Trel::Peer::kDnssdResolved)
         {
-            VerifyOrQuit(peer.GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+            VerifyOrQuit(peer.GetExtPanId() == node1.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
             VerifyOrQuit(peer.GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
             VerifyOrQuit(peer.GetServiceName() != nullptr);
             VerifyOrQuit(StringMatch(peer.GetServiceName(), node1.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -542,7 +542,7 @@ void TestHostAddressChange(void)
     Log("Manually register a TREL service on `node2` with proper TXT data");
 
     SuccessOrQuit(encoder.AppendEntry("xa", node2.Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrQuit(encoder.AppendEntry("xp", node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrQuit(encoder.AppendEntry("xp", node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     ClearAllBytes(service);
     service.mServiceType     = "_trel._udp";
@@ -570,7 +570,7 @@ void TestHostAddressChange(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == kDnssdResolved);
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
 
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -611,7 +611,7 @@ void TestHostAddressChange(void)
     VerifyOrQuit(peer != nullptr);
 
     VerifyOrQuit(peer->GetDnssdState() == kDnssdResolved);
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
 
     VerifyOrQuit(peer->GetServiceName() != nullptr);

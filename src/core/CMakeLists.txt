@@ -178,6 +178,7 @@ set(COMMON_SOURCES
     meshcop/meshcop.cpp
     meshcop/meshcop_leader.cpp
     meshcop/meshcop_tlvs.cpp
+    meshcop/network_identity.cpp
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
     meshcop/secure_transport.cpp
