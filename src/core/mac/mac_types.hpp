@@ -221,16 +221,6 @@ public:
     }
 
     /**
-     * Overloads operator `==` to evaluate whether or not two `ExtAddress` instances are equal.
-     *
-     * @param[in]  aOther  The other `ExtAddress` instance to compare with.
-     *
-     * @retval TRUE   If the two `ExtAddress` instances are equal.
-     * @retval FALSE  If the two `ExtAddress` instances are not equal.
-     */
-    bool operator==(const ExtAddress &aOther) const;
-
-    /**
      * Converts an address to a string.
      *
      * @returns An `InfoString` containing the string representation of the Extended Address.
