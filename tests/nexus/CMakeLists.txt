@@ -46,6 +46,7 @@ add_library(ot-nexus-platform
     platform/nexus_mdns.cpp
     platform/nexus_misc.cpp
     platform/nexus_node.cpp
+    platform/nexus_pcap.cpp
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp

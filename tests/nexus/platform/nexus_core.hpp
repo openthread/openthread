@@ -33,6 +33,7 @@
 #include "instance/instance.hpp"
 
 #include "nexus_alarm.hpp"
+#include "nexus_pcap.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_utils.hpp"
 
@@ -85,6 +86,7 @@ private:
     static bool  sInUse;
 
     OwningList<Node> mNodes;
+    Pcap             mPcap;
     uint16_t         mCurNodeId;
     bool             mPendingAction;
     TimeMilli        mNow;

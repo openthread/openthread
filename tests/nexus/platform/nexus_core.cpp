@@ -27,6 +27,9 @@
  */
 
 #include "nexus_core.hpp"
+
+#include <cstdlib>
+
 #include "nexus_node.hpp"
 
 namespace ot {
@@ -40,11 +43,20 @@ Core::Core(void)
     , mCurNodeId(0)
     , mPendingAction(false)
 {
+    const char *pcapFile;
+
     VerifyOrQuit(!sInUse);
     sCore  = this;
     sInUse = true;
 
     mNextAlarmTime = mNow.GetDistantFuture();
+
+    pcapFile = getenv("OT_NEXUS_PCAP_FILE");
+
+    if ((pcapFile != nullptr) && (pcapFile[0] != '\0'))
+    {
+        mPcap.Open(pcapFile);
+    }
 }
 
 Core::~Core(void) { sInUse = false; }
@@ -134,6 +146,8 @@ void Core::ProcessRadio(Node &aNode)
 
     ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
 
+    mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow.GetValue() * 1000ull);
+
     otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
 
     for (Node &rxNode : mNodes)
@@ -187,15 +201,14 @@ void Core::ProcessRadio(Node &aNode)
 
     if (ackMode != kNoAck)
     {
-        Mac::TxFrame ackFrame;
-        uint8_t      ackPsdu[Mac::Frame::kImmAckLength];
-
-        ClearAllBytes(ackFrame);
-        ackFrame.mPsdu = ackPsdu;
+        Radio::Frame ackFrame;
 
         ackFrame.GenerateImmAck(
             static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame)),
             (ackMode == kSendAckFramePending));
+
+        ackFrame.UpdateFcs();
+        mPcap.WriteFrame(ackFrame, mNow.GetValue() * 1000ull);
 
         otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
     }

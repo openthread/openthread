@@ -50,7 +50,7 @@ struct Radio
     static constexpr State kStateReceive  = OT_RADIO_STATE_RECEIVE;
     static constexpr State kStateTransmit = OT_RADIO_STATE_TRANSMIT;
 
-    struct Frame : public Mac::Frame
+    struct Frame : public Mac::TxFrame
     {
         Frame(void);
         explicit Frame(const Frame &aFrame);
