@@ -51,6 +51,8 @@ ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
     return string;
 }
 
+Error ExtendedPanId::GenerateRandom(void) { return Random::Crypto::Fill(*this); }
+
 ExtendedPanIdManager::ExtendedPanIdManager(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
