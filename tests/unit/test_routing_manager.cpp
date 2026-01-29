@@ -5101,6 +5101,126 @@ void TestDhcp6Pd(void)
     FinalizeTest();
 }
 
+void TestDhcp6PdConflict(void)
+{
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  pdPrefix       = PrefixFromString("2001:db8:dead:beef::", 64);
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDhcp6PdConflict");
+
+    InitTest(/* aEnableBorderRouting */ true);
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    sInstance->Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(true);
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report a PD prefix and check that its used as OMR prefix
+
+    Log("Report DHCPv6-PD prefix");
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+
+    sExpectedRios.Add(pdPrefix);
+    AdvanceTime(10 * 1000);
+
+    VerifyPdOmrPrefix(pdPrefix);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise the same prefix as on-link from a router.
+
+    Log("Router A advertises PD prefix as on-link");
+    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 200, 200)});
+
+    // Check that the PD prefix is no longer used as OMR prefix due to
+    // conflict. The OMR should switch back to local OMR.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for the PIO from Router A to expire. We renew the PD
+    // prefix during this time to ensure it stays valid.
+
+    Log("Wait for Router A PIO to expire");
+
+    AdvanceTime(300 * 1000);
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+    AdvanceTime(300 * 1000);
+
+    // Router A entry should be expired and removed. The PD prefix is still
+    // valid (renewed). The conflict should be resolved. Validate that PD
+    // prefix is again being use as OMR prefix.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(pdPrefix);
+
+    AdvanceTime(100 * 1000);
+
+    VerifyPdOmrPrefix(pdPrefix);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the PD prefix
+
+    ReportPdPrefixesAsRa({Pio(pdPrefix, 0, 0)});
+
+    AdvanceTime(1 * 1000);
+    VerifyNoPdOmrPrefix();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Now Advertise the PD prefix as on-link from a router first.
+
+    Log("Router A advertises PD prefix as on-link before delegating the prefix");
+    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 200, 200)});
+
+    // Check that local OMR is used.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report the same PD prefix. Validate that local OMR prefix is
+    // still being used.
+
+    Log("Delegate PD prefix which conflicts with already advertised on-link prefix from router A");
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(100 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of TestDhcp6PdConflict");
+
+    FinalizeTest();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 static void HandleRdnssChanged(void *aContext)
@@ -5378,6 +5498,7 @@ int main(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     ot::TestDhcp6Pd();
+    ot::TestDhcp6PdConflict();
 #endif
     ot::TestRdnss();
 
