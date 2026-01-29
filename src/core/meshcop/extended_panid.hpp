@@ -69,6 +69,14 @@ public:
      */
     InfoString ToString(void) const;
 
+    /**
+     * Generates a cryptographically secure random sequence to populate the Extended PAN Identifier.
+     *
+     * @retval kErrorNone     Successfully generated a random Extended PAN ID.
+     * @retval kErrorFailed   Failed to generate random sequence.
+     */
+    Error GenerateRandom(void);
+
 } OT_TOOL_PACKED_END;
 
 class ExtendedPanIdManager : public InstanceLocator, private NonCopyable
