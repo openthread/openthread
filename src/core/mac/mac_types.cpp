@@ -75,8 +75,6 @@ void ExtAddress::SetFromIid(const Ip6::InterfaceIdentifier &aIid)
 
 #endif
 
-bool ExtAddress::operator==(const ExtAddress &aOther) const { return (memcmp(m8, aOther.m8, sizeof(m8)) == 0); }
-
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
     InfoString string;
