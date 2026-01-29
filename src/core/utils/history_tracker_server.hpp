@@ -91,14 +91,8 @@ private:
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
     Error AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, const RequestTlv &aRequestTlv);
 
-    static void HandleAnswerResponse(void                *aContext,
-                                     otMessage           *aMessage,
-                                     const otMessageInfo *aMessageInfo,
-                                     otError              aResult);
-    void        HandleAnswerResponse(Coap::Message          &aNextAnswer,
-                                     Coap::Message          *aResponse,
-                                     const Ip6::MessageInfo *aMessageInfo,
-                                     Error                   aResult);
+    static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);
+    void        HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 

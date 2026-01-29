@@ -72,7 +72,7 @@ void Mle::HandlePartitionChange(void)
     mPreviousPartitionIdTimeout        = GetNetworkIdTimeout();
 
     Get<AddressResolver>().Clear();
-    IgnoreError(Get<Tmf::Agent>().AbortTransaction(&Mle::HandleAddressSolicitResponse, this));
+    IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleAddressSolicitResponse, this));
     mRouterTable.Clear();
 }
 
@@ -3288,7 +3288,7 @@ Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
 
     messageInfo.SetSockAddrToRlocPeerAddrToLeaderRloc();
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &HandleAddressSolicitResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleAddressSolicitResponse, this));
     mAddressSolicitPending = true;
 
     Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
@@ -3321,7 +3321,7 @@ exit:
     LogSendError(kTypeAddressRelease, error);
 }
 
-void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 {
     uint8_t             status;
     uint16_t            rloc16;
@@ -3331,13 +3331,13 @@ void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::Messa
 
     mAddressSolicitPending = false;
 
-    VerifyOrExit(aResult == kErrorNone && aMessage != nullptr && aMessageInfo != nullptr);
+    VerifyOrExit(aResult == kErrorNone && aMsg != nullptr);
 
-    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged);
+    VerifyOrExit(aMsg->GetCode() == Coap::kCodeChanged);
 
-    Log(kMessageReceive, kTypeAddressReply, aMessageInfo->GetPeerAddr());
+    Log(kMessageReceive, kTypeAddressReply, aMsg->mMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(Tlv::Find<ThreadStatusTlv>(*aMessage, status));
+    SuccessOrExit(Tlv::Find<ThreadStatusTlv>(aMsg->mMessage, status));
 
     if (status != kAddrSolicitSuccess)
     {
@@ -3356,10 +3356,10 @@ void Mle::HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::Messa
         ExitNow();
     }
 
-    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(*aMessage, rloc16));
+    SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg->mMessage, rloc16));
     routerId = RouterIdFromRloc16(rloc16);
 
-    SuccessOrExit(Tlv::FindTlv(*aMessage, routerMaskTlv));
+    SuccessOrExit(Tlv::FindTlv(aMsg->mMessage, routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
 
     SetAlternateRloc16(GetRloc16());

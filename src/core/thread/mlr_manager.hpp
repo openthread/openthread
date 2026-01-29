@@ -155,17 +155,11 @@ private:
                          uint8_t               aAddressNum,
                          const uint32_t       *aTimeout,
                          Coap::ResponseHandler aResponseHandler,
-                         void                 *aResponseContext);
+                         void                 *aContext);
 
-    static void  HandleMlrResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void         HandleMlrResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-    static Error ParseMlrResponse(Error          aResult,
-                                  Coap::Message *aMessage,
-                                  uint8_t       &aStatus,
-                                  AddressArray  &aFailedAddresses);
+    DeclareTmfResponseHandlerIn(MlrManager, HandleMlrResponse);
+
+    static Error ParseMlrResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     DeclareTmfResponseHandlerIn(MlrManager, HandleRegisterResponse);

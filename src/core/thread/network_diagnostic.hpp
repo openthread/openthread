@@ -175,14 +175,8 @@ private:
     Error AppendChildTableIp6AddressList(Message &aMessage);
 #endif
 
-    static void HandleAnswerResponse(void                *aContext,
-                                     otMessage           *aMessage,
-                                     const otMessageInfo *aMessageInfo,
-                                     otError              aResult);
-    void        HandleAnswerResponse(Coap::Message          &aNextAnswer,
-                                     Coap::Message          *aResponse,
-                                     const Ip6::MessageInfo *aMessageInfo,
-                                     Error                   aResult);
+    static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);
+    void        HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Error AppendBorderRouterIfAddrs(Message &aMessage);
@@ -281,10 +275,16 @@ private:
                       const Ip6::Address   &aDestination,
                       const uint8_t         aTlvTypes[],
                       uint8_t               aCount,
-                      Coap::ResponseHandler aHandler = nullptr,
-                      void                 *aContext = nullptr);
+                      Coap::ResponseHandler aHandler,
+                      void                 *aContext);
 
-    DeclareTmfResponseHandlerFullParamIn(Client, HandleGetResponse);
+    Error SendCommand(Uri                 aUri,
+                      Message::Priority   aPriority,
+                      const Ip6::Address &aDestination,
+                      const uint8_t       aTlvTypes[],
+                      uint8_t             aCount);
+
+    DeclareTmfResponseHandlerIn(Client, HandleGetResponse);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 

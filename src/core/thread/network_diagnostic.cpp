@@ -805,34 +805,27 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
     }
 }
 
-void Server::HandleAnswerResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult)
+void Server::HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
 {
     Coap::Message *nextAnswer = static_cast<Coap::Message *>(aContext);
 
     VerifyOrExit(nextAnswer != nullptr);
 
-    nextAnswer->Get<Server>().HandleAnswerResponse(*nextAnswer, AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                   aResult);
+    nextAnswer->Get<Server>().HandleAnswerResponse(*nextAnswer, aMsg, aResult);
 
 exit:
     return;
 }
 
-void Server::HandleAnswerResponse(Coap::Message          &aNextAnswer,
-                                  Coap::Message          *aResponse,
-                                  const Ip6::MessageInfo *aMessageInfo,
-                                  Error                   aResult)
+void Server::HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult)
 {
     Error error = aResult;
 
     SuccessOrExit(error);
-    VerifyOrExit(aResponse != nullptr && aMessageInfo != nullptr, error = kErrorDrop);
-    VerifyOrExit(aResponse->ReadCode() == Coap::kCodeChanged, error = kErrorDrop);
+    VerifyOrExit(aResponse != nullptr, error = kErrorDrop);
+    VerifyOrExit(aResponse->GetCode() == Coap::kCodeChanged, error = kErrorDrop);
 
-    SendNextAnswer(aNextAnswer, aMessageInfo->GetPeerAddr());
+    SendNextAnswer(aNextAnswer, aResponse->mMessageInfo.GetPeerAddr());
 
 exit:
     if (error != kErrorNone)
@@ -1031,7 +1024,7 @@ Error Client::SendDiagnosticGet(const Ip6::Address &aDestination,
     else
     {
         error = SendCommand(kUriDiagnosticGetRequest, Message::kPriorityNormal, aDestination, aTlvTypes, aCount,
-                            &HandleGetResponse, this);
+                            HandleGetResponse, this);
     }
 
     SuccessOrExit(error);
@@ -1040,6 +1033,15 @@ Error Client::SendDiagnosticGet(const Ip6::Address &aDestination,
 
 exit:
     return error;
+}
+
+Error Client::SendCommand(Uri                 aUri,
+                          Message::Priority   aPriority,
+                          const Ip6::Address &aDestination,
+                          const uint8_t       aTlvTypes[],
+                          uint8_t             aCount)
+{
+    return SendCommand(aUri, aPriority, aDestination, aTlvTypes, aCount, nullptr, nullptr);
 }
 
 Error Client::SendCommand(Uri                   aUri,
@@ -1093,13 +1095,14 @@ exit:
     return error;
 }
 
-void Client::HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+void Client::HandleGetResponse(Coap::Msg *aMsg, Error aResult)
 {
     SuccessOrExit(aResult);
-    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged, aResult = kErrorFailed);
+    VerifyOrExit(aMsg->GetCode() == Coap::kCodeChanged, aResult = kErrorFailed);
 
 exit:
-    mGetCallback.InvokeIfSet(aResult, aMessage, aMessageInfo);
+    mGetCallback.InvokeIfSet(aResult, (aMsg == nullptr) ? nullptr : &aMsg->mMessage,
+                             (aMsg == nullptr) ? nullptr : &aMsg->mMessageInfo);
 }
 
 template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
