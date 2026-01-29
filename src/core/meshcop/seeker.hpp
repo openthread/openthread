@@ -48,12 +48,18 @@
 #include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
+#include "common/msg_backed_array.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "net/socket.hpp"
 #include "thread/discover_scanner.hpp"
 
 namespace ot {
+
+class UnitTester;
+
 namespace MeshCoP {
 
 /**
@@ -61,6 +67,8 @@ namespace MeshCoP {
  */
 class Seeker : public InstanceLocator, private NonCopyable
 {
+    friend class ot::UnitTester;
+
 public:
     typedef otSeekerScanResult ScanResult; ///< Discover Scan result.
 
@@ -166,40 +174,76 @@ public:
     Error SetUpNextConnection(Ip6::SockAddr &aSockAddr);
 
 private:
-    static constexpr uint16_t kDefaultUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    static constexpr uint16_t kMaxCandidates  = OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES;
+    static constexpr uint16_t kDefaultUdpPort          = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kMaxCandidates           = OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES;
+    static constexpr uint16_t kMaxCandidatesPerNetwork = OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK;
 
     enum State : uint8_t
     {
         kStateStopped,
         kStateDiscovering,
         kStateDiscoverDone,
-        kStateConnecting,
+        kStateConnectingNetworks,
+        kStateConnectingAny,
     };
 
-    struct Candidate
+    struct Candidate : public Clearable<Candidate>
     {
-        bool IsValid(void) const { return mPriority != 0; }
+        enum Action : uint8_t
+        {
+            kSave,
+            kReplace,
+            kEvict,
+            kDrop,
+            kConnect,
+        };
 
-        Mac::ExtAddress mExtAddr;
-        Mac::PanId      mPanId;
-        uint16_t        mJoinerUdpPort;
-        uint8_t         mChannel;
-        uint8_t         mPriority;
+        Candidate(void) { Clear(); }
+        void SetFrom(const ScanResult &aResult, bool aPreferred);
+        bool IsFavoredOver(const Candidate &aOther) const;
+        bool IsFavoredOver(const ScanResult &aResult, bool aPreferred) const;
+        bool IsFavoredOver(int8_t aRssi, bool aPreferred) const;
+        bool Matches(const MeshCoP::ExtendedPanId &aExtPanId) const { return mExtPanId == aExtPanId; }
+        bool Matches(const MeshCoP::ExtendedPanId &aExtPanId, const Mac::ExtAddress &aExtAddr) const;
+        void Log(Action aAction) const;
+
+        static const char *ActionToString(Action aAction);
+
+        MeshCoP::ExtendedPanId mExtPanId;
+        Mac::ExtAddress        mExtAddr;
+        Mac::PanId             mPanId;
+        uint16_t               mJoinerUdpPort;
+        uint8_t                mChannel;
+        int8_t                 mRssi;
+        bool                   mPreferred : 1;
+        bool                   mConnAttempted : 1;
     };
 
-    State          GetState(void) const { return mState; }
-    void           SetState(State aState) { mState = aState; }
-    static void    HandleDiscoverResult(ScanResult *aResult, void *aContext);
-    void           HandleDiscoverResult(ScanResult *aResult);
-    void           SaveCandidate(const ScanResult &aResult, bool aPreferred);
-    static uint8_t CalculatePriority(int8_t aRssi, bool aPreferred);
+    using CandidateArray = MessageBackedArray<Candidate, kMaxCandidates>;
+
+    struct CandidateEntry : public CandidateArray::IndexedEntry
+    {
+        CandidateEntry(void) { MarkAsEmpty(); }
+        void MarkAsEmpty(void) { SetIndexToInvalid(); }
+        bool IsEmpty(void) const { return IsIndexInvalid(); }
+        void ReplaceWithIfFavored(const CandidateEntry &aEntry);
+    };
+
+    State       GetState(void) const { return mState; }
+    void        SetState(State aState) { mState = aState; }
+    static void HandleDiscoverResult(ScanResult *aResult, void *aContext);
+    void        HandleDiscoverResult(ScanResult *aResult);
+    void        SaveCandidate(const ScanResult &aResult, bool aPreferred);
+    Error       EvictCandidate(CandidateEntry &aEntry);
+    Error       SelectNextCandidate(CandidateEntry &aEntry);
+    uint16_t    CountAndSelectLeastFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId,
+                                                       CandidateEntry               &aEntry) const;
+    Error SelectMostFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId, CandidateEntry &aFavoredEntry) const;
 
     State                   mState;
     uint16_t                mUdpPort;
     Callback<ScanEvaluator> mScanEvaluator;
-    Candidate               mCandidates[kMaxCandidates];
-    uint16_t                mCandidateIndex;
+    CandidateArray          mCandidates;
 };
 
 } // namespace MeshCoP
