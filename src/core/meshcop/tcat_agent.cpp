@@ -286,9 +286,9 @@ uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequir
                 if (mCommissionerHasDomainName)
                 {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_4)
-                    if (Get<MeshCoP::NetworkNameManager>().GetDomainName() == mCommissionerDomainName)
+                    if (Get<MeshCoP::NetworkIdentity>().GetDomainName() == mCommissionerDomainName)
 #else
-                    if (StringMatch(mCommissionerDomainName.GetAsCString(), NetworkName::kDomainNameInit))
+                    if (StringMatch(mCommissionerDomainName.GetAsCString(), NetworkIdentity::kDefaultDomainName))
 #endif
                     {
                         res |= flag;
@@ -759,7 +759,7 @@ exit:
 Error TcatAgent::HandleGetNetworkName(Message &aOutgoingMessage, bool &aResponse)
 {
     Error             error    = kErrorNone;
-    MeshCoP::NameData nameData = Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData();
+    MeshCoP::NameData nameData = Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsData();
 
     VerifyOrExit(Get<ActiveDatasetManager>().IsCommissioned(), error = kErrorNotFound);
 #if !OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
@@ -812,7 +812,7 @@ Error TcatAgent::HandleGetExtPanId(Message &aOutgoingMessage, bool &aResponse)
     VerifyOrExit(Get<ActiveDatasetManager>().IsCommissioned(), error = kErrorNotFound);
 
     SuccessOrExit(error = Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload,
-                                         &Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId(), sizeof(ExtendedPanId)));
+                                         &Get<MeshCoP::NetworkIdentity>().GetExtPanId(), sizeof(ExtendedPanId)));
     aResponse = true;
 
 exit:

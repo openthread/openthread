@@ -130,8 +130,8 @@ Error TxtData::Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength
         SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kBbrPort, BackboneRouter::kBackboneUdpPort));
     }
 
-    SuccessOrExit(error = encoder.AppendNameEntry(Key::kDomainName,
-                                                  Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsData()));
+    SuccessOrExit(
+        error = encoder.AppendNameEntry(Key::kDomainName, Get<MeshCoP::NetworkIdentity>().GetDomainName().GetAsData()));
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

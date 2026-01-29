@@ -2738,7 +2738,7 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
         case MeshCoP::Tlv::kExtendedPanId:
             SuccessOrExit(error = tlvInfo.Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, extPanId));
-            VerifyOrExit(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId() != extPanId, error = kErrorDrop);
+            VerifyOrExit(Get<MeshCoP::NetworkIdentity>().GetExtPanId() != extPanId, error = kErrorDrop);
 
             break;
 
@@ -2825,11 +2825,11 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::DiscoveryResponseTlv>(*message, discoveryResponseTlvValue));
 
-    SuccessOrExit(
-        error = Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error =
+                      Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::NetworkNameTlv>(
-                      *message, Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString()));
+                      *message, Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsCString()));
 
     SuccessOrExit(error = message->AppendSteeringDataTlv());
 
@@ -2837,10 +2837,10 @@ Error Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, const Discove
         error = Tlv::Append<MeshCoP::JoinerUdpPortTlv>(*message, Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()));
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_4)
-    if (!Get<MeshCoP::NetworkNameManager>().IsDefaultDomainNameSet())
+    if (!Get<MeshCoP::NetworkIdentity>().IsDefaultDomainNameSet())
     {
         SuccessOrExit(error = Tlv::Append<MeshCoP::ThreadDomainNameTlv>(
-                          *message, Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsCString()));
+                          *message, Get<MeshCoP::NetworkIdentity>().GetDomainName().GetAsCString()));
     }
 #endif
 
