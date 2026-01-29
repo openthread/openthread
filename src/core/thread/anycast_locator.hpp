@@ -93,11 +93,9 @@ public:
     bool IsInProgress(void) const { return mCallback.IsSet(); }
 
 private:
-    static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
-
-    void HandleResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
-
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
+
+    DeclareTmfResponseHandlerIn(AnycastLocator, HandleResponse);
 
     Callback<LocatorCallback> mCallback;
 };

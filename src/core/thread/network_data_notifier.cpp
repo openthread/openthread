@@ -242,9 +242,9 @@ void Notifier::HandleNotifierEvents(Events aEvents)
 
 void Notifier::HandleTimer(void) { SynchronizeServerData(); }
 
-void Notifier::HandleCoapResponse(Coap::Message *aMessage, Error aResult)
+void Notifier::HandleCoapResponse(Coap::Msg *aMsg, Error aResult)
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMsg);
 
     mWaitingForResponse = false;
 

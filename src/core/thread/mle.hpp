@@ -2414,7 +2414,7 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    DeclareTmfResponseHandlerFullParamIn(Mle, HandleAddressSolicitResponse);
+    DeclareTmfResponseHandlerIn(Mle, HandleAddressSolicitResponse);
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const;

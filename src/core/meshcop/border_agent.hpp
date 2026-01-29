@@ -312,12 +312,9 @@ private:
 
         static void HandleConnected(ConnectEvent aEvent, void *aContext);
         void        HandleConnected(ConnectEvent aEvent);
-        static void HandleLeaderResponseToFwdTmf(void                *aContext,
-                                                 otMessage           *aMessage,
-                                                 const otMessageInfo *aMessageInfo,
-                                                 otError              aResult);
+        static void HandleLeaderResponseToFwdTmf(void *aContext, Coap::Msg *aMsg, otError aResult);
         void        HandleLeaderResponseToFwdTmf(const ForwardContext &aForwardContext,
-                                                 const Coap::Message  *aResponse,
+                                                 const Coap::Msg      *aResponse,
                                                  Error                 aResult);
         static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Coap::Msg &aMsg);
         bool        HandleResource(const char *aUriPath, Coap::Msg &aMsg);

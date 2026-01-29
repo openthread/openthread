@@ -159,8 +159,8 @@ otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
                                          otCoapBlockwiseTransmitHook aTransmitHook,
                                          otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage), aHandler,
-                                                                                aContext, aTransmitHook, aReceiveHook);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
+        AsCoapMessage(aMessage), aHandler, aTransmitHook, aReceiveHook, aContext);
 }
 #endif
 
@@ -169,8 +169,12 @@ otError otCoapSecureSendRequest(otInstance           *aInstance,
                                 otCoapResponseHandler aHandler,
                                 void                 *aContext)
 {
-    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage), aHandler,
-                                                                                aContext);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
+        AsCoapMessage(aMessage), aHandler,
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        /* aTransmitHook */ nullptr, /* aReceiveHook */ nullptr,
+#endif
+        aContext);
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -216,8 +220,8 @@ otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessage(AsCoapMessage(aMessage), nullptr,
-                                                                                aContext, aTransmitHook);
+    return AsCoreType(aInstance).Get<Coap::ApplicationCoapSecure>().SendMessageWithResponseHandlerSeparateParams(
+        AsCoapMessage(aMessage), /* aResponseHandler */ nullptr, aTransmitHook, /* aReceiveHook */ nullptr, aContext);
 }
 #endif
 

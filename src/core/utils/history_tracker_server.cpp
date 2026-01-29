@@ -257,34 +257,27 @@ void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::Me
     aMessageInfo.SetPeerAddr(aDestination);
 }
 
-void Server::HandleAnswerResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult)
+void Server::HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
 {
     Coap::Message *nextAnswer = static_cast<Coap::Message *>(aContext);
 
     VerifyOrExit(nextAnswer != nullptr);
 
-    nextAnswer->Get<Server>().HandleAnswerResponse(*nextAnswer, AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                   aResult);
+    nextAnswer->Get<Server>().HandleAnswerResponse(*nextAnswer, aMsg, aResult);
 
 exit:
     return;
 }
 
-void Server::HandleAnswerResponse(Coap::Message          &aNextAnswer,
-                                  Coap::Message          *aResponse,
-                                  const Ip6::MessageInfo *aMessageInfo,
-                                  Error                   aResult)
+void Server::HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult)
 {
     Error error = aResult;
 
     SuccessOrExit(error);
-    VerifyOrExit(aResponse != nullptr && aMessageInfo != nullptr, error = kErrorDrop);
-    VerifyOrExit(aResponse->ReadCode() == Coap::kCodeChanged, error = kErrorDrop);
+    VerifyOrExit(aResponse != nullptr, error = kErrorDrop);
+    VerifyOrExit(aResponse->GetCode() == Coap::kCodeChanged, error = kErrorDrop);
 
-    SendNextAnswer(aNextAnswer, aMessageInfo->GetPeerAddr());
+    SendNextAnswer(aNextAnswer, aResponse->mMessageInfo.GetPeerAddr());
 
 exit:
     if (error != kErrorNone)

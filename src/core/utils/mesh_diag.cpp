@@ -113,7 +113,7 @@ exit:
     return error;
 }
 
-void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, Error aResult)
+void MeshDiag::HandleDiagGetResponse(Coap::Msg *aMsg, Error aResult)
 {
     Error           error;
     RouterInfo      routerInfo;
@@ -121,17 +121,17 @@ void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, Error aResult)
     ChildIterator   childIterator;
 
     SuccessOrExit(aResult);
-    VerifyOrExit(aMessage != nullptr);
+    VerifyOrExit(aMsg != nullptr);
     VerifyOrExit(mState == kStateDiscoverTopology);
 
-    SuccessOrExit(routerInfo.ParseFrom(*aMessage));
+    SuccessOrExit(routerInfo.ParseFrom(aMsg->mMessage));
 
-    if (ip6AddrIterator.InitFrom(*aMessage) == kErrorNone)
+    if (ip6AddrIterator.InitFrom(aMsg->mMessage) == kErrorNone)
     {
         routerInfo.mIp6AddrIterator = &ip6AddrIterator;
     }
 
-    if (childIterator.InitFrom(*aMessage, routerInfo.mRloc16) == kErrorNone)
+    if (childIterator.InitFrom(aMsg->mMessage, routerInfo.mRloc16) == kErrorNone)
     {
         routerInfo.mChildIterator = &childIterator;
     }

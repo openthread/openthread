@@ -495,24 +495,13 @@ exit:
     return error;
 }
 
-void DatasetManager::HandleMgmtSetResponse(void                *aContext,
-                                           otMessage           *aMessage,
-                                           const otMessageInfo *aMessageInfo,
-                                           otError              aError)
+void DatasetManager::HandleMgmtSetResponse(Coap::Msg *aMsg, Error aError)
 {
-    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
-                                                                   AsCoreTypePtr(aMessageInfo), aError);
-}
-
-void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error   error;
     uint8_t state = StateTlv::kPending;
 
     SuccessOrExit(error = aError);
-    VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending,
+    VerifyOrExit(Tlv::Find<StateTlv>(aMsg->mMessage, state) == kErrorNone && state != StateTlv::kPending,
                  error = kErrorParse);
 
     if (state == StateTlv::kReject)

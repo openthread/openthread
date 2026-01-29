@@ -73,7 +73,7 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEve
     {
         if (mIsDuaPending)
         {
-            IgnoreError(Get<Tmf::Agent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
+            IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDuaResponse, this));
         }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -227,7 +227,7 @@ void DuaManager::RemoveDomainUnicastAddress(void)
 {
     if (mDuaState == kRegistering && mIsDuaPending)
     {
-        IgnoreError(Get<Tmf::Agent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
+        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDuaResponse, this));
     }
 
     mDuaState                        = kNotExist;
@@ -513,7 +513,7 @@ void DuaManager::PerformNextRegistration(void)
 
     messageInfo.SetSockAddrToRloc();
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleDuaResponse, this));
 
     mIsDuaPending   = true;
     mRegisteringDua = dua;
@@ -539,7 +539,7 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void DuaManager::HandleDuaResponse(Coap::Message *aMessage, Error aResult)
+void DuaManager::HandleDuaResponse(Coap::Msg *aMsg, Error aResult)
 {
     Error error;
 
@@ -555,12 +555,12 @@ void DuaManager::HandleDuaResponse(Coap::Message *aMessage, Error aResult)
     }
 
     VerifyOrExit(aResult == kErrorNone, error = kErrorParse);
-    OT_ASSERT(aMessage != nullptr);
+    OT_ASSERT(aMsg != nullptr);
 
-    VerifyOrExit(aMessage->ReadCode() == Coap::kCodeChanged || aMessage->ReadCode() >= Coap::kCodeBadRequest,
+    VerifyOrExit(aMsg->GetCode() == Coap::kCodeChanged || aMsg->GetCode() >= Coap::kCodeBadRequest,
                  error = kErrorParse);
 
-    error = ProcessDuaResponse(*aMessage);
+    error = ProcessDuaResponse(aMsg->mMessage);
 
 exit:
     if (error != kErrorResponseTimeout)
@@ -738,7 +738,7 @@ void DuaManager::HandleChildDuaAddressEvent(const Child &aChild, ChildDuaAddress
         // Abort on going proxy DUA.req for this child
         if (mChildIndexDuaRegistering == childIndex)
         {
-            IgnoreError(Get<Tmf::Agent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
+            IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDuaResponse, this));
         }
 
         mChildDuaMask.Remove(childIndex);
