@@ -366,8 +366,7 @@ void Radio::Frame::UpdateFcs(void)
 
     fcs = CrcCalculator<uint16_t>(kCrc16CcittPolynomial).FeedBytes(mPsdu, mLength - fcsSize);
 
-    mPsdu[mLength - 2] = fcs & 0xff;
-    mPsdu[mLength - 1] = (fcs >> 8) & 0xff;
+    LittleEndian::WriteUint16(fcs, &mPsdu[mLength - 2]);
 
 exit:
     return;
