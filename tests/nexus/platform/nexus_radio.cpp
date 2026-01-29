@@ -360,13 +360,12 @@ Radio::Frame::Frame(const Frame &aFrame)
 void Radio::Frame::UpdateFcs(void)
 {
     uint16_t fcs;
-    uint8_t  fcsSize = GetFcsSize();
 
-    VerifyOrExit(mLength >= fcsSize);
+    VerifyOrExit(mLength >= sizeof(uint16_t));
 
-    fcs = CrcCalculator<uint16_t>(kCrc16CcittPolynomial).FeedBytes(mPsdu, mLength - fcsSize);
+    fcs = CrcCalculator<uint16_t>(kCrc16CcittPolynomial).FeedBytes(mPsdu, mLength - sizeof(uint16_t));
 
-    LittleEndian::WriteUint16(fcs, &mPsdu[mLength - 2]);
+    LittleEndian::WriteUint16(fcs, &mPsdu[mLength - sizeof(uint16_t)]);
 
 exit:
     return;
