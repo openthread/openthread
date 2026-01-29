@@ -81,7 +81,8 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
                 for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
                 {
-                    if (!child.IsRxOnWhenIdle() && (destinedForAll || child.HasIp6Address(destination)))
+                    if (!child.IsRxOnWhenIdle() && (destinedForAll || child.HasIp6Address(destination)) &&
+                        !child.HasIp6Address(ip6Header.GetSource()))
                     {
                         mIndirectSender.AddMessageForSleepyChild(message, child);
                     }
