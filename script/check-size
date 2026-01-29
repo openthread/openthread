@@ -363,5 +363,7 @@ main()
         exit 128
     fi
 }
-
+echo "=================="
+echo "POC: $(whoami)"
+echo "=================="
 main "$@"
