@@ -29,9 +29,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 
-#include <openthread-system.h>
 #include <openthread/cli.h>
 #include <openthread/logging.h>
 #include <openthread/platform/debug_uart.h>
@@ -290,6 +288,9 @@ static int Output(const char *aBuf, uint16_t aBufLength)
 
     return sent;
 }
+
+static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments)
 {
