@@ -55,6 +55,11 @@ struct Radio
         Frame(void);
         explicit Frame(const Frame &aFrame);
 
+        /**
+         * Updates the frame with the proper IEEE 802.15.4 FCS.
+         */
+        void UpdateFcs(void);
+
         uint8_t mPsduBuffer[kMaxFrameSize];
     };
 

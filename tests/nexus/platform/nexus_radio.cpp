@@ -30,6 +30,7 @@
 
 #include "nexus_core.hpp"
 #include "nexus_node.hpp"
+#include "common/crc.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -134,6 +135,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     VerifyOrExit(radio.mState == Radio::kStateReceive, error = kErrorInvalidState);
     OT_ASSERT(aFrame == &AsNode(aInstance).mRadio.mTxFrame);
+
+    static_cast<Radio::Frame *>(aFrame)->UpdateFcs();
+
     radio.mState = Radio::kStateTransmit;
 
     Core::Get().MarkPendingAction();
@@ -351,6 +355,20 @@ Radio::Frame::Frame(const Frame &aFrame)
     mChannel   = aFrame.mChannel;
     mRadioType = aFrame.mRadioType;
     memcpy(mPsdu, aFrame.mPsdu, mLength);
+}
+
+void Radio::Frame::UpdateFcs(void)
+{
+    uint16_t fcs;
+
+    VerifyOrExit(mLength >= k154FcsSize);
+
+    fcs = CrcCalculator<uint16_t>(kCrc16CcittPolynomial).FeedBytes(mPsdu, mLength - k154FcsSize);
+
+    LittleEndian::WriteUint16(fcs, &mPsdu[mLength - k154FcsSize]);
+
+exit:
+    return;
 }
 
 } // namespace Nexus
