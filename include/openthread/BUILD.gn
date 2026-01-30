@@ -70,6 +70,7 @@ source_set("openthread") {
     "icmp6.h",
     "instance.h",
     "ip6.h",
+    "ipfix.h",
     "jam_detection.h",
     "joiner.h",
     "link.h",

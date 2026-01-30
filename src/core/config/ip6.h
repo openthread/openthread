@@ -221,6 +221,17 @@
 #define OPENTHREAD_CONFIG_IP6_RESTRICT_FORWARDING_LARGER_SCOPE_MCAST_WITH_LOCAL_SRC 0
 #endif
 
+/* ================================================================================ */
+/**
+ * @def OPENTHREAD_CONFIG_IPFIX_ENABLE
+ *
+ * Define as 1 to enable IPFIX functionality.
+ */
+#ifndef OPENTHREAD_CONFIG_IPFIX_ENABLE
+#define OPENTHREAD_CONFIG_IPFIX_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
+/* ================================================================================ */
+
 /**
  * @}
  */

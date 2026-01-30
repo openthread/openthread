@@ -236,6 +236,10 @@ private:
     void SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket);
     void ReceiveIcmp6Message(void);
 #endif
+
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    bool GetLinkLocalAddressForIfIndex(uint32_t aInfraIfIndex, otIp6Address &aAddress);
+#endif
 };
 
 } // namespace Posix
