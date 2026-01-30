@@ -95,11 +95,10 @@
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
 #include "meshcop/dataset_updater.hpp"
-#include "meshcop/extended_panid.hpp"
 #include "meshcop/joiner.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop_leader.hpp"
-#include "meshcop/network_name.hpp"
+#include "meshcop/network_identity.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
 #include "net/dhcp6_types.hpp"
@@ -559,8 +558,7 @@ private:
 
     MeshCoP::ActiveDatasetManager  mActiveDataset;
     MeshCoP::PendingDatasetManager mPendingDataset;
-    MeshCoP::ExtendedPanIdManager  mExtendedPanIdManager;
-    MeshCoP::NetworkNameManager    mNetworkNameManager;
+    MeshCoP::NetworkIdentity       mNetworkIdentity;
     Ip6::Filter                    mIp6Filter;
     KeyManager                     mKeyManager;
     Lowpan::Lowpan                 mLowpan;
@@ -935,13 +933,11 @@ template <> inline Tmf::Agent &Instance::Get(void) { return mTmfAgent; }
 template <> inline Tmf::SecureAgent &Instance::Get(void) { return mTmfSecureAgent; }
 #endif
 
-template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void) { return mExtendedPanIdManager; }
-
-template <> inline MeshCoP::NetworkNameManager &Instance::Get(void) { return mNetworkNameManager; }
-
 template <> inline MeshCoP::ActiveDatasetManager &Instance::Get(void) { return mActiveDataset; }
 
 template <> inline MeshCoP::PendingDatasetManager &Instance::Get(void) { return mPendingDataset; }
+
+template <> inline MeshCoP::NetworkIdentity &Instance::Get(void) { return mNetworkIdentity; }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> inline TimeSync &Instance::Get(void) { return mTimeSync; }

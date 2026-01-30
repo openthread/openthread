@@ -41,7 +41,6 @@
 #include "common/as_core_type.hpp"
 #include "common/data.hpp"
 #include "common/equatable.hpp"
-#include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/string.hpp"
 
@@ -100,9 +99,6 @@ public:
 class NetworkName : public otNetworkName, public Unequatable<NetworkName>
 {
 public:
-    static constexpr const char *kNetworkNameInit = "OpenThread";
-    static constexpr const char *kDomainNameInit  = "DefaultDomain"; // Section 5.22 Thread spec, MUST NOT change.
-
     /**
      * This constant specified the maximum number of chars in Network Name (excludes null char).
      */
@@ -169,93 +165,6 @@ public:
  */
 typedef NetworkName DomainName;
 #endif
-
-/**
- * Manages the Network Name value.
- */
-class NetworkNameManager : public InstanceLocator, private NonCopyable
-{
-public:
-    /**
-     * Constructor.
-     *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
-     */
-    explicit NetworkNameManager(Instance &aInstance);
-
-    /**
-     * Returns the Network Name.
-     *
-     * @returns The Network Name.
-     */
-    const NetworkName &GetNetworkName(void) const { return mNetworkName; }
-
-    /**
-     * Sets the Network Name.
-     *
-     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
-     *
-     * @retval kErrorNone          Successfully set the Network Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     */
-    Error SetNetworkName(const char *aNameString);
-
-    /**
-     * Sets the Network Name.
-     *
-     * @param[in]  aNameData     A name data (pointer to char buffer and length).
-     *
-     * @retval kErrorNone          Successfully set the Network Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     */
-    Error SetNetworkName(const NameData &aNameData);
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    /**
-     * Returns the Thread Domain Name.
-     *
-     * @returns The Thread Domain Name.
-     */
-    const DomainName &GetDomainName(void) const { return mDomainName; }
-
-    /**
-     * Sets the Thread Domain Name.
-     *
-     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     */
-    Error SetDomainName(const char *aNameString);
-
-    /**
-     * Sets the Thread Domain Name.
-     *
-     * @param[in]  aNameData     A name data (pointer to char buffer and length).
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     */
-    Error SetDomainName(const NameData &aNameData);
-
-    /**
-     * Checks whether the Thread Domain Name is currently set to the default name.
-     *
-     * @returns true if Thread Domain Name equals "DefaultDomain", false otherwise.
-     */
-    bool IsDefaultDomainNameSet(void) const;
-
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
-private:
-    Error SignalNetworkNameChange(Error aError);
-
-    NetworkName mNetworkName;
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    DomainName mDomainName;
-#endif
-};
 
 } // namespace MeshCoP
 

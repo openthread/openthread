@@ -396,7 +396,7 @@ Error PeerTable::EvictPeer(void)
     Error          error = kErrorNotFound;
     OwnedPtr<Peer> peerToEvict;
 
-    peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     if (peerToEvict == nullptr)
     {

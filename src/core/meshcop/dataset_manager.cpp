@@ -211,11 +211,11 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             break;
 
         case Tlv::kExtendedPanId:
-            Get<ExtendedPanIdManager>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
+            Get<NetworkIdentity>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
             break;
 
         case Tlv::kNetworkName:
-            IgnoreError(Get<NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
+            IgnoreError(Get<NetworkIdentity>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kNetworkKey:

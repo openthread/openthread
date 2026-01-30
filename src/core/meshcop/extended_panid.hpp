@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for managing the Extended PAN ID.
+ *   This file includes definitions for Extended PAN ID.
  */
 
 #ifndef OT_CORE_MESHCOP_EXTENDED_PANID_HPP_
@@ -41,8 +41,6 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
-#include "common/locator.hpp"
-#include "common/non_copyable.hpp"
 #include "common/string.hpp"
 
 namespace ot {
@@ -78,36 +76,6 @@ public:
     Error GenerateRandom(void);
 
 } OT_TOOL_PACKED_END;
-
-class ExtendedPanIdManager : public InstanceLocator, private NonCopyable
-{
-public:
-    /**
-     * Constructor.
-     *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
-     */
-    explicit ExtendedPanIdManager(Instance &aInstance);
-
-    /**
-     * Returns the Extended PAN Identifier.
-     *
-     * @returns The Extended PAN Identifier.
-     */
-    const ExtendedPanId &GetExtPanId(void) const { return mExtendedPanId; }
-
-    /**
-     * Sets the Extended PAN Identifier.
-     *
-     * @param[in]  aExtendedPanId  The Extended PAN Identifier.
-     */
-    void SetExtPanId(const ExtendedPanId &aExtendedPanId);
-
-private:
-    static const otExtendedPanId sExtendedPanidInit;
-
-    ExtendedPanId mExtendedPanId;
-};
 
 } // namespace MeshCoP
 

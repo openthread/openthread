@@ -1190,7 +1190,7 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
 
 void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
 {
-    const MeshCoP::ExtendedPanId &extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
+    const MeshCoP::ExtendedPanId &extPanId = Get<MeshCoP::NetworkIdentity>().GetExtPanId();
     OldPrefix                    *entry;
     Ip6::Prefix                   oldLocalPrefix = mLocalPrefix;
 

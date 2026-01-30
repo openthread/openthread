@@ -74,7 +74,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     SuccessOrExit(error = AsCoreType(&mExtendedPanId).GenerateRandom());
     SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
-    nameWriter.Append("%s-%04x", NetworkName::kNetworkNameInit, mPanId);
+    nameWriter.Append("%s-%04x", NetworkIdentity::kDefaultNetworkName, mPanId);
 
     mComponents.mIsActiveTimestampPresent = true;
     mComponents.mIsNetworkKeyPresent      = true;

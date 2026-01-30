@@ -297,7 +297,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
     if (!dataset.Contains<ExtendedPanIdTlv>())
     {
-        IgnoreError(dataset.Write<ExtendedPanIdTlv>(Get<ExtendedPanIdManager>().GetExtPanId()));
+        IgnoreError(dataset.Write<ExtendedPanIdTlv>(Get<NetworkIdentity>().GetExtPanId()));
     }
 
     if (!dataset.Contains<MeshLocalPrefixTlv>())
@@ -315,7 +315,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
     if (!dataset.Contains<NetworkNameTlv>())
     {
-        NameData nameData = Get<NetworkNameManager>().GetNetworkName().GetAsData();
+        NameData nameData = Get<NetworkIdentity>().GetNetworkName().GetAsData();
 
         IgnoreError(dataset.WriteTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
