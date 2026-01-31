@@ -32,7 +32,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"
-#include "gmock/gmock.h"
+#include "lib/spinel/openthread-spinel-config.h"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 
@@ -491,6 +491,7 @@ TEST(RadioSpinelSrcMatch, shouldBeAbleToClearAllRadioSrcMatchExtEntres)
     ASSERT_EQ(platform.SrcMatchCountExtEntries(), 0);
 }
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
 {
     constexpr uint16_t      kTestShortAddr = 0x1234;
@@ -518,3 +519,4 @@ TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
     ASSERT_EQ(platform.SrcMatchHasShortEntry(kTestShortAddr), 1);
     ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
 }
+#endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
