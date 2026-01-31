@@ -29,6 +29,7 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
 
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 
 #include "nexus_alarm.hpp"
@@ -83,6 +84,9 @@ public:
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
 
+    void        SetName(const char *aName) { mName.Clear().Append("%s", aName != nullptr ? aName : ""); }
+    const char *GetName(void) const { return mName.AsCString(); }
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     template <typename Type> Type &Get(void)
@@ -113,7 +117,9 @@ public:
     Node *mNext;
 
 private:
-    Node(void) = default;
+    Node(void) {}
+
+    String<32> mName;
 };
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
