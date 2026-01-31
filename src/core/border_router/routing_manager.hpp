@@ -961,8 +961,10 @@ private:
         void               Start(void) { Evaluate(); }
         void               Stop(void) { Evaluate(); }
         bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
+        bool               HasConflictWithOnLinkPrefixes(void) const { return mConflicted; }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         State              GetState(void) const { return mState; }
+        void               CheckConflictWithOnLinkPrefixes(void);
 
         void  ProcessPrefixesFromRa(const InfraIf::Icmp6Packet &aRaPacket);
         void  ProcessPrefix(const Dhcp6PdPrefix &aPrefix);
@@ -1000,6 +1002,7 @@ private:
 #endif
 
         State         mState;
+        bool          mConflicted;
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
         TimeMilli     mLastPlatformRaTime;

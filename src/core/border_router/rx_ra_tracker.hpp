@@ -307,6 +307,16 @@ public:
      */
     bool IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const;
 
+    /**
+     * Indicates whether a given prefix is seen as an on-link prefix in any tracked RA.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to check.
+     *
+     * @retval TRUE   The prefix is on-link.
+     * @retval FALSE  The prefix is not on-link.
+     */
+    bool IsPrefixOnLink(const Ip6::Prefix &aPrefix) const;
+
     // Callbacks notifying of changes
     void HandleLocalOnLinkPrefixChanged(void);
 

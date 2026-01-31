@@ -865,7 +865,8 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
     {
     case kOmrConfigAuto:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-        if (Get<RoutingManager>().mPdPrefixManager.HasPrefix())
+        if (Get<RoutingManager>().mPdPrefixManager.HasPrefix() &&
+            !Get<RoutingManager>().mPdPrefixManager.HasConflictWithOnLinkPrefixes())
         {
             if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
             {
@@ -877,6 +878,7 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
         }
         else
 #endif
+
             if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
         {
             RemoveLocalFromNetData();
@@ -2504,6 +2506,7 @@ void RoutingManager::TxRaInfo::CalculateHash(const RouterAdvert::RxMessage &aRaM
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kDhcp6PdStateDisabled)
+    , mConflicted(false)
     , mNumPlatformPioProcessed(0)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
@@ -2636,6 +2639,8 @@ void RoutingManager::PdPrefixManager::WithdrawPrefix(void)
     LogInfo("Withdrew DHCPv6 PD prefix %s", mPrefix.GetPrefix().ToString().AsCString());
 
     mPrefix.Clear();
+    mConflicted = false;
+
     mTimer.Stop();
 
     Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
@@ -2727,7 +2732,10 @@ void RoutingManager::PdPrefixManager::ApplyFavoredPrefix(const PdPrefix &aFavore
     if (aFavoredPrefix.IsFavoredOver(mPrefix))
     {
         mPrefix = aFavoredPrefix;
+
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
+        CheckConflictWithOnLinkPrefixes();
+
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
@@ -2778,6 +2786,35 @@ void RoutingManager::PdPrefixManager::EvaluateCandidatePrefix(PdPrefix &aPrefix,
     {
         aFavoredPrefix = aPrefix;
     }
+
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::CheckConflictWithOnLinkPrefixes(void)
+{
+    // Checks if the delegated PD prefix is also seen as an on-link
+    // prefix. This protects against DHCPv6-PD server misbehavior
+    // assigning the same prefix to multiple requesters.
+    //
+    // If a conflict is detected, the delegated PD prefix is no longer
+    // used as OMR prefix, reverting back to using the local OMR
+    // prefix. Once the conflict is resolved, the PD prefix can be
+    // used as OMR prefix again.
+
+    bool conflicted;
+
+    VerifyOrExit(HasPrefix());
+
+    conflicted = Get<RxRaTracker>().IsPrefixOnLink(mPrefix.GetPrefix());
+    VerifyOrExit(conflicted != mConflicted);
+
+    mConflicted = conflicted;
+
+    LogInfo("DHCPv6 PD prefix %s %sconflicts with the advertised on-link prefixes",
+            mPrefix.GetPrefix().ToString().AsCString(), mConflicted ? "" : "no longer ");
+
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
 
 exit:
     return;
