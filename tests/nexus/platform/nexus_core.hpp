@@ -56,6 +56,8 @@ public:
     TimeMilli GetNow(void) { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
 
+    void SaveTestInfo(const char *aFilename);
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
 
