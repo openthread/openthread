@@ -527,8 +527,6 @@ otError otThreadWakeup(otInstance         *aInstance,
 }
 #endif
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
 {
@@ -538,3 +536,5 @@ void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint1
     UptimeToString(uptime, writer, /* aIncludeMsec */ false);
 }
 #endif
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
