@@ -132,7 +132,7 @@ Error Joiner::Start(const char      *aPskd,
     // (free allocated message, stop seeker, close agent, etc).
     shouldCleanup = true;
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(Seeker::kUdpPort));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(Get<Seeker>().GetUdpPort()));
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 

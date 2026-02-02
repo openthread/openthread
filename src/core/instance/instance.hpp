@@ -618,8 +618,10 @@ private:
     Tmf::SecureAgent mTmfSecureAgent;
 #endif
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#if OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
     MeshCoP::Seeker mSeeker;
+#endif
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     MeshCoP::Joiner mJoiner;
 #endif
 
@@ -959,9 +961,11 @@ template <> inline PanIdQueryClient &Instance::Get(void) { return mCommissioner.
 template <> inline Dnssd &Instance::Get(void) { return mDnssd; }
 #endif
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#if OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
 template <> inline MeshCoP::Seeker &Instance::Get(void) { return mSeeker; }
+#endif
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 template <> inline MeshCoP::Joiner &Instance::Get(void) { return mJoiner; }
 #endif
 

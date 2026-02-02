@@ -120,6 +120,7 @@ source_set("openthread") {
     "radio_stats.h",
     "random_crypto.h",
     "random_noncrypto.h",
+    "seeker.h",
     "server.h",
     "sntp.h",
     "srp_client.h",

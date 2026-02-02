@@ -74,6 +74,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SEEKER_ENABLE
+ *
+ * Define as 1 to enable Seeker functionality and `otSeeker` APIs.
+ *
+ * The Seeker is a part of the Thread MeshCoP process. It is responsible for discovering nearby Joiner Router
+ * candidates, prioritizing them, and iterating through the list to select the best candidate for connection.
+ * It also operates as a sub-system of the `Joiner`, delegating control to the next layer to enable the
+ * implementation of alternative and custom joining protocols.
+ */
+#ifndef OPENTHREAD_CONFIG_SEEKER_ENABLE
+#define OPENTHREAD_CONFIG_SEEKER_ENABLE OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif
+
+/**
  * @}
  */
 

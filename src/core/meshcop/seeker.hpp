@@ -40,8 +40,11 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#if OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
 
+#include <openthread/seeker.h>
+
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -59,30 +62,20 @@ namespace MeshCoP {
 class Seeker : public InstanceLocator, private NonCopyable
 {
 public:
-    static constexpr uint16_t kUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT; ///< The default Joiner UDP port.
+    typedef otSeekerScanResult ScanResult; ///< Discover Scan result.
 
-    typedef Mle::DiscoverScanner::ScanResult ScanResult; ///< Discover Scan result.
+    typedef otSeekerVerdict Verdict; ///< A verdict returned from `ScanEvaluator` evaluating a Discover Scan result.
 
-    /**
-     * Represents a verdict returned from `ScanEvaluator` when evaluating a Discover Scan result.
-     */
-    enum Verdict : uint8_t
-    {
-        kAccept,          ///< The scan result is acceptable.
-        kAcceptPreferred, ///< The scan result is acceptable and preferred.
-        kIgnore,          ///< The scan result should be ignored.
-    };
+    static constexpr Verdict kAccept          = OT_SEEKER_ACCEPT;           ///< Scan result is acceptable.
+    static constexpr Verdict kAcceptPreferred = OT_SEEKER_ACCEPT_PREFERRED; ///< Scan result is acceptable & preferred.
+    static constexpr Verdict kIgnore          = OT_SEEKER_IGNORE;           ///< Scan result should be ignored.
 
     /**
      * Represents the callback function type used to evaluate a scan result or report the end of a scan.
      *
-     * @param[in] aContext  A pointer to the callback context.
-     * @param[in] aResult   A pointer to the scan result to evaluate, or `nullptr` to indicate scan completion.
-     *
-     * @returns The verdict for the scan result (`kAccept`, `kAcceptPreferred`, or `kIgnore`).
-     *          If @p aResult is `nullptr` (scan complete), the return value is ignored.
+     * See `otSeekerScanEvaluator` for more details.
      */
-    typedef Verdict (*ScanEvaluator)(void *aContext, const ScanResult *aResult);
+    typedef otSeekerScanEvaluator ScanEvaluator;
 
     /**
      * Initializes the `Seeker`
@@ -132,6 +125,25 @@ public:
     bool IsRunning(void) const { return GetState() != kStateStopped; }
 
     /**
+     * Gets the Seeker UDP port.
+     *
+     * @returns The Seeker UDP port.
+     */
+    uint16_t GetUdpPort(void) const { return mUdpPort; }
+
+    /**
+     * Sets the Seeker UDP port.
+     *
+     * This method can only be called when the Seeker is not running.
+     *
+     * @param[in] aUdpPort    The Seeker UDP port.
+     *
+     * @retval kErrorNone           Successfully set the Seeker UDP port.
+     * @retval kErrorInvalidState   The Seeker is already running.
+     */
+    Error SetUdpPort(uint16_t aUdpPort);
+
+    /**
      * Selects the next best candidate and prepares the connection.
      *
      * This method must be called after the discovery scan has completed (indicated by the `ScanEvaluator` callback
@@ -139,8 +151,8 @@ public:
      *
      * This method iterates through the discovered Joiner Router candidates in order of priority. For the selected
      * candidate, it configures the radio channel and PAN ID, and populates @p aSockAddr with the candidate's address.
-     * It also registers the Joiner UDP port `kUdpPort` as an unsecure port to allow UDP
-     * connection to the candidate.
+     * It also registers the Seeker UDP port (`GetUdpPort()`) as an unsecure port to allow UDP connection to the
+     * candidate.
      *
      * If the list is exhausted, this method returns `kErrorNotFound` and automatically calls `Stop()`, which removes
      * the unsecure port and clears internal state.
@@ -154,7 +166,8 @@ public:
     Error SetUpNextConnection(Ip6::SockAddr &aSockAddr);
 
 private:
-    static constexpr uint16_t kMaxCandidates = OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES;
+    static constexpr uint16_t kDefaultUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    static constexpr uint16_t kMaxCandidates  = OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES;
 
     enum State : uint8_t
     {
@@ -183,6 +196,7 @@ private:
     static uint8_t CalculatePriority(int8_t aRssi, bool aPreferred);
 
     State                   mState;
+    uint16_t                mUdpPort;
     Callback<ScanEvaluator> mScanEvaluator;
     Candidate               mCandidates[kMaxCandidates];
     uint16_t                mCandidateIndex;
@@ -191,6 +205,6 @@ private:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif // OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #endif // OT_CORE_MESHCOP_SEEKER_HPP_
