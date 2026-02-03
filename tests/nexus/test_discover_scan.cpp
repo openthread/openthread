@@ -149,7 +149,7 @@ void TestDiscoverScanRequestCallback(void)
     result = &resultContext.mScanResults[0];
 
     VerifyOrQuit(AsCoreType(&result->mExtAddress) == leader.Get<Mac::Mac>().GetExtAddress());
-    VerifyOrQuit(AsCoreType(&result->mExtendedPanId) == leader.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(AsCoreType(&result->mExtendedPanId) == leader.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(result->mPanId == leader.Get<Mac::Mac>().GetPanId());
     VerifyOrQuit(result->mChannel == leader.Get<Mac::Mac>().GetPanChannel());
     VerifyOrQuit(result->mDiscover);
