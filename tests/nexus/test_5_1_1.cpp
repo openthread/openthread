@@ -106,6 +106,9 @@ void Test5_1_1(void)
     Node &leader = nexus.CreateNode();
     Node &router = nexus.CreateNode();
 
+    leader.SetName("LEADER");
+    router.SetName("ROUTER");
+
     nexus.AdvanceTime(0);
 
     Instance::SetLogLevel(kLogLevelInfo);
@@ -194,6 +197,8 @@ void Test5_1_1(void)
         router.Get<Mle::Mle>().GetLinkLocalAddress().ToString().AsCString());
     SendAndVerifyEchoRequest(nexus, leader, router, leaderReceivedEchoReply);
     Log("Router (as DUT) responded with Echo Reply successfully");
+
+    nexus.SaveTestInfo("test_5_1_1.json");
 }
 
 } // namespace Nexus
