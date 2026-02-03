@@ -859,11 +859,11 @@ void RxRaTracker::Evaluate(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check for possible conflict between delegated DHCPv6-PD prefix
-    // and any of the observed on-link prefixes. This protects against
-    // DHCPv6-PD server misbehavior (assigning same prefix to multiple
-    // requesters).
+    // and any of the observed on-link or route prefixes. This protects
+    // against DHCPv6-PD server misbehavior (assigning same prefix to
+    // multiple requesters).
 
-    Get<RoutingManager>().mPdPrefixManager.CheckConflictWithOnLinkPrefixes();
+    Get<RoutingManager>().mPdPrefixManager.CheckConflict(RoutingManager::PdPrefixManager::kRxRaPrefixTableChanged);
 #endif
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1204,6 +1204,22 @@ bool RxRaTracker::IsPrefixOnLink(const Ip6::Prefix &aPrefix) const
 
 exit:
     return isOnLink;
+}
+
+bool RxRaTracker::ContainsRoutePrefix(const Ip6::Prefix &aPrefix) const
+{
+    bool contains = false;
+
+    for (const Router &router : mRouters)
+    {
+        if (router.mRoutePrefixes.ContainsMatching(aPrefix))
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
 }
 
 bool RxRaTracker::IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const

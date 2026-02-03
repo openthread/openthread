@@ -865,8 +865,7 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
     {
     case kOmrConfigAuto:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-        if (Get<RoutingManager>().mPdPrefixManager.HasPrefix() &&
-            !Get<RoutingManager>().mPdPrefixManager.HasConflictWithOnLinkPrefixes())
+        if (Get<RoutingManager>().mPdPrefixManager.HasPrefix() && !Get<RoutingManager>().mPdPrefixManager.HasConflict())
         {
             if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
             {
@@ -2506,7 +2505,8 @@ void RoutingManager::TxRaInfo::CalculateHash(const RouterAdvert::RxMessage &aRaM
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kDhcp6PdStateDisabled)
-    , mConflicted(false)
+    , mOnLinkPrefixConflict(false)
+    , mRoutePrefixConflict(false)
     , mNumPlatformPioProcessed(0)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
@@ -2639,7 +2639,8 @@ void RoutingManager::PdPrefixManager::WithdrawPrefix(void)
     LogInfo("Withdrew DHCPv6 PD prefix %s", mPrefix.GetPrefix().ToString().AsCString());
 
     mPrefix.Clear();
-    mConflicted = false;
+    mOnLinkPrefixConflict = false;
+    mRoutePrefixConflict  = false;
 
     mTimer.Stop();
 
@@ -2734,7 +2735,7 @@ void RoutingManager::PdPrefixManager::ApplyFavoredPrefix(const PdPrefix &aFavore
         mPrefix = aFavoredPrefix;
 
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
-        CheckConflictWithOnLinkPrefixes();
+        CheckConflict(kPdPrefixChanged);
 
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
 
@@ -2791,10 +2792,10 @@ exit:
     return;
 }
 
-void RoutingManager::PdPrefixManager::CheckConflictWithOnLinkPrefixes(void)
+void RoutingManager::PdPrefixManager::CheckConflict(ConflictCheckEvent aEvent)
 {
-    // Checks if the delegated PD prefix is also seen as an on-link
-    // prefix. This protects against DHCPv6-PD server misbehavior
+    // Checks if the delegated PD prefix is also seen as an on-link or
+    // route prefix. This protects against DHCPv6-PD server misbehavior
     // assigning the same prefix to multiple requesters.
     //
     // If a conflict is detected, the delegated PD prefix is no longer
@@ -2802,19 +2803,71 @@ void RoutingManager::PdPrefixManager::CheckConflictWithOnLinkPrefixes(void)
     // prefix. Once the conflict is resolved, the PD prefix can be
     // used as OMR prefix again.
 
-    bool conflicted;
+    bool hadConflict;
 
     VerifyOrExit(HasPrefix());
 
-    conflicted = Get<RxRaTracker>().IsPrefixOnLink(mPrefix.GetPrefix());
-    VerifyOrExit(conflicted != mConflicted);
+    hadConflict = HasConflict();
 
-    mConflicted = conflicted;
+    CheckConflictWithOnLinkPrefixes();
+    CheckConflictWithRoutePrefixes(aEvent);
 
-    LogInfo("DHCPv6 PD prefix %s %sconflicts with the advertised on-link prefixes",
-            mPrefix.GetPrefix().ToString().AsCString(), mConflicted ? "" : "no longer ");
+    if (hadConflict != HasConflict())
+    {
+        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+    }
 
-    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::CheckConflictWithOnLinkPrefixes(void)
+{
+    UpdateConflictFlag(mOnLinkPrefixConflict, Get<RxRaTracker>().IsPrefixOnLink(mPrefix.GetPrefix()), "on-link");
+}
+
+void RoutingManager::PdPrefixManager::CheckConflictWithRoutePrefixes(ConflictCheckEvent aEvent)
+{
+    // Conflict detection for route prefixes depends on the triggering
+    // event and the current state.
+    //
+    // If a new PD prefix is assigned (`kPdPrefixChanged`), any matching
+    // route prefix (RIO) is flagged as a conflict.
+    //
+    // If `RxRaTracker` is changed (`kRxRaPrefixTableChanged`), we check
+    // only for conflict resolution:
+    // - If conflicted, we check if the interfering RIO is removed.
+    // - We ignore any new RIO route matches. Once the PD prefix is
+    //   adopted, it is published in Thread Network Data as the OMR
+    //   prefix. Other BRs connected to the same mesh will see this and
+    //   advertise it as a RIO in their emitted RAs to announce
+    //   reachability to the Thread mesh. We must not treat these
+    //   expected advertisements as conflicts.
+
+    switch (aEvent)
+    {
+    case kPdPrefixChanged:
+        break;
+    case kRxRaPrefixTableChanged:
+        VerifyOrExit(mRoutePrefixConflict);
+        break;
+    }
+
+    UpdateConflictFlag(mRoutePrefixConflict, Get<RxRaTracker>().ContainsRoutePrefix(mPrefix.GetPrefix()), "route");
+
+exit:
+    return;
+}
+
+void RoutingManager::PdPrefixManager::UpdateConflictFlag(bool &aConflictFlag, bool aNewFlag, const char *aPrefixType)
+{
+    OT_UNUSED_VARIABLE(aPrefixType);
+
+    VerifyOrExit(aConflictFlag != aNewFlag);
+    aConflictFlag = aNewFlag;
+
+    LogInfo("DHCPv6 PD prefix %s %sconflicts with the advertised %s prefixes",
+            mPrefix.GetPrefix().ToString().AsCString(), aNewFlag ? "" : "no longer ", aPrefixType);
 
 exit:
     return;
