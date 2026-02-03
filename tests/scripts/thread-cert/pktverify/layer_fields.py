@@ -82,6 +82,11 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     except Exception:
         pass
 
+    if dv == 'True':
+        return 1
+    if dv == 'False':
+        return 0
+
     raise ValueError((v, v.get_default_value(), v.raw_value))
 
 
