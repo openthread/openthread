@@ -320,12 +320,14 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
     AsCoreType(aInstance).Get<NeighborTable>().RegisterCallback(aCallback);
 }
 
+#if OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
 void otThreadSetDiscoveryRequestCallback(otInstance                      *aInstance,
                                          otThreadDiscoveryRequestCallback aCallback,
                                          void                            *aContext)
 {
     AsCoreType(aInstance).Get<Mle::Mle>().SetDiscoveryRequestCallback(aCallback, aContext);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 

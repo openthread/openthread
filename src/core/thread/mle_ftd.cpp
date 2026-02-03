@@ -2749,9 +2749,10 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
     if (parsedDiscoveryRequestTlv)
     {
+#if OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
         if (mDiscoveryRequestCallback.IsSet())
         {
-            otThreadDiscoveryRequestInfo info;
+            DiscoveryRequestInfo info;
 
             AsCoreType(&info.mExtAddress).SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
             info.mVersion  = discoveryRequestTlvValue.GetVersion();
@@ -2759,6 +2760,7 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
             mDiscoveryRequestCallback.Invoke(&info);
         }
+#endif
 
         if (discoveryRequestTlvValue.GetJoinerFlag())
         {
