@@ -53,7 +53,7 @@ jobs:
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       OT_VT_USE_UNIX_SOCKET: 1
-      MULTIPLY: 3
+      MULTIPLY: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
