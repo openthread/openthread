@@ -182,6 +182,7 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
+        logging.info('[DEBUG] calling pool.apply_async() for %d', i)
         pool.apply_async(run_cert, [i, port_offset, script, run_directory],
                          callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
                              id, script, script_successes, port_offset),
