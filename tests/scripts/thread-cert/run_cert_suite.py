@@ -177,12 +177,13 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
     script_successes: Dict[str, List[int]] = defaultdict(list)
 
     def result_callback(iteration_id, script, dic, port_offset):
+        logging.info('[DEBUG] result_callback() -> %d, %s, port_offset %d', iteration_id, script, port_offset)
         port_offset_pool.release(port_offset)
         dic[script].append(iteration_id)
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
-        logging.info('[DEBUG] calling pool.apply_async() for %d', i)
+        logging.info('[DEBUG] calling pool.apply_async() for %s %d, port_offset %d', script, i, port_offset)
         pool.apply_async(run_cert, [i, port_offset, script, run_directory],
                          callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
                              id, script, script_successes, port_offset),
@@ -190,9 +191,16 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
                              id, script, script_failures, port_offset))
 
     pool.close()
+    logging.info('[DEBUG] called pool.close()')
+
+
     pool.join()
+    logging.info('[DEBUG] called pool.join()')
 
     print_summary(scripts, script_successes, script_failures)
+
+    logging.info('[DEBUG] done with run_tests')
+
     return sum(len(l) for l in script_failures.values())
 
 
