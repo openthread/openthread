@@ -43,10 +43,12 @@ def verify(pv):
     #
     # 5.1.3.1 Topology
     # - Set Partition ID on Leader to max value
-    # - Set Router_2 NETWORK_ID_TIMEOUT to 110 seconds (10 seconds faster than default). If the DUT uses a timeout faster than default, timing may need to be adjusted.
+    # - Set Router_2 NETWORK_ID_TIMEOUT to 110 seconds (10 seconds faster than default). If the DUT uses a timeout
+    #   faster than default, timing may need to be adjusted.
     #
     # 5.1.3.2 Purpose & Description
-    # The purpose of this test case is to verify that after the removal of the Leader from the network, the DUT will first attempt to reattach to the original partition (P1), and then attach to a new partition (P2).
+    # The purpose of this test case is to verify that after the removal of the Leader from the network, the DUT will
+    # first attempt to reattach to the original partition (P1), and then attach to a new partition (P2).
     #
     # Spec Reference: Router ID Management / Router ID Assignment
     # V1.1 Section: 5.9.9 / 5.9.10
@@ -80,7 +82,8 @@ def verify(pv):
     print("Step 3: Leader is powered off.")
 
     # Step 4: Router_2
-    # - Description: Times out after 110 seconds and automatically creates a new partition (P2) with itself as the Leader of P2
+    # - Description: Times out after 110 seconds and automatically creates a new partition (P2) with itself as the
+    #   Leader of P2
     # - Pass Criteria: N/A
     print("Step 4: Router_2 becomes leader of a new partition (P2).")
     pkts.filter_wpan_src64(ROUTER_2).\
@@ -91,7 +94,8 @@ def verify(pv):
     # Step 5: Router_1 (DUT)
     # - Description: Times out after 120 seconds and automatically attempts to reattach to original partition (P1)
     # - Pass Criteria:
-    #   - The DUT MUST attempt to reattach to its original partition (P1) by sending a MLE Parent Request with an IP Hop Limit of 255 to the Link-Local All-Routers multicast address (FF02::2).
+    #   - The DUT MUST attempt to reattach to its original partition (P1) by sending a MLE Parent Request with an IP
+    #     Hop Limit of 255 to the Link-Local All-Routers multicast address (FF02::2).
     #   - The following TLVs MUST be present in the MLE Parent Request:
     #     - Challenge TLV
     #     - Mode TLV
