@@ -182,6 +182,7 @@ set(COMMON_SOURCES
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
     meshcop/secure_transport.cpp
+    meshcop/seeker.cpp
     meshcop/steering_data.cpp
     meshcop/tcat_agent.cpp
     meshcop/timestamp.cpp

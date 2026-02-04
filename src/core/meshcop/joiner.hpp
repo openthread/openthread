@@ -52,7 +52,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "meshcop/secure_transport.hpp"
-#include "thread/discover_scanner.hpp"
+#include "meshcop/seeker.hpp"
 #include "thread/tmf.hpp"
 
 namespace ot {
@@ -135,7 +135,7 @@ public:
     const Mac::ExtAddress &GetId(void) const { return mId; }
 
     /**
-     * Gets the Jointer Discerner.
+     * Gets the Joiner Discerner.
      *
      * @returns A pointer to the current Joiner Discerner or `nullptr` if none is set.
      */
@@ -178,40 +178,28 @@ public:
     static const char *StateToString(State aState);
 
 private:
-    static constexpr uint16_t kMaxJoinerRouterCandidates = OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES;
-    static constexpr uint16_t kJoinerUdpPort             = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    static constexpr uint32_t kConfigExtAddressDelay     = 100;  // in msec.
-    static constexpr uint32_t kResponseTimeout           = 4000; // in msec
+    static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
+    static constexpr uint32_t kResponseTimeout       = 4000; // in msec
 
-    struct JoinerRouter
-    {
-        Mac::ExtAddress mExtAddr;
-        Mac::PanId      mPanId;
-        uint16_t        mJoinerUdpPort;
-        uint8_t         mChannel;
-        uint8_t         mPriority;
-    };
-
-    void        SetState(State aState);
-    void        SetIdFromIeeeEui64(void);
-    void        SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult);
-    void        TryNextJoinerRouter(Error aPrevError);
-    Error       Connect(JoinerRouter &aRouter);
-    void        Finish(Error aError);
-    void        HandleTimer(void);
-    uint8_t     CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
-    Error       PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
-                                             const char *aVendorName,
-                                             const char *aVendorModel,
-                                             const char *aVendorSwVersion,
-                                             const char *aVendorData);
-    void        FreeJoinerFinalizeMessage(void);
-    void        SendJoinerFinalize(void);
-    void        SendJoinerEntrustResponse(const Coap::Msg &aMsg);
-    static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
-    void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
-    static void HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
-    void        HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
+    void                   SetState(State aState);
+    void                   SetIdFromIeeeEui64(void);
+    void                   TryNextCandidate(Error aPrevError);
+    Error                  ConnectToNextCandidate(void);
+    void                   Finish(Error aError);
+    void                   HandleTimer(void);
+    Error                  PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
+                                                        const char *aVendorName,
+                                                        const char *aVendorModel,
+                                                        const char *aVendorSwVersion,
+                                                        const char *aVendorData);
+    void                   FreeJoinerFinalizeMessage(void);
+    void                   SendJoinerFinalize(void);
+    void                   SendJoinerEntrustResponse(const Coap::Msg &aMsg);
+    static Seeker::Verdict EvaluateScanResult(void *aContext, const Seeker::ScanResult *aResult);
+    Seeker::Verdict        EvaluateScanResult(const Seeker::ScanResult *aResult);
+    void                   HandleScanCompleted(void);
+    static void            HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
+    void                   HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
 
     DeclareTmfResponseHandlerIn(Joiner, HandleJoinerFinalizeResponse);
 
@@ -223,8 +211,6 @@ private:
     JoinerDiscerner              mDiscerner;
     State                        mState;
     Callback<CompletionCallback> mCompletionCallback;
-    JoinerRouter                 mJoinerRouters[kMaxJoinerRouterCandidates];
-    uint16_t                     mJoinerRouterIndex;
     Coap::Message               *mFinalizeMessage;
     JoinerTimer                  mTimer;
 };
