@@ -261,7 +261,6 @@ Error CoapBase::SendMessage(Message                &aMessage,
     Message *storedCopy = nullptr;
     uint16_t copyLength = 0;
     Msg      txMsg(aMessage, aMessageInfo);
-    Metadata metadata;
 
     SuccessOrExit(error = txMsg.ParseHeaderAndOptions(Msg::kRemovePayloadMarkerIfNoPayload));
 
@@ -304,32 +303,13 @@ Error CoapBase::SendMessage(Message                &aMessage,
 
     if (copyLength > 0)
     {
+        Metadata metadata;
+
+        metadata.Init(txMsg, *aTxParameters, aCallbacks);
+
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        {
-            bool shouldObserve = false;
-
-            SuccessOrExit(error = ProcessObserveSend(txMsg, shouldObserve));
-            metadata.mObserve   = shouldObserve;
-            metadata.mIsRequest = txMsg.IsRequest();
-        }
+        SuccessOrExit(error = ProcessObserveSend(txMsg, metadata));
 #endif
-
-        metadata.mSourceAddress            = txMsg.mMessageInfo.GetSockAddr();
-        metadata.mDestinationPort          = txMsg.mMessageInfo.GetPeerPort();
-        metadata.mDestinationAddress       = txMsg.mMessageInfo.GetPeerAddr();
-        metadata.mMulticastLoop            = txMsg.mMessageInfo.GetMulticastLoop();
-        metadata.mCallbacks                = aCallbacks;
-        metadata.mRetransmissionsRemaining = aTxParameters->mMaxRetransmit;
-        metadata.mRetransmissionTimeout    = aTxParameters->CalculateInitialRetransmissionTimeout();
-        metadata.mAcknowledged             = false;
-        metadata.mConfirmable              = txMsg.IsConfirmable();
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        metadata.mHopLimit        = txMsg.mMessageInfo.GetHopLimit();
-        metadata.mIsHostInterface = txMsg.mMessageInfo.IsHostInterface();
-#endif
-        metadata.mNextTimerShot =
-            TimerMilli::GetNow() +
-            (metadata.mConfirmable ? metadata.mRetransmissionTimeout : aTxParameters->CalculateMaxTransmitWait());
 
         storedCopy = CopyAndEnqueueMessage(txMsg.mMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != nullptr, error = kErrorNoBufs);
@@ -513,7 +493,7 @@ void CoapBase::ScheduleRetransmissionTimer(void)
         metadata.ReadFrom(message);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        if (IsObserveSubscription(metadata))
+        if (metadata.IsObserveSubscription())
         {
             // This is an RFC7641 subscription which is already acknowledged.
             // We do not time it out, so skip it when determining the next
@@ -522,7 +502,7 @@ void CoapBase::ScheduleRetransmissionTimer(void)
         }
 #endif
 
-        nextTime.UpdateIfEarlier(metadata.mNextTimerShot);
+        nextTime.UpdateIfEarlier(metadata.mTimerFireTime);
     }
 
     mRetransmissionTimer.FireAt(nextTime);
@@ -543,40 +523,27 @@ void CoapBase::HandleRetransmissionTimer(void)
     {
         metadata.ReadFrom(message);
 
-        if (now >= metadata.mNextTimerShot)
+        if (now >= metadata.mTimerFireTime)
         {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            if (IsObserveSubscription(metadata))
+            if (metadata.IsObserveSubscription())
             {
                 continue;
             }
 #endif
 
-            if (!metadata.mConfirmable || (metadata.mRetransmissionsRemaining == 0))
+            if (!metadata.ShouldRetransmit())
             {
-                // No expected response or acknowledgment.
                 FinalizeCoapTransaction(message, metadata, nullptr, kErrorResponseTimeout);
                 continue;
             }
 
-            // Increment retransmission counter and timer.
-            metadata.mRetransmissionsRemaining--;
-            metadata.mRetransmissionTimeout *= 2;
-            metadata.mNextTimerShot = now + metadata.mRetransmissionTimeout;
+            metadata.UpdateRetxCounterAndTimeout(now);
             metadata.UpdateIn(message);
 
-            // Retransmit
             if (!metadata.mAcknowledged)
             {
-                messageInfo.SetPeerAddr(metadata.mDestinationAddress);
-                messageInfo.SetPeerPort(metadata.mDestinationPort);
-                messageInfo.SetSockAddr(metadata.mSourceAddress);
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-                messageInfo.SetHopLimit(metadata.mHopLimit);
-                messageInfo.SetIsHostInterface(metadata.mIsHostInterface);
-#endif
-                messageInfo.SetMulticastLoop(metadata.mMulticastLoop);
-
+                metadata.CopyInfoTo(messageInfo);
                 SendCopy(message, messageInfo);
             }
         }
@@ -671,9 +638,8 @@ Message *CoapBase::FindRelatedRequest(const Msg &aMsg, Metadata &aMetadata)
     {
         aMetadata.ReadFrom(message);
 
-        if (((aMetadata.mDestinationAddress == aMsg.mMessageInfo.GetPeerAddr() &&
-              aMetadata.mDestinationPort == aMsg.mMessageInfo.GetPeerPort()) ||
-             aMetadata.mDestinationAddress.IsMulticast() || aMetadata.mDestinationAddress.GetIid().IsAnycastLocator()))
+        if (aMetadata.HasSamePeerAddrAndPort(aMsg.mMessageInfo) || aMetadata.mDestinationAddress.IsMulticast() ||
+            aMetadata.mDestinationAddress.GetIid().IsAnycastLocator())
         {
             switch (aMsg.GetType())
             {
@@ -1595,20 +1561,21 @@ exit:
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
-Error CoapBase::ProcessObserveSend(Msg &aTxMsg, bool &aShouldObserve)
+Error CoapBase::ProcessObserveSend(Msg &aTxMsg, Metadata &aMetadata)
 {
     Error            error;
     Option::Iterator iterator;
 
-    aShouldObserve = false;
+    aMetadata.mObserve   = false;
+    aMetadata.mIsRequest = aTxMsg.IsRequest();
 
     SuccessOrExit(error = iterator.Init(aTxMsg.mMessage, kOptionObserve));
-    aShouldObserve = !iterator.IsDone();
+    aMetadata.mObserve = !iterator.IsDone();
 
     // Special case, if we're sending a GET with Observe=1, that is a
     // cancellation.
 
-    if (aShouldObserve && aTxMsg.IsGetRequest())
+    if (aMetadata.mObserve && aTxMsg.IsGetRequest())
     {
         uint64_t value = 0;
 
@@ -1617,31 +1584,23 @@ Error CoapBase::ProcessObserveSend(Msg &aTxMsg, bool &aShouldObserve)
         if (value == 1)
         {
             Message *request;
-            Metadata metadata;
+            Metadata reqMetadata;
 
-            aShouldObserve = false;
+            aMetadata.mObserve = false;
 
             // If we can find the previous matching request, cancel that too.
 
-            request = FindRelatedRequest(aTxMsg, metadata);
+            request = FindRelatedRequest(aTxMsg, reqMetadata);
 
             if (request != nullptr)
             {
-                FinalizeCoapTransaction(*request, metadata, nullptr, kErrorNone);
+                FinalizeCoapTransaction(*request, reqMetadata, nullptr, kErrorNone);
             }
         }
     }
 
 exit:
     return error;
-}
-
-bool CoapBase::IsObserveSubscription(const Metadata &aMetadata)
-{
-    // Indicate whether the message is an RFC7641 subscription which
-    // is already acknowledged.
-
-    return aMetadata.mIsRequest && aMetadata.mObserve && aMetadata.mAcknowledged;
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -1690,6 +1649,65 @@ void CoapBase::SendCallbacks::InvokeResponseHandler(Msg *aMsg, Error aResult) co
         mResponseHandlerSeparateParams(mContext, message, messageInfo, aResult);
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// CoapBase::Metadata
+
+void CoapBase::Metadata::Init(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks)
+{
+    mSourceAddress      = aTxMsg.mMessageInfo.GetSockAddr();
+    mDestinationPort    = aTxMsg.mMessageInfo.GetPeerPort();
+    mDestinationAddress = aTxMsg.mMessageInfo.GetPeerAddr();
+    mMulticastLoop      = aTxMsg.mMessageInfo.GetMulticastLoop();
+    mCallbacks          = aCallbacks;
+    mRetxRemaining      = aTxParams.mMaxRetransmit;
+    mRetxTimeout        = aTxParams.CalculateInitialRetransmissionTimeout();
+    mAcknowledged       = false;
+    mConfirmable        = aTxMsg.IsConfirmable();
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    mHopLimit        = aTxMsg.mMessageInfo.GetHopLimit();
+    mIsHostInterface = aTxMsg.mMessageInfo.IsHostInterface();
+#endif
+
+    mTimerFireTime = TimerMilli::GetNow() + (mConfirmable ? mRetxTimeout : aTxParams.CalculateMaxTransmitWait());
+}
+
+bool CoapBase::Metadata::HasSamePeerAddrAndPort(const Ip6::MessageInfo &aMessageInfo) const
+{
+    return (mDestinationPort == aMessageInfo.GetPeerPort()) && (mDestinationAddress == aMessageInfo.GetPeerAddr());
+}
+
+bool CoapBase::Metadata::ShouldRetransmit(void) const { return mConfirmable && (mRetxRemaining > 0); }
+
+void CoapBase::Metadata::UpdateRetxCounterAndTimeout(TimeMilli aNow)
+{
+    mRetxRemaining--;
+    mRetxTimeout *= 2;
+
+    mTimerFireTime = aNow + mRetxTimeout;
+}
+
+void CoapBase::Metadata::CopyInfoTo(Ip6::MessageInfo &aMessageInfo) const
+{
+    aMessageInfo.SetPeerAddr(mDestinationAddress);
+    aMessageInfo.SetPeerPort(mDestinationPort);
+    aMessageInfo.SetSockAddr(mSourceAddress);
+    aMessageInfo.SetMulticastLoop(mMulticastLoop);
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    aMessageInfo.SetHopLimit(mHopLimit);
+    aMessageInfo.SetIsHostInterface(mIsHostInterface);
+#endif
+}
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+bool CoapBase::Metadata::IsObserveSubscription(void) const
+{
+    // Indicate whether the message is an RFC7641 subscription which
+    // is already acknowledged.
+
+    return mIsRequest && mObserve && mAcknowledged;
+}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // CoapBase::ResponseCache

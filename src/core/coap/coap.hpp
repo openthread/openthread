@@ -784,24 +784,33 @@ private:
 
     struct Metadata : public Message::FooterData<Metadata>
     {
-        Ip6::Address  mSourceAddress;            // IPv6 address of the message source.
-        Ip6::Address  mDestinationAddress;       // IPv6 address of the message destination.
-        uint16_t      mDestinationPort;          // UDP port of the message destination.
-        SendCallbacks mCallbacks;                // All callbacks, response handler and clockwise rx/tx hooks.
-        TimeMilli     mNextTimerShot;            // Time when the timer should shoot for this message.
-        uint32_t      mRetransmissionTimeout;    // Delay that is applied to next retransmission.
-        uint8_t       mRetransmissionsRemaining; // Number of retransmissions remaining.
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        uint8_t mHopLimit; // The hop limit.
+        void Init(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks);
+        bool HasSamePeerAddrAndPort(const Ip6::MessageInfo &aMessageInfo) const;
+        bool ShouldRetransmit(void) const;
+        void UpdateRetxCounterAndTimeout(TimeMilli aNow);
+        void CopyInfoTo(Ip6::MessageInfo &aMessageInfo) const;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        bool IsObserveSubscription(void) const;
 #endif
-        bool mAcknowledged : 1;  // Information that request was acknowledged.
-        bool mConfirmable : 1;   // Information that message is confirmable.
-        bool mMulticastLoop : 1; // Information that multicast loop is enabled.
+
+        Ip6::Address  mSourceAddress;
+        Ip6::Address  mDestinationAddress;
+        uint16_t      mDestinationPort;
+        SendCallbacks mCallbacks;
+        TimeMilli     mTimerFireTime;
+        uint32_t      mRetxTimeout;
+        uint8_t       mRetxRemaining;
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        bool mIsHostInterface : 1; // TRUE if packets sent/received via host interface, FALSE otherwise.
+        uint8_t mHopLimit;
+#endif
+        bool mAcknowledged : 1;
+        bool mConfirmable : 1;
+        bool mMulticastLoop : 1;
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        bool mIsHostInterface : 1;
 #endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        bool mObserve : 1; // Information that this request involves Observations.
+        bool mObserve : 1;
         bool mIsRequest : 1;
 #endif
     };
@@ -882,9 +891,7 @@ private:
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    Error ProcessObserveSend(Msg &aTxMsg, bool &aShouldObserve);
-
-    static bool IsObserveSubscription(const Metadata &aMetadata);
+    Error ProcessObserveSend(Msg &aTxMsg, Metadata &aMetadata);
 #endif
 
     MessageQueue      mPendingRequests;
