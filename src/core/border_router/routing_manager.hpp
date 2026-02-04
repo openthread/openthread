@@ -955,16 +955,22 @@ private:
 
         static constexpr RoutePreference kPdRoutePreference = RoutePreference::kRoutePreferenceMedium;
 
+        enum ConflictCheckEvent : uint8_t
+        {
+            kPdPrefixChanged,
+            kRxRaPrefixTableChanged,
+        };
+
         explicit PdPrefixManager(Instance &aInstance);
 
         void               SetEnabled(bool aEnabled);
         void               Start(void) { Evaluate(); }
         void               Stop(void) { Evaluate(); }
         bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
-        bool               HasConflictWithOnLinkPrefixes(void) const { return mConflicted; }
+        bool               HasConflict(void) const { return mOnLinkPrefixConflict || mRoutePrefixConflict; }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         State              GetState(void) const { return mState; }
-        void               CheckConflictWithOnLinkPrefixes(void);
+        void               CheckConflict(ConflictCheckEvent aEvent);
 
         void  ProcessPrefixesFromRa(const InfraIf::Icmp6Packet &aRaPacket);
         void  ProcessPrefix(const Dhcp6PdPrefix &aPrefix);
@@ -992,6 +998,9 @@ private:
         void EvaluateCandidatePrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
         void ApplyFavoredPrefix(const PdPrefix &aFavoredPrefix);
         void WithdrawPrefix(void);
+        void CheckConflictWithOnLinkPrefixes(void);
+        void CheckConflictWithRoutePrefixes(ConflictCheckEvent aEvent);
+        void UpdateConflictFlag(bool &aConflictFlag, bool aNewFlag, const char *aPrefixType);
 
         static const char *StateToString(State aState);
 
@@ -1002,7 +1011,8 @@ private:
 #endif
 
         State         mState;
-        bool          mConflicted;
+        bool          mOnLinkPrefixConflict;
+        bool          mRoutePrefixConflict;
         uint32_t      mNumPlatformPioProcessed;
         uint32_t      mNumPlatformRaReceived;
         TimeMilli     mLastPlatformRaTime;

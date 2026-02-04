@@ -317,6 +317,16 @@ public:
      */
     bool IsPrefixOnLink(const Ip6::Prefix &aPrefix) const;
 
+    /**
+     * Indicates whether a given prefix is seen as a route prefix advertised by any router.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to check.
+     *
+     * @retval TRUE   The prefix is seen as a route prefix.
+     * @retval FALSE  The prefix is not seen as a route prefix.
+     */
+    bool ContainsRoutePrefix(const Ip6::Prefix &aPrefix) const;
+
     // Callbacks notifying of changes
     void HandleLocalOnLinkPrefixChanged(void);
 
