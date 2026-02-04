@@ -33,7 +33,7 @@
 
 #include "seeker.hpp"
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#if OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -45,6 +45,7 @@ RegisterLogModule("Seeker");
 Seeker::Seeker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateStopped)
+    , mUdpPort(kDefaultUdpPort)
     , mCandidateIndex(0)
 {
 }
@@ -87,11 +88,26 @@ void Seeker::Stop(void)
     case kStateDiscoverDone:
         break;
     case kStateConnecting:
-        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kUdpPort));
+        IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(mUdpPort));
         break;
     }
 
     SetState(kStateStopped);
+}
+
+Error Seeker::SetUdpPort(uint16_t aUdpPort)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!IsRunning(), error = kErrorInvalidState);
+
+    VerifyOrExit(aUdpPort != mUdpPort);
+    LogInfo("UDP port changed: %u -> %u", mUdpPort, aUdpPort);
+
+    mUdpPort = aUdpPort;
+
+exit:
+    return error;
 }
 
 void Seeker::HandleDiscoverResult(ScanResult *aResult, void *aContext)
@@ -228,9 +244,9 @@ Error Seeker::SetUpNextConnection(Ip6::SockAddr &aSockAddr)
     Get<Mac::Mac>().SetPanId(candidate->mPanId);
     SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(candidate->mChannel));
 
-    if (!Get<Ip6::Filter>().IsUnsecurePort(kUdpPort))
+    if (!Get<Ip6::Filter>().IsUnsecurePort(mUdpPort))
     {
-        SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(kUdpPort));
+        SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(mUdpPort));
     }
 
     SetState(kStateConnecting);
@@ -246,4 +262,4 @@ exit:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif // OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
