@@ -227,10 +227,10 @@ jobs:
     - name: Build & Run
       run: |
         ./tests/nexus/build.sh
-        ninja test
+        ctest -L core --output-on-failure
         git clean -dfx
         ./tests/nexus/build.sh trel
-        ./tests/nexus/nexus_trel
+        ctest -L trel --output-on-failure
 
   upload-coverage:
     needs:
