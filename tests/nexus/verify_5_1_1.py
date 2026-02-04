@@ -29,51 +29,14 @@
 
 import sys
 import os
-import json
-import logging
-import traceback
 
-# Add the thread-cert directory to sys.path to find pktverify
+# Add the current directory to sys.path to find verify_utils
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
-OT_ROOT = os.path.abspath(os.path.join(CUR_DIR, '../..'))
-THREAD_CERT_DIR = os.path.join(OT_ROOT, 'tests/scripts/thread-cert')
-sys.path.append(THREAD_CERT_DIR)
+sys.path.append(CUR_DIR)
 
+import verify_utils
 from pktverify import consts
-from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
-from pktverify import utils as pvutils
-from pktverify.coap import CoapTlvParser
-import struct
-
-
-# Monkey-patch CoapTlvParser to parse Thread TLVs in CoAP payload
-def thread_coap_tlv_parse(t, v):
-    kvs = []
-    if t == consts.NL_MAC_EXTENDED_ADDRESS_TLV:
-        kvs.append(('mac_addr', v.hex()))
-    elif t == consts.NL_RLOC16_TLV:
-        kvs.append(('rloc16', hex(struct.unpack('>H', v)[0])))
-    elif t == consts.NL_STATUS_TLV:
-        kvs.append(('status', str(v[0])))
-    elif t == consts.NL_ROUTER_MASK_TLV:
-        kvs.append(('router_mask', v.hex()))
-    return kvs
-
-
-CoapTlvParser.parse = staticmethod(thread_coap_tlv_parse)
-
-
-# Monkey-patch which_tshark to use system tshark if /tmp/thread-wireshark/tshark is not found
-def which_tshark_patch():
-    default_path = '/tmp/thread-wireshark/tshark'
-    if os.path.exists(default_path):
-        return default_path
-    import shutil
-    return shutil.which('tshark') or '/usr/local/bin/tshark'
-
-
-pvutils.which_tshark = which_tshark_patch
 
 
 def verify(pv):
@@ -365,37 +328,5 @@ def verify(pv):
         must_next()
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 verify_5_1_1.py <json_file>")
-        sys.exit(1)
-
-    json_file = os.path.abspath(sys.argv[1])
-
-    with open(json_file, 'rt') as f:
-        data = json.load(f)
-
-    try:
-        wireshark_prefs = consts.WIRESHARK_OVERRIDE_PREFS.copy()
-
-        network_key = data.get('network_key')
-        if network_key:
-            wireshark_prefs['uat:ieee802154_keys'] = f'"{network_key}","1","Thread hash"'
-
-        mesh_local_prefix = data.get('extra_vars', {}).get('mesh_local_prefix')
-        if mesh_local_prefix:
-            prefix_addr = mesh_local_prefix.split('/')[0]
-            wireshark_prefs['6lowpan.context0'] = f'{prefix_addr}/64'
-
-        pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
-        pv.add_common_vars()
-        verify(pv)
-        print("Verification PASSED")
-    except Exception as e:
-        print(f"Verification FAILED: {e}")
-        traceback.print_exc()
-        sys.exit(1)
-
-
 if __name__ == '__main__':
-    main()
+    verify_utils.run_main(verify)
