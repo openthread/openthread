@@ -115,6 +115,7 @@ endmacro()
 
 ot_nexus_test(5_1_1)
 ot_nexus_test(5_1_2)
+ot_nexus_test(5_1_3)
 ot_nexus_test(border_agent)
 ot_nexus_test(border_agent_tracker)
 ot_nexus_test(discover_scan)

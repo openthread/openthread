@@ -50,6 +50,7 @@ NEXUS_BIN_DIR="${BUILD_DIR}/tests/nexus"
 DEFAULT_TESTS=(
     "5_1_1"
     "5_1_2"
+    "5_1_3"
 )
 
 # Use provided arguments or the default test list
