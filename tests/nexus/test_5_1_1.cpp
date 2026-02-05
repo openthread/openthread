@@ -96,9 +96,9 @@ void Test5_1_1(void)
      * This test case must be executed twice, first - where the DUT is a Leader and forms a network,
      * and second - where the DUT is a router and attaches to a network.
      *
-     * Spec Reference          | V1.1 Section | V1.3.0 Section
-     * ------------------------|--------------|---------------
-     * Attaching to a Parent   | 4.7.1        | 4.5.1
+     * Spec Reference                             | V1.1 Section    | V1.3.0 Section
+     * -------------------------------------------|-----------------|-----------------
+     * Attaching to a Parent                      | 4.7.1           | 4.5.1
      */
 
     Core nexus;

@@ -51,9 +51,9 @@ def verify(pv):
     5.1.2.2 Purpose & Description
     The purpose of the test case is to verify that when the timer reaches the value of the Timeout TLV sent by the Child, the Parent stops responding to Address Query on the Child's behalf.
 
-    Spec Reference: Timing Out Children
-    V1.1 Section: 4.7.5
-    V1.3.0 Section: 4.6.3
+    Spec Reference                             | V1.1 Section    | V1.3.0 Section
+    -------------------------------------------|-----------------|-----------------
+    Timing Out Children                        | 4.7.5           | 4.6.3
     """
 
     pkts = pv.pkts
