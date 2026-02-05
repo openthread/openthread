@@ -63,6 +63,7 @@ def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: st
         return
 
     try:
+        logging.info('[TESTDEBUG] run_cert() script: %s', script)
         test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(iteration_id)
         logfile = f'{run_directory}/{test_name}.log' if run_directory else f'{test_name}.log'
         env = os.environ.copy()
@@ -74,12 +75,14 @@ def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: st
             print(f'Running PORT_OFFSET={port_offset} {test_name}')
             with open(logfile, 'wt') as output:
                 abs_script = os.path.abspath(script)
+                logging.info('[TESTDEBUG] subprocess.check_call(%s) >>>>>>>>',script)
                 subprocess.check_call(abs_script,
                                       stdout=output,
                                       stderr=output,
                                       stdin=subprocess.DEVNULL,
                                       cwd=run_directory,
                                       env=env)
+                logging.info('[TESTDEBUG] subprocess.check_call(%s) <<<<<<<<',script)
         except subprocess.CalledProcessError:
             bash(f'cat {logfile} 1>&2')
             logging.error("Run test %s failed, please check the log file: %s", test_name, logfile)
@@ -177,13 +180,13 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
     script_successes: Dict[str, List[int]] = defaultdict(list)
 
     def result_callback(iteration_id, script, dic, port_offset):
-        logging.info('[DEBUG] result_callback() -> %d, %s, port_offset %d', iteration_id, script, port_offset)
+        logging.info('[TESTDEBUG] resultlt_callback() -> %d, %s, port_offset %d', iteration_id, script, port_offset)
         port_offset_pool.release(port_offset)
         dic[script].append(iteration_id)
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
-        logging.info('[DEBUG] calling pool.apply_async() for %s %d, port_offset %d', script, i, port_offset)
+        logging.info('[TESTDEBUG] ~~~~~~  pool.apply_async() for %s %d, port_offset %d', script, i, port_offset)
         pool.apply_async(run_cert, [i, port_offset, script, run_directory],
                          callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
                              id, script, script_successes, port_offset),
@@ -191,15 +194,15 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
                              id, script, script_failures, port_offset))
 
     pool.close()
-    logging.info('[DEBUG] called pool.close()')
+    logging.info('[TESTDEBUG] ~~~~~ pool.close()')
 
 
     pool.join()
-    logging.info('[DEBUG] called pool.join()')
+    logging.info('[TESTDEBUG] ~~~~~ pool.join()')
 
     print_summary(scripts, script_successes, script_failures)
 
-    logging.info('[DEBUG] done with run_tests')
+    logging.info('[TESTDEBUG] ~~~~~~~~~~~~ DONE with run_tests')
 
     return sum(len(l) for l in script_failures.values())
 
