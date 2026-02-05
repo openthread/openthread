@@ -1176,8 +1176,7 @@ otError Coap::BlockwiseTransmitHook(void     *aContext,
 
 otError Coap::BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore)
 {
-    static uint32_t blockCount = 0;
-    OT_UNUSED_VARIABLE(aPosition);
+    uint32_t blockCount = aPosition / *aBlockLength;
 
     // Send a random payload
     otRandomNonCryptoFillBuffer(aBlock, *aBlockLength);
@@ -1189,15 +1188,13 @@ otError Coap::BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, uint16_
         OutputBytesLine(&aBlock[i * 16], 16);
     }
 
-    if (blockCount == mBlockCount - 1)
+    if (blockCount >= mBlockCount - 1)
     {
-        blockCount = 0;
-        *aMore     = false;
+        *aMore = false;
     }
     else
     {
         *aMore = true;
-        blockCount++;
     }
 
     return OT_ERROR_NONE;
