@@ -67,5 +67,6 @@ echo "Creating symlinks in /usr/local/bin..."
 sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
 sudo ln -sf "${INSTALL_DIR}/bin/clang-tidy" "/usr/local/bin/clang-tidy-19"
 sudo ln -sf "${INSTALL_DIR}/bin/clang-apply-replacements" "/usr/local/bin/clang-apply-replacements-19"
+sudo ln -sf "${INSTALL_DIR}/bin/run-clang-tidy" "/usr/local/bin/run-clang-tidy-19"
 
 echo "Done."
