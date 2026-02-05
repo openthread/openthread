@@ -98,7 +98,7 @@ class Node(object):
     _SPEED_UP_FACTOR = 1  # defines the default time speed up factor
 
     # Determine whether to save logs in a file.
-    _SAVE_LOGS = True
+    _SAVE_LOGS = os.getenv('TORANJ_SAVE_LOGS', '1') == '1'
 
     # name of  log file (if _SAVE_LOGS is `True`)
     _LOG_FNAME = 'ot-logs'
