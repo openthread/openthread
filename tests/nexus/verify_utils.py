@@ -76,6 +76,10 @@ def apply_patches():
     pvutils.which_tshark = which_tshark_patch
 
 
+def get_vars(pv, prefix, count, suffix=''):
+    return [pv.vars[f'{prefix}_{i}{suffix}'] for i in range(1, count + 1)]
+
+
 def run_main(verify_func):
     if len(sys.argv) < 2:
         print(f"Usage: python3 {sys.argv[0]} <json_file>")
