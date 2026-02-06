@@ -978,6 +978,8 @@ Error CoapBase::ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks)
     VerifyOrExit(blockSize <= kMaxBlockSize, error = kErrorNoBufs);
 
     SuccessOrExit(error = aCallbacks.mBlockwiseTransmitHook(aCallbacks.mContext, buf, 0, &blockSize, &moreBlocks));
+
+    SuccessOrExit(error = aMsg.mMessage.AppendPayloadMarker());
     SuccessOrExit(error = aMsg.mMessage.AppendBytes(buf, blockSize));
 
     switch (type)
