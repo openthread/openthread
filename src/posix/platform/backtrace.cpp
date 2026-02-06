@@ -156,6 +156,7 @@ static void signalCritical(int sig, siginfo_t *info, void *ucontext)
 
     otLogCritPlat("------------------ END OF CRASH ------------------");
 
+    otSysCrashCallback();
     resetSignalActions();
     raise(sig);
 }

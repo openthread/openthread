@@ -330,6 +330,11 @@ void otSysTrelDeinit(void);
  */
 void otSysSetRcpRestorationEnabled(bool aEnabled);
 
+/**
+ * Called when openthread has crashed
+ */
+inline __attribute__((weak)) void otSysCrashCallback(void) {}
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
