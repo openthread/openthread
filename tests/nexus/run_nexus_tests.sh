@@ -60,6 +60,7 @@ DEFAULT_TESTS=(
     "5_1_10"
     "5_1_11"
     "5_1_12"
+    "5_1_13"
 )
 
 # Use provided arguments or the default test list
