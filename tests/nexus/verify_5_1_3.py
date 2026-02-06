@@ -50,9 +50,9 @@ def verify(pv):
     # The purpose of this test case is to verify that after the removal of the Leader from the network, the DUT will
     # first attempt to reattach to the original partition (P1), and then attach to a new partition (P2).
     #
-    # Spec Reference: Router ID Management / Router ID Assignment
-    # V1.1 Section: 5.9.9 / 5.9.10
-    # V1.3.0 Section: 5.9.9 / 5.9.10
+    # Spec Reference                             | V1.1 Section    | V1.3.0 Section
+    # -------------------------------------------|-----------------|-----------------
+    # Router ID Management / Router ID Assignment | 5.9.9 / 5.9.10  | 5.9.9 / 5.9.10
 
     pkts = pv.pkts
     pv.summary.show()
