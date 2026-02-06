@@ -3093,20 +3093,20 @@ class NodeImpl:
         else:
             timeout = 5
 
-        self._expect(r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
-                     r'(?: with payload: ([\da-f]+))?\b',
-                     timeout=timeout)
-        (source, observe, payload) = self.pexpect.match.groups()
+        self._expect(
+            r'coap request from ([\da-f:]+) (GET|PUT|DELETE|POST)(?: OBS=(\d+))?'
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
+        (source, method, observe, payload) = self.pexpect.match.groups()
+
         source = source.decode('UTF-8')
+        method = method.decode('UTF-8')
 
         if observe is not None:
             observe = int(observe, base=10)
 
-        if payload is not None:
-            payload = binascii.a2b_hex(payload).decode('UTF-8')
-
         # Return the values received
-        return dict(source=source, observe=observe, payload=payload)
+        return dict(source=source, observe=observe, payload=payload, method=method)
 
     def coap_wait_subscribe(self):
         """
