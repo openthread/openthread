@@ -129,6 +129,7 @@ ot_nexus_test(5_1_10 "cert;nexus")
 ot_nexus_test(5_1_11 "cert;nexus")
 ot_nexus_test(5_1_12 "cert;nexus")
 ot_nexus_test(5_1_13 "cert;nexus")
+ot_nexus_test(5_2_1 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_agent "core;nexus")
