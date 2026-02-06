@@ -818,10 +818,11 @@ public:
     /**
      * Appends a Payload Marker indicating the beginning of the payload.
      *
-     * It also sets the offset to the start of the payload.
+     * If the message already contains a Payload Marker, this method makes no changes. If it appends a Payload
+     * Marker, it also sets the message offset to the start of the payload.
      *
-     * @retval kErrorNone    Payload Marker was successfully added.
-     * @retval kErrorNoBufs  Could not grow the message to append the payload marker.
+     * @retval kErrorNone    Payload Marker was successfully added or was already present in the message.
+     * @retval kErrorNoBufs  Could not grow the message to append the Payload Marker.
      */
     Error AppendPayloadMarker(void);
 
