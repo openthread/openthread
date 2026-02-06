@@ -55,76 +55,53 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
         },
     }
 
-    def _do_transfer_test(self, method):
-        self.nodes[LEADER].start()
+    def test(self):
+        leader = self.nodes[LEADER]
+        router = self.nodes[ROUTER]
+
+        leader.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        self.assertEqual(leader.get_state(), 'leader')
 
-        self.nodes[ROUTER].start()
+        router.start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
-        self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+        self.assertEqual(router.get_state(), 'router')
 
-        mleid = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        leader_mleid = leader.get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        router_mleid = router.get_ip6_address(config.ADDRESS_TYPE.ML_EID)
 
-        self.nodes[LEADER].coap_start()
-        self.nodes[LEADER].coap_set_resource_path_block('test', 10)
+        leader.coap_set_resource_path_block('test', 3)
 
-        self.nodes[ROUTER].coap_start()
+        leader.coap_start()
+        router.coap_start()
 
-        if method == 'GET':
-            response = self.nodes[ROUTER].coap_get_block(mleid, 'test', size=32)
-            response_payload = response['payload']
-            self.assertIsNotNone(response_payload)
+        for method in ['GET', 'PUT', 'POST']:
+            if method == 'GET':
+                response = router.coap_get_block(leader_mleid, 'test', size=32)
+            elif method == 'PUT':
+                response = router.coap_put_block(leader_mleid, 'test', size=256, count=2)
+            elif method == 'POST':
+                response = router.coap_post_block(leader_mleid, 'test', size=1024, count=2)
+            else:
+                raise ValueError(method)
 
-        if method == 'PUT':
-            self.nodes[ROUTER].coap_put_block(mleid, 'test', size=256, count=2)
-            request = self.nodes[ROUTER].coap_wait_request()
-            request_payload = request['payload']
-            self.assertIsNotNone(request_payload)
+            self.assertEqual(response['source'], leader_mleid)
 
-        if method == 'POST':
-            self.nodes[ROUTER].coap_post_block(mleid, 'test', size=1024, count=2)
-            request = self.nodes[ROUTER].coap_wait_request()
-            request_payload = request['payload']
-            self.assertIsNotNone(request_payload)
+            request = leader.coap_wait_request()
+            self.assertEqual(request['method'], method)
+            self.assertEqual(request['source'], router_mleid)
 
-        self.simulator.go(10)
+            if method == 'GET':
+                self.assertIsNotNone(response['payload'])
+                self.assertIsNone(request['payload'])
+            else:
+                self.assertIsNone(response['payload'])
+                self.assertIsNotNone(request['payload'])
 
-        self.nodes[ROUTER].coap_stop()
-        self.nodes[LEADER].coap_stop()
+            self.simulator.go(10)
 
-    def test_get(self):
-        """
-        Test block-wise transfer using GET method.
-        """
-        for trial in range(0, 3):
-            try:
-                self._do_transfer_test(method='GET')
-                break
-            except (AssertionError, pexpect.exceptions.TIMEOUT):
-                continue
-
-    def test_put(self):
-        """
-        Test block-wise transfer using PUT method.
-        """
-        for trial in range(0, 3):
-            try:
-                self._do_transfer_test(method='PUT')
-                break
-            except (AssertionError, pexpect.exceptions.TIMEOUT):
-                continue
-
-    def test_post(self):
-        """
-        Test block-wise transfer using POST method.
-        """
-        for trial in range(0, 3):
-            try:
-                self._do_transfer_test(method='POST')
-                break
-            except (AssertionError, pexpect.exceptions.TIMEOUT):
-                continue
+        router.coap_stop()
+        leader.coap_stop()
 
 
 if __name__ == '__main__':
