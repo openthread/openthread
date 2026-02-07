@@ -33,9 +33,24 @@
 
 set -euxo pipefail
 
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+readonly repo_dir
 INSTALL_FORMAT_TOOLS="${INSTALL_FORMAT_TOOLS:-1}"
 
 LLVM_MAJOR_VERSION="19"
+
+pip_install()
+{
+    echo 'Installing python3 dependencies...'
+    local pip_executable="pip3"
+    if [[ -z ${VIRTUAL_ENV:-} ]]; then
+        if [[ ! -d "${repo_dir}/.venv" ]]; then
+            python3 -m venv "${repo_dir}/.venv"
+        fi
+        pip_executable="${repo_dir}/.venv/bin/pip3"
+    fi
+    "${pip_executable}" install --upgrade "$@"
+}
 
 install_packages_pretty_format()
 {
@@ -46,10 +61,10 @@ install_packages_pretty_format()
     sudo bash "$(dirname "$0")/install-llvm.sh"
 
     # add yapf for pretty
-    python3 -m pip install yapf==0.43.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
+    pip_install yapf==0.43.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
 
     # add mdv for local size report
-    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
+    pip_install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
 
     # add shfmt for shell pretty
     command -v shfmt || sudo apt-get install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
@@ -63,10 +78,9 @@ install_packages_apt()
 
     # apt-get update and install dependencies
     sudo apt-get update
-    sudo apt-get --no-install-recommends install -y g++ lsb-release cmake ninja-build shellcheck libgtest-dev libgmock-dev
+    sudo apt-get --no-install-recommends install -y g++ lsb-release cmake ninja-build shellcheck libgtest-dev libgmock-dev python3-pip python3-venv
 
     echo 'Installing GNU Arm Embedded Toolchain...'
-
     PLATFORM=$(lsb_release -is)
     ARCH=$(arch)
 
@@ -129,7 +143,7 @@ install_packages_brew()
         } || echo "WARNING: could not install llvm@${LLVM_MAJOR_VERSION}, which is useful if you plan to contribute C/C++ code to the OpenThread project."
 
         # add yapf for pretty
-        python3 -m pip install yapf==0.43.0 || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+        pip_install yapf==0.43.0 || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
     fi
 
     brew install include-what-you-use || echo 'WARNING: iwyu, which is useful to ensure applying the IWYU rules.'
