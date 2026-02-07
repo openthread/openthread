@@ -358,17 +358,12 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        FreeJoinerFinalizeMessage();
-    }
-
     return error;
 }
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
-    VerifyOrExit(mState == kStateIdle && mFinalizeMessage != nullptr);
+    VerifyOrExit(mFinalizeMessage != nullptr);
 
     mFinalizeMessage->Free();
     mFinalizeMessage = nullptr;
