@@ -165,7 +165,7 @@ void Test5_1_10(void)
      *     - Version TLV
      */
 
-    dut.Get<Mle::Mle>().SetRouterEligible(false);
+    SuccessOrQuit(dut.Get<Mle::Mle>().SetRouterEligible(false));
     dut.Join(leader);
 
     /**
