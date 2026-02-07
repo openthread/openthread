@@ -83,8 +83,9 @@ public:
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
 
-    void        SetName(const char *aName) { IgnoreError(StringCopy(mName, aName)); }
-    const char *GetName(void) const { return mName; }
+    void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
+    void        SetName(const char *aPrefix, uint16_t aIndex);
+    const char *GetName(void) const { return mName.AsCString(); }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -118,7 +119,7 @@ public:
 private:
     Node(void) {}
 
-    char mName[32];
+    String<32> mName;
 };
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }

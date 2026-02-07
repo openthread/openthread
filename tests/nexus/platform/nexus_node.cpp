@@ -103,6 +103,8 @@ void Node::AllowList(Node &aNode)
 
 void Node::UnallowList(Node &aNode) { Get<Mac::Filter>().RemoveAddress(aNode.Get<Mac::Mac>().GetExtAddress()); }
 
+void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append("%s %u", aPrefix, aIndex); }
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
 {
