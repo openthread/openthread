@@ -124,9 +124,7 @@ class Bytes(bytearray):
         elif not isinstance(other, Bytes):
             other = self.__class__(other)
 
-        eq = super().__eq__(other)
-        print("[%r %s %r]" % (self, "==" if eq else "!=", other), file=sys.stderr)
-        return eq
+        return super().__eq__(other)
 
 
 if __name__ == '__main__':
