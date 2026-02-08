@@ -50,6 +50,7 @@ jobs:
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
+      TEST_TIMEOUT: 1800
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.4
       INTER_OP: 1
@@ -165,6 +166,7 @@ jobs:
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
+      TEST_TIMEOUT: 1800
       PACKET_VERIFICATION: ${{ matrix.packet_verification }}
       THREAD_VERSION: 1.4
       INTER_OP: 1

@@ -317,7 +317,7 @@ do_cert_suite()
     sudo modprobe ip6table_filter
 
     mkdir -p ot_testing
-    ./tests/scripts/thread-cert/run_cert_suite.py --run-directory ot_testing --multiply "${MULTIPLY:-1}" "$@"
+    ./tests/scripts/thread-cert/run_cert_suite.py --run-directory ot_testing --multiply "${MULTIPLY:-1}" --timeout "${TEST_TIMEOUT:-0}" "$@"
     exit 0
 }
 
