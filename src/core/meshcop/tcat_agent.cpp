@@ -48,11 +48,8 @@ RegisterLogModule("TcatAgent");
 
 bool TcatAgent::VendorInfo::IsValid(void) const
 {
-    return (mProvisioningUrl == nullptr ||
-            (IsValidUtf8String(mProvisioningUrl) &&
-             (static_cast<uint8_t>(StringLength(mProvisioningUrl, kProvisioningUrlMaxLength)) <
-              kProvisioningUrlMaxLength))) &&
-           mPskdString != nullptr;
+    // Note: mProvisioningUrl can be nullptr, if not present
+    return mPskdString != nullptr && Tlv::ValidateStringValue<ProvisioningUrlTlv>(mProvisioningUrl) == kErrorNone;
 }
 
 TcatAgent::TcatAgent(Instance &aInstance)
@@ -825,10 +822,10 @@ Error TcatAgent::HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &aResp
     uint16_t length;
 
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
-    VerifyOrExit(mVendorInfo->mProvisioningUrl != nullptr, error = kErrorInvalidState);
+    VerifyOrExit(mVendorInfo->mProvisioningUrl != nullptr, error = kErrorNotImplemented);
 
     length = StringLength(mVendorInfo->mProvisioningUrl, kProvisioningUrlMaxLength);
-    VerifyOrExit(length > 0 && length <= Tlv::kBaseTlvMaxLength, error = kErrorNotFound);
+    VerifyOrExit(length > 0, error = kErrorNotImplemented);
 
     SuccessOrExit(error =
                       Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, mVendorInfo->mProvisioningUrl, length));
