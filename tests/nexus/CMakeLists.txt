@@ -80,13 +80,13 @@ set(COMMON_LIBS
 
 #----------------------------------------------------------------------------------------------------------------------
 
-macro(ot_nexus_test name)
+macro(ot_nexus_test name labels)
 
     # Macro to add an OpenThread nexus test.
     #
-    #   Nexus test name will be `nexus_{name}`. Test source file of
-    #   `test_{name}.cpp` is used. Optional extra arguments can be
-    #   passed to provide additional source files.
+    # The test target will be named `nexus_{name}` and compiled from the source
+    # file `test_{name}.cpp`. The `labels` argument assigns categories to the
+    # test, allowing us to run specific subsets using `ctest -L {label}`.
 
     add_executable(nexus_${name}
         test_${name}.cpp ${ARGN}
@@ -108,30 +108,39 @@ macro(ot_nexus_test name)
     )
 
     add_test(NAME nexus_${name} COMMAND nexus_${name})
+
+    set_tests_properties(nexus_${name} PROPERTIES LABELS "${labels}")
 endmacro()
 
 
 #----------------------------------------------------------------------------------------------------------------------
 
-ot_nexus_test(5_1_1)
-ot_nexus_test(5_1_2)
-ot_nexus_test(5_1_3)
-ot_nexus_test(5_1_4)
-ot_nexus_test(5_1_5)
-ot_nexus_test(5_1_6)
-ot_nexus_test(5_1_7)
-ot_nexus_test(5_1_8)
-ot_nexus_test(5_1_9)
-ot_nexus_test(5_1_10)
-ot_nexus_test(5_1_11)
-ot_nexus_test(5_1_12)
-ot_nexus_test(5_1_13)
-ot_nexus_test(border_agent)
-ot_nexus_test(border_agent_tracker)
-ot_nexus_test(discover_scan)
-ot_nexus_test(dtls)
-ot_nexus_test(form_join)
-ot_nexus_test(full_network_reset)
-ot_nexus_test(large_network)
-ot_nexus_test(nat64_translator)
-ot_nexus_test(trel)
+# Cert tests
+ot_nexus_test(5_1_1 "cert;nexus")
+ot_nexus_test(5_1_2 "cert;nexus")
+ot_nexus_test(5_1_3 "cert;nexus")
+ot_nexus_test(5_1_4 "cert;nexus")
+ot_nexus_test(5_1_5 "cert;nexus")
+ot_nexus_test(5_1_6 "cert;nexus")
+ot_nexus_test(5_1_7 "cert;nexus")
+ot_nexus_test(5_1_8 "cert;nexus")
+ot_nexus_test(5_1_9 "cert;nexus")
+ot_nexus_test(5_1_10 "cert;nexus")
+ot_nexus_test(5_1_11 "cert;nexus")
+ot_nexus_test(5_1_12 "cert;nexus")
+ot_nexus_test(5_1_13 "cert;nexus")
+
+# Misc tests
+ot_nexus_test(border_agent "core;nexus")
+ot_nexus_test(border_agent_tracker "core;nexus")
+ot_nexus_test(discover_scan "core;nexus")
+ot_nexus_test(dtls "core;nexus")
+ot_nexus_test(form_join "core;nexus")
+ot_nexus_test(nat64_translator "core;nexus")
+
+# Trel
+ot_nexus_test(trel "trel;nexus")
+
+# Large network
+ot_nexus_test(full_network_reset "core;large_network;nexus")
+ot_nexus_test(large_network "core;large_network;nexus")
