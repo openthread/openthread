@@ -150,7 +150,7 @@ void CoapBase::ClearRequests(const Ip6::Address *aAddress)
 
         if ((aAddress == nullptr) || (metadata.mSourceAddress == *aAddress))
         {
-            FinalizeCoapTransaction(message, metadata, nullptr, kErrorAbort);
+            FinalizeRequestWithError(message, metadata, kErrorAbort);
         }
     }
 }
@@ -512,7 +512,7 @@ void CoapBase::HandleRetransmissionTimer(void)
         {
             if (!metadata.ShouldRetransmit())
             {
-                FinalizeCoapTransaction(message, metadata, nullptr, kErrorResponseTimeout);
+                FinalizeRequestWithError(message, metadata, kErrorResponseTimeout);
                 continue;
             }
 
@@ -532,7 +532,17 @@ void CoapBase::HandleRetransmissionTimer(void)
     mRetransmissionTimer.FireAt(nextTime);
 }
 
-void CoapBase::FinalizeCoapTransaction(Message &aRequest, const Metadata &aMetadata, Msg *aResponse, Error aResult)
+void CoapBase::FinalizeRequest(Message &aRequest, const Metadata &aMetadata, Msg &aResponse)
+{
+    Finalize(aRequest, aMetadata, &aResponse, kErrorNone);
+}
+
+void CoapBase::FinalizeRequestWithError(Message &aRequest, const Metadata &aMetadata, Error aResult)
+{
+    Finalize(aRequest, aMetadata, /* aResponse */ nullptr, aResult);
+}
+
+void CoapBase::Finalize(Message &aRequest, const Metadata &aMetadata, Msg *aResponse, Error aResult)
 {
     DequeueMessage(aRequest);
 
@@ -550,7 +560,7 @@ Error CoapBase::AbortTransaction(ResponseHandler aHandler, void *aContext)
 
         if (metadata.mCallbacks.Matches(aHandler, aContext))
         {
-            FinalizeCoapTransaction(message, metadata, nullptr, kErrorAbort);
+            FinalizeRequestWithError(message, metadata, kErrorAbort);
             error = kErrorNone;
         }
     }
@@ -707,7 +717,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
     case kTypeReset:
         if (aRxMsg.IsEmpty())
         {
-            FinalizeCoapTransaction(*request, metadata, nullptr, kErrorAbort);
+            FinalizeRequestWithError(*request, metadata, kErrorAbort);
         }
 
         // Silently ignore non-empty reset messages (RFC 7252, Section 4.2).
@@ -726,7 +736,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
                 // as if it were a piggy-backed response so we can stop
                 // re-sending and the application can move on.
 
-                FinalizeCoapTransaction(*request, metadata, &aRxMsg, kErrorNone);
+                FinalizeRequest(*request, metadata, aRxMsg);
             }
             else
 #endif
@@ -767,7 +777,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
                 SuccessOrExit(error = ProcessBlockwiseResponse(aRxMsg, *request, metadata));
 #else
-                FinalizeCoapTransaction(*request, metadata, &aRxMsg, kErrorNone);
+                FinalizeRequest(*request, metadata, aRxMsg);
 #endif
             }
         }
@@ -815,7 +825,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
         }
         else
         {
-            FinalizeCoapTransaction(*request, metadata, &aRxMsg, kErrorNone);
+            FinalizeRequest(*request, metadata, aRxMsg);
         }
 
         break;
@@ -1020,7 +1030,7 @@ Error CoapBase::ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const M
     {
     case 0:
         // Piggybacked response.
-        FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, kErrorNone);
+        FinalizeRequest(aRequest, aMetadata, aRxMsg);
         break;
     case 1: // Block1 option
         if (aRxMsg.GetCode() == kCodeContinue && aMetadata.mCallbacks.HasBlockwiseTransmitHook())
@@ -1031,7 +1041,7 @@ Error CoapBase::ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const M
         if (aRxMsg.GetCode() != kCodeContinue || !aMetadata.mCallbacks.HasBlockwiseTransmitHook() ||
             error != kErrorNone)
         {
-            FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, error);
+            Finalize(aRequest, aMetadata, &aRxMsg, error);
         }
         break;
     case 2: // Block2 option
@@ -1043,7 +1053,7 @@ Error CoapBase::ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const M
         if (aRxMsg.GetCode() >= kCodeBadRequest || !aMetadata.mCallbacks.HasBlockwiseReceiveHook() ||
             error != kErrorNone)
         {
-            FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, error);
+            Finalize(aRequest, aMetadata, &aRxMsg, error);
         }
         break;
     case 3: // Block1 & Block2 option
@@ -1052,11 +1062,11 @@ Error CoapBase::ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const M
             error = SendNextBlock2Request(aRequest, aRxMsg, aMetadata, totalTransferSize, true);
         }
 
-        FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, error);
+        Finalize(aRequest, aMetadata, &aRxMsg, error);
         break;
     default:
         error = kErrorAbort;
-        FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, error);
+        Finalize(aRequest, aMetadata, &aRxMsg, error);
         break;
     }
 
@@ -1275,7 +1285,7 @@ Error CoapBase::SendNextBlock1Request(Message &aRequest, Msg &aRxMsg, const Meta
     // Conclude block-wise transfer if last block has been received
     if (!requestBlockInfo.mMoreBlocks)
     {
-        FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, kErrorNone);
+        FinalizeRequest(aRequest, aMetadata, aRxMsg);
         ExitNow();
     }
 
@@ -1344,7 +1354,7 @@ Error CoapBase::SendNextBlock2Request(Message        &aRequest,
 
     if (!msgBlockInfo.mMoreBlocks)
     {
-        FinalizeCoapTransaction(aRequest, aMetadata, &aRxMsg, kErrorNone);
+        FinalizeRequest(aRequest, aMetadata, aRxMsg);
         ExitNow();
     }
 
@@ -1573,7 +1583,7 @@ Error CoapBase::ProcessObserveSend(Msg &aTxMsg, Metadata &aMetadata)
 
             if (request != nullptr)
             {
-                FinalizeCoapTransaction(*request, reqMetadata, nullptr, kErrorNone);
+                Finalize(*request, reqMetadata, nullptr, kErrorNone);
             }
         }
     }

@@ -853,7 +853,9 @@ private:
     Message    *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata);
     void        DequeueMessage(Message &aMessage);
     Message    *FindRelatedRequest(const Msg &aMsg, Metadata &aMetadata);
-    void        FinalizeCoapTransaction(Message &aRequest, const Metadata &aMetadata, Msg *aResponse, Error aResult);
+    void        FinalizeRequest(Message &aRequest, const Metadata &aMetadata, Msg &aResponse);
+    void        FinalizeRequestWithError(Message &aRequest, const Metadata &aMetadata, Error aResult);
+    void        Finalize(Message &aRequest, const Metadata &aMetadata, Msg *aResponse, Error aResult);
     bool        InvokeResponseFallback(Msg &aRxMsg) const;
     void        ProcessReceivedRequest(Msg &aRxMsg);
     void        ProcessReceivedResponse(Msg &aRxMsg);
