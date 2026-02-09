@@ -174,7 +174,7 @@ void Test5_2_1(void)
      */
     reed1.Join(dut);
     nexus.AdvanceTime(kAttachToChildTime);
-    VerifyOrQuit(reed1.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(reed1.Get<Mle::Mle>().IsAttached());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Router_1 (DUT)");
