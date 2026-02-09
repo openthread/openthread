@@ -52,6 +52,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      TEST_TIMEOUT: 300
       OT_VT_USE_UNIX_SOCKET: 1
       MULTIPLY: 3
     steps:
@@ -107,6 +108,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      TEST_TIMEOUT: 300
       OT_VT_USE_UNIX_SOCKET: 1
     steps:
     - name: Harden Runner
@@ -162,6 +164,7 @@ jobs:
       THREAD_VERSION: 1.1
       USE_MTD: 1
       VIRTUAL_TIME: 1
+      TEST_TIMEOUT: 300
       OT_VT_USE_UNIX_SOCKET: 1
       MESSAGE_USE_HEAP: ${{ matrix.message_use_heap }}
     steps:
@@ -212,6 +215,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      TEST_TIMEOUT: 300
       OT_VT_USE_UNIX_SOCKET: 1
     steps:
     - name: Harden Runner
@@ -361,6 +365,7 @@ jobs:
       COVERAGE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      TEST_TIMEOUT: 300
       OT_VT_USE_UNIX_SOCKET: 1
       CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
     steps:
