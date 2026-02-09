@@ -183,6 +183,40 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
+Error Iterator::GetNextBorderAdmitterInfo(uint16_t &aRloc16)
+{
+    Error   error         = kErrorNone;
+    uint8_t serviceNumber = Manager::kBorderAdmitterServiceNumber;
+    do
+    {
+        ServiceData serviceData;
+
+        // Process the next Server sub-TLV within the current Service TLV.
+
+        if (AdvanceToNextServer() == kErrorNone)
+        {
+            aRloc16 = mServerSubTlv->GetServer16();
+            ExitNow();
+        }
+
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(serviceNumber);
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
+
+    } while (mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
 Error Iterator::AdvanceToNextServer(void)
 {
     Error                 error = kErrorNotFound;

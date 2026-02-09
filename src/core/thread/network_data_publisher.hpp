@@ -188,6 +188,26 @@ public:
      */
     void UnpublishDnsSrpService(void) { mDnsSrpServiceEntry.Unpublish(); }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    /**
+     * Requests Border Admitter service entry to be published in the Thread Network Data.
+     */
+    void PublishBorderAdmitterService(void) { mBorderAdmitterEntry.Publish(); }
+
+    /**
+     * Unpublishes any previously added Border Admitter service entry from the Network Data.
+     */
+    void UnpublishBorderAdmitterService(void) { mBorderAdmitterEntry.Unpublish(); }
+
+    /**
+     * Indicates whether or not the Border Admitter service entry has been added in the Thread Network Data.
+     *
+     * @retval TRUE    The published service entry is added to the Thread Network Data.
+     * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
+     */
+    bool IsBorderAdmitterServicePublished(void) { return mBorderAdmitterEntry.IsAdded(); }
+#endif
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -440,6 +460,30 @@ private:
         Info                            mInfo;
         Callback<DnsSrpServiceCallback> mCallback;
     };
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    class BorderAdmitterEntry : public Entry, private NonCopyable
+    {
+        friend class Entry;
+
+    public:
+        explicit BorderAdmitterEntry(Instance &aInstance);
+        void Publish(void);
+        void Unpublish(void);
+        void HandleTimer(void) { Entry::HandleTimer(); }
+        void HandleNotifierEvents(Events aEvents);
+
+    private:
+        static constexpr uint8_t kDesiredNum = 1;
+
+        void Add(void);
+        void Remove(State aNextState);
+        void Notify(Event aEvent) const;
+        void Process(void);
+        void CountEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
+    };
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -499,6 +543,9 @@ private:
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     bool IsADnsSrpServiceEntry(const Entry &aEntry) const { return (&aEntry == &mDnsSrpServiceEntry); }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    bool IsBorderAdmitterEntry(const Entry &aEntry) const { return (&aEntry == &mBorderAdmitterEntry); }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -517,6 +564,9 @@ private:
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     DnsSrpServiceEntry mDnsSrpServiceEntry;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    BorderAdmitterEntry mBorderAdmitterEntry;
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

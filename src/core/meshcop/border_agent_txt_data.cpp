@@ -262,6 +262,13 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (aInstance.Get<Admitter>().IsEnabled())
+    {
+        bitmap |= kFlagAdmitterSupported;
+    }
+#endif
+
     return bitmap;
 }
 
@@ -431,9 +438,10 @@ void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
     aInfo.mThreadRole    = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
     aInfo.mMultiAilState =
         static_cast<otBorderAgentMultiAilState>((aBitmap & kMaskMultiAilState) >> kOffsetMultiAilState);
-    aInfo.mBbrIsActive    = aBitmap & kFlagBbrIsActive;
-    aInfo.mBbrIsPrimary   = aBitmap & kFlagBbrIsPrimary;
-    aInfo.mEpskcSupported = aBitmap & kFlagEpskcSupported;
+    aInfo.mBbrIsActive       = aBitmap & kFlagBbrIsActive;
+    aInfo.mBbrIsPrimary      = aBitmap & kFlagBbrIsPrimary;
+    aInfo.mEpskcSupported    = aBitmap & kFlagEpskcSupported;
+    aInfo.mAdmitterSupported = aBitmap & kFlagAdmitterSupported;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE

@@ -284,7 +284,7 @@ SecureAgent::SecureAgent(Instance &aInstance)
 {
     SetAcceptCallback(&HandleDtlsAccept, this);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
     SetResourceHandler(&HandleResource);
 #endif
 }
@@ -301,7 +301,7 @@ Coap::SecureSession *SecureAgent::HandleDtlsAccept(void)
     return IsSessionInUse() ? nullptr : static_cast<Coap::SecureSession *>(this);
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
 
 bool SecureAgent::HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg)
 {
@@ -313,16 +313,25 @@ bool SecureAgent::HandleResource(const char *aUriPath, Msg &aMsg)
     bool didHandle = false;
     Uri  uri       = UriFromPath(aUriPath);
 
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
     if (uri == kUriJoinerFinalize)
     {
         Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMsg);
         didHandle = true;
     }
+#endif
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    if (mResourceHandler.IsSet())
+    {
+        didHandle = mResourceHandler.Invoke(uri, aMsg);
+    }
+#endif
 
     return didHandle;
 }
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
 
 #endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
