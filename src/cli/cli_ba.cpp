@@ -564,11 +564,164 @@ void Ba::HandleBorderAgentEphemeralKeyStateChange(void)
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
+template <> otError Ba::Process<Cmd("admitter")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli ba admitter
+     * @code
+     * ba admitter
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderAdmitterIsEnabled
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otBorderAdmitterIsEnabled(GetInstancePtr()));
+    }
+    /**
+     * @cli ba admitter (enable, disable)
+     * @code
+     * ba admitter enable
+     * Done
+     * @endcode
+     * @code
+     * ba admitter
+     * Enabled
+     * Done
+     * @endcode
+     * @cparam ba admitter @ca{enable|disable}
+     * @par api_copy
+     * #otBorderAdmitterSetEnabled
+     */
+    else if (ProcessEnableDisable(aArgs, otBorderAdmitterSetEnabled) == OT_ERROR_NONE)
+    {
+    }
+    /**
+     * @cli ba admitter state
+     * @code
+     * ba admitter state
+     * enabled: yes
+     * is-prime: yes
+     * is-active-commissioner: yes
+     * is-petition-rejected: no
+     * Done
+     * @endcode
+     * @par
+     * Outputs the state of Border Agent Admitter.
+     * @sa otBorderAdmitterIsEnabled
+     * @sa otBorderAdmitterIsPrimeAdmitter
+     * @sa otBorderAdmitterIsActiveCommissioner
+     * @sa otBorderAdmitterIsPetitionRejected
+     */
+    else if (aArgs[0] == "state")
+    {
+        bool enabled = otBorderAdmitterIsEnabled(GetInstancePtr());
+
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        OutputLine("enabled: %s", enabled ? "yes" : "no");
+        VerifyOrExit(enabled);
+        OutputLine("is-prime: %s", otBorderAdmitterIsPrimeAdmitter(GetInstancePtr()) ? "yes" : "no");
+        OutputLine("is-active-commissioner: %s", otBorderAdmitterIsActiveCommissioner(GetInstancePtr()) ? "yes" : "no");
+        OutputLine("is-petition-rejected: %s", otBorderAdmitterIsPetitionRejected(GetInstancePtr()) ? "yes" : "no");
+    }
+    /**
+     * @cli ba admitter joinerudpport (get,set)
+     * @code
+     * ba admitter joinerudpport
+     * 1000
+     * Done
+     * @endcode
+     * @code
+     * ba admitter joinerudpport 1001
+     * Done
+     * @endcode
+     * @cparam ba admitter joinerudpport [@ca{port}]
+     * @par
+     * Gets or sets the Border Agent Admitter Joiner UDP port.
+     * @sa otBorderAdmitterGetJoinerUdpPort
+     * @sa otBorderAdmitterSetJoinerUdpPort
+     */
+    else if (aArgs[0] == "joinerudpport")
+    {
+        error = ProcessGetSet(aArgs + 1, otBorderAdmitterGetJoinerUdpPort, otBorderAdmitterSetJoinerUdpPort);
+    }
+
+    /**
+     * @cli ba admitter enrollers
+     * @code
+     * ba admitter enrollers
+     * Enroller - id: phone01275ABC
+     *     steering-data: [0042008000000000]
+     *     mode: 0xc0
+     *     msec-since-registered: 10478
+     *     Joiner - iid: a5d2e4f0c8b1937e
+     *         msec-since-accepted: 3299
+     *         msec-till-expiration: 418852
+     * Done
+     * @endcode
+     * @par
+     * Outputs the list of enrollers and accepted joiners per enroller.
+     * @sa otBorderAdmitterGetNextEnrollerInfo
+     * @sa otBorderAdmitterGetNextJoinerInfo
+     */
+    else if (aArgs[0] == "enrollers")
+    {
+        otBorderAdmitterIterator     iter;
+        otBorderAdmitterEnrollerInfo enrollerInfo;
+        otBorderAdmitterJoinerInfo   joinerInfo;
+        Uint64StringBuffer           u64String;
+
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        otBorderAdmitterInitIterator(GetInstancePtr(), &iter);
+
+        while (otBorderAdmitterGetNextEnrollerInfo(&iter, &enrollerInfo) == OT_ERROR_NONE)
+        {
+            OutputLine("Enroller - id: %s", enrollerInfo.mId);
+            OutputFormat(kIndentSize, "steering-data: [");
+            OutputBytes(enrollerInfo.mSteeringData.m8, enrollerInfo.mSteeringData.mLength);
+            OutputLine("]");
+            OutputLine(kIndentSize, "mode: 0x%02x", enrollerInfo.mMode);
+            OutputLine(kIndentSize, "msec-since-registered: %s",
+                       Uint64ToString(enrollerInfo.mRegisterDuration, u64String));
+
+            while (otBorderAdmitterGetNextJoinerInfo(&iter, &joinerInfo) == OT_ERROR_NONE)
+            {
+                OutputFormat(kIndentSize, "Joiner - iid: ");
+                OutputBytesLine(joinerInfo.mIid.mFields.m8, OT_IP6_IID_SIZE);
+
+                OutputLine(kIndentSize * 2, "msec-since-accepted: %s",
+                           Uint64ToString(joinerInfo.mMsecSinceAccept, u64String));
+                OutputLine(kIndentSize * 2, "msec-till-expiration: %lu", ToUlong(joinerInfo.mMsecTillExpiration));
+            }
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
 otError Ba::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString) {aCommandString, &Ba::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+        CmdEntry("admitter"),
+#endif
         CmdEntry("counters"),
         CmdEntry("disable"),
         CmdEntry("enable"),

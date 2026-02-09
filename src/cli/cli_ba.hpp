@@ -77,6 +77,8 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
+    static constexpr uint8_t kIndentSize = 4;
+
     using Command = CommandEntry<Ba>;
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
