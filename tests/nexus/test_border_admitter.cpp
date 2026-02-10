@@ -1886,7 +1886,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
 
         VerifyOrQuit(readIid == joinerIids[0]);
-        VerifyOrQuit(joinerRouterRloc = admitter.Get<Mle::Mle>().GetRloc16());
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1982,7 +1982,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
 
         VerifyOrQuit(readIid == joinerIids[0]);
-        VerifyOrQuit(joinerRouterRloc = admitter.Get<Mle::Mle>().GetRloc16());
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
     }
 
     joiners[0]->Get<Joiner>().Stop();
@@ -2029,7 +2029,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
 
         VerifyOrQuit(readIid == joinerIids[1]);
-        VerifyOrQuit(joinerRouterRloc = admitter.Get<Mle::Mle>().GetRloc16());
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
     }
 
     joiners[1]->Get<Joiner>().Stop();
@@ -2164,7 +2164,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
 
         VerifyOrQuit(readIid == joinerIids[1]);
-        VerifyOrQuit(joinerRouterRloc = admitter.Get<Mle::Mle>().GetRloc16());
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
     }
 
     joiners[1]->Get<Joiner>().Stop();
@@ -2277,7 +2277,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
 
         VerifyOrQuit(readIid == joinerIids[1]);
-        VerifyOrQuit(joinerRouterRloc = admitter.Get<Mle::Mle>().GetRloc16());
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
     }
 
     joiners[1]->Get<Joiner>().Stop();
@@ -2756,7 +2756,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
 
         VerifyOrQuit(readIid == joinerIids[1]);
-        VerifyOrQuit(joinerRouterRloc = admitter.Get<Mle::Mle>().GetRloc16());
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
     }
 
     joiners[1]->Get<Joiner>().Stop();
