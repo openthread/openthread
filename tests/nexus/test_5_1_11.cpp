@@ -165,11 +165,11 @@ void Test5_1_11(void)
      *   (medium).
      * - Pass Criteria: N/A
      */
-    dut.Get<Mac::Filter>().AddRssIn(router2.Get<Mac::Mac>().GetExtAddress(), kRssiQuality2);
-    router2.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiQuality2);
+    SuccessOrQuit(dut.Get<Mac::Filter>().AddRssIn(router2.Get<Mac::Mac>().GetExtAddress(), kRssiQuality2));
+    SuccessOrQuit(router2.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiQuality2));
 
-    dut.Get<Mac::Filter>().AddRssIn(reed1.Get<Mac::Mac>().GetExtAddress(), kRssiQuality3);
-    reed1.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiQuality3);
+    SuccessOrQuit(dut.Get<Mac::Filter>().AddRssIn(reed1.Get<Mac::Mac>().GetExtAddress(), kRssiQuality3));
+    SuccessOrQuit(reed1.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiQuality3));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Router_1 (DUT)");
