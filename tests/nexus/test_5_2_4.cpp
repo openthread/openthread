@@ -61,24 +61,9 @@ static constexpr uint32_t kReedAdvertisementMaxJitter = 60 * 1000;
 static constexpr uint32_t kWaitTime = kReedAdvertisementInterval + kReedAdvertisementMaxJitter;
 
 /**
- * Time to wait for ICMPv6 Echo Response.
- */
-static constexpr uint32_t kEchoResponseTime = 1000;
-
-/**
  * Number of routers in the topology besides the leader.
  */
 static constexpr uint16_t kNumRouters = 15;
-
-/**
- * Hop limit for ICMPv6 Echo Request.
- */
-static constexpr uint8_t kEchoHopLimit = 64;
-
-/**
- * Echo Request Identifier.
- */
-static constexpr uint16_t kEchoIdentifier = 0x1234;
 
 void Test5_2_4(void)
 {
@@ -281,18 +266,7 @@ void Test5_2_4(void)
      *   Leader.
      * - Pass Criteria: The Leader MUST respond with an ICMPv6 Echo Reply.
      */
-    {
-        Message         *message = med1.Get<Ip6::Icmp>().NewMessage();
-        Ip6::MessageInfo messageInfo;
-
-        VerifyOrQuit(message != nullptr);
-        messageInfo.SetPeerAddr(leader.Get<Mle::Mle>().GetMeshLocalEid());
-        messageInfo.SetHopLimit(kEchoHopLimit);
-
-        SuccessOrQuit(med1.Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, kEchoIdentifier));
-    }
-
-    nexus.AdvanceTime(kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, leader.Get<Mle::Mle>().GetMeshLocalEid());
 
     nexus.SaveTestInfo("test_5_2_4.json");
 }

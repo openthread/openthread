@@ -415,5 +415,58 @@ void Core::ProcessTrel(Node &aNode)
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
+//---------------------------------------------------------------------------------------------------------------------
+
+Core::IcmpEchoResponseContext::IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier)
+    : mNode(aNode)
+    , mIdentifier(aIdentifier)
+    , mResponseReceived(false)
+{
+}
+
+void Core::HandleIcmpResponse(void                *aContext,
+                              otMessage           *aMessage,
+                              const otMessageInfo *aMessageInfo,
+                              const otIcmp6Header *aIcmpHeader)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+
+    IcmpEchoResponseContext *context     = static_cast<IcmpEchoResponseContext *>(aContext);
+    const Ip6::Icmp::Header *header      = AsCoreTypePtr(aIcmpHeader);
+    const Ip6::MessageInfo  *messageInfo = AsCoreTypePtr(aMessageInfo);
+
+    VerifyOrQuit(context != nullptr);
+    VerifyOrQuit(header != nullptr);
+    VerifyOrQuit(messageInfo != nullptr);
+
+    if ((header->GetType() == Ip6::Icmp::Header::kTypeEchoReply) && (header->GetId() == context->mIdentifier))
+    {
+        context->mResponseReceived = true;
+
+        Log("Received Echo Reply on Node %u (%s) from %s", context->mNode.GetId(), context->mNode.GetName(),
+            messageInfo->GetPeerAddr().ToString().AsCString());
+    }
+}
+
+void Core::SendAndVerifyEchoRequest(Node               &aSender,
+                                    const Ip6::Address &aDestination,
+                                    uint16_t            aPayloadSize,
+                                    uint8_t             aHopLimit,
+                                    uint32_t            aResponseTimeout)
+{
+    static constexpr uint16_t kIdentifier = 0x1234;
+
+    IcmpEchoResponseContext icmpContext(aSender, kIdentifier);
+    Ip6::Icmp::Handler      icmpHandler(HandleIcmpResponse, &icmpContext);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().RegisterHandler(icmpHandler));
+
+    aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit);
+    AdvanceTime(aResponseTimeout);
+    VerifyOrQuit(icmpContext.mResponseReceived);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().UnregisterHandler(icmpHandler));
+}
+
 } // namespace Nexus
 } // namespace ot

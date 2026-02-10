@@ -64,17 +64,6 @@ static constexpr uint32_t kChildTimeoutWaitTime = (kChildTimeout + 2) * 1000;
  */
 static constexpr uint32_t kEchoRequestWaitTime = 5 * 1000;
 
-static void SendEchoRequest(Node &aSender, const Ip6::Address &aPeerAddr, uint16_t aIdentifier)
-{
-    Message         *message = aSender.Get<Ip6::Icmp>().NewMessage();
-    Ip6::MessageInfo messageInfo;
-
-    VerifyOrQuit(message != nullptr);
-    messageInfo.SetPeerAddr(aPeerAddr);
-    messageInfo.SetHopLimit(64);
-    SuccessOrQuit(aSender.Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier));
-}
-
 void Test5_1_2(void)
 {
     /**
@@ -167,7 +156,7 @@ void Test5_1_2(void)
      * Leader automatically attempts to perform address resolution by sending an Address Query Request
      * - Pass Criteria: N/A
      */
-    SendEchoRequest(leader, med.Get<Mle::Mle>().GetMeshLocalEid(), 0x1234);
+    leader.SendEchoRequest(med.Get<Mle::Mle>().GetMeshLocalEid(), 0x1234);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Router_1 (DUT)");
@@ -188,7 +177,7 @@ void Test5_1_2(void)
      * Leader automatically attempts to perform address resolution by sending an Address Query Request
      * - Pass Criteria: N/A
      */
-    SendEchoRequest(leader, sed.Get<Mle::Mle>().GetMeshLocalEid(), 0x5678);
+    leader.SendEchoRequest(sed.Get<Mle::Mle>().GetMeshLocalEid(), 0x5678);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 7: Router_1 (DUT)");

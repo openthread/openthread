@@ -46,52 +46,6 @@ static constexpr uint32_t kFormNetworkTime = 13 * 1000;
  */
 static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 
-/**
- * Time to wait for ICMPv6 Echo Response.
- */
-static constexpr uint32_t kEchoResponseTime = 1000;
-
-/**
- * ICMPv6 Echo Request identifier.
- */
-static constexpr uint16_t kEchoIdentifier = 0x1234;
-
-/**
- * ICMPv6 Hop Limit.
- */
-static constexpr uint8_t kHopLimit = 64;
-
-static void HandleEchoReply(void                *aContext,
-                            otMessage           *aMessage,
-                            const otMessageInfo *aMessageInfo,
-                            const otIcmp6Header *aIcmpHeader)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    if (aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY)
-    {
-        *static_cast<bool *>(aContext) = true;
-    }
-}
-
-static void SendAndVerifyEchoRequest(Core &aNexus, Node &aSender, Node &aReceiver, bool &aReceivedEchoReply)
-{
-    Message         *message = aSender.Get<Ip6::Icmp>().NewMessage();
-    Ip6::MessageInfo messageInfo;
-
-    VerifyOrQuit(message != nullptr);
-
-    messageInfo.SetPeerAddr(aReceiver.Get<Mle::Mle>().GetLinkLocalAddress());
-    messageInfo.SetHopLimit(kHopLimit);
-
-    aReceivedEchoReply = false;
-    SuccessOrQuit(aSender.Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, kEchoIdentifier));
-
-    aNexus.AdvanceTime(kEchoResponseTime);
-    VerifyOrQuit(aReceivedEchoReply, "Echo Reply not received");
-}
-
 void Test5_1_6(void)
 {
     /**
@@ -151,11 +105,7 @@ void Test5_1_6(void)
      * - Pass Criteria:
      *   - The DUT MUST respond with an ICMPv6 Echo Reply
      */
-    bool               leaderReceivedEchoReply = false;
-    Ip6::Icmp::Handler leaderIcmpHandler(HandleEchoReply, &leaderReceivedEchoReply);
-    SuccessOrQuit(leader.Get<Ip6::Icmp>().RegisterHandler(leaderIcmpHandler));
-
-    SendAndVerifyEchoRequest(nexus, leader, router, leaderReceivedEchoReply);
+    nexus.SendAndVerifyEchoRequest(leader, router.Get<Mle::Mle>().GetLinkLocalAddress());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: Harness instructs the Leader to remove the Router ID of Router_1 (the DUT)");
@@ -191,7 +141,7 @@ void Test5_1_6(void)
      * - Pass Criteria:
      *   - The DUT MUST respond with an ICMPv6 Echo Reply
      */
-    SendAndVerifyEchoRequest(nexus, leader, router, leaderReceivedEchoReply);
+    nexus.SendAndVerifyEchoRequest(leader, router.Get<Mle::Mle>().GetLinkLocalAddress());
 
     nexus.SaveTestInfo("test_5_1_6.json");
 }

@@ -56,7 +56,15 @@ public:
     TimeMilli GetNow(void) { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Test specific helper methods
+
     void SaveTestInfo(const char *aFilename);
+    void SendAndVerifyEchoRequest(Node               &aSender,
+                                  const Ip6::Address &aDestination,
+                                  uint16_t            aPayloadSize     = 0,
+                                  uint8_t             aHopLimit        = 64,
+                                  uint32_t            aResponseTimeout = 1000);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
@@ -77,12 +85,26 @@ private:
         kSendAckFramePending,
     };
 
+    struct IcmpEchoResponseContext
+    {
+        IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier);
+
+        Node    &mNode;
+        uint16_t mIdentifier;
+        bool     mResponseReceived;
+    };
+
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
     void ProcessMdns(Node &aNode);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void ProcessTrel(Node &aNode);
 #endif
+
+    static void HandleIcmpResponse(void                *aContext,
+                                   otMessage           *aMessage,
+                                   const otMessageInfo *aMessageInfo,
+                                   const otIcmp6Header *aIcmpHeader);
 
     static Core *sCore;
     static bool  sInUse;
