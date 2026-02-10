@@ -82,9 +82,4 @@ void otTrelResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Trel
 
 uint16_t otTrelGetUdpPort(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().GetUdpPort(); }
 
-void otTrelSetStateChangeCallback(otInstance *aInstance, otTrelStateChangeCallback aCallback, void *aContext)
-{
-    AsCoreType(aInstance).Get<Trel::Interface>().SetStateChangeCallback(aCallback, aContext);
-}
-
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

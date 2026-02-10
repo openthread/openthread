@@ -41,9 +41,7 @@
 #include <openthread/trel.h>
 #include <openthread/platform/trel.h>
 
-#include "common/callback.hpp"
 #include "common/locator.hpp"
-#include "common/tasklet.hpp"
 #include "net/socket.hpp"
 #include "radio/trel_packet.hpp"
 
@@ -73,13 +71,6 @@ class Interface : public InstanceLocator
                                          const otSockAddr *aSenderAddr);
 
 public:
-    /**
-     * Pointer type defines the callback used by TREL interface to notify user of state changes.
-     *
-     * Please see `otTrelStateChangeCallback` for more details.
-     */
-    typedef otTrelStateChangeCallback StateChangeCallback;
-
     /**
      * Represents an entity requesting to enable or disable the TREL interface (via `SetEnabled()`).
      */
@@ -158,14 +149,6 @@ public:
      */
     uint16_t GetUdpPort(void) const { return mUdpPort; }
 
-    /**
-     * Sets the callback.
-     *
-     * @param[in] aCallback   The callback function pointer.
-     * @param[in] aContext    The context associated and used with callback handler.
-     */
-    void SetStateChangeCallback(StateChangeCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
-
 private:
     enum State : uint8_t
     {
@@ -177,7 +160,6 @@ private:
     explicit Interface(Instance &aInstance);
 
     void UpdateState(void);
-    void HandleTask(void);
 
     // Methods used by `Trel::Link`.
     void  Init(void);
@@ -186,16 +168,12 @@ private:
     // Callbacks from `otPlatTrel`.
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
 
-    using CallbackTask = TaskletIn<Interface, &Interface::HandleTask>;
-
-    bool                          mUserEnabled : 1;
-    bool                          mStackEnabled : 1;
-    bool                          mFiltered : 1;
-    State                         mState;
-    uint16_t                      mUdpPort;
-    Packet                        mRxPacket;
-    CallbackTask                  mCallbackTask;
-    Callback<StateChangeCallback> mCallback;
+    bool     mUserEnabled : 1;
+    bool     mStackEnabled : 1;
+    bool     mFiltered : 1;
+    State    mState;
+    uint16_t mUdpPort;
+    Packet   mRxPacket;
 };
 
 } // namespace Trel
