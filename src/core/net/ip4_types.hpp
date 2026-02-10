@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv4 packet processing.
  */
 
-#ifndef IP4_TYPES_HPP_
-#define IP4_TYPES_HPP_
+#ifndef OT_CORE_NET_IP4_TYPES_HPP_
+#define OT_CORE_NET_IP4_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -826,4 +826,4 @@ DefineCoreType(otIp4Cidr, Ip4::Cidr);
 
 } // namespace ot
 
-#endif // IP4_TYPES_HPP_
+#endif // OT_CORE_NET_IP4_TYPES_HPP_

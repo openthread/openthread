@@ -31,8 +31,8 @@
  *   This file includes common type definitions for Border Router modules.
  */
 
-#ifndef BR_TYPES_HPP_
-#define BR_TYPES_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_
+#define OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,6 +47,7 @@
 #include "common/string.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
+#include "common/uptime.hpp"
 #include "net/ip6_address.hpp"
 #include "net/nd6.hpp"
 #include "thread/network_data.hpp"
@@ -58,6 +59,7 @@ typedef NetworkData::RoutePreference          RoutePreference;     ///< Route pr
 typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
 typedef otBorderRoutingPrefixTableEntry       PrefixTableEntry;    ///< Prefix Table Entry.
 typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
+typedef otBorderRoutingNat64PrefixEntry       Nat64PrefixEntry;    ///< NAT64 Prefix Entry.
 typedef otBorderRoutingRdnssAddrEntry         RdnssAddrEntry;      ///< RDNSS Address Entry.
 typedef otBorderRoutingRdnssAddrCallback      RdnssAddrCallback;   ///< RDNS Address changed callback.
 typedef otBorderRoutingIfAddrEntry            IfAddrEntry;         ///< Infra-if IPv6 Address Entry.
@@ -65,12 +67,12 @@ typedef otBorderRoutingPeerBorderRouterEntry  PeerBrEntry;         ///< Peer Bor
 typedef otBorderRoutingPrefixTableEntry       Dhcp6PdPrefix;       ///< DHCPv6 PD prefix.
 typedef otPdProcessedRaInfo                   Dhcp6PdCounters;     ///< DHCPv6 PD counters.
 typedef otBorderRoutingRequestDhcp6PdCallback Dhcp6PdCallback;     ///< DHCPv6 PD callback.
-typedef otBorderRoutingMultiAilCallback       MultiAilCallback;    ///< Multi AIL detection callback.
 
 // IPv6 Neighbor Discovery (ND) types
 typedef Ip6::Nd::PrefixInfoOption         PrefixInfoOption;         ///< Prefix Info Option (PIO).
 typedef Ip6::Nd::RouteInfoOption          RouteInfoOption;          ///< Route Info Option (RIO).
 typedef Ip6::Nd::RaFlagsExtOption         RaFlagsExtOption;         ///< RA Flags Extension Option.
+typedef Ip6::Nd::Nat64PrefixOption        Nat64PrefixOption;        ///< NAT64 Prefix Option.
 typedef Ip6::Nd::RecursiveDnsServerOption RecursiveDnsServerOption; ///< Recursive DNS Server (RDNSS) Option.
 typedef Ip6::Nd::RouterAdvert             RouterAdvert;             ///< Router Advertisement (RA).
 typedef Ip6::Nd::NeighborAdvertMessage    NeighborAdvertMessage;    ///< Neighbor Advertisement message.
@@ -338,6 +340,47 @@ private:
     RoutePreference mRoutePreference;
 };
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+/**
+ * Represents a NAT64 Prefix.
+ */
+class Nat64Prefix : public LifetimedPrefix, public Clearable<Nat64Prefix>
+{
+public:
+    /**
+     * Sets the NAT64 prefix information from a `Nat64PrefixOption`.
+     *
+     * @param[in] aNat64Prefix  The `Nat64PrefixOption` to set from.
+     */
+    void SetFrom(const Nat64PrefixOption &aNat64Prefix);
+
+    /**
+     * Clears (sets to zero) the valid lifetime of the NAT64 prefix.
+     */
+    void ClearValidLifetime(void) { mValidLifetime = 0; }
+
+    /**
+     * Copies the NAT64 prefix information to a `Nat64PrefixEntry`.
+     *
+     * @param[out] aEntry  The `Nat64PrefixEntry` to copy information to.
+     * @param[in]  aNow    The current time.
+     */
+    void CopyInfoTo(Nat64PrefixEntry &aEntry, TimeMilli aNow) const;
+
+    /**
+     * Indicates whether this NAT64 prefix is favored over another NAT64 prefix.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to compare against.
+     *
+     * @retval TRUE   If this prefix is favored over @p aPrefix.
+     * @retval FALSE  If this prefix is not favored over @p aPrefix.
+     */
+    bool IsFavoredOver(const Ip6::Prefix &aPrefix) const;
+};
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /**
@@ -451,7 +494,7 @@ public:
      * @param[in] aAddress    The IPv6 address.
      * @param[in] aUptimeNow  The current uptime (in seconds).
      */
-    void SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow);
+    void SetFrom(const Ip6::Address &aAddress, UptimeSec aUptimeNow);
 
     /**
      * Indicates whether this interface address entry matches a given IPv6 address.
@@ -479,11 +522,11 @@ public:
      * @param[out] aEntry      The `IfAddrEntry` to copy information to.
      * @param[in]  aUptimeNow  The current uptime.
      */
-    void CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const;
+    void CopyInfoTo(IfAddrEntry &aEntry, UptimeSec aUptimeNow) const;
 
 private:
     Ip6::Address mAddress;
-    uint32_t     mLastUseUptime;
+    UptimeSec    mLastUseUptime;
 };
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -628,4 +671,4 @@ TimeMilli CalculateClampedExpirationTime(TimeMilli aUpdateTime, uint32_t aLifeti
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // BR_TYPES_HPP_
+#endif // OT_CORE_BORDER_ROUTER_BR_TYPES_HPP_

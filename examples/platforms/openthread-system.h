@@ -50,7 +50,7 @@ extern "C" {
  * @param[in]  argc  Number of arguments in @p argv.
  * @param[in]  argv  Argument vector.
  */
-void otSysInit(int argc, char *argv[]);
+void otSysInit(int aArgCount, char *aArgVector[]);
 
 /**
  * Performs all platform-specific deinitialization for OpenThread's drivers.

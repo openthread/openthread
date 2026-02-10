@@ -106,6 +106,10 @@ extern "C" {
 OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 OT_TOOL_WEAK void otPlatFree(void *aPtr) { free(aPtr); }
+
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
+
+OT_TOOL_WEAK void otPlatCryptoFree(void *aPtr) { free(aPtr); }
 #endif
 
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}
@@ -435,10 +439,6 @@ OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *)
 {
     return static_cast<uint8_t>(otPlatTimeGetXtalAccuracy() / 2);
 }
-#endif
-
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-OT_TOOL_WEAK void otPlatOtnsStatus(const char *) {}
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

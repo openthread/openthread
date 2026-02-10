@@ -25,6 +25,9 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OT_LIB_SPINEL_SPINEL_ENCRYPTER_HPP_
+#define OT_LIB_SPINEL_SPINEL_ENCRYPTER_HPP_
+
 #include <cstddef>
 
 /**
@@ -62,3 +65,5 @@ bool EncryptOutbound(unsigned char *aFrameBuf, size_t aFrameSize, size_t *aFrame
 bool DecryptInbound(unsigned char *aFrameBuf, size_t aFrameSize, size_t *aFrameLength);
 
 } // namespace SpinelEncrypter
+
+#endif // OT_LIB_SPINEL_SPINEL_ENCRYPTER_HPP_

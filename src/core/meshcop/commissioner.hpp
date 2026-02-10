@@ -31,8 +31,8 @@
  *   This file includes definitions for the Commissioner role.
  */
 
-#ifndef COMMISSIONER_HPP_
-#define COMMISSIONER_HPP_
+#ifndef OT_CORE_MESHCOP_COMMISSIONER_HPP_
+#define OT_CORE_MESHCOP_COMMISSIONER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -393,35 +393,15 @@ private:
     void HandleTimer(void);
     void HandleJoinerExpirationTimer(void);
 
-    static void HandleMgmtCommissionerSetResponse(void                *aContext,
-                                                  otMessage           *aMessage,
-                                                  const otMessageInfo *aMessageInfo,
-                                                  otError              aResult);
-    void        HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
-                                                  const Ip6::MessageInfo *aMessageInfo,
-                                                  Error                   aResult);
-    static void HandleMgmtCommissionerGetResponse(void                *aContext,
-                                                  otMessage           *aMessage,
-                                                  const otMessageInfo *aMessageInfo,
-                                                  otError              aResult);
-    void        HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
-                                                  const Ip6::MessageInfo *aMessageInfo,
-                                                  Error                   aResult);
-    static void HandleLeaderPetitionResponse(void                *aContext,
-                                             otMessage           *aMessage,
-                                             const otMessageInfo *aMessageInfo,
-                                             otError              aResult);
-    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
-    static void HandleLeaderKeepAliveResponse(void                *aContext,
-                                              otMessage           *aMessage,
-                                              const otMessageInfo *aMessageInfo,
-                                              Error                aResult);
-    void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerIn(Commissioner, HandleMgmtCommissionerSetResponse);
+    DeclareTmfResponseHandlerIn(Commissioner, HandleMgmtCommissionerGetResponse);
+    DeclareTmfResponseHandlerIn(Commissioner, HandleLeaderPetitionResponse);
+    DeclareTmfResponseHandlerIn(Commissioner, HandleLeaderKeepAliveResponse);
 
     static void HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent, void *aContext);
     void        HandleSecureAgentConnectEvent(Dtls::Session::ConnectEvent aEvent);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     void HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -488,4 +468,4 @@ DefineMapEnum(otCommissionerJoinerEvent, MeshCoP::Commissioner::JoinerEvent);
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-#endif // COMMISSIONER_HPP_
+#endif // OT_CORE_MESHCOP_COMMISSIONER_HPP_

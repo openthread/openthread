@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 network interfaces.
  */
 
-#ifndef NET_NETIF_HPP_
-#define NET_NETIF_HPP_
+#ifndef OT_CORE_NET_NETIF_HPP_
+#define OT_CORE_NET_NETIF_HPP_
 
 #include "openthread-core-config.h"
 
@@ -147,6 +147,13 @@ public:
          * @returns The unicast address.
          */
         Address &GetAddress(void) { return AsCoreType(&mAddress); }
+
+        /**
+         * Sets the unicast address.
+         *
+         * @param[in] aAddress  The unicast address.
+         */
+        void SetAddress(const Address &aAddress) { mAddress = aAddress; }
 
         /**
          * Returns the address's prefix length (in bits).
@@ -654,4 +661,4 @@ DefineCoreType(otNetifMulticastAddress, Ip6::Netif::MulticastAddress);
 
 } // namespace ot
 
-#endif // NET_NETIF_HPP_
+#endif // OT_CORE_NET_NETIF_HPP_

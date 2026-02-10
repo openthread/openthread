@@ -31,8 +31,8 @@
  *   This file includes definition for bit manipulation utility functions.
  */
 
-#ifndef BIT_UTILS_HPP_
-#define BIT_UTILS_HPP_
+#ifndef OT_CORE_COMMON_BIT_UTILS_HPP_
+#define OT_CORE_COMMON_BIT_UTILS_HPP_
 
 #include "common/encoding.hpp"
 #include "common/numeric_limits.hpp"
@@ -329,4 +329,4 @@ UintType ReadBitsBigEndian(UintType aBits)
 
 } // namespace ot
 
-#endif // BIT_UTILS_HPP_
+#endif // OT_CORE_COMMON_BIT_UTILS_HPP_

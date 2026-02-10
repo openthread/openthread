@@ -31,8 +31,8 @@
  *   This file includes definitions for the spinel interface to Radio Co-processor (RCP)
  */
 
-#ifndef SPINEL_SPINEL_INTERFACE_HPP_
-#define SPINEL_SPINEL_INTERFACE_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_INTERFACE_HPP_
+#define OT_LIB_SPINEL_SPINEL_INTERFACE_HPP_
 
 #include "openthread-spinel-config.h"
 
@@ -197,4 +197,4 @@ protected:
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_SPINEL_INTERFACE_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_INTERFACE_HPP_

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the CLI service.
  */
 
-#ifndef CONFIG_CLI_H_
-#define CONFIG_CLI_H_
+#ifndef OT_CLI_CLI_CONFIG_H_
+#define OT_CLI_CLI_CONFIG_H_
 
 #include "openthread-core-config.h"
 
@@ -196,4 +196,4 @@
 #define OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE 0
 #endif
 
-#endif // CONFIG_CLI_H_
+#endif // OT_CLI_CLI_CONFIG_H_

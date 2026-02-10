@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing IEEE 802.15.4 MAC frames.
  */
 
-#ifndef MAC_FRAME_HPP_
-#define MAC_FRAME_HPP_
+#ifndef OT_CORE_MAC_MAC_FRAME_HPP_
+#define OT_CORE_MAC_MAC_FRAME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1322,14 +1322,14 @@ public:
     /**
      * Generate IEE 802.15.4 Wake-up frame.
      *
-     * @param[in]    aPanId     A destination PAN identifier
-     * @param[in]    aDest      A destination address (short or extended)
-     * @param[in]    aSource    A source address (short or extended)
+     * @param[in]    aPanId          A destination PAN identifier
+     * @param[in]    aWakeupRequest  A const reference to the wake-up request.
+     * @param[in]    aSource         A source address (short or extended)
      *
      * @retval  kErrorNone        Successfully generated Wake-up frame.
      * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
      */
-    Error GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource);
+    Error GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource);
 #endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1528,4 +1528,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_FRAME_HPP_
+#endif // OT_CORE_MAC_MAC_FRAME_HPP_

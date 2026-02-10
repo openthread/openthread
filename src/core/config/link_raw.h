@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Link Raw service.
  */
 
-#ifndef CONFIG_LINK_RAW_H_
-#define CONFIG_LINK_RAW_H_
+#ifndef OT_CORE_CONFIG_LINK_RAW_H_
+#define OT_CORE_CONFIG_LINK_RAW_H_
 
 /**
  * @addtogroup config-link-raw
@@ -56,4 +56,4 @@
  * @}
  */
 
-#endif // CONFIG_LINK_RAW_H_
+#endif // OT_CORE_CONFIG_LINK_RAW_H_

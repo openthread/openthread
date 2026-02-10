@@ -31,8 +31,8 @@
  *   This file includes definitions for the SRP client buffers and service pool.
  */
 
-#ifndef SRP_CLIENT_BUFFERS_HPP_
-#define SRP_CLIENT_BUFFERS_HPP_
+#ifndef OT_CORE_UTILS_SRP_CLIENT_BUFFERS_HPP_
+#define OT_CORE_UTILS_SRP_CLIENT_BUFFERS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -251,4 +251,4 @@ DefineCoreType(otSrpClientBuffersServiceEntry, Utils::SrpClientBuffers::ServiceE
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 
-#endif // SRP_CLIENT_BUFFERS_HPP_
+#endif // OT_CORE_UTILS_SRP_CLIENT_BUFFERS_HPP_

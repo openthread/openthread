@@ -31,8 +31,8 @@
  *   This file wraps the calls to platform OTNS abstractions.
  */
 
-#ifndef UTILS_OTNS_HPP_
-#define UTILS_OTNS_HPP_
+#ifndef OT_CORE_UTILS_OTNS_HPP_
+#define OT_CORE_UTILS_OTNS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -189,4 +189,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#endif // UTILS_OTNS_HPP_
+#endif // OT_CORE_UTILS_OTNS_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for an owned smart pointer.
  */
 
-#ifndef OWNED_PTR_HPP_
-#define OWNED_PTR_HPP_
+#ifndef OT_CORE_COMMON_OWNED_PTR_HPP_
+#define OT_CORE_COMMON_OWNED_PTR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -177,4 +177,4 @@ private:
 
 } // namespace ot
 
-#endif // OWNED_PTR_HPP_
+#endif // OT_CORE_COMMON_OWNED_PTR_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for the message buffer pool and message buffers.
  */
 
-#ifndef MESSAGE_HPP_
-#define MESSAGE_HPP_
+#ifndef OT_CORE_COMMON_MESSAGE_HPP_
+#define OT_CORE_COMMON_MESSAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -498,6 +498,16 @@ public:
      * @retval kErrorNoBufs  Failed to grow the size of the message because insufficient buffers were available.
      */
     Error SetLength(uint16_t aLength);
+
+    /**
+     * Increases the message length by a given number of bytes.
+     *
+     * @param[in]  aSize     The number of bytes to increase the message length by.
+     *
+     * @retval kErrorNone    Successfully increased the length of the message.
+     * @retval kErrorNoBufs  Failed to allocate new buffers to grow the message.
+     */
+    Error IncreaseLength(uint16_t aSize);
 
     /**
      * Returns the number of buffers in the message.
@@ -1849,6 +1859,13 @@ public:
      */
     explicit MessagePool(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * Tears down the object and releases platform managed resources.
+     */
+    ~MessagePool(void);
+#endif
+
     /**
      * Allocates a new message with specified settings.
      *
@@ -1942,4 +1959,4 @@ DefineMapEnum(otMessageOrigin, Message::Origin);
 
 } // namespace ot
 
-#endif // MESSAGE_HPP_
+#endif // OT_CORE_COMMON_MESSAGE_HPP_

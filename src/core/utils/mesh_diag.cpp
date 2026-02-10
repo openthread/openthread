@@ -113,36 +113,25 @@ exit:
     return error;
 }
 
-void MeshDiag::HandleDiagGetResponse(void                *aContext,
-                                     otMessage           *aMessage,
-                                     const otMessageInfo *aMessageInfo,
-                                     otError              aResult)
+void MeshDiag::HandleDiagGetResponse(Coap::Msg *aMsg, Error aResult)
 {
-    static_cast<MeshDiag *>(aContext)->HandleDiagGetResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
-                                                             aResult);
-}
-
-void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error           error;
     RouterInfo      routerInfo;
     Ip6AddrIterator ip6AddrIterator;
     ChildIterator   childIterator;
 
     SuccessOrExit(aResult);
-    VerifyOrExit(aMessage != nullptr);
+    VerifyOrExit(aMsg != nullptr);
     VerifyOrExit(mState == kStateDiscoverTopology);
 
-    SuccessOrExit(routerInfo.ParseFrom(*aMessage));
+    SuccessOrExit(routerInfo.ParseFrom(aMsg->mMessage));
 
-    if (ip6AddrIterator.InitFrom(*aMessage) == kErrorNone)
+    if (ip6AddrIterator.InitFrom(aMsg->mMessage) == kErrorNone)
     {
         routerInfo.mIp6AddrIterator = &ip6AddrIterator;
     }
 
-    if (childIterator.InitFrom(*aMessage, routerInfo.mRloc16) == kErrorNone)
+    if (childIterator.InitFrom(aMsg->mMessage, routerInfo.mRloc16) == kErrorNone)
     {
         routerInfo.mChildIterator = &childIterator;
     }

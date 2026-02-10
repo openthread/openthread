@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
@@ -73,8 +74,6 @@ void ExtAddress::SetFromIid(const Ip6::InterfaceIdentifier &aIid)
 }
 
 #endif
-
-bool ExtAddress::operator==(const ExtAddress &aOther) const { return (memcmp(m8, aOther.m8, sizeof(m8)) == 0); }
 
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
@@ -403,6 +402,27 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
         (GetKey() == aOther.GetKey());
 #endif
 }
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+uint8_t GetWakeupIdLength(WakeupId aWakeupId)
+{
+    uint8_t zeroBytesCount = 0;
+
+    for (int i = static_cast<int>(sizeof(WakeupId)) - 1; i >= 1; --i)
+    {
+        if (((aWakeupId >> (i * kBitsPerByte)) & 0xFF) == 0)
+        {
+            zeroBytesCount++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return sizeof(WakeupId) - zeroBytesCount;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 void WakeupRequest::SetExtAddress(const ExtAddress &aExtAddress)

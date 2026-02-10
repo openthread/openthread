@@ -259,21 +259,14 @@ void Tracker::LogOnError(Error, const char *, const char *) {}
 
 const char *Tracker::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Stopped",
-        "PendingDnssd",
-        "Running",
-    };
+#define StateMapList(_)                   \
+    _(kStateStopped, "Stopped")           \
+    _(kStatePendingDnssd, "PendingDnssd") \
+    _(kStateRunning, "Running")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStatePendingDnssd);
-        ValidateNextEnum(kStateRunning);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -282,7 +275,7 @@ const char *Tracker::StateToString(State aState)
 void Tracker::Iterator::Init(Instance &aInstance)
 {
     SetAgentEntry(aInstance.Get<Tracker>().mAgents.GetHead());
-    SetInitUptime(aInstance.Get<Uptime>().GetUptime());
+    SetInitUptime(aInstance.Get<UptimeTracker>().GetUptime());
 }
 
 Error Tracker::Iterator::GetNextAgentInfo(AgentInfo &aInfo)
@@ -364,7 +357,7 @@ exit:
 Tracker::Agent::Agent(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mNext(nullptr)
-    , mDiscoverUptime(aInstance.Get<Uptime>().GetUptime())
+    , mDiscoverUptime(aInstance.Get<UptimeTracker>().GetUptime())
     , mLastUpdateUptime(mDiscoverUptime)
     , mPort(0)
 {
@@ -481,7 +474,7 @@ exit:
     return;
 }
 
-void Tracker::Agent::SetUpdateTimeToNow(void) { mLastUpdateUptime = Get<Uptime>().GetUptime(); }
+void Tracker::Agent::SetUpdateTimeToNow(void) { mLastUpdateUptime = Get<UptimeTracker>().GetUptime(); }
 
 bool Tracker::Agent::Matches(MatchType aType, const char *aName) const
 {
@@ -503,7 +496,7 @@ exit:
     return matches;
 }
 
-void Tracker::Agent::CopyInfoTo(AgentInfo &aInfo, uint64_t aUptimeNow) const
+void Tracker::Agent::CopyInfoTo(AgentInfo &aInfo, UptimeMsec aUptimeNow) const
 {
     ClearAllBytes(aInfo);
 

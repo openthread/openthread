@@ -26,13 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_CORE_HPP_
-#define OT_NEXUS_CORE_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
 
 #include "nexus_alarm.hpp"
+#include "nexus_pcap.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_utils.hpp"
 
@@ -54,6 +55,8 @@ public:
 
     TimeMilli GetNow(void) { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
+
+    void SaveTestInfo(const char *aFilename);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
@@ -85,6 +88,7 @@ private:
     static bool  sInUse;
 
     OwningList<Node> mNodes;
+    Pcap             mPcap;
     uint16_t         mCurNodeId;
     bool             mPendingAction;
     TimeMilli        mNow;
@@ -97,4 +101,4 @@ void Log(const char *aFormat, ...);
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_CORE_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_

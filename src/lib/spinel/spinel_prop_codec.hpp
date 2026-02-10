@@ -30,8 +30,8 @@
  * @file This file includes definitions for spinel property encoding and decoding functions.
  */
 
-#ifndef SPINEL_PROP_CODEC_HPP_
-#define SPINEL_PROP_CODEC_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_
+#define OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_
 
 #include <openthread/platform/dnssd.h>
 
@@ -57,6 +57,35 @@ otError EncodeDnssd(Encoder                    &aEncoder,
                     const DnssdObjType         &aObj,
                     otPlatDnssdRequestId        aRequestId,
                     otPlatDnssdRegisterCallback aCallback);
+
+/**
+ * Use Spinel::Encode to encode a Dnssd Discovery.
+ *
+ * DnssdDiscoveryType can be: otPlatDnssdBrowser, otPlatDnssdSrvResolver, otPlatDnssdTxtResolver,
+ * otPlatDnssdAddressResolver and otPlatDnssdRecordQuerier.
+ *
+ * A Spinel header and command MUST have been encoded by the encoder.
+ *
+ * @param[in] aEncoder    A reference to the encoder object.
+ * @param[in] aDiscovery  A reference to the dnssd discovery object.
+ */
+template <typename DnssdDiscoveryType>
+otError EncodeDnssdDiscovery(Encoder &aEncoder, const DnssdDiscoveryType &aDiscovery);
+
+/**
+ * Use Spinel::Encode to encode a Dnssd Browser result.
+ *
+ * A Spinel header and command MUST have been encoded by the encoder.
+ *
+ * @param[in] aEncoder          A reference to the encoder object.
+ * @param[in] aBrowseResult     A reference to the browse result object.
+ * @param[in] aCallbackData     A pointer to the callback data.
+ * @param[in] aCallbackDataLen  The data length.
+ */
+otError EncodeDnssdBrowseResult(Encoder                       &aEncoder,
+                                const otPlatDnssdBrowseResult &aBrowseResult,
+                                const uint8_t                 *aCallbackData,
+                                uint16_t                       aCallbackDataLen);
 
 /**
  * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_HOST message to a otPlatDnssdHost.
@@ -113,7 +142,37 @@ otError DecodeDnssdKey(Decoder              &aDecoder,
                        const uint8_t       *&aCallbackData,
                        uint16_t             &aCallbackDataLen);
 
+/**
+ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_BROWSER message to a otPlatDnssdBrowser.
+ *
+ * The decoder MUST have read the header, command and property key of the frame.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aBrowser          A reference to the dnssd browser.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdBrowser(Decoder            &aDecoder,
+                           otPlatDnssdBrowser &aBrowser,
+                           const uint8_t     *&aCallbackData,
+                           uint16_t           &aCallbackDataLen);
+
+/**
+ * Use Spinel::Decoder to decode a Dnssd Browser result.
+ *
+ * The decoder MUST have read the header, command and property key of the frame.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aBrowseResult     A reference to the browse result.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdBrowseResult(Decoder                 &aDecoder,
+                                otPlatDnssdBrowseResult &aBrowseResult,
+                                const uint8_t          *&aCallbackData,
+                                uint16_t                &aCallbackDataLen);
+
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_PROP_CODEC_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_

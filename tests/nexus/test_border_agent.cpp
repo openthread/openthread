@@ -40,11 +40,11 @@ using ActiveDatasetManager = MeshCoP::ActiveDatasetManager;
 using Manager              = MeshCoP::BorderAgent::Manager;
 using BaTxtData            = MeshCoP::BorderAgent::TxtData;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
+using Admitter             = MeshCoP::BorderAgent::Admitter;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
-using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
+using NetworkIdentity      = MeshCoP::NetworkIdentity;
 using NameData             = MeshCoP::NameData;
-using NetworkNameManager   = MeshCoP::NetworkNameManager;
 using TxtEntry             = Dns::TxtEntry;
 
 void TestBorderAgent(void)
@@ -757,6 +757,75 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidArgsErrors == 2);
 }
 
+void TestBorderAgentEphemeralKeyTapGeneration(void)
+{
+    static constexpr uint16_t kMaxRounds = 20;
+
+    using Tap = EphemeralKeyManager::Tap;
+
+    Core    nexus;
+    Node   &node = nexus.CreateNode();
+    Tap     tap;
+    uint8_t index;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentEphemeralKeyTapGeneration");
+
+    nexus.AdvanceTime(0);
+
+    node.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    for (uint16_t round = 0; round < kMaxRounds; round++)
+    {
+        SuccessOrQuit(tap.GenerateRandom());
+        SuccessOrQuit(tap.Validate());
+        Log("Generated random TAP: %s", tap.mTap);
+
+        // Tamper with one of the digits and ensure checksum fails.
+
+        index = round % Tap::kLength;
+
+        tap.mTap[index]++;
+
+        if (tap.mTap[index] > '9')
+        {
+            tap.mTap[index] = '0';
+        }
+
+        VerifyOrQuit(tap.Validate() == kErrorFailed);
+    }
+
+    // CHeck valid TAP strings (Thread spec (1.4.1d3) - section  8.4.9.7)
+
+    SuccessOrQuit(StringCopy(tap.mTap, "903723159"));
+    SuccessOrQuit(tap.Validate());
+
+    SuccessOrQuit(StringCopy(tap.mTap, "746351983"));
+    SuccessOrQuit(tap.Validate());
+
+    // Check invalid TAP strings.
+
+    SuccessOrQuit(StringCopy(tap.mTap, ""));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "1234"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "12345678"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "123456789"));
+    VerifyOrQuit(tap.Validate() == kErrorFailed);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "a23456789"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "12345678A"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+}
+
 EpskcEvent GetNewestEpskcEvent(Node &aNode)
 {
     const EpskcEvent *epskcEvent = nullptr;
@@ -1240,6 +1309,7 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
     static constexpr uint32_t kThreadRoleRouter             = 2 << 9;
     static constexpr uint32_t kThreadRoleLeader             = 3 << 9;
     static constexpr uint32_t kFlagEpskcSupported           = 1 << 11;
+    static constexpr uint32_t kFlagAdmitterSupported        = 1 << 14;
 
     MeshCoP::BorderAgent::Id id;
     BaTxtData::Info          info;
@@ -1273,8 +1343,8 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
 
     if (aNode.Get<MeshCoP::ActiveDatasetManager>().IsComplete())
     {
-        const char                   *networkName = aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString();
-        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<ExtendedPanIdManager>().GetExtPanId();
+        const char                   *networkName = aNode.Get<NetworkIdentity>().GetNetworkName().GetAsCString();
+        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<NetworkIdentity>().GetExtPanId();
 
         aTxtData.ValidateKey("nn", networkName);
         VerifyOrQuit(info.mHasNetworkName);
@@ -1366,6 +1436,17 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
         VerifyOrQuit(!(stateBitmap & kFlagEpskcSupported));
         VerifyOrQuit(!info.mStateBitmap.mEpskcSupported);
     }
+
+    if (aNode.Get<Admitter>().IsEnabled())
+    {
+        VerifyOrQuit(stateBitmap & kFlagAdmitterSupported);
+        VerifyOrQuit(info.mStateBitmap.mAdmitterSupported);
+    }
+    else
+    {
+        VerifyOrQuit(!(stateBitmap & kFlagAdmitterSupported));
+        VerifyOrQuit(!info.mStateBitmap.mAdmitterSupported);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1403,7 +1484,7 @@ void TestBorderAgentTxtDataCallback(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Set MeshCoP service change callback. Will get initial values.
     Log("Set MeshCoP service change callback and check initial values");
-    node0.Get<Manager>().SetServiceChangedCallback(HandleServiceChanged, &callbackInvoked);
+    node0.Get<BaTxtData>().SetChangedCallback(HandleServiceChanged, &callbackInvoked);
     nexus.AdvanceTime(1);
 
     // Check the initial TXT entries
@@ -1821,6 +1902,86 @@ void TestBorderAgentServiceRegistration(void)
     sTxtOutcomes.Clear();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable Admitter function");
+
+    node0.Get<Admitter>().SetEnabled(true);
+    VerifyOrQuit(node0.Get<Admitter>().IsEnabled());
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check the registered service");
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
+    Log("  HostName: %s", service.mHostName);
+    Log("  ServiceInstance: %s", service.mServiceInstance);
+    Log("  ServiceType: %s", service.mServiceType);
+    Log("  Port: %u", service.mPort);
+    Log("  TTL: %lu", ToUlong(service.mTtl));
+
+    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
+    VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
+    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+    VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
+    VerifyOrQuit(service.mTtl > 0);
+    VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
+    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+    ValidateRegisteredServiceData(service, node0);
+
+    // Check that there is no more registered mDNS service
+    VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable Admitter function");
+
+    node0.Get<Admitter>().SetEnabled(false);
+    VerifyOrQuit(!node0.Get<Admitter>().IsEnabled());
+
+    nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check the registered service");
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
+    Log("  HostName: %s", service.mHostName);
+    Log("  ServiceInstance: %s", service.mServiceInstance);
+    Log("  ServiceType: %s", service.mServiceType);
+    Log("  Port: %u", service.mPort);
+    Log("  TTL: %lu", ToUlong(service.mTtl));
+
+    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
+    VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
+    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+    VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
+    VerifyOrQuit(service.mTtl > 0);
+    VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
+    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+    ValidateRegisteredServiceData(service, node0);
+
+    // Check that there is no more registered mDNS service
+    VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable Border Agent and validate that registered service is removed");
 
     node0.Get<MeshCoP::BorderAgent::Manager>().SetEnabled(false);
@@ -1904,7 +2065,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Set vendor TXT data and validate that it is included in the registered mDNS service");
 
-    node0.Get<Manager>().SetVendorTxtData(kVendorTxtData, sizeof(kVendorTxtData));
+    node0.Get<BaTxtData>().SetVendorData(kVendorTxtData, sizeof(kVendorTxtData));
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
@@ -1942,7 +2103,7 @@ void TestBorderAgentServiceRegistration(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Clear vendor TXT data and validate that the registered mDNS service is updated accordingly");
 
-    node0.Get<Manager>().SetVendorTxtData(nullptr, 0);
+    node0.Get<BaTxtData>().SetVendorData(nullptr, 0);
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
 
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
@@ -1979,6 +2140,7 @@ int main(void)
 {
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
+    ot::Nexus::TestBorderAgentEphemeralKeyTapGeneration();
     ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();

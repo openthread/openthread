@@ -31,8 +31,8 @@
  *   This file includes definitions related to Thread Network Data service/server entries.
  */
 
-#ifndef NETWORK_DATA_SERVICE_HPP_
-#define NETWORK_DATA_SERVICE_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_SERVICE_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_SERVICE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -143,6 +143,21 @@ public:
      * @retval kErrorNotFound   No more matching entries in the Network Data.
      */
     Error GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    /**
+     * Gets the next Border Admitter service info from the Thread Network Data Border Admitter servcie entries.
+     *
+     * To start from the first service entry, ensure the iterator is reset (e.g., by creating a new `Iterator`
+     * instance, or by calling `Reset()`).
+     *
+     * @param[out] aRloc16      On success, returns the RLOC16 or device which added Border Admitter service entry.
+     *
+     * @retval kErrorNone       Successfully got the next info. @p aRloc16 is updated.
+     * @retval kErrorNotFound   No more matching entries in the Network Data.
+     */
+    Error GetNextBorderAdmitterInfo(uint16_t &aRloc16);
+#endif
 
 private:
     Error AdvanceToNextServer(void);
@@ -277,6 +292,24 @@ public:
     Error RemoveBackboneRouterService(void) { return RemoveService(kBackboneRouterServiceNumber); }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    /**
+     * Adds a Border Admitter Service entry to the local Thread Network Data.
+     *
+     * @retval kErrorNone     Successfully added the Service entry.
+     * @retval kErrorNoBufs   Insufficient space to add the Service entry.
+     */
+    Error AddBorderAdmitterService(void) { return AddService(kBorderAdmitterServiceNumber); }
+
+    /**
+     * Removes the Border Admitter Service entry from the local Thread Network Data.
+     *
+     * @retval kErrorNone       Successfully removed the Service entry.
+     * @retval kErrorNotFound   Could not find the Service entry.
+     */
+    Error RemoveBorderAdmitterService(void) { return RemoveService(kBorderAdmitterServiceNumber); }
+#endif
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -322,6 +355,7 @@ private:
     static constexpr uint8_t kBackboneRouterServiceNumber = 0x01;
     static constexpr uint8_t kDnsSrpAnycastServiceNumber  = 0x5c;
     static constexpr uint8_t kDnsSrpUnicastServiceNumber  = 0x5d;
+    static constexpr uint8_t kBorderAdmitterServiceNumber = 0xad;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -504,6 +538,8 @@ private:
         return AddService(&aServiceData, aServiceData.GetLength(), &aServerData, sizeof(ServerDataType));
     }
 
+    Error AddService(uint8_t aServiceNumber) { return AddService(&aServiceNumber, sizeof(uint8_t), nullptr, 0); }
+
     Error AddService(const void *aServiceData,
                      uint8_t     aServiceDataLength,
                      const void *aServerData,
@@ -540,4 +576,4 @@ private:
 } // namespace NetworkData
 } // namespace ot
 
-#endif // NETWORK_DATA_SERVICE_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_SERVICE_HPP_

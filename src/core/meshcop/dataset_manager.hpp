@@ -31,8 +31,8 @@
  *   This file includes definitions for managing MeshCoP Datasets.
  */
 
-#ifndef MESHCOP_DATASET_MANAGER_HPP_
-#define MESHCOP_DATASET_MANAGER_HPP_
+#ifndef OT_CORE_MESHCOP_DATASET_MANAGER_HPP_
+#define OT_CORE_MESHCOP_DATASET_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -279,19 +279,15 @@ private:
     bool  IsPendingDataset(void) const { return (mType == Dataset::kPending); }
     void  Restore(const Dataset &aDataset);
     Error ApplyConfiguration(const Dataset &aDataset) const;
-    void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void  HandleGet(const Coap::Msg &aMsg) const;
     void  HandleTimer(void);
     Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
     void  LocalSave(const Dataset &aDataset);
     void  SignalDatasetChange(void) const;
     void  SyncLocalWithLeader(const Dataset &aDataset);
     Error SendSetRequest(const Dataset &aDataset);
-    void  HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
-    static void HandleMgmtSetResponse(void                *aContext,
-                                      otMessage           *aMessage,
-                                      const otMessageInfo *aMessageInfo,
-                                      otError              aError);
+    DeclareTmfResponseHandlerIn(DatasetManager, HandleMgmtSetResponse);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     void  MoveKeysToSecureStorage(Dataset &aDataset) const;
@@ -302,11 +298,9 @@ private:
 #endif
 
 #if OPENTHREAD_FTD
-    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Msg &aMsg);
     Error ProcessSetOrReplaceRequest(MgmtCommand aCommand, const Coap::Message &aMessage, RequestInfo &aInfo) const;
-    void  SendSetOrReplaceResponse(const Coap::Message    &aRequest,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   StateTlv::State         aState);
+    void  SendSetOrReplaceResponse(const Coap::Msg &aMsg, StateTlv::State aState);
 #endif
 
     Type                      mType;
@@ -390,7 +384,7 @@ public:
 #endif
 
 private:
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
@@ -442,7 +436,28 @@ public:
      * Starts the Leader functions for maintaining the Active Operational Dataset.
      */
     void StartLeader(void);
-#endif
+
+    /**
+     * Gets the minimal delay timer.
+     *
+     * @retval the minimal delay timer (in ms).
+     */
+    uint32_t GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
+
+    /**
+     * Sets the minimal delay timer value.
+     *
+     * This method is reserved for testing and demo purposes only. Changing this will render a production application
+     * non-compliant with the Thread Specification.
+     *
+     * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
+     *
+     * @retval  kErrorNone         Successfully set the minimal delay timer.
+     * @retval  kErrorInvalidArgs  If @p aDelayTimerMinimal is not valid. It is zero or it is larger than or equal to
+     *                             the default minimum value of `DelayTimerTlv::kMinDelay`.
+     */
+    Error SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
+#endif // OPENTHREAD_FTD
 
 private:
 #if OPENTHREAD_FTD
@@ -456,11 +471,14 @@ private:
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     void                     HandleDelayTimer(void);
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     using DelayTimer = TimerMilliIn<PendingDatasetManager, &PendingDatasetManager::HandleDelayTimer>;
 
     DelayTimer mDelayTimer;
+#if OPENTHREAD_FTD
+    uint32_t mDelayTimerMinimal;
+#endif
 };
 
 DeclareTmfHandler(PendingDatasetManager, kUriPendingGet);
@@ -471,4 +489,4 @@ DeclareTmfHandler(PendingDatasetManager, kUriPendingSet);
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // MESHCOP_DATASET_MANAGER_HPP_
+#endif // OT_CORE_MESHCOP_DATASET_MANAGER_HPP_

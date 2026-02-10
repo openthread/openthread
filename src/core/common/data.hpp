@@ -31,8 +31,8 @@
  *   This file includes definitions for a `Data` and `MutableData`.
  */
 
-#ifndef DATA_HPP_
-#define DATA_HPP_
+#ifndef OT_CORE_COMMON_DATA_HPP_
+#define OT_CORE_COMMON_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -364,4 +364,4 @@ public:
 
 } // namespace ot
 
-#endif // DATA_HPP_
+#endif // OT_CORE_COMMON_DATA_HPP_

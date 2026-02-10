@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MULTICAST_DNS_HPP_
-#define MULTICAST_DNS_HPP_
+#ifndef OT_CORE_NET_MDNS_HPP_
+#define OT_CORE_NET_MDNS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -472,6 +472,7 @@ public:
      * @retval kErrorNone           Browser started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical browser (same service and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aBrowser is invalid, or the callback is `nullptr`.
      */
     Error StartBrowser(const Browser &aBrowser);
 
@@ -483,7 +484,8 @@ public:
      * @param[in] aBrowser    The browser to stop.
      *
      * @retval kErrorNone           Browser stopped successfully.
-     * @retval kErrorInvalidSatet  mDNS module is not enabled.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aBrowser is invalid, or the callback is `nullptr`.
      */
     Error StopBrowser(const Browser &aBrowser);
 
@@ -507,6 +509,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartSrvResolver(const SrvResolver &aResolver);
 
@@ -519,6 +522,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopSrvResolver(const SrvResolver &aResolver);
 
@@ -542,6 +546,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartTxtResolver(const TxtResolver &aResolver);
 
@@ -554,6 +559,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopTxtResolver(const TxtResolver &aResolver);
 
@@ -577,6 +583,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -589,6 +596,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopIp6AddressResolver(const AddressResolver &aResolver);
 
@@ -613,6 +621,7 @@ public:
      * @retval kErrorNone           Resolver started successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
      * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StartIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -625,6 +634,7 @@ public:
      *
      * @retval kErrorNone           Resolver stopped successfully.
      * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorInvalidArgs    A name in @p aResolver is invalid, or the callback is `nullptr`.
      */
     Error StopIp4AddressResolver(const AddressResolver &aResolver);
 
@@ -653,10 +663,11 @@ public:
      *
      * @param[in] aQuerier    The record querier to be started.
      *
-     * @retval kErrorNone              Record @p aQuerier started successfully.
-     * @retval kErrorInvalidState      mDNS module is not enabled.
-     * @retval kErrorAlready           An identical querier (same name, record type, and callback) is already active.
-     * @retval kErrorInvalidArg   The `mRecordType` in @p aQuerier is invalid. MUST use browser/resolvers.
+     * @retval kErrorNone          Record @p aQuerier started successfully.
+     * @retval kErrorInvalidState  mDNS module is not enabled.
+     * @retval kErrorAlready       An identical querier (same name, record type, and callback) is already active.
+     * @retval kErrorInvalidArgs   The `mRecordType` in @p aQuerier is invalid (MUST use browser/resolvers), or
+     *                             a name in @p aQuerier is invalid, or the callback is `nullptr`.
      */
     Error StartRecordQuerier(const RecordQuerier &aQuerier);
 
@@ -667,8 +678,10 @@ public:
      *
      * @param[in] aQuerier    The record querier to be stopped.
      *
-     * @retval kErrorNone           Querier stopped successfully.
-     * @retval kErrorInvalidStat    mDNS module is not enabled.
+     * @retval kErrorNone          Querier stopped successfully.
+     * @retval kErrorInvalidState  mDNS module is not enabled.
+     * @retval kErrorInvalidArgs   The `mRecordType` in @p aQuerier is invalid (MUST use browser/resolvers), or
+     *                             a name in @p aQuerier is invalid, or the callback is `nullptr`.
      */
     Error StopRecordQuerier(const RecordQuerier &aQuerier);
 
@@ -896,8 +909,10 @@ private:
     static constexpr uint8_t  kNumberOfAnnounces = 3;
     static constexpr uint32_t kAnnounceInterval  = 1000; // In msec - time between first two announces
 
-    static constexpr uint8_t  kNumberOfInitalQueries = 3;
-    static constexpr uint32_t kInitialQueryInterval  = 1000; // In msec - time between first two queries
+    static constexpr uint32_t kMinQueryRetryInterval   = Time::kOneSecondInMsec; // In msec
+    static constexpr uint32_t kMaxQueryRetryInterval   = Time::kOneHourInMsec;   // In msec
+    static constexpr uint32_t kQueryRetryGrowthFactor  = 2;
+    static constexpr uint32_t kQueryRetryJitterDivisor = 32;
 
     static constexpr uint32_t kMinInitialQueryDelay     = 20;  // msec
     static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
@@ -908,8 +923,9 @@ private:
     static constexpr uint32_t kResponseAggregationMaxDelay = 500; // msec
 
     static constexpr uint32_t kUnspecifiedTtl       = 0;
-    static constexpr uint32_t kDefaultTtl           = 120;
-    static constexpr uint32_t kDefaultKeyTtl        = kDefaultTtl;
+    static constexpr uint32_t kDefaultAddrTtl       = 120;
+    static constexpr uint32_t kDefaultServiceTtl    = 4500;
+    static constexpr uint32_t kDefaultKeyTtl        = 4500;
     static constexpr uint32_t kLegacyUnicastNsecTtl = 10;
     static constexpr uint32_t kNsecTtl              = 4500;
     static constexpr uint32_t kServicesPtrTtl       = 4500;
@@ -1171,6 +1187,7 @@ private:
         void SetCallback(const Callback &aCallback);
         void ClearCallback(void) { mCallback.Clear(); }
         void MarkToInvokeCallbackUnconditionally(void);
+        void DecideToProbeOnRegister(void);
         void StartProbing(void);
         void SetStateToConflict(void);
         void SetStateToRemoving(void);
@@ -1841,7 +1858,7 @@ private:
         bool  IsActive(void) const { return mIsActive; }
         bool  ShouldDelete(TimeMilli aNow) const;
         void  StartInitialQueries(void);
-        void  StopInitialQueries(void) { mInitalQueries = kNumberOfInitalQueries; }
+        void  StopQueryRetries(void) { mContinuousRetry = false; }
         Error Add(const ResultCallback &aCallback);
         void  Remove(const ResultCallback &aCallback);
         void  DetermineNextFireTime(void);
@@ -1861,7 +1878,7 @@ private:
         bool     ShouldQuery(TimeMilli aNow);
         void     PrepareQuery(CacheContext &aContext);
         void     ProcessExpiredRecords(TimeMilli aNow);
-        void     DetermineNextInitialQueryTime(void);
+        void     UpdateQueryRetryInterval(void);
 
         ResultCallback *FindCallbackMatching(const ResultCallback &aCallback);
 
@@ -1869,10 +1886,12 @@ private:
         template <typename CacheType> const CacheType &As(void) const { return *static_cast<const CacheType *>(this); }
 
         Type         mType;                   // Cache entry type.
-        uint8_t      mInitalQueries;          // Number initial queries sent already.
+        bool         mContinuousRetry : 1;    // Whether to continue sending queries.
         bool         mQueryPending : 1;       // Whether a query tx request is pending.
         bool         mLastQueryTimeValid : 1; // Whether `mLastQueryTime` is valid.
         bool         mIsActive : 1;           // Whether there is any active resolver/browser/querier for this entry.
+        uint32_t     mRetryInterval;          // The current query retry interval (in msec).
+        uint32_t     mJitteredRetryInterval;  // The current query retry interval with added random jitter (in msec).
         TimeMilli    mNextQueryTime;          // The next query tx time when `mQueryPending`.
         TimeMilli    mLastQueryTime;          // The last query tx time or the upcoming tx time of first initial query.
         TimeMilli    mDeleteTime;             // The time to delete the entry when not `mIsActive`.
@@ -2322,6 +2341,11 @@ private:
     Error     ValidateHostName(const Host &aHost) const;
     Error     ValidateServiceNames(const Service &aService, bool aCheckHostAndSubTypeLabels) const;
     Error     ValidateKeyName(const Key &aKey) const;
+    Error     ValidateNamesIn(const Browser &aBrowser) const;
+    Error     ValidateNamesIn(const SrvResolver &aSrvResolver) const;
+    Error     ValidateNamesIn(const TxtResolver &aTxtResolver) const;
+    Error     ValidateNamesIn(const AddressResolver &aAddressResolver) const;
+    Error     ValidateNamesIn(const RecordQuerier &aRecordQuerier) const;
     void      HandleInfraIfStateChanged(void);
     void      HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded, uint32_t aInfraIfIndex);
     void      HandleHostAddressRemoveAll(uint32_t aInfraIfIndex);
@@ -2439,4 +2463,4 @@ DefineCoreType(otPlatMdnsAddressInfo, Dns::Multicast::Core::AddressInfo);
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
-#endif // MULTICAST_DNS_HPP_
+#endif // OT_CORE_NET_MDNS_HPP_

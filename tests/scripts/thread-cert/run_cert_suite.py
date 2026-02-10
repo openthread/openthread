@@ -57,7 +57,7 @@ def bash(cmd: str, check=True, stdout=None):
     subprocess.run(cmd, shell=True, check=check, stdout=stdout)
 
 
-def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: str):
+def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: str, timeout: int):
     if not os.access(script, os.X_OK):
         logging.warning('Skip test %s, not executable', script)
         return
@@ -79,7 +79,12 @@ def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: st
                                       stderr=output,
                                       stdin=subprocess.DEVNULL,
                                       cwd=run_directory,
-                                      env=env)
+                                      env=env,
+                                      timeout=None if timeout == 0 else timeout)
+        except subprocess.TimeoutExpired:
+            bash(f'cat {logfile} 1>&2')
+            logging.error("Run test %s timed out, please check the log file: %s", test_name, logfile)
+            raise
         except subprocess.CalledProcessError:
             bash(f'cat {logfile} 1>&2')
             logging.error("Run test %s failed, please check the log file: %s", test_name, logfile)
@@ -115,6 +120,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--multiply', type=int, default=1, help='run each test for multiple times')
+    parser.add_argument('--timeout', type=int, default=0, help='timeout in seconds per test, zero means no timeout')
     parser.add_argument('--run-directory', type=str, default=None, help='run each test in the specified directory')
     parser.add_argument("scripts", nargs='+', type=str, help='specify Backbone test scripts')
 
@@ -122,6 +128,7 @@ def parse_args():
     logging.info("Max jobs: %d", MAX_JOBS)
     logging.info("Run directory: %s", args.run_directory or '.')
     logging.info("Multiply: %d", args.multiply)
+    logging.info("Timeout: %d", args.timeout)
     logging.info("Test scripts: %d", len(args.scripts))
     return args
 
@@ -165,7 +172,7 @@ def print_summary(scripts: List[str], script_successes: Dict[str, List[int]], sc
         print(message)
 
 
-def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
+def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None, timeout: int = 0):
     scripts = list(set(scripts))
 
     # Run each script for multiple times
@@ -182,7 +189,7 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
-        pool.apply_async(run_cert, [i, port_offset, script, run_directory],
+        pool.apply_async(run_cert, [i, port_offset, script, run_directory, timeout],
                          callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
                              id, script, script_successes, port_offset),
                          error_callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
@@ -206,7 +213,7 @@ def main():
         setup_backbone_env()
 
     try:
-        fail_count = run_tests(args.scripts, args.multiply, args.run_directory)
+        fail_count = run_tests(args.scripts, args.multiply, args.run_directory, args.timeout)
         exit(fail_count)
     finally:
         if has_backbone_tests:

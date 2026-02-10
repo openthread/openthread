@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
-from .base_commands import BleCommand, CommandResultNone, Command
+from .base_commands import BleCommand, CommandResult, CommandResultNone, Command
 from tlv.tlv import TLV
 from tlv.tcat_tlv import TcatTLVType
 
@@ -36,7 +36,7 @@ class TlvCommandList(Command):
     def get_help_string(self) -> str:
         return 'List available TLV types to use in \'tlv send\'.'
 
-    async def execute_default(self, args, context):
+    async def execute_default(self, args, context) -> CommandResult:
         list_tlv = "\n".join([f"{tlv.value:#x}\t{tlv.name}" for tlv in TcatTLVType])
         print(f"\n{list_tlv}")
         return CommandResultNone()
@@ -50,7 +50,7 @@ class TlvCommandSend(BleCommand):
     def get_help_string(self) -> str:
         return 'Send TLV with arbitrary payload: \'tlv send <TLV_TYPE> <TLV_PAYLOAD>\'.'
 
-    def prepare_data(self, args, context):
+    def prepare_data(self, args, context) -> bytes:
         tlv_type = TcatTLVType(int(args[0], 16))
         tlv_value = bytes()
         try:
@@ -64,11 +64,12 @@ class TlvCommandSend(BleCommand):
 class TlvCommand(Command):
 
     def __init__(self):
+        super().__init__()
         self._subcommands = {'list': TlvCommandList(), 'send': TlvCommandSend()}
 
     def get_help_string(self) -> str:
         return 'Send TLV with arbitrary payload.'
 
-    async def execute_default(self, args, context):
+    async def execute_default(self, args, context) -> CommandResult:
         self.print_help()
         return CommandResultNone()

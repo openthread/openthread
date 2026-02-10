@@ -31,8 +31,8 @@
  *   This file includes definitions for managing Domain Unicast Address feature defined in Thread 1.2.
  */
 
-#ifndef DUA_MANAGER_HPP_
-#define DUA_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_DUA_MANAGER_HPP_
+#define OT_CORE_THREAD_DUA_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -219,13 +219,9 @@ private:
 
     void UpdateTimeTickerRegistration(void);
 
-    static void HandleDuaResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult);
-    void        HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerIn(DuaManager, HandleDuaResponse);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     Error ProcessDuaResponse(Coap::Message &aMessage);
 
@@ -283,4 +279,4 @@ DeclareTmfHandler(DuaManager, kUriDuaRegistrationNotify);
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-#endif // DUA_MANAGER_HPP_
+#endif // OT_CORE_THREAD_DUA_MANAGER_HPP_

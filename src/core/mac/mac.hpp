@@ -31,8 +31,8 @@
  *   This file includes definitions for the IEEE 802.15.4 MAC.
  */
 
-#ifndef MAC_HPP_
-#define MAC_HPP_
+#ifndef OT_CORE_MAC_MAC_HPP_
+#define OT_CORE_MAC_MAC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -133,6 +133,11 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      */
     explicit Mac(Instance &aInstance);
+
+    /**
+     * Clears the Mode2Key on destruction.
+     */
+    ~Mac(void) { ClearMode2Key(); }
 
     /**
      * Starts an IEEE 802.15.4 Active Scan.
@@ -958,4 +963,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_HPP_
+#endif // OT_CORE_MAC_MAC_HPP_

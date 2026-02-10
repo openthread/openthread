@@ -105,17 +105,29 @@ typedef enum otBorderAgentThreadRole
 } otBorderAgentThreadRole;
 
 /**
+ * Represents the Multi-AIL (Adjacent Infrastructure Link) detection state in a Border Agent State Bitmap.
+ */
+typedef enum otBorderAgentMultiAilState
+{
+    OT_BORDER_AGENT_MULTI_AIL_STATE_DISABLED     = 0, ///< Multi-AIL detection is disabled.
+    OT_BORDER_AGENT_MULTI_AIL_STATE_NOT_DETECTED = 1, ///< Multi-AIL detection is enabled, not detected.
+    OT_BORDER_AGENT_MULTI_AIL_STATE_DETECTED     = 2, ///< Multi-AIL detection is enabled, detected.
+} otBorderAgentMultiAilState;
+
+/**
  * Represents Border Agent State Bitmap information.
  */
 typedef struct otBorderAgentStateBitmap
 {
-    otBorderAgentConnMode      mConnMode;       ///< Connection Mode.
-    otBorderAgentThreadIfState mThreadIfState;  ///< Thread Interface Status.
-    otBorderAgentAvailability  mAvailability;   ///< Availability
-    otBorderAgentThreadRole    mThreadRole;     ///< Thread Role.
-    bool                       mBbrIsActive;    ///< Backbone Router function is active.
-    bool                       mBbrIsPrimary;   ///< Device is the Primary Backbone Router.
-    bool                       mEpskcSupported; ///< ePSKc Mode is supported.
+    otBorderAgentConnMode      mConnMode;          ///< Connection Mode.
+    otBorderAgentThreadIfState mThreadIfState;     ///< Thread Interface Status.
+    otBorderAgentAvailability  mAvailability;      ///< Availability
+    otBorderAgentThreadRole    mThreadRole;        ///< Thread Role.
+    bool                       mBbrIsActive;       ///< Backbone Router function is active.
+    bool                       mBbrIsPrimary;      ///< Device is the Primary Backbone Router.
+    bool                       mEpskcSupported;    ///< ePSKc Mode is supported.
+    otBorderAgentMultiAilState mMultiAilState;     ///< Multi-AIL detection state.
+    bool                       mAdmitterSupported; ///< Border Admitter function is supported.
 } otBorderAgentStateBitmap;
 
 /**

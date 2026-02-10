@@ -31,8 +31,8 @@
  *   This file includes definitions for Channel Manager.
  */
 
-#ifndef CHANNEL_MANAGER_HPP_
-#define CHANNEL_MANAGER_HPP_
+#ifndef OT_CORE_UTILS_CHANNEL_MANAGER_HPP_
+#define OT_CORE_UTILS_CHANNEL_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -372,4 +372,4 @@ private:
 #endif // #if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
 #endif // #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
-#endif // CHANNEL_MANAGER_HPP_
+#endif // OT_CORE_UTILS_CHANNEL_MANAGER_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for MLE types and constants.
  */
 
-#ifndef MLE_TYPES_HPP_
-#define MLE_TYPES_HPP_
+#ifndef OT_CORE_THREAD_MLE_TYPES_HPP_
+#define OT_CORE_THREAD_MLE_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,10 +42,9 @@
 #if OPENTHREAD_CONFIG_P2P_ENABLE
 #include <openthread/provisional/p2p.h>
 #endif
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
-#if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
-#endif
 
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
@@ -67,6 +66,8 @@ namespace ot {
 class Message;
 
 namespace Mle {
+
+class Mle;
 
 /**
  * @addtogroup core-mle-core
@@ -128,6 +129,15 @@ enum DeviceRole : uint8_t
     kRoleChild    = OT_DEVICE_ROLE_CHILD,    ///< The Thread Child role.
     kRoleRouter   = OT_DEVICE_ROLE_ROUTER,   ///< The Thread Router role.
     kRoleLeader   = OT_DEVICE_ROLE_LEADER,   ///< The Thread Leader role.
+};
+
+/**
+ * Represents a status value in an MLE Status TLV.
+ */
+enum Status : uint8_t
+{
+    kStatusSuccess = 0, ///< Success status.
+    kStatusError   = 1, ///< Error status.
 };
 
 /**
@@ -738,6 +748,92 @@ private:
 };
 
 /**
+ * Represents device connectivity info from Connectivity TLV.
+ */
+class Connectivity : public otNetworkDiagConnectivity, public Clearable<Connectivity>
+{
+    friend class Mle;
+
+public:
+    /**
+     * Returns the Parent Priority value.
+     *
+     * @returns The Parent Priority value.
+     */
+    int8_t GetParentPriority(void) const { return mParentPriority; }
+
+    /**
+     * Returns the number of neighbors with link quality 3.
+     *
+     * @returns The number of neighbors with link quality 3.
+     */
+    uint8_t GetNumLinkQuality3(void) const { return mLinkQuality3; }
+
+    /**
+     * Returns the number of neighbors with link quality 2.
+     *
+     * @returns The number of neighbors with link quality 2.
+     */
+    uint8_t GetNumLinkQuality2(void) const { return mLinkQuality2; }
+
+    /**
+     * Returns the number of neighbors with link quality 1.
+     *
+     * @returns The number of neighbors with link quality 1.
+     */
+    uint8_t GetNumLinkQuality1(void) const { return mLinkQuality1; }
+
+    /**
+     * Returns the Leader Cost value.
+     *
+     * @returns The Leader Cost value.
+     */
+    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+
+    /**
+     * Returns the Router ID Sequence value.
+     *
+     * @returns The Router ID Sequence value.
+     */
+    uint8_t GetIdSequence(void) const { return mIdSequence; }
+
+    /**
+     * Returns the Active Routers value.
+     *
+     * @returns The Active Routers value.
+     */
+    uint8_t GetActiveRouterCount(void) const { return mActiveRouters; }
+
+    /**
+     * Indicates whether or not the partition is a singleton based on Active Router Count.
+     *
+     * @retval TRUE   The partition is a singleton.
+     * @retval FALSE  The partition is not a singleton.
+     */
+    bool IsSingleton(void) const { return (mActiveRouters <= 1); }
+
+    /**
+     * Returns the SED Buffer Size value.
+     *
+     * @returns The SED Buffer Size value.
+     */
+    uint16_t GetSedBufferSize(void) const { return mSedBufferSize; }
+
+    /**
+     * Returns the SED Datagram Count value.
+     *
+     * @returns The SED Datagram Count value.
+     */
+    uint8_t GetSedDatagramCount(void) const { return mSedDatagramCount; }
+
+private:
+    static constexpr uint16_t kDefaultSedBufferSize    = OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE;
+    static constexpr uint8_t  kDefaultSedDatagramCount = OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT;
+
+    void IncrementNumForLinkQuality(uint8_t aLinkQuality);
+};
+
+/**
  * Represents a MLE Key Material
  */
 typedef Mac::KeyMaterial KeyMaterial;
@@ -876,4 +972,4 @@ DefineCoreType(otP2pRequest, Mle::P2pRequest);
 
 } // namespace ot
 
-#endif // MLE_TYPES_HPP_
+#endif // OT_CORE_THREAD_MLE_TYPES_HPP_

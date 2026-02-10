@@ -31,8 +31,8 @@
  *   This file includes definitions for performing SHA-256 computations.
  */
 
-#ifndef SHA256_HPP_
-#define SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_SHA256_HPP_
+#define OT_CORE_CRYPTO_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -149,4 +149,4 @@ DefineCoreType(otCryptoSha256Hash, Crypto::Sha256::Hash);
 
 } // namespace ot
 
-#endif // SHA256_HPP_
+#endif // OT_CORE_CRYPTO_SHA256_HPP_

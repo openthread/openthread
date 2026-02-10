@@ -57,9 +57,9 @@ MbedTls::MbedTls(void)
     // mbedTLS's debug level is almost the same as OpenThread's
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     mbedtls_platform_set_calloc_free(Heap::CAlloc, Heap::Free);
-#endif // OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+#endif
 }
 
 Error MbedTls::MapError(int aMbedTlsError)

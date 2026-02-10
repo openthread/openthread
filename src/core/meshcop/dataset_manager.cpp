@@ -211,11 +211,11 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             break;
 
         case Tlv::kExtendedPanId:
-            Get<ExtendedPanIdManager>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
+            Get<NetworkIdentity>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
             break;
 
         case Tlv::kNetworkName:
-            IgnoreError(Get<NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
+            IgnoreError(Get<NetworkIdentity>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kNetworkKey:
@@ -495,24 +495,13 @@ exit:
     return error;
 }
 
-void DatasetManager::HandleMgmtSetResponse(void                *aContext,
-                                           otMessage           *aMessage,
-                                           const otMessageInfo *aMessageInfo,
-                                           otError              aError)
+void DatasetManager::HandleMgmtSetResponse(Coap::Msg *aMsg, Error aError)
 {
-    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
-                                                                   AsCoreTypePtr(aMessageInfo), aError);
-}
-
-void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error   error;
     uint8_t state = StateTlv::kPending;
 
     SuccessOrExit(error = aError);
-    VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending,
+    VerifyOrExit(Tlv::Find<StateTlv>(aMsg->mMessage, state) == kErrorNone && state != StateTlv::kPending,
                  error = kErrorParse);
 
     if (state == StateTlv::kReject)
@@ -530,16 +519,16 @@ exit:
     mTimer.Start(kSendSetDelay);
 }
 
-void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void DatasetManager::HandleGet(const Coap::Msg &aMsg) const
 {
     Error          error    = kErrorNone;
-    Coap::Message *response = ProcessGetRequest(aMessage, kCheckSecurityPolicyFlags);
+    Coap::Message *response = ProcessGetRequest(aMsg.mMessage, kCheckSecurityPolicyFlags);
 
     VerifyOrExit(response != nullptr);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
 
     LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(response, error);
@@ -878,11 +867,7 @@ exit:
     return isValid;
 }
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
-}
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Msg &aMsg) { DatasetManager::HandleGet(aMsg); }
 
 void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
 
@@ -892,6 +877,9 @@ void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDataset
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
     , mDelayTimer(aInstance)
+#if OPENTHREAD_FTD
+    , mDelayTimerMinimal(DelayTimerTlv::kMinDelay)
+#endif
 {
 }
 
@@ -999,11 +987,7 @@ exit:
     Clear();
 }
 
-template <>
-void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
-}
+template <> void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Msg &aMsg) { DatasetManager::HandleGet(aMsg); }
 
 void PendingDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<PendingDatasetManager>().HandleTimer(); }
 

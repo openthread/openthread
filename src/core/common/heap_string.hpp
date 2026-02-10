@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap::String` (a heap allocated string).
  */
 
-#ifndef HEAP_STRING_HPP_
-#define HEAP_STRING_HPP_
+#ifndef OT_CORE_COMMON_HEAP_STRING_HPP_
+#define OT_CORE_COMMON_HEAP_STRING_HPP_
 
 #include "openthread-core-config.h"
 
@@ -192,4 +192,4 @@ private:
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_STRING_HPP_
+#endif // OT_CORE_COMMON_HEAP_STRING_HPP_

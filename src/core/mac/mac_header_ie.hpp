@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing IEEE 802.15.4 IE (Information Element).
  */
 
-#ifndef MAC_HEADER_IE_HPP_
-#define MAC_HEADER_IE_HPP_
+#ifndef OT_CORE_MAC_MAC_HEADER_IE_HPP_
+#define OT_CORE_MAC_MAC_HEADER_IE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -377,10 +377,43 @@ public:
      */
     void SetRetryCount(uint8_t aRetryCount) { WriteBits<uint8_t, kRetryCountMask>(mConnectionWindow, aRetryCount); }
 
+    /**
+     * Sets the Wake-up Identifier.
+     *
+     * @param[in]  aWakeupId  The Wake-up Identifier.
+     *
+     * @retval kErrorNone   Successfully set the Wake-up Identifier.
+     * @retval kErrorParse  The length of the given Wake-up Identifier didn't match the reserved length.
+     */
+    Error SetWakeupId(WakeupId aWakeupId);
+
+    /**
+     * Gets the Wake-up Identifier.
+     *
+     * @param[out]  aWakeupId  A reference to the Wake-up Identifier.
+     *
+     * @retval kErrorNone    Successfully got the Wake-up Identifier.
+     * @retval kErrorParse   Failed to parse the Wake-up Identifier from the Connection IE.
+     */
+    Error GetWakeupId(WakeupId &aWakeupId) const;
+
+    /**
+     * Gets the pointer to the HeaderIe of this ConnectionIe.
+     *
+     * @returns A pointer to the HeaderIe.
+     */
+    const HeaderIe *GetHeaderIe(void) const
+    {
+        return reinterpret_cast<const HeaderIe *>(reinterpret_cast<const uint8_t *>(this) - sizeof(HeaderIe));
+    }
+
 private:
     static constexpr uint8_t kRetryIntervalOffset = 4;
     static constexpr uint8_t kRetryIntervalMask   = 0x3 << kRetryIntervalOffset;
     static constexpr uint8_t kRetryCountMask      = 0xf;
+
+    const uint8_t *GetWakeupIdData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
+    uint8_t       *GetWakeupIdData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
 
     uint8_t mConnectionWindow;
 } OT_TOOL_PACKED_END;
@@ -393,4 +426,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_HEADER_IE_HPP_
+#endif // OT_CORE_MAC_MAC_HEADER_IE_HPP_

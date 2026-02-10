@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI to control the Joiner role.
  */
 
-#ifndef CLI_JOINER_HPP_
-#define CLI_JOINER_HPP_
+#ifndef OT_CLI_CLI_JOINER_HPP_
+#define OT_CLI_CLI_JOINER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -89,4 +89,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#endif // CLI_JOINER_HPP_
+#endif // OT_CLI_CLI_JOINER_HPP_

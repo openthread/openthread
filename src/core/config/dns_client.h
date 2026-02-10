@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the DNS Client.
  */
 
-#ifndef CONFIG_DNS_CLIENT_H_
-#define CONFIG_DNS_CLIENT_H_
+#ifndef OT_CORE_CONFIG_DNS_CLIENT_H_
+#define OT_CORE_CONFIG_DNS_CLIENT_H_
 
 /**
  * @addtogroup config-dns-client
@@ -171,6 +171,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF
+ *
+ * Define as 1 to bind DNS client UDP socket to the internal Thread network interface. When set to 0, the socket is
+ * bound to the unspecified network interface, allowing it to send and receive DNS messages over any network interface.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF
+#define OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
  *
  * Enables support for sending DNS Queries over TCP.
@@ -192,4 +203,4 @@
  * @}
  */
 
-#endif // CONFIG_DNS_CLIENT_H_
+#endif // OT_CORE_CONFIG_DNS_CLIENT_H_

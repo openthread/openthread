@@ -390,14 +390,16 @@ bool MeshForwarder::IsDirectTxQueueOverMaxFrameThreshold(void) const
 
 void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 {
+    Error error;
+    bool  originalEvictFlag;
+
     VerifyOrExit(aMessage.IsDirectTransmission());
     VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
 
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    {
-        bool  originalEvictFlag = aMessage.GetDoNotEvict();
-        Error error;
+    originalEvictFlag = aMessage.GetDoNotEvict();
 
+    do
+    {
         // We mark the "do not evict" flag on the new `aMessage` so
         // that it will not be removed from `RemoveAgedMessages()`.
         // This protects against the unlikely case where the newly
@@ -408,15 +410,15 @@ void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
         // freed twice.
 
         aMessage.SetDoNotEvict(true);
-        error = RemoveAgedMessages();
+        error = EvictMessage(aMessage.GetPriority(), kEvictReasonDirectTxQueueAtLimit);
         aMessage.SetDoNotEvict(originalEvictFlag);
 
         if (error == kErrorNone)
         {
             VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
         }
-    }
-#endif
+
+    } while (error == kErrorNone);
 
     LogMessage(kMessageFullQueueDrop, aMessage);
     FinalizeMessageDirectTx(aMessage, kErrorDrop);
@@ -1363,42 +1365,28 @@ exit:
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {
-    static const char *const kMessageActionStrings[] = {
-        "Received",                    // (0) kMessageReceive
-        "Sent",                        // (1) kMessageTransmit
-        "Prepping indir tx",           // (2) kMessagePrepareIndirect
-        "Dropping",                    // (3) kMessageDrop
-        "Dropping (reassembly queue)", // (4) kMessageReassemblyDrop
-        "Evicting",                    // (5) kMessageEvict
+#define MessageActionMapList(_)                              \
+    _(kMessageReceive, "Received")                           \
+    _(kMessageTransmit, "Sent")                              \
+    _(kMessagePrepareIndirect, "Prepping indir tx")          \
+    _(kMessageDrop, "Dropping")                              \
+    _(kMessageReassemblyDrop, "Dropping (reassembly queue)") \
+    _(kMessageEvict, "Evicting (no msg buff)")               \
+    _(kMessageFullQueueEvict, "Evicting (dir queue full)")   \
+    _(kMessageFullQueueDrop, "Dropping (dir queue full)")    \
+    QueueMgmntMessageActionMapList(_)
+
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        "Marked ECN",            // (6) kMessageMarkEcn
-        "Dropping (queue mgmt)", // (7) kMessageQueueMgmtDrop
+#define QueueMgmntMessageActionMapList(_) \
+    _(kMessageMarkEcn, "Marked ECN")      \
+    _(kMessageQueueMgmtDrop, "Dropping (queue mgmt)")
+#else
+#define QueueMgmntMessageActionMapList(_)
 #endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        "Dropping (dir queue full)", // (8) kMessageFullQueueDrop
-#endif
-    };
 
-    const char *string = kMessageActionStrings[aAction];
+    DefineEnumStringArray(MessageActionMapList);
 
-    struct MessageActionChecker
-    {
-        InitEnumValidatorCounter();
-
-        ValidateNextEnum(kMessageReceive);
-        ValidateNextEnum(kMessageTransmit);
-        ValidateNextEnum(kMessagePrepareIndirect);
-        ValidateNextEnum(kMessageDrop);
-        ValidateNextEnum(kMessageReassemblyDrop);
-        ValidateNextEnum(kMessageEvict);
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        ValidateNextEnum(kMessageMarkEcn);
-        ValidateNextEnum(kMessageQueueMgmtDrop);
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        ValidateNextEnum(kMessageFullQueueDrop);
-#endif
-    };
+    const char *string = kStrings[aAction];
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {
@@ -1549,12 +1537,11 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
 
     case kMessageDrop:
     case kMessageReassemblyDrop:
+    case kMessageFullQueueDrop:
     case kMessageEvict:
+    case kMessageFullQueueEvict:
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     case kMessageQueueMgmtDrop:
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    case kMessageFullQueueDrop:
 #endif
         // default kLogLevelInfo for dropped message
         break;

@@ -177,6 +177,38 @@ void RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const
     aEntry.mRoutePreference     = static_cast<otRoutePreference>(GetRoutePreference());
 }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+//---------------------------------------------------------------------------------------------------------------------
+// Nat64Prefix
+
+void Nat64Prefix::SetFrom(const Nat64PrefixOption &aNat64Prefix)
+{
+    IgnoreError(aNat64Prefix.GetPrefix(mPrefix));
+    mValidLifetime  = aNat64Prefix.GetLifetime();
+    mLastUpdateTime = TimerMilli::GetNow();
+}
+
+void Nat64Prefix::CopyInfoTo(Nat64PrefixEntry &aEntry, TimeMilli aNow) const
+{
+    aEntry.mPrefix              = GetPrefix();
+    aEntry.mMsecSinceLastUpdate = aNow - GetLastUpdateTime();
+    aEntry.mLifetime            = GetValidLifetime();
+}
+
+bool Nat64Prefix::IsFavoredOver(const Ip6::Prefix &aPrefix) const
+{
+    bool isFavored = false;
+
+    VerifyOrExit(mPrefix.GetLength() != 0);
+    VerifyOrExit(aPrefix.GetLength() != 0, isFavored = true);
+
+    isFavored = GetPrefix() < aPrefix;
+
+exit:
+    return isFavored;
+}
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 //---------------------------------------------------------------------------------------------------------------------
 // RdnssAddress
 
@@ -199,7 +231,7 @@ void RdnssAddress::CopyInfoTo(RdnssAddrEntry &aEntry, TimeMilli aNow) const
 //---------------------------------------------------------------------------------------------------------------------
 // IfAddress
 
-void IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
+void IfAddress::SetFrom(const Ip6::Address &aAddress, UptimeSec aUptimeNow)
 {
     mAddress       = aAddress;
     mLastUseUptime = aUptimeNow;
@@ -207,7 +239,7 @@ void IfAddress::SetFrom(const Ip6::Address &aAddress, uint32_t aUptimeNow)
 
 bool IfAddress::Matches(const InvalidChecker &aChecker) const { return !aChecker.Get<InfraIf>().HasAddress(mAddress); }
 
-void IfAddress::CopyInfoTo(IfAddrEntry &aEntry, uint32_t aUptimeNow) const
+void IfAddress::CopyInfoTo(IfAddrEntry &aEntry, UptimeSec aUptimeNow) const
 {
     aEntry.mAddress         = mAddress;
     aEntry.mSecSinceLastUse = aUptimeNow - mLastUseUptime;

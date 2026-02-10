@@ -31,8 +31,8 @@
  *   This file includes definitions for infrastructure network interface.
  */
 
-#ifndef INFRA_IF_HPP_
-#define INFRA_IF_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_
+#define OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_
 
 #include "openthread-core-config.h"
 
@@ -101,13 +101,15 @@ public:
     /**
      * Initializes the `InfraIf`.
      *
-     * @param[in]  aIfIndex        The infrastructure interface index.
+     * This method can also be used to re-initialize and switch the infrastructure interface index to a new one.
+     * Switching the interface index will trigger all components running on the previous interface (Border Routing,
+     * mDNS, etc) to be stopped (as if the previous if-index is no longer running) before restarting operations on the
+     * new interface.
      *
-     * @retval  kErrorNone         Successfully initialized the `InfraIf`.
-     * @retval  kErrorInvalidArgs  The index of the infra interface is not valid.
-     * @retval  kErrorInvalidState The `InfraIf` is already initialized.
+     * @param[in]  aInfraIfIndex      The infrastructure network interface index.
+     * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure interface is running.
      */
-    Error Init(uint32_t aIfIndex);
+    void Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
     /**
      * Deinitilaizes the `InfraIf`.
@@ -240,4 +242,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // INFRA_IF_HPP_
+#endif // OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_

@@ -41,21 +41,28 @@ using namespace ot;
 
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
+    AsCoreType(aInstance).Get<BorderRouter::InfraIf>().Init(aInfraIfIndex, aInfraIfIsRunning);
+
+    return kErrorNone;
 }
 
 otError otBorderRoutingGetInfraIfInfo(otInstance *aInstance, uint32_t *aInfraIfIndex, bool *aInfraIfIsRunning)
 {
-    bool isRunning;
+    Error error = kErrorNone;
 
     AssertPointerIsNotNull(aInfraIfIndex);
 
-    if (aInfraIfIsRunning == nullptr)
+    VerifyOrExit(AsCoreType(aInstance).Get<BorderRouter::InfraIf>().IsInitialized(), error = kErrorInvalidState);
+
+    *aInfraIfIndex = AsCoreType(aInstance).Get<BorderRouter::InfraIf>().GetIfIndex();
+
+    if (aInfraIfIsRunning != nullptr)
     {
-        aInfraIfIsRunning = &isRunning;
+        *aInfraIfIsRunning = AsCoreType(aInstance).Get<BorderRouter::InfraIf>().IsRunning();
     }
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetInfraIfInfo(*aInfraIfIndex, *aInfraIfIsRunning);
+exit:
+    return error;
 }
 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
@@ -231,6 +238,18 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
     return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextRouterEntry(*aIterator, *aEntry);
 }
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+otError otBorderRoutingGetNextNat64PrefixEntry(otInstance                         *aInstance,
+                                               otBorderRoutingPrefixTableIterator *aIterator,
+                                               otBorderRoutingNat64PrefixEntry    *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RxRaTracker>().GetNextNat64PrefixEntry(*aIterator, *aEntry);
+}
+#endif
+
 otError otBorderRoutingGetNextRdnssAddrEntry(otInstance                         *aInstance,
                                              otBorderRoutingPrefixTableIterator *aIterator,
                                              otBorderRoutingRdnssAddrEntry      *aEntry)
@@ -282,22 +301,6 @@ uint16_t otBorderRoutingCountPeerBrs(otInstance *aInstance, uint32_t *aMinAge)
 
     return AsCoreType(aInstance).Get<BorderRouter::NetDataBrTracker>().CountBrs(
         BorderRouter::NetDataBrTracker::kExcludeThisDevice, *aMinAge);
-}
-
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
-
-bool otBorderRoutingIsMultiAilDetected(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsMultiAilDetected();
-}
-
-void otBorderRoutingSetMultiAilCallback(otInstance                     *aInstance,
-                                        otBorderRoutingMultiAilCallback aCallback,
-                                        void                           *aContext)
-{
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetMultiAilCallback(aCallback, aContext);
 }
 
 #endif

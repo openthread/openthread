@@ -30,6 +30,8 @@ import("../../etc/gn/openthread.gni")
 openthread_cli_sources = [
   "cli.cpp",
   "cli.hpp",
+  "cli_ba.cpp",
+  "cli_ba.hpp",
   "cli_bbr.cpp",
   "cli_bbr.hpp",
   "cli_br.cpp",
@@ -40,7 +42,6 @@ openthread_cli_sources = [
   "cli_coap_secure.hpp",
   "cli_commissioner.cpp",
   "cli_commissioner.hpp",
-  "cli_config.h",
   "cli_dataset.cpp",
   "cli_dataset.hpp",
   "cli_dns.cpp",
@@ -74,20 +75,25 @@ openthread_cli_sources = [
   "x509_cert_key.hpp",
 ]
 
-config("cli_config") {
-  defines = []
+static_library("cli_config") {
+  public = [ "cli_config.h" ]
+  deps = [ "../../src/core:libopenthread_core_headers" ]
 }
 
 static_library("libopenthread-cli-ftd") {
   sources = openthread_cli_sources
-  public_deps = [ "../core:libopenthread-ftd" ]
-  public_configs = [":cli_config"]
+  public_deps = [
+    ":cli_config",
+    "../core:libopenthread-ftd",
+  ]
   visibility = [ "../../*" ]
 }
 
 static_library("libopenthread-cli-mtd") {
   sources = openthread_cli_sources
-  public_deps = [ "../core:libopenthread-mtd" ]
-  public_configs = [":cli_config"]
+  public_deps = [
+    ":cli_config",
+    "../core:libopenthread-mtd",
+  ]
   visibility = [ "../../*" ]
 }

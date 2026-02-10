@@ -71,45 +71,39 @@ otError otThreadSendDiagnosticReset(otInstance         *aInstance,
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
-const char *otThreadGetVendorName(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorName();
-}
+const char *otThreadGetVendorName(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetName(); }
 
-const char *otThreadGetVendorModel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorModel();
-}
+const char *otThreadGetVendorModel(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetModel(); }
 
 const char *otThreadGetVendorSwVersion(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorSwVersion();
+    return AsCoreType(aInstance).Get<VendorInfo>().GetSwVersion();
 }
 
 const char *otThreadGetVendorAppUrl(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorAppUrl();
+    return AsCoreType(aInstance).Get<VendorInfo>().GetAppUrl();
 }
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorName(aVendorName);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetName(aVendorName);
 }
 
 otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorModel(aVendorModel);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetModel(aVendorModel);
 }
 
 otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorSwVersion(aVendorSwVersion);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetSwVersion(aVendorSwVersion);
 }
 
 otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorAppUrl(aVendorAppUrl);
+    return AsCoreType(aInstance).Get<VendorInfo>().SetAppUrl(aVendorAppUrl);
 }
 #endif
 

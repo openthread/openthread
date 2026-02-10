@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BLE_SECURE_HPP_
-#define BLE_SECURE_HPP_
+#ifndef OT_CORE_RADIO_BLE_SECURE_HPP_
+#define OT_CORE_RADIO_BLE_SECURE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -154,7 +154,12 @@ public:
     /**
      * Initializes TLS session with a peer using an already open BLE connection.
      *
-     * @retval kErrorNone  Successfully started TLS connection.
+     * @retval kErrorNone          Successfully started TLS connection.
+     * @retval kErrorSecurity      TLS security error during session establishment.
+     * @retval kErrorInvalidState  BLE link is not active.
+     * @retval kErrorNoBufs        Failure in buffer memory allocation.
+     * @retval kErrorInvalidArgs   Internal TLS stack error.
+     * @retval kErrorFailed        General TLS error.
      */
     Error Connect(void);
 
@@ -278,7 +283,7 @@ public:
      * @param[in]  aBuf            A pointer to the data received.
      * @param[in]  aLength         A number indicating the length of the data buffer.
      */
-    Error HandleBleReceive(uint8_t *aBuf, uint16_t aLength);
+    void HandleBleReceive(uint8_t *aBuf, uint16_t aLength);
 
     /**
      * Used to notify the secure BLE server that a BLE Device has been connected.
@@ -297,15 +302,16 @@ public:
     /**
      * Used to notify the secure BLE server that the BLE Device has updated ATT_MTU size.
      *
-     * @param[in]  aMtu             The updated ATT_MTU value.
+     * @param[in]  aMtu             The updated ATT_MTU value. Note that values above OT_BLE_ATT_MTU_MAX
+     *                              will be clamped to OT_BLE_ATT_MTU_MAX.
      */
-    Error HandleBleMtuUpdate(uint16_t aMtu);
+    void HandleBleMtuUpdate(uint16_t aMtu);
 
     /**
      * @brief Gets the Install Code Verify Status during the current session.
      *
-     * @return TRUE The install code was correctly verified.
-     * @return FALSE The install code was not verified.
+     * @retval TRUE  The install code was correctly verified.
+     * @retval FALSE The install code was not verified.
      */
     bool GetInstallCodeVerifyStatus(void) const { return Get<MeshCoP::TcatAgent>().GetInstallCodeVerifyStatus(); }
 
@@ -313,8 +319,10 @@ public:
      * @brief Notifies the BLE layer that the TCAT advertisement data was changed, so
      * BLE advertisement message content should be updated.
      *
-     * @retval kErrorNone     Successfully updated using the new data.
-     * @return kErrorFailed   Update failed.
+     * @retval kErrorNone         Successfully updated using the new data.
+     * @retval kErrorNoBufs       Updated failed due to buffer allocation failure.
+     * @retval kErrorInvalidArgs  Updated failed due to invalid advertisement data.
+     * @retval kErrorFailed       Update failed.
      */
     Error NotifyAdvertisementChanged();
 
@@ -338,8 +346,10 @@ private:
         kNotAdvertising = 3, // Ble secure is started but not advertising.
     };
 
-    static constexpr uint8_t  kInitialMtuSize   = 23; // ATT_MTU
-    static constexpr uint8_t  kGattOverhead     = 3;  // BLE GATT payload fits MTU size - 3 bytes
+    static constexpr uint8_t  kInitialMtuSize   = OT_BLE_ATT_MTU_DEFAULT;
+    static constexpr uint8_t  kMinMtuSize       = OT_BLE_ATT_MTU_MIN;
+    static constexpr uint8_t  kMaxMtuSize       = OT_BLE_ATT_MTU_MAX;
+    static constexpr uint8_t  kGattOverhead     = 3; // BLE GATT payload fits (MTU size - 3 bytes)
     static constexpr uint8_t  kPacketBufferSize = OT_BLE_ATT_MTU_MAX - kGattOverhead;
     static constexpr uint16_t kTxBleHandle      = 0;   // Characteristics Handle for TX (not used)
     static constexpr uint16_t kTlsDataMaxSize   = 800; // Maximum size of data chunks sent with mTls.Send(..)
@@ -378,4 +388,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
-#endif // BLE_SECURE_HPP_
+#endif // OT_CORE_RADIO_BLE_SECURE_HPP_

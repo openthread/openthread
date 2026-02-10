@@ -433,11 +433,16 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance);
  * @p aVendorName should be UTF8 with max length of 32 chars (`MAX_VENDOR_NAME_TLV_LENGTH`). Maximum length does not
  * include the null `\0` character.
  *
+ * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, @p aVendorName must start with the "RD:" prefix.
+ * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
+ * the name is rejected, and `OT_ERROR_INVALID_ARGS` is returned.
+ *
  * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aVendorName     The vendor name string.
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor name.
- * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid (too long or not UTF8).
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid. It is too long, is not UTF-8, or does not start with
+ *                                the "RD:" prefix when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
  */
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName);
 

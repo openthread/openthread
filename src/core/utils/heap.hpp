@@ -31,8 +31,8 @@
  *   This file includes definitions for heap.
  */
 
-#ifndef OT_UTILS_HEAP_HPP_
-#define OT_UTILS_HEAP_HPP_
+#ifndef OT_CORE_UTILS_HEAP_HPP_
+#define OT_CORE_UTILS_HEAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -223,6 +223,7 @@ private:
     static constexpr uint16_t kSuperBlockOffset   = kAlignSize - sizeof(uint16_t);
     static constexpr uint16_t kFirstBlockOffset   = kAlignSize * 2 - sizeof(uint16_t);
     static constexpr uint16_t kGuardBlockOffset   = kMemorySize - sizeof(uint16_t);
+    static constexpr uint16_t kTotalSizeGuard     = kAlignSize + sizeof(Block);
 
     static_assert(kMemorySize % kAlignSize == 0, "The heap memory size is not aligned to kAlignSize!");
 
@@ -325,4 +326,4 @@ private:
 
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-#endif // OT_UTILS_HEAP_HPP_
+#endif // OT_CORE_UTILS_HEAP_HPP_

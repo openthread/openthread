@@ -64,6 +64,9 @@ const char TxtData::Key::kModelName[]  = "mn";
 
 TxtData::TxtData(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    , mChangedTask(aInstance)
+#endif
 {
 }
 
@@ -127,8 +130,8 @@ Error TxtData::Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength
         SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kBbrPort, BackboneRouter::kBackboneUdpPort));
     }
 
-    SuccessOrExit(error = encoder.AppendNameEntry(Key::kDomainName,
-                                                  Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsData()));
+    SuccessOrExit(
+        error = encoder.AppendNameEntry(Key::kDomainName, Get<MeshCoP::NetworkIdentity>().GetDomainName().GetAsData()));
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -160,6 +163,50 @@ Error TxtData::Prepare(ServiceTxtData &aTxtData)
     return Prepare(aTxtData.mData, sizeof(aTxtData.mData), aTxtData.mLength);
 }
 
+void TxtData::SetChangedCallback(ChangedCallback aCallback, void *aContext)
+{
+    mChangedCallback.Set(aCallback, aContext);
+    Refresh();
+}
+
+void TxtData::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
+                            kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleChangedTask(void)
+{
+    VerifyOrExit(Get<Manager>().IsEnabled());
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<Manager>().HandleServiceTxtDataChanged();
+#endif
+
+    mChangedCallback.InvokeIfSet();
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLength)
+{
+    VerifyOrExit(!mVendorData.Matches(aVendorData, aVendorDataLength));
+
+    SuccessOrAssert(mVendorData.SetFrom(aVendorData, aVendorDataLength));
+    Refresh();
+
+exit:
+    return;
+}
+
+#endif
+
 uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
 {
     uint32_t bitmap = 0;
@@ -186,6 +233,20 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
         break;
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    {
+        MultiAilState state = kMultiAilDisabled;
+
+        if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
+        {
+            state =
+                aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected() ? kMultiAilDetected : kMultiAilNotDetected;
+        }
+
+        bitmap |= (static_cast<uint32_t>(state) << kOffsetMultiAilState);
+    }
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (aInstance.Get<Mle::Mle>().IsAttached())
     {
@@ -201,10 +262,19 @@ uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (aInstance.Get<Admitter>().IsEnabled())
+    {
+        bitmap |= kFlagAdmitterSupported;
+    }
+#endif
+
     return bitmap;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
@@ -362,13 +432,16 @@ void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
 {
     ClearAllBytes(aInfo);
 
-    aInfo.mConnMode       = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
-    aInfo.mThreadIfState  = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
-    aInfo.mAvailability   = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
-    aInfo.mThreadRole     = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
-    aInfo.mBbrIsActive    = aBitmap & kFlagBbrIsActive;
-    aInfo.mBbrIsPrimary   = aBitmap & kFlagBbrIsPrimary;
-    aInfo.mEpskcSupported = aBitmap & kFlagEpskcSupported;
+    aInfo.mConnMode      = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
+    aInfo.mThreadIfState = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
+    aInfo.mAvailability  = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
+    aInfo.mThreadRole    = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
+    aInfo.mMultiAilState =
+        static_cast<otBorderAgentMultiAilState>((aBitmap & kMaskMultiAilState) >> kOffsetMultiAilState);
+    aInfo.mBbrIsActive       = aBitmap & kFlagBbrIsActive;
+    aInfo.mBbrIsPrimary      = aBitmap & kFlagBbrIsPrimary;
+    aInfo.mEpskcSupported    = aBitmap & kFlagEpskcSupported;
+    aInfo.mAdmitterSupported = aBitmap & kFlagAdmitterSupported;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE

@@ -31,8 +31,8 @@
  *   This file includes definitions for `FrameData`.
  */
 
-#ifndef FRAME_DATA_HPP_
-#define FRAME_DATA_HPP_
+#ifndef OT_CORE_COMMON_FRAME_DATA_HPP_
+#define OT_CORE_COMMON_FRAME_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -164,4 +164,4 @@ public:
 
 } // namespace ot
 
-#endif // FRAME_DATA_HPP_
+#endif // OT_CORE_COMMON_FRAME_DATA_HPP_

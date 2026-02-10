@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 class UdpStream:
     BASE_PORT = 10000
-    MAX_SERVER_TIMEOUT_SEC = 10
+    MAX_SERVER_TIMEOUT_SEC = 0.010
 
     def __init__(self, address, node_id):
         self.__receive_buffer = b''
@@ -58,4 +58,8 @@ class UdpStream:
             logger.debug(f'rx {len(data)} bytes')
             return data
         else:
-            raise socket.timeout('simulation UdpStream recv timeout - likely, TCAT is stopped on TCAT Device')
+            return b''
+
+    async def disconnect(self):
+        if self.socket is not None:
+            self.socket.close()

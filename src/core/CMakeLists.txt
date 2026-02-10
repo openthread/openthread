@@ -34,7 +34,9 @@ set(COMMON_SOURCES
     api/backbone_router_api.cpp
     api/backbone_router_ftd_api.cpp
     api/ble_secure_api.cpp
+    api/border_agent_admitter_api.cpp
     api/border_agent_api.cpp
+    api/border_agent_ephemeral_key_api.cpp
     api/border_agent_tracker_api.cpp
     api/border_agent_txt_data_api.cpp
     api/border_router_api.cpp
@@ -67,6 +69,7 @@ set(COMMON_SOURCES
     api/mdns_api.cpp
     api/mesh_diag_api.cpp
     api/message_api.cpp
+    api/multi_ail_detection_api.cpp
     api/multi_radio_api.cpp
     api/nat64_api.cpp
     api/netdata_api.cpp
@@ -78,11 +81,13 @@ set(COMMON_SOURCES
     api/radio_stats_api.cpp
     api/random_crypto_api.cpp
     api/random_noncrypto_api.cpp
+    api/seeker_api.cpp
     api/server_api.cpp
     api/sntp_api.cpp
     api/srp_client_api.cpp
     api/srp_client_buffers_api.cpp
     api/srp_server_api.cpp
+    api/steering_data_api.cpp
     api/tasklet_api.cpp
     api/tcp_api.cpp
     api/tcp_ext_api.cpp
@@ -102,6 +107,7 @@ set(COMMON_SOURCES
     border_router/br_types.cpp
     border_router/dhcp6_pd_client.cpp
     border_router/infra_if.cpp
+    border_router/multi_ail_detector.cpp
     border_router/routing_manager.cpp
     border_router/rx_ra_tracker.cpp
     coap/coap.cpp
@@ -159,6 +165,8 @@ set(COMMON_SOURCES
     mac/wakeup_tx_scheduler.cpp
     meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
+    meshcop/border_agent_admitter.cpp
+    meshcop/border_agent_ephemeral_key.cpp
     meshcop/border_agent_tracker.cpp
     meshcop/border_agent_txt_data.cpp
     meshcop/commissioner.cpp
@@ -173,9 +181,12 @@ set(COMMON_SOURCES
     meshcop/meshcop.cpp
     meshcop/meshcop_leader.cpp
     meshcop/meshcop_tlvs.cpp
+    meshcop/network_identity.cpp
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
     meshcop/secure_transport.cpp
+    meshcop/seeker.cpp
+    meshcop/steering_data.cpp
     meshcop/tcat_agent.cpp
     meshcop/timestamp.cpp
     net/checksum.cpp
@@ -270,12 +281,16 @@ set(COMMON_SOURCES
     thread/time_sync_service.cpp
     thread/tmf.cpp
     thread/uri_paths.cpp
+    thread/vendor_info.cpp
     thread/version.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/history_tracker.cpp
+    utils/history_tracker_client.cpp
+    utils/history_tracker_server.cpp
+    utils/history_tracker_tlvs.cpp
     utils/jam_detector.cpp
     utils/link_metrics_manager.cpp
     utils/mesh_diag.cpp

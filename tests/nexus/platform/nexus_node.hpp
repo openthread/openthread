@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_NODE_HPP_
-#define OT_NEXUS_NODE_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
 
 #include "instance/instance.hpp"
 
@@ -83,6 +83,10 @@ public:
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
 
+    void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
+    void        SetName(const char *aPrefix, uint16_t aIndex);
+    const char *GetName(void) const { return mName.AsCString(); }
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     template <typename Type> Type &Get(void)
@@ -113,7 +117,9 @@ public:
     Node *mNext;
 
 private:
-    Node(void) = default;
+    Node(void) {}
+
+    String<32> mName;
 };
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
@@ -121,4 +127,4 @@ inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_NODE_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_

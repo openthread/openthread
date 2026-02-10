@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for power calibration module.
  */
 
-#ifndef CONFIG_POWER_CALIBRATION_H_
-#define CONFIG_POWER_CALIBRATION_H_
+#ifndef OT_CORE_CONFIG_POWER_CALIBRATION_H_
+#define OT_CORE_CONFIG_POWER_CALIBRATION_H_
 
 /**
  * @addtogroup config-power-calibration
@@ -74,4 +74,4 @@
  * @}
  */
 
-#endif // CONFIG_POWER_CALIBRATION_H_
+#endif // OT_CORE_CONFIG_POWER_CALIBRATION_H_

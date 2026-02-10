@@ -95,6 +95,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
     , mMdns(aInstance, *this)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    , mBa(aInstance, *this)
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     , mBbr(aInstance, *this)
 #endif
@@ -442,371 +445,8 @@ template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[]) { return m
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli ba (enable, disable)
-     * @code
-     * ba enable
-     * Done
-     * @endcode
-     * @code
-     * ba disable
-     * Done
-     * @endcode
-     * @cparam ba  @ca{enable|disable}
-     * @par api_copy
-     * #otBorderAgentSetEnabled
-     */
-    if (ProcessEnableDisable(aArgs, otBorderAgentSetEnabled) == OT_ERROR_NONE)
-    {
-    }
-    /**
-     * @cli ba port
-     * @code
-     * ba port
-     * 49153
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderAgentGetUdpPort
-     */
-    else if (aArgs[0] == "port")
-    {
-        OutputLine("%u", otBorderAgentGetUdpPort(GetInstancePtr()));
-    }
-    /**
-     * @cli ba state
-     * @code
-     * ba state
-     * Active
-     * Done
-     * @endcode
-     * @par
-     * Prints the current state of the Border Agent service. Possible states are:
-     * - `Disabled`: Border Agent service is disabled.
-     * - `Inactive`: Border Agent service is enabled but not yet active.
-     * - `Active`: Border Agent service is enabled and active. External commissioner can connect and establish secure
-     *   DTLS sessions with the Border Agent using PSKc
-     * @sa #otBorderAgentIsActive
-     */
-    else if (aArgs[0] == "state")
-    {
-        if (!otBorderAgentIsEnabled(GetInstancePtr()))
-        {
-            OutputLine("Disabled");
-        }
-        else
-        {
-            OutputLine("%s", otBorderAgentIsActive(GetInstancePtr()) ? "Active" : "Inactive");
-        }
-    }
-#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
-    /**
-     * @cli ba servicebasename
-     * @code
-     * ba servicebasename OpenThreadBorderAgent
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderAgentSetMeshCoPServiceBaseName
-     */
-    else if (aArgs[0] == "servicebasename")
-    {
-        VerifyOrExit(!aArgs[1].IsEmpty() && aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        error = otBorderAgentSetMeshCoPServiceBaseName(GetInstancePtr(), aArgs[1].GetCString());
-    }
+template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[]) { return mBa.Process(aArgs); }
 #endif
-    /**
-     * @cli ba sessions
-     * @code
-     * ba sessions
-     * [fe80:0:0:0:cc79:2a29:d311:1aea]:9202 connected:yes commissioner:no lifetime:1860
-     * Done
-     * @endcode
-     * @par
-     * Prints the list of Border Agent's sessions. Information per session:
-     * * Peer socket address (IPv6 address and port).
-     * * Whether or not the session is connected.
-     * * Whether or not the session is accepted as full commissioner.
-     * * Session lifetime in milliseconds (calculated from the time the session was first established).
-     */
-    else if (aArgs[0] == "sessions")
-    {
-        otBorderAgentSessionIterator iterator;
-        otBorderAgentSessionInfo     info;
-        char                         sockAddrString[OT_IP6_SOCK_ADDR_STRING_SIZE];
-        Uint64StringBuffer           lifetimeString;
-
-        otBorderAgentInitSessionIterator(GetInstancePtr(), &iterator);
-
-        while (otBorderAgentGetNextSessionInfo(&iterator, &info) == OT_ERROR_NONE)
-        {
-            otIp6SockAddrToString(&info.mPeerSockAddr, sockAddrString, sizeof(sockAddrString));
-
-            OutputLine("%s connected:%s commissioner:%s lifetime:%s", sockAddrString, info.mIsConnected ? "yes" : "no",
-                       info.mIsCommissioner ? "yes" : "no", Uint64ToString(info.mLifetime, lifetimeString));
-        }
-    }
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    /**
-     * @cli ba id (get,set)
-     * @code
-     * ba id
-     * cb6da1e0c0448aaec39fa90f3d58f45c
-     * Done
-     * @endcode
-     * @code
-     * ba id 00112233445566778899aabbccddeeff
-     * Done
-     * @endcode
-     * @cparam ba id [@ca{border-agent-id}]
-     * Use the optional `border-agent-id` argument to set the Border Agent ID.
-     * @par
-     * Gets or sets the 16 bytes Border Router ID which can uniquely identifies the device among multiple BRs.
-     * @sa otBorderAgentGetId
-     * @sa otBorderAgentSetId
-     */
-    else if (aArgs[0] == "id")
-    {
-        otBorderAgentId id;
-
-        if (aArgs[1].IsEmpty())
-        {
-            SuccessOrExit(error = otBorderAgentGetId(GetInstancePtr(), &id));
-            OutputBytesLine(id.mId);
-        }
-        else
-        {
-            uint16_t idLength = sizeof(id);
-
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(idLength, id.mId));
-            VerifyOrExit(idLength == sizeof(id), error = OT_ERROR_INVALID_ARGS);
-            error = otBorderAgentSetId(GetInstancePtr(), &id);
-        }
-    }
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    else if (aArgs[0] == "ephemeralkey")
-    {
-        bool enable;
-
-        /**
-         * @cli ba ephemeralkey
-         * @code
-         * ba ephemeralkey
-         * Stopped
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otBorderAgentEphemeralKeyGetState
-         */
-        if (aArgs[1].IsEmpty())
-        {
-            otBorderAgentEphemeralKeyState state = otBorderAgentEphemeralKeyGetState(GetInstancePtr());
-
-            OutputLine("%s", otBorderAgentEphemeralKeyStateToString(state));
-        }
-        /**
-         * @cli ba ephemeralkey (enable, disable)
-         * @code
-         * ba ephemeralkey enable
-         * Done
-         * @endcode
-         * @code
-         * ba ephemeralkey
-         * Enabled
-         * Done
-         * @endcode
-         * @cparam ba ephemeralkey @ca{enable|disable}
-         * @par api_copy
-         * #otBorderAgentEphemeralKeySetEnabled
-         */
-        else if (ProcessEnableDisable(aArgs + 1, otBorderAgentEphemeralKeySetEnabled) == OT_ERROR_NONE)
-        {
-        }
-        /**
-         * @cli ba ephemeralkey start <keystring> [timeout-in-msec] [port]
-         * @code
-         * ba ephemeralkey start Z10X20g3J15w1000P60m16 5000 1234
-         * Done
-         * @endcode
-         * @cparam ba ephemeralkey start @ca{keystring} [@ca{timeout-in-msec}] [@ca{port}]
-         * @par api_copy
-         * #otBorderAgentEphemeralKeyStart
-         */
-        else if (aArgs[1] == "start")
-        {
-            uint32_t timeout = 0;
-            uint16_t port    = 0;
-
-            VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-
-            if (!aArgs[3].IsEmpty())
-            {
-                SuccessOrExit(error = aArgs[3].ParseAsUint32(timeout));
-            }
-
-            if (!aArgs[4].IsEmpty())
-            {
-                SuccessOrExit(error = aArgs[4].ParseAsUint16(port));
-            }
-
-            error = otBorderAgentEphemeralKeyStart(GetInstancePtr(), aArgs[2].GetCString(), timeout, port);
-        }
-        /**
-         * @cli ba ephemeralkey stop
-         * @code
-         * ba ephemeralkey stop
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otBorderAgentEphemeralKeyStop
-         */
-        else if (aArgs[1] == "stop")
-        {
-            otBorderAgentEphemeralKeyStop(GetInstancePtr());
-        }
-        /**
-         * @cli ba ephemeralkey port
-         * @code
-         * ba ephemeralkey port
-         * 49153
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otBorderAgentEphemeralKeyGetUdpPort
-         */
-        else if (aArgs[1] == "port")
-        {
-            OutputLine("%u", otBorderAgentEphemeralKeyGetUdpPort(GetInstancePtr()));
-        }
-        /**
-         * @cli ba ephemeralkey callback (enable, disable)
-         * @code
-         * ba ephemeralkey callback enable
-         * Done
-         * @endcode
-         * @code
-         * ba ephemeralkey start W10X10 5000 49155
-         * Done
-         * BorderAgentEphemeralKey callback - state:Started
-         * BorderAgentEphemeralKey callback - state:Connected
-         * @endcode
-         * @cparam ba ephemeralkey callback @ca{enable|disable}
-         * @par api_copy
-         * #otBorderAgentEphemeralKeySetCallback
-         */
-        else if (aArgs[1] == "callback")
-        {
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[2], enable));
-
-            if (enable)
-            {
-                otBorderAgentEphemeralKeySetCallback(GetInstancePtr(), HandleBorderAgentEphemeralKeyStateChange, this);
-            }
-            else
-            {
-                otBorderAgentEphemeralKeySetCallback(GetInstancePtr(), nullptr, nullptr);
-            }
-        }
-        else
-        {
-            error = OT_ERROR_INVALID_ARGS;
-        }
-    }
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    /**
-     * @cli ba counters
-     * @code
-     * ba counters
-     * epskcActivation: 0
-     * epskcApiDeactivation: 0
-     * epskcTimeoutDeactivation: 0
-     * epskcMaxAttemptDeactivation: 0
-     * epskcDisconnectDeactivation: 0
-     * epskcInvalidBaStateError: 0
-     * epskcInvalidArgsError: 0
-     * epskcStartSecureSessionError: 0
-     * epskcSecureSessionSuccess: 0
-     * epskcSecureSessionFailure: 0
-     * epskcCommissionerPetition: 0
-     * pskcSecureSessionSuccess: 0
-     * pskcSecureSessionFailure: 0
-     * pskcCommissionerPetition: 0
-     * mgmtActiveGet: 0
-     * mgmtPendingGet: 0
-     * Done
-     * @endcode
-     * @par
-     * Gets the border agent counters.
-     * @sa otBorderAgentGetCounters
-     */
-    else if (aArgs[0] == "counters")
-    {
-        OutputBorderAgentCounters(*otBorderAgentGetCounters(GetInstancePtr()));
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
-    }
-
-exit:
-    return error;
-}
-
-void Interpreter::OutputBorderAgentCounters(const otBorderAgentCounters &aCounters)
-{
-    struct BaCounterName
-    {
-        const uint32_t otBorderAgentCounters::*mValuePtr;
-        const char                            *mName;
-    };
-
-    static const BaCounterName kBaCounterNames[] = {
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-        {&otBorderAgentCounters::mEpskcActivations, "epskcActivation"},
-        {&otBorderAgentCounters::mEpskcDeactivationClears, "epskcApiDeactivation"},
-        {&otBorderAgentCounters::mEpskcDeactivationTimeouts, "epskcTimeoutDeactivation"},
-        {&otBorderAgentCounters::mEpskcDeactivationMaxAttempts, "epskcMaxAttemptDeactivation"},
-        {&otBorderAgentCounters::mEpskcDeactivationDisconnects, "epskcDisconnectDeactivation"},
-        {&otBorderAgentCounters::mEpskcInvalidBaStateErrors, "epskcInvalidBaStateError"},
-        {&otBorderAgentCounters::mEpskcInvalidArgsErrors, "epskcInvalidArgsError"},
-        {&otBorderAgentCounters::mEpskcStartSecureSessionErrors, "epskcStartSecureSessionError"},
-        {&otBorderAgentCounters::mEpskcSecureSessionSuccesses, "epskcSecureSessionSuccess"},
-        {&otBorderAgentCounters::mEpskcSecureSessionFailures, "epskcSecureSessionFailure"},
-        {&otBorderAgentCounters::mEpskcCommissionerPetitions, "epskcCommissionerPetition"},
-#endif
-        {&otBorderAgentCounters::mPskcSecureSessionSuccesses, "pskcSecureSessionSuccess"},
-        {&otBorderAgentCounters::mPskcSecureSessionFailures, "pskcSecureSessionFailure"},
-        {&otBorderAgentCounters::mPskcCommissionerPetitions, "pskcCommissionerPetition"},
-        {&otBorderAgentCounters::mMgmtActiveGets, "mgmtActiveGet"},
-        {&otBorderAgentCounters::mMgmtPendingGets, "mgmtPendingGet"},
-    };
-
-    for (const BaCounterName &counter : kBaCounterNames)
-    {
-        OutputLine("%s: %lu", counter.mName, ToUlong(aCounters.*counter.mValuePtr));
-    }
-}
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void *aContext)
-{
-    reinterpret_cast<Interpreter *>(aContext)->HandleBorderAgentEphemeralKeyStateChange();
-}
-
-void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void)
-{
-    otBorderAgentEphemeralKeyState state = otBorderAgentEphemeralKeyGetState(GetInstancePtr());
-
-    OutputLine("BorderAgentEphemeralKey callback - state:%s", otBorderAgentEphemeralKeyStateToString(state));
-}
-#endif
-
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
 
@@ -1005,18 +645,11 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      */
     else if (aArgs[0] == "state")
     {
-        static const char *const kNat64State[] = {"Disabled", "NotRunning", "Idle", "Active"};
-
-        static_assert(0 == OT_NAT64_STATE_DISABLED, "OT_NAT64_STATE_DISABLED value is incorrect");
-        static_assert(1 == OT_NAT64_STATE_NOT_RUNNING, "OT_NAT64_STATE_NOT_RUNNING value is incorrect");
-        static_assert(2 == OT_NAT64_STATE_IDLE, "OT_NAT64_STATE_IDLE value is incorrect");
-        static_assert(3 == OT_NAT64_STATE_ACTIVE, "OT_NAT64_STATE_ACTIVE value is incorrect");
-
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        OutputLine("PrefixManager: %s", kNat64State[otNat64GetPrefixManagerState(GetInstancePtr())]);
+        OutputLine("PrefixManager: %s", otNat64StateToString(otNat64GetPrefixManagerState(GetInstancePtr())));
 #endif
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        OutputLine("Translator: %s", kNat64State[otNat64GetTranslatorState(GetInstancePtr())]);
+        OutputLine("Translator: %s", otNat64StateToString(otNat64GetTranslatorState(GetInstancePtr())));
 #endif
     }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -3003,7 +2636,7 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
     otError  error        = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
     /**
      * @cli discover reqcallback (enable,disable)
      * @code
@@ -3031,7 +2664,7 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
         otThreadSetDiscoveryRequestCallback(GetInstancePtr(), callback, context);
         ExitNow();
     }
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
 
     if (!aArgs[0].IsEmpty())
     {
@@ -8253,7 +7886,7 @@ void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiag
 }
 #endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);

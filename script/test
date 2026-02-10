@@ -68,6 +68,9 @@ readonly VERBOSE
 BORDER_ROUTING="${BORDER_ROUTING:-1}"
 readonly BORDER_ROUTING
 
+DISCOVERY_PROXY="${DISCOVERY_PROXY:-1}"
+readonly DISCOVERY_PROXY
+
 NAT64="${NAT64:-0}"
 readonly NAT64
 
@@ -161,20 +164,11 @@ build_simulation()
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
-    if [[ ${VIRTUAL_TIME} == 1 ]] && [[ ${OT_NODE_TYPE} == rcp* ]]; then
-        OT_CMAKE_NINJA_TARGET=ot-rcp OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}" "-DOT_SIMULATION_VIRTUAL_TIME_UART=ON"
-    fi
-
     if [[ ${version} != "1.1" && ${INTER_OP_BBR} == 1 ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
         OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
-
-        if [[ ${VIRTUAL_TIME} == 1 ]] && [[ ${OT_NODE_TYPE} == rcp* ]]; then
-            OT_CMAKE_NINJA_TARGET=ot-rcp OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}-bbr" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}" "-DOT_SIMULATION_VIRTUAL_TIME_UART=ON"
-        fi
-
     fi
 }
 
@@ -323,7 +317,7 @@ do_cert_suite()
     sudo modprobe ip6table_filter
 
     mkdir -p ot_testing
-    ./tests/scripts/thread-cert/run_cert_suite.py --run-directory ot_testing --multiply "${MULTIPLY:-1}" "$@"
+    ./tests/scripts/thread-cert/run_cert_suite.py --run-directory ot_testing --multiply "${MULTIPLY:-1}" --timeout "${TEST_TIMEOUT:-0}" "$@"
     exit 0
 }
 
@@ -359,12 +353,12 @@ do_build_otbr_docker()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
-        "-DOTBR_DNS_UPSTREAM_QUERY=ON"
         "-DOTBR_DUA_ROUTING=ON"
         "-DOTBR_DHCP6_PD=ON"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"
+        "DISCOVERY_PROXY=${DISCOVERY_PROXY}"
         "INFRA_IF_NAME=eth0"
         "BACKBONE_ROUTER=1"
         "REFERENCE_DEVICE=1"

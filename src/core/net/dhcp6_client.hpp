@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Client.
  */
 
-#ifndef DHCP6_CLIENT_HPP_
-#define DHCP6_CLIENT_HPP_
+#ifndef OT_CORE_NET_DHCP6_CLIENT_HPP_
+#define OT_CORE_NET_DHCP6_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -152,4 +152,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
-#endif // DHCP6_CLIENT_HPP_
+#endif // OT_CORE_NET_DHCP6_CLIENT_HPP_

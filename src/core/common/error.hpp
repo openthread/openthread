@@ -31,8 +31,8 @@
  *   This file defines the errors used by OpenThread core.
  */
 
-#ifndef ERROR_HPP_
-#define ERROR_HPP_
+#ifndef OT_CORE_COMMON_ERROR_HPP_
+#define OT_CORE_COMMON_ERROR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -102,4 +102,4 @@ const char *ErrorToString(Error aError);
 
 } // namespace ot
 
-#endif // ERROR_HPP_
+#endif // OT_CORE_COMMON_ERROR_HPP_
