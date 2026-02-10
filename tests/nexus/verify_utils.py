@@ -45,6 +45,7 @@ from pktverify.packet_verifier import PacketVerifier
 from pktverify import utils as pvutils
 from pktverify.coap import CoapTlvParser
 from pktverify.addrs import Ipv6Addr
+from pktverify.bytes import Bytes
 
 
 # Monkey-patch CoapTlvParser to parse Thread TLVs in CoAP payload
@@ -54,6 +55,8 @@ def thread_coap_tlv_parse(t, v):
         kvs.append(('target_eid', str(Ipv6Addr(v))))
     elif t == consts.NL_MAC_EXTENDED_ADDRESS_TLV:
         kvs.append(('mac_addr', v.hex()))
+    elif t == consts.NL_ML_EID_TLV:
+        kvs.append(('ml_eid', Bytes(v).format_hextets()))
     elif t == consts.NL_RLOC16_TLV:
         kvs.append(('rloc16', hex(struct.unpack('>H', v)[0])))
     elif t == consts.NL_STATUS_TLV:
