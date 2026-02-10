@@ -443,21 +443,14 @@ void Local::AddDomainPrefixToNetworkData(void)
 
 const char *Local::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Set",    // (0) kActionSet
-        "Add",    // (1) kActionAdd
-        "Remove", // (2) kActionRemove
-    };
+#define ActionMapList(_) \
+    _(kActionSet, "Set") \
+    _(kActionAdd, "Add") \
+    _(kActionRemove, "Remove")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kActionSet);
-        ValidateNextEnum(kActionAdd);
-        ValidateNextEnum(kActionRemove);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    return kActionStrings[aAction];
+    return kStrings[aAction];
 }
 
 void Local::LogDomainPrefix(Action aAction, Error aError)

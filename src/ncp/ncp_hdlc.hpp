@@ -30,8 +30,8 @@
  *   This file contains definitions for a HDLC based NCP interface to the OpenThread stack.
  */
 
-#ifndef NCP_HDLC_HPP_
-#define NCP_HDLC_HPP_
+#ifndef OT_NCP_NCP_HDLC_HPP_
+#define OT_NCP_NCP_HDLC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -154,4 +154,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_HDLC_HPP_
+#endif // OT_NCP_NCP_HDLC_HPP_

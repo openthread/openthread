@@ -31,8 +31,8 @@
  *   This file includes definitions for the Received RA Tracker.
  */
 
-#ifndef RX_RA_TRACKER_HPP_
-#define RX_RA_TRACKER_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_RX_RA_TRACKER_HPP_
+#define OT_CORE_BORDER_ROUTER_RX_RA_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -307,6 +307,26 @@ public:
      */
     bool IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const;
 
+    /**
+     * Indicates whether a given prefix is seen as an on-link prefix in any tracked RA.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to check.
+     *
+     * @retval TRUE   The prefix is on-link.
+     * @retval FALSE  The prefix is not on-link.
+     */
+    bool IsPrefixOnLink(const Ip6::Prefix &aPrefix) const;
+
+    /**
+     * Indicates whether a given prefix is seen as a route prefix advertised by any router.
+     *
+     * @param[in] aPrefix  The IPv6 prefix to check.
+     *
+     * @retval TRUE   The prefix is seen as a route prefix.
+     * @retval FALSE  The prefix is not seen as a route prefix.
+     */
+    bool ContainsRoutePrefix(const Ip6::Prefix &aPrefix) const;
+
     // Callbacks notifying of changes
     void HandleLocalOnLinkPrefixChanged(void);
 
@@ -420,7 +440,7 @@ private:
         Nat64PrefixList mNat64Prefixes;
 #endif
         RdnssAddressList mRdnssAddresses;
-        uint32_t         mDiscoverTime;
+        UptimeSec        mDiscoverTime;
         TimeMilli        mLastUpdateTime;
         TimeMilli        mTimeoutTime;
         uint8_t          mNsProbeCount;
@@ -455,7 +475,7 @@ private:
             kRoutePrefix,
         };
 
-        void  Init(const Entry<Router> *aRoutersHead, uint32_t aUptime);
+        void  Init(const Entry<Router> *aRoutersHead, UptimeSec aUptime);
         Error AdvanceToNextRouter(Type aType);
         Error AdvanceToNextPrefixEntry(void);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -463,8 +483,8 @@ private:
 #endif
         Error                AdvanceToNextRdnssAddrEntry(void);
         Error                AdvanceToNextIfAddrEntry(const Entry<IfAddress> *aListHead);
-        uint32_t             GetInitUptime(void) const { return mData0; }
-        void                 SetInitUptime(uint32_t aUptime) { mData0 = aUptime; }
+        UptimeSec            GetInitUptime(void) const { return mData0; }
+        void                 SetInitUptime(UptimeSec aUptime) { mData0 = aUptime; }
         TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
         void                 SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
         const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
@@ -696,4 +716,4 @@ template <> void RxRaTracker::Entry<RxRaTracker::Router>::Free(void);
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // RX_RA_TRACKER_HPP_
+#endif // OT_CORE_BORDER_ROUTER_RX_RA_TRACKER_HPP_

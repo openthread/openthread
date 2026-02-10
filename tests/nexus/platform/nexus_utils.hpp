@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_UTIL_HPP_
-#define OT_NEXUS_UTIL_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_UTILS_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_UTILS_HPP_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,4 +74,4 @@
 #define _Stringize(aArg) _Stringize2(aArg)
 #define _Stringize2(aArg) #aArg
 
-#endif // OT_NEXUS_UTIL_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_UTILS_HPP_

@@ -19,7 +19,7 @@ If pipx is not available, it can be installed for Linux/Windows/MacOS following 
 Then, install this project using Poetry:
 
 ```
-poetry install --no-root
+poetry install
 ```
 
 This will install all the required modules to a virtual environment, which can be used by calling `poetry run <COMMAND>` from the project directory.

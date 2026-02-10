@@ -31,8 +31,8 @@
  *   This file includes definitions for Clearable class for OpenThread objects.
  */
 
-#ifndef CLEARABLE_HPP_
-#define CLEARABLE_HPP_
+#ifndef OT_CORE_COMMON_CLEARABLE_HPP_
+#define OT_CORE_COMMON_CLEARABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -77,4 +77,4 @@ private:
 
 } // namespace ot
 
-#endif // CLEARABLE_HPP_
+#endif // OT_CORE_COMMON_CLEARABLE_HPP_

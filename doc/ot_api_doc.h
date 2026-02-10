@@ -119,6 +119,7 @@
  * @defgroup api-border-agent-txt-data   Border Agent TXT Data Parser
  * @defgroup api-border-router           Border Router
  * @defgroup api-border-routing          Border Routing Manager
+ * @defgroup api-multi-ail-detection     Border Router Multi AIL Detection
  * @defgroup api-commissioner            Commissioner
  * @defgroup api-thread-general          General
  * @brief This module includes functions for all Thread roles.
@@ -127,7 +128,9 @@
  * @brief Includes functions for the Operational Dataset API.
  * @defgroup api-thread-router           Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
+ * @defgroup api-seeker                  Seeker
  * @defgroup api-server                  Server
+ * @defgroup api-steering-data           Steering Data
  *
  * @}
  *

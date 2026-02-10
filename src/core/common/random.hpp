@@ -31,8 +31,8 @@
  *  This file includes definitions for OpenThread random number generation.
  */
 
-#ifndef RANDOM_HPP_
-#define RANDOM_HPP_
+#ifndef OT_CORE_COMMON_RANDOM_HPP_
+#define OT_CORE_COMMON_RANDOM_HPP_
 
 #include "openthread-core-config.h"
 
@@ -227,4 +227,4 @@ template <typename ObjectType> Error Fill(ObjectType &aObject)
 } // namespace Random
 } // namespace ot
 
-#endif // RANDOM_HPP_
+#endif // OT_CORE_COMMON_RANDOM_HPP_

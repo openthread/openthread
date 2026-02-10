@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Mesh Forwarder.
  */
 
-#ifndef CONFIG_MESH_FORWARDER_H_
-#define CONFIG_MESH_FORWARDER_H_
+#ifndef OT_CORE_CONFIG_MESH_FORWARDER_H_
+#define OT_CORE_CONFIG_MESH_FORWARDER_H_
 
 /**
  * @addtogroup config-mesh-forwarder
@@ -201,4 +201,4 @@
  * @}
  */
 
-#endif // CONFIG_MESH_FORWARDER_H_
+#endif // OT_CORE_CONFIG_MESH_FORWARDER_H_

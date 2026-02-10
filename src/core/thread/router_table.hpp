@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROUTER_TABLE_HPP_
-#define ROUTER_TABLE_HPP_
+#ifndef OT_CORE_THREAD_ROUTER_TABLE_HPP_
+#define OT_CORE_THREAD_ROUTER_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -474,4 +474,4 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-#endif // ROUTER_TABLE_HPP_
+#endif // OT_CORE_THREAD_ROUTER_TABLE_HPP_

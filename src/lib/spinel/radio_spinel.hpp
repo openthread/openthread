@@ -31,8 +31,8 @@
  *   This file includes definitions for the spinel based radio transceiver.
  */
 
-#ifndef RADIO_SPINEL_HPP_
-#define RADIO_SPINEL_HPP_
+#ifndef OT_LIB_SPINEL_RADIO_SPINEL_HPP_
+#define OT_LIB_SPINEL_RADIO_SPINEL_HPP_
 
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -1370,4 +1370,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // RADIO_SPINEL_HPP_
+#endif // OT_LIB_SPINEL_RADIO_SPINEL_HPP_

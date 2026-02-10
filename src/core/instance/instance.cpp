@@ -82,7 +82,7 @@ Instance::Instance(void)
 #endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    , mUptime(*this)
+    , mUptimeTracker(*this)
 #endif
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     , mOtns(*this)
@@ -142,8 +142,7 @@ Instance::Instance(void)
 #endif
     , mActiveDataset(*this)
     , mPendingDataset(*this)
-    , mExtendedPanIdManager(*this)
-    , mNetworkNameManager(*this)
+    , mNetworkIdentity(*this)
     , mIp6Filter(*this)
     , mKeyManager(*this)
     , mLowpan(*this)
@@ -167,6 +166,7 @@ Instance::Instance(void)
     , mNetworkDataPublisher(*this)
 #endif
     , mNetworkDataServiceManager(*this)
+    , mVendorInfo(*this)
     , mNetworkDiagnosticServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     , mNetworkDiagnosticClient(*this)
@@ -186,6 +186,9 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
     , mTmfSecureAgent(*this)
+#endif
+#if OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
+    , mSeeker(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
@@ -260,6 +263,12 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     , mHistoryTrackerLocal(*this)
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    , mHistoryTrackerServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    , mHistoryTrackerClient(*this)
+#endif
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     , mLinkMetricsManager(*this)

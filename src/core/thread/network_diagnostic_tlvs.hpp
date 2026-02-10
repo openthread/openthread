@@ -31,14 +31,15 @@
  *   This file includes definitions for generating and processing Network Diagnostics TLVs.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_TLVS_HPP_
-#define NETWORK_DIAGNOSTIC_TLVS_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/netdiag.h>
 #include <openthread/thread.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
@@ -276,45 +277,20 @@ typedef SimpleTlvInfo<Tlv::kBrLocalOnlinkPrefix, Ip6::NetworkPrefix> BrLocalOnli
  */
 typedef SimpleTlvInfo<Tlv::kBrFavoredOnLinkPrefix, Ip6::NetworkPrefix> BrFavoredOnLinkPrefixTlv;
 
-typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
+/**
+ * Represents information parsed from Connectivity TLV.
+ */
+typedef Mle::Connectivity Connectivity;
 
 /**
- * Implements Connectivity TLV generation and parsing.
+ * Represents a Connectivity TLV value.
  */
-OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv : public Mle::ConnectivityTlv
-{
-public:
-    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kConnectivity; ///< The TLV Type value.
+typedef Mle::ConnectivityTlvValue ConnectivityTlvValue;
 
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        Mle::ConnectivityTlv::Init();
-        ot::Tlv::SetType(kType);
-    }
-
-    /**
-     * Retrieves the `Connectivity` value.
-     *
-     * @param[out] aConnectivity   A reference to `Connectivity` to populate.
-     */
-    void GetConnectivity(Connectivity &aConnectivity) const
-    {
-        aConnectivity.mParentPriority   = GetParentPriority();
-        aConnectivity.mLinkQuality3     = GetLinkQuality3();
-        aConnectivity.mLinkQuality2     = GetLinkQuality2();
-        aConnectivity.mLinkQuality1     = GetLinkQuality1();
-        aConnectivity.mLeaderCost       = GetLeaderCost();
-        aConnectivity.mIdSequence       = GetIdSequence();
-        aConnectivity.mActiveRouters    = GetActiveRouters();
-        aConnectivity.mSedBufferSize    = GetSedBufferSize();
-        aConnectivity.mSedDatagramCount = GetSedDatagramCount();
-    }
-
-} OT_TOOL_PACKED_END;
+/**
+ * Defines Connectivity TLV constants.
+ */
+typedef TlvInfo<Tlv::kConnectivity> ConnectivityTlv;
 
 /**
  * Implements Route TLV generation and parsing.
@@ -336,23 +312,14 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Leader Data TLV generation and parsing.
+ * Represents a Leader Data TLV value.
  */
-OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv : public Mle::LeaderDataTlv
-{
-public:
-    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kLeaderData; ///< The TLV Type value.
+typedef Mle::LeaderDataTlvValue LeaderDataTlvValue;
 
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        Mle::LeaderDataTlv::Init();
-        ot::Tlv::SetType(kType);
-    }
-} OT_TOOL_PACKED_END;
+/**
+ * Defines Leader Data TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
 
 /**
  * Implements Mac Counters TLV generation and parsing.
@@ -702,15 +669,6 @@ public:
     void InitFrom(const Child &aChild);
 
     /**
-     * Initializes the TLV as empty (zero length).
-     */
-    void InitAsEmpty(void)
-    {
-        SetType(kChild);
-        SetLength(0);
-    }
-
-    /**
      * Returns the Flags field (`kFlags*` constants define bits in flags).
      *
      * @returns The Flags field.
@@ -899,15 +857,6 @@ public:
      * @param[in] aRouter   The router to initialize the TLV from.
      */
     void InitFrom(const Router &aRouter);
-
-    /**
-     * Initializes the TLV as empty (zero length).
-     */
-    void InitAsEmpty(void)
-    {
-        SetType(kRouterNeighbor);
-        SetLength(0);
-    }
 
     /**
      * Returns the Flags field (`kFlags*` constants define bits in flags).
@@ -1153,6 +1102,9 @@ private:
 } OT_TOOL_PACKED_END;
 
 } // namespace NetworkDiagnostic
+
+DefineCoreType(otNetworkDiagConnectivity, NetworkDiagnostic::Connectivity);
+
 } // namespace ot
 
-#endif // NETWORK_DIAGNOSTIC_TLVS_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_

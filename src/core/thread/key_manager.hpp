@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread security material generation.
  */
 
-#ifndef KEY_MANAGER_HPP_
-#define KEY_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_KEY_MANAGER_HPP_
+#define OT_CORE_THREAD_KEY_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -649,4 +649,4 @@ DefineCoreType(otPskc, Pskc);
 
 } // namespace ot
 
-#endif // KEY_MANAGER_HPP_
+#endif // OT_CORE_THREAD_KEY_MANAGER_HPP_

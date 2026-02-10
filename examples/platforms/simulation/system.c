@@ -45,12 +45,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
+
+#include <openthread-select.h>
+#include <openthread-system.h>
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/toolchain.h>
 
 #include "simul_utils.h"
 
@@ -221,67 +224,93 @@ void otSysDeinit(void)
 
 void otSysProcessDrivers(otInstance *aInstance)
 {
-    fd_set         read_fds;
-    fd_set         write_fds;
-    fd_set         error_fds;
-    int            max_fd = -1;
+    fd_set         readFdSet;
+    fd_set         writeFdSet;
+    fd_set         errorFdSet;
+    int            maxFd = -1;
     struct timeval timeout;
-    int            rval;
 
-    FD_ZERO(&read_fds);
-    FD_ZERO(&write_fds);
-    FD_ZERO(&error_fds);
+    FD_ZERO(&readFdSet);
+    FD_ZERO(&writeFdSet);
+    FD_ZERO(&errorFdSet);
 
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    platformAlarmUpdateTimeout(&timeout);
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+    otSysUpdateEvents(aInstance, &maxFd, &readFdSet, &writeFdSet, &errorFdSet, &timeout);
+
+    if (select(maxFd + 1, &readFdSet, &writeFdSet, &errorFdSet, &timeout) < 0)
+    {
+        if (errno != EINTR)
+        {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+
+        FD_ZERO(&readFdSet);
+        FD_ZERO(&writeFdSet);
+        FD_ZERO(&errorFdSet);
+    }
+
+    otSysProcessEvents(aInstance, &readFdSet, &writeFdSet, &errorFdSet);
+}
+
+void otSysUpdateEvents(otInstance     *aInstance,
+                       int            *aMaxFd,
+                       fd_set         *aReadFdSet,
+                       fd_set         *aWriteFdSet,
+                       fd_set         *aErrorFdSet,
+                       struct timeval *aTimeout)
+{
+    OT_UNUSED_VARIABLE(aErrorFdSet);
+
+#if OPENTHREAD_SIMULATION_UART_ENABLE
+    platformUartUpdateFdSet(aReadFdSet, aWriteFdSet, aErrorFdSet, aMaxFd);
+#endif
+    platformAlarmUpdateTimeout(aTimeout);
+    platformRadioUpdateFdSet(aReadFdSet, aWriteFdSet, aTimeout, aMaxFd);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+    platformTrelUpdateFdSet(aReadFdSet, aWriteFdSet, aTimeout, aMaxFd);
 #endif
 #if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformInfraIfUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    platformInfraIfUpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd);
 #endif
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
-    platformMdnsSocketUpdateFdSet(&read_fds, &max_fd);
+    platformMdnsSocketUpdateFdSet(aReadFdSet, aMaxFd);
 #endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    platformBleUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+    platformBleUpdateFdSet(aReadFdSet, aWriteFdSet, aTimeout, aMaxFd);
 #endif
-
     if (otTaskletsArePending(aInstance))
     {
-        timeout.tv_sec  = 0;
-        timeout.tv_usec = 0;
+        aTimeout->tv_sec  = 0;
+        aTimeout->tv_usec = 0;
     }
+}
 
-    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+void otSysProcessEvents(otInstance   *aInstance,
+                        const fd_set *aReadFdSet,
+                        const fd_set *aWriteFdSet,
+                        const fd_set *aErrorFdSet)
+{
+    OT_UNUSED_VARIABLE(aErrorFdSet);
 
-    if (rval >= 0)
-    {
-        platformUartProcess();
-        platformRadioProcess(aInstance, &read_fds, &write_fds);
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-        platformBleProcess(aInstance, &read_fds, &write_fds);
+#if OPENTHREAD_SIMULATION_UART_ENABLE
+    platformUartProcess();
 #endif
-    }
-    else if (errno != EINTR)
-    {
-        perror("select");
-        exit(EXIT_FAILURE);
-    }
+    platformRadioProcess(aInstance, aReadFdSet, aWriteFdSet);
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    platformBleProcess(aInstance, aReadFdSet, aWriteFdSet);
+#endif
 
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelProcess(aInstance, &read_fds, &write_fds);
+    platformTrelProcess(aInstance, aReadFdSet, aWriteFdSet);
 #endif
 #if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    platformInfraIfProcess(aInstance, &read_fds, &write_fds);
+    platformInfraIfProcess(aInstance, aReadFdSet, aWriteFdSet);
 #endif
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
-    platformMdnsSocketProcess(aInstance, &read_fds);
+    platformMdnsSocketProcess(aInstance, aReadFdSet);
 #endif
-
     if (gTerminate)
     {
         exit(0);

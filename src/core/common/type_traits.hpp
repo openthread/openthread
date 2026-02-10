@@ -31,8 +31,8 @@
  *   This file includes type traits definitions.
  */
 
-#ifndef OT_TYPE_TRAITS_HPP_
-#define OT_TYPE_TRAITS_HPP_
+#ifndef OT_CORE_COMMON_TYPE_TRAITS_HPP_
+#define OT_CORE_COMMON_TYPE_TRAITS_HPP_
 
 #include <stdint.h>
 
@@ -220,4 +220,4 @@ struct FirstArgTypeOf<RetType (*)(FirstArgType, Args...)>
 } // namespace TypeTraits
 } // namespace ot
 
-#endif // OT_TYPE_TRAITS_HPP_
+#endif // OT_CORE_COMMON_TYPE_TRAITS_HPP_

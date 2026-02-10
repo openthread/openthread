@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SNTP_CLIENT_HPP_
-#define SNTP_CLIENT_HPP_
+#ifndef OT_CORE_NET_SNTP_CLIENT_HPP_
+#define OT_CORE_NET_SNTP_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -274,4 +274,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
-#endif // SNTP_CLIENT_HPP_
+#endif // OT_CORE_NET_SNTP_CLIENT_HPP_

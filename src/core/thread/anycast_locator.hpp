@@ -31,8 +31,8 @@
  *   This file includes definitions for Anycast Locator functionality.
  */
 
-#ifndef ANYCAST_LOCATOR_HPP_
-#define ANYCAST_LOCATOR_HPP_
+#ifndef OT_CORE_THREAD_ANYCAST_LOCATOR_HPP_
+#define OT_CORE_THREAD_ANYCAST_LOCATOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -93,11 +93,9 @@ public:
     bool IsInProgress(void) const { return mCallback.IsSet(); }
 
 private:
-    static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    void HandleResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
-
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    DeclareTmfResponseHandlerIn(AnycastLocator, HandleResponse);
 
     Callback<LocatorCallback> mCallback;
 };
@@ -110,4 +108,4 @@ DeclareTmfHandler(AnycastLocator, kUriAnycastLocate);
 
 #endif // OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 
-#endif //  ANYCAST_LOCATOR_HPP_
+#endif // OT_CORE_THREAD_ANYCAST_LOCATOR_HPP_

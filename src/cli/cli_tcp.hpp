@@ -31,8 +31,8 @@
  *   This file contains definitions for a TCP CLI tool.
  */
 
-#ifndef CLI_TCP_EXAMPLE_HPP_
-#define CLI_TCP_EXAMPLE_HPP_
+#ifndef OT_CLI_CLI_TCP_HPP_
+#define OT_CLI_CLI_TCP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -222,4 +222,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_TCP_EXAMPLE_HPP_
+#endif // OT_CLI_CLI_TCP_HPP_

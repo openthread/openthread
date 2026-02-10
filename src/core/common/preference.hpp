@@ -32,8 +32,8 @@
  *   Route Preference in RFC-4191.
  */
 
-#ifndef PREFERENCE_HPP_
-#define PREFERENCE_HPP_
+#ifndef OT_CORE_COMMON_PREFERENCE_HPP_
+#define OT_CORE_COMMON_PREFERENCE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -126,4 +126,4 @@ private:
 
 } // namespace ot
 
-#endif // PREFERENCE_HPP_
+#endif // OT_CORE_COMMON_PREFERENCE_HPP_

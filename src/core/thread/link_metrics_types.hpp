@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Link Metrics TLVs.
  */
 
-#ifndef LINK_METRICS_TYPES_HPP_
-#define LINK_METRICS_TYPES_HPP_
+#ifndef OT_CORE_THREAD_LINK_METRICS_TYPES_HPP_
+#define OT_CORE_THREAD_LINK_METRICS_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -350,4 +350,4 @@ DefineMapEnum(otLinkMetricsStatus, LinkMetrics::Status);
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-#endif // LINK_METRICS_TYPES_HPP_
+#endif // OT_CORE_THREAD_LINK_METRICS_TYPES_HPP_

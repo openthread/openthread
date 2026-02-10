@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_TREL_HPP_
-#define OT_NEXUS_TREL_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_TREL_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_TREL_HPP_
 
 #include "instance/instance.hpp"
 
@@ -70,4 +70,4 @@ struct Trel
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // OT_NEXUS_TREL_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_TREL_HPP_

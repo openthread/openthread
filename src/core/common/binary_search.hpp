@@ -31,8 +31,8 @@
  *  This file provides a generic binary search and related helper functions.
  */
 
-#ifndef BINARY_SEARCH_HPP_
-#define BINARY_SEARCH_HPP_
+#ifndef OT_CORE_COMMON_BINARY_SEARCH_HPP_
+#define OT_CORE_COMMON_BINARY_SEARCH_HPP_
 
 #include "openthread-core-config.h"
 
@@ -122,4 +122,4 @@ private:
 
 } // namespace ot
 
-#endif // BINARY_SEARCH_HPP_
+#endif // OT_CORE_COMMON_BINARY_SEARCH_HPP_

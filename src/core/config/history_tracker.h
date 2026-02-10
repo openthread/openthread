@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for History Tracker module.
  */
 
-#ifndef CONFIG_HISTORY_TRACKER_H_
-#define CONFIG_HISTORY_TRACKER_H_
+#ifndef OT_CORE_CONFIG_HISTORY_TRACKER_H_
+#define OT_CORE_CONFIG_HISTORY_TRACKER_H_
 
 /**
  * @addtogroup config-history-tracker
@@ -50,6 +50,25 @@
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+ *
+ * Define as 1 to enable History Tracker Server module (answering received TMF history queries).
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+ *
+ * Define as 1 to enable History Tracker Client module (using TMF history query to retrieve history info from other
+ * devices).
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 #endif
 
 /**
@@ -230,4 +249,4 @@
  * @}
  */
 
-#endif // CONFIG_HISTORY_TRACKER_H_
+#endif // OT_CORE_CONFIG_HISTORY_TRACKER_H_

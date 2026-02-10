@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for NAT64.
  */
 
-#ifndef CONFIG_NAT64_H_
-#define CONFIG_NAT64_H_
+#ifndef OT_CORE_CONFIG_NAT64_H_
+#define OT_CORE_CONFIG_NAT64_H_
 
 /**
  * @addtogroup config-nat64
@@ -103,4 +103,4 @@
  * @}
  */
 
-#endif
+#endif // OT_CORE_CONFIG_NAT64_H_

@@ -37,7 +37,7 @@
 
 namespace ot {
 
-void TestMessage(void)
+void TestMessage(uint16_t aReservedLength)
 {
     static constexpr uint16_t kMaxSize    = (Buffer::kSize * 3 + 24);
     static constexpr uint16_t kOffsetStep = 101;
@@ -52,7 +52,7 @@ void TestMessage(void)
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
 
-    printf("TestMessage\n");
+    printf("TestMessage(aReservedLength: %u)\n", aReservedLength);
 
     memset(zeroBuffer, 0, sizeof(zeroBuffer));
 
@@ -63,7 +63,7 @@ void TestMessage(void)
 
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
-    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
     message->SetLinkSecurityEnabled(kWithLinkSecurity);
     SuccessOrQuit(message->SetPriority(Message::Priority::kPriorityNet));
     message->SetType(Message::Type::kType6lowpan);
@@ -187,7 +187,7 @@ void TestMessage(void)
     // Test `WriteBytesFromMessage()` behavior copying between different
     // messages.
 
-    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
     SuccessOrQuit(message2->SetLength(kMaxSize));
 
     for (uint16_t readOffset = 0; readOffset < kMaxSize; readOffset += kOffsetStep)
@@ -319,7 +319,7 @@ void TestMessage(void)
     {
         for (uint16_t length = 0; length <= kMaxSize - offset; length += kLengthStep)
         {
-            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
             SuccessOrQuit(message->AppendBytes(writeBuffer, kMaxSize));
 
             message->RemoveHeader(offset, length);
@@ -340,7 +340,7 @@ void TestMessage(void)
     {
         for (uint16_t length = 0; length <= kMaxSize; length += kLengthStep)
         {
-            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
             SuccessOrQuit(message->AppendBytes(writeBuffer, kMaxSize));
 
             SuccessOrQuit(message->InsertHeader(offset, length));
@@ -452,7 +452,13 @@ void TestAppender(void)
 
 int main(void)
 {
-    ot::TestMessage();
+    static const uint16_t kReserveLengths[] = {0, 33, 400};
+
+    for (uint16_t reservedLength : kReserveLengths)
+    {
+        ot::TestMessage(reservedLength);
+    }
+
     ot::TestAppender();
     printf("All tests passed\n");
     return 0;

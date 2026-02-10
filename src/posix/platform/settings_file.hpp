@@ -29,6 +29,8 @@
 #ifndef OT_POSIX_PLATFORM_SETTINGS_FILE_HPP_
 #define OT_POSIX_PLATFORM_SETTINGS_FILE_HPP_
 
+#include <limits.h>
+
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 
@@ -38,6 +40,22 @@ namespace Posix {
 class SettingsFile
 {
 public:
+    static constexpr size_t kMaxFileBaseNameSize = 32;
+
+    /**
+     * Gets the path to store setting files.
+     *
+     * @returns  Path for setting files.
+     */
+    static const char *GetSettingsPath(void);
+
+    /**
+     * Sets the path to store setting files.
+     *
+     * @param[in]   aSettingsPath   Path for setting files.
+     */
+    static void SetSettingsPath(const char *aSettingsPath);
+
     SettingsFile(void)
         : mSettingsFd(-1)
     {
@@ -107,12 +125,11 @@ public:
     void Wipe(void);
 
 private:
-    static const size_t kMaxFileDirectorySize   = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH);
-    static const size_t kSlashLength            = 1;
-    static const size_t kMaxFileBaseNameSize    = 64;
-    static const size_t kMaxFileExtensionLength = 5; ///< The length of `.Swap` or `.data`.
-    static const size_t kMaxFilePathSize =
-        kMaxFileDirectorySize + kSlashLength + kMaxFileBaseNameSize + kMaxFileExtensionLength;
+    static constexpr size_t kSlashLength             = 1;
+    static constexpr size_t kMaxFileExtensionLength  = 5; ///< The length of `.Swap` or `.data`.
+    static constexpr size_t kMaxFileFullPathNameSize = PATH_MAX - kMaxFileExtensionLength;
+    static constexpr size_t kMaxFileBasePathNameSize = kMaxFileFullPathNameSize - kSlashLength - kMaxFileBaseNameSize;
+    static constexpr size_t kMaxFilePathSize         = PATH_MAX;
 
     otError Delete(uint16_t aKey, int aIndex, int *aSwapFd);
     void    GetSettingsFilePath(char aFileName[kMaxFilePathSize], bool aSwap);
@@ -121,8 +138,9 @@ private:
     void    SwapPersist(int aFd);
     void    SwapDiscard(int aFd);
 
-    char mSettingFileBaseName[kMaxFileBaseNameSize];
-    int  mSettingsFd;
+    static char sSettingsPath[kMaxFileBasePathNameSize];
+    char        mSettingsFileFullPathName[kMaxFileFullPathNameSize];
+    int         mSettingsFd;
 };
 
 } // namespace Posix

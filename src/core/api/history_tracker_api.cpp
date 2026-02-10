@@ -204,4 +204,24 @@ void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
     HistoryTracker::Local::EntryAgeToString(aEntryAge, aBuffer, aSize);
 }
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+
+otError otHistoryTrackerQueryNetInfo(otInstance                     *aInstance,
+                                     uint16_t                        aRloc16,
+                                     uint16_t                        aMaxEntries,
+                                     uint32_t                        aMaxEntryAge,
+                                     otHistoryTrackerNetInfoCallback aCallback,
+                                     void                           *aContext)
+{
+    return AsCoreType(aInstance).Get<HistoryTracker::Client>().QueryNetInfo(aRloc16, aMaxEntries, aMaxEntryAge,
+                                                                            aCallback, aContext);
+}
+
+void otHistoryTrackerCancelQuery(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<HistoryTracker::Client>().CancelQuery();
+}
+
+#endif
+
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

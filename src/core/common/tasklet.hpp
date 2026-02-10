@@ -31,8 +31,8 @@
  *   This file includes definitions for tasklets and the tasklet scheduler.
  */
 
-#ifndef TASKLET_HPP_
-#define TASKLET_HPP_
+#ifndef OT_CORE_COMMON_TASKLET_HPP_
+#define OT_CORE_COMMON_TASKLET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -211,4 +211,4 @@ private:
 
 } // namespace ot
 
-#endif // TASKLET_HPP_
+#endif // OT_CORE_COMMON_TASKLET_HPP_

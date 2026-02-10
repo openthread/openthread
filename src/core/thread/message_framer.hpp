@@ -31,8 +31,8 @@
  *   This file includes definitions for `MessageFramer`.
  */
 
-#ifndef MESSAGE_FRAMER_HPP_
-#define MESSAGE_FRAMER_HPP_
+#ifndef OT_CORE_THREAD_MESSAGE_FRAMER_HPP_
+#define OT_CORE_THREAD_MESSAGE_FRAMER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -138,4 +138,4 @@ private:
 
 } // namespace ot
 
-#endif // MESSAGE_FRAMER_HPP_
+#endif // OT_CORE_THREAD_MESSAGE_FRAMER_HPP_

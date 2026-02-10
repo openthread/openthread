@@ -30,8 +30,8 @@
  * @file This file includes definitions for spinel helper methods.
  */
 
-#ifndef SPINEL_HELPER_HPP_
-#define SPINEL_HELPER_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_HELPER_HPP_
+#define OT_LIB_SPINEL_SPINEL_HELPER_HPP_
 
 #include <openthread/error.h>
 
@@ -65,4 +65,4 @@ otError SpinelStatusToOtError(spinel_status_t aStatus);
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_HELPER_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_HELPER_HPP_

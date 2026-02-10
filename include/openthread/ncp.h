@@ -42,6 +42,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -135,7 +136,8 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
  * @param[in]  aFormat     A pointer to the format string.
  * @param[in]  aArgs       va_list matching aFormat.
  */
-void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
+void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
 
 //-----------------------------------------------------------------------------------------
 // Peek/Poke memory access control delegates

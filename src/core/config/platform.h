@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for platform-specific services.
  */
 
-#ifndef CONFIG_PLATFORM_H_
-#define CONFIG_PLATFORM_H_
+#ifndef OT_CORE_CONFIG_PLATFORM_H_
+#define OT_CORE_CONFIG_PLATFORM_H_
 
 #include "config/srp_server.h"
 
@@ -199,4 +199,4 @@
  * @}
  */
 
-#endif // CONFIG_PLATFORM_H_
+#endif // OT_CORE_CONFIG_PLATFORM_H_

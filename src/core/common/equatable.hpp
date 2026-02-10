@@ -31,8 +31,8 @@
  *   This file includes definitions for Equatable class for OpenThread objects.
  */
 
-#ifndef EQUATABLE_HPP_
-#define EQUATABLE_HPP_
+#ifndef OT_CORE_COMMON_EQUATABLE_HPP_
+#define OT_CORE_COMMON_EQUATABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -111,4 +111,4 @@ private:
 
 } // namespace ot
 
-#endif // EQUATABLE_HPP_
+#endif // OT_CORE_COMMON_EQUATABLE_HPP_

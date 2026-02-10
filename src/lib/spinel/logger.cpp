@@ -311,7 +311,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
         name = (key == SPINEL_PROP_RCP_TIMESTAMP) ? "timestamp" : "counter";
-        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, static_cast<unsigned int>(value));
     }
     break;
 
@@ -422,7 +422,8 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
             maskLength -= static_cast<spinel_size_t>(unpacked);
         }
 
-        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channelMask:0x%08x", channelMask);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channelMask:0x%08x",
+                          static_cast<unsigned int>(channelMask));
     }
     break;
 
@@ -507,8 +508,9 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
             start += Snprintf(start, static_cast<uint32_t>(end - start),
                               "... csmaCaEnabled:%u, isHeaderUpdated:%u, isARetx:%u, skipAes:%u"
                               ", txDelay:%u, txDelayBase:%u",
-                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes, frame.mInfo.mTxInfo.mTxDelay,
-                              frame.mInfo.mTxInfo.mTxDelayBaseTime);
+                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes,
+                              static_cast<unsigned int>(frame.mInfo.mTxInfo.mTxDelay),
+                              static_cast<unsigned int>(frame.mInfo.mTxInfo.mTxDelayBaseTime));
         }
     }
     break;
@@ -672,7 +674,8 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         LogDebg(" stopped:%u", metrics.mStopped);
 
         start = buf;
-        start += Snprintf(start, static_cast<uint32_t>(end - start), " grantGlitch:%u", metrics.mNumGrantGlitch);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), " grantGlitch:%u",
+                          static_cast<unsigned int>(metrics.mNumGrantGlitch));
     }
     break;
 

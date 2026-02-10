@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DNS_DSO_HPP_
-#define DNS_DSO_HPP_
+#ifndef OT_CORE_NET_DNS_DSO_HPP_
+#define OT_CORE_NET_DNS_DSO_HPP_
 
 #include "openthread-core-config.h"
 
@@ -918,4 +918,4 @@ DefineMapEnum(otPlatDsoDisconnectMode, Dns::Dso::Connection::DisconnectMode);
 
 #endif // OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
-#endif // DNS_DSO_HPP_
+#endif // OT_CORE_NET_DNS_DSO_HPP_

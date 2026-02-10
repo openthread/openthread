@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_LOWPAN_HPP
-#define TEST_LOWPAN_HPP
+#ifndef OT_UNIT_TEST_LOWPAN_HPP_
+#define OT_UNIT_TEST_LOWPAN_HPP_
 
 #include <stdint.h>
 
@@ -261,4 +261,4 @@ public:
 
 } // namespace ot
 
-#endif // TEST_LOWPAN_HPP
+#endif // OT_UNIT_TEST_LOWPAN_HPP_

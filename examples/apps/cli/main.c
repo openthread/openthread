@@ -38,7 +38,6 @@
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/tasklet.h>
-#include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 
 #include "openthread-system.h"
@@ -163,14 +162,3 @@ pseudo_reset:
 
     return 0;
 }
-
-#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    va_list ap;
-
-    va_start(ap, aFormat);
-    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
-    va_end(ap);
-}
-#endif

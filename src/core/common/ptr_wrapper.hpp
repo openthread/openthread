@@ -31,8 +31,8 @@
  *   This file includes definitions for a pointer wrapper.
  */
 
-#ifndef PTR_WRAPPER_HPP_
-#define PTR_WRAPPER_HPP_
+#ifndef OT_CORE_COMMON_PTR_WRAPPER_HPP_
+#define OT_CORE_COMMON_PTR_WRAPPER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -169,4 +169,4 @@ protected:
 
 } // namespace ot
 
-#endif // PTR_WRAPPER_HPP_
+#endif // OT_CORE_COMMON_PTR_WRAPPER_HPP_

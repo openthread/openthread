@@ -31,8 +31,8 @@
  *   This file includes definitions for Multicast Listener Registration states of multicast addresses.
  */
 
-#ifndef MLR_TYPES_HPP_
-#define MLR_TYPES_HPP_
+#ifndef OT_CORE_THREAD_MLR_TYPES_HPP_
+#define OT_CORE_THREAD_MLR_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -74,4 +74,4 @@ enum MlrStatus
 
 } // namespace ot
 
-#endif // MLR_TYPES_HPP_
+#endif // OT_CORE_THREAD_MLR_TYPES_HPP_

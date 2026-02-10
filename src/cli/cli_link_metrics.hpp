@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter for Link Metrics function.
  */
 
-#ifndef CLI_LINK_METRICS_HPP_
-#define CLI_LINK_METRICS_HPP_
+#ifndef OT_CLI_CLI_LINK_METRICS_HPP_
+#define OT_CLI_CLI_LINK_METRICS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -127,4 +127,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
-#endif // CLI_LINK_METRICS_HPP_
+#endif // OT_CLI_CLI_LINK_METRICS_HPP_

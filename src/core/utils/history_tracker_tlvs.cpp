@@ -1,0 +1,90 @@
+/*
+ *  Copyright (c) 2025, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file includes definitions to support History Tracker TLVs.
+ */
+
+#include "utils/history_tracker_tlvs.hpp"
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+
+namespace ot {
+namespace HistoryTracker {
+
+void AnswerTlv::Init(uint16_t aIndex, bool aIsLast)
+{
+    SetType(kAnswer);
+    SetLength(sizeof(*this) - sizeof(Tlv));
+
+    SetFlagsIndex((aIndex & kIndexMask) | (aIsLast ? kIsLastFlag : 0));
+}
+
+void RequestTlv::Init(uint8_t aTlvType, uint16_t aNumEntries, uint32_t aMaxEntryAge)
+{
+    SetType(kRequest);
+    SetLength(sizeof(*this) - sizeof(Tlv));
+
+    mTlvType     = aTlvType;
+    mNumEntries  = BigEndian::HostSwap16(aNumEntries);
+    mMaxEntryAge = BigEndian::HostSwap32(aMaxEntryAge);
+}
+
+void NetworkInfoTlv::InitFrom(const NetworkInfo &aNetworkInfo, uint32_t aEntryAge)
+{
+    Mle::DeviceMode deviceMode;
+
+    SetType(kNetworkInfo);
+    SetLength(sizeof(*this) - sizeof(Tlv));
+
+    deviceMode.Set(aNetworkInfo.mMode);
+
+    mEntryAge    = BigEndian::HostSwap32(aEntryAge);
+    mRole        = aNetworkInfo.mRole;
+    mMode        = deviceMode.Get();
+    mRloc16      = BigEndian::HostSwap16(aNetworkInfo.mRloc16);
+    mPartitionId = BigEndian::HostSwap32(aNetworkInfo.mPartitionId);
+}
+
+void NetworkInfoTlv::CopyTo(NetworkInfo &aNetworkInfo) const
+{
+    Mle::DeviceMode deviceMode;
+
+    deviceMode.Set(mMode);
+
+    aNetworkInfo.mRole        = static_cast<otDeviceRole>(mRole);
+    aNetworkInfo.mRloc16      = BigEndian::HostSwap16(mRloc16);
+    aNetworkInfo.mPartitionId = BigEndian::HostSwap32(mPartitionId);
+    deviceMode.Get(aNetworkInfo.mMode);
+}
+
+} // namespace HistoryTracker
+} // namespace ot
+
+#endif // #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

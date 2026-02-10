@@ -31,8 +31,8 @@
  *   This file includes definitions for manipulating MeshCoP timestamps.
  */
 
-#ifndef MESHCOP_TIMESTAMP_HPP_
-#define MESHCOP_TIMESTAMP_HPP_
+#ifndef OT_CORE_MESHCOP_TIMESTAMP_HPP_
+#define OT_CORE_MESHCOP_TIMESTAMP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -190,4 +190,4 @@ private:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // MESHCOP_TIMESTAMP_HPP_
+#endif // OT_CORE_MESHCOP_TIMESTAMP_HPP_

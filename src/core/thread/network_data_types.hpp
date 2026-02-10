@@ -31,8 +31,8 @@
  *   This file includes definitions for Network Data types and constants.
  */
 
-#ifndef NETWORK_DATA_TYPES_HPP_
-#define NETWORK_DATA_TYPES_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_TYPES_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -437,4 +437,4 @@ DefineCoreType(otServerConfig, NetworkData::ServiceConfig::ServerConfig);
 
 } // namespace ot
 
-#endif // NETWORK_DATA_TYPES_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_TYPES_HPP_

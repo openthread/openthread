@@ -500,4 +500,4 @@ bool otBleSecureGetInstallCodeVerifyStatus(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif /* OPENTHREAD_BLE_SECURE_H_ */
+#endif // OPENTHREAD_BLE_SECURE_H_

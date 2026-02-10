@@ -31,8 +31,8 @@
  *  Implements the TCAT Agent service.
  */
 
-#ifndef TCAT_AGENT_HPP_
-#define TCAT_AGENT_HPP_
+#ifndef OT_CORE_MESHCOP_TCAT_AGENT_HPP_
+#define OT_CORE_MESHCOP_TCAT_AGENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -414,7 +414,7 @@ public:
      */
     bool GetApplicationResponsePending(void) const { return mApplicationResponsePending; }
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 private:
     void  NotifyApplicationResponseSent(void) { mApplicationResponsePending = false; }
@@ -556,4 +556,4 @@ DefineMapEnum(otTcatAdvertisedDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
-#endif // TCAT_AGENT_HPP_
+#endif // OT_CORE_MESHCOP_TCAT_AGENT_HPP_

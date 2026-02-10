@@ -1351,9 +1351,15 @@ void Core::Entry::SetStateToConflict(void)
     switch (GetState())
     {
     case kProbing:
-    case kRegistered:
         SetState(kConflict);
         break;
+
+    case kRegistered:
+#if !OPENTHREAD_CONFIG_MULTICAST_DNS_PERSIST_STATE_ON_POST_PROBE_CONFLICT
+        SetState(kConflict);
+#endif
+        break;
+
     case kConflict:
     case kRemoving:
         break;
@@ -4095,25 +4101,16 @@ bool Core::TxMessage::ShouldClearAppendStateOnReinit(const Entry &aEntry) const
 
 const char *Core::TxMessage::TypeToString(Type aType)
 {
-    static const char *const kTypeStrings[] = {
-        "multicast probe",         // kMulticastProbe
-        "multicast query",         // kMulticastQuery
-        "multicast response",      // kMulticastResponse
-        "unicast response",        // kUnicastResponse
-        "legacy-unicast response", // kLegacyUnicastResponse
-    };
+#define TypeMapList(_)                          \
+    _(kMulticastProbe, "multicast probe")       \
+    _(kMulticastQuery, "multicast query")       \
+    _(kMulticastResponse, "multicast response") \
+    _(kUnicastResponse, "unicast response")     \
+    _(kLegacyUnicastResponse, "legacy-unicast response")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kMulticastProbe);
-        ValidateNextEnum(kMulticastQuery);
-        ValidateNextEnum(kMulticastResponse);
-        ValidateNextEnum(kUnicastResponse);
-        ValidateNextEnum(kLegacyUnicastResponse);
-    };
+    DefineEnumStringArray(TypeMapList);
 
-    return kTypeStrings[aType];
+    return kStrings[aType];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -4223,7 +4220,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
 
     mStartOffset[kQuestionSection] = offset;
 
-    SuccessOrAssert(mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
+    SuccessOrExit(error = mQuestions.ReserveCapacity(mRecordCounts.GetFor(kQuestionSection)));
 
     for (numRecords = mRecordCounts.GetFor(kQuestionSection); numRecords > 0; numRecords--)
     {
@@ -5141,6 +5138,7 @@ Error Core::Start(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
 
@@ -5166,6 +5164,7 @@ Error Core::Stop(const BrowserResolverType &aBrowserOrResolver)
 
     VerifyOrExit(mIsEnabled, error = kErrorInvalidState);
     VerifyOrExit(aBrowserOrResolver.mCallback != nullptr, error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidateNamesIn(aBrowserOrResolver));
 
     cacheEntry = GetCacheList<CacheType>().FindMatching(aBrowserOrResolver);
     VerifyOrExit(cacheEntry != nullptr);
@@ -5215,6 +5214,8 @@ Error Core::StartRecordQuerier(const RecordQuerier &aQuerier)
     return error;
 }
 
+Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+
 Error Core::StopIp6AddressResolver(const AddressResolver &aResolver)
 {
     return Stop<Ip6AddrCache, AddressResolver>(aResolver);
@@ -5230,7 +5231,62 @@ Error Core::StopIp4AddressResolver(const AddressResolver &aResolver)
     return Stop<Ip4AddrCache, AddressResolver>(aResolver);
 }
 
-Error Core::StopRecordQuerier(const RecordQuerier &aQuerier) { return Stop<RecordCache, RecordQuerier>(aQuerier); }
+Error Core::ValidateNamesIn(const Browser &aBrowser) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateName(aBrowser.mServiceType));
+
+    if (aBrowser.mSubTypeLabel != nullptr)
+    {
+        error = Name::ValidateLabel(aBrowser.mSubTypeLabel);
+    }
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const SrvResolver &aSrvResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aSrvResolver.mServiceInstance));
+    error = Name::ValidateName(aSrvResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const TxtResolver &aTxtResolver) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aTxtResolver.mServiceInstance));
+    error = Name::ValidateName(aTxtResolver.mServiceType);
+
+exit:
+    return error;
+}
+
+Error Core::ValidateNamesIn(const AddressResolver &aAddressResolver) const
+{
+    return Name::ValidateName(aAddressResolver.mHostName);
+}
+
+Error Core::ValidateNamesIn(const RecordQuerier &aRecordQuerier) const
+{
+    Error error;
+
+    SuccessOrExit(error = Name::ValidateLabel(aRecordQuerier.mFirstLabel));
+
+    if (aRecordQuerier.mNextLabels != nullptr)
+    {
+        error = Name::ValidateName(aRecordQuerier.mNextLabels);
+    }
+
+exit:
+    return error;
+}
 
 void Core::AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType)
 {
@@ -5569,12 +5625,14 @@ void Core::CacheEntry::Init(Instance &aInstance, Type aType)
 {
     InstanceLocatorInit::Init(aInstance);
 
-    mType               = aType;
-    mInitalQueries      = 0;
-    mQueryPending       = false;
-    mLastQueryTimeValid = false;
-    mIsActive           = false;
-    mDeleteTime         = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mType                  = aType;
+    mContinuousRetry       = false;
+    mQueryPending          = false;
+    mLastQueryTimeValid    = false;
+    mIsActive              = false;
+    mDeleteTime            = TimerMilli::GetNow() + kNonActiveDeleteTimeout;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
 }
 
 void Core::CacheEntry::SetIsActive(bool aIsActive)
@@ -5612,9 +5670,11 @@ bool Core::CacheEntry::ShouldDelete(TimeMilli aNow) const { return !mIsActive &&
 
 void Core::CacheEntry::StartInitialQueries(void)
 {
-    mInitalQueries      = 0;
-    mLastQueryTimeValid = false;
-    mLastQueryTime      = Get<Core>().RandomizeInitialQueryTxTime();
+    mContinuousRetry       = true;
+    mRetryInterval         = 0;
+    mJitteredRetryInterval = 0;
+    mLastQueryTimeValid    = false;
+    mLastQueryTime         = Get<Core>().RandomizeInitialQueryTxTime();
 
     ScheduleQuery(mLastQueryTime);
 }
@@ -5850,11 +5910,9 @@ void Core::CacheEntry::DetermineNextFireTime(void)
 {
     mQueryPending = false;
 
-    if (mInitalQueries < kNumberOfInitalQueries)
+    if (mContinuousRetry)
     {
-        uint32_t interval = (mInitalQueries == 0) ? 0 : (1U << (mInitalQueries - 1)) * kInitialQueryInterval;
-
-        ScheduleQuery(mLastQueryTime + interval);
+        ScheduleQuery(mLastQueryTime + mJitteredRetryInterval);
     }
 
     if (!mIsActive)
@@ -5883,6 +5941,26 @@ void Core::CacheEntry::DetermineNextFireTime(void)
         As<RecordCache>().DetermineRecordFireTime();
         break;
     }
+}
+
+void Core::CacheEntry::UpdateQueryRetryInterval(void)
+{
+    uint16_t maxJitter;
+
+    VerifyOrExit(mContinuousRetry);
+
+    mRetryInterval *= kQueryRetryGrowthFactor;
+    mRetryInterval = Clamp(mRetryInterval, kMinQueryRetryInterval, kMaxQueryRetryInterval);
+
+    // We pre-calculate the jittered retry interval to ensure
+    // `DetermineNextFireTime()` uses a consistent value.
+
+    maxJitter = ClampToUint16(mRetryInterval / kQueryRetryJitterDivisor);
+
+    mJitteredRetryInterval = Random::NonCrypto::AddJitter(mRetryInterval, maxJitter);
+
+exit:
+    return;
 }
 
 void Core::CacheEntry::ScheduleTimer(void) { ScheduleFireTimeOn(Get<Core>().mCacheTimer); }
@@ -5926,10 +6004,7 @@ void Core::CacheEntry::PrepareQuery(CacheContext &aContext)
     mLastQueryTimeValid = true;
     mLastQueryTime      = aContext.GetNow();
 
-    if (mInitalQueries < kNumberOfInitalQueries)
-    {
-        mInitalQueries++;
-    }
+    UpdateQueryRetryInterval();
 
     // Let the cache entry super-classes update their state
     // after query was sent.
@@ -6477,7 +6552,7 @@ void Core::SrvCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
 
         // If not present already, we add a passive `TxtCache` for the
         // same service name, and an `Ip6AddrCache` for the host name.
@@ -6653,7 +6728,7 @@ void Core::TxtCache::ProcessResponseRecord(const Message &aMessage, uint16_t aRe
 
     if (mRecord.IsPresent())
     {
-        StopInitialQueries();
+        StopQueryRetries();
     }
 
     ConvertTo(result);
@@ -7066,7 +7141,7 @@ void Core::AddrCache::CommitNewResponseEntries(void)
         }
     }
 
-    StopInitialQueries();
+    StopQueryRetries();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invoke callbacks if there is any change.
@@ -7438,7 +7513,7 @@ void Core::RecordCache::CommitNewEntriesForType(uint16_t aRecordType)
 
         if (mRecordType != ResourceRecord::kTypeAny)
         {
-            StopInitialQueries();
+            StopQueryRetries();
         }
     }
 

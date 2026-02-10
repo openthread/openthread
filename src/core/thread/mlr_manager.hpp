@@ -31,8 +31,8 @@
  *   This file includes definitions for managing Multicast Listener Registration feature defined in Thread 1.2.
  */
 
-#ifndef MLR_MANAGER_HPP_
-#define MLR_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_MLR_MANAGER_HPP_
+#define OT_CORE_THREAD_MLR_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -54,6 +54,7 @@
 #include "net/netif.hpp"
 #include "thread/child.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -154,24 +155,14 @@ private:
                          uint8_t               aAddressNum,
                          const uint32_t       *aTimeout,
                          Coap::ResponseHandler aResponseHandler,
-                         void                 *aResponseContext);
+                         void                 *aContext);
 
-    static void  HandleMlrResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void         HandleMlrResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-    static Error ParseMlrResponse(Error          aResult,
-                                  Coap::Message *aMessage,
-                                  uint8_t       &aStatus,
-                                  AddressArray  &aFailedAddresses);
+    DeclareTmfResponseHandlerIn(MlrManager, HandleMlrResponse);
+
+    static Error ParseMlrResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    static void HandleRegisterResponse(void                *aContext,
-                                       otMessage           *aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aResult);
-    void        HandleRegisterResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
+    DeclareTmfResponseHandlerIn(MlrManager, HandleRegisterResponse);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
@@ -216,4 +207,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-#endif // MLR_MANAGER_HPP_
+#endif // OT_CORE_THREAD_MLR_MANAGER_HPP_

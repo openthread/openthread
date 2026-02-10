@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to control History Tracker
  */
 
-#ifndef CLI_HISTORY_HPP_
-#define CLI_HISTORY_HPP_
+#ifndef OT_CLI_CLI_HISTORY_HPP_
+#define OT_CLI_CLI_HISTORY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -97,11 +97,35 @@ private:
     void    OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
     void    OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
 
+    void OutputNetInfoTableHeader(void);
+    void OutputNetInfoEntry(bool aIsList, const otHistoryTrackerNetworkInfo &aInfo, uint32_t aEntryAge);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    void    OutputResult(otError aError);
+    otError ParseQueryArgs(Arg       aArgs[],
+                           bool     &aIsList,
+                           uint16_t &aRloc16,
+                           uint16_t &aNumEntries,
+                           uint32_t &aMaxEntryAge) const;
+
+    void HandleNetInfo(otError aError, const otHistoryTrackerNetworkInfo *aNetworkInfo, uint32_t aEntryAge);
+
+    static void HandleNetInfo(otError                            aError,
+                              const otHistoryTrackerNetworkInfo *aNetworkInfo,
+                              uint32_t                           aEntryAge,
+                              void                              *aContext);
+
+#endif
+
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType);
     static const char *AilRouterEventToString(otHistoryTrackerAilRouterEvent aEvent);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    bool mQueryUseListFormat;
+#endif
 };
 
 } // namespace Cli
@@ -109,4 +133,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // CLI_HISTORY_HPP_
+#endif // OT_CLI_CLI_HISTORY_HPP_

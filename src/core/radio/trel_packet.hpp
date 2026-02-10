@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Radio Encapsulation Link (TREL) Packet
  */
 
-#ifndef TREL_PACKET_HPP_
-#define TREL_PACKET_HPP_
+#ifndef OT_CORE_RADIO_TREL_PACKET_HPP_
+#define OT_CORE_RADIO_TREL_PACKET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -329,4 +329,4 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // TREL_PACKET_HPP_
+#endif // OT_CORE_RADIO_TREL_PACKET_HPP_

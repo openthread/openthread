@@ -57,10 +57,19 @@ extern "C" {
  */
 
 /**
- * This callback allows OpenThread to provide specific handlers for certain UDP messages.
+ * Represents a callback to handle a received UDP message.
  *
- * @retval  true    The message is handled by this receiver and should not be further processed.
- * @retval  false   The message is not handled by this receiver.
+ * This callback is used by a UDP receiver (see `otUdpAddReceiver()`) to process an incoming UDP message.
+ *
+ * This callback does not transfer ownership of @p aMessage. The callback implementation must not modify the message
+ * content. The message is guaranteed to be valid only within the context of the callback.
+ *
+ * @param[in] aContext      A pointer to the application-specific context.
+ * @param[in] aMessage      A pointer to the received UDP message.
+ * @param[in] aMessageInfo  A pointer to the IPv6 message info structure.
+ *
+ * @retval  TRUE    The message is handled by this receiver and should not be further processed.
+ * @retval  FALSE   The message is not handled by this receiver.
  */
 typedef bool (*otUdpHandler)(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
@@ -110,7 +119,14 @@ otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo);
 
 /**
- * This callback allows OpenThread to inform the application of a received UDP message.
+ * Callback function pointer to notify the application of a received UDP message on a UDP socket.
+ *
+ * This callback does not transfer ownership of @p aMessage. The callback implementation must not modify the message
+ * content. The message is guaranteed to be valid only within the context of the callback.
+ *
+ * @param[in] aContext      A pointer to the application-specific context.
+ * @param[in] aMessage      A pointer to the received UDP message.
+ * @param[in] aMessageInfo  A pointer to the IPv6 message info structure.
  */
 typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

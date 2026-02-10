@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the DNS Client.
  */
 
-#ifndef CONFIG_DNS_CLIENT_H_
-#define CONFIG_DNS_CLIENT_H_
+#ifndef OT_CORE_CONFIG_DNS_CLIENT_H_
+#define OT_CORE_CONFIG_DNS_CLIENT_H_
 
 /**
  * @addtogroup config-dns-client
@@ -203,4 +203,4 @@
  * @}
  */
 
-#endif // CONFIG_DNS_CLIENT_H_
+#endif // OT_CORE_CONFIG_DNS_CLIENT_H_

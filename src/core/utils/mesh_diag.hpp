@@ -31,8 +31,8 @@
  *   This file includes definitions for Mesh Diagnostic module.
  */
 
-#ifndef MESH_DIAG_HPP_
-#define MESH_DIAG_HPP_
+#ifndef OT_CORE_UTILS_MESH_DIAG_HPP_
+#define OT_CORE_UTILS_MESH_DIAG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -44,7 +44,6 @@
 
 #include <openthread/mesh_diag.h>
 
-#include "coap/coap.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -52,6 +51,7 @@
 #include "net/ip6_address.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 struct otMeshDiagIp6AddrIterator
 {
@@ -306,12 +306,7 @@ private:
     bool  ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     bool  ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-
-    static void HandleDiagGetResponse(void                *aContext,
-                                      otMessage           *aMessage,
-                                      const otMessageInfo *aMessageInfo,
-                                      otError              aResult);
+    DeclareTmfResponseHandlerIn(MeshDiag, HandleDiagGetResponse);
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
 
@@ -341,4 +336,4 @@ DefineCoreType(otMeshDiagChildIterator, Utils::MeshDiag::ChildIterator);
 
 #endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
-#endif // MESH_DIAG_HPP_
+#endif // OT_CORE_UTILS_MESH_DIAG_HPP_

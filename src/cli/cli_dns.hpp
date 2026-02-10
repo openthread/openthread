@@ -31,8 +31,8 @@
  *   This file contains definitions for CLI to DNS (client and resolver).
  */
 
-#ifndef CLI_DNS_HPP_
-#define CLI_DNS_HPP_
+#ifndef OT_CLI_CLI_DNS_HPP_
+#define OT_CLI_CLI_DNS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -139,4 +139,4 @@ private:
 
 #endif // OPENTHREAD_CLI_DNS_ENABLE
 
-#endif // CLI_DNS_HPP_
+#endif // OT_CLI_CLI_DNS_HPP_

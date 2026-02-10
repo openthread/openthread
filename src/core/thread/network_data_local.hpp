@@ -31,8 +31,8 @@
  *   This file includes definitions for manipulating local Thread Network Data.
  */
 
-#ifndef NETWORK_DATA_LOCAL_HPP_
-#define NETWORK_DATA_LOCAL_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_LOCAL_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_LOCAL_HPP_
 
 #include "openthread-core-config.h"
 
@@ -183,4 +183,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-#endif // NETWORK_DATA_LOCAL_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_LOCAL_HPP_

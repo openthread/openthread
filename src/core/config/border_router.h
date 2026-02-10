@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Border Router services.
  */
 
-#ifndef CONFIG_BORDER_ROUTER_H_
-#define CONFIG_BORDER_ROUTER_H_
+#ifndef OT_CORE_CONFIG_BORDER_ROUTER_H_
+#define OT_CORE_CONFIG_BORDER_ROUTER_H_
 
 /**
  * @addtogroup config-border-router
@@ -92,4 +92,4 @@
  * @}
  */
 
-#endif // CONFIG_BORDER_ROUTER_H_
+#endif // OT_CORE_CONFIG_BORDER_ROUTER_H_

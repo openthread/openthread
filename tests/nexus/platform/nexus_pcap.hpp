@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,65 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#include <openthread-core-config.h>
-#include <openthread/config.h>
 
-#include <openthread/platform/otns.h>
-#include <openthread/platform/toolchain.h>
+#ifndef OT_NEXUS_PLATFORM_NEXUS_PCAP_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_PCAP_HPP_
 
-#include "common/log.hpp"
+#include <cstdint>
+#include <cstdio>
 
-using namespace ot;
+#include <openthread/platform/radio.h>
 
-/*
- * Implementation note:
- *   These are all "weak" so that a platform may if it chooses to override the instance.
- */
+namespace ot {
+namespace Nexus {
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
+class Pcap
+{
+public:
+    Pcap(void);
+    ~Pcap(void);
 
-OT_TOOL_WEAK
-void otPlatOtnsStatus(const char *aStatus) { LogAlways("[OTNS] %s", aStatus); }
+    /**
+     * Opens a pcap file.
+     *
+     * @param[in] aFilename  The filename to open.
+     */
+    void Open(const char *aFilename);
 
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+    /**
+     * Closes the pcap file.
+     */
+    void Close(void);
+
+    /**
+     * Writes a frame to the pcap file.
+     *
+     * @param[in] aFrame   The frame to write.
+     * @param[in] aTimeUs  The timestamp in microseconds.
+     */
+    void WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs);
+
+private:
+    static constexpr uint32_t kPcapMagicNumber  = 0xa1b2c3d4;
+    static constexpr uint16_t kPcapVersionMajor = 2;
+    static constexpr uint16_t kPcapVersionMinor = 4;
+    static constexpr uint32_t kPcapSnapLen      = 65535;
+    static constexpr uint32_t kPcapDlt154Tap    = 283;
+
+    static constexpr uint8_t kTapVersion = 0;
+
+    static constexpr uint16_t kTapFcsType   = 0;
+    static constexpr uint16_t kTapFcsLength = 1;
+    static constexpr uint8_t  kTapFcsValue  = 1; // 16-bit CRC
+
+    static constexpr uint16_t kTapChannelType   = 3;
+    static constexpr uint16_t kTapChannelLength = 3;
+    static constexpr uint8_t  kTapChannelPage   = 0;
+
+    FILE *mFile;
+};
+
+} // namespace Nexus
+} // namespace ot
+
+#endif // OT_NEXUS_PLATFORM_NEXUS_PCAP_HPP_

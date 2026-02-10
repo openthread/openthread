@@ -86,29 +86,23 @@ exit:
 
 Error Initiator::AppendLinkMetricsQueryTlv(Message &aMessage, const QueryInfo &aInfo)
 {
-    Error error = kErrorNone;
-    Tlv   tlv;
+    Error         error = kErrorNone;
+    Tlv::Bookmark tlvBookmark;
 
     // The MLE Link Metrics Query TLV has two sub-TLVs:
     // - Query ID sub-TLV with series ID as value.
     // - Query Options sub-TLV with Type IDs as value.
 
-    tlv.SetType(Mle::Tlv::kLinkMetricsQuery);
-    tlv.SetLength(sizeof(Tlv) + sizeof(uint8_t) + ((aInfo.mTypeIdCount == 0) ? 0 : (sizeof(Tlv) + aInfo.mTypeIdCount)));
-
-    SuccessOrExit(error = aMessage.Append(tlv));
+    SuccessOrExit(error = Tlv::StartTlv(aMessage, Mle::Tlv::kLinkMetricsQuery, tlvBookmark));
 
     SuccessOrExit(error = Tlv::Append<QueryIdSubTlv>(aMessage, aInfo.mSeriesId));
 
     if (aInfo.mTypeIdCount != 0)
     {
-        QueryOptionsSubTlv queryOptionsTlv;
-
-        queryOptionsTlv.Init();
-        queryOptionsTlv.SetLength(aInfo.mTypeIdCount);
-        SuccessOrExit(error = aMessage.Append(queryOptionsTlv));
-        SuccessOrExit(error = aMessage.AppendBytes(aInfo.mTypeIds, aInfo.mTypeIdCount));
+        SuccessOrExit(error = Tlv::AppendTlv(aMessage, QueryOptionsSubTlv::kType, aInfo.mTypeIds, aInfo.mTypeIdCount));
     }
+
+    error = Tlv::EndTlv(aMessage, tlvBookmark);
 
 exit:
     return error;
@@ -116,14 +110,14 @@ exit:
 
 void Initiator::HandleReport(const Message &aMessage, OffsetRange &aOffsetRange, const Ip6::Address &aAddress)
 {
-    Error           error     = kErrorNone;
-    bool            hasStatus = false;
-    bool            hasReport = false;
-    Tlv::ParsedInfo tlvInfo;
-    ReportSubTlv    reportTlv;
-    MetricsValues   values;
-    uint8_t         status;
-    uint8_t         typeId;
+    Error         error     = kErrorNone;
+    bool          hasStatus = false;
+    bool          hasReport = false;
+    Tlv::Info     tlvInfo;
+    ReportSubTlv  reportTlv;
+    MetricsValues values;
+    uint8_t       status;
+    uint8_t       typeId;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -135,7 +129,7 @@ void Initiator::HandleReport(const Message &aMessage, OffsetRange &aOffsetRange,
     {
         SuccessOrExit(error = tlvInfo.ParseFrom(aMessage, aOffsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
@@ -144,11 +138,11 @@ void Initiator::HandleReport(const Message &aMessage, OffsetRange &aOffsetRange,
         // - One or more Report Sub-TLVs (in case of success), or
         // - A single Status Sub-TLV (in case of failure).
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case StatusSubTlv::kType:
             VerifyOrExit(!hasStatus && !hasReport, error = kErrorDrop);
-            SuccessOrExit(error = Tlv::Read<StatusSubTlv>(aMessage, aOffsetRange.GetOffset(), status));
+            SuccessOrExit(error = tlvInfo.Read<StatusSubTlv>(aMessage, status));
             hasStatus = true;
             break;
 
@@ -293,11 +287,11 @@ exit:
 
 Error Initiator::HandleManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
 {
-    Error           error = kErrorNone;
-    OffsetRange     offsetRange;
-    Tlv::ParsedInfo tlvInfo;
-    uint8_t         status;
-    bool            hasStatus = false;
+    Error       error = kErrorNone;
+    OffsetRange offsetRange;
+    Tlv::Info   tlvInfo;
+    uint8_t     status;
+    bool        hasStatus = false;
 
     VerifyOrExit(mMgmtResponseCallback.IsSet());
 
@@ -307,16 +301,16 @@ Error Initiator::HandleManagementResponse(const Message &aMessage, const Ip6::Ad
     {
         SuccessOrExit(error = tlvInfo.ParseFrom(aMessage, offsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case StatusSubTlv::kType:
             VerifyOrExit(!hasStatus, error = kErrorParse);
-            SuccessOrExit(error = Tlv::Read<StatusSubTlv>(aMessage, offsetRange.GetOffset(), status));
+            SuccessOrExit(error = tlvInfo.Read<StatusSubTlv>(aMessage, status));
             hasStatus = true;
             break;
 
@@ -408,15 +402,13 @@ Subject::Subject(Instance &aInstance)
 
 Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor)
 {
-    Error           error = kErrorNone;
-    Tlv             tlv;
-    Tlv::ParsedInfo tlvInfo;
-    uint8_t         queryId;
-    bool            hasQueryId = false;
-    uint16_t        length;
-    uint16_t        offset;
-    OffsetRange     offsetRange;
-    MetricsValues   values;
+    Error         error = kErrorNone;
+    Tlv::Info     tlvInfo;
+    uint8_t       queryId;
+    bool          hasQueryId = false;
+    OffsetRange   offsetRange;
+    Tlv::Bookmark tlvBookmark;
+    MetricsValues values;
 
     values.Clear();
 
@@ -431,22 +423,21 @@ Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, N
     {
         SuccessOrExit(error = tlvInfo.ParseFrom(aRequestMessage, offsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case SubTlv::kQueryId:
-            SuccessOrExit(error =
-                              Tlv::Read<QueryIdSubTlv>(aRequestMessage, tlvInfo.mTlvOffsetRange.GetOffset(), queryId));
+            SuccessOrExit(error = tlvInfo.Read<QueryIdSubTlv>(aRequestMessage, queryId));
             hasQueryId = true;
             break;
 
         case SubTlv::kQueryOptions:
-            SuccessOrExit(error =
-                              ReadTypeIdsFromMessage(aRequestMessage, tlvInfo.mValueOffsetRange, values.GetMetrics()));
+            SuccessOrExit(
+                error = ReadTypeIdsFromMessage(aRequestMessage, tlvInfo.GetValueOffsetRange(), values.GetMetrics()));
             break;
 
         default:
@@ -460,9 +451,7 @@ Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, N
     // Append MLE Link Metrics Report TLV and its sub-TLVs to
     // `aMessage`.
 
-    offset = aMessage.GetLength();
-    tlv.SetType(Mle::Tlv::kLinkMetricsReport);
-    SuccessOrExit(error = aMessage.Append(tlv));
+    SuccessOrExit(error = Tlv::StartTlv(aMessage, Mle::Tlv::kLinkMetricsReport, tlvBookmark));
 
     if (queryId == kQueryIdSingleProbe)
     {
@@ -495,10 +484,7 @@ Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, N
         }
     }
 
-    // Update the TLV length in message.
-    length = aMessage.GetLength() - offset - sizeof(Tlv);
-    tlv.SetLength(static_cast<uint8_t>(length));
-    aMessage.Write(offset, tlv);
+    error = Tlv::EndTlv(aMessage, tlvBookmark);
 
 exit:
     LogDebg("AppendReport, error:%s", ErrorToString(error));
@@ -509,7 +495,7 @@ Error Subject::HandleManagementRequest(const Message &aMessage, Neighbor &aNeigh
 {
     Error               error = kErrorNone;
     OffsetRange         offsetRange;
-    Tlv::ParsedInfo     tlvInfo;
+    Tlv::Info           tlvInfo;
     FwdProbingRegSubTlv fwdProbingSubTlv;
     EnhAckConfigSubTlv  enhAckConfigSubTlv;
     Metrics             metrics;
@@ -529,14 +515,14 @@ Error Subject::HandleManagementRequest(const Message &aMessage, Neighbor &aNeigh
 
         SuccessOrExit(error = tlvInfo.ParseFrom(aMessage, offsetRange));
 
-        if (tlvInfo.mIsExtended)
+        if (tlvInfo.IsExtended())
         {
             continue;
         }
 
-        tlvOffsetRange = tlvInfo.mTlvOffsetRange;
+        tlvOffsetRange = tlvInfo.GetTlvOffsetRange();
 
-        switch (tlvInfo.mType)
+        switch (tlvInfo.GetType())
         {
         case SubTlv::kFwdProbingReg:
             subTlv     = &fwdProbingSubTlv;

@@ -31,8 +31,8 @@
  *   This file includes miscellaneous compile-time configuration constants for OpenThread.
  */
 
-#ifndef CONFIG_MISC_H_
-#define CONFIG_MISC_H_
+#ifndef OT_CORE_CONFIG_MISC_H_
+#define OT_CORE_CONFIG_MISC_H_
 
 /**
  * @addtogroup config-misc
@@ -308,6 +308,15 @@
 #else
 #define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS 384
 #endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE
+ *
+ * Define as 1 to enable the MeshCoP Steering Data public APIs (in `openthread/steering_data.h`).
+ */
+#ifndef OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE
+#define OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE 0
 #endif
 
 /**
@@ -642,4 +651,4 @@
  * @}
  */
 
-#endif // CONFIG_MISC_H_
+#endif // OT_CORE_CONFIG_MISC_H_

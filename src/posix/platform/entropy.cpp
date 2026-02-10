@@ -42,57 +42,14 @@
 
 #include "common/code_utils.hpp"
 
-#ifndef __SANITIZE_ADDRESS__
-#define __SANITIZE_ADDRESS__ 0
-#endif
-
-#if __SANITIZE_ADDRESS__ != 0
-
-static uint32_t sState = 1;
-
-#endif // __SANITIZE_ADDRESS__
-
 void platformRandomInit(void)
 {
-#if __SANITIZE_ADDRESS__ != 0
-
-    // Multiplying gNodeId assures that no two nodes gets the same seed within an hour.
-    sState = (uint32_t)time(nullptr) + (3600 * gNodeId);
-
-#endif // __SANITIZE_ADDRESS__
+    // Do nothing.
 }
-
-#if __SANITIZE_ADDRESS__ != 0
-
-uint32_t randomUint32Get(void)
-{
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
-
-    tmpstate = (uint64_t)33614 * (uint64_t)sState;
-    q        = tmpstate & 0xffffffff;
-    q        = q >> 1;
-    p        = tmpstate >> 32;
-    mlcg     = p + q;
-
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
-
-    sState = mlcg;
-
-    return mlcg;
-}
-
-#endif // __SANITIZE_ADDRESS__
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
-
-#if __SANITIZE_ADDRESS__ == 0
 
     FILE  *file = nullptr;
     size_t readLength;
@@ -111,27 +68,5 @@ exit:
     {
         fclose(file);
     }
-
-#else // __SANITIZE_ADDRESS__
-
-    /*
-     * THE IMPLEMENTATION BELOW IS NOT COMPLIANT WITH THE THREAD SPECIFICATION.
-     *
-     * Address Sanitizer triggers test failures when reading random
-     * values from /dev/urandom.  The pseudo-random number generator
-     * implementation below is only used to enable continuous
-     * integration checks with Address Sanitizer enabled.
-     */
-    VerifyOrExit(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
-
-    for (uint16_t length = 0; length < aOutputLength; length++)
-    {
-        aOutput[length] = (uint8_t)randomUint32Get();
-    }
-
-exit:
-
-#endif // __SANITIZE_ADDRESS__
-
     return error;
 }

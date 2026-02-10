@@ -31,9 +31,11 @@
  *   This file includes definitions for generic number utility functions (min, max, clamp).
  */
 
-#ifndef NUM_UTILS_HPP_
-#define NUM_UTILS_HPP_
+#ifndef OT_CORE_COMMON_NUM_UTILS_HPP_
+#define OT_CORE_COMMON_NUM_UTILS_HPP_
 
+#include "common/code_utils.hpp"
+#include "common/error.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/type_traits.hpp"
 
@@ -230,6 +232,37 @@ template <> inline int ThreeWayCompare(bool aFirst, bool aSecond)
 }
 
 /**
+ * Safely multiplies two unsigned integers and checks for overflow.
+ *
+ * @tparam UintType   The value type (MUST be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`).
+ *
+ * @param[in]  aFirstValue   The first operand in the multiplication.
+ * @param[in]  aSecondValue  The second operand in the multiplication.
+ * @param[out] aResult       A reference to return the multiplication result.
+ *
+ * @retval kErrorNone          If the multiplication was performed safely without overflow. @p aResult is updated.
+ * @retval kErrorInvalidArgs   If the multiplication would result in an overflow.
+ */
+template <typename UintType> inline Error SafeMultiply(UintType aFirstValue, UintType aSecondValue, UintType &aResult)
+{
+    static_assert(TypeTraits::IsUint<UintType>::kValue, "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
+
+    Error error = kErrorNone;
+
+    if (aFirstValue == 0 || aSecondValue == 0)
+    {
+        aResult = 0;
+        ExitNow();
+    }
+
+    aResult = aFirstValue * aSecondValue;
+    VerifyOrExit(aResult / aFirstValue == aSecondValue, error = kErrorInvalidArgs);
+
+exit:
+    return error;
+}
+
+/**
  * This template function divides two numbers and rounds the result to the closest integer.
  *
  * @tparam IntType   The integer type.
@@ -270,4 +303,4 @@ inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned lon
 
 } // namespace ot
 
-#endif // NUM_UTILS_HPP_
+#endif // OT_CORE_COMMON_NUM_UTILS_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for a child mask.
  */
 
-#ifndef CHILD_MASK_HPP_
-#define CHILD_MASK_HPP_
+#ifndef OT_CORE_THREAD_CHILD_MASK_HPP_
+#define OT_CORE_THREAD_CHILD_MASK_HPP_
 
 #include "openthread-core-config.h"
 
@@ -60,4 +60,4 @@ typedef BitSet<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
 
 } // namespace ot
 
-#endif // CHILD_MASK_HPP_
+#endif // OT_CORE_THREAD_CHILD_MASK_HPP_

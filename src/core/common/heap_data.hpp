@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap::Data` (heap allocated data).
  */
 
-#ifndef HEAP_DATA_HPP_
-#define HEAP_DATA_HPP_
+#ifndef OT_CORE_COMMON_HEAP_DATA_HPP_
+#define OT_CORE_COMMON_HEAP_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -211,4 +211,4 @@ private:
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_DATA_HPP_
+#endif // OT_CORE_COMMON_HEAP_DATA_HPP_

@@ -47,25 +47,24 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
 {
 }
 
-template <>
-void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
 {
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMessage.IsPostRequest());
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
+    VerifyOrExit(aMsg.IsPostRequest());
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
-    SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMessage, panId));
+    SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));
 
     mChannelMask  = mask;
-    mCommissioner = aMessageInfo.GetPeerAddr();
+    mCommissioner = aMsg.mMessageInfo.GetPeerAddr();
     mPanId        = panId;
     mTimer.Start(kScanDelay);
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
         LogInfo("Sent %s ack", UriToString<kUriPanIdQuery>());
     }
 

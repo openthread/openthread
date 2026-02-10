@@ -30,8 +30,8 @@
  *   This file shows how to implement the Radio Spinel vendor hook.
  */
 
-#ifndef SPINEL_EXTENSION_H
-#define SPINEL_EXTENSION_H
+#ifndef OT_LIB_SPINEL_EXAMPLE_VENDOR_HOOK_HPP_
+#define OT_LIB_SPINEL_EXAMPLE_VENDOR_HOOK_HPP_
 
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
@@ -56,4 +56,4 @@ public:
 } // namespace ot
 
 #endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
-#endif // SPINEL_EXTENSION_H
+#endif // OT_LIB_SPINEL_EXAMPLE_VENDOR_HOOK_HPP_

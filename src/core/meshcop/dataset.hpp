@@ -31,8 +31,8 @@
  *   This file includes definitions for managing MeshCoP Datasets.
  */
 
-#ifndef MESHCOP_DATASET_HPP_
-#define MESHCOP_DATASET_HPP_
+#ifndef OT_CORE_MESHCOP_DATASET_HPP_
+#define OT_CORE_MESHCOP_DATASET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -785,4 +785,4 @@ DefineCoreType(otOperationalDataset, MeshCoP::Dataset::Info);
 
 } // namespace ot
 
-#endif // MESHCOP_DATASET_HPP_
+#endif // OT_CORE_MESHCOP_DATASET_HPP_

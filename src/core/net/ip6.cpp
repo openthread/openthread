@@ -1117,13 +1117,43 @@ void Ip6::DetermineAction(const Message &aMessage,
         // Always forward multicast packets to host network stack
         aForwardHost = true;
 
-        // If subscribed to the multicast address, receive if it is from the
-        // Thread netif or if multicast loop is allowed.
+        // Determine `aReceive` for a multicast message destined for
+        // an address to which this device is subscribed.
+        //
+        // 1) Accept if `MulticastLoop` is enabled.
+        // 2) Otherwise, if it originates from the Thread Netif:
+        //   - Always accept if the device is non-sleepy.
+        //   - If sleepy, only if the source is NOT the SED itself.
+        //
+        // For non-sleepy devices, duplicate multicast detection is
+        // handled in `Mpl::ProcessOption()`, which will update
+        // `aReceive` if the message was seen before (based on the
+        // MPL Seed).
+        //
+        // To optimize SED behavior, MPL processing is fully skipped
+        // on SEDs. Therefore, the check above is added to handle the
+        // specific case where an SED sends a multicast message to a
+        // group it is subscribed to. The parent can send it back to
+        // the SED (since the child is subscribed), we check and skip
+        // processing it.
 
-        if ((aMessage.IsOriginThreadNetif() || aMessage.GetMulticastLoop()) &&
-            Get<ThreadNetif>().IsMulticastSubscribed(aHeader.GetDestination()))
+        if (Get<ThreadNetif>().IsMulticastSubscribed(aHeader.GetDestination()))
         {
-            aReceive = true;
+            if (aMessage.GetMulticastLoop())
+            {
+                aReceive = true;
+            }
+            else if (aMessage.IsOriginThreadNetif())
+            {
+                if (Get<Mle::Mle>().IsRxOnWhenIdle())
+                {
+                    aReceive = true;
+                }
+                else
+                {
+                    aReceive = !Get<ThreadNetif>().HasUnicastAddress(aHeader.GetSource());
+                }
+            }
         }
 
         ExitNow();
@@ -1514,23 +1544,15 @@ const char *Ip6::IpProtoToString(uint8_t aIpProto)
 
 const char *Ip6::EcnToString(Ecn aEcn)
 {
-    static const char *const kEcnStrings[] = {
-        "no", // (0) kEcnNotCapable
-        "e1", // (1) kEcnCapable1  (ECT1)
-        "e0", // (2) kEcnCapable0  (ECT0)
-        "ce", // (3) kEcnMarked    (Congestion Encountered)
-    };
+#define EcnMapList(_)                \
+    _(kEcnNotCapable, "no")          \
+    _(kEcnCapable1, "e1") /* ECT1*/  \
+    _(kEcnCapable0, "e0") /* ECT0 */ \
+    _(kEcnMarked, "ce")   /* Congestion Encountered */
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kEcnNotCapable);
-        ValidateNextEnum(kEcnCapable1);
-        ValidateNextEnum(kEcnCapable0);
-        ValidateNextEnum(kEcnMarked);
-    };
+    DefineEnumStringArray(EcnMapList);
 
-    return kEcnStrings[aEcn];
+    return kStrings[aEcn];
 }
 
 // LCOV_EXCL_STOP

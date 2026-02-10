@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Thread Network Data TLVs.
  */
 
-#ifndef NETWORK_DATA_TLVS_HPP_
-#define NETWORK_DATA_TLVS_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_TLVS_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1540,4 +1540,4 @@ private:
 } // namespace NetworkData
 } // namespace ot
 
-#endif // NETWORK_DATA_TLVS_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_TLVS_HPP_

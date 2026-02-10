@@ -283,7 +283,7 @@ void PeerDiscoverer::RegisterService(uint16_t aPort, const TxtData &aTxtData)
 
     LogInfo("Registering service %s.%s", service.mServiceInstance, kTrelServiceType);
     LogInfo("    port:%u, ext-addr:%s, ext-panid:%s", aPort, Get<Mac::Mac>().GetExtAddress().ToString().AsCString(),
-            Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId().ToString().AsCString());
+            Get<MeshCoP::NetworkIdentity>().GetExtPanId().ToString().AsCString());
 
     Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, HandleRegisterDone);
 }
@@ -800,7 +800,7 @@ void PeerDiscoverer::TxtDataEncoder::Encode(void)
     Dns::TxtDataEncoder encoder(mBuffer, sizeof(mBuffer));
 
     SuccessOrAssert(encoder.AppendEntry(kExtAddressKey, Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     mData   = mBuffer;
     mLength = encoder.GetLength();

@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ from enum import Enum
 class TcatTLVType(Enum):
     RESPONSE_W_STATUS = 0x01
     RESPONSE_W_PAYLOAD = 0x02
+    RESPONSE_EVENT = 0x03
     GET_NETWORK_NAME = 0x08
     DISCONNECT = 0x09
     PING = 0x0A

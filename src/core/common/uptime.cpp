@@ -39,7 +39,7 @@
 
 namespace ot {
 
-Uptime::Uptime(Instance &aInstance)
+UptimeTracker::UptimeTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mStartTime(TimerMilli::GetNow())
     , mOverflowCount(0)
@@ -48,7 +48,7 @@ Uptime::Uptime(Instance &aInstance)
     mTimer.FireAt(mStartTime + kTimerInterval);
 }
 
-uint64_t Uptime::GetUptime(void) const
+UptimeMsec UptimeTracker::GetUptime(void) const
 {
     TimeMilli now           = TimerMilli::GetNow();
     uint32_t  overflowCount = mOverflowCount;
@@ -75,19 +75,15 @@ uint64_t Uptime::GetUptime(void) const
     // lower 32 bits (which is always correct even under the corner
     // case where the `HandleTimer()` is not yet handled).
 
-    return (static_cast<uint64_t>(overflowCount) << 32) + (now - mStartTime);
+    return (static_cast<UptimeMsec>(overflowCount) << 32) + (now - mStartTime);
 }
 
-void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
+UptimeSec UptimeTracker::GetUptimeInSeconds(void) const
 {
-    StringWriter writer(aBuffer, aSize);
-
-    UptimeToString(GetUptime(), writer, /* aIncludeMsec */ true);
+    return static_cast<UptimeSec>(GetUptime() / Time::kOneSecondInMsec);
 }
 
-uint32_t Uptime::GetUptimeInSeconds(void) const { return MsecToSec(GetUptime()); }
-
-void Uptime::HandleTimer(void)
+void UptimeTracker::HandleTimer(void)
 {
     if (mTimer.GetFireTime() == mStartTime)
     {
@@ -109,7 +105,7 @@ static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
     return static_cast<uint16_t>(quotient);
 }
 
-void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec)
+void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, bool aIncludeMsec)
 {
     uint64_t days = aUptime / Time::kOneDayInMsec;
     uint32_t remainder;

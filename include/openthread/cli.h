@@ -41,6 +41,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +76,8 @@ typedef struct otCliCommand
  *
  * @returns                Number of bytes written by the callback.
  */
-typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list aArguments);
+typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list aArguments)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 /**
  * Initialize the CLI module.
@@ -119,7 +121,7 @@ void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
  * @param[in]  aFmt   A pointer to the format string.
  * @param[in]  ...    A matching list of arguments.
  */
-void otCliOutputFormat(const char *aFmt, ...);
+void otCliOutputFormat(const char *aFmt, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
  * Write error code to the CLI console
@@ -138,7 +140,8 @@ void otCliAppendResult(otError aError);
  * @param[in]  aFormat     A pointer to the format string.
  * @param[in]  aArgs       va_list matching aFormat.
  */
-void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
+void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
 
 /**
  * Callback to allow vendor specific commands to be added to the user command table.

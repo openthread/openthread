@@ -31,8 +31,8 @@
  *   This file contains header for exit code utilities.
  */
 
-#ifndef PLATFORM_EXIT_CODE_H_
-#define PLATFORM_EXIT_CODE_H_
+#ifndef OT_LIB_PLATFORM_EXIT_CODE_H_
+#define OT_LIB_PLATFORM_EXIT_CODE_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -161,4 +161,4 @@ const char *otExitCodeToString(uint8_t aExitCode);
 }
 #endif
 
-#endif // PLATFORM_EXIT_CODE_H_
+#endif // OT_LIB_PLATFORM_EXIT_CODE_H_

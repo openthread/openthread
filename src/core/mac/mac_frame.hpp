@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing IEEE 802.15.4 MAC frames.
  */
 
-#ifndef MAC_FRAME_HPP_
-#define MAC_FRAME_HPP_
+#ifndef OT_CORE_MAC_MAC_FRAME_HPP_
+#define OT_CORE_MAC_MAC_FRAME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1528,4 +1528,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_FRAME_HPP_
+#endif // OT_CORE_MAC_MAC_FRAME_HPP_

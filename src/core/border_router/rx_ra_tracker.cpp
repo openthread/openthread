@@ -217,7 +217,7 @@ void RxRaTracker::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket,
 
         router = newEntry;
         router->Clear();
-        router->mDiscoverTime = Get<Uptime>().GetUptimeInSeconds();
+        router->mDiscoverTime = Get<UptimeTracker>().GetUptimeInSeconds();
         router->mAddress      = aSrcAddress;
 
         mRouters.Push(*newEntry);
@@ -576,7 +576,7 @@ void RxRaTracker::UpdateIfAddresses(const Ip6::Address &aAddress)
         mIfAddresses.Push(*entry);
     }
 
-    entry->SetFrom(aAddress, Get<Uptime>().GetUptimeInSeconds());
+    entry->SetFrom(aAddress, Get<UptimeTracker>().GetUptimeInSeconds());
 
 exit:
     return;
@@ -855,6 +855,16 @@ void RxRaTracker::Evaluate(void)
         mPendingEvents.mDecisionFactorChanged = true;
         mEventTask.Post();
     }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check for possible conflict between delegated DHCPv6-PD prefix
+    // and any of the observed on-link or route prefixes. This protects
+    // against DHCPv6-PD server misbehavior (assigning same prefix to
+    // multiple requesters).
+
+    Get<RoutingManager>().mPdPrefixManager.CheckConflict(RoutingManager::PdPrefixManager::kRxRaPrefixTableChanged);
+#endif
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Schedule timers
@@ -1176,6 +1186,42 @@ exit:
     return isOnLink;
 }
 
+bool RxRaTracker::IsPrefixOnLink(const Ip6::Prefix &aPrefix) const
+{
+    bool isOnLink = false;
+
+    for (const Router &router : mRouters)
+    {
+        for (const OnLinkPrefix &onLinkPrefix : router.mOnLinkPrefixes)
+        {
+            if (aPrefix == onLinkPrefix.GetPrefix())
+            {
+                isOnLink = true;
+                ExitNow();
+            }
+        }
+    }
+
+exit:
+    return isOnLink;
+}
+
+bool RxRaTracker::ContainsRoutePrefix(const Ip6::Prefix &aPrefix) const
+{
+    bool contains = false;
+
+    for (const Router &router : mRouters)
+    {
+        if (router.mRoutePrefixes.ContainsMatching(aPrefix))
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
+}
+
 bool RxRaTracker::IsAddressReachableThroughExplicitRoute(const Ip6::Address &aAddress) const
 {
     // Checks whether the `aAddress` matches any discovered route
@@ -1203,7 +1249,7 @@ exit:
 
 void RxRaTracker::InitIterator(PrefixTableIterator &aIterator) const
 {
-    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Get<Uptime>().GetUptimeInSeconds());
+    static_cast<Iterator &>(aIterator).Init(mRouters.GetHead(), Get<UptimeTracker>().GetUptimeInSeconds());
 }
 
 Error RxRaTracker::GetNextPrefixTableEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
@@ -1371,21 +1417,14 @@ exit:
 
 const char *RxRaTracker::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 {
-    static const char *const kOriginStrings[] = {
-        "",                          // (0) kAnotherRouter
-        "(this BR routing-manager)", // (1) kThisBrRoutingManager
-        "(this BR other sw entity)", // (2) kThisBrOtherEntity
-    };
+#define RouterAdvOriginMapList(_)                         \
+    _(kAnotherRouter, "")                                 \
+    _(kThisBrRoutingManager, "(this BR routing-manager)") \
+    _(kThisBrOtherEntity, "(this BR other sw entity)")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAnotherRouter);
-        ValidateNextEnum(kThisBrRoutingManager);
-        ValidateNextEnum(kThisBrOtherEntity);
-    };
+    DefineEnumStringArray(RouterAdvOriginMapList);
 
-    return kOriginStrings[aRaOrigin];
+    return kStrings[aRaOrigin];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -1393,7 +1432,7 @@ const char *RxRaTracker::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
 //---------------------------------------------------------------------------------------------------------------------
 // RxRaTracker::Iterator
 
-void RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHead, uint32_t aUptime)
+void RxRaTracker::Iterator::Init(const Entry<Router> *aRoutersHead, UptimeSec aUptime)
 {
     SetInitUptime(aUptime);
     SetInitTime();
@@ -1627,7 +1666,7 @@ bool RxRaTracker::Router::IsPeerBr(void) const
     return mAllEntriesDisregarded && !(mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty());
 }
 
-void RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const
+void RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, UptimeSec aUptime) const
 {
     aEntry.mAddress                  = mAddress;
     aEntry.mMsecSinceLastUpdate      = aNow - mLastUpdateTime;

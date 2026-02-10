@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the MLE service.
  */
 
-#ifndef CONFIG_MLE_H_
-#define CONFIG_MLE_H_
+#ifndef OT_CORE_CONFIG_MLE_H_
+#define OT_CORE_CONFIG_MLE_H_
 
 /**
  * @addtogroup config-mle
@@ -303,6 +303,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
+ *
+ * Define as 1 to support `otThreadSetDiscoveryRequestCallback()`. It allows registering a callback to be notified of
+ * received MLE Discovery Requests.
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
+#define OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
  *
  * Define as 1 to enable Link Metrics initiator feature.
@@ -351,4 +361,4 @@
  * @}
  */
 
-#endif // CONFIG_MLE_H_
+#endif // OT_CORE_CONFIG_MLE_H_

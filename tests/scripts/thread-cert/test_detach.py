@@ -98,6 +98,7 @@ class TestDetach(thread_cert.TestCase):
 
         child1.detach()
         self.assertEqual(child1.get_state(), 'disabled')
+        self.simulator.go(2)  # The router processes its child table every second; wait 2s to be safe.
         self.assertFalse(router1.get_child_table())
 
         router1.detach()

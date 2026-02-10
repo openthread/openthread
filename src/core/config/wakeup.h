@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Wake-up Coordinator and Wake-up End Device roles.
  */
 
-#ifndef CONFIG_WAKEUP_H_
-#define CONFIG_WAKEUP_H_
+#ifndef OT_CORE_CONFIG_WAKEUP_H_
+#define OT_CORE_CONFIG_WAKEUP_H_
 
 /**
  * @addtogroup config-wakeup
@@ -148,4 +148,4 @@
  * @}
  */
 
-#endif // CONFIG_WAKEUP_H_
+#endif // OT_CORE_CONFIG_WAKEUP_H_

@@ -30,8 +30,8 @@
  *   This file includes definitions for NdProxy Table on Thread Backbone Border Router.
  */
 
-#ifndef NDPROXY_TABLE_HPP_
-#define NDPROXY_TABLE_HPP_
+#ifndef OT_CORE_BACKBONE_ROUTER_NDPROXY_TABLE_HPP_
+#define OT_CORE_BACKBONE_ROUTER_NDPROXY_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -305,4 +305,4 @@ DefineMapEnum(otBackboneRouterNdProxyEvent, BackboneRouter::NdProxyTable::NdProx
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
-#endif // NDPROXY_TABLE_HPP_
+#endif // OT_CORE_BACKBONE_ROUTER_NDPROXY_TABLE_HPP_

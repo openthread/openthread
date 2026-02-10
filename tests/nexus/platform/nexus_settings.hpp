@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_SETTINGS_HPP_
-#define OT_NEXUS_SETTINGS_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_SETTINGS_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_SETTINGS_HPP_
 
 #include "common/const_cast.hpp"
 #include "common/owning_list.hpp"
@@ -79,4 +79,4 @@ struct Settings
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_SETTINGS_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_SETTINGS_HPP_

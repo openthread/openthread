@@ -31,8 +31,8 @@
  *   This file includes types and constants for IPv6 processing.
  */
 
-#ifndef IP6_TYPES_HPP_
-#define IP6_TYPES_HPP_
+#ifndef OT_CORE_NET_IP6_TYPES_HPP_
+#define OT_CORE_NET_IP6_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -112,4 +112,4 @@ enum Ecn : uint8_t
 } // namespace Ip6
 } // namespace ot
 
-#endif // IP6_TYPES_HPP_
+#endif // OT_CORE_NET_IP6_TYPES_HPP_

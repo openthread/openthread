@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Commissioner.
  */
 
-#ifndef CONFIG_COMMISSIONER_H_
-#define CONFIG_COMMISSIONER_H_
+#ifndef OT_CORE_CONFIG_COMMISSIONER_H_
+#define OT_CORE_CONFIG_COMMISSIONER_H_
 
 /**
  * @addtogroup config-commissioner
@@ -75,4 +75,4 @@
  * @}
  */
 
-#endif // CONFIG_COMMISSIONER_H_
+#endif // OT_CORE_CONFIG_COMMISSIONER_H_

@@ -31,8 +31,8 @@
  *   This file includes definitions for managing Thread Network Data.
  */
 
-#ifndef NETWORK_DATA_HPP_
-#define NETWORK_DATA_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -702,4 +702,4 @@ private:
 
 } // namespace ot
 
-#endif // NETWORK_DATA_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_HPP_

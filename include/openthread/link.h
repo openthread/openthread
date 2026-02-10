@@ -38,10 +38,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/commissioner.h>
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/steering_data.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus

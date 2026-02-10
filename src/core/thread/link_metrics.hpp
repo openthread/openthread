@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Link Metrics query and management.
  */
 
-#ifndef LINK_METRICS_HPP_
-#define LINK_METRICS_HPP_
+#ifndef OT_CORE_THREAD_LINK_METRICS_HPP_
+#define OT_CORE_THREAD_LINK_METRICS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -350,4 +350,4 @@ int8_t  ScaleRawValueToRssi(uint8_t aRawValue);
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-#endif // LINK_METRICS_HPP
+#endif // OT_CORE_THREAD_LINK_METRICS_HPP_

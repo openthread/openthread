@@ -31,8 +31,8 @@
  *   This file includes definitions for the NAT64 translator.
  */
 
-#ifndef NAT64_TRANSLATOR_HPP_
-#define NAT64_TRANSLATOR_HPP_
+#ifndef OT_CORE_NET_NAT64_TRANSLATOR_HPP_
+#define OT_CORE_NET_NAT64_TRANSLATOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -389,4 +389,4 @@ DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);
 
 } // namespace ot
 
-#endif // NAT64_TRANSLATOR_HPP_
+#endif // OT_CORE_NET_NAT64_TRANSLATOR_HPP_

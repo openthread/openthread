@@ -31,8 +31,8 @@
  *   This file includes definitions for infrastructure network interface.
  */
 
-#ifndef INFRA_IF_HPP_
-#define INFRA_IF_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_
+#define OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_
 
 #include "openthread-core-config.h"
 
@@ -242,4 +242,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // INFRA_IF_HPP_
+#endif // OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_

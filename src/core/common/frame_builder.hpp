@@ -31,8 +31,8 @@
  *  This file defines OpenThread `FrameBuilder` class.
  */
 
-#ifndef FRAME_BUILDER_HPP_
-#define FRAME_BUILDER_HPP_
+#ifndef OT_CORE_COMMON_FRAME_BUILDER_HPP_
+#define OT_CORE_COMMON_FRAME_BUILDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -329,4 +329,4 @@ private:
 
 } // namespace ot
 
-#endif // FRAME_BUILDER_HPP_
+#endif // OT_CORE_COMMON_FRAME_BUILDER_HPP_

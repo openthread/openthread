@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Network Data Publisher.
  */
 
-#ifndef CONFIG_NETDATA_PUBLISHER_H_
-#define CONFIG_NETDATA_PUBLISHER_H_
+#ifndef OT_CORE_CONFIG_NETDATA_PUBLISHER_H_
+#define OT_CORE_CONFIG_NETDATA_PUBLISHER_H_
 
 /**
  * @addtogroup config-netdata-publisher
@@ -159,4 +159,4 @@
  * @}
  */
 
-#endif // CONFIG_NETDATA_PUBLISHER_H_
+#endif // OT_CORE_CONFIG_NETDATA_PUBLISHER_H_

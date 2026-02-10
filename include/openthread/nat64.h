@@ -525,6 +525,15 @@ otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
 otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
 
 /**
+ * Converts a given `otNat64State` to a human-readable string.
+ *
+ * @param[in] aState  The NAT64 state.
+ *
+ * @returns The string representation of @p aState.
+ */
+const char *otNat64StateToString(otNat64State aState);
+
+/**
  * @}
  */
 

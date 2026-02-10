@@ -41,7 +41,7 @@
  * The OpenThread feature configuration file.
  */
 #if defined(OPENTHREAD_CONFIG_FILE)
-#include OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE // IWYU pragma: export
 #endif
 
 #endif // OPENTHREAD_CONFIG_H_

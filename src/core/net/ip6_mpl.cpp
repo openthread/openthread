@@ -117,7 +117,9 @@ exit:
 
 Error Mpl::ProcessOption(Message &aMessage, const MplOption &aOption, bool &aReceive)
 {
-    Error error;
+    Error error = kErrorNone;
+
+    VerifyOrExit(Get<Mle::Mle>().IsRxOnWhenIdle());
 
     // Check if the MPL Data Message is new.
     error = UpdateSeedSet(aOption.GetSeedId(), aOption.GetSequence());
@@ -130,12 +132,19 @@ Error Mpl::ProcessOption(Message &aMessage, const MplOption &aOption, bool &aRec
     }
     else if (!aMessage.IsOriginThreadNetif())
     {
+        // If the MPL message is not new (already present in the seed
+        // set), avoid receiving it again. It should have been
+        // received and processed the first time the seed set was
+        // updated.
         aReceive = false;
-        // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
-        // to allow subsequent retransmissions with the same sequence number.
+
+        // In case MPL Data Message is generated locally, ignore
+        // potential error of the MPL Seed Set to allow subsequent
+        // retransmissions with the same sequence number.
         error = kErrorNone;
     }
 
+exit:
     return error;
 }
 

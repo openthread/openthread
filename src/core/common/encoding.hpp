@@ -31,8 +31,8 @@
  *   This file includes definitions for byte-ordering encoding.
  */
 
-#ifndef ENCODING_HPP_
-#define ENCODING_HPP_
+#ifndef OT_CORE_COMMON_ENCODING_HPP_
+#define OT_CORE_COMMON_ENCODING_HPP_
 
 #include "openthread-core-config.h"
 
@@ -429,4 +429,4 @@ template <> inline void Write(uint64_t aValue, uint8_t *aBuffer) { WriteUint64(a
 
 } // namespace ot
 
-#endif // ENCODING_HPP_
+#endif // OT_CORE_COMMON_ENCODING_HPP_

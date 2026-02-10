@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Parent Search.
  */
 
-#ifndef CONFIG_PARENT_SEARCH_H_
-#define CONFIG_PARENT_SEARCH_H_
+#ifndef OT_CORE_CONFIG_PARENT_SEARCH_H_
+#define OT_CORE_CONFIG_PARENT_SEARCH_H_
 
 /**
  * @addtogroup config-parent-search
@@ -149,4 +149,4 @@
  * @}
  */
 
-#endif // CONFIG_PARENT_SEARCH_H_
+#endif // OT_CORE_CONFIG_PARENT_SEARCH_H_

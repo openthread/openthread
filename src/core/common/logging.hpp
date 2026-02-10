@@ -31,12 +31,12 @@
  *   This file includes logging related macro/function definitions.
  */
 
-#ifndef LOGGING_HPP_
-#define LOGGING_HPP_
+#ifndef OT_CORE_COMMON_LOGGING_HPP_
+#define OT_CORE_COMMON_LOGGING_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/logging.h>
 #include <openthread/platform/logging.h>
 
-#endif // LOGGING_HPP_
+#endif // OT_CORE_COMMON_LOGGING_HPP_

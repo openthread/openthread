@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for CoAP.
  */
 
-#ifndef CONFIG_COAP_H_
-#define CONFIG_COAP_H_
+#ifndef OT_CORE_CONFIG_COAP_H_
+#define OT_CORE_CONFIG_COAP_H_
 
 /**
  * @addtogroup config-coap
@@ -103,4 +103,4 @@
  * @}
  */
 
-#endif // CONFIG_COAP_H_
+#endif // OT_CORE_CONFIG_COAP_H_

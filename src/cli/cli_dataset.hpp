@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter.
  */
 
-#ifndef CLI_DATASET_HPP_
-#define CLI_DATASET_HPP_
+#ifndef OT_CLI_CLI_DATASET_HPP_
+#define OT_CLI_CLI_DATASET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -141,4 +141,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_DATASET_HPP_
+#endif // OT_CLI_CLI_DATASET_HPP_

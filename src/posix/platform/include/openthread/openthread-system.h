@@ -32,8 +32,8 @@
  *   This file defines the platform-specific functions needed by OpenThread's example applications.
  */
 
-#ifndef OPENTHREAD_SYSTEM_H_
-#define OPENTHREAD_SYSTEM_H_
+#ifndef OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_
+#define OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_
 
 #include <setjmp.h>
 #include <stdbool.h>
@@ -83,6 +83,8 @@ typedef struct otPlatformCoprocessorUrls
  */
 typedef struct otPlatformConfig
 {
+    const char *mTunDevice;                           ///< The POSIX TUN device path.
+                                                      ///< Used if `OT_PLATFORM_NETIF` is enabled.
     const char               *mBackboneInterfaceName; ///< Backbone network interface name.
     const char               *mInterfaceName;         ///< Thread network interface name.
     otPlatformCoprocessorUrls mCoprocessorUrls;       ///< Coprocessor URLs.
@@ -93,6 +95,7 @@ typedef struct otPlatformConfig
                                                       ///< directly after initialization.
     CoprocessorType mCoprocessorType;                 ///< The co-processor type. This field is used to pass
                                                       ///< the type to the app layer.
+    const char *mDataPath;                            ///< Data path.
 } otPlatformConfig;
 
 /**
@@ -331,4 +334,4 @@ void otSysSetRcpRestorationEnabled(bool aEnabled);
 } // end of extern "C"
 #endif
 
-#endif // OPENTHREAD_SYSTEM_H_
+#endif // OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_

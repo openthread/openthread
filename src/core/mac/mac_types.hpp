@@ -31,8 +31,8 @@
  *   This file includes definitions for MAC types.
  */
 
-#ifndef MAC_TYPES_HPP_
-#define MAC_TYPES_HPP_
+#ifndef OT_CORE_MAC_MAC_TYPES_HPP_
+#define OT_CORE_MAC_MAC_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -219,16 +219,6 @@ public:
     {
         CopyAddress(aBuffer, m8, aByteOrder);
     }
-
-    /**
-     * Overloads operator `==` to evaluate whether or not two `ExtAddress` instances are equal.
-     *
-     * @param[in]  aOther  The other `ExtAddress` instance to compare with.
-     *
-     * @retval TRUE   If the two `ExtAddress` instances are equal.
-     * @retval FALSE  If the two `ExtAddress` instances are not equal.
-     */
-    bool operator==(const ExtAddress &aOther) const;
 
     /**
      * Converts an address to a string.
@@ -1105,4 +1095,4 @@ DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
 
 } // namespace ot
 
-#endif // MAC_TYPES_HPP_
+#endif // OT_CORE_MAC_MAC_TYPES_HPP_

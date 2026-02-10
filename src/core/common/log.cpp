@@ -99,7 +99,8 @@ void Logger::LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char 
     static_assert(sizeof(kModuleNamePadding) == kMaxLogModuleNameLength + 1, "Padding string is not correct");
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
-    ot::Uptime::UptimeToString(ot::Instance::Get().Get<ot::Uptime>().GetUptime(), logString, /* aInlcudeMsec */ true);
+    ot::UptimeToString(ot::Instance::Get().Get<ot::UptimeTracker>().GetUptime(), logString,
+                       /* aInlcudeMsec */ true);
     logString.Append(" ");
 #endif
 

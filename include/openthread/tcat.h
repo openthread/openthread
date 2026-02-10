@@ -223,4 +223,4 @@ typedef void (*otHandleTcatJoin)(otError aError, void *aContext);
 } // extern "C"
 #endif
 
-#endif /* OPENTHREAD_TCAT_H_ */
+#endif // OPENTHREAD_TCAT_H_

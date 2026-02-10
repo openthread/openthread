@@ -31,8 +31,8 @@
  *   This file includes definitions for MeshCoP.
  */
 
-#ifndef MESHCOP_HPP_
-#define MESHCOP_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -43,18 +43,18 @@
 #include "coap/coap.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/code_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "meshcop/steering_data.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-
 namespace MeshCoP {
 
 /**
@@ -224,159 +224,6 @@ private:
 };
 
 /**
- * Represents Steering Data (bloom filter).
- */
-class SteeringData : public otSteeringData
-{
-public:
-    static constexpr uint8_t kMaxLength = OT_STEERING_DATA_MAX_LENGTH; ///< Maximum Steering Data length (in bytes).
-
-    /**
-     * Represents the hash bit index values for the bloom filter calculated from a Joiner ID.
-     *
-     * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
-     */
-    struct HashBitIndexes
-    {
-        static constexpr uint8_t kNumIndexes = 2; ///< Number of hash bit indexes.
-
-        uint16_t mIndex[kNumIndexes]; ///< The hash bit index array.
-    };
-
-    /**
-     * Initializes the Steering Data and clears the bloom filter.
-     *
-     * @param[in]  aLength   The Steering Data length (in bytes) - MUST be smaller than or equal to `kMaxLength`.
-     */
-    void Init(uint8_t aLength = kMaxLength);
-
-    /**
-     * Clears the bloom filter (all bits are cleared and no Joiner Id is accepted)..
-     *
-     * The Steering Data length (bloom filter length) is set to one byte with all bits cleared.
-     */
-    void Clear(void) { Init(1); }
-
-    /**
-     * Sets the bloom filter to permit all Joiner IDs.
-     *
-     * To permit all Joiner IDs, The Steering Data length (bloom filter length) is set to one byte with all bits set.
-     */
-    void SetToPermitAllJoiners(void);
-
-    /**
-     * Returns the Steering Data length (in bytes).
-     *
-     * @returns The Steering Data length (in bytes).
-     */
-    uint8_t GetLength(void) const { return mLength; }
-
-    /**
-     * Gets the Steering Data buffer (bloom filter).
-     *
-     * @returns A pointer to the Steering Data buffer.
-     */
-    const uint8_t *GetData(void) const { return m8; }
-
-    /**
-     * Gets the Steering Data buffer (bloom filter).
-     *
-     * @returns A pointer to the Steering Data buffer.
-     */
-    uint8_t *GetData(void) { return m8; }
-
-    /**
-     * Updates the bloom filter adding the given Joiner ID.
-     *
-     * @param[in]  aJoinerId  The Joiner ID to add to bloom filter.
-     */
-    void UpdateBloomFilter(const Mac::ExtAddress &aJoinerId);
-
-    /**
-     * Updates the bloom filter adding a given Joiner Discerner.
-     *
-     * @param[in]  aDiscerner  The Joiner Discerner to add to bloom filter.
-     */
-    void UpdateBloomFilter(const JoinerDiscerner &aDiscerner);
-
-    /**
-     * Indicates whether the bloom filter is empty (all the bits are cleared).
-     *
-     * @returns TRUE if the bloom filter is empty, FALSE otherwise.
-     */
-    bool IsEmpty(void) const { return DoesAllMatch(0); }
-
-    /**
-     * Indicates whether the bloom filter permits all Joiner IDs (all the bits are set).
-     *
-     * @returns TRUE if the bloom filter permits all Joiners IDs, FALSE otherwise.
-     */
-    bool PermitsAllJoiners(void) const { return (mLength > 0) && DoesAllMatch(kPermitAll); }
-
-    /**
-     * Indicates whether the bloom filter contains a given Joiner ID.
-     *
-     * @param[in] aJoinerId  A Joiner ID.
-     *
-     * @returns TRUE if the bloom filter contains @p aJoinerId, FALSE otherwise.
-     */
-    bool Contains(const Mac::ExtAddress &aJoinerId) const;
-
-    /**
-     * Indicates whether the bloom filter contains a given Joiner Discerner.
-     *
-     * @param[in] aDiscerner   A Joiner Discerner.
-     *
-     * @returns TRUE if the bloom filter contains @p aDiscerner, FALSE otherwise.
-     */
-    bool Contains(const JoinerDiscerner &aDiscerner) const;
-
-    /**
-     * Indicates whether the bloom filter contains the hash bit indexes (derived from a Joiner ID).
-     *
-     * @param[in]  aIndexes   A hash bit index structure (derived from a Joiner ID).
-     *
-     * @returns TRUE if the bloom filter contains the Joiner ID mapping to @p aIndexes, FALSE otherwise.
-     */
-    bool Contains(const HashBitIndexes &aIndexes) const;
-
-    /**
-     * Calculates the bloom filter hash bit indexes from a given Joiner ID.
-     *
-     * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
-     *
-     * @param[in]  aJoinerId  The Joiner ID to calculate the hash bit indexes.
-     * @param[out] aIndexes   A reference to a `HashBitIndexes` structure to output the calculated index values.
-     */
-    static void CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes);
-
-    /**
-     * Calculates the bloom filter hash bit indexes from a given Joiner Discerner.
-     *
-     * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
-     *
-     * @param[in]  aDiscerner     The Joiner Discerner to calculate the hash bit indexes.
-     * @param[out] aIndexes       A reference to a `HashBitIndexes` structure to output the calculated index values.
-     */
-    static void CalculateHashBitIndexes(const JoinerDiscerner &aDiscerner, HashBitIndexes &aIndexes);
-
-private:
-    static constexpr uint8_t kPermitAll = 0xff;
-
-    uint8_t GetNumBits(void) const { return (mLength * kBitsPerByte); }
-
-    uint8_t BitIndex(uint8_t aBit) const { return (mLength - 1 - (aBit / kBitsPerByte)); }
-    uint8_t BitFlag(uint8_t aBit) const { return static_cast<uint8_t>(1U << (aBit % kBitsPerByte)); }
-
-    bool GetBit(uint8_t aBit) const { return (m8[BitIndex(aBit)] & BitFlag(aBit)) != 0; }
-    void SetBit(uint8_t aBit) { m8[BitIndex(aBit)] |= BitFlag(aBit); }
-    void ClearBit(uint8_t aBit) { m8[BitIndex(aBit)] &= ~BitFlag(aBit); }
-
-    bool DoesAllMatch(uint8_t aMatch) const;
-    void UpdateBloomFilter(const HashBitIndexes &aIndexes);
-};
-
-/**
  * Represents a Commissioning Dataset.
  */
 class CommissioningDataset : public otCommissioningDataset, public Clearable<CommissioningDataset>
@@ -533,9 +380,8 @@ void LogCertMessage(const char *aText, const Coap::Message &aMessage);
 
 DefineCoreType(otJoinerPskd, MeshCoP::JoinerPskd);
 DefineCoreType(otJoinerDiscerner, MeshCoP::JoinerDiscerner);
-DefineCoreType(otSteeringData, MeshCoP::SteeringData);
 DefineCoreType(otCommissioningDataset, MeshCoP::CommissioningDataset);
 
 } // namespace ot
 
-#endif // MESHCOP_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_HPP_

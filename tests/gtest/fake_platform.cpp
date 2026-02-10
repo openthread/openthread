@@ -666,9 +666,5 @@ void otPlatDnssdStartRecordQuerier(otInstance *, const otPlatDnssdRecordQuerier 
 
 void otPlatDnssdStopRecordQuerier(otInstance *, const otPlatDnssdRecordQuerier *) {}
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
-#endif
-
 void otPlatAssertFail(const char *, int) {}
 } // extern "C"

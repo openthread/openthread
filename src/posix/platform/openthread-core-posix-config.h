@@ -31,8 +31,8 @@
  *   This file includes posix app compile-time configuration constants for OpenThread core.
  */
 
-#ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
-#define OPENTHREAD_CORE_POSIX_CONFIG_H_
+#ifndef OT_POSIX_PLATFORM_OPENTHREAD_CORE_POSIX_CONFIG_H_
+#define OT_POSIX_PLATFORM_OPENTHREAD_CORE_POSIX_CONFIG_H_
 
 #include <openthread/platform/logging.h>
 
@@ -170,4 +170,4 @@
 #define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US 5000
 #endif
 
-#endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
+#endif // OT_POSIX_PLATFORM_OPENTHREAD_CORE_POSIX_CONFIG_H_

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the SRP (Service Registration Protocol) Server.
  */
 
-#ifndef CONFIG_SRP_SERVER_H_
-#define CONFIG_SRP_SERVER_H_
+#ifndef OT_CORE_CONFIG_SRP_SERVER_H_
+#define OT_CORE_CONFIG_SRP_SERVER_H_
 
 /**
  * @addtogroup config-srp-server
@@ -142,4 +142,4 @@
  * @}
  */
 
-#endif // CONFIG_SRP_SERVER_H_
+#endif // OT_CORE_CONFIG_SRP_SERVER_H_

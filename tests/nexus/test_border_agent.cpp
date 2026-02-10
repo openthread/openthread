@@ -42,9 +42,8 @@ using BaTxtData            = MeshCoP::BorderAgent::TxtData;
 using EphemeralKeyManager  = MeshCoP::BorderAgent::EphemeralKeyManager;
 using EpskcEvent           = HistoryTracker::EpskcEvent;
 using Iterator             = HistoryTracker::Iterator;
-using ExtendedPanIdManager = MeshCoP::ExtendedPanIdManager;
+using NetworkIdentity      = MeshCoP::NetworkIdentity;
 using NameData             = MeshCoP::NameData;
-using NetworkNameManager   = MeshCoP::NetworkNameManager;
 using TxtEntry             = Dns::TxtEntry;
 
 void TestBorderAgent(void)
@@ -757,6 +756,75 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<Manager>().GetCounters().mEpskcInvalidArgsErrors == 2);
 }
 
+void TestBorderAgentEphemeralKeyTapGeneration(void)
+{
+    static constexpr uint16_t kMaxRounds = 20;
+
+    using Tap = EphemeralKeyManager::Tap;
+
+    Core    nexus;
+    Node   &node = nexus.CreateNode();
+    Tap     tap;
+    uint8_t index;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentEphemeralKeyTapGeneration");
+
+    nexus.AdvanceTime(0);
+
+    node.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    for (uint16_t round = 0; round < kMaxRounds; round++)
+    {
+        SuccessOrQuit(tap.GenerateRandom());
+        SuccessOrQuit(tap.Validate());
+        Log("Generated random TAP: %s", tap.mTap);
+
+        // Tamper with one of the digits and ensure checksum fails.
+
+        index = round % Tap::kLength;
+
+        tap.mTap[index]++;
+
+        if (tap.mTap[index] > '9')
+        {
+            tap.mTap[index] = '0';
+        }
+
+        VerifyOrQuit(tap.Validate() == kErrorFailed);
+    }
+
+    // CHeck valid TAP strings (Thread spec (1.4.1d3) - section  8.4.9.7)
+
+    SuccessOrQuit(StringCopy(tap.mTap, "903723159"));
+    SuccessOrQuit(tap.Validate());
+
+    SuccessOrQuit(StringCopy(tap.mTap, "746351983"));
+    SuccessOrQuit(tap.Validate());
+
+    // Check invalid TAP strings.
+
+    SuccessOrQuit(StringCopy(tap.mTap, ""));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "1234"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "12345678"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "123456789"));
+    VerifyOrQuit(tap.Validate() == kErrorFailed);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "a23456789"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(tap.mTap, "12345678A"));
+    VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
+}
+
 EpskcEvent GetNewestEpskcEvent(Node &aNode)
 {
     const EpskcEvent *epskcEvent = nullptr;
@@ -1273,8 +1341,8 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
 
     if (aNode.Get<MeshCoP::ActiveDatasetManager>().IsComplete())
     {
-        const char                   *networkName = aNode.Get<NetworkNameManager>().GetNetworkName().GetAsCString();
-        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<ExtendedPanIdManager>().GetExtPanId();
+        const char                   *networkName = aNode.Get<NetworkIdentity>().GetNetworkName().GetAsCString();
+        const MeshCoP::ExtendedPanId &extPanId    = aNode.Get<NetworkIdentity>().GetExtPanId();
 
         aTxtData.ValidateKey("nn", networkName);
         VerifyOrQuit(info.mHasNetworkName);
@@ -1979,6 +2047,7 @@ int main(void)
 {
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
+    ot::Nexus::TestBorderAgentEphemeralKeyTapGeneration();
     ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();

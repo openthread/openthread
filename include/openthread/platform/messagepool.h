@@ -106,6 +106,15 @@ void otPlatMessagePoolFree(otInstance *aInstance, otMessageBuffer *aBuffer);
  */
 uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
+/**
+ * Deinitialize the platform implemented message pool.
+ *
+ * Is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ *
+ * @param[in] aInstance  A pointer to the OpenThread instance.
+ */
+void otPlatMessagePoolDeinit(otInstance *aInstance);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

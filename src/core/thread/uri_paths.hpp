@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread URIs.
  */
 
-#ifndef URI_PATHS_HPP_
-#define URI_PATHS_HPP_
+#ifndef OT_CORE_THREAD_URI_PATHS_HPP_
+#define OT_CORE_THREAD_URI_PATHS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -83,6 +83,8 @@ enum Uri : uint8_t
     kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
     kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
     kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,          ///< History Answer ("h/an")
+    kUriHistoryQuery,           ///< History Query ("h/qy")
     kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
     kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
     kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
@@ -161,4 +163,4 @@ template <> const char *UriToString<kUriMlr>(void);
 
 } // namespace ot
 
-#endif // URI_PATHS_HPP_
+#endif // OT_CORE_THREAD_URI_PATHS_HPP_

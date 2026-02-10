@@ -155,7 +155,7 @@ void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPre
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
 
-    Get<RoutingManager>().HandleInfraIfDiscoverNat64PrefixDone(aPrefix);
+    Get<RoutingManager>().HandlePlatformDiscoveredNat64PrefixDone(aPrefix);
 
 exit:
     if (error != kErrorNone)
@@ -184,6 +184,11 @@ Error InfraIf::HandleStateChanged(uint32_t aIfIndex, bool aIsRunning)
     mIsRunning = aIsRunning;
 
     Get<RxRaTracker>().HandleInfraIfStateChanged();
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<MultiAilDetector>().HandleInfraIfStateChanged();
+#endif
+
     Get<RoutingManager>().HandleInfraIfStateChanged();
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE

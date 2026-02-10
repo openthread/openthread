@@ -30,6 +30,7 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/tests/nexus
     ${PROJECT_SOURCE_DIR}/tests/nexus/platform
 )
 
@@ -46,6 +47,7 @@ add_library(ot-nexus-platform
     platform/nexus_mdns.cpp
     platform/nexus_misc.cpp
     platform/nexus_node.cpp
+    platform/nexus_pcap.cpp
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp
@@ -111,8 +113,22 @@ endmacro()
 
 #----------------------------------------------------------------------------------------------------------------------
 
+ot_nexus_test(5_1_1)
+ot_nexus_test(5_1_2)
+ot_nexus_test(5_1_3)
+ot_nexus_test(5_1_4)
+ot_nexus_test(5_1_5)
+ot_nexus_test(5_1_6)
+ot_nexus_test(5_1_7)
+ot_nexus_test(5_1_8)
+ot_nexus_test(5_1_9)
+ot_nexus_test(5_1_10)
+ot_nexus_test(5_1_11)
+ot_nexus_test(5_1_12)
+ot_nexus_test(5_1_13)
 ot_nexus_test(border_agent)
 ot_nexus_test(border_agent_tracker)
+ot_nexus_test(discover_scan)
 ot_nexus_test(dtls)
 ot_nexus_test(form_join)
 ot_nexus_test(full_network_reset)

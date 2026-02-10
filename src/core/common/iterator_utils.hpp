@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic item-pointer iterator class.
  */
 
-#ifndef ITERATOR_UTILS_HPP_
-#define ITERATOR_UTILS_HPP_
+#ifndef OT_CORE_COMMON_ITERATOR_UTILS_HPP_
+#define OT_CORE_COMMON_ITERATOR_UTILS_HPP_
 
 namespace ot {
 
@@ -154,4 +154,4 @@ protected:
 
 } // namespace ot
 
-#endif // ITERATOR_UTILS_HPP_
+#endif // OT_CORE_COMMON_ITERATOR_UTILS_HPP_

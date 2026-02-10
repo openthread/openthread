@@ -1295,77 +1295,47 @@ exit:
 
 const char *Dso::Connection::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disconnected",            // (0) kStateDisconnected,
-        "Connecting",              // (1) kStateConnecting,
-        "ConnectedButSessionless", // (2) kStateConnectedButSessionless,
-        "EstablishingSession",     // (3) kStateEstablishingSession,
-        "SessionEstablished",      // (4) kStateSessionEstablished,
-    };
+#define StateMapList(_)                                         \
+    _(kStateDisconnected, "Disconnected")                       \
+    _(kStateConnecting, "Connecting")                           \
+    _(kStateConnectedButSessionless, "ConnectedButSessionless") \
+    _(kStateEstablishingSession, "EstablishingSession")         \
+    _(kStateSessionEstablished, "SessionEstablished")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisconnected);
-        ValidateNextEnum(kStateConnecting);
-        ValidateNextEnum(kStateConnectedButSessionless);
-        ValidateNextEnum(kStateEstablishingSession);
-        ValidateNextEnum(kStateSessionEstablished);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 const char *Dso::Connection::MessageTypeToString(MessageType aMessageType)
 {
-    static const char *const kMessageTypeStrings[] = {
-        "Request",        // (0) kRequestMessage
-        "Response",       // (1) kResponseMessage
-        "Unidirectional", // (2) kUnidirectionalMessage
-    };
+#define MessageTypeMapList(_)       \
+    _(kRequestMessage, "Request")   \
+    _(kResponseMessage, "Response") \
+    _(kUnidirectionalMessage, "Unidirectional")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kRequestMessage);
-        ValidateNextEnum(kResponseMessage);
-        ValidateNextEnum(kUnidirectionalMessage);
-    };
+    DefineEnumStringArray(MessageTypeMapList);
 
-    return kMessageTypeStrings[aMessageType];
+    return kStrings[aMessageType];
 }
 
 const char *Dso::Connection::DisconnectReasonToString(DisconnectReason aReason)
 {
-    static const char *const kDisconnectReasonStrings[] = {
-        "FailedToConnect",         // (0) kReasonFailedToConnect
-        "ResponseTimeout",         // (1) kReasonResponseTimeout
-        "PeerDoesNotSupportDso",   // (2) kReasonPeerDoesNotSupportDso
-        "PeerClosed",              // (3) kReasonPeerClosed
-        "PeerAborted",             // (4) kReasonPeerAborted
-        "InactivityTimeout",       // (5) kReasonInactivityTimeout
-        "KeepAliveTimeout",        // (6) kReasonKeepAliveTimeout
-        "ServerRetryDelayRequest", // (7) kReasonServerRetryDelayRequest
-        "PeerMisbehavior",         // (8) kReasonPeerMisbehavior
-        "Unknown",                 // (9) kReasonUnknown
-    };
+#define DisconnectReasonMapList(_)                               \
+    _(kReasonFailedToConnect, "FailedToConnect")                 \
+    _(kReasonResponseTimeout, "ResponseTimeout")                 \
+    _(kReasonPeerDoesNotSupportDso, "PeerDoesNotSupportDso")     \
+    _(kReasonPeerClosed, "PeerClosed")                           \
+    _(kReasonPeerAborted, "PeerAborted")                         \
+    _(kReasonInactivityTimeout, "InactivityTimeout")             \
+    _(kReasonKeepAliveTimeout, "KeepAliveTimeout")               \
+    _(kReasonServerRetryDelayRequest, "ServerRetryDelayRequest") \
+    _(kReasonPeerMisbehavior, "PeerMisbehavior")                 \
+    _(kReasonUnknown, "Unknown")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kReasonFailedToConnect);
-        ValidateNextEnum(kReasonResponseTimeout);
-        ValidateNextEnum(kReasonPeerDoesNotSupportDso);
-        ValidateNextEnum(kReasonPeerClosed);
-        ValidateNextEnum(kReasonPeerAborted);
-        ValidateNextEnum(kReasonInactivityTimeout);
-        ValidateNextEnum(kReasonKeepAliveTimeout);
-        ValidateNextEnum(kReasonServerRetryDelayRequest);
-        ValidateNextEnum(kReasonPeerMisbehavior);
-        ValidateNextEnum(kReasonUnknown);
-    };
+    DefineEnumStringArray(DisconnectReasonMapList);
 
-    return kDisconnectReasonStrings[aReason];
+    return kStrings[aReason];
 }
 
 //---------------------------------------------------------------------------------------------------------------------

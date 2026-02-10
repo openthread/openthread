@@ -36,6 +36,7 @@
 #include "common/array.hpp"
 #include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
+#include "common/enum_to_string.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "utils/static_counter.hpp"
@@ -190,28 +191,40 @@ bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// Connectivity
+
+void Connectivity::IncrementNumForLinkQuality(uint8_t aLinkQuality)
+{
+    switch (aLinkQuality)
+    {
+    case kLinkQuality1:
+        mLinkQuality1++;
+        break;
+    case kLinkQuality2:
+        mLinkQuality2++;
+        break;
+    case kLinkQuality3:
+        mLinkQuality3++;
+        break;
+    default:
+        break;
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 const char *RoleToString(DeviceRole aRole)
 {
-    static const char *const kRoleStrings[] = {
-        "disabled", // (0) kRoleDisabled
-        "detached", // (1) kRoleDetached
-        "child",    // (2) kRoleChild
-        "router",   // (3) kRoleRouter
-        "leader",   // (4) kRoleLeader
-    };
+#define RoleMapList(_)           \
+    _(kRoleDisabled, "disabled") \
+    _(kRoleDetached, "detached") \
+    _(kRoleChild, "child")       \
+    _(kRoleRouter, "router")     \
+    _(kRoleLeader, "leader")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kRoleDisabled);
-        ValidateNextEnum(kRoleDetached);
-        ValidateNextEnum(kRoleChild);
-        ValidateNextEnum(kRoleRouter);
-        ValidateNextEnum(kRoleLeader);
-    };
+    DefineEnumStringArray(RoleMapList);
 
-    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
+    return (aRole < GetArrayLength(kStrings)) ? kStrings[aRole] : "invalid";
 }
 
 } // namespace Mle

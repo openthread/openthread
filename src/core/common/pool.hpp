@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic object pool.
  */
 
-#ifndef POOL_HPP_
-#define POOL_HPP_
+#ifndef OT_CORE_COMMON_POOL_HPP_
+#define OT_CORE_COMMON_POOL_HPP_
 
 #include "openthread-core-config.h"
 
@@ -185,4 +185,4 @@ private:
 
 } // namespace ot
 
-#endif // POOL_HPP_
+#endif // OT_CORE_COMMON_POOL_HPP_

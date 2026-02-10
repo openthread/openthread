@@ -483,7 +483,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_AGENT_EPHEMERA
         break;
     case OT_BORDER_AGENT_STATE_DISABLED:
         error = OT_ERROR_NOT_CAPABLE;
-        // Fall through
+        OT_FALL_THROUGH;
     case OT_BORDER_AGENT_STATE_STOPPED:
         ExitNow();
     }
@@ -1664,9 +1664,9 @@ exit:
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX>(void)
 {
-    otError                            error = OT_ERROR_NONE;
-    otBorderRoutingPrefixTableEntry    prefixEntry;
-    const otIp6Address *prefixAddr;
+    otError                         error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableEntry prefixEntry;
+    const otIp6Address             *prefixAddr;
 
     memset(&prefixEntry, 0, sizeof(prefixEntry));
 

@@ -31,8 +31,8 @@
  *   This file includes definitions for Multicast Listeners Table.
  */
 
-#ifndef MULTICAST_LISTENERS_TABLE_HPP
-#define MULTICAST_LISTENERS_TABLE_HPP
+#ifndef OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_
+#define OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -231,4 +231,4 @@ DefineMapEnum(otBackboneRouterMulticastListenerEvent, BackboneRouter::MulticastL
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
-#endif // MULTICAST_LISTENERS_TABLE_HPP
+#endif // OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_

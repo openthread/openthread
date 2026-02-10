@@ -75,12 +75,12 @@ NON_PREFERRED_CHANNELS_TLV = 36
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check setting vendor name, model, ans sw version
 
-r1.set_vendor_name('nest')
+r1.set_vendor_name('RD:nest')
 r1.set_vendor_model('marble')
 r1.set_vendor_sw_version('ot-1.4')
 r1.set_vendor_app_url('https://example.com/vendor-app')
 
-verify(r1.get_vendor_name() == 'nest')
+verify(r1.get_vendor_name() == 'RD:nest')
 verify(r1.get_vendor_model() == 'marble')
 verify(r1.get_vendor_sw_version() == 'ot-1.4')
 verify(r1.get_vendor_app_url() == 'https://example.com/vendor-app')
@@ -90,12 +90,24 @@ verify(r1.get_vendor_app_url() == 'https://example.com/vendor-app')
 
 # Vendor name should accept up to 32 chars
 
-r2.set_vendor_name('01234567890123456789012345678901')  # 32 chars
+r2.set_vendor_name('RD:01234567890123456789012345678')  # 32 chars
 
 errored = False
 
 try:
-    r2.set_vendor_name('012345678901234567890123456789012')  # 33 chars
+    r2.set_vendor_name('RD:012345678901234567890123456789')  # 33 chars
+except cli.CliError as e:
+    verify(e.message == 'InvalidArgs')
+    errored = True
+
+verify(errored)
+
+# Vendor name under `REFERENCE_DEVICE` build MUST start with "RD:".
+
+errored = False
+
+try:
+    r2.set_vendor_name('name_without_RD_prefix')
 except cli.CliError as e:
     verify(e.message == 'InvalidArgs')
     errored = True
@@ -143,21 +155,21 @@ r2_rloc = r2.get_rloc_ip_addr()
 result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_NAME_TLV)
 verify(len(result) == 2)
 verify(result[1].startswith("Vendor Name:"))
-verify(result[1].split(':')[1].strip() == r1.get_vendor_name())
+verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_name())
 
 # Get vendor model (TLV 28)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_MODEL_TLV)
 verify(len(result) == 2)
 verify(result[1].startswith("Vendor Model:"))
-verify(result[1].split(':')[1].strip() == r1.get_vendor_model())
+verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_model())
 
 # Get vendor sw version (TLV 29)
 
 result = r2.cli('networkdiagnostic get', r1_rloc, VENDOR_SW_VERSION_TLV)
 verify(len(result) == 2)
 verify(result[1].startswith("Vendor SW Version:"))
-verify(result[1].split(':')[1].strip() == r1.get_vendor_sw_version())
+verify(result[1].split(':', 1)[1].strip() == r1.get_vendor_sw_version())
 
 # Get vendor app URL (TLV 35)
 
@@ -180,11 +192,11 @@ result = r1.cli('networkdiagnostic get', r2_rloc, VENDOR_NAME_TLV, VENDOR_MODEL_
 verify(len(result) == 6)
 for line in result[1:]:
     if line.startswith("Vendor Name:"):
-        verify(line.split(':')[1].strip() == r2.get_vendor_name())
+        verify(line.split(':', 1)[1].strip() == r2.get_vendor_name())
     elif line.startswith("Vendor Model:"):
-        verify(line.split(':')[1].strip() == r2.get_vendor_model())
+        verify(line.split(':', 1)[1].strip() == r2.get_vendor_model())
     elif line.startswith("Vendor SW Version:"):
-        verify(line.split(':')[1].strip() == r2.get_vendor_sw_version())
+        verify(line.split(':', 1)[1].strip() == r2.get_vendor_sw_version())
     elif line.startswith("Vendor App URL:"):
         verify(line.split(':', 1)[1].strip() == r2.get_vendor_app_url())
     elif line.startswith("Thread Stack Version:"):

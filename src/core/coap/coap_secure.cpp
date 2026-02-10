@@ -58,27 +58,32 @@ void SecureSession::Cleanup(void)
     mTransmitTask.Unpost();
 }
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
-Error SecureSession::SendMessage(Message                    &aMessage,
-                                 ResponseHandler             aHandler,
-                                 void                       *aContext,
-                                 otCoapBlockwiseTransmitHook aTransmitHook,
-                                 otCoapBlockwiseReceiveHook  aReceiveHook)
-{
-    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), TxParameters::GetDefault(), aHandler,
-                                                 aContext, aTransmitHook, aReceiveHook)
-                         : kErrorInvalidState;
-}
-
-#else
-
 Error SecureSession::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
     return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo(), aHandler, aContext) : kErrorInvalidState;
 }
 
-#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+Error SecureSession::SendMessage(Message &aMessage)
+{
+    return IsConnected() ? CoapBase::SendMessage(aMessage, GetMessageInfo()) : kErrorInvalidState;
+}
+
+Error SecureSession::SendMessageWithResponseHandlerSeparateParams(Message                      &aMessage,
+                                                                  ResponseHandlerSeparateParams aHandler,
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+                                                                  BlockwiseTransmitHook aTransmitHook,
+                                                                  BlockwiseReceiveHook  aReceiveHook,
+#endif
+                                                                  void *aContext)
+{
+    return IsConnected() ? CoapBase::SendMessageWithResponseHandlerSeparateParams(aMessage, GetMessageInfo(),
+                                                                                  /* aTxParameters */ nullptr, aHandler,
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+                                                                                  aTransmitHook, aReceiveHook,
+#endif
+                                                                                  aContext)
+                         : kErrorInvalidState;
+}
 
 Error SecureSession::Transmit(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
@@ -125,7 +130,7 @@ void SecureSession::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr);
+    VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
     SuccessOrExit(message->AppendBytes(aBuf, aLength));
 
     CoapBase::Receive(*message, GetMessageInfo());

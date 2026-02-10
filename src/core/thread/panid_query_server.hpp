@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef PANID_QUERY_SERVER_HPP_
-#define PANID_QUERY_SERVER_HPP_
+#ifndef OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_
+#define OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -62,7 +62,7 @@ public:
 private:
     static constexpr uint32_t kScanDelay = 1000; ///< SCAN_DELAY (in msec)
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext);
     void        HandleScanResult(Mac::ActiveScanResult *aScanResult);
@@ -90,4 +90,4 @@ DeclareTmfHandler(PanIdQueryServer, kUriPanIdQuery);
 
 } // namespace ot
 
-#endif // PANID_QUERY_SERVER_HPP_
+#endif // OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_

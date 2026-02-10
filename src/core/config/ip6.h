@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the IP6 service.
  */
 
-#ifndef CONFIG_IP6_H_
-#define CONFIG_IP6_H_
+#ifndef OT_CORE_CONFIG_IP6_H_
+#define OT_CORE_CONFIG_IP6_H_
 
 /**
  * @addtogroup config-ip6
@@ -225,4 +225,4 @@
  * @}
  */
 
-#endif // CONFIG_IP6_H_
+#endif // OT_CORE_CONFIG_IP6_H_

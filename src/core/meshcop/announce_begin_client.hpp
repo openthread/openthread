@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to Announce Requests.
  */
 
-#ifndef ANNOUNCE_BEGIN_CLIENT_HPP_
-#define ANNOUNCE_BEGIN_CLIENT_HPP_
+#ifndef OT_CORE_MESHCOP_ANNOUNCE_BEGIN_CLIENT_HPP_
+#define OT_CORE_MESHCOP_ANNOUNCE_BEGIN_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -78,4 +78,4 @@ public:
 
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
-#endif // ANNOUNCE_BEGIN_CLIENT_HPP_
+#endif // OT_CORE_MESHCOP_ANNOUNCE_BEGIN_CLIENT_HPP_

@@ -81,8 +81,8 @@ bool          tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
                                             uint16_t             aPort);
 void          tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
 void          tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState);
-void          tcplp_sys_log(const char *aFormat, ...);
-void          tcplp_sys_panic(const char *aFormat, ...);
+void          tcplp_sys_log(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+void          tcplp_sys_panic(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 bool          tcplp_sys_autobind(otInstance *      aInstance,
                                  const otSockAddr *aPeer,
                                  otSockAddr *      aToBind,

@@ -114,33 +114,4 @@ if {$::env(THREAD_VERSION) != "1.1" && $::env(OT_NODE_TYPE) == "cli"} {
     wait_for "" "Done"
 }
 
-switch_node 1
-send "discover reqcallback enable\n"
-expect_line "Done"
-
-switch_node 5
-send "discover\n"
-expect "Error 13: InvalidState"
-send "ifconfig up\n"
-expect_line "Done"
-send "discover 12\n"
-
-expect "| Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| OpenThread-ch12 +\\| $extpan_1 \\| $pan_1 \\| $extaddr_1 \\| 12 \\| +-?\\d+ \\| +\\d \\|"
-wait_for "" "Done"
-
-switch_node 1
-expect -re {version=\d,joiner=0}
-
-switch_node 5
-send "ifconfig up\n"
-expect_line "Done"
-send "joiner start 123456\n"
-set timeout 10
-expect "NotFound"
-
-switch_node 1
-expect -re {version=\d,joiner=1}
-
 dispose_all

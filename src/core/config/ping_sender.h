@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for ping sender module.
  */
 
-#ifndef CONFIG_PING_SENDER_H_
-#define CONFIG_PING_SENDER_H_
+#ifndef OT_CORE_CONFIG_PING_SENDER_H_
+#define OT_CORE_CONFIG_PING_SENDER_H_
 
 /**
  * @addtogroup config-ping-sender
@@ -96,4 +96,4 @@
  * @}
  */
 
-#endif // CONFIG_PING_SENDER_H_
+#endif // OT_CORE_CONFIG_PING_SENDER_H_

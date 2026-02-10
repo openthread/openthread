@@ -151,6 +151,41 @@ void TestNumUtils(void)
     VerifyOrQuit(ThreeWayCompare<bool>(true, false) > 0);
     VerifyOrQuit(ThreeWayCompare<bool>(false, true) < 0);
 
+    SuccessOrQuit(SafeMultiply<uint16_t>(0, 0, u16));
+    VerifyOrQuit(u16 == 0);
+    SuccessOrQuit(SafeMultiply<uint16_t>(0, 0xffff, u16));
+    VerifyOrQuit(u16 == 0);
+    SuccessOrQuit(SafeMultiply<uint16_t>(0xffff, 0, u16));
+    VerifyOrQuit(u16 == 0);
+
+    SuccessOrQuit(SafeMultiply<uint16_t>(1, 0xffff, u16));
+    VerifyOrQuit(u16 == 0xffff);
+    SuccessOrQuit(SafeMultiply<uint16_t>(0xffff, 1, u16));
+    VerifyOrQuit(u16 == 0xffff);
+
+    SuccessOrQuit(SafeMultiply<uint16_t>(256, 255, u16));
+    VerifyOrQuit(u16 == 65280);
+    SuccessOrQuit(SafeMultiply<uint16_t>(255, 256, u16));
+    VerifyOrQuit(u16 == 65280);
+
+    VerifyOrQuit(SafeMultiply<uint16_t>(256, 256, u16) == kErrorInvalidArgs);
+
+    for (uint16_t num = 2; num < 255; num++)
+    {
+        uint16_t div = 0xffff / num;
+
+        SuccessOrQuit(SafeMultiply<uint16_t>(num, div, u16));
+        VerifyOrQuit(u16 == num * div);
+        SuccessOrQuit(SafeMultiply<uint16_t>(div, num, u16));
+        VerifyOrQuit(u16 == num * div);
+
+        VerifyOrQuit(SafeMultiply<uint16_t>(num, div + 1, u16) == kErrorInvalidArgs);
+        VerifyOrQuit(SafeMultiply<uint16_t>(div + 1, num, u16) == kErrorInvalidArgs);
+
+        VerifyOrQuit(SafeMultiply<uint16_t>(num + 1, div, u16) == kErrorInvalidArgs);
+        VerifyOrQuit(SafeMultiply<uint16_t>(div, num + 1, u16) == kErrorInvalidArgs);
+    }
+
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(2, 1) == 2);
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(1, 3) == 0);
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(1, 2) == 1);

@@ -180,3 +180,14 @@ void otIp4CidrToString(const otIp4Cidr *aCidr, char *aBuffer, uint16_t aSize)
 
     AsCoreType(aCidr).ToString(aBuffer, aSize);
 }
+
+const char *otNat64StateToString(otNat64State aState)
+{
+    const char *str = "Unknown";
+
+    VerifyOrExit(aState <= OT_NAT64_STATE_ACTIVE);
+    str = Nat64::StateToString(MapEnum(aState));
+
+exit:
+    return str;
+}

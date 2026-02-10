@@ -31,8 +31,8 @@
  *   This file includes definitions for TCP/IPv6 sockets.
  */
 
-#ifndef TCP6_HPP_
-#define TCP6_HPP_
+#ifndef OT_CORE_NET_TCP6_HPP_
+#define OT_CORE_NET_TCP6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -680,4 +680,4 @@ DefineCoreType(otTcpListener, Ip6::Tcp::Listener);
 
 } // namespace ot
 
-#endif // TCP6_HPP_
+#endif // OT_CORE_NET_TCP6_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic singly linked list.
  */
 
-#ifndef LINKED_LIST_HPP_
-#define LINKED_LIST_HPP_
+#ifndef OT_CORE_COMMON_LINKED_LIST_HPP_
+#define OT_CORE_COMMON_LINKED_LIST_HPP_
 
 #include "openthread-core-config.h"
 
@@ -613,4 +613,4 @@ private:
 
 } // namespace ot
 
-#endif // LINKED_LIST_HPP_
+#endif // OT_CORE_COMMON_LINKED_LIST_HPP_

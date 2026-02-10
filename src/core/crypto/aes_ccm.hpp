@@ -31,8 +31,8 @@
  *   This file includes definitions for performing AES-CCM computations.
  */
 
-#ifndef AES_CCM_HPP_
-#define AES_CCM_HPP_
+#ifndef OT_CORE_CRYPTO_AES_CCM_HPP_
+#define OT_CORE_CRYPTO_AES_CCM_HPP_
 
 #include "openthread-core-config.h"
 
@@ -209,4 +209,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // AES_CCM_HPP_
+#endif // OT_CORE_CRYPTO_AES_CCM_HPP_

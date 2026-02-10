@@ -62,7 +62,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriEnergyScan));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
@@ -85,23 +85,23 @@ exit:
     return error;
 }
 
-template <>
-void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
 {
     uint32_t               mask;
     MeshCoP::EnergyListTlv energyListTlv;
 
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
     LogInfo("Received %s", UriToString<kUriEnergyReport>());
 
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
-    SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyListTlv), energyListTlv));
+    SuccessOrExit(
+        MeshCoP::Tlv::FindTlv(aMsg.mMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyListTlv), energyListTlv));
 
     mCallback.InvokeIfSet(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength());
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
 
     LogInfo("Sent %s ack", UriToString<kUriEnergyReport>());
 

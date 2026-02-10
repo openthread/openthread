@@ -31,8 +31,8 @@
  *   This file includes definitions for jam detector.
  */
 
-#ifndef JAM_DETECTOR_HPP_
-#define JAM_DETECTOR_HPP_
+#ifndef OT_CORE_UTILS_JAM_DETECTOR_HPP_
+#define OT_CORE_UTILS_JAM_DETECTOR_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,9 +47,6 @@
 #include "common/timer.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-
 namespace Utils {
 
 class JamDetector : public InstanceLocator, private NonCopyable
@@ -210,4 +207,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
-#endif // JAM_DETECTOR_HPP_
+#endif // OT_CORE_UTILS_JAM_DETECTOR_HPP_

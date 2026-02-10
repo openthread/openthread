@@ -31,8 +31,8 @@
  *   This file includes definitions for generic number utility functions (min, max).
  */
 
-#ifndef LIB_UTILS_MATH_HPP_
-#define LIB_UTILS_MATH_HPP_
+#ifndef OT_LIB_UTILS_MATH_HPP_
+#define OT_LIB_UTILS_MATH_HPP_
 
 namespace ot {
 namespace Lib {
@@ -79,4 +79,4 @@ inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned lon
 } // namespace Lib
 } // namespace ot
 
-#endif // LIB_UTILS_MATH_HPP_
+#endif // OT_LIB_UTILS_MATH_HPP_

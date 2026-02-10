@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Prefix Delegation (PD) Client.
  */
 
-#ifndef DHCP6_PD_CLIENT_HPP_
-#define DHCP6_PD_CLIENT_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_
+#define OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -274,4 +274,4 @@ private:
 
 #endif // OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
 
-#endif // DHCP6_PD_CLIENT_HPP_
+#endif // OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_

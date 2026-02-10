@@ -39,6 +39,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 
 namespace ot {
 namespace Utils {
@@ -65,9 +67,22 @@ void *Heap::CAlloc(size_t aCount, size_t aSize)
     void    *ret  = nullptr;
     Block   *prev = nullptr;
     Block   *curr = nullptr;
-    uint16_t size = static_cast<uint16_t>(aCount * aSize);
+    uint16_t size;
 
-    VerifyOrExit(size);
+    // Verify that the requested allocation size will not cause an overflow.
+    //
+    // The total size is checked to be small enough to fit in a `uint16_t`
+    // after accounting for internal overhead. `kTotalSizeGuard` provides a
+    // guard for alignment adjustments and block metadata, preventing the final
+    // calculated `size` from overflowing `uint16_t`.
+
+    VerifyOrExit(aCount <= NumericLimits<uint16_t>::kMax);
+    VerifyOrExit(aSize <= NumericLimits<uint16_t>::kMax);
+
+    SuccessOrExit(SafeMultiply<uint16_t>(static_cast<uint16_t>(aCount), static_cast<uint16_t>(aSize), size));
+
+    VerifyOrExit(size > 0);
+    VerifyOrExit(size <= NumericLimits<uint16_t>::kMax - kTotalSizeGuard);
 
     size += kAlignSize - 1 - kBlockRemainderSize;
     size &= ~(kAlignSize - 1);

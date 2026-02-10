@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Network Diagnostics.
  */
 
-#ifndef CONFIG_NETWORK_DIAGNOSTIC_H_
-#define CONFIG_NETWORK_DIAGNOSTIC_H_
+#ifndef OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_
+#define OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_
 
 /**
  * @addtogroup config-network-diagnostic
@@ -43,13 +43,22 @@
  * @{
  */
 
+#include "config/misc.h"
+
 /**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
  *
  * Specifies the default Vendor Name string.
+ *
+ * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, the Vendor Name string MUST start with the "RD:" prefix
+ * to ensure reference devices are identifiable. This is checked and enforced at build-time (`static_assert`).
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "RD:"
+#else
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME ""
+#endif
 #endif
 
 /**
@@ -101,4 +110,4 @@
  * @}
  */
 
-#endif // CONFIG_NETWORK_DIAGNOSTIC_H_
+#endif // OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for TREL.
  */
 
-#ifndef CONFIG_TREL_H_
-#define CONFIG_TREL_H_
+#ifndef OT_CORE_CONFIG_TREL_H_
+#define OT_CORE_CONFIG_TREL_H_
 
 /**
  * @addtogroup config-trel
@@ -82,4 +82,4 @@
  * @}
  */
 
-#endif // CONFIG_TREL_H_
+#endif // OT_CORE_CONFIG_TREL_H_

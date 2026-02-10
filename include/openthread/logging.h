@@ -227,7 +227,8 @@ void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aF
  * @param[in] aFormat           The format string.
  * @param[in] aArgs             Arguments for the format specification.
  */
-void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, va_list aArgs);
+void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, va_list aArgs)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
 
 /**
  * Emits a log message at a given log level.

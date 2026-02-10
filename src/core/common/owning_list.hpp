@@ -32,8 +32,8 @@
  *   the list.
  */
 
-#ifndef OWNING_LIST_HPP_
-#define OWNING_LIST_HPP_
+#ifndef OT_CORE_COMMON_OWNING_LIST_HPP_
+#define OT_CORE_COMMON_OWNING_LIST_HPP_
 
 #include "openthread-core-config.h"
 
@@ -162,4 +162,4 @@ public:
 
 } // namespace ot
 
-#endif // OWNING_LIST_HPP_
+#endif // OT_CORE_COMMON_OWNING_LIST_HPP_

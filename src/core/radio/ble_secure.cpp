@@ -284,9 +284,10 @@ Error BleSecure::SendApplicationTlv(MeshCoP::TcatAgent::TcatApplicationProtocol 
 {
     Error error = kErrorNone;
 
-    VerifyOrExit((aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolStatus &&
-                  aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolResponse) ||
-                     Get<MeshCoP::TcatAgent>().GetApplicationResponsePending(),
+    VerifyOrExit(aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolNone &&
+                     ((aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolStatus &&
+                       aTcatApplicationProtocol != MeshCoP::TcatAgent::kApplicationProtocolResponse) ||
+                      Get<MeshCoP::TcatAgent>().GetApplicationResponsePending()),
                  error = kErrorRejected);
 
     if (aLength > Tlv::kBaseTlvMaxLength)
@@ -339,7 +340,7 @@ Error BleSecure::Flush(void)
         length -= kTlsDataMaxSize;
 
         // Should never fail since we are decreasing the length of the message
-        SuccessOrAssert(error = mSendMessage->SetLength(length));
+        IgnoreError(mSendMessage->SetLength(length));
         mTransmitQueue.Enqueue(*message);
         mTransmitTask.Post();
         message = nullptr;
@@ -362,7 +363,7 @@ exit:
     return error;
 }
 
-Error BleSecure::HandleBleReceive(uint8_t *aBuf, uint16_t aLength)
+void BleSecure::HandleBleReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message     *message = nullptr;
     Ip6::MessageInfo messageInfo;
@@ -370,8 +371,7 @@ Error BleSecure::HandleBleReceive(uint8_t *aBuf, uint16_t aLength)
 
     if ((message = Get<MessagePool>().Allocate(Message::kTypeBle, 0)) == nullptr)
     {
-        error = kErrorNoBufs;
-        ExitNow();
+        ExitNow(error = kErrorNoBufs);
     }
     SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
@@ -379,18 +379,19 @@ Error BleSecure::HandleBleReceive(uint8_t *aBuf, uint16_t aLength)
     mTls.HandleReceive(*message, messageInfo);
 
 exit:
+    // if BLE packets go missing, the TLS layer will catch the damaged records - so we just warn here.
+    LogWarnOnError(error, "HandleBleReceive");
     FreeMessage(message);
-    return error;
 }
 
 void BleSecure::HandleBleConnected(uint16_t aConnectionId)
 {
     OT_UNUSED_VARIABLE(aConnectionId);
 
-    mBleState = kConnected;
-
+    // if getting ATT MTU size fails, it stays at the default
+    mMtuSize = kInitialMtuSize;
     IgnoreError(otPlatBleGattMtuGet(&GetInstance(), &mMtuSize));
-
+    mBleState = kConnected;
     mConnectCallback.InvokeIfSet(&GetInstance(), IsConnected(), true);
 }
 
@@ -402,28 +403,22 @@ void BleSecure::HandleBleDisconnected(uint16_t aConnectionId)
     mBleState = kAdvertising;
     mMtuSize  = kInitialMtuSize;
 
-    Disconnect(); // Stop TLS connection
+    Disconnect(); // Stop TLS connection and update advertisement data
 
     // if a different BLE advertising state was requested earlier while a BLE client was connected,
     // then now's the time to fulfill the request.
     IgnoreError(SetRequestedBleAdvertisementsState());
 }
 
-Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
+void BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
 {
-    Error error = kErrorNone;
-
-    if (aMtu <= OT_BLE_ATT_MTU_MAX)
+    OT_ASSERT(aMtu >= kMinMtuSize);
+    // if higher MTU is available than configured, we still obey our configured maximum.
+    if (aMtu > kMaxMtuSize)
     {
-        mMtuSize = aMtu;
+        aMtu = kMaxMtuSize;
     }
-    else
-    {
-        mMtuSize = OT_BLE_ATT_MTU_MAX;
-        error    = kErrorInvalidArgs;
-    }
-
-    return error;
+    mMtuSize = aMtu;
 }
 
 void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent, void *aContext)
@@ -479,12 +474,14 @@ void BleSecure::HandleTlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength
 
 void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
+    otError error = kErrorNone;
+
     VerifyOrExit(mReceivedMessage != nullptr);
     DumpDebg("Rx", aBuf, aLength);
 
     if (!mTlvMode)
     {
-        SuccessOrExit(mReceivedMessage->AppendBytes(aBuf, aLength));
+        SuccessOrExit(error = mReceivedMessage->AppendBytes(aBuf, aLength));
         mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, 0, OT_TCAT_APPLICATION_PROTOCOL_NONE);
         IgnoreError(mReceivedMessage->SetLength(0));
     }
@@ -502,12 +499,12 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
 
                 if (missingBytes > aLength)
                 {
-                    SuccessOrExit(mReceivedMessage->AppendBytes(aBuf, aLength));
+                    SuccessOrExit(error = mReceivedMessage->AppendBytes(aBuf, aLength));
                     break;
                 }
                 else
                 {
-                    SuccessOrExit(mReceivedMessage->AppendBytes(aBuf, static_cast<uint16_t>(missingBytes)));
+                    SuccessOrExit(error = mReceivedMessage->AppendBytes(aBuf, static_cast<uint16_t>(missingBytes)));
                     aLength -= missingBytes;
                     aBuf += missingBytes;
                 }
@@ -543,7 +540,7 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
             // TLV fully loaded - let TCAT agent handle it, if connected
             if (Get<MeshCoP::TcatAgent>().IsConnected())
             {
-                Error error = kErrorNone;
+                Error errorTcatAgent = kErrorNone;
 
                 IgnoreError(Flush());
 
@@ -553,33 +550,50 @@ void BleSecure::HandleTlsReceive(uint8_t *aBuf, uint16_t aLength)
                     VerifyOrExit(mSendMessage != nullptr, error = kErrorNoBufs);
                 }
 
-                error = Get<MeshCoP::TcatAgent>().HandleSingleTlv(*mReceivedMessage, *mSendMessage);
-                IgnoreError(Flush());
+                errorTcatAgent = Get<MeshCoP::TcatAgent>().HandleSingleTlv(*mReceivedMessage, *mSendMessage);
 
-                if (error == kErrorAbort)
+                if (errorTcatAgent != kErrorNone)
                 {
-                    LogInfo("Disconnecting TCAT client.");
                     // kErrorAbort indicates that a Disconnect command TLV has been received.
+                    if (errorTcatAgent == kErrorAbort)
+                    {
+                        LogInfo("Disconnecting TCAT client.");
+                    }
+                    else
+                    {
+                        // fatal error: TLV integrity and order can't be guaranteed anymore for this connection.
+                        LogWarnOnError(errorTcatAgent, "HandleSingleTlv");
+                    }
                     Disconnect();
                     // BleSecure is not stopped here, it must remain active in advertising state and
                     // must be ready to receive a next TCAT commissioner.
                     ExitNow();
                 }
+                SuccessOrExit(error = Flush()); // send out the response generated by the TcatAgent
             }
             else
             {
+                // if the TCAT agent is not connected - do callback using the TLV's value as the message
                 mReceivedMessage->SetOffset(static_cast<uint16_t>(offset));
                 mReceiveCallback.InvokeIfSet(&GetInstance(), mReceivedMessage, static_cast<int32_t>(offset),
                                              OT_TCAT_APPLICATION_PROTOCOL_NONE);
             }
 
-            SuccessOrExit(mReceivedMessage->SetLength(0)); // also sets the offset to 0
-            requiredBytes = sizeof(Tlv);
-        }
+            IgnoreError(mReceivedMessage->SetLength(0)); // also sets the offset to 0
+            requiredBytes = sizeof(Tlv);                 // set for the next TLV
+        } // while (aLength > 0)
     }
 
 exit:
-    return;
+    if (error != kErrorNone)
+    {
+        // in this very rare case, a partial TLV is received, or a TLV has been fully dropped, or Flush() failed.
+        // mSendMessage is most likely not initialized; so appending a GeneralError status TLV to mSendMessage would
+        // fail also. In this case it's not possible to recover TLV integrity and client/server sync.
+        // It's handled by logging the error and (necessarily) closing the secure connection.
+        LogCrit("HandleTlsReceive: %s", ErrorToString(error));
+        Disconnect();
+    }
 }
 
 void BleSecure::HandleTransmit(void)
@@ -664,7 +678,7 @@ void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, 
     OT_UNUSED_VARIABLE(aHandle); // Only a single handle is expected for RX
 
     VerifyOrExit(aPacket != nullptr);
-    IgnoreError(AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleReceive(aPacket->mValue, aPacket->mLength));
+    AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleReceive(aPacket->mValue, aPacket->mLength);
 exit:
     return;
 }
@@ -681,7 +695,7 @@ void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
 
 void otPlatBleGattOnMtuUpdate(otInstance *aInstance, uint16_t aMtu)
 {
-    IgnoreError(AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleMtuUpdate(aMtu));
+    AsCoreType(aInstance).Get<Ble::BleSecure>().HandleBleMtuUpdate(aMtu);
 }
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

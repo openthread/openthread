@@ -31,8 +31,8 @@
  *   This file includes definitions for performing AES-ECB computations.
  */
 
-#ifndef AES_ECB_HPP_
-#define AES_ECB_HPP_
+#ifndef OT_CORE_CRYPTO_AES_ECB_HPP_
+#define OT_CORE_CRYPTO_AES_ECB_HPP_
 
 #include "openthread-core-config.h"
 
@@ -96,4 +96,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // AES_ECB_HPP_
+#endif // OT_CORE_CRYPTO_AES_ECB_HPP_

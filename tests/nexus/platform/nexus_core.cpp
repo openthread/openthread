@@ -27,6 +27,10 @@
  */
 
 #include "nexus_core.hpp"
+
+#include <cstdlib>
+#include <cstring>
+
 #include "nexus_node.hpp"
 
 namespace ot {
@@ -40,11 +44,167 @@ Core::Core(void)
     , mCurNodeId(0)
     , mPendingAction(false)
 {
+    const char *pcapFile;
+
     VerifyOrQuit(!sInUse);
     sCore  = this;
     sInUse = true;
 
     mNextAlarmTime = mNow.GetDistantFuture();
+
+    pcapFile = getenv("OT_NEXUS_PCAP_FILE");
+
+    if ((pcapFile != nullptr) && (pcapFile[0] != '\0'))
+    {
+        mPcap.Open(pcapFile);
+    }
+}
+
+void Core::SaveTestInfo(const char *aFilename)
+{
+    FILE       *file = fopen(aFilename, "w");
+    Node       *tail = mNodes.GetTail();
+    const char *testcase;
+    const char *slash;
+    const char *dot;
+    const char *version;
+    int         testcaseLen;
+
+    VerifyOrExit(file != nullptr);
+
+    testcase = aFilename;
+    slash    = strrchr(aFilename, '/');
+
+    if (slash != nullptr)
+    {
+        testcase = slash + 1;
+    }
+
+    dot         = strrchr(testcase, '.');
+    testcaseLen = (dot != nullptr) ? static_cast<int>(dot - testcase) : static_cast<int>(strlen(testcase));
+
+    switch (otThreadGetVersion())
+    {
+    case OT_THREAD_VERSION_1_1:
+        version = "1.1";
+        break;
+    case OT_THREAD_VERSION_1_2:
+        version = "1.2";
+        break;
+    case OT_THREAD_VERSION_1_3:
+        version = "1.3";
+        break;
+    case OT_THREAD_VERSION_1_4:
+        version = "1.4";
+        break;
+    default:
+        version = "unknown";
+        break;
+    }
+
+    fprintf(file, "{\n");
+    fprintf(file, "  \"testcase\": \"%.*s\",\n", testcaseLen, testcase);
+    fprintf(file, "  \"pcap\": \"%s\",\n", getenv("OT_NEXUS_PCAP_FILE") ? getenv("OT_NEXUS_PCAP_FILE") : "");
+
+    if (!mNodes.IsEmpty())
+    {
+        NetworkKey                          networkKey;
+        Node                               &node = *mNodes.GetHead();
+        String<OT_NETWORK_KEY_SIZE * 2 + 1> keyString;
+
+        node.Get<KeyManager>().GetNetworkKey(networkKey);
+        keyString.AppendHexBytes(networkKey.m8, OT_NETWORK_KEY_SIZE);
+        fprintf(file, "  \"network_key\": \"%s\",\n", keyString.AsCString());
+
+        for (Node &leaderNode : mNodes)
+        {
+            if (leaderNode.Get<Mle::Mle>().IsLeader())
+            {
+                Ip6::Address aloc;
+                leaderNode.Get<Mle::Mle>().GetLeaderAloc(aloc);
+                fprintf(file, "  \"leader_aloc\": \"%s\",\n", aloc.ToString().AsCString());
+                break;
+            }
+        }
+    }
+
+    fprintf(file, "  \"topology\": {\n");
+    for (Node &node : mNodes)
+    {
+        fprintf(file, "    \"%u\": {\"name\": \"%s\", \"version\": \"%s\"}%s\n", node.GetInstance().GetId(),
+                node.GetName() ? node.GetName() : "", version, (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"extaddrs\": {\n");
+    for (Node &node : mNodes)
+    {
+        fprintf(file, "    \"%u\": \"%s\"%s\n", node.GetInstance().GetId(),
+                node.Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"rloc16s\": {\n");
+    for (Node &node : mNodes)
+    {
+        fprintf(file, "    \"%u\": \"0x%04x\"%s\n", node.GetInstance().GetId(), node.Get<Mle::Mle>().GetRloc16(),
+                (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"mleids\": {\n");
+    for (Node &node : mNodes)
+    {
+        fprintf(file, "    \"%u\": \"%s\"%s\n", node.GetInstance().GetId(),
+                node.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString(), (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"rlocs\": {\n");
+    for (Node &node : mNodes)
+    {
+        fprintf(file, "    \"%u\": \"%s\"%s\n", node.GetInstance().GetId(),
+                node.Get<Mle::Mle>().GetMeshLocalRloc().ToString().AsCString(), (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"ipaddrs\": {\n");
+    for (Node &node : mNodes)
+    {
+        bool first = true;
+
+        fprintf(file, "    \"%u\": [\n", node.GetInstance().GetId());
+        for (const Ip6::Netif::UnicastAddress &addr : node.Get<ThreadNetif>().GetUnicastAddresses())
+        {
+            if (!first)
+            {
+                fprintf(file, ",\n");
+            }
+            fprintf(file, "      \"%s\"", addr.GetAddress().ToString().AsCString());
+            first = false;
+        }
+        fprintf(file, "\n    ]%s\n", (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"extra_vars\": {\n");
+    if (!mNodes.IsEmpty())
+    {
+        Node       &node = *mNodes.GetHead();
+        Ip6::Prefix prefix;
+
+        prefix.Set(node.Get<Mle::Mle>().GetMeshLocalPrefix());
+        fprintf(file, "    \"mesh_local_prefix\": \"%s\"\n", prefix.ToString().AsCString());
+    }
+    fprintf(file, "  }\n");
+
+    fprintf(file, "}\n");
+
+exit:
+    if (file != nullptr)
+    {
+        fclose(file);
+    }
 }
 
 Core::~Core(void) { sInUse = false; }
@@ -134,6 +294,8 @@ void Core::ProcessRadio(Node &aNode)
 
     ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
 
+    mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow.GetValue() * 1000ull);
+
     otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
 
     for (Node &rxNode : mNodes)
@@ -187,15 +349,14 @@ void Core::ProcessRadio(Node &aNode)
 
     if (ackMode != kNoAck)
     {
-        Mac::TxFrame ackFrame;
-        uint8_t      ackPsdu[Mac::Frame::kImmAckLength];
-
-        ClearAllBytes(ackFrame);
-        ackFrame.mPsdu = ackPsdu;
+        Radio::Frame ackFrame;
 
         ackFrame.GenerateImmAck(
             static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame)),
             (ackMode == kSendAckFramePending));
+
+        ackFrame.UpdateFcs();
+        mPcap.WriteFrame(ackFrame, mNow.GetValue() * 1000ull);
 
         otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
     }

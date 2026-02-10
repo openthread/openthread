@@ -38,4 +38,8 @@ if (current_os == "") {
   current_os = target_os
 }
 
-set_default_toolchain("//etc/gn/toolchain:gcc")
+declare_args() {
+  use_clang = false
+}
+
+set_default_toolchain("//etc/gn/toolchain")

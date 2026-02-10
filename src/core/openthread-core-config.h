@@ -31,10 +31,10 @@
  *   This file includes compile-time configuration constants for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#ifndef OT_CORE_OPENTHREAD_CORE_CONFIG_H_
+#define OT_CORE_OPENTHREAD_CORE_CONFIG_H_
 
-#include <openthread/config.h>
+#include <openthread/config.h> // IWYU pragma: export
 #include <openthread/thread.h>
 
 #define OPENTHREAD_CORE_CONFIG_H_IN
@@ -48,21 +48,22 @@
  */
 
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE // IWYU pragma: export
 #elif defined(OPENTHREAD_CONFIG_CORE_USER_CONFIG_HEADER_ENABLE)
 // This configuration header file should be provided by the user when
 // OPENTHREAD_CONFIG_CORE_USER_CONFIG_HEADER_ENABLE is defined to 1.
-#include "openthread-core-user-config.h"
+#include "openthread-core-user-config.h" // IWYU pragma: export
 #endif
 
 #ifdef OPENTHREAD_PLATFORM_CORE_CONFIG_FILE
-#include OPENTHREAD_PLATFORM_CORE_CONFIG_FILE
+#include OPENTHREAD_PLATFORM_CORE_CONFIG_FILE // IWYU pragma: export
 #endif
 
 #ifndef OPENTHREAD_CONFIG_THREAD_VERSION
 #define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_3
 #endif
 
+// IWYU pragma: begin_exports
 #include "config/announce_sender.h"
 #include "config/backbone_router.h"
 #include "config/border_agent.h"
@@ -111,6 +112,7 @@
 #include "config/tmf.h"
 #include "config/trel.h"
 #include "config/wakeup.h"
+// IWYU pragma: end_exports
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 
@@ -120,4 +122,4 @@
 #include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
 #endif
 
-#endif // OPENTHREAD_CORE_CONFIG_H_
+#endif // OT_CORE_OPENTHREAD_CORE_CONFIG_H_

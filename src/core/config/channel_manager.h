@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Channel Manager.
  */
 
-#ifndef CONFIG_CHANNEL_MANAGER_H_
-#define CONFIG_CHANNEL_MANAGER_H_
+#ifndef OT_CORE_CONFIG_CHANNEL_MANAGER_H_
+#define OT_CORE_CONFIG_CHANNEL_MANAGER_H_
 
 /**
  * @addtogroup config-channel-manager
@@ -152,4 +152,4 @@
  * @}
  */
 
-#endif // CONFIG_CHANNEL_MANAGER_H_
+#endif // OT_CORE_CONFIG_CHANNEL_MANAGER_H_

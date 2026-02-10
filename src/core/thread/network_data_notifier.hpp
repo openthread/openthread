@@ -31,8 +31,8 @@
  *   This file includes definitions for transmitting SVR_DATA.ntf messages.
  */
 
-#ifndef NETWORK_DATA_NOTIFIER_HPP_
-#define NETWORK_DATA_NOTIFIER_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_NOTIFIER_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_NOTIFIER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -40,12 +40,12 @@
 
 #include <openthread/border_router.h>
 
-#include "coap/coap.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -130,13 +130,10 @@ private:
     Error UpdateInconsistentData(void);
 #endif
 
-    void        HandleNotifierEvents(Events aEvents);
-    void        HandleTimer(void);
-    static void HandleCoapResponse(void                *aContext,
-                                   otMessage           *aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void        HandleCoapResponse(Error aResult);
+    void HandleNotifierEvents(Events aEvents);
+    void HandleTimer(void);
+
+    DeclareTmfResponseHandlerIn(Notifier, HandleCoapResponse);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     void HandleNetDataFull(void);
@@ -174,4 +171,4 @@ private:
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-#endif // NETWORK_DATA_NOTIFIER_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_NOTIFIER_HPP_

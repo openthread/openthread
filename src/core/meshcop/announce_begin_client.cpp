@@ -59,7 +59,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, kUriAnnounceBegin));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
