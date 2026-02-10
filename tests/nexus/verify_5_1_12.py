@@ -74,16 +74,16 @@ def verify(pv):
     #     - Route64 TLV
     #     - Source Address TLV
     print("Step 2: Router_1 (DUT) transmits MLE advertisements.")
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: {
                           consts.LEADER_DATA_TLV,
                           consts.ROUTE64_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255) \
+        .must_next()
 
     # Step 3: Test Harness
     # - Description: Harness enables communication between Router_1 (DUT) and Router_2.
@@ -116,21 +116,21 @@ def verify(pv):
 
     # In this test, DUT should send Link Request to Router_2 when it hears Router_2's advertisement
     # It might also send Link Accept and Request if it heard a Link Request from Router_2 first.
-    pkts.filter_wpan_src64(DUT).\
-        filter_wpan_dst64(ROUTER_2).\
-        filter(lambda p: p.mle.cmd in [consts.MLE_LINK_REQUEST, consts.MLE_LINK_ACCEPT_AND_REQUEST] and\
+    pkts.filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(ROUTER_2) \
+        .filter(lambda p: p.mle.cmd in [consts.MLE_LINK_REQUEST, consts.MLE_LINK_ACCEPT_AND_REQUEST] and \
                {
                 consts.CHALLENGE_TLV,
                 consts.LEADER_DATA_TLV,
                 consts.TLV_REQUEST_TLV,
                 consts.SOURCE_ADDRESS_TLV,
                 consts.VERSION_TLV
-                } <= set(p.mle.tlv.type)).\
-        must_next()
+                } <= set(p.mle.tlv.type)) \
+        .must_next()
 
-    pkts.filter_wpan_src64(ROUTER_2).\
-        filter_wpan_dst64(DUT).\
-        filter(lambda p: p.mle.cmd in [consts.MLE_LINK_ACCEPT, consts.MLE_LINK_ACCEPT_AND_REQUEST] and\
+    pkts.filter_wpan_src64(ROUTER_2) \
+        .filter_wpan_dst64(DUT) \
+        .filter(lambda p: p.mle.cmd in [consts.MLE_LINK_ACCEPT, consts.MLE_LINK_ACCEPT_AND_REQUEST] and \
                {
                 consts.LEADER_DATA_TLV,
                 consts.LINK_LAYER_FRAME_COUNTER_TLV,
@@ -138,8 +138,8 @@ def verify(pv):
                 consts.RESPONSE_TLV,
                 consts.SOURCE_ADDRESS_TLV,
                 consts.VERSION_TLV
-                } <= set(p.mle.tlv.type)).\
-        must_next()
+                } <= set(p.mle.tlv.type)) \
+        .must_next()
 
 
 if __name__ == '__main__':

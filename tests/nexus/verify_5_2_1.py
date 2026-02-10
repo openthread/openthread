@@ -76,25 +76,25 @@ def verify(pv):
     #     - Leader Data TLV
     #     - Route64 TLV
     print("Step 1: Router_1 (DUT)")
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: {
                           consts.SOURCE_ADDRESS_TLV,
                           consts.LEADER_DATA_TLV,
                           consts.ROUTE64_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255) \
+        .must_next()
 
     # Step 2: REED_1
     # - Description: Attach REED_1 to DUT; REED_1 automatically sends MLE Parent Request.
     # - Pass Criteria: N/A
     print("Step 2: REED_1")
-    pkts.filter_wpan_src64(REED_1).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        must_next()
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .must_next()
 
     # Step 3: Router_1 (DUT)
     # - Description: Automatically sends an MLE Parent Response.
@@ -111,10 +111,10 @@ def verify(pv):
     #     - Version TLV
     #     - MLE Frame Counter TLV (optional)
     print("Step 3: Router_1 (DUT)")
-    pkts.filter_wpan_src64(DUT).\
-        filter_wpan_dst64(REED_1).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(REED_1) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.CONNECTIVITY_TLV,
                           consts.LEADER_DATA_TLV,
@@ -123,8 +123,8 @@ def verify(pv):
                           consts.RESPONSE_TLV,
                           consts.SOURCE_ADDRESS_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 4: Router_1 (DUT)
     # - Description: Automatically sends an MLE Child ID Response.
@@ -137,33 +137,33 @@ def verify(pv):
     #     - Source Address TLV
     #     - Route64 TLV (optional)
     print("Step 4: Router_1 (DUT)")
-    pkts.filter_wpan_src64(DUT).\
-        filter_wpan_dst64(REED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(REED_1) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE) \
+        .filter(lambda p: {
                           consts.ADDRESS16_TLV,
                           consts.LEADER_DATA_TLV,
                           consts.NETWORK_DATA_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 6: MED_1
     # - Description: The harness attaches MED_1 to REED_1.
     # - Pass Criteria: N/A
     print("Step 6: MED_1")
-    pkts.filter_wpan_src64(MED_1).\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        must_next()
+    pkts.filter_wpan_src64(MED_1) \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .must_next()
 
     # Step 7: REED_1
     # - Description: Automatically sends an Address Solicit Request to DUT.
     # - Pass Criteria: N/A
     print("Step 7: REED_1")
-    _pkt_sol = pkts.filter_wpan_src64(REED_1).\
-        filter_wpan_dst16(DUT_RLOC16).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        must_next()
+    _pkt_sol = pkts.filter_wpan_src64(REED_1) \
+        .filter_wpan_dst16(DUT_RLOC16) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .must_next()
 
     # Step 8: Router_1 (DUT)
     # - Description: Automatically forwards Address Solicit Request to Leader, and forwards Leader's Address Solicit
@@ -172,33 +172,33 @@ def verify(pv):
     #   - The DUT MUST forward the Address Solicit Request to the Leader.
     #   - The DUT MUST forward the Leader's Address Solicit Response to REED_1.
     print("Step 8: Router_1 (DUT)")
-    pkts.filter_wpan_src16(DUT_RLOC16).\
-        filter_wpan_dst16(LEADER_RLOC16).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        must_next()
+    pkts.filter_wpan_src16(DUT_RLOC16) \
+        .filter_wpan_dst16(LEADER_RLOC16) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .must_next()
 
-    pkts.filter_wpan_src16(LEADER_RLOC16).\
-        filter_wpan_dst16(DUT_RLOC16).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        must_next()
+    pkts.filter_wpan_src16(LEADER_RLOC16) \
+        .filter_wpan_dst16(DUT_RLOC16) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .must_next()
 
-    pkts.filter_wpan_src16(DUT_RLOC16).\
-        filter_wpan_dst16(_pkt_sol.wpan.src16).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        must_next()
+    pkts.filter_wpan_src16(DUT_RLOC16) \
+        .filter_wpan_dst16(_pkt_sol.wpan.src16) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .must_next()
 
     # Step 9: Leader
     # - Description: Harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request to REED_1.
     # - Pass Criteria:
     #   - REED_1 responds with ICMPv6 Echo Reply.
     print("Step 9: Leader")
-    _pkt_ping = pkts.filter_ping_request().\
-        filter_wpan_src64(LEADER).\
-        must_next()
+    _pkt_ping = pkts.filter_ping_request() \
+        .filter_wpan_src64(LEADER) \
+        .must_next()
 
-    pkts.filter_ping_reply(identifier=_pkt_ping.icmpv6.echo.identifier).\
-        filter_wpan_src64(REED_1).\
-        must_next()
+    pkts.filter_ping_reply(identifier=_pkt_ping.icmpv6.echo.identifier) \
+        .filter_wpan_src64(REED_1) \
+        .must_next()
 
 
 if __name__ == '__main__':

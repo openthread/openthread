@@ -66,31 +66,31 @@ def verify(pv):
     # - Pass Criteria: N/A
     print("Step 0: Verify topology is formed correctly")
     pv.verify_attached('ROUTER')
-    pkts.copy().filter_wpan_src64(LEADER).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    pkts.copy().filter_wpan_src64(LEADER) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
                           consts.NL_STATUS_TLV,
                           consts.NL_RLOC16_TLV,
                           consts.NL_ROUTER_MASK_TLV
-                          } <= set(p.coap.tlv.type) and\
-               p.coap.code == consts.COAP_CODE_ACK and\
+                          } <= set(p.coap.tlv.type) and \
+               p.coap.code == consts.COAP_CODE_ACK and \
                p.coap.tlv.status == 0
-               ).\
-        must_next()
+               ) \
+        .must_next()
 
     # Step 1: Leader
     # - Description: Harness instructs the Leader to send a ' helper ping' (ICMPv6 Echo Request) to the DUT
     # - Pass Criteria:
     #   - The DUT MUST respond with an ICMPv6 Echo Reply
     print("Step 1: Leader sends a ' helper ping' (ICMPv6 Echo Request) to the DUT")
-    _pkt = pkts.filter_ping_request().\
-        filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-        filter_wpan_src64(ROUTER).\
-        filter_wpan_dst64(LEADER).\
-        must_next()
+    _pkt = pkts.filter_ping_request() \
+        .filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER) \
+        .must_next()
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+        .filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst64(LEADER) \
+        .must_next()
 
     # Step 2: Leader
     # - Description: Harness instructs the Leader to remove the Router ID of Router_1 (the DUT)
@@ -105,25 +105,25 @@ def verify(pv):
     print("Step 3: Router_1 (DUT) automatically re-attaches")
 
     # MLE Parent Request
-    pkts.filter_wpan_src64(ROUTER).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(ROUTER) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.MODE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 0).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 0) \
+        .must_next()
 
     # MLE Child ID Request
-    _pkt = pkts.filter_wpan_src64(ROUTER).\
-        filter_wpan_dst64(LEADER).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        filter(lambda p: {
+    _pkt = pkts.filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst64(LEADER) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .filter(lambda p: {
                           consts.LINK_LAYER_FRAME_COUNTER_TLV,
                           consts.MODE_TLV,
                           consts.RESPONSE_TLV,
@@ -132,36 +132,36 @@ def verify(pv):
                           consts.ADDRESS16_TLV,
                           consts.NETWORK_DATA_TLV,
                           consts.VERSION_TLV
-                } <= set(p.mle.tlv.type) and\
-               p.mle.tlv.addr16 is nullField and\
-               p.thread_nwd.tlv.type is nullField).\
-               must_next()
+                } <= set(p.mle.tlv.type) and \
+               p.mle.tlv.addr16 is nullField and \
+               p.thread_nwd.tlv.type is nullField) \
+        .must_next()
     _pkt.must_not_verify(lambda p: (consts.ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
     # Address Solicit Request
-    pkts.filter_wpan_src64(ROUTER).\
-        filter_wpan_dst16(LEADER_RLOC16).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst16(LEADER_RLOC16) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
                           consts.NL_MAC_EXTENDED_ADDRESS_TLV,
                           consts.NL_STATUS_TLV
                           } <= set(p.coap.tlv.type)
-               ).\
-       must_next()
+               ) \
+        .must_next()
 
     # Step 4: Leader
     # - Description: Harness verifies connectivity by instructing the Leader to send an ICMPv6 Echo Request to the DUT
     # - Pass Criteria:
     #   - The DUT MUST respond with an ICMPv6 Echo Reply
     print("Step 4: Leader sends an ICMPv6 Echo Request to the DUT")
-    _pkt = pkts.filter_ping_request().\
-        filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-        filter_wpan_src64(ROUTER).\
-        filter_wpan_dst64(LEADER).\
-        must_next()
+    _pkt = pkts.filter_ping_request() \
+        .filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER) \
+        .must_next()
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+        .filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst64(LEADER) \
+        .must_next()
 
 
 if __name__ == '__main__':

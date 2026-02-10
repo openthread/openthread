@@ -72,12 +72,12 @@ def verify(pv):
     #   advertisements.
     # - Pass Criteria: N/A
     print("Step 1: Setup the topology without the DUT")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        must_next()
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        must_next()
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .must_next()
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .must_next()
 
     # Step 2: Test Harness
     # - Description: Harness configures the RSSI between Leader, Router_1, Router_2 (DUT), REED_1, and REED_2 to enable
@@ -86,19 +86,19 @@ def verify(pv):
     print("Step 2: Harness configures the RSSI")
 
     # Step 3: Router_2 (DUT)
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.MODE_TLV,
                           consts.CHALLENGE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 0).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 0) \
+        .must_next()
     lstart = pkts.index
 
     # Step 4: REED_2, REED_1
@@ -119,29 +119,29 @@ def verify(pv):
     #   - The Key Identifier Mode of the Security Control field of the MAC frame Auxiliary Security Header MUST be set
     #     to '0x02'
     print("Step 5: Router_2 (DUT) sends MLE Parent Request with Scan Mask set to Routers and REEDs")
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.MODE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 1 and\
-               p.wpan.aux_sec.key_id_mode == 0x02).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 1 and \
+               p.wpan.aux_sec.key_id_mode == 0x02) \
+        .must_next()
     lend = pkts.index
 
     # Verify Step 4: No Parent Response from REEDs between Step 3 and Step 5
     for reed in [REED_1, REED_2]:
-        pkts.range(lstart, lend).\
-            filter_wpan_src64(reed).\
-            filter_wpan_dst64(DUT).\
-            filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-            must_not_next()
+        pkts.range(lstart, lend) \
+            .filter_wpan_src64(reed) \
+            .filter_wpan_dst64(DUT) \
+            .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+            .must_not_next()
 
     # Step 6: REED_1, REED_2
     # - Description: Each device automatically responds to DUT with MLE Parent Response. REED_1 reports more high
@@ -154,10 +154,10 @@ def verify(pv):
 
     def find_parent_response(src64):
         pkts.index = _index
-        pkt = pkts.filter_wpan_src64(src64).\
-            filter_wpan_dst64(DUT).\
-            filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-            filter(lambda p: {
+        pkt = pkts.filter_wpan_src64(src64) \
+            .filter_wpan_dst64(DUT) \
+            .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+            .filter(lambda p: {
                               consts.CHALLENGE_TLV,
                               consts.CONNECTIVITY_TLV,
                               consts.LEADER_DATA_TLV,
@@ -166,9 +166,9 @@ def verify(pv):
                               consts.RESPONSE_TLV,
                               consts.SOURCE_ADDRESS_TLV,
                               consts.VERSION_TLV
-                              } <= set(p.mle.tlv.type) and\
-                   p.wpan.aux_sec.key_id_mode == 0x02).\
-            must_next()
+                              } <= set(p.mle.tlv.type) and \
+                   p.wpan.aux_sec.key_id_mode == 0x02) \
+            .must_next()
         return pkt, pkts.index
 
     p_reed1, index1 = find_parent_response(REED_1)
@@ -197,18 +197,18 @@ def verify(pv):
     #   - The following TLV MUST NOT be present in the Child ID Request:
     #     - Address Registration TLV
     print("Step 7: Router_2 (DUT) sends a MLE Child ID Request to REED_1")
-    _pkt = pkts.filter_wpan_src64(DUT).\
-        filter_wpan_dst64(REED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        filter(lambda p: {
+    _pkt = pkts.filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(REED_1) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .filter(lambda p: {
                           consts.LINK_LAYER_FRAME_COUNTER_TLV,
                           consts.MODE_TLV,
                           consts.RESPONSE_TLV,
                           consts.TIMEOUT_TLV,
                           consts.TLV_REQUEST_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
     _pkt.must_not_verify(lambda p: consts.ADDRESS_REGISTRATION_TLV in p.mle.tlv.type)
 
 

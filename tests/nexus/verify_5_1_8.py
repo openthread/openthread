@@ -71,9 +71,9 @@ def verify(pv):
     # - Pass Criteria: N/A
     print("Step 1: Leader, Router_1, Router_2, Router_3")
     for node in [LEADER, ROUTER_1, ROUTER_2, ROUTER_3]:
-        pkts.filter_wpan_src64(node).\
-            filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-            must_next()
+        pkts.filter_wpan_src64(node) \
+            .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+            .must_next()
 
     # Step 2: Test Harness
     # - Description: Harness configures the RSSI between Router_1, Router_2, and Router_3 and Router_4 (DUT) to enable
@@ -92,30 +92,30 @@ def verify(pv):
     #     - Scan Mask TLV = 0x80 (Active Routers)
     #     - Version TLV
     print("Step 3: Router_4 (DUT)")
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {consts.CHALLENGE_TLV, consts.MODE_TLV, consts.SCAN_MASK_TLV, consts.VERSION_TLV} <= set(p.mle.tlv.type)).\
-        filter(lambda p: p.ipv6.hlim == 255).\
-        filter(lambda p: p.mle.tlv.scan_mask.r == 1).\
-        filter(lambda p: p.mle.tlv.scan_mask.e == 0).\
-        must_next()
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {consts.CHALLENGE_TLV, consts.MODE_TLV, consts.SCAN_MASK_TLV, consts.VERSION_TLV} <= set(p.mle.tlv.type)) \
+        .filter(lambda p: p.ipv6.hlim == 255) \
+        .filter(lambda p: p.mle.tlv.scan_mask.r == 1) \
+        .filter(lambda p: p.mle.tlv.scan_mask.e == 0) \
+        .must_next()
 
     # Step 4: Router_2, Router_3
     # - Description: Each device automatically responds to the DUT with MLE Parent Response.
     # - Pass Criteria: N/A
     print("Step 4: Router_2, Router_3")
     _start_idx = pkts.index
-    pkts.filter_wpan_src64(ROUTER_2).\
-        filter_wpan_dst64(DUT).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        must_next()
+    pkts.filter_wpan_src64(ROUTER_2) \
+        .filter_wpan_dst64(DUT) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .must_next()
 
-    pkts.range(_start_idx).\
-        filter_wpan_src64(ROUTER_3).\
-        filter_wpan_dst64(DUT).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        must_next()
+    pkts.range(_start_idx) \
+        .filter_wpan_src64(ROUTER_3) \
+        .filter_wpan_dst64(DUT) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .must_next()
 
     # Step 5: Router_4 (DUT)
     # - Description: Automatically sends a MLE Child ID Request to Router_3 due to better connectivity.
@@ -133,19 +133,19 @@ def verify(pv):
     print("Step 5: Router_4 (DUT)")
     # We must reset the range to find Child ID Request because Step 4 might have advanced past it
     # depending on which Parent Response came last.
-    child_id_req = pkts.range(_start_idx).\
-        filter_wpan_src64(DUT).\
-        filter_wpan_dst64(ROUTER_3).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        filter(lambda p: {
+    child_id_req = pkts.range(_start_idx) \
+        .filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(ROUTER_3) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .filter(lambda p: {
             consts.LINK_LAYER_FRAME_COUNTER_TLV,
             consts.MODE_TLV,
             consts.RESPONSE_TLV,
             consts.TIMEOUT_TLV,
             consts.TLV_REQUEST_TLV,
             consts.VERSION_TLV
-        } <= set(p.mle.tlv.type)).\
-        must_next()
+        } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     child_id_req.must_not_verify(lambda p: consts.ADDRESS_REGISTRATION_TLV in p.mle.tlv.type)
 

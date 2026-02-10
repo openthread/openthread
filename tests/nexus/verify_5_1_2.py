@@ -78,35 +78,35 @@ def verify(pv):
     # - Description: Harness instructs the Leader to send an ICMPv6 Echo Request to MED_1. As part of the process, the Leader automatically attempts to perform address resolution by sending an Address Query Request
     # - Pass Criteria: N/A
     print("Step 3: Leader sends Address Query for MED_1")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: p.coap.tlv.target_eid == pv.vars['MED_1_MLEID']).\
-        must_next()
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_coap_request(consts.ADDR_QRY_URI) \
+        .filter(lambda p: p.coap.tlv.target_eid == pv.vars['MED_1_MLEID']) \
+        .must_next()
 
     # Step 4: Router_1 (DUT)
     # - Description: Does not respond to Address Query Request
     # - Pass Criteria: The DUT MUST NOT respond with an Address Notification Message
     print("Step 4: Router_1 (DUT) MUST NOT respond with an Address Notification Message")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_coap_request(consts.ADDR_NTF_URI).\
-        must_not_next()
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_coap_request(consts.ADDR_NTF_URI) \
+        .must_not_next()
 
     # Step 6: Leader
     # - Description: Harness instructs the Leader to send an ICMPv6 Echo Request to SED_1. As part of the process, the Leader automatically attempts to perform address resolution by sending an Address Query Request
     # - Pass Criteria: N/A
     print("Step 6: Leader sends Address Query for SED_1")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_coap_request(consts.ADDR_QRY_URI).\
-        filter(lambda p: p.coap.tlv.target_eid == pv.vars['SED_1_MLEID']).\
-        must_next()
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_coap_request(consts.ADDR_QRY_URI) \
+        .filter(lambda p: p.coap.tlv.target_eid == pv.vars['SED_1_MLEID']) \
+        .must_next()
 
     # Step 7: Router_1 (DUT)
     # - Description: Does not to Address Query Request
     # - Pass Criteria: The DUT MUST NOT respond with an Address Notification Message
     print("Step 7: Router_1 (DUT) MUST NOT respond with an Address Notification Message")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_coap_request(consts.ADDR_NTF_URI).\
-        must_not_next()
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_coap_request(consts.ADDR_NTF_URI) \
+        .must_not_next()
 
 
 if __name__ == '__main__':

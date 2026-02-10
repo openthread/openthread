@@ -99,19 +99,19 @@ def verify(pv):
     #   - The DUT MUST make two separate attempts to reconnect to its current Partition in this manner.
     print("Step 5: Router_1 attempts to reattach to original partition.")
     for _ in range(2):
-        pkts.filter_wpan_src64(ROUTER_1).\
-            filter_LLARMA().\
-            filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-            filter(lambda p: {
+        pkts.filter_wpan_src64(ROUTER_1) \
+            .filter_LLARMA() \
+            .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+            .filter(lambda p: {
                               consts.CHALLENGE_TLV,
                               consts.MODE_TLV,
                               consts.SCAN_MASK_TLV,
                               consts.VERSION_TLV
-                              } <= set(p.mle.tlv.type) and\
-                   p.ipv6.hlim == 255 and\
-                   p.mle.tlv.scan_mask.r == 1 and\
-                   p.mle.tlv.scan_mask.e == 1).\
-            must_next()
+                              } <= set(p.mle.tlv.type) and \
+                   p.ipv6.hlim == 255 and \
+                   p.mle.tlv.scan_mask.r == 1 and \
+                   p.mle.tlv.scan_mask.e == 1) \
+            .must_next()
 
     # Step 6: Router_1 (DUT)
     # - Description: Automatically attempts to attach to any other partition
@@ -123,16 +123,16 @@ def verify(pv):
     #     - Scan Mask TLV
     #     - Version TLV
     print("Step 6: Router_1 attempts to attach to any other partition.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.MODE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 7: Router_1 (DUT)
     # - Description: Automatically creates a new partition with different Partition ID, initial VN_version, initial
@@ -149,23 +149,23 @@ def verify(pv):
     #     - Initial VN_version & VN_stable_version different from the original
     #     - Initial ID sequence number different from the original
     print("Step 8: Router_2 attaches to Router_1 (DUT) and receives MLE Parent Response.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_wpan_dst64(ROUTER_2).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        filter(lambda p: p.mle.tlv.leader_data.partition_id != P1_ID).\
-        filter(lambda p: (p.mle.tlv.leader_data.data_version != original_leader_data.data_version) or
-               (p.mle.tlv.leader_data.stable_data_version != original_leader_data.stable_data_version)).\
-        must_next()
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_wpan_dst64(ROUTER_2) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .filter(lambda p: p.mle.tlv.leader_data.partition_id != P1_ID) \
+        .filter(lambda p: (p.mle.tlv.leader_data.data_version != original_leader_data.data_version) or
+               (p.mle.tlv.leader_data.stable_data_version != original_leader_data.stable_data_version)) \
+        .must_next()
 
     # Step 9: Router_2
     # - Description: Automatically sends MLE Child ID Request
     # - Pass Criteria:
     #   - The DUT MUST send a properly formatted Child ID Response to Router_2 (See 5.1.1 Attaching for pass criteria)
     print("Step 9: Router_1 sends Child ID Response to Router_2.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_wpan_dst64(ROUTER_2).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE).\
-        must_next()
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_wpan_dst64(ROUTER_2) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE) \
+        .must_next()
 
     # Step 10: Router_1 (DUT)
     # - Description: Automatically sends Address Solicit Response Message
@@ -178,12 +178,12 @@ def verify(pv):
     #     - RLOC16 TLV
     #     - Router Mask TLV
     print("Step 10: Router_1 sends Address Solicit Response to Router_2.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        filter(lambda p: {consts.NL_STATUS_TLV, consts.NL_RLOC16_TLV, consts.NL_ROUTER_MASK_TLV} <=
+    pkts.filter_wpan_src64(ROUTER_1) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {consts.NL_STATUS_TLV, consts.NL_RLOC16_TLV, consts.NL_ROUTER_MASK_TLV} <=
                set(p.coap.tlv.type) and
-               p.coap.tlv.status == 0).\
-        must_next()
+               p.coap.tlv.status == 0) \
+        .must_next()
 
 
 if __name__ == '__main__':

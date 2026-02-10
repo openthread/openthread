@@ -77,30 +77,30 @@ def verify(pv):
     print("Step 2: Router_1 / Leader")
 
     # Leader Advertisements
-    pkts.filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter_LLANMA().\
-        filter_wpan_src64(LEADER).\
-        filter(lambda p: {
+    pkts.filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter_LLANMA() \
+        .filter_wpan_src64(LEADER) \
+        .filter(lambda p: {
                           consts.LEADER_DATA_TLV,
                           consts.ROUTE64_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.route64.id_mask is not nullField).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.route64.id_mask is not nullField) \
+        .must_next()
 
     # Router_1 Advertisements
-    pkts.filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter_LLANMA().\
-        filter_wpan_src64(ROUTER_1).\
-        filter(lambda p: {
+    pkts.filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter_LLANMA() \
+        .filter_wpan_src64(ROUTER_1) \
+        .filter(lambda p: {
                           consts.LEADER_DATA_TLV,
                           consts.ROUTE64_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.route64.id_mask is not nullField).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.route64.id_mask is not nullField) \
+        .must_next()
 
     # Step 3: Router_1
     # - Description: Harness silently resets the device.
@@ -122,19 +122,19 @@ def verify(pv):
 
     # Note: Address16 and Route64 TLVs are requested in TLV Request TLV, and Wireshark dissects their types into
     # mle.tlv.type list. We also verify that they are NOT present as top-level TLVs (since the router has reset).
-    pkt_lq = pkts.filter_mle_cmd(consts.MLE_LINK_REQUEST).\
-        filter_LLARMA().\
-        filter_wpan_src64(ROUTER_1).\
-        filter(lambda p: {
+    pkt_lq = pkts.filter_mle_cmd(consts.MLE_LINK_REQUEST) \
+        .filter_LLARMA() \
+        .filter_wpan_src64(ROUTER_1) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.TLV_REQUEST_TLV,
                           consts.VERSION_TLV,
                           consts.ADDRESS16_TLV,
                           consts.ROUTE64_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
 
-    pkt_lq.must_verify(lambda p: p.mle.tlv.addr16 is nullField and\
+    pkt_lq.must_verify(lambda p: p.mle.tlv.addr16 is nullField and \
                                  p.mle.tlv.route64.id_mask is nullField)
 
     # Step 5: Leader
@@ -156,10 +156,10 @@ def verify(pv):
 
     ROUTER_1_RLOC16 = pv.vars['ROUTER_1_RLOC16']
 
-    pkt_la = pkts.filter_mle_cmd2(consts.MLE_LINK_ACCEPT, consts.MLE_LINK_ACCEPT_AND_REQUEST).\
-        filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER_1).\
-        filter(lambda p: p.sniff_timestamp - pkt_lq.sniff_timestamp < consts.MLE_MAX_RESPONSE_DELAY + 0.1 and\
+    pkt_la = pkts.filter_mle_cmd2(consts.MLE_LINK_ACCEPT, consts.MLE_LINK_ACCEPT_AND_REQUEST) \
+        .filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER_1) \
+        .filter(lambda p: p.sniff_timestamp - pkt_lq.sniff_timestamp < consts.MLE_MAX_RESPONSE_DELAY + 0.1 and \
                          {
                           consts.ADDRESS16_TLV,
                           consts.LEADER_DATA_TLV,
@@ -168,10 +168,10 @@ def verify(pv):
                           consts.ROUTE64_TLV,
                           consts.SOURCE_ADDRESS_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.mle.tlv.addr16 == ROUTER_1_RLOC16 and\
-               p.mle.tlv.route64.id_mask is not nullField).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.mle.tlv.addr16 == ROUTER_1_RLOC16 and \
+               p.mle.tlv.route64.id_mask is not nullField) \
+        .must_next()
 
     if pkt_la.mle.cmd == consts.MLE_LINK_ACCEPT_AND_REQUEST:
         pkt_la.must_verify(lambda p: consts.CHALLENGE_TLV in p.mle.tlv.type)

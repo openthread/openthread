@@ -72,23 +72,23 @@ def verify_ping_forwarding(pv, start_idx, children_rloc16, children_mleid, base_
         f = pkts.range(start_idx).copy()
 
         # Router to child
-        f.filter_ping_request(identifier=base_echo_id + i).\
-            filter_wpan_src16(ROUTER_1_RLOC16).\
-            filter_wpan_dst16(child_rloc16).\
-            filter_ipv6_dst(child_mleid).\
-            must_next()
+        f.filter_ping_request(identifier=base_echo_id + i) \
+            .filter_wpan_src16(ROUTER_1_RLOC16) \
+            .filter_wpan_dst16(child_rloc16) \
+            .filter_ipv6_dst(child_mleid) \
+            .must_next()
 
         # Child to Router
-        f.filter_ping_reply(identifier=base_echo_id + i).\
-            filter_wpan_src16(child_rloc16).\
-            filter_wpan_dst16(ROUTER_1_RLOC16).\
-            must_next()
+        f.filter_ping_reply(identifier=base_echo_id + i) \
+            .filter_wpan_src16(child_rloc16) \
+            .filter_wpan_dst16(ROUTER_1_RLOC16) \
+            .must_next()
 
         # Router to Leader
-        f.filter_ping_reply(identifier=base_echo_id + i).\
-            filter_wpan_src16(ROUTER_1_RLOC16).\
-            filter_wpan_dst16(LEADER_RLOC16).\
-            must_next()
+        f.filter_ping_reply(identifier=base_echo_id + i) \
+            .filter_wpan_src16(ROUTER_1_RLOC16) \
+            .filter_wpan_dst16(LEADER_RLOC16) \
+            .must_next()
 
         max_idx = max(max_idx, f.index)
 
@@ -140,18 +140,18 @@ def verify(pv):
 
     for child in children:
         # Parent Response
-        f = start_pkts.copy().\
-            filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(child).\
-            filter_mle_cmd(consts.MLE_PARENT_RESPONSE)
+        f = start_pkts.copy() \
+        .filter_wpan_src64(ROUTER_1) \
+        .filter_wpan_dst64(child) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE)
         f.must_next()
         max_idx = max(max_idx, f.index)
 
         # Child ID Response
-        f = start_pkts.copy().\
-            filter_wpan_src64(ROUTER_1).\
-            filter_wpan_dst64(child).\
-            filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE)
+        f = start_pkts.copy() \
+        .filter_wpan_src64(ROUTER_1) \
+        .filter_wpan_dst64(child) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE)
         f.must_next()
         max_idx = max(max_idx, f.index)
 
@@ -169,12 +169,12 @@ def verify(pv):
 
     # Leader sends all requests to Router first (identifiers 1001..1004)
     for i, med_mleid in enumerate(MEDS_MLEID):
-        pkts.filter_ping_request(identifier=MED_ECHO_ID + i).\
-            filter_wpan_src16(LEADER_RLOC16).\
-            filter_wpan_dst16(ROUTER_1_RLOC16).\
-            filter_ipv6_dst(med_mleid).\
-            filter(lambda p: p.ipv6.plen == SMALL_DATAGRAM_SIZE - IPV6_HEADER_SIZE).\
-            must_next()
+        pkts.filter_ping_request(identifier=MED_ECHO_ID + i) \
+            .filter_wpan_src16(LEADER_RLOC16) \
+            .filter_wpan_dst16(ROUTER_1_RLOC16) \
+            .filter_ipv6_dst(med_mleid) \
+            .filter(lambda p: p.ipv6.plen == SMALL_DATAGRAM_SIZE - IPV6_HEADER_SIZE) \
+            .must_next()
 
     # Verify Router forwards to MEDs and receives replies (allow interleaving with requests)
     pkts.index = verify_ping_forwarding(pv, step2_start_idx, MEDS_RLOC16, MEDS_MLEID, MED_ECHO_ID)
@@ -193,21 +193,21 @@ def verify(pv):
 
     # Leader sends all requests to Router first (identifiers 2001..2006)
     # SED_1 (1280 octets)
-    pkts.filter_ping_request(identifier=SED_ECHO_ID).\
-        filter_wpan_src16(LEADER_RLOC16).\
-        filter_wpan_dst16(ROUTER_1_RLOC16).\
-        filter_ipv6_dst(SEDS_MLEID[0]).\
-        filter(lambda p: p.ipv6.plen == LARGE_DATAGRAM_SIZE - IPV6_HEADER_SIZE).\
-        must_next()
+    pkts.filter_ping_request(identifier=SED_ECHO_ID) \
+        .filter_wpan_src16(LEADER_RLOC16) \
+        .filter_wpan_dst16(ROUTER_1_RLOC16) \
+        .filter_ipv6_dst(SEDS_MLEID[0]) \
+        .filter(lambda p: p.ipv6.plen == LARGE_DATAGRAM_SIZE - IPV6_HEADER_SIZE) \
+        .must_next()
 
     # SED_2..6 (106 octets)
     for i in range(1, NUM_SEDS):
-        pkts.filter_ping_request(identifier=SED_ECHO_ID + i).\
-            filter_wpan_src16(LEADER_RLOC16).\
-            filter_wpan_dst16(ROUTER_1_RLOC16).\
-            filter_ipv6_dst(SEDS_MLEID[i]).\
-            filter(lambda p: p.ipv6.plen == SMALL_DATAGRAM_SIZE - IPV6_HEADER_SIZE).\
-            must_next()
+        pkts.filter_ping_request(identifier=SED_ECHO_ID + i) \
+            .filter_wpan_src16(LEADER_RLOC16) \
+            .filter_wpan_dst16(ROUTER_1_RLOC16) \
+            .filter_ipv6_dst(SEDS_MLEID[i]) \
+            .filter(lambda p: p.ipv6.plen == SMALL_DATAGRAM_SIZE - IPV6_HEADER_SIZE) \
+            .must_next()
 
     # Verify Router forwards to SEDs and receives replies (allow interleaving)
     pkts.index = verify_ping_forwarding(pv, step3_start_idx, SEDS_RLOC16, SEDS_MLEID, SED_ECHO_ID)

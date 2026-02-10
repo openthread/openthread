@@ -72,16 +72,16 @@ def verify(pv):
     #     - Route64 TLV
     #     - Source Address TLV
     print("Step 1: Leader is sending properly formatted MLE Advertisements.")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: {
                           consts.LEADER_DATA_TLV,
                           consts.ROUTE64_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255) \
+        .must_next()
 
     # Step 2: Router_1
     # - Description: Automatically begins the attach process by sending a multicast MLE Parent Request.
@@ -93,19 +93,19 @@ def verify(pv):
     #     - Scan Mask TLV = 0x80 (Active Routers)
     #     - Version TLV
     print("Step 2: Router sends a MLE Parent Request")
-    pkts.filter_wpan_src64(ROUTER).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(ROUTER) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.MODE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 0).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 0) \
+        .must_next()
 
     # Step 3: Leader
     # - Description: Automatically responds with a MLE Parent Response.
@@ -121,10 +121,10 @@ def verify(pv):
     #     - Version TLV
     #     - MLE Frame Counter TLV (optional)
     print("Step 3: Leader responds with a MLE Parent Response.")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.CONNECTIVITY_TLV,
                           consts.LEADER_DATA_TLV,
@@ -133,8 +133,8 @@ def verify(pv):
                           consts.RESPONSE_TLV,
                           consts.SOURCE_ADDRESS_TLV,
                           consts.VERSION_TLV
-                           } <= set(p.mle.tlv.type)).\
-               must_next()
+                           } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 4: Router_1
     # - Description: Automatically responds to the MLE Parent Response by sending a MLE Child ID Request.
@@ -153,10 +153,10 @@ def verify(pv):
     #   - The following TLV MUST NOT be present in the MLE Child ID Request:
     #     - Address Registration TLV
     print("Step 4: Router sends a MLE Child ID Request.")
-    _pkt = pkts.filter_wpan_src64(ROUTER).\
-        filter_wpan_dst64(LEADER).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        filter(lambda p: {
+    _pkt = pkts.filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst64(LEADER) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .filter(lambda p: {
                           consts.LINK_LAYER_FRAME_COUNTER_TLV,
                           consts.MODE_TLV,
                           consts.RESPONSE_TLV,
@@ -165,10 +165,10 @@ def verify(pv):
                           consts.ADDRESS16_TLV,
                           consts.NETWORK_DATA_TLV,
                           consts.VERSION_TLV
-                } <= set(p.mle.tlv.type) and\
-               p.mle.tlv.addr16 is nullField and\
-               p.thread_nwd.tlv.type is nullField).\
-               must_next()
+                } <= set(p.mle.tlv.type) and \
+               p.mle.tlv.addr16 is nullField and \
+               p.thread_nwd.tlv.type is nullField) \
+        .must_next()
     _pkt.must_not_verify(lambda p: (consts.ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
     # Step 5: Leader
@@ -181,16 +181,16 @@ def verify(pv):
     #     - Source Address TLV
     #     - Route64 TLV (if requested)
     print("Step 5: Leader responds with a Child ID Response.")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE) \
+        .filter(lambda p: {
                           consts.ADDRESS16_TLV,
                           consts.LEADER_DATA_TLV,
                           consts.NETWORK_DATA_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type)).\
-               must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 6: Router_1
     # - Description: Automatically sends an Address Solicit Request.
@@ -201,15 +201,15 @@ def verify(pv):
     #       - MAC Extended Address TLV
     #       - Status TLV
     print("Step 6: Router sends an Address Solicit Request.")
-    _pkt = pkts.filter_wpan_src64(ROUTER).\
-        filter_wpan_dst16(LEADER_RLOC16).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    _pkt = pkts.filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst16(LEADER_RLOC16) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
                           consts.NL_MAC_EXTENDED_ADDRESS_TLV,
                           consts.NL_STATUS_TLV
-                          } <= set(p.coap.tlv.type)\
-               ).\
-       must_next()
+                          } <= set(p.coap.tlv.type) \
+               ) \
+        .must_next()
 
     # Step 7: Leader
     # - Description: Automatically sends an Address Solicit Response.
@@ -221,18 +221,18 @@ def verify(pv):
     #       - RLOC16 TLV
     #       - Router Mask TLV
     print("Step 7: Leader sends an Address Solicit Response.")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_wpan_dst16(_pkt.wpan.src16).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_wpan_dst16(_pkt.wpan.src16) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
                           consts.NL_STATUS_TLV,
                           consts.NL_RLOC16_TLV,
                           consts.NL_ROUTER_MASK_TLV
-                          } <= set(p.coap.tlv.type) and\
-               p.coap.code == consts.COAP_CODE_ACK and\
-               p.coap.tlv.status == 0\
-               ).\
-        must_next()
+                          } <= set(p.coap.tlv.type) and \
+               p.coap.code == consts.COAP_CODE_ACK and \
+               p.coap.tlv.status == 0 \
+               ) \
+        .must_next()
 
     # Step 8: Router_1
     # - Description: Automatically multicasts a Link Request Message (optional).
@@ -244,17 +244,17 @@ def verify(pv):
     #     - Version TLV
     #     - TLV Request TLV: Link Margin
     print("Step 8: Router MAY send a multicast Link Request Message (optional).")
-    link_request = pkts.filter_wpan_src64(ROUTER).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_LINK_REQUEST).\
-        filter(lambda p: {
+    link_request = pkts.filter_wpan_src64(ROUTER) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_LINK_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.LEADER_DATA_TLV,
                           consts.SOURCE_ADDRESS_TLV,
                           consts.VERSION_TLV,
                           consts.TLV_REQUEST_TLV
-                          } <= set(p.mle.tlv.type)).\
-        next()
+                          } <= set(p.mle.tlv.type)) \
+        .next()
 
     # Step 9: Leader
     # - Description: Automatically unicasts a Link Accept message (conditional).
@@ -270,18 +270,18 @@ def verify(pv):
     #     - MLE Frame Counter TLV (optional)
     if link_request:
         print("Step 9: Leader responds with a Link Accept message.")
-        pkts.filter_wpan_src64(LEADER).\
-            filter_wpan_dst64(ROUTER).\
-            filter_mle_cmd(consts.MLE_LINK_ACCEPT).\
-            filter(lambda p: {
+        pkts.filter_wpan_src64(LEADER) \
+            .filter_wpan_dst64(ROUTER) \
+            .filter_mle_cmd(consts.MLE_LINK_ACCEPT) \
+            .filter(lambda p: {
                               consts.LEADER_DATA_TLV,
                               consts.LINK_LAYER_FRAME_COUNTER_TLV,
                               consts.LINK_MARGIN_TLV,
                               consts.RESPONSE_TLV,
                               consts.SOURCE_ADDRESS_TLV,
                               consts.VERSION_TLV
-                              } <= set(p.mle.tlv.type)).\
-            must_next()
+                              } <= set(p.mle.tlv.type)) \
+            .must_next()
     else:
         print("Step 9: Link Request not sent, skipping Link Accept verification.")
 
@@ -293,39 +293,39 @@ def verify(pv):
     #     - Route64 TLV
     #     - Source Address TLV
     print("Step 10: Router is sending properly formatted MLE Advertisements.")
-    pkts.filter_wpan_src64(ROUTER).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(ROUTER) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: {
                           consts.LEADER_DATA_TLV,
                           consts.ROUTE64_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255) \
+        .must_next()
 
     # Step 11: Leader Or Router_1 (not the DUT)
     # - Description: Harness verifies connectivity by instructing the reference device to send a ICMPv6 Echo Request to the DUT link-local address.
     # - Pass Criteria:
     #   - The DUT MUST respond with ICMPv6 Echo Reply
     print("Step 11: ICMPv6 Echo Request/Reply")
-    _pkt = pkts.filter_ping_request().\
-        filter_wpan_src64(ROUTER).\
-        filter_wpan_dst64(LEADER).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-        filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER).\
-        must_next()
+    _pkt = pkts.filter_ping_request() \
+        .filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst64(LEADER) \
+        .must_next()
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+        .filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER) \
+        .must_next()
 
-    _pkt = pkts.filter_ping_request().\
-        filter_wpan_src64(LEADER).\
-        filter_wpan_dst64(ROUTER).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-        filter_wpan_src64(ROUTER).\
-        filter_wpan_dst64(LEADER).\
-        must_next()
+    _pkt = pkts.filter_ping_request() \
+        .filter_wpan_src64(LEADER) \
+        .filter_wpan_dst64(ROUTER) \
+        .must_next()
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+        .filter_wpan_src64(ROUTER) \
+        .filter_wpan_dst64(LEADER) \
+        .must_next()
 
 
 if __name__ == '__main__':

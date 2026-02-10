@@ -87,28 +87,28 @@ def verify(pv):
     #     - Scan Mask TLV = 0x80 (active Routers)
     #     - Version TLV
     print("Step 3: Router_1 (DUT) sends MLE Parent Request to active Routers")
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.MODE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 0).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 0) \
+        .must_next()
 
     # Step 4: Router_2
     # - Description: Automatically responds to DUT with MLE Parent Response.
     # - Pass Criteria: N/A
     print("Step 4: Router_2 responds with MLE Parent Response")
-    pkts.filter_wpan_src64(ROUTER_2).\
-        filter_wpan_dst64(DUT).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        must_next()
+    pkts.filter_wpan_src64(ROUTER_2) \
+        .filter_wpan_dst64(DUT) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .must_next()
 
     # Step 5: Router_1 (DUT)
     # - Description: Automatically sends another MLE Parent Request - to Routers and REEDs - when it doesn’t see the
@@ -121,19 +121,19 @@ def verify(pv):
     #     - Scan Mask TLV = 0xC0 (Routers and REEDs)
     #     - Version TLV
     print("Step 5: Router_1 (DUT) sends MLE Parent Request to Routers and REEDs")
-    pkts.filter_wpan_src64(DUT).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(DUT) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.MODE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 1).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 1) \
+        .must_next()
 
     # Step 6: Router_1 (DUT)
     # - Description: Automatically sends MLE Child ID Request to REED_1 due to its better link quality.
@@ -149,10 +149,10 @@ def verify(pv):
     #   - The following TLV MUST NOT be present in the Child ID Request:
     #     - Address Registration TLV
     print("Step 6: Router_1 (DUT) sends MLE Child ID Request to REED_1")
-    pkt = pkts.filter_wpan_src64(DUT).\
-        filter_wpan_dst64(REED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        filter(lambda p: {
+    pkt = pkts.filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(REED_1) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .filter(lambda p: {
                           consts.LINK_LAYER_FRAME_COUNTER_TLV,
                           consts.MODE_TLV,
                           consts.RESPONSE_TLV,
@@ -161,10 +161,10 @@ def verify(pv):
                           consts.VERSION_TLV,
                           consts.ADDRESS16_TLV,
                           consts.NETWORK_DATA_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.mle.tlv.addr16 is nullField and\
-               p.thread_nwd.tlv.type is nullField).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.mle.tlv.addr16 is nullField and \
+               p.thread_nwd.tlv.type is nullField) \
+        .must_next()
     pkt.must_not_verify(lambda p: (consts.ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
 

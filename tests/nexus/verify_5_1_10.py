@@ -88,19 +88,19 @@ def verify(pv):
     #       - Scan Mask TLV (Router bit = 1, REED bit = 0)
     #       - Version TLV
     print("Step 3: Router_3 (DUT)")
-    pkts.filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        filter_LLARMA().\
-        filter_wpan_src64(DUT).\
-        filter(lambda p: {
+    pkts.filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .filter_LLARMA() \
+        .filter_wpan_src64(DUT) \
+        .filter(lambda p: {
                           consts.MODE_TLV,
                           consts.CHALLENGE_TLV,
                           consts.SCAN_MASK_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.scan_mask.r == 1 and\
-               p.mle.tlv.scan_mask.e == 0).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.scan_mask.r == 1 and \
+               p.mle.tlv.scan_mask.e == 0) \
+        .must_next()
 
     # Step 4: Router_1, Router_2
     # - Description: Leader, Router_1, and Router_2 each send MLE Parent Response.
@@ -125,10 +125,10 @@ def verify(pv):
     #       - Link-layer Frame Counter TLV
     #       - Exclude Address Registration TLV
     print("Step 5: Router_3 (DUT)")
-    pkt = pkts.filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        filter_wpan_src64(DUT).\
-        filter_wpan_dst64(ROUTER_1).\
-        filter(lambda p: {
+    pkt = pkts.filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .filter_wpan_src64(DUT) \
+        .filter_wpan_dst64(ROUTER_1) \
+        .filter(lambda p: {
                           consts.MODE_TLV,
                           consts.RESPONSE_TLV,
                           consts.TIMEOUT_TLV,
@@ -137,11 +137,11 @@ def verify(pv):
                           consts.LINK_LAYER_FRAME_COUNTER_TLV,
                           consts.ADDRESS16_TLV,
                           consts.NETWORK_DATA_TLV
-                          } <= set(p.mle.tlv.type) and\
-               p.ipv6.hlim == 255 and\
-               p.mle.tlv.addr16 is nullField and\
-               p.thread_nwd.tlv.type is nullField).\
-        must_next()
+                          } <= set(p.mle.tlv.type) and \
+               p.ipv6.hlim == 255 and \
+               p.mle.tlv.addr16 is nullField and \
+               p.thread_nwd.tlv.type is nullField) \
+        .must_next()
     pkt.must_not_verify(lambda p: (consts.ADDRESS_REGISTRATION_TLV) in p.mle.tlv.type)
 
 

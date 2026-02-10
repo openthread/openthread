@@ -67,19 +67,19 @@ def verify(pv):
     # - Pass Criteria: Topology is created, the DUT is the Leader of the network and there is a total of 32
     #   active routers, including the Leader.
     print("Step 1: All")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: consts.LEADER_DATA_TLV in p.mle.tlv.type).\
-        must_next()
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: consts.LEADER_DATA_TLV in p.mle.tlv.type) \
+        .must_next()
 
     # Step 2: Router_31
     # - Description: The harness causes Router_31 to attach to the network and send an Address Solicit Request to
     #   become an active router.
     # - Pass Criteria: N/A
     print("Step 2: Router_31")
-    pkts.filter_wpan_src64(ROUTER_31).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        must_next()
+    pkts.filter_wpan_src64(ROUTER_31) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .must_next()
 
     # Step 3: Leader (DUT)
     # - Description: The DUT receives the Address Solicit Request and automatically replies with an Address
@@ -92,36 +92,36 @@ def verify(pv):
     #       - RLOC16 TLV
     #       - Router Mask TLV
     print("Step 3: Leader (DUT)")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
             consts.NL_STATUS_TLV,
             consts.NL_RLOC16_TLV,
             consts.NL_ROUTER_MASK_TLV
-        } <= set(p.coap.tlv.type) and\
-            p.coap.code == consts.COAP_CODE_ACK and\
-            p.coap.tlv.status == consts.ADDR_SOL_SUCCESS).\
-        must_next()
+        } <= set(p.coap.tlv.type) and \
+            p.coap.code == consts.COAP_CODE_ACK and \
+            p.coap.tlv.status == consts.ADDR_SOL_SUCCESS) \
+        .must_next()
 
     # Step 4: Leader (DUT)
     # - Description: Automatically sends MLE Advertisements.
     # - Pass Criteria: The DUT’s MLE Advertisements MUST contain the Route64 TLV with 32 assigned Router IDs.
     print("Step 4: Leader (DUT)")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: consts.ROUTE64_TLV in p.mle.tlv.type and\
-               len(p.mle.tlv.route64.id_mask) == MAX_ROUTERS).\
-        must_next()
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: consts.ROUTE64_TLV in p.mle.tlv.type and \
+               len(p.mle.tlv.route64.id_mask) == MAX_ROUTERS) \
+        .must_next()
 
     # Step 5: Router_32
     # - Description: The harness causes Router_32 to attach to any of the active routers, 2-hops from the leader,
     #   and to send an Address Solicit Request to become an active router.
     # - Pass Criteria: N/A
     print("Step 5: Router_32")
-    pkts.filter_wpan_src64(ROUTER_32).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        must_next()
+    pkts.filter_wpan_src64(ROUTER_32) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .must_next()
 
     # Step 6: Leader (DUT)
     # - Description: The DUT receives the Address Solicit Request and automatically replies with an Address
@@ -132,14 +132,14 @@ def verify(pv):
     #     - CoAP Payload:
     #       - Status TLV (value = No Address Available)
     print("Step 6: Leader (DUT)")
-    pkts.filter_wpan_src64(LEADER).\
-        filter_coap_ack(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(LEADER) \
+        .filter_coap_ack(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
             consts.NL_STATUS_TLV
-        } <= set(p.coap.tlv.type) and\
-            p.coap.code == consts.COAP_CODE_ACK and\
-            p.coap.tlv.status == consts.NL_NO_ADDRESS_AVAILABLE).\
-        must_next()
+        } <= set(p.coap.tlv.type) and \
+            p.coap.code == consts.COAP_CODE_ACK and \
+            p.coap.tlv.status == consts.NL_NO_ADDRESS_AVAILABLE) \
+        .must_next()
 
 
 if __name__ == '__main__':

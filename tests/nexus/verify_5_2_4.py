@@ -78,10 +78,10 @@ def verify(pv):
     # - Pass Criteria: The DUT MUST NOT attempt to become an active router by sending an Address Solicit Request.
     print("Step 2: The DUT MUST NOT attempt to become an active router.")
     # We verify it joins as a child and NO Address Solicit Request is sent before Step 9.
-    pkts.filter_wpan_src64(REED_1).\
-        filter_wpan_dst64(ROUTER_15).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        must_next()
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_wpan_dst64(ROUTER_15) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .must_next()
 
     # Step 3: REED_1 (DUT)
     # - Description: Automatically sends MLE Advertisements.
@@ -95,15 +95,15 @@ def verify(pv):
     #   - The following TLV MUST NOT be present in the MLE Advertisement:
     #     - Route64 TLV
     print("Step 3: The DUT MUST send properly formatted MLE Advertisements.")
-    _pkt = pkts.filter_wpan_src64(REED_1).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        filter(lambda p: {
+    _pkt = pkts.filter_wpan_src64(REED_1) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .filter(lambda p: {
                           consts.LEADER_DATA_TLV,
                           consts.SOURCE_ADDRESS_TLV
                           } <= set(p.mle.tlv.type) and
-               p.ipv6.hlim == 255).\
-        must_next()
+               p.ipv6.hlim == 255) \
+        .must_next()
     _pkt.must_not_verify(lambda p: (consts.ROUTE64_TLV) in p.mle.tlv.type)
 
     # Step 4: Wait
@@ -117,28 +117,28 @@ def verify(pv):
     # - Pass Criteria: The DUT MUST send a second MLE Advertisement after REED_ADVERTISEMENT_INTERVAL+JITTER where
     #   JITTER <= REED_ADVERTISEMENT_MAX_JITTER.
     print("Step 5: The DUT MUST send a second MLE Advertisement.")
-    pkts.filter_wpan_src64(REED_1).\
-        filter_LLANMA().\
-        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-        must_next()
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_LLANMA() \
+        .filter_mle_cmd(consts.MLE_ADVERTISEMENT) \
+        .must_next()
 
     # Step 6: MED_1
     # - Description: Automatically sends multicast MLE Parent Request.
     # - Pass Criteria: N/A
     print("Step 6: MED_1 sends multicast MLE Parent Request.")
-    pkts.filter_wpan_src64(MED_1).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-        must_next()
+    pkts.filter_wpan_src64(MED_1) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
+        .must_next()
 
     # Step 7: REED_1 (DUT)
     # - Description: Automatically sends MLE Parent Response.
     # - Pass Criteria: The DUT MUST reply with a properly formatted MLE Parent Response.
     print("Step 7: The DUT MUST reply with a properly formatted MLE Parent Response.")
-    pkts.filter_wpan_src64(REED_1).\
-        filter_wpan_dst64(MED_1).\
-        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_wpan_dst64(MED_1) \
+        .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.CONNECTIVITY_TLV,
                           consts.LEADER_DATA_TLV,
@@ -147,17 +147,17 @@ def verify(pv):
                           consts.RESPONSE_TLV,
                           consts.SOURCE_ADDRESS_TLV,
                           consts.VERSION_TLV
-                           } <= set(p.mle.tlv.type)).\
-        must_next()
+                           } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 8: MED_1
     # - Description: Automatically sends MLE Child ID Request to the DUT.
     # - Pass Criteria: N/A
     print("Step 8: MED_1 sends MLE Child ID Request to the DUT.")
-    pkts.filter_wpan_src64(MED_1).\
-        filter_wpan_dst64(REED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-        must_next()
+    pkts.filter_wpan_src64(MED_1) \
+        .filter_wpan_dst64(REED_1) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
+        .must_next()
 
     # Step 9: REED_1 (DUT)
     # - Description: Automatically sends an Address Solicit Request to the Leader.
@@ -169,13 +169,13 @@ def verify(pv):
     #       - Status TLV
     #       - RLOC16 TLV (optional)
     print("Step 9: The DUT MUST send an Address Solicit Request to the Leader.")
-    pkts.filter_wpan_src64(REED_1).\
-        filter_coap_request(consts.ADDR_SOL_URI).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_coap_request(consts.ADDR_SOL_URI) \
+        .filter(lambda p: {
                           consts.NL_MAC_EXTENDED_ADDRESS_TLV,
                           consts.NL_STATUS_TLV
-                          } <= set(p.coap.tlv.type)).\
-        must_next()
+                          } <= set(p.coap.tlv.type)) \
+        .must_next()
 
     # Step 10: REED_1 (DUT)
     # - Description: Optionally, automatically sends a Multicast Link Request after receiving an Address Solicit
@@ -190,44 +190,44 @@ def verify(pv):
     #     - Version TLV
     print("Step 10: The DUT MAY send a Multicast Link Request.")
     # We use next() since it's optional
-    pkts.filter_wpan_src64(REED_1).\
-        filter_LLARMA().\
-        filter_mle_cmd(consts.MLE_LINK_REQUEST).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_LLARMA() \
+        .filter_mle_cmd(consts.MLE_LINK_REQUEST) \
+        .filter(lambda p: {
                           consts.CHALLENGE_TLV,
                           consts.LEADER_DATA_TLV,
                           consts.SOURCE_ADDRESS_TLV,
                           consts.TLV_REQUEST_TLV,
                           consts.VERSION_TLV
-                          } <= set(p.mle.tlv.type)).\
-        next()
+                          } <= set(p.mle.tlv.type)) \
+        .next()
 
     # Step 11: REED_1 (DUT)
     # - Description: Automatically sends MLE Child ID Response to MED_1.
     # - Pass Criteria: The DUTs MLE Child ID Response MUST be properly formatted with MED_1’s new 16-bit address.
     print("Step 11: The DUT MUST send MLE Child ID Response to MED_1.")
-    pkts.filter_wpan_src64(REED_1).\
-        filter_wpan_dst64(MED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE).\
-        filter(lambda p: {
+    pkts.filter_wpan_src64(REED_1) \
+        .filter_wpan_dst64(MED_1) \
+        .filter_mle_cmd(consts.MLE_CHILD_ID_RESPONSE) \
+        .filter(lambda p: {
                           consts.ADDRESS16_TLV,
                           consts.LEADER_DATA_TLV,
                           consts.NETWORK_DATA_TLV,
                           consts.SOURCE_ADDRESS_TLV
-                          } <= set(p.mle.tlv.type)).\
-        must_next()
+                          } <= set(p.mle.tlv.type)) \
+        .must_next()
 
     # Step 12: MED_1
     # - Description: The harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request to the
     #   Leader.
     # - Pass Criteria: The Leader MUST respond with an ICMPv6 Echo Reply.
     print("Step 12: Harness verifies connectivity by sending an ICMPv6 Echo Request.")
-    _pkt = pkts.filter_ping_request().\
-        filter_wpan_src64(MED_1).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-        filter_ipv6_dst(_pkt.ipv6.src).\
-        must_next()
+    _pkt = pkts.filter_ping_request() \
+        .filter_wpan_src64(MED_1) \
+        .must_next()
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+        .filter_ipv6_dst(_pkt.ipv6.src) \
+        .must_next()
 
 
 if __name__ == '__main__':
