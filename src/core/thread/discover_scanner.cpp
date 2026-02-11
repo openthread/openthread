@@ -64,7 +64,6 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     Error                             error   = kErrorNone;
     Mle::TxMessage                   *message = nullptr;
     Tlv::Bookmark                     tlvBookmark;
-    Ip6::Address                      destination;
     MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
 
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
@@ -131,9 +130,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
     message->RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
 
-    destination.SetToLinkLocalAllRoutersMulticast();
-
-    SuccessOrExit(error = message->SendTo(destination));
+    SuccessOrExit(error = message->SendTo(Ip6::Address::GetLinkLocalAllRoutersMulticast()));
 
     if ((aPanId == Mac::kPanIdBroadcast) && (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast))
     {
@@ -156,7 +153,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
     }
 
-    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
+    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, Ip6::Address::GetLinkLocalAllRoutersMulticast());
 
 exit:
     FreeMessageOnError(message, error);

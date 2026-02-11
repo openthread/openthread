@@ -621,32 +621,6 @@ public:
     bool IsLinkLocalUnicastOrMulticast(void) const;
 
     /**
-     * Indicates whether or not the IPv6 address is a link-local all nodes multicast address (ff02::01).
-     *
-     * @retval TRUE   If the IPv6 address is a link-local all nodes multicast address.
-     * @retval FALSE  If the IPv6 address is not a link-local all nodes multicast address.
-     */
-    bool IsLinkLocalAllNodesMulticast(void) const;
-
-    /**
-     * Sets the IPv6 address to the link-local all nodes multicast address (ff02::01).
-     */
-    void SetToLinkLocalAllNodesMulticast(void);
-
-    /**
-     * Indicates whether or not the IPv6 address is a link-local all routers multicast address (ff02::02).
-     *
-     * @retval TRUE   If the IPv6 address is a link-local all routers multicast address.
-     * @retval FALSE  If the IPv6 address is not a link-local all routers multicast address.
-     */
-    bool IsLinkLocalAllRoutersMulticast(void) const;
-
-    /**
-     * Sets the IPv6 address to the link-local all routers multicast address (ff02::02).
-     */
-    void SetToLinkLocalAllRoutersMulticast(void);
-
-    /**
      * Indicates whether or not the IPv6 address is a realm-local multicast address.
      *
      * @retval TRUE   If the IPv6 address is a realm-local multicast address.
@@ -655,51 +629,47 @@ public:
     bool IsRealmLocalMulticast(void) const;
 
     /**
-     * Indicates whether or not the IPv6 address is a realm-local all nodes multicast address (ff03::01).
-     *
-     * @retval TRUE   If the IPv6 address is a realm-local all nodes multicast address.
-     * @retval FALSE  If the IPv6 address is not a realm-local all nodes multicast address.
-     */
-    bool IsRealmLocalAllNodesMulticast(void) const;
-
-    /**
-     * Sets the IPv6 address to the realm-local all nodes multicast address (ff03::01)
-     */
-    void SetToRealmLocalAllNodesMulticast(void);
-
-    /**
-     * Indicates whether or not the IPv6 address is a realm-local all routers multicast address (ff03::02).
-     *
-     * @retval TRUE   If the IPv6 address is a realm-local all routers multicast address.
-     * @retval FALSE  If the IPv6 address is not a realm-local all routers multicast address.
-     */
-    bool IsRealmLocalAllRoutersMulticast(void) const;
-
-    /**
-     * Sets the IPv6 address to the realm-local all routers multicast address (ff03::02).
-     */
-    void SetToRealmLocalAllRoutersMulticast(void);
-
-    /**
-     * Indicates whether or not the IPv6 address is a realm-local all MPL forwarders address (ff03::fc).
-     *
-     * @retval TRUE   If the IPv6 address is a realm-local all MPL forwarders address.
-     * @retval FALSE  If the IPv6 address is not a realm-local all MPL forwarders address.
-     */
-    bool IsRealmLocalAllMplForwarders(void) const;
-
-    /**
-     * Sets the the IPv6 address to the realm-local all MPL forwarders address (ff03::fc).
-     */
-    void SetToRealmLocalAllMplForwarders(void);
-
-    /**
      * Indicates whether or not the IPv6 address is multicast larger than realm local.
      *
      * @retval TRUE   If the IPv6 address is multicast larger than realm local.
      * @retval FALSE  If the IPv6 address is not multicast or the scope is not larger than realm local.
      */
     bool IsMulticastLargerThanRealmLocal(void) const;
+
+    /**
+     * Returns the link-local all nodes multicast address (ff02::01).
+     *
+     * @returns The link-local all nodes multicast address.
+     */
+    static const Address &GetLinkLocalAllNodesMulticast(void);
+
+    /**
+     * Returns the link-local all routers multicast address (ff02::02)
+     *
+     * @returns The link-local all routers multicast address.
+     */
+    static const Address &GetLinkLocalAllRoutersMulticast(void);
+
+    /**
+     * Returns the realm-local all nodes multicast address (ff03::01)
+     *
+     * @returns The realm-local all nodes multicast address.
+     */
+    static const Address &GetRealmLocalAllNodesMulticast(void);
+
+    /**
+     * Returns the realm-local all routers multicast address (ff03::02).
+     *
+     * @returns The realm-local all routers multicast address.
+     */
+    static const Address &GetRealmLocalAllRoutersMulticast(void);
+
+    /**
+     * Returns the realm-local all MPL forwarders address (ff03::fc).
+     *
+     * @returns The realm-local all MPL forwarders address.
+     */
+    static const Address &GetRealmLocalAllMplForwarders(void);
 
     /**
      * Sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Network Prefix and
@@ -950,12 +920,6 @@ private:
     void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
     void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
-
-    static const Address &GetLinkLocalAllNodesMulticast(void);
-    static const Address &GetLinkLocalAllRoutersMulticast(void);
-    static const Address &GetRealmLocalAllNodesMulticast(void);
-    static const Address &GetRealmLocalAllRoutersMulticast(void);
-    static const Address &GetRealmLocalAllMplForwarders(void);
 
     static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits);
 

@@ -101,12 +101,6 @@ void Test5_3_1(void)
     nexus.AdvanceTime(kAttachToRouterTime);
     VerifyOrQuit(dut.Get<Mle::Mle>().IsRouter());
 
-    Ip6::Address allNodesMulticast;
-    allNodesMulticast.SetToLinkLocalAllNodesMulticast();
-
-    Ip6::Address allRoutersMulticast;
-    allRoutersMulticast.SetToLinkLocalAllRoutersMulticast();
-
     const Ip6::Address &dutAddr = dut.Get<Mle::Mle>().GetLinkLocalAddress();
 
     Log("---------------------------------------------------------------------------------------");
@@ -140,7 +134,7 @@ void Test5_3_1(void)
      *   multicast address (FF02::1)
      * - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply
      */
-    nexus.SendAndVerifyEchoRequest(leader, allNodesMulticast, kEchoPayloadSize);
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetLinkLocalAllNodesMulticast(), kEchoPayloadSize);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 5: Leader sends fragmented Echo Request to All Nodes multicast address");
@@ -151,7 +145,7 @@ void Test5_3_1(void)
      *   multicast address (FF02::1)
      * - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply
      */
-    nexus.SendAndVerifyEchoRequest(leader, allNodesMulticast, kFragmentedEchoPayloadSize);
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetLinkLocalAllNodesMulticast(), kFragmentedEchoPayloadSize);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 6: Leader sends Echo Request to All Routers multicast address");
@@ -162,7 +156,7 @@ void Test5_3_1(void)
      *   multicast address (FF02::2)
      * - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply
      */
-    nexus.SendAndVerifyEchoRequest(leader, allRoutersMulticast, kEchoPayloadSize);
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetLinkLocalAllRoutersMulticast(), kEchoPayloadSize);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 7: Leader sends fragmented Echo Request to All Routers multicast address");
@@ -173,7 +167,7 @@ void Test5_3_1(void)
      *   All-Routers multicast address (FF02::2)
      * - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply
      */
-    nexus.SendAndVerifyEchoRequest(leader, allRoutersMulticast, kFragmentedEchoPayloadSize);
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetLinkLocalAllRoutersMulticast(), kFragmentedEchoPayloadSize);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 8: Leader sends Echo Request to All Thread Nodes multicast address");

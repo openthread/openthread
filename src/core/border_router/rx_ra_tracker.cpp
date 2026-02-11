@@ -1825,7 +1825,6 @@ void RxRaTracker::RsSender::Stop(void) { mTimer.Stop(); }
 
 Error RxRaTracker::RsSender::SendRs(void)
 {
-    Ip6::Address              destAddress;
     RouterSolicitHeader       rsHdr;
     TxMessage                 rsMsg;
     InfraIf::LinkLayerAddress linkAddr;
@@ -1840,9 +1839,8 @@ Error RxRaTracker::RsSender::SendRs(void)
     }
 
     rsMsg.GetAsPacket(packet);
-    destAddress.SetToLinkLocalAllRoutersMulticast();
 
-    error = Get<InfraIf>().Send(packet, destAddress);
+    error = Get<InfraIf>().Send(packet, Ip6::Address::GetLinkLocalAllRoutersMulticast());
 
     if (error == kErrorNone)
     {

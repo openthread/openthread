@@ -325,29 +325,9 @@ bool Address::IsLinkLocalMulticast(void) const { return IsMulticast() && (GetSco
 
 bool Address::IsLinkLocalUnicastOrMulticast(void) const { return IsLinkLocalUnicast() || IsLinkLocalMulticast(); }
 
-bool Address::IsLinkLocalAllNodesMulticast(void) const { return (*this == GetLinkLocalAllNodesMulticast()); }
-
-void Address::SetToLinkLocalAllNodesMulticast(void) { *this = GetLinkLocalAllNodesMulticast(); }
-
-bool Address::IsLinkLocalAllRoutersMulticast(void) const { return (*this == GetLinkLocalAllRoutersMulticast()); }
-
-void Address::SetToLinkLocalAllRoutersMulticast(void) { *this = GetLinkLocalAllRoutersMulticast(); }
-
 bool Address::IsRealmLocalMulticast(void) const { return IsMulticast() && (GetScope() == kRealmLocalScope); }
 
 bool Address::IsMulticastLargerThanRealmLocal(void) const { return IsMulticast() && (GetScope() > kRealmLocalScope); }
-
-bool Address::IsRealmLocalAllNodesMulticast(void) const { return (*this == GetRealmLocalAllNodesMulticast()); }
-
-void Address::SetToRealmLocalAllNodesMulticast(void) { *this = GetRealmLocalAllNodesMulticast(); }
-
-bool Address::IsRealmLocalAllRoutersMulticast(void) const { return (*this == GetRealmLocalAllRoutersMulticast()); }
-
-void Address::SetToRealmLocalAllRoutersMulticast(void) { *this = GetRealmLocalAllRoutersMulticast(); }
-
-bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRealmLocalAllMplForwarders()); }
-
-void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
 
 bool Address::IsIp4Mapped(void) const
 {
