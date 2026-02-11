@@ -35,7 +35,7 @@ CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(CUR_DIR)
 
 import verify_utils
-from pktverify import consts
+from pktverify import consts, errors
 
 
 def verify(pv):
@@ -148,44 +148,43 @@ def verify(pv):
                           } <= set(p.mle.tlv.type)).\
         must_next()
 
-    # Step 6: MED_1
-    # - Description: The harness attaches MED_1 to REED_1.
-    # - Pass Criteria: N/A
-    print("Step 6: MED_1")
-    pkts.filter_wpan_src64(MED_1).\
+    # Step 6, 7 & 8: MED_1 join and REED_1 upgrade/forwarding
+    # - Description: MED_1 joins REED_1 (Step 6) and REED_1 upgrades to a router (Step 7/8).
+    # - Pass Criteria: Both events must occur, but Step 6 may happen before or after Step 7/8.
+    print("Step 6, 7 & 8: MED_1 join and REED_1 upgrade/forwarding")
+
+    # Find Step 6 (MED_1 Parent Request) without advancing main index yet.
+    pkts6 = pkts.copy()
+    pkts6.filter_wpan_src64(MED_1).\
         filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
         must_next()
+    idx6 = pkts6.index
 
-    # Step 7: REED_1
-    # - Description: Automatically sends an Address Solicit Request to DUT.
-    # - Pass Criteria: N/A
-    print("Step 7: REED_1")
-    _pkt_sol = pkts.filter_wpan_src64(REED_1).\
+    # Find Step 7 (Address Solicit) and Step 8 (Forwarding) sequence.
+    pkts78 = pkts.copy()
+    _pkt_sol = pkts78.filter_wpan_src64(REED_1).\
         filter_wpan_dst16(DUT_RLOC16).\
         filter_coap_request(consts.ADDR_SOL_URI).\
         must_next()
 
-    # Step 8: Router_1 (DUT)
-    # - Description: Automatically forwards Address Solicit Request to Leader, and forwards Leader's Address Solicit
-    #     Response to REED_1.
-    # - Pass Criteria:
-    #   - The DUT MUST forward the Address Solicit Request to the Leader.
-    #   - The DUT MUST forward the Leader's Address Solicit Response to REED_1.
-    print("Step 8: Router_1 (DUT)")
-    pkts.filter_wpan_src16(DUT_RLOC16).\
+    pkts78.filter_wpan_src16(DUT_RLOC16).\
         filter_wpan_dst16(LEADER_RLOC16).\
         filter_coap_request(consts.ADDR_SOL_URI).\
         must_next()
 
-    pkts.filter_wpan_src16(LEADER_RLOC16).\
+    pkts78.filter_wpan_src16(LEADER_RLOC16).\
         filter_wpan_dst16(DUT_RLOC16).\
         filter_coap_ack(consts.ADDR_SOL_URI).\
         must_next()
 
-    pkts.filter_wpan_src16(DUT_RLOC16).\
+    pkts78.filter_wpan_src16(DUT_RLOC16).\
         filter_wpan_dst16(_pkt_sol.wpan.src16).\
         filter_coap_ack(consts.ADDR_SOL_URI).\
         must_next()
+    idx78 = pkts78.index
+
+    # Advance main pkts index to the end of all these events.
+    pkts.index = (max(idx6[0], idx78[0]), max(idx6[1], idx78[1]))
 
     # Step 9: Leader
     # - Description: Harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request to REED_1.
