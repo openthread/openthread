@@ -89,9 +89,11 @@ void Test5_2_3(void)
     Instance::SetLogLevel(kLogLevelNote);
 
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(kMaxRouters);
+    leader.Get<Mle::Mle>().SetRouterDowngradeThreshold(kMaxRouters);
     for (uint8_t i = 0; i < kMaxRouters; i++)
     {
         routers[i]->Get<Mle::Mle>().SetRouterUpgradeThreshold(kMaxRouters);
+        routers[i]->Get<Mle::Mle>().SetRouterDowngradeThreshold(kMaxRouters);
     }
 
     // Topology:
@@ -179,7 +181,7 @@ void Test5_2_3(void)
     VerifyOrQuit(routers[kMaxRouters - 1]->Get<Mle::Mle>().IsChild());
 
     // Force Router 32 to try to become a router
-    routers[kMaxRouters - 1]->Get<Mle::Mle>().BecomeRouter(Mle::kReasonTooFewRouters);
+    SuccessOrQuit(routers[kMaxRouters - 1]->Get<Mle::Mle>().BecomeRouter(Mle::kReasonTooFewRouters));
 
     Log("---------------------------------------------------------------------------------------");
     /**
