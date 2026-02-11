@@ -115,7 +115,6 @@ void Test5_3_2(void)
 
     sed1.Join(dut, Node::kAsSed);
     SuccessOrQuit(sed1.Get<DataPollSender>().SetExternalPollPeriod(kSedPollPeriod));
-    sed1.Get<DataPollSender>().StartPolling();
     nexus.AdvanceTime(kAttachToChildTime);
 
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
@@ -221,7 +220,6 @@ void Test5_3_2(void)
         multicastAddr.Clear();
         multicastAddr.mFields.m8[0] = 0xff;
         multicastAddr.mFields.m8[1] = 0x33;
-        multicastAddr.mFields.m8[3] = 64;
         multicastAddr.SetMulticastNetworkPrefix(dut.Get<Mle::Mle>().GetMeshLocalPrefix());
         multicastAddr.mFields.m32[3] = BigEndian::HostSwap32(1);
         nexus.SendAndVerifyEchoRequest(leader, multicastAddr, kLargePayloadSize);
