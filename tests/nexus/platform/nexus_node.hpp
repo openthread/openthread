@@ -79,6 +79,10 @@ public:
     void Join(Node &aNode, JoinMode aJoinMode = kAsFtd);
     void AllowList(Node &aNode);
     void UnallowList(Node &aNode);
+    void SendEchoRequest(const Ip6::Address &aDestination,
+                         uint16_t            aIdentifier,
+                         uint16_t            aPayloadSize = 0,
+                         uint8_t             aHopLimit    = 64);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif

@@ -73,14 +73,14 @@ static constexpr uint16_t kIp6HeaderSize = 40;
 static constexpr uint16_t kIcmp6HeaderSize = 8;
 
 /**
- * Small ICMPv6 Echo Request datagram size in octets.
+ * Small ICMPv6 Echo Request payload size in octets.
  */
-static constexpr uint16_t kSmallDatagramSize = 106;
+static constexpr uint16_t kSmallIcmpEchoPayloadSize = 106 - kIp6HeaderSize - kIcmp6HeaderSize;
 
 /**
  * Large ICMPv6 Echo Request datagram size in octets.
  */
-static constexpr uint16_t kLargeDatagramSize = 1280;
+static constexpr uint16_t kLargeIcmpEchoPayloadSize = 1280 - kIp6HeaderSize - kIcmp6HeaderSize;
 
 /**
  * Time to wait for ICMPv6 Echo replies.
@@ -96,38 +96,6 @@ static constexpr uint16_t kMedEchoId = 1001;
  * ICMPv6 Echo Request identifier for SED children.
  */
 static constexpr uint16_t kSedEchoId = 2001;
-
-static void SendEchoRequest(Node &aSender, const Ip6::Address &aPeerAddr, uint16_t aDatagramSize, uint16_t aIdentifier)
-{
-    Error            error   = kErrorNone;
-    Message         *message = aSender.Get<Ip6::Icmp>().NewMessage();
-    Ip6::MessageInfo messageInfo;
-    uint16_t         payloadLength;
-
-    VerifyOrQuit(message != nullptr);
-
-    VerifyOrExit(aDatagramSize >= kIp6HeaderSize + kIcmp6HeaderSize, error = kErrorInvalidArgs);
-    payloadLength = aDatagramSize - kIp6HeaderSize - kIcmp6HeaderSize;
-
-    error = message->SetLength(payloadLength);
-    SuccessOrExit(error);
-
-    messageInfo.SetPeerAddr(aPeerAddr);
-    messageInfo.SetHopLimit(64);
-
-    error = aSender.Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier);
-    SuccessOrExit(error);
-
-    message = nullptr;
-
-exit:
-    if (message != nullptr)
-    {
-        message->Free();
-    }
-
-    SuccessOrQuit(error);
-}
 
 static void CreateNodes(Core &aNexus, Node *aNodes[], uint16_t aCount, const char *aNamePrefix)
 {
@@ -249,8 +217,9 @@ void Test5_1_7(void)
      */
     for (uint16_t i = 0; i < kNumMeds; i++)
     {
-        SendEchoRequest(leader, meds[i]->Get<Mle::Mle>().GetMeshLocalEid(), kSmallDatagramSize, kMedEchoId + i);
+        leader.SendEchoRequest(meds[i]->Get<Mle::Mle>().GetMeshLocalEid(), kMedEchoId + i, kSmallIcmpEchoPayloadSize);
     }
+
     nexus.AdvanceTime(kEchoResponseWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -266,11 +235,13 @@ void Test5_1_7(void)
      *   - The DUT MUST properly forward ICMPv6 Echo Requests to all SED children.
      *   - The DUT MUST properly forward ICMPv6 Echo Replies to the Leader.
      */
-    SendEchoRequest(leader, seds[0]->Get<Mle::Mle>().GetMeshLocalEid(), kLargeDatagramSize, kSedEchoId);
+    leader.SendEchoRequest(seds[0]->Get<Mle::Mle>().GetMeshLocalEid(), kSedEchoId, kLargeIcmpEchoPayloadSize);
+
     for (uint16_t i = 1; i < kNumSeds; i++)
     {
-        SendEchoRequest(leader, seds[i]->Get<Mle::Mle>().GetMeshLocalEid(), kSmallDatagramSize, kSedEchoId + i);
+        leader.SendEchoRequest(seds[i]->Get<Mle::Mle>().GetMeshLocalEid(), kSedEchoId + i, kSmallIcmpEchoPayloadSize);
     }
+
     nexus.AdvanceTime(kEchoResponseWaitTime);
 
     nexus.SaveTestInfo("test_5_1_7.json");

@@ -103,6 +103,28 @@ void Node::AllowList(Node &aNode)
 
 void Node::UnallowList(Node &aNode) { Get<Mac::Filter>().RemoveAddress(aNode.Get<Mac::Mac>().GetExtAddress()); }
 
+void Node::SendEchoRequest(const Ip6::Address &aDestination,
+                           uint16_t            aIdentifier,
+                           uint16_t            aPayloadSize,
+                           uint8_t             aHopLimit)
+{
+    Message         *message;
+    Ip6::MessageInfo messageInfo;
+
+    message = Get<Ip6::Icmp>().NewMessage();
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(message->SetLength(aPayloadSize));
+
+    messageInfo.SetPeerAddr(aDestination);
+    messageInfo.SetHopLimit(aHopLimit);
+
+    Log("Sending Echo Request from Node %lu (%s) to %s (payload-size:%u)", ToUlong(GetId()), GetName(),
+        aDestination.ToString().AsCString(), aPayloadSize);
+
+    SuccessOrQuit(Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier));
+}
+
 void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append("%s %u", aPrefix, aIndex); }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

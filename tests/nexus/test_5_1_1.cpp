@@ -46,42 +46,6 @@ static constexpr uint32_t kFormNetworkTime = 13 * 1000;
  */
 static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 
-/**
- * Time to wait for ICMPv6 Echo Reply.
- */
-static constexpr uint32_t kEchoResponseTime = 1000;
-
-static void HandleEchoReply(void                *aContext,
-                            otMessage           *aMessage,
-                            const otMessageInfo *aMessageInfo,
-                            const otIcmp6Header *aIcmpHeader)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    if (aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY)
-    {
-        *static_cast<bool *>(aContext) = true;
-    }
-}
-
-static void SendAndVerifyEchoRequest(Core &aNexus, Node &aSender, Node &aReceiver, bool &aReceivedEchoReply)
-{
-    Message         *message = aSender.Get<Ip6::Icmp>().NewMessage();
-    Ip6::MessageInfo messageInfo;
-
-    VerifyOrQuit(message != nullptr);
-
-    messageInfo.SetPeerAddr(aReceiver.Get<Mle::Mle>().GetLinkLocalAddress());
-    messageInfo.SetHopLimit(64);
-
-    aReceivedEchoReply = false;
-    SuccessOrQuit(aSender.Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, 0x1234));
-
-    aNexus.AdvanceTime(kEchoResponseTime);
-    VerifyOrQuit(aReceivedEchoReply, "Echo Reply not received");
-}
-
 void Test5_1_1(void)
 {
     /**
@@ -177,26 +141,16 @@ void Test5_1_1(void)
      * - Pass Criteria:
      *   - The DUT MUST respond with ICMPv6 Echo Reply
      */
-    bool               routerReceivedEchoReply = false;
-    Ip6::Icmp::Handler routerIcmpHandler(HandleEchoReply, &routerReceivedEchoReply);
-    bool               leaderReceivedEchoReply = false;
-    Ip6::Icmp::Handler leaderIcmpHandler(HandleEchoReply, &leaderReceivedEchoReply);
 
     // 1. Verify Leader as DUT: Router (Reference) sends Echo Request to Leader (DUT) Link-Local address
-    SuccessOrQuit(router.Get<Ip6::Icmp>().RegisterHandler(routerIcmpHandler));
 
-    Log("Step 11.1: Sending Echo Request from Router to Leader Link-Local: %s",
-        leader.Get<Mle::Mle>().GetLinkLocalAddress().ToString().AsCString());
-    SendAndVerifyEchoRequest(nexus, router, leader, routerReceivedEchoReply);
-    Log("Leader (as DUT) responded with Echo Reply successfully");
+    Log("Step 11.1: Sending Echo Request from Router to Leader Link-Local");
+    nexus.SendAndVerifyEchoRequest(router, leader.Get<Mle::Mle>().GetLinkLocalAddress());
 
     // 2. Verify Router as DUT: Leader (Reference) sends Echo Request to Router (DUT) Link-Local address
-    SuccessOrQuit(leader.Get<Ip6::Icmp>().RegisterHandler(leaderIcmpHandler));
 
-    Log("Step 11.2: Sending Echo Request from Leader to Router Link-Local: %s",
-        router.Get<Mle::Mle>().GetLinkLocalAddress().ToString().AsCString());
-    SendAndVerifyEchoRequest(nexus, leader, router, leaderReceivedEchoReply);
-    Log("Router (as DUT) responded with Echo Reply successfully");
+    Log("Step 11.2: Sending Echo Request from Leader to Router Link-Local");
+    nexus.SendAndVerifyEchoRequest(leader, router.Get<Mle::Mle>().GetLinkLocalAddress());
 
     nexus.SaveTestInfo("test_5_1_1.json");
 }

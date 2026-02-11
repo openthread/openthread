@@ -51,52 +51,6 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
  */
 static constexpr uint32_t kAttachToChildTime = 10 * 1000;
 
-/**
- * Time to wait for ICMPv6 Echo Reply.
- */
-static constexpr uint32_t kEchoResponseTime = 1000;
-
-static void HandleEchoReply(void                *aContext,
-                            otMessage           *aMessage,
-                            const otMessageInfo *aMessageInfo,
-                            const otIcmp6Header *aIcmpHeader)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    if (aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY)
-    {
-        *static_cast<bool *>(aContext) = true;
-    }
-}
-
-static void SendAndVerifyEchoRequest(Core               &aNexus,
-                                     Node               &aSender,
-                                     const Ip6::Address &aReceiverAddr,
-                                     bool               &aReceivedEchoReply)
-{
-    Message         *message = aSender.Get<Ip6::Icmp>().NewMessage();
-    Ip6::MessageInfo messageInfo;
-    Error            error = kErrorNone;
-
-    VerifyOrQuit(message != nullptr);
-
-    messageInfo.SetPeerAddr(aReceiverAddr);
-    messageInfo.SetHopLimit(64);
-
-    aReceivedEchoReply = false;
-
-    error = aSender.Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, 0x1234);
-    if (error != kErrorNone)
-    {
-        message->Free();
-        SuccessOrQuit(error);
-    }
-
-    aNexus.AdvanceTime(kEchoResponseTime);
-    VerifyOrQuit(aReceivedEchoReply, "Echo Reply not received");
-}
-
 void Test5_2_1(void)
 {
     /**
@@ -256,11 +210,7 @@ void Test5_2_1(void)
      * - Pass Criteria:
      *   - REED_1 responds with ICMPv6 Echo Reply.
      */
-    bool               reed1ReceivedEchoReply = false;
-    Ip6::Icmp::Handler leaderIcmpHandler(HandleEchoReply, &reed1ReceivedEchoReply);
-    leader.Get<Ip6::Icmp>().RegisterHandler(leaderIcmpHandler);
-
-    SendAndVerifyEchoRequest(nexus, leader, reed1.Get<Mle::Mle>().GetMeshLocalEid(), reed1ReceivedEchoReply);
+    nexus.SendAndVerifyEchoRequest(leader, reed1.Get<Mle::Mle>().GetMeshLocalEid());
 
     nexus.SaveTestInfo("test_5_2_1.json");
 }
