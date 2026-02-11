@@ -103,6 +103,12 @@ def run_main(verify_func):
         if mesh_local_prefix:
             prefix_addr = mesh_local_prefix.split('/')[0]
             wireshark_prefs['6lowpan.context0'] = f'{prefix_addr}/64'
+            # Update the Link-Local All Thread Nodes multicast address constant
+            # FF32:40:<MeshLocalPrefix>::1
+            prefix = Ipv6Addr(prefix_addr)
+            all_thread_nodes_mcast_addr = bytearray(Ipv6Addr('ff32:40::1'))
+            all_thread_nodes_mcast_addr[4:12] = prefix[0:8]
+            consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
 
         pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
         pv.add_common_vars()
