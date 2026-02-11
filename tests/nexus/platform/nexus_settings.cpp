@@ -74,12 +74,12 @@ Error Settings::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValue
     Error               error = kErrorNone;
     const Entry        *entry;
     const Entry::Value *value;
-    IndexMatcher        IndexMatcher(aIndex);
+    IndexMatcher        indexMatcher(aIndex);
 
     entry = mEntries.FindMatching(aKey);
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
-    value = entry->mValues.FindMatching(IndexMatcher);
+    value = entry->mValues.FindMatching(indexMatcher);
     VerifyOrExit(value != nullptr, error = kErrorNotFound);
 
     if (aValueLength != nullptr)
@@ -130,9 +130,8 @@ Error Settings::SetOrAdd(SetAddMode aMode, uint16_t aKey, const uint8_t *aValue,
 
 Error Settings::Delete(uint16_t aKey, int aIndex)
 {
-    Error         error = kErrorNone;
-    Entry        *entry;
-    Entry::Value *preValue;
+    Error  error = kErrorNone;
+    Entry *entry;
 
     entry = mEntries.FindMatching(aKey);
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);

@@ -289,6 +289,8 @@ struct ResponseContext : public AdmitterInfo, public Clearable<ResponseContext>
 
 void HandleResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
 {
+    OT_UNUSED_VARIABLE(aResult);
+
     ResponseContext *responseContext;
 
     VerifyOrQuit(aContext != nullptr);
@@ -338,7 +340,6 @@ bool HandleResource(void *aContext, Uri aUri, Coap::Msg &aMsg)
     AdmitterInfo            *info;
     Message                 *msgClone;
     uint16_t                 joinerPort;
-    uint16_t                 joinerRouterRloc;
     Ip6::InterfaceIdentifier joinerIid;
 
     VerifyOrQuit(aContext != nullptr);
@@ -376,7 +377,6 @@ bool HandleResource(void *aContext, Uri aUri, Coap::Msg &aMsg)
         break;
     }
 
-exit:
     return didHandle;
 }
 
@@ -1054,8 +1054,6 @@ void TestBorderAdmitterEnrollerInteraction(void)
 void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
 {
     static const char kEnrollerId[] = "TestEnroller1234";
-
-    static const uint8_t kEnrollerTimeoutInSec = 50;
 
     Core                   nexus;
     Node                  &admitter   = nexus.CreateNode();
@@ -1868,9 +1866,10 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message           *message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
         Ip6::InterfaceIdentifier readIid;
         uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
 
         if ((modes[i] & MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx) == 0)
         {
@@ -1964,9 +1963,10 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message           *message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
         Ip6::InterfaceIdentifier readIid;
         uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
 
         if (i != 0)
         {
@@ -2011,9 +2011,10 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message           *message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
         Ip6::InterfaceIdentifier readIid;
         uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
 
         if ((modes[i] & MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx) == 0)
         {
@@ -2146,9 +2147,10 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message           *message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
         Ip6::InterfaceIdentifier readIid;
         uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
 
         if (i != 0)
         {
@@ -2259,9 +2261,10 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message           *message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
         Ip6::InterfaceIdentifier readIid;
         uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
 
         if (i != 0)
         {
@@ -2738,9 +2741,10 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message           *message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
         Ip6::InterfaceIdentifier readIid;
         uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
 
         if (i != 2)
         {
@@ -3146,9 +3150,10 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        Coap::Message *message = AsCoapMessagePtr(recvContext[i].mProxyRxMsgs.GetHead());
-        Ip6::Address   senderAddr;
-        OffsetRange    offsetRange;
+        Ip6::Address senderAddr;
+        OffsetRange  offsetRange;
+
+        message = AsCoapMessagePtr(recvContext[i].mProxyRxMsgs.GetHead());
 
         if ((modes[i] & MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx) == 0)
         {
@@ -3227,12 +3232,9 @@ void ValidateAdmitterMdnsService(Node &aNode)
 
 void TestBorderAdmitterDnssdService(void)
 {
-    Core                             nexus;
-    Node                            &node1 = nexus.CreateNode();
-    Node                            &node2 = nexus.CreateNode();
-    Dns::Multicast::Core::Iterator  *iterator;
-    Dns::Multicast::Core::Service    service;
-    Dns::Multicast::Core::EntryState entryState;
+    Core  nexus;
+    Node &node1 = nexus.CreateNode();
+    Node &node2 = nexus.CreateNode();
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAdmitterDnssdService");

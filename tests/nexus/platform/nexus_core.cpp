@@ -40,9 +40,10 @@ Core *Core::sCore  = nullptr;
 bool  Core::sInUse = false;
 
 Core::Core(void)
-    : mNow(0)
-    , mCurNodeId(0)
+    : mCurNodeId(0)
     , mPendingAction(false)
+    , mNow(0)
+    , mActiveNode(nullptr)
 {
     const char *pcapFile;
 
