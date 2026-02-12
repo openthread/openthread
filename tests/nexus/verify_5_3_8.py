@@ -158,7 +158,8 @@ def _verify_echo(pv, src_ext, dst_ext, target_ip):
     end_index = pkts.index
 
     # Verify no Address Query from DUT (Leader) for the target IP in this range
-    pkts.range(start_index, end_index).filter_wpan_src64(pv.vars['LEADER']).\
+    pkts.range(start_index, end_index).\
+        filter_wpan_src64(pv.vars['LEADER']).\
         filter(lambda p: p.ipv6.src == DUT_RLOC).\
         filter_coap_request(consts.ADDR_QRY_URI).\
         filter(lambda p: Ipv6Addr(p.coap.tlv.target_eid) == target_ip_addr or\

@@ -78,35 +78,39 @@ def verify(pv):
     # - Description: Build the topology as described and begin the wireless sniffer.
     # - Pass Criteria: N/A
     print("Step 1: All")
-    pkts.filter_wpan_src64(LEADER).filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_next()
-    pkts.filter_wpan_src64(DUT).filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        must_next()
 
     # Step 2: Leader
     # - Description: Harness instructs the device to send an ICMPv6 Echo Request to the DUT ML-EID.
     # - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply.
     print("Step 2: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(DUT_MLEID) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .must_next()
-    pkts.filter_wpan_src64(DUT) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(DUT_MLEID).\
+        filter_ping_request(identifier=ECHO_ID).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
 
     # Step 3: Leader
     # - Description: Harness instructs the device to send a fragmented ICMPv6 Echo Request to the DUT ML-EID.
     # - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply.
     print("Step 3: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(DUT_MLEID) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')) \
-        .must_next()
-    pkts.filter_wpan_src64(DUT) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(DUT_MLEID).\
+        filter_ping_request(identifier=ECHO_ID).\
+        filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
 
     # Step 4: Leader
     # - Description: Harness instructs the device to send an ICMPv6 Echo Request to the Realm-Local All-Nodes
@@ -115,18 +119,19 @@ def verify(pv):
     #   - The DUT MUST respond with an ICMPv6 Echo Reply.
     #   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
     print("Step 4: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .must_next()
-    pkts.filter_wpan_src64(DUT) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
-    pkts.copy().filter_wpan_src64(DUT) \
-        .filter_wpan_dst64(SED_1) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS) \
-        .must_not_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS).\
+        filter_ping_request(identifier=ECHO_ID).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
+    pkts.copy().\
+        filter_wpan_src64(DUT).\
+        filter_wpan_dst64(SED_1).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS).\
+        must_not_next()
 
     # Step 5: Leader
     # - Description: Harness instructs the device to send a fragmented ICMPv6 Echo Request to the Realm-Local
@@ -135,19 +140,20 @@ def verify(pv):
     #   - The DUT MUST respond with an ICMPv6 Echo Reply.
     #   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
     print("Step 5: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')) \
-        .must_next()
-    pkts.filter_wpan_src64(DUT) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
-    pkts.copy().filter_wpan_src64(DUT) \
-        .filter_wpan_dst64(SED_1) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS) \
-        .must_not_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS).\
+        filter_ping_request(identifier=ECHO_ID).\
+        filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
+    pkts.copy().\
+        filter_wpan_src64(DUT).\
+        filter_wpan_dst64(SED_1).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_NODES_ADDRESS).\
+        must_not_next()
 
     # Step 6: Leader
     # - Description: Harness instructs the device to send an ICMPv6 Echo Request to the Realm-Local All-Routers
@@ -156,18 +162,19 @@ def verify(pv):
     #   - The DUT MUST respond with an ICMPv6 Echo Reply.
     #   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
     print("Step 6: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .must_next()
-    pkts.filter_wpan_src64(DUT) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
-    pkts.copy().filter_wpan_src64(DUT) \
-        .filter_wpan_dst64(SED_1) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS) \
-        .must_not_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+        filter_ping_request(identifier=ECHO_ID).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
+    pkts.copy().\
+        filter_wpan_src64(DUT).\
+        filter_wpan_dst64(SED_1).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+        must_not_next()
 
     # Step 7: Leader
     # - Description: Harness instructs the device to send a fragmented ICMPv6 Echo Request to the Realm-Local
@@ -176,19 +183,20 @@ def verify(pv):
     #   - The DUT MUST respond with an ICMPv6 Echo Reply.
     #   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
     print("Step 7: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')) \
-        .must_next()
-    pkts.filter_wpan_src64(DUT) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
-    pkts.copy().filter_wpan_src64(DUT) \
-        .filter_wpan_dst64(SED_1) \
-        .filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS) \
-        .must_not_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+        filter_ping_request(identifier=ECHO_ID).\
+        filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')).\
+        must_next()
+    pkts.filter_wpan_src64(DUT).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
+    pkts.copy().\
+        filter_wpan_src64(DUT).\
+        filter_wpan_dst64(SED_1).\
+        filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
+        must_not_next()
 
     # Step 8: Leader
     # - Description: Harness instructs the device to send a Fragmented ICMPv6 Echo Request to the Realm-Local All
@@ -203,24 +211,24 @@ def verify(pv):
     #     - group ID set to 1
     #   - The DUT MUST use IEEE 802.15.4 indirect transmissions to forward packet to SED_1.
     print("Step 8: Leader")
-    pkts.filter_wpan_src64(LEADER) \
-        .filter_ipv6_dst(realm_local_all_thread_nodes) \
-        .filter_ping_request(identifier=ECHO_ID) \
-        .filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')) \
-        .must_next()
-    pkts.filter(lambda p: p.wpan.src16 == SED_1_RLOC16) \
-        .filter_wpan_cmd(consts.WPAN_DATA_REQUEST) \
-        .must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_ipv6_dst(realm_local_all_thread_nodes).\
+        filter_ping_request(identifier=ECHO_ID).\
+        filter(lambda p: hasattr(p, 'lowpan') and hasattr(p.lowpan, 'fragment')).\
+        must_next()
+    pkts.filter(lambda p: p.wpan.src16 == SED_1_RLOC16).\
+        filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
+        must_next()
     # DUT forwards the packet to SED_1 responding to the Data Request.
     # We use RLOC16 filters because decryption might fail for these packets.
-    pkts.filter(lambda p: p.wpan.src16 == DUT_RLOC16 and p.wpan.dst16 == SED_1_RLOC16) \
-        .must_next()
+    pkts.filter(lambda p: p.wpan.src16 == DUT_RLOC16 and p.wpan.dst16 == SED_1_RLOC16).\
+        must_next()
     # SED_1 sends Echo Reply (unicast to Leader).
     # Unicast packets are usually mapped and decrypted correctly if mapping was learned.
-    pkts.filter(lambda p: p.wpan.src16 == SED_1_RLOC16) \
-        .filter_ipv6_dst(LEADER_MLEID) \
-        .filter_ping_reply(identifier=ECHO_ID) \
-        .must_next()
+    pkts.filter(lambda p: p.wpan.src16 == SED_1_RLOC16).\
+        filter_ipv6_dst(LEADER_MLEID).\
+        filter_ping_reply(identifier=ECHO_ID).\
+        must_next()
 
 
 if __name__ == '__main__':

@@ -77,8 +77,10 @@ def verify(pv):
     # - Description: Verify topology is formed correctly
     # - Pass Criteria: N/A
     print("Step 3: Verifying topology formation.")
-    pkt = pkts.filter_wpan_src64(LEADER).filter_mle_cmd(
-        consts.MLE_ADVERTISEMENT).filter(lambda p: p.mle.tlv.leader_data.partition_id == P1_ID).must_next()
+    pkt = pkts.filter_wpan_src64(LEADER).\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        filter(lambda p: p.mle.tlv.leader_data.partition_id == P1_ID).\
+        must_next()
     original_leader_data = pkt.mle.tlv.leader_data
 
     # Step 4: Leader

@@ -66,8 +66,12 @@ def verify(pv):
     # - Description: Verify topology is formed correctly
     # - Pass Criteria: N/A
     print("Step 1: Verify topology is formed correctly")
-    pkts.filter_wpan_src64(LEADER).filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_next()
-    pkts.filter_wpan_src64(ROUTER_1).filter_mle_cmd(consts.MLE_ADVERTISEMENT).must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        must_next()
+    pkts.filter_wpan_src64(ROUTER_1).\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        must_next()
 
     # Step 2: MED_1, SED_1
     # - Description: Harness silently powers-off both devices and waits for the keep-alive timeout to expire
