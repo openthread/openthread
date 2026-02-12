@@ -774,39 +774,43 @@ void Message::WriteBytesFromMessage(uint16_t       aWriteOffset,
     }
 }
 
-Message *Message::Clone(uint16_t aLength) const
-{
-    Error    error = kErrorNone;
-    Message *messageCopy;
-    Settings settings(IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity, GetPriority());
-    uint16_t offset;
+Message *Message::Clone(void) const { return Clone(GetLength()); }
 
-    aLength     = Min(GetLength(), aLength);
-    messageCopy = Get<MessagePool>().Allocate(GetType(), GetReserved(), settings);
-    VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
+Message *Message::Clone(uint16_t aLength) const { return Clone(aLength, GetReserved()); }
+
+Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
+{
+    Error            error = kErrorNone;
+    Message         *clone;
+    LinkSecurityMode linkSecurityMode = IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity;
+
+    clone = Get<MessagePool>().Allocate(GetType(), aReserveHeader, Settings(linkSecurityMode, GetPriority()));
+    VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
+
+    aLength = Min(aLength, GetLength());
+
+    SuccessOrExit(error = clone->AppendBytesFromMessage(*this, 0, aLength));
 
     // Copy selected message information.
 
-    offset = Min(GetOffset(), aLength);
-    messageCopy->SetOffset(offset);
+    clone->SetOffset(Min(GetOffset(), aLength));
 
-    messageCopy->SetSubType(GetSubType());
-    messageCopy->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
-    messageCopy->SetOrigin(GetOrigin());
-    messageCopy->SetTimestamp(GetTimestamp());
-    messageCopy->SetMeshDest(GetMeshDest());
-    messageCopy->SetPanId(GetPanId());
-    messageCopy->SetChannel(GetChannel());
-    messageCopy->SetRssAverager(GetRssAverager());
-    messageCopy->SetLqiAverager(GetLqiAverager());
+    clone->SetSubType(GetSubType());
+    clone->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
+    clone->SetOrigin(GetOrigin());
+    clone->SetTimestamp(GetTimestamp());
+    clone->SetMeshDest(GetMeshDest());
+    clone->SetPanId(GetPanId());
+    clone->SetChannel(GetChannel());
+    clone->SetRssAverager(GetRssAverager());
+    clone->SetLqiAverager(GetLqiAverager());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    messageCopy->SetTimeSync(IsTimeSync());
+    clone->SetTimeSync(IsTimeSync());
 #endif
 
 exit:
-    FreeAndNullMessageOnError(messageCopy, error);
-    return messageCopy;
+    FreeAndNullMessageOnError(clone, error);
+    return clone;
 }
 
 Error Message::GetLinkInfo(ThreadLinkInfo &aLinkInfo) const

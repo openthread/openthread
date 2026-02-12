@@ -70,6 +70,7 @@ struct otMessage
 
 namespace ot {
 
+class UnitTester;
 template <typename UintType> class CrcCalculator;
 
 namespace Crypto {
@@ -286,6 +287,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
+    friend class ot::UnitTester;
 
 public:
     /**
@@ -1065,26 +1067,39 @@ public:
     /**
      * Creates a copy of the message.
      *
-     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
-     * cloned message are also copied from the original one.
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
      *
-     * @param[in] aLength  Number of payload bytes to copy.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    Message *Clone(void) const;
+
+    /**
+     * Creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message
+     * are also copied from the original one.
+     *
+     * @param[in] aLength  Number of message bytes to copy.
      *
      * @returns A pointer to the message or nullptr if insufficient message buffers are available.
      */
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * Creates a copy of the message.
+     * Creates a copy of the message using a given configuration.
      *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * It allocates the new message from the same message pool as the original one. The `Type`, `SubType`,
+     * `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are copied from the original one.
+     *
+     * @param[in] aLength         Number of message bytes to copy.
+     * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(void) const { return Clone(GetLength()); }
+    Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
 
     /**
      * Returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
