@@ -62,29 +62,6 @@ static constexpr uint32_t kEchoResponseTime = 5000;
  */
 static constexpr uint16_t kRouterCount = 14;
 
-static Ip6::Address GetUnicastAddress(Node &aNode, const char *aPrefixString)
-{
-    Ip6::Prefix  prefix;
-    Ip6::Address address;
-    bool         found = false;
-
-    SuccessOrQuit(prefix.FromString(aPrefixString));
-
-    for (const Ip6::Netif::UnicastAddress &addr : aNode.Get<Ip6::Netif>().GetUnicastAddresses())
-    {
-        if (addr.GetAddress().MatchesPrefix(prefix))
-        {
-            address = addr.GetAddress();
-            found   = true;
-            break;
-        }
-    }
-
-    VerifyOrQuit(found, "did not get unicast address with prefix");
-
-    return address;
-}
-
 void Test5_2_5(void)
 {
     /**
@@ -287,7 +264,7 @@ void Test5_2_5(void)
      *   - The IPv6 Destination address MUST be the RLOC of the destination.
      *   - The DUT MUST send an ICMPv6 Echo Reply.
      */
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(reed1, "2001::/64"), 0, 64, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, reed1.FindMatchingAddress("2001::/64"), 0, 64, kEchoResponseTime);
 
     Log("Step 8: MED_1 sends ICMPv6 Echo Request to REED_1 (DUT) using 2002:: EID.");
 
@@ -305,7 +282,7 @@ void Test5_2_5(void)
      *   - The IPv6 Destination address MUST be the RLOC of the destination.
      *   - The DUT MUST send an ICMPv6 Echo Reply.
      */
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(reed1, "2002::/64"), 0, 64, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, reed1.FindMatchingAddress("2002::/64"), 0, 64, kEchoResponseTime);
 
     nexus.SaveTestInfo("test_5_2_5.json");
 }

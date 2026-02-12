@@ -135,5 +135,26 @@ void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
 }
 #endif
 
+const Ip6::Address &Node::FindMatchingAddress(const char *aPrefix)
+{
+    Ip6::Prefix         prefix;
+    const Ip6::Address *matchedAddress = nullptr;
+
+    SuccessOrQuit(prefix.FromString(aPrefix));
+
+    for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+    {
+        if (unicastAddress.GetAddress().MatchesPrefix(prefix))
+        {
+            matchedAddress = &unicastAddress.GetAddress();
+            break;
+        }
+    }
+
+    VerifyOrQuit(matchedAddress != nullptr, "no matching address found");
+
+    return *matchedAddress;
+}
+
 } // namespace Nexus
 } // namespace ot
