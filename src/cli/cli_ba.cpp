@@ -625,11 +625,11 @@ template <> otError Ba::Process<Cmd("admitter")>(Arg aArgs[])
 
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-        OutputLine("enabled: %s", enabled ? "yes" : "no");
+        OutputLine("enabled: %s", ToYesNo(enabled));
         VerifyOrExit(enabled);
-        OutputLine("is-prime: %s", otBorderAdmitterIsPrimeAdmitter(GetInstancePtr()) ? "yes" : "no");
-        OutputLine("is-active-commissioner: %s", otBorderAdmitterIsActiveCommissioner(GetInstancePtr()) ? "yes" : "no");
-        OutputLine("is-petition-rejected: %s", otBorderAdmitterIsPetitionRejected(GetInstancePtr()) ? "yes" : "no");
+        OutputLine("is-prime: %s", ToYesNo(otBorderAdmitterIsPrimeAdmitter(GetInstancePtr())));
+        OutputLine("is-active-commissioner: %s", ToYesNo(otBorderAdmitterIsActiveCommissioner(GetInstancePtr())));
+        OutputLine("is-petition-rejected: %s", ToYesNo(otBorderAdmitterIsPetitionRejected(GetInstancePtr())));
     }
     /**
      * @cli ba admitter joinerudpport (get,set)
