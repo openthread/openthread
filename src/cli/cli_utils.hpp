@@ -198,6 +198,15 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * Converts a boolean to "yes" or "no" string.
+     *
+     * @param[in] aBool  A boolean value to convert.
+     *
+     * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
+     */
+    static const char *ToYesNo(bool aBool);
+
+    /**
      * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
      */
     struct Uint64StringBuffer
