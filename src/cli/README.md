@@ -653,6 +653,67 @@ mgmtPendingGet: 0
 Done
 ```
 
+### ba admitter
+
+Enables or disables Border Agent Admitter function, or outputs its status.
+
+All `ba admitter` sub-commands requires `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE` in addition to `OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE`.
+
+```bash
+> ba admitter
+Disabled
+Done
+
+> ba admitter enable
+Done
+
+> ba admitter
+Enabled
+Done
+```
+
+### ba admitter state
+
+Outputs the state of Border Agent Admitter.
+
+```bash
+> ba admitter state
+enabled: yes
+is-prime: yes
+is-active-commissioner: yes
+is-petition-rejected: no
+Done
+```
+
+### ba admitter joinerudpport
+
+Gets or sets the Border Agent Admitter Joiner UDP port.
+
+```bash
+> ba admitter joinerudpport
+1000
+Done
+
+> ba admitter joinerudpport 1001
+Done
+```
+
+### ba admitter enrollers
+
+Outputs the list of enrollers and accepted joiners per enroller.
+
+```bash
+> ba admitter enrollers
+Enroller - id: phone01275ABC
+    steering-data: [0042008000000000]
+    mode: 0xc0
+    msec-since-registered: 10478
+    Joiner - iid: a5d2e4f0c8b1937e
+        msec-since-accepted: 3299
+        msec-till-expiration: 418852
+Done
+```
+
 ### batracker enable
 
 Enables Border Agent Tracker.
