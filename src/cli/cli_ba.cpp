@@ -179,8 +179,8 @@ template <> otError Ba::Process<Cmd("sessions")>(Arg aArgs[])
     {
         otIp6SockAddrToString(&info.mPeerSockAddr, sockAddrString, sizeof(sockAddrString));
 
-        OutputLine("%s connected:%s commissioner:%s lifetime:%s", sockAddrString, info.mIsConnected ? "yes" : "no",
-                   info.mIsCommissioner ? "yes" : "no", Uint64ToString(info.mLifetime, lifetimeString));
+        OutputLine("%s connected:%s commissioner:%s lifetime:%s", sockAddrString, ToYesNo(info.mIsConnected),
+                   ToYesNo(info.mIsCommissioner), Uint64ToString(info.mLifetime, lifetimeString));
     }
 exit:
     return error;

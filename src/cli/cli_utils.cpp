@@ -60,6 +60,8 @@ OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallb
 {
 }
 
+const char *Utils::ToYesNo(bool aBool) { return aBool ? "yes" : "no"; }
+
 void Utils::OutputFormat(const char *aFormat, ...)
 {
     va_list args;

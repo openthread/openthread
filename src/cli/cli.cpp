@@ -3614,9 +3614,9 @@ template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
         const otDeviceProperties *props = otThreadGetDeviceProperties(GetInstancePtr());
 
         OutputLine("PowerSupply      : %s", Stringify(props->mPowerSupply, kPowerSupplyStrings));
-        OutputLine("IsBorderRouter   : %s", props->mIsBorderRouter ? "yes" : "no");
-        OutputLine("SupportsCcm      : %s", props->mSupportsCcm ? "yes" : "no");
-        OutputLine("IsUnstable       : %s", props->mIsUnstable ? "yes" : "no");
+        OutputLine("IsBorderRouter   : %s", ToYesNo(props->mIsBorderRouter));
+        OutputLine("SupportsCcm      : %s", ToYesNo(props->mSupportsCcm));
+        OutputLine("IsUnstable       : %s", ToYesNo(props->mIsUnstable));
         OutputLine("WeightAdjustment : %d", props->mLeaderWeightAdjustment);
     }
     /**
@@ -7770,7 +7770,7 @@ void Interpreter::OutputEnhRoute(uint8_t aIndentSize, const otNetworkDiagEnhRout
             continue;
         }
 
-        OutputFormat(" HasLink:%-3s LinkQualityOut:%u LinkQualityIn:%u ", routeData.mHasLink ? "yes" : "no",
+        OutputFormat(" HasLink:%-3s LinkQualityOut:%u LinkQualityIn:%u ", ToYesNo(routeData.mHasLink),
                      routeData.mLinkQualityOut, routeData.mLinkQualityIn);
 
         if (routeData.mNextHop == kInvalidRouterId)
