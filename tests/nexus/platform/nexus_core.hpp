@@ -118,7 +118,7 @@ private:
     Node            *mActiveNode;
 };
 
-void Log(const char *aFormat, ...);
+void Log(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 } // namespace Nexus
 } // namespace ot

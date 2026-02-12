@@ -61,6 +61,7 @@ target_include_directories(ot-nexus-platform
 target_compile_options(ot-nexus-platform
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
+        ${OT_CFLAGS}
 )
 
 target_link_libraries(ot-nexus-platform
@@ -105,6 +106,7 @@ macro(ot_nexus_test name labels)
     target_compile_options(nexus_${name}
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
+        ${OT_CFLAGS}
     )
 
     add_test(NAME nexus_${name} COMMAND nexus_${name})

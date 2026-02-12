@@ -153,6 +153,8 @@ public:
 private:
     static MeshCoP::SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
     {
+        OT_UNUSED_VARIABLE(aMessageInfo);
+
         return static_cast<DtlsTransportAndSingleSession *>(aContext)->HandleAccept();
     }
 
@@ -196,6 +198,8 @@ private:
 
     static MeshCoP::SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
     {
+        OT_UNUSED_VARIABLE(aMessageInfo);
+
         DtlsTransportAndHeapSession *transport;
         HeapDtlsSession             *session;
 

@@ -54,7 +54,6 @@ static constexpr uint32_t kAttachAsChildTime = 10 * 1000;
  * All these values result in Link Quality 3 (highest).
  */
 static constexpr int8_t kRssiHigh = -20;
-static constexpr int8_t kRssiMid  = -40;
 static constexpr int8_t kRssiLow  = -60;
 
 void Test5_1_8(void)

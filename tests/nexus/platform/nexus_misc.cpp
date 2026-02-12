@@ -39,7 +39,8 @@
 namespace ot {
 namespace Nexus {
 
-static void LogVarArgs(Node *aActiveNode, const char *aFormat, va_list aArgs);
+static void LogVarArgs(Node *aActiveNode, const char *aFormat, va_list aArgs)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 extern "C" {
 
