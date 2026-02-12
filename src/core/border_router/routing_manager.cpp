@@ -494,7 +494,6 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     Error                     error = kErrorNone;
     RouterAdvert::TxMessage   raMsg;
     RouterAdvert::Header      header;
-    Ip6::Address              destAddress;
     InfraIf::Icmp6Packet      packet;
     InfraIf::LinkLayerAddress linkAddr;
 
@@ -545,12 +544,11 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     // Exit when the size of packet is less than the size of header.
     VerifyOrExit(raMsg.ContainsAnyOptions());
 
-    destAddress.SetToLinkLocalAllNodesMulticast();
     raMsg.GetAsPacket(packet);
 
     mTxRaInfo.IncrementTxCountAndSaveHash(packet);
 
-    SuccessOrExit(error = Get<InfraIf>().Send(packet, destAddress));
+    SuccessOrExit(error = Get<InfraIf>().Send(packet, Ip6::Address::GetLinkLocalAllNodesMulticast()));
 
     mTxRaInfo.mLastTxTime = TimerMilli::GetNow();
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;

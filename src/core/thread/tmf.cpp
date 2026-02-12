@@ -58,7 +58,7 @@ void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderRloc(void)
 void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
 {
     SetSockAddrToRloc();
-    GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
+    SetPeerAddr(Ip6::Address::GetRealmLocalAllRoutersMulticast());
 }
 
 void MessageInfo::SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16)

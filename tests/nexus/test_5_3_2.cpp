@@ -149,11 +149,7 @@ void Test5_3_2(void)
      *   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
      */
     Log("Step 4: Leader");
-    {
-        Ip6::Address multicastAddr;
-        multicastAddr.SetToRealmLocalAllNodesMulticast();
-        nexus.SendAndVerifyEchoRequest(leader, multicastAddr);
-    }
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetRealmLocalAllNodesMulticast());
 
     /**
      * Step 5: Leader
@@ -164,11 +160,7 @@ void Test5_3_2(void)
      *   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
      */
     Log("Step 5: Leader");
-    {
-        Ip6::Address multicastAddr;
-        multicastAddr.SetToRealmLocalAllNodesMulticast();
-        nexus.SendAndVerifyEchoRequest(leader, multicastAddr, kLargePayloadSize);
-    }
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetRealmLocalAllNodesMulticast(), kLargePayloadSize);
 
     /**
      * Step 6: Leader
@@ -179,11 +171,7 @@ void Test5_3_2(void)
      *   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
      */
     Log("Step 6: Leader");
-    {
-        Ip6::Address multicastAddr;
-        multicastAddr.SetToRealmLocalAllRoutersMulticast();
-        nexus.SendAndVerifyEchoRequest(leader, multicastAddr);
-    }
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetRealmLocalAllRoutersMulticast());
 
     /**
      * Step 7: Leader
@@ -194,11 +182,7 @@ void Test5_3_2(void)
      *   - The DUT MUST NOT forward the ICMPv6 Echo Request to SED_1.
      */
     Log("Step 7: Leader");
-    {
-        Ip6::Address multicastAddr;
-        multicastAddr.SetToRealmLocalAllRoutersMulticast();
-        nexus.SendAndVerifyEchoRequest(leader, multicastAddr, kLargePayloadSize);
-    }
+    nexus.SendAndVerifyEchoRequest(leader, Ip6::Address::GetRealmLocalAllRoutersMulticast(), kLargePayloadSize);
 
     /**
      * Step 8: Leader

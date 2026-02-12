@@ -498,13 +498,7 @@ exit:
     return;
 }
 
-void Mle::SendMulticastAdvertisement(void)
-{
-    Ip6::Address destination;
-
-    destination.SetToLinkLocalAllNodesMulticast();
-    SendAdvertisement(destination);
-}
+void Mle::SendMulticastAdvertisement(void) { SendAdvertisement(Ip6::Address::GetLinkLocalAllNodesMulticast()); }
 
 void Mle::ScheduleUnicastAdvertisementTo(const Router &aRouter)
 {
@@ -615,7 +609,7 @@ void Mle::SendLinkRequest(Router *aRouter)
     {
         mPrevRoleRestorer.GenerateRandomChallenge();
         SuccessOrExit(error = message->AppendChallengeTlv(mPrevRoleRestorer.GetChallenge()));
-        destination.SetToLinkLocalAllRoutersMulticast();
+        destination = Ip6::Address::GetLinkLocalAllRoutersMulticast();
     }
     else
     {
@@ -3104,12 +3098,10 @@ exit:
 
 void Mle::SendMulticastDataResponse(void)
 {
-    Ip6::Address destination;
-    TlvList      tlvList;
+    TlvList tlvList;
 
-    destination.SetToLinkLocalAllNodesMulticast();
     tlvList.Add(Tlv::kNetworkData);
-    SendDataResponse(destination, tlvList);
+    SendDataResponse(Ip6::Address::GetLinkLocalAllNodesMulticast(), tlvList);
 }
 
 void Mle::SendDataResponse(const Ip6::Address &aDestination, const TlvList &aTlvList, const Message *aRequestMessage)
@@ -3913,7 +3905,7 @@ Error Mle::SendTimeSync(void)
 
     message->SetTimeSync(true);
 
-    destination.SetToLinkLocalAllNodesMulticast();
+    destination = Ip6::Address::GetLinkLocalAllNodesMulticast();
     SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend, kTypeTimeSync, destination);

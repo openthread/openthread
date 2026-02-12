@@ -212,7 +212,7 @@ Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Heade
     tunnelHeader.SetHopLimit(kDefaultHopLimit);
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
     tunnelHeader.SetSource(Get<Mle::Mle>().GetMeshLocalRloc());
-    tunnelHeader.GetDestination().SetToRealmLocalAllMplForwarders();
+    tunnelHeader.SetDestination(Address::GetRealmLocalAllMplForwarders());
     tunnelHeader.SetNextHeader(kProtoIp6);
 
     SuccessOrExit(error = AddMplOption(aMessage, tunnelHeader));
