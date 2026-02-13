@@ -59,8 +59,8 @@ def verify(pv):
     MAX_ROUTERS = 32
 
     LEADER = pv.vars['Leader']
-    ROUTER_31 = pv.vars['Router 31']
-    ROUTER_32 = pv.vars['Router 32']
+    ROUTER_31 = pv.vars['Router_31']
+    ROUTER_32 = pv.vars['Router_32']
 
     # Step 1: All
     # - Description: Begin wireless sniffer and ensure topology is created and connectivity between nodes.
