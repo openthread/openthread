@@ -160,7 +160,8 @@ def verify(pv):
     end_of_step_4 = pkts.index
 
     # Now check in the range up to this reply.
-    pkts.range(start_of_step_4, end_of_step_4).filter_wpan_src64(DUT).\
+    pkts.range(start_of_step_4, end_of_step_4).\
+        filter_wpan_src64(DUT).\
         filter_ipv6_src(pv.vars['DUT_RLOC']).\
         filter_coap_request(consts.ADDR_QRY_URI).\
         filter(lambda p: p.coap.tlv.target_eid == pv.vars['ROUTER_3_MLEID']).\
