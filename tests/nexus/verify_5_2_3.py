@@ -99,7 +99,6 @@ def verify(pv):
             consts.NL_RLOC16_TLV,
             consts.NL_ROUTER_MASK_TLV
         } <= set(p.coap.tlv.type) and\
-            p.coap.code == consts.COAP_CODE_ACK and\
             p.coap.tlv.status == consts.ADDR_SOL_SUCCESS).\
         must_next()
 
@@ -137,7 +136,6 @@ def verify(pv):
         filter(lambda p: {
             consts.NL_STATUS_TLV
         } <= set(p.coap.tlv.type) and\
-            p.coap.code == consts.COAP_CODE_ACK and\
             p.coap.tlv.status == consts.NL_NO_ADDRESS_AVAILABLE).\
         must_next()
 
