@@ -148,7 +148,8 @@ def verify(pv):
         filter_wpan_src64(LEADER).\
         filter_RLARMA().\
         filter_coap_request(consts.ADDR_ERR_URI).\
-        filter(lambda p: p.coap.tlv.target_eid == '2001::1' and p.ipv6.src == pv.vars['LEADER_RLOC']).\
+        filter(lambda p: p.coap.tlv.target_eid == '2001::1').\
+        filter_ipv6_src(pv.vars['LEADER_RLOC']).\
         must_next()
 
 

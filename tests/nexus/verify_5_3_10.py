@@ -147,8 +147,8 @@ def verify(pv):
     pkts.filter_wpan_src16(DUT_RLOC16).\
         filter_coap_request(consts.ADDR_NTF_URI).\
         filter(lambda p: p.coap.type == COAP_TYPE_CON).\
-        filter(lambda p: p.ipv6.src == DUT_RLOC).\
-        filter(lambda p: p.ipv6.dst == BR_RLOC).\
+        filter_ipv6_src(DUT_RLOC).\
+        filter_ipv6_dst(BR_RLOC).\
         filter(lambda p: {
                           consts.NL_TARGET_EID_TLV,
                           consts.NL_RLOC16_TLV,
@@ -209,7 +209,7 @@ def verify(pv):
 
     # DUT must NOT respond with Address Notification
     with pkts.save_index():
-        pkts.filter(lambda p: p.ipv6.src == DUT_RLOC).\
+        pkts.filter_ipv6_src(DUT_RLOC).\
             filter_coap_request(consts.ADDR_NTF_URI).\
             filter(lambda p: is_same_iid(p.coap.tlv.target_eid, MED_1_GUA)).\
             must_not_next()
