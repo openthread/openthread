@@ -69,15 +69,15 @@ def verify(pv):
     print("Step 1: Verify topology is formed correctly")
 
     # First attach of Router_1
-    _pkt = pkts.filter_wpan_src64(ROUTER_1). \
-      filter_wpan_dst16(LEADER_RLOC16). \
-      filter_coap_request(consts.ADDR_SOL_URI). \
-      must_next()
+    _pkt = pkts.filter_wpan_src64(ROUTER_1).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_coap_request(consts.ADDR_SOL_URI).\
+        must_next()
 
-    _pkt_res = pkts.filter_wpan_src64(LEADER). \
-      filter_wpan_dst16(_pkt.wpan.src16). \
-      filter_coap_ack(consts.ADDR_SOL_URI). \
-      must_next()
+    _pkt_res = pkts.filter_wpan_src64(LEADER).\
+        filter_wpan_dst16(_pkt.wpan.src16).\
+        filter_coap_ack(consts.ADDR_SOL_URI).\
+        must_next()
 
     first_router_id = _pkt_res.coap.tlv.rloc16 >> ROUTER_ID_OFFSET
     print(f"Router_1 first Router ID: {first_router_id}")
@@ -107,23 +107,23 @@ def verify(pv):
     #     - Router Mask TLV
     print("Step 4: Leader (DUT) automatically attaches Router_1 and reassigns a different Router ID")
 
-    _pkt = pkts.filter_wpan_src64(ROUTER_1). \
-      filter_wpan_dst16(LEADER_RLOC16). \
-      filter_coap_request(consts.ADDR_SOL_URI). \
-      filter(lambda p: p.coap.tlv.rloc16 >> ROUTER_ID_OFFSET == first_router_id). \
-      must_next()
+    _pkt = pkts.filter_wpan_src64(ROUTER_1).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_coap_request(consts.ADDR_SOL_URI).\
+        filter(lambda p: p.coap.tlv.rloc16 >> ROUTER_ID_OFFSET == first_router_id).\
+        must_next()
 
-    _pkt_res = pkts.filter_wpan_src64(LEADER). \
-      filter_wpan_dst16(_pkt.wpan.src16). \
-      filter_coap_ack(consts.ADDR_SOL_URI). \
-      filter(lambda p: {
-        consts.NL_STATUS_TLV,
-        consts.NL_RLOC16_TLV,
-        consts.NL_ROUTER_MASK_TLV
-      } <= set(p.coap.tlv.type) and
-        p.coap.code == consts.COAP_CODE_ACK and
-        p.coap.tlv.status == 0). \
-      must_next()
+    _pkt_res = pkts.filter_wpan_src64(LEADER).\
+        filter_wpan_dst16(_pkt.wpan.src16).\
+        filter_coap_ack(consts.ADDR_SOL_URI).\
+        filter(lambda p: {
+            consts.NL_STATUS_TLV,
+            consts.NL_RLOC16_TLV,
+            consts.NL_ROUTER_MASK_TLV
+        } <= set(p.coap.tlv.type) and
+            p.coap.code == consts.COAP_CODE_ACK and
+            p.coap.tlv.status == 0).\
+        must_next()
 
     second_router_id = _pkt_res.coap.tlv.rloc16 >> ROUTER_ID_OFFSET
     print(f"Router_1 second Router ID: {second_router_id}")
@@ -153,23 +153,23 @@ def verify(pv):
     #     - Router Mask TLV
     print("Step 7: Leader (DUT) automatically attaches Router_1 and reassigns the requested Router ID")
 
-    _pkt = pkts.filter_wpan_src64(ROUTER_1). \
-      filter_wpan_dst16(LEADER_RLOC16). \
-      filter_coap_request(consts.ADDR_SOL_URI). \
-      filter(lambda p: p.coap.tlv.rloc16 >> ROUTER_ID_OFFSET == second_router_id). \
-      must_next()
+    _pkt = pkts.filter_wpan_src64(ROUTER_1).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_coap_request(consts.ADDR_SOL_URI).\
+        filter(lambda p: p.coap.tlv.rloc16 >> ROUTER_ID_OFFSET == second_router_id).\
+        must_next()
 
-    _pkt_res = pkts.filter_wpan_src64(LEADER). \
-      filter_wpan_dst16(_pkt.wpan.src16). \
-      filter_coap_ack(consts.ADDR_SOL_URI). \
-      filter(lambda p: {
-        consts.NL_STATUS_TLV,
-        consts.NL_RLOC16_TLV,
-        consts.NL_ROUTER_MASK_TLV
-      } <= set(p.coap.tlv.type) and
-        p.coap.code == consts.COAP_CODE_ACK and
-        p.coap.tlv.status == 0). \
-      must_next()
+    _pkt_res = pkts.filter_wpan_src64(LEADER).\
+        filter_wpan_dst16(_pkt.wpan.src16).\
+        filter_coap_ack(consts.ADDR_SOL_URI).\
+        filter(lambda p: {
+            consts.NL_STATUS_TLV,
+            consts.NL_RLOC16_TLV,
+            consts.NL_ROUTER_MASK_TLV
+        } <= set(p.coap.tlv.type) and
+            p.coap.code == consts.COAP_CODE_ACK and
+            p.coap.tlv.status == 0).\
+        must_next()
 
     third_router_id = _pkt_res.coap.tlv.rloc16 >> ROUTER_ID_OFFSET
     print(f"Router_1 third Router ID: {third_router_id}")

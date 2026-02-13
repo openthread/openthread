@@ -87,11 +87,16 @@ def verify(pv):
     #   - The hopsLft field of the 6LoWPAN Mesh Header MUST be greater than the route cost to the destination.
     print("Step 3: Router_3")
     # Router_3 -> DUT
-    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).filter_wpan_dst16(DUT_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).must_next()
+    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).\
+        filter_wpan_dst16(DUT_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        must_next()
     # DUT -> Leader
-    p2 = pkts.filter_wpan_src16(DUT_RLOC16).filter_wpan_dst16(LEADER_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).filter(lambda p: p.lowpan.mesh.hops > 1).must_next()
+    p2 = pkts.filter_wpan_src16(DUT_RLOC16).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        filter(lambda p: p.lowpan.mesh.hops > 1).\
+        must_next()
     assert get_hops(p2) == get_hops(p1) - 1, f'Hops left not decremented correctly: {get_hops(p1)} -> {get_hops(p2)}'
 
     # Step 4: Harness
@@ -106,15 +111,23 @@ def verify(pv):
     #   - The hopsLft field of the 6LoWPAN Mesh Header MUST be greater than the route cost to the destination.
     print("Step 5: Router_3")
     # Router_3 -> DUT
-    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).filter_wpan_dst16(DUT_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).must_next()
+    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).\
+        filter_wpan_dst16(DUT_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        must_next()
     # DUT -> Router_2
-    p2 = pkts.filter_wpan_src16(DUT_RLOC16).filter_wpan_dst16(ROUTER_2_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).filter(lambda p: p.lowpan.mesh.hops > 2).must_next()
+    p2 = pkts.filter_wpan_src16(DUT_RLOC16).\
+        filter_wpan_dst16(ROUTER_2_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        filter(lambda p: p.lowpan.mesh.hops > 2).\
+        must_next()
     assert get_hops(p2) == get_hops(p1) - 1, f'Hops left not decremented correctly: {get_hops(p1)} -> {get_hops(p2)}'
     # Router_2 -> Leader
-    p3 = pkts.filter_wpan_src16(ROUTER_2_RLOC16).filter_wpan_dst16(LEADER_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).filter(lambda p: p.lowpan.mesh.hops > 1).must_next()
+    p3 = pkts.filter_wpan_src16(ROUTER_2_RLOC16).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        filter(lambda p: p.lowpan.mesh.hops > 1).\
+        must_next()
     assert get_hops(p3) == get_hops(p2) - 1, f'Hops left not decremented correctly: {get_hops(p2)} -> {get_hops(p3)}'
 
     # Step 6: Harness
@@ -130,11 +143,16 @@ def verify(pv):
     #   - The hopsLft field of the 6LoWPAN Mesh Header MUST be greater than the route cost to the destination.
     print("Step 7: Router_3")
     # Router_3 -> DUT
-    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).filter_wpan_dst16(DUT_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).must_next()
+    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).\
+        filter_wpan_dst16(DUT_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        must_next()
     # DUT -> Leader
-    p2 = pkts.filter_wpan_src16(DUT_RLOC16).filter_wpan_dst16(LEADER_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).filter(lambda p: p.lowpan.mesh.hops > 2).must_next()
+    p2 = pkts.filter_wpan_src16(DUT_RLOC16).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        filter(lambda p: p.lowpan.mesh.hops > 2).\
+        must_next()
     assert get_hops(p2) == get_hops(p1) - 1, f'Hops left not decremented correctly: {get_hops(p1)} -> {get_hops(p2)}'
 
     # Step 8: Harness
@@ -149,15 +167,23 @@ def verify(pv):
     #   - The hopsLft field of the 6LoWPAN Mesh Header MUST be greater than the route cost to the destination.
     print("Step 9: Router_3")
     # Router_3 -> DUT
-    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).filter_wpan_dst16(DUT_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).must_next()
+    p1 = pkts.filter_wpan_src16(ROUTER_3_RLOC16).\
+        filter_wpan_dst16(DUT_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        must_next()
     # DUT -> Router_2
-    p2 = pkts.filter_wpan_src16(DUT_RLOC16).filter_wpan_dst16(ROUTER_2_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).filter(lambda p: p.lowpan.mesh.hops > 2).must_next()
+    p2 = pkts.filter_wpan_src16(DUT_RLOC16).\
+        filter_wpan_dst16(ROUTER_2_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        filter(lambda p: p.lowpan.mesh.hops > 2).\
+        must_next()
     assert get_hops(p2) == get_hops(p1) - 1, f'Hops left not decremented correctly: {get_hops(p1)} -> {get_hops(p2)}'
     # Router_2 -> Leader
-    p3 = pkts.filter_wpan_src16(ROUTER_2_RLOC16).filter_wpan_dst16(LEADER_RLOC16).filter_ping_request(
-        identifier=ECHO_IDENTIFIER).filter(lambda p: p.lowpan.mesh.hops > 1).must_next()
+    p3 = pkts.filter_wpan_src16(ROUTER_2_RLOC16).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        filter_ping_request(identifier=ECHO_IDENTIFIER).\
+        filter(lambda p: p.lowpan.mesh.hops > 1).\
+        must_next()
     assert get_hops(p3) == get_hops(p2) - 1, f'Hops left not decremented correctly: {get_hops(p2)} -> {get_hops(p3)}'
 
 

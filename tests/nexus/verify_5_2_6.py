@@ -73,8 +73,8 @@ def verify(pv):
     # - Pass Criteria: N/A
     print("Step 2: Router_24 - Harness causes Router_24 to attach to the network")
     pkts.filter_wpan_src64(ROUTER_24).\
-      filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-      must_next()
+        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
+        must_next()
 
     # Step 3: Router_1 (DUT)
     # - Description: Allow enough time for the DUT to get Network Data Updates and resign its Router ID.
@@ -91,41 +91,41 @@ def verify(pv):
 
     # Verify DUT sends Parent Request
     pkts.filter_wpan_src64(ROUTER_1).\
-      filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-      must_next()
+        filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
+        must_next()
 
     # Verify DUT sends Child ID Request
     pkts.filter_wpan_src64(ROUTER_1).\
-      filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
-      must_next()
+        filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST).\
+        must_next()
 
     # Verify DUT sends Address Release with required TLVs
     pkts.filter_wpan_src64(ROUTER_1).\
-      filter_coap_request(consts.ADDR_REL_URI).\
-      filter(lambda p: {
-        consts.NL_MAC_EXTENDED_ADDRESS_TLV,
-        consts.NL_RLOC16_TLV
-      } <= {int(t, 16) if isinstance(t, str) else t for t in p.coap.tlv.type}).\
-      must_next()
+        filter_coap_request(consts.ADDR_REL_URI).\
+        filter(lambda p: {
+            consts.NL_MAC_EXTENDED_ADDRESS_TLV,
+            consts.NL_RLOC16_TLV
+        } <= {int(t, 16) if isinstance(t, str) else t for t in p.coap.tlv.type}).\
+        must_next()
 
     # Step 4: Leader
     # - Description: Receives Address Release message and automatically sends a 2.04 Changed CoAP response.
     # - Pass Criteria: N/A
     print("Step 4: Leader - Receives Address Release message and automatically sends a 2.04 Changed CoAP response.")
     pkts.filter_wpan_src64(LEADER).\
-      filter_coap_ack(consts.ADDR_REL_URI).\
-      filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
-      must_next()
+        filter_coap_ack(consts.ADDR_REL_URI).\
+        filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
+        must_next()
 
     # Step 5: Leader
     # - Description: Harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request to the DUT
     # - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply
     print("Step 5: Leader - Harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request")
     _pkt = pkts.filter_ping_request().\
-      filter_wpan_src64(LEADER).\
-      must_next()
+        filter_wpan_src64(LEADER).\
+        must_next()
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
-      must_next()
+        must_next()
 
 
 if __name__ == '__main__':

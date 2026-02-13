@@ -86,13 +86,15 @@ def verify(pv):
     for mleid in MEDS_MLEID:
         # For each MED, verify a ping request exists. A fresh copy of `pkts` is used
         # to ensure the search is independent of the order of packets for other MEDs.
-        pkts.copy().filter_ping_request().\
+        pkts.copy().\
+            filter_ping_request().\
             filter_wpan_src64(SED_1).\
             filter_ipv6_dst(mleid).\
             must_next()
 
         # Verify a corresponding address query is sent by the DUT.
-        pkts.copy().filter_wpan_src64(DUT).\
+        pkts.copy().\
+            filter_wpan_src64(DUT).\
             filter_ipv6_dst(consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS).\
             filter_coap_request(consts.ADDR_QRY_URI).\
             filter(lambda p: p.coap.tlv.target_eid == str(mleid)).\
@@ -146,7 +148,8 @@ def verify(pv):
             must_next()
 
     # Verify NO Address Query was sent by DUT starting from the start of Step 4
-    pkts.range(checkpoint_step4).filter_wpan_src64(DUT).\
+    pkts.range(checkpoint_step4).\
+        filter_wpan_src64(DUT).\
         filter_coap_request(consts.ADDR_QRY_URI).\
         must_not_next()
 

@@ -79,7 +79,8 @@ def verify(pv):
     #     - Route64 TLV
     #     - Source Address TLV
     print("Step 2: Leader (DUT)")
-    pkts.copy().filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+    pkts.copy().\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
         filter_wpan_src64(LEADER).\
         filter_LLANMA().\
         filter(lambda p: {
@@ -111,7 +112,8 @@ def verify(pv):
     #     - CoAP Payload:
     #       - Target EID TLV
     print("Step 5: MED_2")
-    pkts.copy().filter_wpan_src64(LEADER).\
+    pkts.copy().\
+        filter_wpan_src64(LEADER).\
         filter_RLARMA().\
         filter_coap_request(consts.ADDR_QRY_URI).\
         filter(lambda p: p.coap.tlv.target_eid == '2001::1').\
@@ -121,8 +123,14 @@ def verify(pv):
     # - Description: Automatically respond with Address Notification message with matching Target TLVs.
     # - Pass Criteria: N/A
     print("Step 6: Router_1, Router_2")
-    pkts.copy().filter_wpan_src64(ROUTER_1).filter_coap_request(consts.ADDR_NTF_URI).must_next()
-    pkts.copy().filter_wpan_src64(ROUTER_2).filter_coap_request(consts.ADDR_NTF_URI).must_next()
+    pkts.copy().\
+        filter_wpan_src64(ROUTER_1).\
+        filter_coap_request(consts.ADDR_NTF_URI).\
+        must_next()
+    pkts.copy().\
+        filter_wpan_src64(ROUTER_2).\
+        filter_coap_request(consts.ADDR_NTF_URI).\
+        must_next()
 
     # Step 7: Leader (DUT)
     # - Description: Automatically sends a Multicast Address Error Notification.
@@ -136,7 +144,8 @@ def verify(pv):
     #       - ML-EID TLV
     #   - The IPv6 Source address MUST be the RLOC of the originator,,,
     print("Step 7: Leader (DUT)")
-    pkts.copy().filter_wpan_src64(LEADER).\
+    pkts.copy().\
+        filter_wpan_src64(LEADER).\
         filter_RLARMA().\
         filter_coap_request(consts.ADDR_ERR_URI).\
         filter(lambda p: p.coap.tlv.target_eid == '2001::1' and p.ipv6.src == pv.vars['LEADER_RLOC']).\

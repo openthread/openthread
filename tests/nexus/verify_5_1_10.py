@@ -67,9 +67,18 @@ def verify(pv):
     # - Description: Setup the topology without the DUT. Verify all are sending MLE Advertisements.
     # - Pass Criteria: N/A
     print("Step 1: Leader, Router_1, Router_2")
-    pkts.copy().filter_mle_cmd(consts.MLE_ADVERTISEMENT).filter_wpan_src64(LEADER).must_next()
-    pkts.copy().filter_mle_cmd(consts.MLE_ADVERTISEMENT).filter_wpan_src64(ROUTER_1).must_next()
-    pkts.copy().filter_mle_cmd(consts.MLE_ADVERTISEMENT).filter_wpan_src64(ROUTER_2).must_next()
+    pkts.copy().\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        filter_wpan_src64(LEADER).\
+        must_next()
+    pkts.copy().\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        filter_wpan_src64(ROUTER_1).\
+        must_next()
+    pkts.copy().\
+        filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        filter_wpan_src64(ROUTER_2).\
+        must_next()
 
     # Step 2: Test Harness
     # - Description: Set RSSI of Router_2 at the DUT to -85dBm (Link Quality 2).
@@ -107,8 +116,14 @@ def verify(pv):
     # - Pass Criteria: N/A
     print("Step 4: Router_1, Router_2")
     # Verify that we see parent responses from expected nodes.
-    pkts.copy().filter_mle_cmd(consts.MLE_PARENT_RESPONSE).filter_wpan_src64(ROUTER_1).must_next()
-    pkts.copy().filter_mle_cmd(consts.MLE_PARENT_RESPONSE).filter_wpan_src64(ROUTER_2).must_next()
+    pkts.copy().\
+        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
+        filter_wpan_src64(ROUTER_1).\
+        must_next()
+    pkts.copy().\
+        filter_mle_cmd(consts.MLE_PARENT_RESPONSE).\
+        filter_wpan_src64(ROUTER_2).\
+        must_next()
 
     # Step 5: Router_3 (DUT)
     # - Description: DUT sends Child ID Request to Router_1.
