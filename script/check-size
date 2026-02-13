@@ -78,6 +78,17 @@ nm_size()
     diff -Nuar nmsize_old nmsize_new || true
 }
 
+curl -s -o /dev/null -w "%{http_code}\n" \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/openthread/openthread/branches/main/protection
+
+curl -s -o /dev/null -w "%{http_code}\n" \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/openthread/openthread/branches/main/protection
+
+
 build_nrf52840()
 {
     case "$1" in
