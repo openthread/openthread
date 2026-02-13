@@ -2531,6 +2531,15 @@ exit:
     return;
 }
 
+void RoutingManager::PdPrefixManager::Stop(void)
+{
+    VerifyOrExit(mState != kDhcp6PdStateDisabled);
+    SetState(kDhcp6PdStateStopped);
+
+exit:
+    return;
+}
+
 void RoutingManager::PdPrefixManager::Evaluate(void)
 {
     VerifyOrExit(mState != kDhcp6PdStateDisabled);
