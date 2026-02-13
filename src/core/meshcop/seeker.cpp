@@ -46,7 +46,7 @@ Seeker::Seeker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateStopped)
     , mUdpPort(kDefaultUdpPort)
-    , mCandidateIndex(0)
+    , mCandidates(aInstance)
 {
 }
 
@@ -66,9 +66,6 @@ Error Seeker::Start(ScanEvaluator aScanEvaluator, void *aContext)
 
     mScanEvaluator.Set(aScanEvaluator, aContext);
 
-    ClearAllBytes(mCandidates);
-    mCandidateIndex = 0;
-
     SuccessOrExit(error =
                       Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
                                                            /* aJoiner */ true, /* aEnableFiltering */ false,
@@ -87,10 +84,13 @@ void Seeker::Stop(void)
     case kStateDiscovering:
     case kStateDiscoverDone:
         break;
-    case kStateConnecting:
+    case kStateConnectingNetworks:
+    case kStateConnectingAny:
         IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(mUdpPort));
         break;
     }
+
+    mCandidates.Clear();
 
     SetState(kStateStopped);
 }
@@ -152,75 +152,109 @@ exit:
 
 void Seeker::SaveCandidate(const ScanResult &aResult, bool aPreferred)
 {
-    uint8_t    priority;
-    Candidate *end;
-    Candidate *entry;
+    Error                         error           = kErrorNone;
+    const MeshCoP::ExtendedPanId &extPanId        = AsCoreType(&aResult.mExtendedPanId);
+    bool                          shouldPushAsNew = false;
+    CandidateEntry                entry;
 
-    LogInfo("Discovered: %s, pan:0x%04x, port:%u, chan:%u, rssi:%d, preferred:%s",
-            AsCoreType(&aResult.mExtAddress).ToString().AsCString(), aResult.mPanId, aResult.mJoinerUdpPort,
-            aResult.mChannel, aResult.mRssi, ToYesNo(aPreferred));
+    entry.MarkAsEmpty();
 
-    priority = CalculatePriority(aResult.mRssi, aPreferred);
-
-    // We keep the list sorted based on priority. Find the place to
-    // add the new result.
-
-    end = GetArrayEnd(mCandidates);
-
-    for (entry = &mCandidates[0]; entry < end; entry++)
+    if (mCandidates.FindMatching(entry, extPanId, AsCoreType(&aResult.mExtAddress)) == kErrorNone)
     {
-        if (priority > entry->mPriority)
+        entry.Log(Candidate::kReplace);
+    }
+    else
+    {
+        uint16_t count = CountAndSelectLeastFavoredCandidateFor(extPanId, entry);
+
+        if ((count == kMaxCandidatesPerNetwork) || ((count > 0) && mCandidates.IsFull()))
         {
+            // We have reached the max allowed candidates for this
+            // network (`extPanId`), or the array is full but we have
+            // some existing entries for this network. In both cases
+            // we replace the least favored existing entry with the
+            // new scan result only if the new result is favored over
+            // the existing one.
+
+            if (entry.IsFavoredOver(aResult, aPreferred))
+            {
+                error = kErrorDrop;
+            }
+            else
+            {
+                entry.Log(Candidate::kReplace);
+            }
+        }
+        else if (!mCandidates.IsFull())
+        {
+            shouldPushAsNew = true;
+        }
+        else
+        {
+            // When the array is full, we only evict an entry to make
+            // room for a new network (one not yet in the list). We
+            // do not evict to add redundancy (additional candidates)
+            // for a network we have already discovered. We know
+            // `count == 0` when we get here.
+
+            error = EvictCandidate(entry);
+        }
+    }
+
+    entry.SetFrom(aResult, aPreferred);
+
+    // We check the `error` after `entry.SetFrom()` so that the
+    // `entry.Log()` call at `exit` uses the proper candidate
+    // entry from the scan `aResult`.
+
+    SuccessOrExit(error);
+
+    SuccessOrExit(error = shouldPushAsNew ? mCandidates.Push(entry) : mCandidates.Write(entry));
+
+    entry.Log(Candidate::kSave);
+
+exit:
+    if (error != kErrorNone)
+    {
+        entry.Log(Candidate::kDrop);
+    }
+}
+
+Error Seeker::EvictCandidate(CandidateEntry &aEntry)
+{
+    Error          error = kErrorNoBufs;
+    CandidateEntry entry;
+
+    aEntry.MarkAsEmpty();
+
+    for (entry.InitForIteration(); mCandidates.ReadNext(entry) == kErrorNone;)
+    {
+        uint16_t count = CountAndSelectLeastFavoredCandidateFor(entry.mExtPanId, aEntry);
+
+        if (count > 1)
+        {
+            aEntry.Log(Candidate::kEvict);
+            error = kErrorNone;
             break;
         }
     }
 
-    VerifyOrExit(entry < end);
-
-    // Shift elements in array to make room for the new one.
-    memmove(entry + 1, entry,
-            static_cast<size_t>(reinterpret_cast<uint8_t *>(end - 1) - reinterpret_cast<uint8_t *>(entry)));
-
-    entry->mExtAddr       = AsCoreType(&aResult.mExtAddress);
-    entry->mPanId         = aResult.mPanId;
-    entry->mJoinerUdpPort = aResult.mJoinerUdpPort;
-    entry->mChannel       = aResult.mChannel;
-    entry->mPriority      = priority;
-
-exit:
-    return;
-}
-
-uint8_t Seeker::CalculatePriority(int8_t aRssi, bool aPreferred)
-{
-    int16_t priority;
-
-    if (aRssi == Radio::kInvalidRssi)
-    {
-        aRssi = -127;
-    }
-
-    priority = Clamp<int8_t>(aRssi, -127, -1);
-
-    // We assign a higher priority value to networks marked as
-    // preferred (128 < priority < 256) compared to normal
-    // (0 < priority < 128). Sub-prioritize based on signal
-    // strength. Priority 0 is reserved for unused entry.
-
-    priority += aPreferred ? 256 : 128;
-
-    return static_cast<uint8_t>(priority);
+    return error;
 }
 
 Error Seeker::SetUpNextConnection(Ip6::SockAddr &aSockAddr)
 {
-    Error            error = kErrorNone;
-    const Candidate *candidate;
+    Error          error = kErrorNone;
+    CandidateEntry entry;
 
     switch (GetState())
     {
     case kStateDiscoverDone:
-    case kStateConnecting:
+        SetState(kStateConnectingNetworks);
+        break;
+
+    case kStateConnectingNetworks:
+    case kStateConnectingAny:
         break;
 
     case kStateStopped:
@@ -228,35 +262,238 @@ Error Seeker::SetUpNextConnection(Ip6::SockAddr &aSockAddr)
         ExitNow(error = kErrorInvalidState);
     }
 
-    candidate = &mCandidates[mCandidateIndex];
+    error = SelectNextCandidate(entry);
 
-    if (!candidate->IsValid())
+    if (error != kErrorNone)
     {
         Stop();
-        ExitNow(error = kErrorNotFound);
+        ExitNow();
     }
 
-    mCandidateIndex++;
+    entry.Log(Candidate::kConnect);
 
-    LogInfo("Setting up conn to %s, pan:0x%04x, chan:%u", candidate->mExtAddr.ToString().AsCString(), candidate->mPanId,
-            candidate->mChannel);
+    entry.mConnAttempted = true;
+    IgnoreError(mCandidates.Write(entry));
 
-    Get<Mac::Mac>().SetPanId(candidate->mPanId);
-    SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(candidate->mChannel));
+    Get<Mac::Mac>().SetPanId(entry.mPanId);
+    SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(entry.mChannel));
 
     if (!Get<Ip6::Filter>().IsUnsecurePort(mUdpPort))
     {
         SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(mUdpPort));
     }
 
-    SetState(kStateConnecting);
-
     aSockAddr.Clear();
-    aSockAddr.SetPort(candidate->mJoinerUdpPort);
-    aSockAddr.GetAddress().SetToLinkLocalAddress(candidate->mExtAddr);
+    aSockAddr.SetPort(entry.mJoinerUdpPort);
+    aSockAddr.GetAddress().SetToLinkLocalAddress(entry.mExtAddr);
 
 exit:
     return error;
+}
+
+Error Seeker::SelectNextCandidate(CandidateEntry &aEntry)
+{
+    CandidateEntry entry;
+
+    aEntry.MarkAsEmpty();
+
+    if (mState == kStateConnectingNetworks)
+    {
+        // While in `kStateConnectingNetworks` we first try to cover all
+        // discovered networks (Extended PAN IDs). We determine the most
+        // favored candidate among all discovered networks which has not
+        // yet been attempted.
+
+        for (entry.InitForIteration(); mCandidates.ReadNext(entry) == kErrorNone;)
+        {
+            CandidateEntry matchingPanEntry;
+
+            if (SelectMostFavoredCandidateFor(entry.mExtPanId, matchingPanEntry) == kErrorNone)
+            {
+                aEntry.ReplaceWithIfFavored(matchingPanEntry);
+            }
+        }
+
+        if (!aEntry.IsEmpty())
+        {
+            ExitNow();
+        }
+
+        // If we have already covered the most favored candidate per Network
+        // (Extended PAN ID), we switch to `kStateConnectingAny` where we
+        // try any remaining discovered candidates (e.g. backup candidates
+        // associated with the same networks).
+
+        mState = kStateConnectingAny;
+    }
+
+    for (entry.InitForIteration(); mCandidates.ReadNext(entry) == kErrorNone;)
+    {
+        if (entry.mConnAttempted)
+        {
+            continue;
+        }
+
+        aEntry.ReplaceWithIfFavored(entry);
+    }
+
+exit:
+    return aEntry.IsEmpty() ? kErrorNotFound : kErrorNone;
+}
+
+uint16_t Seeker::CountAndSelectLeastFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId,
+                                                        CandidateEntry               &aEntry) const
+{
+    // Iterates through all candidates matching a given Extended PAN ID.
+    // Returns the total count of such entries. Also finds the least
+    // favored matching entry and returns it in `aEntry`. This is then
+    // used to decide whether to replace an existing candidate entry with
+    // a new one.
+
+    uint16_t       count = 0;
+    CandidateEntry entry;
+
+    aEntry.MarkAsEmpty();
+
+    for (entry.InitForIteration(); mCandidates.ReadNext(entry) == kErrorNone;)
+    {
+        if (!entry.Matches(aExtPanId))
+        {
+            continue;
+        }
+
+        count++;
+
+        if ((count == 1) || aEntry.IsFavoredOver(entry))
+        {
+            aEntry = entry;
+        }
+    }
+
+    return count;
+}
+
+Error Seeker::SelectMostFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId,
+                                            CandidateEntry               &aFavoredEntry) const
+{
+    // Iterates through all candidates associated with a given network
+    // (matching `aExtPanId`). If a connection has already been attempted
+    // with any candidate from this network, `kErrorAlready` is returned.
+    // Otherwise, the most favored candidate for this network is determined
+    // and returned in `aFavoredEntry`.
+
+    Error          error = kErrorNone;
+    CandidateEntry entry;
+
+    aFavoredEntry.MarkAsEmpty();
+
+    for (entry.InitForIteration(); mCandidates.ReadNext(entry) == kErrorNone;)
+    {
+        if (!entry.Matches(aExtPanId))
+        {
+            continue;
+        }
+
+        if (entry.mConnAttempted)
+        {
+            error = kErrorAlready;
+            ExitNow();
+        }
+
+        aFavoredEntry.ReplaceWithIfFavored(entry);
+    }
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Seeker::Candidate
+
+void Seeker::Candidate::SetFrom(const ScanResult &aResult, bool aPreferred)
+{
+    mExtPanId      = AsCoreType(&aResult.mExtendedPanId);
+    mExtAddr       = AsCoreType(&aResult.mExtAddress);
+    mPanId         = aResult.mPanId;
+    mJoinerUdpPort = aResult.mJoinerUdpPort;
+    mChannel       = aResult.mChannel;
+    mRssi          = aResult.mRssi;
+    mPreferred     = aPreferred;
+    mConnAttempted = false;
+}
+
+bool Seeker::Candidate::IsFavoredOver(const Candidate &aOther) const
+{
+    return IsFavoredOver(aOther.mRssi, aOther.mPreferred);
+}
+
+bool Seeker::Candidate::IsFavoredOver(const ScanResult &aResult, bool aPreferred) const
+{
+    return IsFavoredOver(aResult.mRssi, aPreferred);
+}
+
+bool Seeker::Candidate::IsFavoredOver(int8_t aRssi, bool aPreferred) const
+{
+    int compare;
+
+    compare = ThreeWayCompare(mPreferred, aPreferred);
+    VerifyOrExit(compare == 0);
+    compare = ThreeWayCompare(mRssi, aRssi);
+
+exit:
+    return (compare > 0);
+}
+
+bool Seeker::Candidate::Matches(const MeshCoP::ExtendedPanId &aExtPanId, const Mac::ExtAddress &aExtAddr) const
+{
+    return (mExtPanId == aExtPanId) && (mExtAddr == aExtAddr);
+}
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+const char *Seeker::Candidate::ActionToString(Action aAction)
+{
+#define ActionMapList(_)     \
+    _(kSave, "Saving")       \
+    _(kReplace, "Replacing") \
+    _(kEvict, "Evicting")    \
+    _(kDrop, "Dropping")     \
+    _(kConnect, "Connecting to")
+
+    DefineEnumStringArray(ActionMapList);
+
+    return kStrings[aAction];
+}
+
+void Seeker::Candidate::Log(Action aAction) const
+{
+    LogInfo("%s candidate:", ActionToString(aAction));
+    LogInfo("   ext-panid: %s", mExtPanId.ToString().AsCString());
+    LogInfo("   ext-addr: %s", mExtAddr.ToString().AsCString());
+    LogInfo("   panid: 0x%04x", mPanId);
+    LogInfo("   channel: %u", mChannel);
+    LogInfo("   rssi: %d", mRssi);
+    LogInfo("   preferred: %s", ToYesNo(mPreferred));
+    LogInfo("   joiner-port: %u", mJoinerUdpPort);
+}
+
+#else
+void Seeker::Candidate::Log(Action) const {}
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
+// Seeker::CandidateEntry
+
+void Seeker::CandidateEntry::ReplaceWithIfFavored(const CandidateEntry &aEntry)
+{
+    // Replaces this entry with `aEntry` if this entry is currently
+    // empty (not yet set) or if `aEntry` is favored over the
+    // current one.
+
+    if (IsEmpty() || aEntry.IsFavoredOver(*this))
+    {
+        *this = aEntry;
+    }
 }
 
 } // namespace MeshCoP
