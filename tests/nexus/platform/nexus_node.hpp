@@ -66,12 +66,19 @@ class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListE
     friend class Heap::Allocatable<Node>;
 
 public:
+    // Defines the device role and Network Data request behavior
+    // during joining:
+    //
+    // - `kAsFtd`, `kAsFed`, and `kAsMed` all request full netdata.
+    // - `kAsSed` requests only stable netdata (default for SED).
+    // - `kAsSedWithFullNetData` explicitly request full netdata.
     enum JoinMode : uint8_t
     {
         kAsFtd,
         kAsFed,
         kAsMed,
         kAsSed,
+        kAsSedWithFullNetData,
     };
 
     void Reset(void);

@@ -66,7 +66,7 @@ void Node::Form(void)
 void Node::Join(Node &aNode, JoinMode aJoinMode)
 {
     MeshCoP::Dataset dataset;
-    Mle::DeviceMode  mode(0);
+    uint8_t          mode = 0;
 
     switch (aJoinMode)
     {
@@ -75,18 +75,20 @@ void Node::Join(Node &aNode, JoinMode aJoinMode)
         OT_FALL_THROUGH;
 
     case kAsFtd:
-        mode.Set(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullThreadDevice |
-                 Mle::DeviceMode::kModeFullNetworkData);
+        mode = Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullThreadDevice |
+               Mle::DeviceMode::kModeFullNetworkData;
         break;
     case kAsMed:
-        mode.Set(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData);
+        mode = Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData;
+        break;
+    case kAsSedWithFullNetData:
+        mode = Mle::DeviceMode::kModeFullNetworkData;
         break;
     case kAsSed:
-        mode.Set(Mle::DeviceMode::kModeFullNetworkData);
         break;
     }
 
-    SuccessOrQuit(Get<Mle::Mle>().SetDeviceMode(mode));
+    SuccessOrQuit(Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(mode)));
 
     SuccessOrQuit(aNode.Get<MeshCoP::ActiveDatasetManager>().Read(dataset));
     Get<MeshCoP::ActiveDatasetManager>().SaveLocal(dataset);
