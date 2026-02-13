@@ -133,7 +133,7 @@ def verify(pv):
     # DUT responds with Address Notification
     pkts.filter_coap_request(consts.ADDR_NTF_URI).\
         filter(lambda p: p.coap.type == COAP_TYPE_CON).\
-        filter(lambda p: p.ipv6.src == pv.vars['DUT_RLOC']).\
+        filter_ipv6_src(pv.vars['DUT_RLOC']).\
         filter_ipv6_dst(pv.vars['ROUTER_1_RLOC']).\
         filter(lambda p: {
             consts.NL_ML_EID_TLV,
@@ -161,7 +161,7 @@ def verify(pv):
 
     # Now check in the range up to this reply.
     pkts.range(start_of_step_4, end_of_step_4).filter_wpan_src64(DUT).\
-        filter(lambda p: p.ipv6.src == pv.vars['DUT_RLOC']).\
+        filter_ipv6_src(pv.vars['DUT_RLOC']).\
         filter_coap_request(consts.ADDR_QRY_URI).\
         filter(lambda p: p.coap.tlv.target_eid == pv.vars['ROUTER_3_MLEID']).\
         must_not_next()
@@ -201,7 +201,7 @@ def verify(pv):
 
     # DUT must NOT respond with Address Notification for MED_1 ML-EID
     with pkts.save_index():
-        pkts.filter(lambda p: p.ipv6.src == pv.vars['DUT_RLOC']).\
+        pkts.filter_ipv6_src(pv.vars['DUT_RLOC']).\
             filter_coap_request(consts.ADDR_NTF_URI).\
             filter(lambda p: p.coap.tlv.target_eid == pv.vars['MED_1_MLEID']).\
             must_not_next()

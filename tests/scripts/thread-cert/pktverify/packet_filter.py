@@ -538,6 +538,10 @@ class PacketFilter(object):
         assert isinstance(addr, (str, EthAddr))
         return self.filter(lambda p: p.eth.src == addr, **kwargs)
 
+    def filter_ipv6_src(self, addr, **kwargs):
+        assert isinstance(addr, (str, Ipv6Addr))
+        return self.filter(lambda p: p.ipv6.src == addr, **kwargs)
+
     def filter_ipv6_dst(self, addr, **kwargs):
         assert isinstance(addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
