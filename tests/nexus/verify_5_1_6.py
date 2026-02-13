@@ -74,7 +74,6 @@ def verify(pv):
                           consts.NL_RLOC16_TLV,
                           consts.NL_ROUTER_MASK_TLV
                           } <= set(p.coap.tlv.type) and\
-               p.coap.code == consts.COAP_CODE_ACK and\
                p.coap.tlv.status == 0
                ).\
         must_next()

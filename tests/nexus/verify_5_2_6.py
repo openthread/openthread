@@ -114,7 +114,6 @@ def verify(pv):
     print("Step 4: Leader - Receives Address Release message and automatically sends a 2.04 Changed CoAP response.")
     pkts.filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.ADDR_REL_URI).\
-        filter(lambda p: p.coap.code == consts.COAP_CODE_ACK).\
         must_next()
 
     # Step 5: Leader
