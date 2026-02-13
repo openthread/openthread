@@ -72,12 +72,7 @@ exit:
     return;
 }
 
-void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext)
-{
-    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aScanResult);
-}
-
-void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
+void PanIdQueryServer::HandleScanResult(const ScanResult *aScanResult)
 {
     if (aScanResult != nullptr)
     {

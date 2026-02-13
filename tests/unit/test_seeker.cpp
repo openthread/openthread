@@ -39,7 +39,6 @@ class UnitTester
 {
 public:
     using Seeker         = MeshCoP::Seeker;
-    using ScanResult     = MeshCoP::Seeker::ScanResult;
     using CandidateEntry = MeshCoP::Seeker::CandidateEntry;
 
     static void CreateScanResult(ScanResult &aResult, uint64_t aExtPanId, uint64_t aExtAddr, int8_t aRssi)

@@ -46,8 +46,8 @@ struct DiscoverContext
         mScanResults.Clear();
     }
 
-    bool                                                 mDiscoverDone;
-    Array<Mle::DiscoverScanner::ScanResult, kMaxResults> mScanResults;
+    bool                           mDiscoverDone;
+    Array<ScanResult, kMaxResults> mScanResults;
 };
 
 struct RequestCallbackContext : public Clearable<RequestCallbackContext>
@@ -59,19 +59,20 @@ struct RequestCallbackContext : public Clearable<RequestCallbackContext>
 void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 {
     DiscoverContext *context = static_cast<DiscoverContext *>(aContext);
+    ScanResult      *result  = AsCoreTypePtr(aResult);
 
     VerifyOrQuit(aContext != nullptr);
 
-    Log("   HandleDiscoverResult() called%s", aResult == nullptr ? " (done)" : "");
+    Log("   HandleDiscoverResult() called%s", result == nullptr ? " (done)" : "");
 
-    if (aResult == nullptr)
+    if (result == nullptr)
     {
         context->mDiscoverDone = true;
     }
     else
     {
         VerifyOrQuit(!context->mDiscoverDone);
-        SuccessOrQuit(context->mScanResults.PushBack(*aResult));
+        SuccessOrQuit(context->mScanResults.PushBack(*result));
     }
 }
 
@@ -95,12 +96,12 @@ void HandleDiscoverRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aCon
 
 void TestDiscoverScanRequestCallback(void)
 {
-    Core                              nexus;
-    Node                             &leader  = nexus.CreateNode();
-    Node                             &scanner = nexus.CreateNode();
-    DiscoverContext                   resultContext;
-    RequestCallbackContext            requestContext;
-    Mle::DiscoverScanner::ScanResult *result;
+    Core                   nexus;
+    Node                  &leader  = nexus.CreateNode();
+    Node                  &scanner = nexus.CreateNode();
+    DiscoverContext        resultContext;
+    RequestCallbackContext requestContext;
+    ScanResult            *result;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestDiscoverScanRequestCallback");
@@ -148,11 +149,11 @@ void TestDiscoverScanRequestCallback(void)
 
     result = &resultContext.mScanResults[0];
 
-    VerifyOrQuit(AsCoreType(&result->mExtAddress) == leader.Get<Mac::Mac>().GetExtAddress());
-    VerifyOrQuit(AsCoreType(&result->mExtendedPanId) == leader.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
-    VerifyOrQuit(result->mPanId == leader.Get<Mac::Mac>().GetPanId());
-    VerifyOrQuit(result->mChannel == leader.Get<Mac::Mac>().GetPanChannel());
-    VerifyOrQuit(result->mDiscover);
+    VerifyOrQuit(result->GetExtAddress() == leader.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(result->GetExtendedPanId() == leader.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
+    VerifyOrQuit(result->GetPanId() == leader.Get<Mac::Mac>().GetPanId());
+    VerifyOrQuit(result->GetChannel() == leader.Get<Mac::Mac>().GetPanChannel());
+    VerifyOrQuit(result->IsDiscover());
 }
 
 } // namespace Nexus

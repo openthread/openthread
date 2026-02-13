@@ -202,15 +202,14 @@ exit:
     return;
 }
 
-Seeker::Verdict Joiner::EvaluateScanResult(void *aContext, const Seeker::ScanResult *aResult)
+Seeker::Verdict Joiner::EvaluateScanResult(void *aContext, const otSeekerScanResult *aResult)
 {
-    return static_cast<Joiner *>(aContext)->EvaluateScanResult(aResult);
+    return static_cast<Joiner *>(aContext)->EvaluateScanResult(AsCoreTypePtr(aResult));
 }
 
-Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
+Seeker::Verdict Joiner::EvaluateScanResult(const ScanResult *aResult)
 {
-    Seeker::Verdict     verdict = Seeker::kIgnore;
-    const SteeringData *steeringData;
+    Seeker::Verdict verdict = Seeker::kIgnore;
 
     if (aResult == nullptr)
     {
@@ -218,13 +217,11 @@ Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
         ExitNow();
     }
 
-    steeringData = AsCoreTypePtr(&aResult->mSteeringData);
-
     // We prefer networks with an exact match of Joiner ID or
     // Discerner in the Steering Data compared to ones that allow all
     // Joiners.
 
-    if (steeringData->PermitsAllJoiners())
+    if (aResult->GetSteeringData().PermitsAllJoiners())
     {
         verdict = Seeker::kAccept;
         ExitNow();
@@ -232,11 +229,11 @@ Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
 
     if (!mDiscerner.IsEmpty())
     {
-        VerifyOrExit(steeringData->Contains(mDiscerner));
+        VerifyOrExit(aResult->GetSteeringData().Contains(mDiscerner));
     }
     else
     {
-        VerifyOrExit(steeringData->Contains(mId));
+        VerifyOrExit(aResult->GetSteeringData().Contains(mId));
     }
 
     verdict = Seeker::kAcceptPreferred;

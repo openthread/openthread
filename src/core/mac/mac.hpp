@@ -51,6 +51,7 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_links.hpp"
 #include "mac/mac_types.hpp"
+#include "mac/scan_result.hpp"
 #include "mac/sub_mac.hpp"
 #include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
@@ -99,16 +100,6 @@ constexpr uint32_t kDefaultWedListenInterval = OPENTHREAD_CONFIG_WED_LISTEN_INTE
 constexpr uint32_t kDefaultWedListenDuration = OPENTHREAD_CONFIG_WED_LISTEN_DURATION;
 
 /**
- * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
- */
-typedef otHandleActiveScanResult ActiveScanHandler;
-
-/**
- * Defines an Active Scan result.
- */
-typedef otActiveScanResult ActiveScanResult;
-
-/**
  * Defines the function pointer which is called during an Energy Scan when the scan result for a channel is
  * ready or when the scan completes.
  */
@@ -151,7 +142,7 @@ public:
      * @retval kErrorNone  Successfully scheduled the Active Scan request.
      * @retval kErrorBusy  Could not schedule the scan (a scan is ongoing or scheduled).
      */
-    Error ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
+    Error ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ScanResult::Handler aHandler, void *aContext);
 
     /**
      * Starts an IEEE 802.15.4 Energy Scan.
@@ -847,7 +838,6 @@ private:
     Error UpdateScanChannel(void);
     void  PerformActiveScan(void);
     void  ReportActiveScanResult(const RxFrame *aBeaconFrame);
-    Error ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
 
@@ -926,11 +916,9 @@ private:
 #endif
     union
     {
-        ActiveScanHandler mActiveScanHandler;
-        EnergyScanHandler mEnergyScanHandler;
+        ScanResult::ScanCallback    mActiveScanCallback;
+        Callback<EnergyScanHandler> mEnergyScanCallback;
     };
-
-    void *mScanHandlerContext;
 
     Links              mLinks;
     OperationTask      mOperationTask;

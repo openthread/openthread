@@ -64,13 +64,11 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    static void HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext);
-    void        HandleScanResult(Mac::ActiveScanResult *aScanResult);
-
-    void HandleTimer(void);
+    DeclareScanResultHandlerIn(PanIdQueryServer, HandleScanResult);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+    void HandleTimer(void);
     void SendConflict(void);
 
     using DelayTimer = TimerMilliIn<PanIdQueryServer, &PanIdQueryServer::HandleTimer>;

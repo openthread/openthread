@@ -58,7 +58,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 bool                    aJoiner,
                                 bool                    aEnableFiltering,
                                 const FilterIndexes    *aFilterIndexes,
-                                Handler                 aCallback,
+                                ScanResult::Handler     aHandler,
                                 void                   *aContext)
 {
     Error                             error   = kErrorNone;
@@ -88,7 +88,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         }
     }
 
-    mCallback.Set(aCallback, aContext);
+    mCallback.Set(aHandler, aContext);
     mShouldRestorePanId = false;
     mScanChannels       = Get<Mac::Mac>().GetSupportedChannelMask();
 
@@ -332,7 +332,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
     aRxInfo.mMessage.SetOffset(offsetRange.GetOffset());
     IgnoreError(aRxInfo.mMessage.SetLength(offsetRange.GetEndOffset()));
 
-    ClearAllBytes(result);
+    result.Clear();
     result.mDiscover = true;
     result.mPanId    = aRxInfo.mMessage.GetPanId();
     result.mChannel  = aRxInfo.mMessage.GetChannel();
