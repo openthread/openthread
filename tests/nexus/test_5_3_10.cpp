@@ -88,32 +88,6 @@ static constexpr char kPrefix1[] = "2003::/64";
  */
 static constexpr char kPrefix2[] = "2004::/64";
 
-/**
- * Get a unicast address of a node with a given prefix.
- */
-static Ip6::Address GetUnicastAddress(Node &aNode, const char *aPrefixString)
-{
-    Ip6::Prefix  prefix;
-    Ip6::Address address;
-    bool         found = false;
-
-    SuccessOrQuit(prefix.FromString(aPrefixString));
-
-    for (const Ip6::Netif::UnicastAddress &addr : aNode.Get<Ip6::Netif>().GetUnicastAddresses())
-    {
-        if (addr.GetAddress().MatchesPrefix(prefix))
-        {
-            address = addr.GetAddress();
-            found   = true;
-            break;
-        }
-    }
-
-    VerifyOrQuit(found, "did not get unicast address with prefix");
-
-    return address;
-}
-
 void Test5_3_10(void)
 {
     /**
@@ -238,7 +212,7 @@ void Test5_3_10(void)
      *     packet to Router_1.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(router1, kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, router1.FindMatchingAddress(kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
 
     Log("Step 4: Border Router");
 
@@ -256,7 +230,7 @@ void Test5_3_10(void)
      *   - The IPv6 Destination address MUST be the RLOC of the destination.
      */
 
-    nexus.SendAndVerifyEchoRequest(br, GetUnicastAddress(med1, kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(br, med1.FindMatchingAddress(kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
 
     Log("Step 5: MED_1");
 
@@ -268,7 +242,7 @@ void Test5_3_10(void)
      *   - The DUT MUST forward the ICMPv6 Echo Reply to MED_1.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(router1, kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, router1.FindMatchingAddress(kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
 
     nexus.SaveTestInfo("test_5_3_10.json");
 
@@ -283,7 +257,7 @@ void Test5_3_10(void)
      *   - The DUT MUST send an Address Query Request to discover Router_1’s RLOC address.
      */
 
-    Ip6::Address router1Gua = GetUnicastAddress(router1, kPrefix1);
+    Ip6::Address router1Gua = router1.FindMatchingAddress(kPrefix1);
 
     router1.Reset();
     nexus.AdvanceTime(kRouterIdExpirationTimeInSec * 1000);
@@ -302,7 +276,7 @@ void Test5_3_10(void)
      *   - The DUT MUST NOT respond with an Address Notification message.
      */
 
-    Ip6::Address med1Gua = GetUnicastAddress(med1, kPrefix1);
+    Ip6::Address med1Gua = med1.FindMatchingAddress(kPrefix1);
 
     med1.Reset();
     nexus.AdvanceTime(dut.Get<Mle::Mle>().GetTimeout() * 1000);

@@ -67,37 +67,6 @@ static constexpr uint16_t kEchoPayloadSize = 0;
 static constexpr uint8_t kEchoHopLimit = 64;
 
 /**
- * Get a unicast address matching a prefix.
- *
- * @param[in] aNode          The node to search.
- * @param[in] aPrefixString  The prefix to match.
- *
- * @returns The unicast address found.
- */
-static Ip6::Address GetUnicastAddress(Node &aNode, const char *aPrefixString)
-{
-    Ip6::Prefix  prefix;
-    Ip6::Address address;
-    bool         found = false;
-
-    SuccessOrQuit(prefix.FromString(aPrefixString));
-
-    for (const Ip6::Netif::UnicastAddress &addr : aNode.Get<Ip6::Netif>().GetUnicastAddresses())
-    {
-        if (addr.GetAddress().MatchesPrefix(prefix))
-        {
-            address = addr.GetAddress();
-            found   = true;
-            break;
-        }
-    }
-
-    VerifyOrQuit(found, "did not get unicast address with prefix");
-
-    return address;
-}
-
-/**
  * Add an on-mesh prefix to a node.
  *
  * @param[in] aNode          The node to add the prefix to.
@@ -251,7 +220,7 @@ void Test5_3_8(void)
      *   - MED_2 MUST respond with an ICMPv6 Echo Reply.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(med2, "2001::/64"), kEchoPayloadSize, kEchoHopLimit,
+    nexus.SendAndVerifyEchoRequest(med1, med2.FindMatchingAddress("2001::/64"), kEchoPayloadSize, kEchoHopLimit,
                                    kEchoResponseWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -265,7 +234,7 @@ void Test5_3_8(void)
      *   - MED_2 MUST respond with an ICMPv6 Echo Reply.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(med2, "2002::/64"), kEchoPayloadSize, kEchoHopLimit,
+    nexus.SendAndVerifyEchoRequest(med1, med2.FindMatchingAddress("2002::/64"), kEchoPayloadSize, kEchoHopLimit,
                                    kEchoResponseWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -279,7 +248,7 @@ void Test5_3_8(void)
      *   - MED_2 MUST respond with an ICMPv6 Echo Reply.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, GetUnicastAddress(med2, "2003::/64"), kEchoPayloadSize, kEchoHopLimit,
+    nexus.SendAndVerifyEchoRequest(med1, med2.FindMatchingAddress("2003::/64"), kEchoPayloadSize, kEchoHopLimit,
                                    kEchoResponseWaitTime);
 
     nexus.SaveTestInfo("test_5_3_8.json");

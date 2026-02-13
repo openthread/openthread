@@ -87,6 +87,11 @@ public:
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
 
+    // Finds and returns the address on device matching the given `aPrefix`.
+    // It requires a matching prefix to be found, otherwise it is treated as
+    // a test failure (emits error message and exits the program.)
+    const Ip6::Address &FindMatchingAddress(const char *aPrefix);
+
     void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
     void        SetName(const char *aPrefix, uint16_t aIndex);
     const char *GetName(void) const { return mName.AsCString(); }

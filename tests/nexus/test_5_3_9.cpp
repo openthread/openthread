@@ -92,29 +92,6 @@ static constexpr uint8_t kHopLimit = 64;
  */
 static constexpr uint32_t kSedPollPeriod = 100;
 
-static Ip6::Address GetGuaAddress(Node &aNode, const char *aPrefixString)
-{
-    Ip6::Prefix  prefix;
-    Ip6::Address address;
-    bool         found = false;
-
-    SuccessOrQuit(prefix.FromString(aPrefixString));
-
-    for (const Ip6::Netif::UnicastAddress &addr : aNode.Get<Ip6::Netif>().GetUnicastAddresses())
-    {
-        if (addr.GetAddress().MatchesPrefix(prefix))
-        {
-            address = addr.GetAddress();
-            found   = true;
-            break;
-        }
-    }
-
-    VerifyOrQuit(found, "did not get unicast address with prefix");
-
-    return address;
-}
-
 void Test5_3_9(void)
 {
     /**
@@ -228,7 +205,7 @@ void Test5_3_9(void)
      *     packet to SED_1.
      */
     Log("Step 3: SED_1");
-    nexus.SendAndVerifyEchoRequest(sed1, GetGuaAddress(router3, "2001::/64"), kEchoPayloadSize, kHopLimit,
+    nexus.SendAndVerifyEchoRequest(sed1, router3.FindMatchingAddress("2001::/64"), kEchoPayloadSize, kHopLimit,
                                    kEchoResponseTime);
 
     /**
@@ -245,7 +222,7 @@ void Test5_3_9(void)
      *   - The IPv6 Destination address MUST be the RLOC of the destination.
      */
     Log("Step 4: Router_1");
-    nexus.SendAndVerifyEchoRequest(router1, GetGuaAddress(sed1, "2001::/64"), kEchoPayloadSize, kHopLimit,
+    nexus.SendAndVerifyEchoRequest(router1, sed1.FindMatchingAddress("2001::/64"), kEchoPayloadSize, kHopLimit,
                                    kEchoResponseTime);
 
     /**
@@ -256,7 +233,7 @@ void Test5_3_9(void)
      *   - The DUT MUST forward the ICMPv6 Echo Reply to SED_1.
      */
     Log("Step 5: SED_1");
-    nexus.SendAndVerifyEchoRequest(sed1, GetGuaAddress(router3, "2001::/64"), kEchoPayloadSize, kHopLimit,
+    nexus.SendAndVerifyEchoRequest(sed1, router3.FindMatchingAddress("2001::/64"), kEchoPayloadSize, kHopLimit,
                                    kEchoResponseTime);
 
     /**
@@ -268,7 +245,7 @@ void Test5_3_9(void)
      *   - The DUT MUST send an Address Query to discover Router_3’s RLOC address.
      */
     Log("Step 6: Router_2 (DUT)");
-    Ip6::Address router3Gua = GetGuaAddress(router3, "2001::/64");
+    Ip6::Address router3Gua = router3.FindMatchingAddress("2001::/64");
     router3.Reset();
     nexus.AdvanceTime(kRouterIdTimeout);
 
@@ -284,7 +261,7 @@ void Test5_3_9(void)
      *   - The DUT MUST NOT respond with an Address Notification message.
      */
     Log("Step 7: SED_1");
-    Ip6::Address sed1Gua = GetGuaAddress(sed1, "2001::/64");
+    Ip6::Address sed1Gua = sed1.FindMatchingAddress("2001::/64");
     sed1.Reset();
     nexus.AdvanceTime(kChildTimeout);
 
