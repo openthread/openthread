@@ -155,6 +155,7 @@ ot_nexus_test(5_5_4_1 "cert;nexus")
 ot_nexus_test(5_5_4_2 "cert;nexus")
 ot_nexus_test(5_5_5 "cert;nexus")
 ot_nexus_test(5_5_7 "cert;nexus")
+ot_nexus_test(5_7_1 "cert;nexus")
 ot_nexus_test(5_8_2 "cert;nexus")
 
 # Misc tests

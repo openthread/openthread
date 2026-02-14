@@ -528,6 +528,13 @@ _LAYER_FIELDS = {
     'coap.tlv.ext_mac_addr': _ext_addr,
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
+    'coap.tlv.mac_addr': _ext_addr,
+    'coap.tlv.mode': _auto,
+    'coap.tlv.partition_id': _auto,
+    'coap.tlv.leader_router_id': _auto,
+    'coap.tlv.router_id_sequence': _auto,
+    'coap.tlv.router_id_mask': _str,
+    'coap.tlv.mac_counter': _list(_auto),
 
     # dtls
     'dtls.handshake.type': _list(_auto),
