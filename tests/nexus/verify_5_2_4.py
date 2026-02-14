@@ -64,9 +64,9 @@ def verify(pv):
     pv.summary.show()
 
     LEADER = pv.vars['Leader']
-    ROUTER_15 = pv.vars['Router 15']
-    REED_1 = pv.vars['REED 1']
-    MED_1 = pv.vars['MED 1']
+    ROUTER_15 = pv.vars['Router_15']
+    REED_1 = pv.vars['REED_1']
+    MED_1 = pv.vars['MED_1']
 
     # Step 1: All
     # - Description: Ensure topology is formed correctly without the DUT.

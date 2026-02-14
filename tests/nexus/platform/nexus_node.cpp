@@ -125,7 +125,7 @@ void Node::SendEchoRequest(const Ip6::Address &aDestination,
     SuccessOrQuit(Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier));
 }
 
-void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append("%s %u", aPrefix, aIndex); }
+void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append("%s_%u", aPrefix, aIndex); }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
