@@ -106,6 +106,10 @@ class Packet(object):
     def dns(self) -> DnsLayer:
         return DnsLayer(self._packet, 'dns')
 
+    @property
+    def number(self) -> int:
+        return int(self._packet.number)
+
     def __getattr__(self, layer_name: str) -> Layer:
 
         real_layer_name = layer_name
