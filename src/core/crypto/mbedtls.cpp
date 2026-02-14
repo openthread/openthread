@@ -137,7 +137,9 @@ Error MbedTls::MapError(int aMbedTlsError)
 #if (MBEDTLS_VERSION_NUMBER < 0x03000000)
     case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
 #endif
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
     case MBEDTLS_ERR_THREADING_BAD_INPUT_DATA:
+#endif
     case MBEDTLS_ERR_THREADING_MUTEX_ERROR:
         error = kErrorSecurity;
         break;
