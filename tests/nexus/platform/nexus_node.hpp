@@ -66,6 +66,11 @@ class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListE
     friend class Heap::Allocatable<Node>;
 
 public:
+    static constexpr uint16_t kIdStringSize = 12;
+
+    typedef String<kIdStringSize> IdString;
+    typedef uint32_t              Id;
+
     enum JoinMode : uint8_t
     {
         kAsFtd,
@@ -110,7 +115,9 @@ public:
         return *this;
     }
 
-    uint32_t GetId(void) { return GetInstance().GetId(); }
+    Id GetId(void) { return GetInstance().GetId(); }
+
+    static IdString IdToString(Id aId);
 
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 

@@ -138,7 +138,10 @@ OT_TOOL_PACKED_BEGIN
 class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>, public Clearable<NetworkKey>
 {
 public:
-    static constexpr uint8_t kSize = OT_NETWORK_KEY_SIZE; ///< Size of the Thread Network Key (in bytes).
+    static constexpr uint8_t  kSize           = OT_NETWORK_KEY_SIZE; ///< Size of the Thread Network Key (in bytes).
+    static constexpr uint16_t kInfoStringSize = kSize * 2 + 1;       ///< Max chars for the info string (`ToString()`).
+
+    typedef String<kInfoStringSize> InfoString; ///< Fixed-length `String` object returned from `ToString()
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -149,6 +152,13 @@ public:
      */
     Error GenerateRandom(void) { return Random::Crypto::Fill(*this); }
 #endif
+
+    /**
+     * Converts the `NetworkKey` to a null-terminated string.
+     *
+     * @returns A `String` representing the `NetworkKey` (all bytes in hex format).
+     */
+    InfoString ToString(void) const;
 
 } OT_TOOL_PACKED_END;
 

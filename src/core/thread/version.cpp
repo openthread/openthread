@@ -36,16 +36,21 @@
 namespace ot {
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
-const char kThreadVersionString[] = "1.1.1";
+const char kThreadVersionString[]      = "1.1.1";
+const char kThreadVersionStringShort[] = "1.1";
 #elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_2
-const char kThreadVersionString[] = "1.2.0";
+const char kThreadVersionString[]      = "1.2.0";
+const char kThreadVersionStringShort[] = "1.2";
 #elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3
-const char kThreadVersionString[] = "1.3.0";
+const char kThreadVersionString[]      = "1.3.0";
+const char kThreadVersionStringShort[] = "1.3";
 #elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_3_1
 // Support projects on legacy "1.3.1" version, which is now "1.4"
-const char kThreadVersionString[] = "1.4.0";
+const char kThreadVersionString[]      = "1.4.0";
+const char kThreadVersionStringShort[] = "1.4";
 #elif OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_4
-const char kThreadVersionString[] = "1.4.0";
+const char kThreadVersionString[]      = "1.4.0";
+const char kThreadVersionStringShort[] = "1.4";
 #else
 #error "The `OPENTHREAD_CONFIG_THREAD_VERSION` is not valid or supported"
 #endif

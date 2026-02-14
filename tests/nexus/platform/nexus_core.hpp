@@ -59,7 +59,7 @@ public:
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test specific helper methods
 
-    void SaveTestInfo(const char *aFilename);
+    void SaveTestInfo(const char *aFileName);
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
                                   uint16_t            aPayloadSize     = 0,
