@@ -57,7 +57,7 @@ static constexpr uint32_t kResetTime = 300 * 1000;
 /**
  * Time to wait for network merge.
  */
-static constexpr uint32_t kMergeWaitTime = 200 * 1000;
+static constexpr uint32_t kMergeWaitTime = 300 * 1000;
 
 /**
  * The identifier used for Echo Request.

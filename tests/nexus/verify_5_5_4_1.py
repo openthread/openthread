@@ -37,6 +37,10 @@ sys.path.append(CUR_DIR)
 import verify_utils
 from pktverify import consts
 
+ECHO_IDENTIFIER = 0xabcd
+STEP_3_START_IDENTIFIER = 0x5303
+STEP_3_END_IDENTIFIER = 0x5304
+
 
 def verify(pv):
     # 5.5.4 Split and Merge with Routers
@@ -90,15 +94,16 @@ def verify(pv):
     # - Description: Reset the DUT for 300 seconds (longer than NETWORK_ID_TIMEOUT default value of 120 seconds).
     # - Pass Criteria: The DUT MUST stop sending MLE advertisements,.
     print("Step 3: Leader (DUT)")
+
     # Find the markers for the reset period.
     markers = pv.pkts.copy()
     markers.filter_ping_request().\
-        filter(lambda p: p.icmpv6.echo.identifier == 0x5303).\
+        filter(lambda p: p.icmpv6.echo.identifier == STEP_3_START_IDENTIFIER).\
         must_next()
     start_index = markers.index
 
     markers.filter_ping_request().\
-        filter(lambda p: p.icmpv6.echo.identifier == 0x5304).\
+        filter(lambda p: p.icmpv6.echo.identifier == STEP_3_END_IDENTIFIER).\
         must_next()
     stop_index = markers.index
 
@@ -124,13 +129,16 @@ def verify(pv):
     # - Description: Harness instructs device to send an ICMPv6 Echo Request to Router_4.
     # - Pass Criteria: Router_4 MUST send an ICMPv6 Echo Reply to Router_3.
     print("Step 6: Router_3")
+
     pkts.filter_ping_request().\
         filter_ipv6_src(ROUTER_3_MLEID).\
         filter_ipv6_dst(ROUTER_4_MLEID).\
+        filter(lambda p: p.icmpv6.echo.identifier == ECHO_IDENTIFIER).\
         must_next()
     pkts.filter_ping_reply().\
         filter_ipv6_src(ROUTER_4_MLEID).\
         filter_ipv6_dst(ROUTER_3_MLEID).\
+        filter(lambda p: p.icmpv6.echo.identifier == ECHO_IDENTIFIER).\
         must_next()
 
 
