@@ -165,8 +165,7 @@ void Test5_1_10(void)
      *     - Version TLV
      */
 
-    SuccessOrQuit(dut.Get<Mle::Mle>().SetRouterEligible(false));
-    dut.Join(leader);
+    dut.Join(leader, Node::kAsFed);
 
     /**
      * Step 4: Router_1, Router_2

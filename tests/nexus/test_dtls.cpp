@@ -254,13 +254,11 @@ void TestDtlsSingleSession(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
 
-    SuccessOrQuit(node1.Get<Mle::Mle>().SetRouterEligible(false));
-    node1.Join(node0);
+    node1.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node1.Get<Mle::Mle>().IsChild());
 
-    SuccessOrQuit(node2.Get<Mle::Mle>().SetRouterEligible(false));
-    node2.Join(node0);
+    node2.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
 
@@ -496,13 +494,11 @@ void TestDtlsMultiSession(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
 
-    SuccessOrQuit(node1.Get<Mle::Mle>().SetRouterEligible(false));
-    node1.Join(node0);
+    node1.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node1.Get<Mle::Mle>().IsChild());
 
-    SuccessOrQuit(node2.Get<Mle::Mle>().SetRouterEligible(false));
-    node2.Join(node0);
+    node2.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
 
