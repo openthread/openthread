@@ -101,11 +101,17 @@ def verify(pv):
                p.ipv6.hlim == 255).\
         must_next()
 
-    pkts.filter_ping_request().\
+    _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst64(LEADER).\
         must_next()
     lstart = pkts.index
+
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+        filter_wpan_src64(LEADER).\
+        filter_wpan_dst64(ROUTER_1).\
+        must_next()
+    reset_time = pkts.last().sniff_timestamp + 2.0
 
     # Step 3: Leader
     # - Description: Reset Leader.
@@ -144,6 +150,7 @@ def verify(pv):
     pkts.range(lstart, lend).\
         filter_wpan_src64(LEADER).\
         filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
+        filter(lambda p: p.sniff_timestamp > reset_time).\
         must_not_next()
 
     # Step 5: Router_1
