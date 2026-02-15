@@ -244,6 +244,78 @@ void TestNcpDnssdBrowse(void)
     VerifyOrQuit(sDnssdBrowseCallbackInvoked);
 }
 
+static bool sDnssdSrvCallbackInvoked = false;
+
+static void TestDnssdSrvCallback(otInstance *aInstance, const otPlatDnssdSrvResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    VerifyOrQuit(strcmp(aResult->mServiceInstance, "GAT-X303 #1") == 0);
+    VerifyOrQuit(strcmp(aResult->mServiceType, "_ms._tcp") == 0);
+    VerifyOrQuit(strcmp(aResult->mHostName, "GAT-X303 #1._ms._tcp.local") == 0);
+    VerifyOrQuit(aResult->mPort == 5353);
+    VerifyOrQuit(aResult->mPriority == 1);
+    VerifyOrQuit(aResult->mWeight == 10);
+    VerifyOrQuit(aResult->mTtl == 120);
+    VerifyOrQuit(aResult->mInfraIfIndex == 1);
+
+    sDnssdSrvCallbackInvoked = true;
+}
+
+static otError GenerateSpinelDnssdSrvResultFrame(const otPlatDnssdSrvResult &aSrvResult, uint8_t *aBuf, uint16_t &aLen)
+{
+    otError                error = OT_ERROR_NONE;
+    uint8_t                buf[kMaxSpinelBufferSize];
+    Spinel::Buffer         ncpBuffer(buf, kMaxSpinelBufferSize);
+    Spinel::Encoder        encoder(ncpBuffer);
+    otPlatDnssdSrvCallback callback = &TestDnssdSrvCallback;
+
+    uint8_t header = SPINEL_HEADER_FLAG | 0 /* Iid */ | 1 /* Tid */;
+    SuccessOrExit(error = encoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_DNSSD_SRV_RESULT));
+    SuccessOrExit(error = EncodeDnssdSrvResult(encoder, aSrvResult, reinterpret_cast<const uint8_t *>(&callback),
+                                               sizeof(callback)));
+    SuccessOrExit(error = encoder.EndFrame());
+
+    SuccessOrExit(ncpBuffer.OutFrameBegin());
+    aLen = ncpBuffer.OutFrameGetLength();
+    VerifyOrExit(ncpBuffer.OutFrameRead(aLen, aBuf) == aLen, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+void TestNcpDnssdSrvResolve(void)
+{
+    Instance              *instance = static_cast<Instance *>(testInitInstance());
+    Ncp::NcpBase           ncpBase(instance);
+    uint8_t                recvBuf[kMaxSpinelBufferSize];
+    uint16_t               recvLen;
+    otPlatDnssdSrvResolver resolver;
+    otPlatDnssdSrvResult   srvResult;
+
+    resolver.mServiceInstance = "GAT-X303 #1";
+    resolver.mServiceType     = "_ms._tcp";
+    resolver.mInfraIfIndex    = 1;
+    resolver.mCallback        = TestDnssdSrvCallback;
+
+    otPlatDnssdStartSrvResolver(instance, &resolver);
+
+    srvResult.mServiceInstance = "GAT-X303 #1";
+    srvResult.mServiceType     = "_ms._tcp";
+    srvResult.mHostName        = "GAT-X303 #1._ms._tcp.local";
+    srvResult.mPort            = 5353;
+    srvResult.mPriority        = 1;
+    srvResult.mWeight          = 10;
+    srvResult.mTtl             = 120;
+    srvResult.mInfraIfIndex    = 1;
+
+    SuccessOrQuit(GenerateSpinelDnssdSrvResultFrame(srvResult, recvBuf, recvLen));
+
+    ncpBase.HandleReceive(recvBuf, recvLen);
+
+    VerifyOrQuit(sDnssdSrvCallbackInvoked);
+}
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
@@ -254,6 +326,7 @@ int main(void)
     ot::TestNcpDnssdGetState();
     ot::TestNcpDnssdRegistrations();
     ot::TestNcpDnssdBrowse();
+    ot::TestNcpDnssdSrvResolve();
 #endif
     printf("All tests passed\n");
     return 0;

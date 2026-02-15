@@ -325,6 +325,20 @@ public:
     void DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser);
 
     /**
+     * Starts a service resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartSrvResolver(const otPlatDnssdSrvResolver *aResolver);
+
+    /**
+     * Stops a service resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver);
+
+    /**
      * Gets the Dnssd state.
      *
      * Returns the platform dnssd state.
@@ -943,6 +957,11 @@ protected:
 template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdBrowser>
 {
     static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_BROWSER;
+};
+
+template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
+{
+    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_SRV_RESOLVER;
 };
 #endif
 
