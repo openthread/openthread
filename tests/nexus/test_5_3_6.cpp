@@ -97,10 +97,8 @@ void Test5_3_6(void)
      * - Leader (DUT) and Router 1
      * - Router 1 and Router 2
      */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(router1, router2);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

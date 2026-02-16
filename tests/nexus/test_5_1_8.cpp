@@ -101,14 +101,9 @@ void Test5_1_8(void)
     // R3 <-> R1
     // R1 <-> R2
     // DUT hears R1, R2, R3
-    leader.AllowList(router3);
-    router3.AllowList(leader);
-
-    router3.AllowList(router1);
-    router1.AllowList(router3);
-
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    nexus.AllowLinkBetween(leader, router3);
+    nexus.AllowLinkBetween(router3, router1);
+    nexus.AllowLinkBetween(router1, router2);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Leader, Router_1, Router_2, Router_3");
@@ -144,11 +139,8 @@ void Test5_1_8(void)
      *   a link quality of 3 (highest).
      * - Pass Criteria: N/A
      */
-    dut.AllowList(router2);
-    dut.AllowList(router3);
-
-    router2.AllowList(dut);
-    router3.AllowList(dut);
+    nexus.AllowLinkBetween(dut, router2);
+    nexus.AllowLinkBetween(dut, router3);
 
     // Harness configures the RSSI to prefer Router 3.
     // All values below enable Link Quality 3 (highest).

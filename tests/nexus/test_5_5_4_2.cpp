@@ -122,14 +122,10 @@ void Test5_5_4_2(void)
     Log("Step 1: All");
 
     /** Use AllowList to specify links between nodes. */
-    leader.AllowList(router1);
-    leader.AllowList(router2);
-    router1.AllowList(leader);
-    router1.AllowList(router3);
-    router2.AllowList(leader);
-    router2.AllowList(router4);
-    router3.AllowList(router1);
-    router4.AllowList(router2);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(leader, router2);
+    nexus.AllowLinkBetween(router1, router3);
+    nexus.AllowLinkBetween(router2, router4);
 
     /** Set NETWORK_ID_TIMEOUT of Router_3 to 55 seconds. */
     router3.Get<Mle::Mle>().SetNetworkIdTimeout(kRouter3NetworkIdTimeout);

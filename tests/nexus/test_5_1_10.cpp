@@ -107,14 +107,9 @@ void Test5_1_10(void)
      */
 
     /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
-    leader.AllowList(router2);
-
-    router1.AllowList(leader);
-    router1.AllowList(router2);
-
-    router2.AllowList(leader);
-    router2.AllowList(router1);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(leader, router2);
+    nexus.AllowLinkBetween(router1, router2);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -140,11 +135,8 @@ void Test5_1_10(void)
      */
 
     /** Restricted topology for DUT. */
-    dut.AllowList(router1);
-    dut.AllowList(router2);
-
-    router1.AllowList(dut);
-    router2.AllowList(dut);
+    nexus.AllowLinkBetween(dut, router1);
+    nexus.AllowLinkBetween(dut, router2);
 
     IgnoreError(dut.Get<Mac::Filter>().AddRssIn(router2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
     IgnoreError(router2.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));

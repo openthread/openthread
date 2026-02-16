@@ -107,8 +107,7 @@ void RunTest6_1_2(Topology aTopology, const char *aJsonFile)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");
 
-    leader.AllowList(reed);
-    reed.AllowList(leader);
+    nexus.AllowLinkBetween(leader, reed);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -136,8 +135,7 @@ void RunTest6_1_2(Topology aTopology, const char *aJsonFile)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: ED_1 / SED_1 (DUT)");
 
-    reed.AllowList(dut);
-    dut.AllowList(reed);
+    nexus.AllowLinkBetween(reed, dut);
 
     if (aTopology == kTopologyA)
     {

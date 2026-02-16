@@ -83,8 +83,7 @@ void Test5_1_13(void)
     nexus.AdvanceTime(0);
 
     // Use AllowList feature to restrict the topology.
-    leader.AllowList(router);
-    router.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");
@@ -127,7 +126,7 @@ void Test5_1_13(void)
      * - Pass Criteria: N/A
      */
     router.Reset();
-    router.AllowList(leader);
+    nexus.AllowLinkBetween(router, leader);
     router.Get<ThreadNetif>().Up();
     SuccessOrQuit(router.Get<Mle::Mle>().Start());
 

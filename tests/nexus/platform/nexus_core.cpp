@@ -418,6 +418,18 @@ void Core::ProcessTrel(Node &aNode)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void Core::AllowLinkBetween(Node &aFirstNode, Node &aSecondNode)
+{
+    aFirstNode.AllowList(aSecondNode);
+    aSecondNode.AllowList(aFirstNode);
+}
+
+void Core::UnallowLinkBetween(Node &aFirstNode, Node &aSecondNode)
+{
+    aFirstNode.UnallowList(aSecondNode);
+    aSecondNode.UnallowList(aFirstNode);
+}
+
 Core::IcmpEchoResponseContext::IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier)
     : mNode(aNode)
     , mIdentifier(aIdentifier)

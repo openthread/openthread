@@ -101,12 +101,10 @@ void Test5_2_3(void)
     // Router 32 <-> Router 1
     for (uint8_t i = 0; i < kMaxRouters - 1; i++)
     {
-        leader.AllowList(*routers[i]);
-        routers[i]->AllowList(leader);
+        nexus.AllowLinkBetween(leader, *routers[i]);
     }
 
-    routers[kMaxRouters - 1]->AllowList(*routers[0]);
-    routers[0]->AllowList(*routers[kMaxRouters - 1]);
+    nexus.AllowLinkBetween(*routers[kMaxRouters - 1], *routers[0]);
 
     Log("---------------------------------------------------------------------------------------");
     /**
