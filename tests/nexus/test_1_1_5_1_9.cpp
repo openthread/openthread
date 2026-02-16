@@ -114,17 +114,10 @@ void Test5_1_9(void)
      */
     Log("Step 1: Setup the topology without the DUT");
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    leader.AllowList(reed1);
-    reed1.AllowList(leader);
-
-    leader.AllowList(reed2);
-    reed2.AllowList(leader);
-
-    router1.AllowList(reed1);
-    reed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, reed1);
+    AllowLinkBetween(leader, reed2);
+    AllowLinkBetween(router1, reed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -164,10 +157,8 @@ void Test5_1_9(void)
     SuccessOrQuit(reed2.Get<Mac::Filter>().AddRssIn(leader.Get<Mac::Mac>().GetExtAddress(), kLq3Rssi));
 
     // Setup DUT connectivity (only to REEDs)
-    dut.AllowList(reed1);
-    reed1.AllowList(dut);
-    dut.AllowList(reed2);
-    reed2.AllowList(dut);
+    AllowLinkBetween(dut, reed1);
+    AllowLinkBetween(dut, reed2);
 
     SuccessOrQuit(dut.Get<Mac::Filter>().AddRssIn(reed1.Get<Mac::Mac>().GetExtAddress(), kLq3Rssi));
     SuccessOrQuit(dut.Get<Mac::Filter>().AddRssIn(reed2.Get<Mac::Mac>().GetExtAddress(), kLq3Rssi));

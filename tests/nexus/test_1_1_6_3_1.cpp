@@ -148,10 +148,8 @@ void RunTest6_3_1(Topology aTopology, const char *aJsonFile)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(dut);
-    dut.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, dut);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -228,8 +226,7 @@ void RunTest6_3_1(Topology aTopology, const char *aJsonFile)
          */
     }
 
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     nexus.AdvanceTime(kDetectParentLossTime);
 

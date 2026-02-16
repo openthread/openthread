@@ -220,14 +220,9 @@ void Test9_2_9(void)
      * - Pass Criteria: N/A
      */
 
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
-
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    AllowLinkBetween(commissioner, leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, router2);
 
     leader.Get<Mac::Mac>().SetPanId(kPanIdFace);
     leader.Form();
@@ -326,8 +321,7 @@ void Test9_2_9(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Leader");
 
-    router1.UnallowList(router2);
-    router2.UnallowList(router1);
+    UnallowLinkBetween(router1, router2);
 
     /**
      * Step 4: Leader
@@ -393,8 +387,7 @@ void Test9_2_9(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 6: Router_1");
 
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    AllowLinkBetween(router1, router2);
 
     /**
      * Step 6: Router_1
@@ -464,10 +457,8 @@ void Test9_2_9(void)
      * - Pass Criteria: N/A
      */
 
-    leader.UnallowList(router1);
-    leader.UnallowList(router2);
-    router1.UnallowList(leader);
-    router2.UnallowList(leader);
+    UnallowLinkBetween(leader, router1);
+    UnallowLinkBetween(leader, router2);
 
     nexus.AdvanceTime(kRfIsolationTime);
 
@@ -681,8 +672,7 @@ void Test9_2_9(void)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
 
     nexus.AdvanceTime(300000); // 300s to ensure merge and dataset sync.
 

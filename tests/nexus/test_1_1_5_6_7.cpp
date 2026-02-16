@@ -137,40 +137,23 @@ void Test5_6_7(void)
      * - Pass Criteria: N/A.
      */
 
-    leader.AllowList(r1);
-    leader.AllowList(r2);
-    leader.AllowList(r3);
-    leader.AllowList(r4);
-    leader.AllowList(r5);
-    leader.AllowList(r6);
-    leader.AllowList(r7);
-    leader.AllowList(r8);
-    leader.AllowList(r9);
-    leader.AllowList(r10);
-    leader.AllowList(r11);
-    leader.AllowList(r12);
-    leader.AllowList(r13);
-    leader.AllowList(r14);
-    leader.AllowList(r15);
+    AllowLinkBetween(leader, r1);
+    AllowLinkBetween(leader, r2);
+    AllowLinkBetween(leader, r3);
+    AllowLinkBetween(leader, r4);
+    AllowLinkBetween(leader, r5);
+    AllowLinkBetween(leader, r6);
+    AllowLinkBetween(leader, r7);
+    AllowLinkBetween(leader, r8);
+    AllowLinkBetween(leader, r9);
+    AllowLinkBetween(leader, r10);
+    AllowLinkBetween(leader, r11);
+    AllowLinkBetween(leader, r12);
+    AllowLinkBetween(leader, r13);
+    AllowLinkBetween(leader, r14);
+    AllowLinkBetween(leader, r15);
 
-    r1.AllowList(leader);
-    r1.AllowList(dut);
-    r2.AllowList(leader);
-    r3.AllowList(leader);
-    r4.AllowList(leader);
-    r5.AllowList(leader);
-    r6.AllowList(leader);
-    r7.AllowList(leader);
-    r8.AllowList(leader);
-    r9.AllowList(leader);
-    r10.AllowList(leader);
-    r11.AllowList(leader);
-    r12.AllowList(leader);
-    r13.AllowList(leader);
-    r14.AllowList(leader);
-    r15.AllowList(leader);
-
-    dut.AllowList(r1);
+    AllowLinkBetween(dut, r1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -221,8 +204,7 @@ void Test5_6_7(void)
      *   will fail because the DUT will go through (re) attachment when it emerges.
      * - Pass Criteria: N/A.
      */
-    dut.UnallowList(r1);
-    r1.UnallowList(dut);
+    UnallowLinkBetween(dut, r1);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Leader");
@@ -272,8 +254,7 @@ void Test5_6_7(void)
      * - Pass Criteria: N/A.
      */
     nexus.AdvanceTime(kRfIsolationTime);
-    dut.AllowList(r1);
-    r1.AllowList(dut);
+    AllowLinkBetween(dut, r1);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 7: All");

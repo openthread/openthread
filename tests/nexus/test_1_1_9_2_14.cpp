@@ -117,15 +117,9 @@ void Test9_2_14(void)
      *   - Pass Criteria: N/A
      */
 
-    leader1.AllowList(router1);
-    leader1.AllowList(commissioner);
-
-    router1.AllowList(leader1);
-    router1.AllowList(leader2);
-
-    commissioner.AllowList(leader1);
-
-    leader2.AllowList(router1);
+    AllowLinkBetween(leader1, router1);
+    AllowLinkBetween(leader1, commissioner);
+    AllowLinkBetween(router1, leader2);
 
     {
         MeshCoP::Dataset::Info datasetInfo;

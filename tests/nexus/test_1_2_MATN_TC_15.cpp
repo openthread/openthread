@@ -112,17 +112,10 @@ void TestMatnTc15(void)
      *   - N/A
      */
 
-    br1.AllowList(br2);
-    br1.AllowList(router);
-
-    br2.AllowList(br1);
-    br2.AllowList(router);
-
-    router.AllowList(br1);
-    router.AllowList(br2);
-    router.AllowList(dut);
-
-    dut.AllowList(router);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, router);
+    AllowLinkBetween(br2, router);
+    AllowLinkBetween(router, dut);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

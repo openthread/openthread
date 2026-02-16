@@ -118,12 +118,8 @@ void Test7_1_8(const char *aJsonFile)
      * - Pass Criteria: N/A.
      */
 
-    /** Use AllowList feature to specify links between nodes. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(fed1);
-    fed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, fed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

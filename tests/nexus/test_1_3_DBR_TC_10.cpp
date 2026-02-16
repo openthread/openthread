@@ -207,11 +207,8 @@ void Test_1_3_DBR_TC_10(const char *aJsonFileName)
      */
     Log("Step 2: Router_1 and ED_1 enable and form topology.");
 
-    br1.AllowList(router1);
-    router1.AllowList(br1);
-
-    router1.AllowList(ed1);
-    ed1.AllowList(router1);
+    AllowLinkBetween(br1, router1);
+    AllowLinkBetween(router1, ed1);
 
     router1.Join(br1);
     nexus.AdvanceTime(kJoinNetworkTime);

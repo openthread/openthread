@@ -114,8 +114,7 @@ void TestMatnTc26(void)
      * - Pass Criteria:
      * - N/A
      */
-    br1.AllowList(td);
-    td.AllowList(br1);
+    AllowLinkBetween(br1, td);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

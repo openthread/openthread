@@ -95,10 +95,8 @@ void Test1_4_Trel_Tc_1(void)
     SuccessOrQuit(br.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     SuccessOrQuit(router1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
-    br.AllowList(router1);
-    br.AllowList(router2);
-    router1.AllowList(br);
-    router2.AllowList(br);
+    AllowLinkBetween(br, router1);
+    AllowLinkBetween(br, router2);
 
     br.Form();
     nexus.AdvanceTime(kFormNetworkTime);

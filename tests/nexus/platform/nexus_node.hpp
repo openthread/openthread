@@ -205,6 +205,9 @@ public:
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
 
+void AllowLinkBetween(Node &aFirstNode, Node &aSecondNode);
+void UnallowLinkBetween(Node &aFirstNode, Node &aSecondNode);
+
 } // namespace Nexus
 
 template <> inline Nexus::Node        &Instance::Get(void) { return Nexus::AsNode(this); }

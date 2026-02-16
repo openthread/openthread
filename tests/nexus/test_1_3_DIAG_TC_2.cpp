@@ -85,15 +85,8 @@ void TestDiagTc2(const char *aJsonFile)
 
     SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
-    /**
-     * - Leader_1 and Router_1
-     * - Router_1 and TD_1
-     */
-    leader1.AllowList(router1);
-    router1.AllowList(leader1);
-
-    router1.AllowList(td1);
-    td1.AllowList(router1);
+    AllowLinkBetween(leader1, router1);
+    AllowLinkBetween(router1, td1);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Enable the devices in order. Leader configures its Network Data with an OMR prefix.");

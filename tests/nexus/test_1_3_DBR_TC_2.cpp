@@ -124,7 +124,8 @@ void Test_1_3_DBR_TC_2(void)
      * - Pass Criteria: N/A
      */
 
-    br2.AllowList(br1);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(ed1, br1);
 
     br2.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -159,9 +160,6 @@ void Test_1_3_DBR_TC_2(void)
      * - Description (DBR-1.2): Enable: turn on device.
      * - Pass Criteria: N/A
      */
-
-    br1.AllowList(br2);
-    br1.AllowList(ed1);
 
     br1.Join(br2);
     nexus.AdvanceTime(kJoinNetworkTime);
@@ -214,7 +212,6 @@ void Test_1_3_DBR_TC_2(void)
      *     Network Data that is sent to the Child ED 1.
      */
 
-    ed1.AllowList(br1);
     ed1.Join(br1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 

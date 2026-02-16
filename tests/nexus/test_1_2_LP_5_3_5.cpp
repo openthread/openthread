@@ -170,13 +170,11 @@ void Test1_2_LP_5_3_5(void)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
 
     for (Node *ssed : sseds)
     {
-        router1.AllowList(*ssed);
-        ssed->AllowList(router1);
+        AllowLinkBetween(router1, *ssed);
     }
 
     leader.Form();

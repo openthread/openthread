@@ -124,12 +124,8 @@ void Test6_1_5(void)
      * - Pass Criteria: N/A
      */
 
-    /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
-    leader.AllowList(reed2);
-
-    router1.AllowList(leader);
-    reed2.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, reed2);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -155,11 +151,8 @@ void Test6_1_5(void)
      */
 
     /** Restricted topology for DUT. */
-    sed1.AllowList(router1);
-    sed1.AllowList(reed2);
-
-    router1.AllowList(sed1);
-    reed2.AllowList(sed1);
+    AllowLinkBetween(sed1, router1);
+    AllowLinkBetween(sed1, reed2);
 
     SuccessOrQuit(sed1.Get<Mac::Filter>().AddRssIn(reed2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
     SuccessOrQuit(reed2.Get<Mac::Filter>().AddRssIn(sed1.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));

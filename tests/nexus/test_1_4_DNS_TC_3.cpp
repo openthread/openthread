@@ -226,10 +226,8 @@ void Test_1_4_DNS_TC_3(const char *aJsonFileName)
     eth1.mInfraIf.SetUdpHook(HandleUdpHook);
     eth2.mInfraIf.SetUdpHook(HandleUdpHook);
 
-    br1.AllowList(router1);
-    router1.AllowList(br1);
-    router1.AllowList(ed1);
-    ed1.AllowList(router1);
+    AllowLinkBetween(br1, router1);
+    AllowLinkBetween(router1, ed1);
 
     SuccessOrQuit(gua1Prefix.FromString(kGua1Prefix));
     SuccessOrQuit(eth1Addr.FromString(kEth1Addr));

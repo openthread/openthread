@@ -108,12 +108,8 @@ void Test1_2_LP_5_3_4(void)
      * - Pass Criteria: N/A.
      */
 
-    leader.AllowList(router1);
-    leader.AllowList(ssed1);
-
-    router1.AllowList(leader);
-
-    ssed1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, ssed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

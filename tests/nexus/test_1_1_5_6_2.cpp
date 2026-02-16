@@ -88,19 +88,9 @@ void Test5_6_2(void)
     const char *kPrefix1 = "2001::/64";
     const char *kPrefix2 = "2002::/64";
 
-    /**
-     * - Use AllowList to specify links between nodes. There is a link between the following node pairs:
-     *   - Leader (DUT) and Router 1
-     *   - Leader (DUT) and MED 1
-     *   - Leader (DUT) and SED 1
-     */
-    leader.AllowList(router1);
-    leader.AllowList(med1);
-    leader.AllowList(sed1);
-
-    router1.AllowList(leader);
-    med1.AllowList(leader);
-    sed1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, med1);
+    AllowLinkBetween(leader, sed1);
 
     nexus.AdvanceTime(0);
 

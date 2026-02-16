@@ -92,10 +92,8 @@ void Test_1_4_TREL_TC_3(void)
      */
     Log("Step 1: Form the topology. Wait for Router to become Thread router. ED MUST attach to the DUT as its parent.");
 
-    br.AllowList(router);
-    router.AllowList(br);
-    br.AllowList(ed);
-    ed.AllowList(br);
+    AllowLinkBetween(br, router);
+    AllowLinkBetween(br, ed);
 
     SuccessOrQuit(br.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     SuccessOrQuit(router.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));

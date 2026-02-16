@@ -96,15 +96,8 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
     router1.SetName("Router_1");
     ed1.SetName("ED_1");
 
-    /**
-     * In the cpp, use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - BR_1 and Router_1
-     * - Router_1 and ED_1
-     */
-    br1.AllowList(router1);
-    router1.AllowList(br1);
-    router1.AllowList(ed1);
-    ed1.AllowList(router1);
+    AllowLinkBetween(br1, router1);
+    AllowLinkBetween(router1, ed1);
 
     nexus.AdvanceTime(0);
 

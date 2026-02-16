@@ -152,19 +152,10 @@ void Test9_2_18(void)
      * - Description: Ensure topology is formed correctly.
      * - Pass Criteria: N/A
      */
-
-    /** Use AllowList feature to specify links between nodes. */
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
-
-    router1.AllowList(leader);
-    leader.AllowList(router1);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
-
-    router1.AllowList(sed1);
-    sed1.AllowList(router1);
+    AllowLinkBetween(commissioner, leader);
+    AllowLinkBetween(router1, leader);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     MeshCoP::Dataset::Info datasetInfo;
     SuccessOrQuit(datasetInfo.GenerateRandom(leader.GetInstance()));

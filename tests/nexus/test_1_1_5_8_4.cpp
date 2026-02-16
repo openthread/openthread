@@ -107,12 +107,8 @@ void Test5_8_4(void)
      * - Pass Criteria: N/A.
      */
 
-    /** Use AllowList to specify links between nodes. */
-    leader.AllowList(commr1);
-    commr1.AllowList(leader);
-
-    leader.AllowList(commr2);
-    commr2.AllowList(leader);
+    AllowLinkBetween(leader, commr1);
+    AllowLinkBetween(leader, commr2);
 
     /** Partition is formed with all Security Policy TLV bits set to 1. */
     {

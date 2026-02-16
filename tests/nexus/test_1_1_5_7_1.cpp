@@ -99,18 +99,11 @@ void Test5_7_1(void)
      */
     Log("Step 1: All");
 
-    /** Use AllowList to specify links between nodes. */
-    dut.AllowList(leader);
-    dut.AllowList(fed1);
-    dut.AllowList(med1);
-    dut.AllowList(sed1);
-    dut.AllowList(reed1);
-
-    leader.AllowList(dut);
-    fed1.AllowList(dut);
-    med1.AllowList(dut);
-    sed1.AllowList(dut);
-    reed1.AllowList(dut);
+    AllowLinkBetween(dut, leader);
+    AllowLinkBetween(dut, fed1);
+    AllowLinkBetween(dut, med1);
+    AllowLinkBetween(dut, sed1);
+    AllowLinkBetween(dut, reed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

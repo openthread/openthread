@@ -109,28 +109,11 @@ void TestDiagTc1(const char *aJsonFileName)
 
     SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
-    /**
-     * In cpp, use AllowList to specify links between nodes. There is a link between the following node pairs:
-     * - Router_1 and Leader
-     * - Router_1 and FED_1
-     * - Router_1 and MED_1
-     * - Router_1 and SED_1
-     * - Router_1 and REED_1
-     */
-    router1.AllowList(leader);
-    leader.AllowList(router1);
-
-    router1.AllowList(fed1);
-    fed1.AllowList(router1);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
-
-    router1.AllowList(sed1);
-    sed1.AllowList(router1);
-
-    router1.AllowList(reed1);
-    reed1.AllowList(router1);
+    AllowLinkBetween(router1, leader);
+    AllowLinkBetween(router1, fed1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
+    AllowLinkBetween(router1, reed1);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Enable the devices in order. Leader configures its Network Data with an OMR prefix.");

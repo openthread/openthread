@@ -124,8 +124,7 @@ void TestBbrTc3(void)
      * - Pass Criteria:
      *   - N/A
      */
-    br1.AllowList(br2);
-    br2.AllowList(br1);
+    AllowLinkBetween(br1, br2);
 
     br1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
     br1.Get<BorderRouter::RoutingManager>().Init();

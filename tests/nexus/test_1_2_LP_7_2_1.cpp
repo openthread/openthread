@@ -189,10 +189,8 @@ void Test1_2_LP_7_2_1(void)
      * - Pass Criteria: N/A
      */
     Log("Step 1: Topology formation: DUT, SED_1, SSED_1.");
-    leader.AllowList(sed1);
-    leader.AllowList(ssed1);
-    sed1.AllowList(leader);
-    ssed1.AllowList(leader);
+    AllowLinkBetween(leader, sed1);
+    AllowLinkBetween(leader, ssed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

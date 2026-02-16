@@ -124,8 +124,7 @@ void Test9_2_5(void)
      * - Pass Criteria: N/A.
      */
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
+    AllowLinkBetween(leader, router1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

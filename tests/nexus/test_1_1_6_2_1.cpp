@@ -98,10 +98,8 @@ void RunTest6_2_1(Topology aTopology, const char *aJsonFile)
      */
     Log("Step 1: All");
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(dut);
-    dut.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, dut);
 
     leader.Form();
 

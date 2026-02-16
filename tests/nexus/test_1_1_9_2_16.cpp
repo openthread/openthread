@@ -201,14 +201,9 @@ void Test9_2_16(void)
      * - Pass Criteria: N/A
      */
 
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
-
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    AllowLinkBetween(commissioner, leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, router2);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

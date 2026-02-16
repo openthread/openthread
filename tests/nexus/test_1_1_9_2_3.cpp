@@ -112,8 +112,7 @@ void RunTest9_2_3(Topology aTopology, const char *aJsonFile)
      * - Pass Criteria: N/A.
      */
 
-    leader.AllowList(commissioner);
-    commissioner.AllowList(leader);
+    AllowLinkBetween(leader, commissioner);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

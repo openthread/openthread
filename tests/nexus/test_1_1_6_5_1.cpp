@@ -123,8 +123,7 @@ void RunTest6_5_1(Topology aTopology, const char *aJsonFile)
      */
     Log("Step 1: All");
 
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

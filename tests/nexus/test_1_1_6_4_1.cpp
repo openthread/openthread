@@ -134,8 +134,7 @@ void RunTest6_4_1(Topology aTopology, const char *aJsonFile)
      * - Description: Ensure topology is formed correctly.
      * - Pass Criteria: N/A
      */
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

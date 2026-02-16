@@ -134,14 +134,10 @@ void RunTest_6_2_2(Topology aTopology, const char *aJsonFile)
      * - Description: Ensure topology is formed correctly. Ensure that the DUT successfully attached to Router_1.
      * - Pass Criteria: N/A
      */
-    leader.AllowList(router1);
-    leader.AllowList(router2);
-    router1.AllowList(leader);
-    router1.AllowList(router2);
-    router1.AllowList(dut);
-    router2.AllowList(leader);
-    router2.AllowList(router1);
-    dut.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, router2);
+    AllowLinkBetween(router1, router2);
+    AllowLinkBetween(router1, dut);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

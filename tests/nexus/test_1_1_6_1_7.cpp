@@ -102,18 +102,10 @@ void RunTest6_1_7(const char *aJsonFile)
      * - Pass Criteria: N/A
      */
 
-    /** Use AllowList feature to specify links between nodes. */
-    leader.AllowList(router1);
-    leader.AllowList(router2);
-
-    router1.AllowList(leader);
-    router1.AllowList(router3);
-
-    router2.AllowList(leader);
-    router2.AllowList(router3);
-
-    router3.AllowList(router1);
-    router3.AllowList(router2);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(leader, router2);
+    AllowLinkBetween(router1, router3);
+    AllowLinkBetween(router2, router3);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -139,8 +131,7 @@ void RunTest6_1_7(const char *aJsonFile)
      * - Pass Criteria:
      *   - The DUT MUST unicast MLE Child ID Request to the Leader.
      */
-    dut.AllowList(leader);
-    leader.AllowList(dut);
+    AllowLinkBetween(dut, leader);
 
     dut.Join(leader, Node::kAsFed);
     nexus.AdvanceTime(kAttachToLeaderTime);
@@ -159,13 +150,9 @@ void RunTest6_1_7(const char *aJsonFile)
      *     - Source Address TLV
      *     - Version TLV
      */
-    dut.AllowList(router1);
-    dut.AllowList(router2);
-    dut.AllowList(router3);
-
-    router1.AllowList(dut);
-    router2.AllowList(dut);
-    router3.AllowList(dut);
+    AllowLinkBetween(dut, router1);
+    AllowLinkBetween(dut, router2);
+    AllowLinkBetween(dut, router3);
 
     nexus.AdvanceTime(kLinkRequestTime);
 

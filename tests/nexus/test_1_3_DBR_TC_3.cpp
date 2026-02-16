@@ -201,12 +201,10 @@ void Test_1_3_DBR_TC_3(void)
     SuccessOrQuit(br2.Get<BorderRouter::RoutingManager>().GetOmrPrefix(omrPrefix2));
     nexus.AddTestVar("OMR_PREFIX_2", omrPrefix2.ToString().AsCString());
 
-    br1.AllowList(ed1);
-    ed1.AllowList(br1);
+    AllowLinkBetween(br1, ed1);
     ed1.Join(br1, Node::kAsFed);
 
-    br2.AllowList(ed2);
-    ed2.AllowList(br2);
+    AllowLinkBetween(br2, ed2);
     ed2.Join(br2, Node::kAsFed);
 
     nexus.AdvanceTime(kJoinNetworkTime);

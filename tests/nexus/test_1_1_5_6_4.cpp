@@ -109,13 +109,9 @@ void Test5_6_4(void)
      * - Pass Criteria: N/A
      */
 
-    dut.AllowList(router1);
-    dut.AllowList(med1);
-    dut.AllowList(sed1);
-
-    router1.AllowList(dut);
-    med1.AllowList(dut);
-    sed1.AllowList(dut);
+    AllowLinkBetween(dut, router1);
+    AllowLinkBetween(dut, med1);
+    AllowLinkBetween(dut, sed1);
 
     dut.Form();
     nexus.AdvanceTime(kFormNetworkTime);

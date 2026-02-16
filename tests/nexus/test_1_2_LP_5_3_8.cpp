@@ -174,11 +174,8 @@ void Test5_3_8(void)
      * - Pass Criteria: N/A.
      */
 
-    /** Use AllowList feature to specify links between nodes. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(ssed1);
-    ssed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, ssed1);
 
     {
         MeshCoP::Dataset::Info datasetInfo;

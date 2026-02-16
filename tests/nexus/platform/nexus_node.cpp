@@ -251,5 +251,17 @@ bool Node::Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const
     return matches;
 }
 
+void AllowLinkBetween(Node &aFirstNode, Node &aSecondNode)
+{
+    aFirstNode.AllowList(aSecondNode);
+    aSecondNode.AllowList(aFirstNode);
+}
+
+void UnallowLinkBetween(Node &aFirstNode, Node &aSecondNode)
+{
+    aFirstNode.UnallowList(aSecondNode);
+    aSecondNode.UnallowList(aFirstNode);
+}
+
 } // namespace Nexus
 } // namespace ot

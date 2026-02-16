@@ -181,17 +181,10 @@ void Test9_2_10(void)
      * - Pass Criteria: N/A.
      */
 
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
-
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
-
-    router1.AllowList(sed1);
-    sed1.AllowList(router1);
+    AllowLinkBetween(commissioner, leader);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     {
         MeshCoP::Dataset::Info datasetInfo;
@@ -486,19 +479,14 @@ void Test9_2_10(void)
      */
 
     router1.Get<Mac::Filter>().ClearAddresses();
-    router1.AllowList(med1);
-    router1.AllowList(sed1);
-
     med1.Get<Mac::Filter>().ClearAddresses();
-    med1.AllowList(router1);
-
     sed1.Get<Mac::Filter>().ClearAddresses();
-    sed1.AllowList(router1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     leader.Get<Mac::Filter>().ClearAddresses();
     commissioner.Get<Mac::Filter>().ClearAddresses();
-    commissioner.AllowList(leader);
-    leader.AllowList(commissioner);
+    AllowLinkBetween(leader, commissioner);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 14: Router_1");
@@ -570,8 +558,7 @@ void Test9_2_10(void)
 
     nexus.AdvanceTime(kIsolationTime - kDelayTimerTime);
 
-    router1.AllowList(leader);
-    leader.AllowList(router1);
+    AllowLinkBetween(router1, leader);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 19: Router_1");

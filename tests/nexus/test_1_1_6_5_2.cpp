@@ -133,10 +133,8 @@ void RunTest_6_5_2(Topology aTopology, const char *aJsonFile)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    router1.AllowList(dut);
-    dut.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, dut);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -232,8 +230,7 @@ void RunTest_6_5_2(Topology aTopology, const char *aJsonFile)
     /**
      * Enable link between Leader and DUT so it can re-attach to Leader.
      */
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    AllowLinkBetween(leader, dut);
 
     /**
      * Wait for the DUT to realize synchronization failed and start a new attach process.

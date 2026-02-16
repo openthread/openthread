@@ -292,10 +292,8 @@ void Test_1_4_PIC_TC_3(void)
      *   - Pass Criteria:
      *     - N/A
      */
-    br1.AllowList(r1);
-    r1.AllowList(br1);
-    r1.AllowList(ed1);
-    ed1.AllowList(r1);
+    AllowLinkBetween(br1, r1);
+    AllowLinkBetween(r1, ed1);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

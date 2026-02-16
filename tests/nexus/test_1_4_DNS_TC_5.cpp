@@ -266,8 +266,7 @@ void Test_1_4_DNS_TC_5(const char *aJsonFileName)
     sEth1Node = &eth1;
     eth1.mInfraIf.SetUdpHook(HandleUdpHook);
 
-    br1.AllowList(ed1);
-    ed1.AllowList(br1);
+    AllowLinkBetween(br1, ed1);
 
     SuccessOrQuit(eth1Addr.FromString(kEth1Addr));
     SuccessOrQuit(br1AilAddr.FromString(kBr1AilAddr));

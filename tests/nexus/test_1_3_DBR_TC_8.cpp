@@ -281,10 +281,8 @@ void Test_1_3_DBR_TC_8(void)
      */
     Log("Step 1: BR_2 becomes Leader and registers OMR_1.");
 
-    br1.AllowList(br2);
-    br1.AllowList(ed1);
-    br2.AllowList(br1);
-    ed1.AllowList(br1);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(br1, ed1);
 
     br2.Form();
     nexus.AdvanceTime(kFormNetworkTime);

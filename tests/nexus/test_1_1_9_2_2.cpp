@@ -108,8 +108,7 @@ void Test9_2_2(void)
      */
     Log("Step 1: All");
 
-    leader.AllowList(commissioner);
-    commissioner.AllowList(leader);
+    AllowLinkBetween(leader, commissioner);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

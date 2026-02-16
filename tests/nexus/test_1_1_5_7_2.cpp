@@ -134,15 +134,12 @@ void Test5_7_2(void)
      * - Pass Criteria: N/A
      */
 
-    /** Use AllowList to specify links between nodes. */
     for (uint8_t i = 0; i < kNumRouters; i++)
     {
-        leader.AllowList(*routers[i]);
-        routers[i]->AllowList(leader);
+        AllowLinkBetween(leader, *routers[i]);
     }
 
-    reed1.AllowList(*routers[0]);
-    routers[0]->AllowList(reed1);
+    AllowLinkBetween(reed1, *routers[0]);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

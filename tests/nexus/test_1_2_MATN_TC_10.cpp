@@ -133,12 +133,9 @@ void TestMatnTc10(void)
      * - Pass Criteria:
      *   - N/A
      */
-    br1.AllowList(router);
-    br1.AllowList(br2);
-    router.AllowList(br1);
-    router.AllowList(br2);
-    br2.AllowList(br1);
-    br2.AllowList(router);
+    AllowLinkBetween(br1, router);
+    AllowLinkBetween(br1, br2);
+    AllowLinkBetween(router, br2);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

@@ -120,15 +120,10 @@ void Test7_1_6(void)
      * - Pass Criteria: N/A.
      */
 
-    dut.AllowList(router1);
-    dut.AllowList(router2);
-    dut.AllowList(med1);
-    dut.AllowList(sed1);
-
-    router1.AllowList(dut);
-    router2.AllowList(dut);
-    med1.AllowList(dut);
-    sed1.AllowList(dut);
+    AllowLinkBetween(dut, router1);
+    AllowLinkBetween(dut, router2);
+    AllowLinkBetween(dut, med1);
+    AllowLinkBetween(dut, sed1);
 
     dut.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -330,8 +325,7 @@ void Test7_1_6(void)
      * - Pass Criteria: N/A.
      */
 
-    dut.AllowList(router1);
-    router1.AllowList(dut);
+    AllowLinkBetween(dut, router1);
     router1.Join(dut, Node::kAsFed);
     nexus.AdvanceTime(kAttachToRouterTime);
 

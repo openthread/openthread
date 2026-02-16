@@ -123,10 +123,8 @@ void TestMatnTc22(void)
      */
     Log("Step 0: Topology formation – BR_1. Topology addition – TD (DUT_Router and DUT_FED). DUTs register MA1.");
 
-    br1.AllowList(dut1);
-    dut1.AllowList(br1);
-    br1.AllowList(dut2);
-    dut2.AllowList(br1);
+    AllowLinkBetween(br1, dut1);
+    AllowLinkBetween(br1, dut2);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

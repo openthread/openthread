@@ -127,13 +127,8 @@ void Test_1_4_TREL_TC_4(void)
      *   - ED MUST attach to the DUT as its parent.
      */
 
-    /** Use AllowList feature to specify links between nodes. */
-    br.AllowList(router);
-    br.AllowList(ed);
-
-    router.AllowList(br);
-
-    ed.AllowList(br);
+    AllowLinkBetween(br, router);
+    AllowLinkBetween(br, ed);
 
     SuccessOrQuit(br.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     SuccessOrQuit(router.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));

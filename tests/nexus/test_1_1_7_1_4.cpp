@@ -89,15 +89,9 @@ void Test7_1_4(const char *aJsonFile)
     med1.SetName("MED_1");
     sed1.SetName("SED_1");
 
-    /** Use AllowList to specify links between nodes. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
-
-    router1.AllowList(sed1);
-    sed1.AllowList(router1);
+    AllowLinkBetween(leader, router1);
+    AllowLinkBetween(router1, med1);
+    AllowLinkBetween(router1, sed1);
 
     nexus.AdvanceTime(0);
 

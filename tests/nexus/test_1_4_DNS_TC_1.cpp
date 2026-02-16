@@ -147,12 +147,10 @@ void Test_1_4_DNS_TC_1(const char *aJsonFileName)
     Log("Step 1: Topology: Start Eth_1, BR_1, Router_1, and ED_1.");
 
     // BR_1 and Router_1
-    br1.AllowList(r1);
-    r1.AllowList(br1);
+    AllowLinkBetween(br1, r1);
 
     // Router_1 and ED_1
-    r1.AllowList(ed1);
-    ed1.AllowList(r1);
+    AllowLinkBetween(r1, ed1);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

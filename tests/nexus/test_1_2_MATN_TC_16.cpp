@@ -143,8 +143,7 @@ void TestMatnTc16(void)
      */
     Log("Step 0: Topology formation – BR_1 (DUT), Router");
 
-    br1.AllowList(router);
-    router.AllowList(br1);
+    AllowLinkBetween(br1, router);
 
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);

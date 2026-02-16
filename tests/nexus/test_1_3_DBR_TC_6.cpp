@@ -166,8 +166,7 @@ void Test_1_3_DBR_TC_6(void)
 
     br1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
 
-    br1.AllowList(br2);
-    br2.AllowList(br1);
+    AllowLinkBetween(br1, br2);
 
     br1.Join(br2);
     nexus.AdvanceTime(kJoinNetworkTime);
@@ -180,8 +179,7 @@ void Test_1_3_DBR_TC_6(void)
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2b: Device: ED 1 Description (DBR-1.6): Harness enables device.");
 
-    ed1.AllowList(br1);
-    br1.AllowList(ed1);
+    AllowLinkBetween(ed1, br1);
 
     ed1.Join(br1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);

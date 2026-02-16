@@ -268,12 +268,11 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     /**
      * Step 1: All
-     * - Description: Ensure topology is formed correctly.
+     * - Description: Ensure topology is formed correctly
      * - Pass Criteria: N/A.
      */
 
-    leader.AllowList(commissioner);
-    commissioner.AllowList(leader);
+    AllowLinkBetween(leader, commissioner);
 
     {
         MeshCoP::Dataset::Info datasetInfo;

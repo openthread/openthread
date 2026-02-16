@@ -162,18 +162,10 @@ void Test9_2_13(void)
      * - Pass Criteria: N/A.
      */
 
-    /** Set up AllowList for links. */
-    leader1.AllowList(commissioner);
-    commissioner.AllowList(leader1);
-
-    leader1.AllowList(router1);
-    router1.AllowList(leader1);
-
-    router1.AllowList(fed1);
-    fed1.AllowList(router1);
-
-    leader2.AllowList(sed2);
-    sed2.AllowList(leader2);
+    AllowLinkBetween(leader1, commissioner);
+    AllowLinkBetween(leader1, router1);
+    AllowLinkBetween(router1, fed1);
+    AllowLinkBetween(leader2, sed2);
 
     Ip6::Prefix        prefix;
     Ip6::NetworkPrefix networkPrefix;
