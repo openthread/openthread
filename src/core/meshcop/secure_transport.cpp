@@ -199,7 +199,9 @@ Error SecureSession::Setup(void)
     }
 #endif
 
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
     mbedtls_ssl_conf_rng(&mConf, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#endif
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
     mbedtls_ssl_conf_min_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
     mbedtls_ssl_conf_max_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
@@ -278,7 +280,11 @@ Error SecureSession::Setup(void)
 
         if (mIsServer)
         {
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
             rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#else
+            rval = mbedtls_ssl_cookie_setup(&mCookieCtx);
+#endif
             VerifyOrExit(rval == 0);
 
             mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
