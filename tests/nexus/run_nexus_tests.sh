@@ -88,6 +88,8 @@ DEFAULT_TESTS=(
     "5_8_2"
     "6_1_1_A"
     "6_1_1_B"
+    "6_1_2_A"
+    "6_1_2_B"
 )
 
 # Use provided arguments or the default test list
@@ -180,6 +182,8 @@ expanded_tests=()
 for t in "${TESTS_TO_RUN[@]}"; do
     if [[ $t == "6_1_1" ]]; then
         expanded_tests+=("6_1_1_A" "6_1_1_B")
+    elif [[ $t == "6_1_2" ]]; then
+        expanded_tests+=("6_1_2_A" "6_1_2_B")
     else
         expanded_tests+=("$t")
     fi
