@@ -47,7 +47,7 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 /**
  * Time to advance for an isolated router to detect isolation and re-attach, in milliseconds.
  */
-static constexpr uint32_t kReattachTime = 120 * 1000;
+static constexpr uint32_t kReattachTime = 140 * 1000;
 
 /**
  * Time to advance for a node to join as a child.
