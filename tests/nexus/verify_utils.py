@@ -55,6 +55,8 @@ def thread_coap_tlv_parse(t, v):
         kvs.append(('target_eid', str(Ipv6Addr(v))))
     elif t == consts.DG_MAC_EXTENDED_ADDRESS_TLV and len(v) == 8:
         kvs.append(('mac_addr', v.hex()))
+    elif t == consts.DG_MAC_ADDRESS_TLV and len(v) == 2:
+        kvs.append(('rloc16', hex(struct.unpack('>H', v)[0])))
     elif t == consts.NL_MAC_EXTENDED_ADDRESS_TLV and len(v) == 8:
         kvs.append(('mac_addr', v.hex()))
     elif t == consts.NL_ML_EID_TLV and len(v) == 8:
@@ -72,6 +74,9 @@ def thread_coap_tlv_parse(t, v):
             kvs.append(('mac_counter', str(val)))
     elif t == consts.DG_MODE_TLV and len(v) == 1:
         kvs.append(('mode', hex(v[0])))
+    elif t == consts.DG_IPV6_ADDRESS_LIST_TLV:
+        for i in range(0, len(v), 16):
+            kvs.append(('ipv6_address', str(Ipv6Addr(v[i:i + 16]))))
     elif t == consts.DG_LEADER_DATA_TLV and len(v) == 8:
         # Leader data contains Partition ID (4), Weighting (1), Data Version (1), Stable Data Version (1), Leader Router ID (1)
         kvs.append(('partition_id', hex(struct.unpack('>I', v[0:4])[0])))
@@ -80,11 +85,32 @@ def thread_coap_tlv_parse(t, v):
         # Route64 contains Router ID Sequence (1), and Router ID Mask (8), then link qualities
         kvs.append(('router_id_sequence', str(v[0])))
         kvs.append(('router_id_mask', v[1:9].hex()))
+    elif t == consts.DG_CHILD_TABLE_TLV:
+        # Child table contains a list of child entries.
+        # Each entry: [Timeout(5 bits), LQI(2 bits), Child ID(9 bits), Mode(8 bits)] -> total 3 bytes
+        for i in range(0, len(v), 3):
+            if i + 3 <= len(v):
+                timeout_child_id = struct.unpack('>H', v[i:i + 2])[0]
+                child_id = timeout_child_id & 0x1ff
+                mode = v[i + 2]
+                kvs.append(('child_id', hex(child_id)))
+                kvs.append(('child_mode', hex(mode)))
+    elif t == consts.DG_CHANNEL_PAGES_TLV:
+        kvs.append(('channel_pages', v.hex()))
     return kvs
 
 
 def apply_patches():
     CoapTlvParser.parse = staticmethod(thread_coap_tlv_parse)
+
+    from pktverify import layer_fields
+    layer_fields._LAYER_FIELDS['coap.tlv.ipv6_address'] = layer_fields._list(layer_fields._ipv6_addr)
+    layer_fields._LAYER_FIELDS['coap.tlv.rloc16'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.mode'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.leader_router_id'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.child_id'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['coap.tlv.child_mode'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['coap.tlv.channel_pages'] = layer_fields._bytes
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'
