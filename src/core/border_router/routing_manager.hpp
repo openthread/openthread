@@ -965,7 +965,7 @@ private:
 
         void               SetEnabled(bool aEnabled);
         void               Start(void) { Evaluate(); }
-        void               Stop(void) { Evaluate(); }
+        void               Stop(void) { SetState(kDhcp6PdStateStopped); }
         bool               HasPrefix(void) const { return !mPrefix.IsEmpty(); }
         bool               HasConflict(void) const { return mOnLinkPrefixConflict || mRoutePrefixConflict; }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
