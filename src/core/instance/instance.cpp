@@ -432,6 +432,8 @@ void Instance::AfterInit(void)
     mIsInitialized = true;
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
+    Get<KeyManager>().Init();
+
     // Restore datasets and network information
 
     Get<Settings>().Init();
