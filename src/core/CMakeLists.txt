@@ -158,6 +158,7 @@ set(COMMON_SOURCES
     mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
+    mac/scan_result.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp

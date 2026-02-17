@@ -70,8 +70,6 @@ class Seeker : public InstanceLocator, private NonCopyable
     friend class ot::UnitTester;
 
 public:
-    typedef otSeekerScanResult ScanResult; ///< Discover Scan result.
-
     typedef otSeekerVerdict Verdict; ///< A verdict returned from `ScanEvaluator` evaluating a Discover Scan result.
 
     static constexpr Verdict kAccept          = OT_SEEKER_ACCEPT;           ///< Scan result is acceptable.
@@ -229,16 +227,16 @@ private:
         void ReplaceWithIfFavored(const CandidateEntry &aEntry);
     };
 
-    State       GetState(void) const { return mState; }
-    void        SetState(State aState) { mState = aState; }
-    static void HandleDiscoverResult(ScanResult *aResult, void *aContext);
-    void        HandleDiscoverResult(ScanResult *aResult);
-    void        SaveCandidate(const ScanResult &aResult, bool aPreferred);
-    Error       EvictCandidate(CandidateEntry &aEntry);
-    Error       SelectNextCandidate(CandidateEntry &aEntry);
-    uint16_t    CountAndSelectLeastFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId,
-                                                       CandidateEntry               &aEntry) const;
+    State    GetState(void) const { return mState; }
+    void     SetState(State aState) { mState = aState; }
+    void     SaveCandidate(const ScanResult &aResult, bool aPreferred);
+    Error    EvictCandidate(CandidateEntry &aEntry);
+    Error    SelectNextCandidate(CandidateEntry &aEntry);
+    uint16_t CountAndSelectLeastFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId,
+                                                    CandidateEntry               &aEntry) const;
     Error SelectMostFavoredCandidateFor(const MeshCoP::ExtendedPanId &aExtPanId, CandidateEntry &aFavoredEntry) const;
+
+    DeclareScanResultHandlerIn(Seeker, HandleDiscoverResult);
 
     State                   mState;
     uint16_t                mUdpPort;

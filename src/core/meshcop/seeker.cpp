@@ -110,12 +110,7 @@ exit:
     return error;
 }
 
-void Seeker::HandleDiscoverResult(ScanResult *aResult, void *aContext)
-{
-    static_cast<Seeker *>(aContext)->HandleDiscoverResult(aResult);
-}
-
-void Seeker::HandleDiscoverResult(ScanResult *aResult)
+void Seeker::HandleDiscoverResult(const ScanResult *aResult)
 {
     bool preferred = false;
 
@@ -128,8 +123,8 @@ void Seeker::HandleDiscoverResult(ScanResult *aResult)
         ExitNow();
     }
 
-    VerifyOrExit(aResult->mJoinerUdpPort > 0);
-    VerifyOrExit(AsCoreType(&aResult->mSteeringData).IsValid());
+    VerifyOrExit(aResult->GetJoinerUdpPort() > 0);
+    VerifyOrExit(aResult->GetSteeringData().IsValid());
 
     switch (mScanEvaluator.Invoke(aResult))
     {
@@ -152,20 +147,19 @@ exit:
 
 void Seeker::SaveCandidate(const ScanResult &aResult, bool aPreferred)
 {
-    Error                         error           = kErrorNone;
-    const MeshCoP::ExtendedPanId &extPanId        = AsCoreType(&aResult.mExtendedPanId);
-    bool                          shouldPushAsNew = false;
-    CandidateEntry                entry;
+    Error          error           = kErrorNone;
+    bool           shouldPushAsNew = false;
+    CandidateEntry entry;
 
     entry.MarkAsEmpty();
 
-    if (mCandidates.FindMatching(entry, extPanId, AsCoreType(&aResult.mExtAddress)) == kErrorNone)
+    if (mCandidates.FindMatching(entry, aResult.GetExtendedPanId(), aResult.GetExtAddress()) == kErrorNone)
     {
         entry.Log(Candidate::kReplace);
     }
     else
     {
-        uint16_t count = CountAndSelectLeastFavoredCandidateFor(extPanId, entry);
+        uint16_t count = CountAndSelectLeastFavoredCandidateFor(aResult.GetExtendedPanId(), entry);
 
         if ((count == kMaxCandidatesPerNetwork) || ((count > 0) && mCandidates.IsFull()))
         {
@@ -412,12 +406,12 @@ exit:
 
 void Seeker::Candidate::SetFrom(const ScanResult &aResult, bool aPreferred)
 {
-    mExtPanId      = AsCoreType(&aResult.mExtendedPanId);
-    mExtAddr       = AsCoreType(&aResult.mExtAddress);
-    mPanId         = aResult.mPanId;
-    mJoinerUdpPort = aResult.mJoinerUdpPort;
-    mChannel       = aResult.mChannel;
-    mRssi          = aResult.mRssi;
+    mExtPanId      = aResult.GetExtendedPanId();
+    mExtAddr       = aResult.GetExtAddress();
+    mPanId         = aResult.GetPanId();
+    mJoinerUdpPort = aResult.GetJoinerUdpPort();
+    mChannel       = aResult.GetChannel();
+    mRssi          = aResult.GetRssi();
     mPreferred     = aPreferred;
     mConnAttempted = false;
 }
@@ -429,7 +423,7 @@ bool Seeker::Candidate::IsFavoredOver(const Candidate &aOther) const
 
 bool Seeker::Candidate::IsFavoredOver(const ScanResult &aResult, bool aPreferred) const
 {
-    return IsFavoredOver(aResult.mRssi, aPreferred);
+    return IsFavoredOver(aResult.GetRssi(), aPreferred);
 }
 
 bool Seeker::Candidate::IsFavoredOver(int8_t aRssi, bool aPreferred) const

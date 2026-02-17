@@ -541,6 +541,8 @@ openthread_core_files = [
   "mac/mac_links.hpp",
   "mac/mac_types.cpp",
   "mac/mac_types.hpp",
+  "mac/scan_result.cpp",
+  "mac/scan_result.hpp",
   "mac/sub_mac.cpp",
   "mac/sub_mac.hpp",
   "mac/sub_mac_callbacks.cpp",

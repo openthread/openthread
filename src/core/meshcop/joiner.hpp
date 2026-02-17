@@ -195,8 +195,8 @@ private:
     void                   FreeJoinerFinalizeMessage(void);
     void                   SendJoinerFinalize(void);
     void                   SendJoinerEntrustResponse(const Coap::Msg &aMsg);
-    static Seeker::Verdict EvaluateScanResult(void *aContext, const Seeker::ScanResult *aResult);
-    Seeker::Verdict        EvaluateScanResult(const Seeker::ScanResult *aResult);
+    static Seeker::Verdict EvaluateScanResult(void *aContext, const otSeekerScanResult *aResult);
+    Seeker::Verdict        EvaluateScanResult(const ScanResult *aResult);
     void                   HandleScanCompleted(void);
     static void            HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent, void *aContext);
     void                   HandleSecureCoapClientConnect(Dtls::Session::ConnectEvent aEvent);
