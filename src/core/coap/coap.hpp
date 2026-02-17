@@ -782,37 +782,97 @@ private:
 #endif
     };
 
-    struct Metadata : public Message::FooterData<Metadata>
+    struct Request
     {
-        void Init(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks);
-        bool HasSamePeerAddrAndPort(const Ip6::MessageInfo &aMessageInfo) const;
-        bool ShouldRetransmit(void) const;
-        void UpdateRetxCounterAndTimeout(TimeMilli aNow);
-        void CopyInfoTo(Ip6::MessageInfo &aMessageInfo) const;
+        struct Metadata : public Message::FooterData<Metadata>
+        {
+            void Init(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks);
+            bool HasSamePeerAddrAndPort(const Ip6::MessageInfo &aMessageInfo) const;
+            bool ShouldRetransmit(void) const;
+            void UpdateRetxCounterAndTimeout(TimeMilli aNow);
+            void CopyInfoTo(Ip6::MessageInfo &aMessageInfo) const;
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        bool IsObserveSubscription(void) const;
+            bool IsObserveSubscription(void) const;
 #endif
 
-        Ip6::Address  mSourceAddress;
-        Ip6::Address  mDestinationAddress;
-        uint16_t      mDestinationPort;
-        SendCallbacks mCallbacks;
-        TimeMilli     mTimerFireTime;
-        uint32_t      mRetxTimeout;
-        uint8_t       mRetxRemaining;
+            Ip6::Address  mSourceAddress;
+            Ip6::Address  mDestinationAddress;
+            uint16_t      mDestinationPort;
+            SendCallbacks mCallbacks;
+            TimeMilli     mTimerFireTime;
+            uint32_t      mRetxTimeout;
+            uint8_t       mRetxRemaining;
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        uint8_t mHopLimit;
+            uint8_t mHopLimit;
 #endif
-        bool mAcknowledged : 1;
-        bool mConfirmable : 1;
-        bool mMulticastLoop : 1;
+            bool mAcknowledged : 1;
+            bool mConfirmable : 1;
+            bool mMulticastLoop : 1;
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        bool mIsHostInterface : 1;
+            bool mIsHostInterface : 1;
 #endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        bool mObserve : 1;
-        bool mIsRequest : 1;
+            bool mObserve : 1;
+            bool mIsRequest : 1;
 #endif
+        };
+
+        void  Clear(void) { mMessage = nullptr; }
+        bool  HasMessage(void) const { return (mMessage != nullptr); }
+        void  InitFrom(Message &aMessage) { mMessage = &aMessage, ReadMetadataFromMessage(); }
+        void  ReadMetadataFromMessage(void) { mMetadata.ReadFrom(*mMessage); }
+        void  WriteMetadataInMessage(void) { mMetadata.UpdateIn(*mMessage); }
+        void  RemoveMetadataFromMessage(void) { mMetadata.RemoveFrom(*mMessage); }
+        Error AppendMetadataToMessage(void) { return mMetadata.AppendTo(*mMessage); }
+
+        Message *mMessage;
+        Metadata mMetadata;
+    };
+
+    class PendingRequests
+    {
+        struct Iterator;
+
+    public:
+        Error AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest);
+        void  Remove(Request &aRequest);
+        Error FindRelatedRequest(const Msg &aMsg, Request &aRequest);
+        void  GetInfo(MessageQueue::Info &aInfo) const { mRequestMessages.GetInfo(aInfo); }
+
+        // Similar to the MessageQueue iterator, as we iterate over
+        // the PendingRequests entries, the current request can
+        // be safely removed without invalidating the iterator.
+        Iterator begin(void) { return Iterator(mRequestMessages.GetHead()); }
+        Iterator end(void) { return Iterator(); }
+
+    private:
+        struct Iterator : public Unequatable<Iterator>
+        {
+            Iterator(void)
+                : mMessageIterator()
+            {
+            }
+
+            explicit Iterator(Message *aMessage)
+                : mMessageIterator(aMessage)
+            {
+            }
+
+            void operator++(void) { mMessageIterator++; }
+            void operator++(int) { mMessageIterator++; }
+            bool operator==(const Iterator &aOther) const { return mMessageIterator == aOther.mMessageIterator; }
+
+            Request &operator*(void)
+            {
+                mRequest.InitFrom(*mMessageIterator);
+                return mRequest;
+            }
+
+            Message::Iterator mMessageIterator;
+            Request           mRequest;
+        };
+
+        MessageQueue mRequestMessages;
     };
 
     class ResponseCache
@@ -823,7 +883,7 @@ private:
         void  Add(const Msg &aTxMsg, uint32_t aExchangeLifetime);
         void  RemoveAll(void);
         Error SendCachedResponse(const Msg &aRxMsg, CoapBase &aCoapBase);
-        void  GetInfo(MessageQueue::Info &aInfo) const { return mResponses.GetInfo(aInfo); }
+        void  GetInfo(MessageQueue::Info &aInfo) const { mResponses.GetInfo(aInfo); }
 
     private:
         static constexpr uint16_t kMaxCacheSize = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES;
@@ -850,10 +910,8 @@ private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);
     void        ClearRequests(const Ip6::Address *aAddress);
-    Message    *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const Metadata &aMetadata);
-    void        DequeueMessage(Message &aMessage);
-    Message    *FindRelatedRequest(const Msg &aMsg, Metadata &aMetadata);
-    void        FinalizeCoapTransaction(Message &aRequest, const Metadata &aMetadata, Msg *aResponse, Error aResult);
+    void        FinalizeRequest(Request &aRequest, Error aResult);
+    void        FinalizeRequest(Request &aRequest, Error aResult, Msg *aResponse);
     bool        InvokeResponseFallback(Msg &aRxMsg) const;
     void        ProcessReceivedRequest(Msg &aRxMsg);
     void        ProcessReceivedResponse(Msg &aRxMsg);
@@ -861,39 +919,35 @@ private:
                             const Ip6::MessageInfo &aMessageInfo,
                             const TxParameters     *aTxParameters,
                             const SendCallbacks    &aCallbacks);
-    void        SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        RetransmitRequest(const Request &aRequest);
     Error       SendEmptyMessage(Type aType, const Msg &aRxMsg);
     Error       Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     Error ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks);
-    Error ProcessBlockwiseResponse(Msg &aRxMsg, Message &aRequest, const Metadata &aMetadata);
+    Error ProcessBlockwiseResponse(Msg &aRxMsg, Request &aRequest);
     Error ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
-                                  Message         &aRequestOld,
+                                  Request         &aRequestOld,
                                   Message         &aRequest,
                                   const BlockInfo &aBlockInfo);
     Error ProcessBlock1Request(Msg &aRxMsg, const ResourceBlockWise &aResource, uint32_t aTotalLength);
     Error ProcessBlock2Request(Msg &aRxMsg, const ResourceBlockWise &aResource);
-    Error SendNextBlock1Request(Message &aRequest, Msg &aRxMsg, const Metadata &aMetadata);
-    Error SendNextBlock2Request(Message        &aRequest,
-                                Msg            &aRxMsg,
-                                const Metadata &aMetadata,
-                                uint32_t        aTotalLength,
-                                bool            aBeginBlock1Transfer);
+    Error SendNextBlock1Request(Request &aRequest, Msg &aRxMsg);
+    Error SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t aTotalLength, bool aBeginBlock1Transfer);
 
     static Error DetermineBlockSzxFromSize(uint16_t aSize, BlockSzx &aBlockSzx);
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    Error ProcessObserveSend(Msg &aTxMsg, Metadata &aMetadata);
+    Error ProcessObserveSend(Msg &aTxMsg, Request &aRequest);
 #endif
 
-    MessageQueue      mPendingRequests;
+    PendingRequests   mPendingRequests;
     uint16_t          mMessageId;
     TimerMilliContext mRetransmissionTimer;
 
