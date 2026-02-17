@@ -138,7 +138,8 @@ def verify(pv):
     #       - Status TLV
     #       - RLOC16 TLV (optional)
     print("Step 7: REED_1 (DUT)")
-    pkts.filter_wpan_src64(REED_1).\
+    pkts.range(step4_start, cascade=False).\
+      filter_wpan_src64(REED_1).\
       filter_coap_request(consts.ADDR_SOL_URI).\
       filter(lambda p: {
         consts.NL_MAC_EXTENDED_ADDRESS_TLV,
@@ -157,7 +158,8 @@ def verify(pv):
     #     - Source Address TLV
     #     - Version TLV
     print("Step 8: REED_1 (DUT)")
-    link_req = pkts.filter_wpan_src64(REED_1).\
+    link_req = pkts.range(step4_start, cascade=False).\
+      filter_wpan_src64(REED_1).\
       filter_LLANMA().\
       filter_mle_cmd(consts.MLE_LINK_REQUEST).\
       filter(lambda p: {
