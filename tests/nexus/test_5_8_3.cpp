@@ -51,6 +51,12 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kStabilizationTime = 10 * 1000;
 
 /**
+ * Max time to wait for an MLE Advertisement, in milliseconds.
+ * The max MLE advertisement interval is 32 seconds.
+ */
+static constexpr uint32_t kMaxAdvertisementTime = 35 * 1000;
+
+/**
  * Initial Key Sequence Counter value.
  */
 static constexpr uint32_t kInitialKeySequence = 127;
@@ -165,7 +171,7 @@ void Test5_8_3(void)
      *     - Key ID Mode = 0x02 (2)
      *     - Key Index = 0x01 (1)
      */
-    nexus.AdvanceTime(kStabilizationTime);
+    nexus.AdvanceTime(kMaxAdvertisementTime);
     VerifyOrQuit(router1.Get<KeyManager>().GetCurrentKeySequence() == kInitialKeySequence + 1);
 
     nexus.SaveTestInfo("test_5_8_3.json");
