@@ -51,18 +51,35 @@ from pktverify.bytes import Bytes
 # Monkey-patch CoapTlvParser to parse Thread TLVs in CoAP payload
 def thread_coap_tlv_parse(t, v):
     kvs = []
-    if t == consts.NL_TARGET_EID_TLV:
+    if t == consts.NL_TARGET_EID_TLV and len(v) == 16:
         kvs.append(('target_eid', str(Ipv6Addr(v))))
-    elif t == consts.NL_MAC_EXTENDED_ADDRESS_TLV:
+    elif t == consts.DG_MAC_EXTENDED_ADDRESS_TLV and len(v) == 8:
         kvs.append(('mac_addr', v.hex()))
-    elif t == consts.NL_ML_EID_TLV:
+    elif t == consts.NL_MAC_EXTENDED_ADDRESS_TLV and len(v) == 8:
+        kvs.append(('mac_addr', v.hex()))
+    elif t == consts.NL_ML_EID_TLV and len(v) == 8:
         kvs.append(('ml_eid', Bytes(v).format_hextets()))
-    elif t == consts.NL_RLOC16_TLV:
+    elif t == consts.NL_RLOC16_TLV and len(v) == 2:
         kvs.append(('rloc16', hex(struct.unpack('>H', v)[0])))
-    elif t == consts.NL_STATUS_TLV:
+    elif t == consts.NL_STATUS_TLV and len(v) == 1:
         kvs.append(('status', str(v[0])))
     elif t == consts.NL_ROUTER_MASK_TLV:
         kvs.append(('router_mask', v.hex()))
+    elif t == consts.DG_MAC_COUNTERS_TLV:
+        # MAC counters are a list of 4-byte values
+        for i in range(0, len(v), 4):
+            val = struct.unpack('>I', v[i:i + 4])[0]
+            kvs.append(('mac_counter', str(val)))
+    elif t == consts.DG_MODE_TLV and len(v) == 1:
+        kvs.append(('mode', hex(v[0])))
+    elif t == consts.DG_LEADER_DATA_TLV and len(v) == 8:
+        # Leader data contains Partition ID (4), Weighting (1), Data Version (1), Stable Data Version (1), Leader Router ID (1)
+        kvs.append(('partition_id', hex(struct.unpack('>I', v[0:4])[0])))
+        kvs.append(('leader_router_id', str(v[7])))
+    elif t == consts.DG_ROUTE64_TLV:
+        # Route64 contains Router ID Sequence (1), and Router ID Mask (8), then link qualities
+        kvs.append(('router_id_sequence', str(v[0])))
+        kvs.append(('router_id_mask', v[1:9].hex()))
     return kvs
 
 
