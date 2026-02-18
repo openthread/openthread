@@ -32,6 +32,14 @@
 namespace ot {
 namespace Nexus {
 
+Node::IdString Node::IdToString(Id aId)
+{
+    IdString string;
+
+    string.Append("%lu", ToUlong(aId));
+    return string;
+}
+
 void Node::Reset(void)
 {
     Instance *instance = &GetInstance();

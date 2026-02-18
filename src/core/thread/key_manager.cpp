@@ -161,6 +161,17 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// NetworkKey
+
+NetworkKey::InfoString NetworkKey::ToString(void) const
+{
+    InfoString string;
+
+    string.AppendHexBytes(m8, kSize);
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // KeyManager
 
 KeyManager::KeyManager(Instance &aInstance)

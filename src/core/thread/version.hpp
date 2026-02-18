@@ -49,7 +49,8 @@ constexpr uint16_t kThreadVersion1p3 = OT_THREAD_VERSION_1_3; ///< Thread Versio
 constexpr uint16_t kThreadVersion1p3p1 = OT_THREAD_VERSION_1_3_1; ///< Thread Version 1.3.1
 constexpr uint16_t kThreadVersion1p4   = OT_THREAD_VERSION_1_4;   ///< Thread Version 1.4
 
-extern const char kThreadVersionString[]; ///< Thread version as human-readable string.
+extern const char kThreadVersionString[];      ///< Thread version as human-readable string - full (e.g. "1.4.0")
+extern const char kThreadVersionStringShort[]; ///< Thread version as human-readable string - short (e.g. "1.3")
 
 } // namespace ot
 
