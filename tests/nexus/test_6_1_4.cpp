@@ -44,7 +44,7 @@ static constexpr uint32_t kFormNetworkTime = 13 * 1000;
 /**
  * Time to advance for a node to join as a child, in milliseconds.
  */
-static constexpr uint32_t kAttachToChildTime = 10 * 1000;
+static constexpr uint32_t kAttachToChildTime = 100 * 1000;
 
 /**
  * Time to advance for a node to upgrade to a router, in milliseconds.
@@ -69,7 +69,7 @@ static constexpr uint32_t kPollPeriod = 500;
 /**
  * Threshold to keep nodes as REEDs.
  */
-static constexpr uint8_t kReedThreshold = 1;
+static constexpr uint8_t kReedThreshold = 0;
 
 /**
  * Default threshold for router upgrade.
