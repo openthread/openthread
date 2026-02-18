@@ -71,7 +71,7 @@ def verify(pv):
 
     # The Realm-Local All Thread Nodes multicast address (FF33:40:<MeshLocalPrefix>::1)
     # Derived from Link-Local All Thread Nodes (FF32:40:<MeshLocalPrefix>::1)
-    ll_all_thread = consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
+    ll_all_thread = consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS
     rl_all_thread = bytearray(ll_all_thread)
     rl_all_thread[1] = 0x33
     REALM_LOCAL_ALL_THREAD_NODES = Ipv6Addr(rl_all_thread)

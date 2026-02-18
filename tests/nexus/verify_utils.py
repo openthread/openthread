@@ -154,7 +154,7 @@ def run_main(verify_func):
             prefix = Ipv6Addr(prefix_addr)
             all_thread_nodes_mcast_addr = bytearray(Ipv6Addr('ff32:40::1'))
             all_thread_nodes_mcast_addr[4:12] = prefix[0:8]
-            consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
+            consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
 
         pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
         pv.add_common_vars()

@@ -557,7 +557,7 @@ class PacketFilter(object):
         return self.filter(lambda p: p.ipv6.src == src_addr and p.ipv6.dst == dst_addr, **kwargs)
 
     def filter_LLATNMA(self, **kwargs):
-        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
+        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
 
     def filter_RLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_NODES_ADDRESS, **kwargs)
@@ -566,7 +566,7 @@ class PacketFilter(object):
         return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS, **kwargs)
 
     def filter_RLATNMA(self, **kwargs):
-        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
+        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
 
     def filter_LLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)

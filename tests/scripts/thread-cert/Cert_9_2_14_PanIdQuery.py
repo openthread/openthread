@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_CHILD_ID_REQUEST, MGMT_PANID_QUERY, MGMT_PANID_CONFLICT, MGMT_ED_REPORT, NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV, REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MGMT_PANID_QUERY, MGMT_PANID_CONFLICT, MGMT_ED_REPORT, NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV, REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
@@ -123,7 +123,7 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
             ).must_verify(lambda p: {NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV} <= set(p.thread_meshcop.tlv.type))
 
         # Step 4: Commissioner MUST send a multicast MGMT_PANID_QUERY.qry
-        _cpkts.filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).filter_coap_request(
+        _cpkts.filter_ipv6_dst(REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS).filter_coap_request(
             MGMT_PANID_QUERY).must_next().must_verify(
                 lambda p: {NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV} <= set(p.thread_meshcop.
                                                                                                       tlv.type))

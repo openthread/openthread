@@ -115,12 +115,12 @@ class Cert_6_4_2_RealmLocal_Base(thread_cert.TestCase):
             self.simulator.go(2)
 
         self.assertTrue(self.nodes[LEADER].\
-                        ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                        ping(config.REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS,
                              num_responses=2,
                              size=FRAGMENTED_DATA_LEN))
         self.simulator.go(2)
         self.assertTrue(self.nodes[LEADER].\
-                        ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                        ping(config.REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS,
                              num_responses=2))
         self.simulator.go(2)
 
