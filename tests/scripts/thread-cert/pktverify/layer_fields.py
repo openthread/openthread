@@ -67,12 +67,27 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
         return int(rv, 16)
 
     # timestamp: 'Jan  1, 1970 08:00:00.000000000 CST', '0000000000000000'
+    # also handle '1970-01-01T00:00:01.000000000+0000'
     # convert to seconds from 1970, ignore the nanosecond for now since
     # there are integer seconds applied in the test cases
     try:
         time_str = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
         time_in_sec = time.mktime(time_str.utctimetuple())
         return int(time_in_sec)
+    except (ValueError, TypeError):
+        pass
+
+    try:
+        # handle '1970-01-01T00:00:01.000000000+0000' or '1970-01-01T00:00:01.000000+0000'
+        # strip extra zeros if any
+        if 'T' in dv and '+' in dv:
+            parts = dv.split('.')
+            if len(parts) > 1:
+                subparts = parts[1].split('+')
+                if len(subparts) > 1:
+                    dv = parts[0] + '.' + subparts[0][:6] + '+' + subparts[1]
+            time_str = datetime.datetime.strptime(dv, "%Y-%m-%dT%H:%M:%S.%f%z")
+            return int(time_str.timestamp())
     except (ValueError, TypeError):
         pass
 
