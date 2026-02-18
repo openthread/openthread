@@ -187,8 +187,7 @@ void Test5_1_9(void)
      *     - Version TLV
      */
     Log("Step 3: Router_2 (DUT) begins attach process");
-    SuccessOrQuit(dut.Get<Mle::Mle>().SetRouterEligible(false));
-    dut.Join(reed1); // reed1 is just a placeholder here, it will scan.
+    dut.Join(reed1, Node::kAsFed); // reed1 is just a placeholder here, it will scan.
 
     /**
      * Step 4: REED_2, REED_1

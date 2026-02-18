@@ -175,7 +175,6 @@ void Test5_1_8(void)
      *     - Scan Mask TLV = 0x80 (Active Routers)
      *     - Version TLV
      */
-    SuccessOrQuit(dut.Get<Mle::Mle>().SetRouterEligible(false));
     dut.Join(router3, Node::kAsFed); // We use router3 as the dataset source, but it will scan and find all
 
     Log("---------------------------------------------------------------------------------------");

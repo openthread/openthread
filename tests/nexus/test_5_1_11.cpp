@@ -186,8 +186,7 @@ void Test5_1_11(void)
      *     - Scan Mask TLV = 0x80 (active Routers)
      *     - Version TLV
      */
-    SuccessOrQuit(dut.Get<Mle::Mle>().SetRouterEligible(false));
-    dut.Join(leader);
+    dut.Join(leader, Node::kAsFed);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Router_2");
