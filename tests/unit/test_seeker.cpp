@@ -123,7 +123,11 @@ public:
         }
     }
 
-    static void CheckSelectionWith(Seeker &aSeeker, const uint64_t *aExtAddrs, uint16_t aNumExtAddrs)
+    static constexpr uint16_t kSelectionArraySize = 32;
+
+    using ExtAddrArray = Array<uint64_t, kSelectionArraySize>;
+
+    static void CheckSelection(Seeker &aSeeker, const ExtAddrArray &aExtAddrs)
     {
         CandidateEntry  entry;
         Mac::ExtAddress extAddr;
@@ -132,26 +136,20 @@ public:
 
         StartCandidateSelection(aSeeker);
 
-        for (uint16_t index = 0; index < aNumExtAddrs; index++)
+        for (uint64_t addr : aExtAddrs)
         {
             SelectNextCandidate(aSeeker, entry);
             LogCandidate(entry);
 
             VerifyOrQuit(!entry.IsEmpty());
 
-            LittleEndian::WriteUint64(aExtAddrs[index], extAddr.m8);
+            LittleEndian::WriteUint64(addr, extAddr.m8);
             VerifyOrQuit(entry.mExtAddr == extAddr);
             VerifyOrQuit(entry.mConnAttempted);
         }
 
         SelectNextCandidate(aSeeker, entry);
         VerifyOrQuit(entry.IsEmpty());
-    }
-
-    template <uint16_t kExtAddrSize>
-    static void CheckSelection(Seeker &aSeeker, const uint64_t (&aExtAddrArray)[kExtAddrSize])
-    {
-        CheckSelectionWith(aSeeker, &aExtAddrArray[0], kExtAddrSize);
     }
 
     static void TestSeekerCandidates(void)
@@ -165,6 +163,7 @@ public:
 
         Seeker        &seeker = instance->Get<Seeker>();
         CandidateEntry entry;
+        ExtAddrArray   selectionOrder;
 
         printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
         printf("Basic addition & replacement\n\n");
@@ -196,7 +195,10 @@ public:
 
         printf("Validate candidate selection with single entry in array\n\n");
 
-        CheckSelection(seeker, {0xa1});
+        selectionOrder.Clear();
+        SuccessOrQuit(selectionOrder.PushBack(0xa1));
+
+        CheckSelection(seeker, selectionOrder);
 
         printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
         printf("Max candidates per network (limit = 3)\n\n");
@@ -406,7 +408,17 @@ public:
         VerifyOrQuit(Contains(seeker, 0x1234, 0x01));
         VerifyOrQuit(Contains(seeker, 0x5678, 0x02));
 
-        CheckSelection(seeker, {0xc3, 0xb3, 0xe2, 0xa5, 0xd1, 0xf1, 0x02, 0x01});
+        selectionOrder.Clear();
+        SuccessOrQuit(selectionOrder.PushBack(0xc3));
+        SuccessOrQuit(selectionOrder.PushBack(0xb3));
+        SuccessOrQuit(selectionOrder.PushBack(0xe2));
+        SuccessOrQuit(selectionOrder.PushBack(0xa5));
+        SuccessOrQuit(selectionOrder.PushBack(0xd1));
+        SuccessOrQuit(selectionOrder.PushBack(0xf1));
+        SuccessOrQuit(selectionOrder.PushBack(0x02));
+        SuccessOrQuit(selectionOrder.PushBack(0x01));
+
+        CheckSelection(seeker, selectionOrder);
 
         printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
         printf("Selection strategy\n\n");
@@ -457,7 +469,17 @@ public:
         // Next we go through remaining candidates
         // - c2, a1 and a3
 
-        CheckSelection(seeker, {0xe1, 0xb1, 0xc1, 0xd1, 0xa2, 0xc2, 0xa1, 0xa3});
+        selectionOrder.Clear();
+        SuccessOrQuit(selectionOrder.PushBack(0xe1));
+        SuccessOrQuit(selectionOrder.PushBack(0xb1));
+        SuccessOrQuit(selectionOrder.PushBack(0xc1));
+        SuccessOrQuit(selectionOrder.PushBack(0xd1));
+        SuccessOrQuit(selectionOrder.PushBack(0xa2));
+        SuccessOrQuit(selectionOrder.PushBack(0xc2));
+        SuccessOrQuit(selectionOrder.PushBack(0xa1));
+        SuccessOrQuit(selectionOrder.PushBack(0xa3));
+
+        CheckSelection(seeker, selectionOrder);
 
         seeker.Stop();
 
@@ -473,7 +495,15 @@ public:
 
         VerifyOrQuit(seeker.mCandidates.GetLength() == 6);
 
-        CheckSelection(seeker, {0xa1, 0xc1, 0xb1, 0xa2, 0xc2, 0xb2});
+        selectionOrder.Clear();
+        SuccessOrQuit(selectionOrder.PushBack(0xa1));
+        SuccessOrQuit(selectionOrder.PushBack(0xc1));
+        SuccessOrQuit(selectionOrder.PushBack(0xb1));
+        SuccessOrQuit(selectionOrder.PushBack(0xa2));
+        SuccessOrQuit(selectionOrder.PushBack(0xc2));
+        SuccessOrQuit(selectionOrder.PushBack(0xb2));
+
+        CheckSelection(seeker, selectionOrder);
 
         printf("\nTestSeekerCandidates() passed\n\n");
 
