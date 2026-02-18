@@ -93,6 +93,8 @@ DEFAULT_TESTS=(
     "6_1_1_B"
     "6_1_2_A"
     "6_1_2_B"
+    "6_1_3_A"
+    "6_1_3_B"
     "6_2_1_A"
     "6_2_1_B"
 )
@@ -185,15 +187,14 @@ run_test()
 
 expanded_tests=()
 for t in "${TESTS_TO_RUN[@]}"; do
-    if [[ $t == "6_1_1" ]]; then
-        expanded_tests+=("6_1_1_A" "6_1_1_B")
-    elif [[ $t == "6_1_2" ]]; then
-        expanded_tests+=("6_1_2_A" "6_1_2_B")
-    elif [[ $t == "6_2_1" ]]; then
-        expanded_tests+=("6_2_1_A" "6_2_1_B")
-    else
-        expanded_tests+=("$t")
-    fi
+    case "$t" in
+        6_1_1 | 6_1_2 | 6_1_3 | 6_2_1)
+            expanded_tests+=("${t}_A" "${t}_B")
+            ;;
+        *)
+            expanded_tests+=("$t")
+            ;;
+    esac
 done
 
 for t in "${expanded_tests[@]}"; do
