@@ -85,6 +85,25 @@ static_library("libopenthread-spinel-ncp") {
   ]
 }
 
+static_library("libopenthread-radio-spinel") {
+  sources = spinel_sources
+  public_deps = [
+    ":spinel-api",
+    "../../core:libopenthread_core_headers",
+    "../platform:libopenthread-platform",
+  ]
+
+  defines = [
+    "OPENTHREAD_FTD=0",
+    "OPENTHREAD_MTD=0",
+    "OPENTHREAD_RADIO=0",
+  ]
+
+  public_configs = [
+    ":spinel_config_openthread_message_disable",
+  ]
+}
+
 static_library("libopenthread-spinel-rcp") {
   sources = spinel_sources
   public_deps = [
