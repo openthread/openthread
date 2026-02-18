@@ -59,6 +59,7 @@ jobs:
 
     - name: Bootstrap
       run: |
+        sudo add-apt-repository -y ppa:wireshark-dev/stable
         sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y ninja-build tshark
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
