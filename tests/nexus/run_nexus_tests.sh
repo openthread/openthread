@@ -97,6 +97,7 @@ DEFAULT_TESTS=(
     "6_1_3_B"
     "6_2_1_A"
     "6_2_1_B"
+    "6_2_2"
 )
 
 # Use provided arguments or the default test list
@@ -188,7 +189,7 @@ run_test()
 expanded_tests=()
 for t in "${TESTS_TO_RUN[@]}"; do
     case "$t" in
-        6_1_1 | 6_1_2 | 6_1_3 | 6_2_1)
+        6_1_1 | 6_1_2 | 6_1_3 | 6_2_1 | 6_2_2)
             expanded_tests+=("${t}_A" "${t}_B")
             ;;
         *)
