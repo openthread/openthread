@@ -400,6 +400,8 @@ void Mle::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
 
 void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode)
 {
+    uint16_t childCount;
+
     if (aRole == kRoleLeader)
     {
         IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
@@ -432,13 +434,53 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
         Get<AddressResolver>().Clear();
     }
 
-    // Remove children that do not have a matching RLOC16
+    childCount = 0;
+
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
+        uint32_t minDelay;
+        uint32_t maxDelay;
+
         if (RouterIdFromRloc16(child.GetRloc16()) != mRouterId)
         {
+            // Remove children that do not have a matching RLOC16
             RemoveNeighbor(child);
+            continue;
         }
+
+        // Schedule Child Update Request TX to rx-on (non-sleepy) children.
+        // Sleepy children are handled and recovered in the `HandleTimeTick()`.
+
+        if (!child.IsRxOnWhenIdle() || !child.IsStateRestored())
+        {
+            continue;
+        }
+
+        // We spread the "Child Update Request" transmissions to avoid an
+        // initial burst of traffic and allow collection of response from the
+        // children.
+
+        // We track the number of rx-on children. The first 10
+        // (`kThresholdToUseEarlyChildUpdateDelay`) children are
+        // scheduled within a shorter early delay window (
+        // [250ms, 1250ms]), and the rest are scheduled after in
+        // longer ([1250ms, 5000ms]).
+
+        childCount++;
+
+        if (childCount <= kThresholdToUseEarlyChildUpdateDelay)
+        {
+            minDelay = kMinChildUpdateRestoreDelay;
+            maxDelay = kEarlyChildUpdateRestoreDelay;
+        }
+        else
+        {
+            minDelay = kEarlyChildUpdateRestoreDelay;
+            maxDelay = kMaxChildUpdateRestoreDelay;
+        }
+
+        mDelayedSender.ScheduleChildUpdateRequestToChild(child,
+                                                         Random::NonCrypto::GetUint32InRange(minDelay, maxDelay));
     }
 
     LogNote("Partition ID 0x%lx", ToUlong(mLeaderData.GetPartitionId()));
@@ -1646,7 +1688,7 @@ void Mle::HandleTimeTick(void)
             LogInfo("Child 0x%04x timeout expired", child.GetRloc16());
             RemoveNeighbor(child);
         }
-        else if (IsRouterOrLeader() && child.IsStateRestored())
+        else if (IsRouterOrLeader() && child.IsStateRestored() && !child.IsRxOnWhenIdle())
         {
             IgnoreError(SendChildUpdateRequestToChild(child));
         }
