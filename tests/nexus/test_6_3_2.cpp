@@ -153,6 +153,7 @@ void RunTest6_3_2(Topology aTopology, const char *aJsonFile)
     {
         NetworkData::OnMeshPrefixConfig config;
 
+        config.Clear();
         SuccessOrQuit(config.GetPrefix().FromString("2001::/64"));
         config.mStable       = true;
         config.mOnMesh       = true;
@@ -237,6 +238,7 @@ void RunTest6_3_2(Topology aTopology, const char *aJsonFile)
     {
         NetworkData::OnMeshPrefixConfig config;
 
+        config.Clear();
         SuccessOrQuit(config.GetPrefix().FromString("2002::/64"));
         config.mStable       = true;
         config.mOnMesh       = true;
