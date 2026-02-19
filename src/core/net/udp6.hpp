@@ -162,6 +162,7 @@ public:
 #endif
 
     private:
+        bool Matches(uint16_t aSockPort) const { return GetSockName().GetPort() == aSockPort; }
         bool Matches(const MessageInfo &aMessageInfo) const;
 
         void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo)

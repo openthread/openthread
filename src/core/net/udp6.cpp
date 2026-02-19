@@ -486,21 +486,7 @@ exit:
     return;
 }
 
-bool Udp::IsPortInUse(uint16_t aPort) const
-{
-    bool found = false;
-
-    for (const SocketHandle &socket : mSockets)
-    {
-        if (socket.GetSockName().GetPort() == aPort)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    return found;
-}
+bool Udp::IsPortInUse(uint16_t aPort) const { return mSockets.ContainsMatching(aPort); }
 
 } // namespace Ip6
 } // namespace ot
