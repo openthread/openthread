@@ -143,10 +143,6 @@ run_test()
     local verify_script="${REPO_ROOT}/tests/nexus/verify_${test_base}.py"
     local nexus_bin="${NEXUS_BIN_DIR}/${test_name}"
 
-    printf "========================================================================================\n"
-    printf "Running %s...\n" "$test_full"
-    printf "========================================================================================\n"
-
     if [[ ! -x $nexus_bin ]]; then
         printf "Error: %s not found or not executable in %s. Did you build the tests?\n" "$test_name" "$NEXUS_BIN_DIR" >&2
         return 1
@@ -155,6 +151,9 @@ run_test()
     # Create a temporary directory for test artifacts
     local work_dir
     work_dir=$(mktemp -d "${TEMP_DIR}/nexus_test_${test_full}.XXXXXX")
+    local log_file="${work_dir}/test.log"
+
+    printf "Running %-40s... " "$test_full"
 
     # Run the Nexus C++ test and verification in a subshell to isolate the working directory
     (
@@ -180,24 +179,23 @@ run_test()
                 printf "Verification for %s FAILED\n" "$test_full" >&2
                 exit 1
             fi
-        else
-            printf "\n"
-            printf "No verification script found for %s (%s), skipping verification.\n" "$test_full" "$verify_script"
         fi
-    )
+    ) >"$log_file" 2>&1
 
     local exit_code="$?"
 
     if [[ $exit_code -eq 0 ]]; then
-        printf "\n"
-        printf "%s PASSED\n" "$test_full"
+        printf " PASSED\n"
         if [[ -d $work_dir && $work_dir == "${TEMP_DIR}/"* ]]; then
             rm -rf "$work_dir"
         fi
         return 0
     else
-        printf "\n"
-        printf "%s FAILED. Artifacts preserved in: %s\n" "$test_full" "$work_dir" >&2
+        printf " FAILED\n"
+        printf "========================================================================================\n"
+        cat "$log_file"
+        printf "========================================================================================\n"
+        printf "Artifacts preserved in: %s\n" "$work_dir"
         return 1
     fi
 }
