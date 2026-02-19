@@ -174,6 +174,7 @@ ot_nexus_test(6_3_2 "cert;nexus")
 ot_nexus_test(6_4_1 "cert;nexus")
 ot_nexus_test(6_4_2 "cert;nexus")
 ot_nexus_test(6_5_1 "cert;nexus")
+ot_nexus_test(6_6_1 "cert;nexus")
 ot_nexus_test(7_1_1 "cert;nexus")
 
 # Misc tests
