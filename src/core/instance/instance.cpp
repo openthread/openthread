@@ -282,6 +282,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
 #endif
+#if OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE
+    ,  mTimeExceededDetector(*this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mInfraIf(*this)
     , mRxRaTracker(*this)
