@@ -99,14 +99,9 @@ void Test5_1_2(void)
     nexus.AdvanceTime(0);
 
     // Use AllowList feature to restrict the topology.
-    leader.AllowList(router);
-    router.AllowList(leader);
-
-    router.AllowList(med);
-    med.AllowList(router);
-
-    router.AllowList(sed);
-    sed.AllowList(router);
+    nexus.AllowLinkBetween(leader, router);
+    nexus.AllowLinkBetween(router, med);
+    nexus.AllowLinkBetween(router, sed);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");

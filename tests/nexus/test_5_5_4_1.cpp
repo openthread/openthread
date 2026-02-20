@@ -115,18 +115,10 @@ void Test5_5_4_1(void)
      * - Pass Criteria: N/A.
      */
 
-    dut.AllowList(router1);
-    dut.AllowList(router2);
-
-    router1.AllowList(dut);
-    router1.AllowList(router3);
-
-    router2.AllowList(dut);
-    router2.AllowList(router4);
-
-    router3.AllowList(router1);
-
-    router4.AllowList(router2);
+    nexus.AllowLinkBetween(dut, router1);
+    nexus.AllowLinkBetween(dut, router2);
+    nexus.AllowLinkBetween(router1, router3);
+    nexus.AllowLinkBetween(router2, router4);
 
     dut.Form();
     nexus.AdvanceTime(kFormNetworkTime);

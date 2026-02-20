@@ -84,14 +84,9 @@ void Test5_2_1(void)
     med1.SetName("MED_1");
 
     // Establish topology using AllowList
-    dut.AllowList(leader);
-    leader.AllowList(dut);
-
-    dut.AllowList(reed1);
-    reed1.AllowList(dut);
-
-    reed1.AllowList(med1);
-    med1.AllowList(reed1);
+    nexus.AllowLinkBetween(dut, leader);
+    nexus.AllowLinkBetween(dut, reed1);
+    nexus.AllowLinkBetween(reed1, med1);
 
     nexus.AdvanceTime(0);
 

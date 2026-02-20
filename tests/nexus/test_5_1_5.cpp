@@ -96,8 +96,7 @@ void Test5_1_5(void)
      */
 
     /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

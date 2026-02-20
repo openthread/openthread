@@ -126,14 +126,9 @@ void Test5_3_8(void)
     Instance::SetLogLevel(kLogLevelNote);
 
     /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(br);
-    br.AllowList(leader);
-
-    leader.AllowList(med1);
-    med1.AllowList(leader);
-
-    leader.AllowList(med2);
-    med2.AllowList(leader);
+    nexus.AllowLinkBetween(leader, br);
+    nexus.AllowLinkBetween(leader, med1);
+    nexus.AllowLinkBetween(leader, med2);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Border Router");

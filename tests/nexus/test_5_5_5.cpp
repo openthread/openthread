@@ -113,16 +113,13 @@ void Test5_5_5(void)
     /** Configure AllowList for specific links. */
     for (uint16_t i = 2; i <= 15; i++)
     {
-        leader.AllowList(*r[i]);
-        r[i]->AllowList(leader);
+        nexus.AllowLinkBetween(leader, *r[i]);
     }
 
-    r[1]->AllowList(*r[3]);
-    r[3]->AllowList(*r[1]);
+    nexus.AllowLinkBetween(*r[1], *r[3]);
 
     /** DUT links. */
-    dut.AllowList(*r[2]);
-    r[2]->AllowList(dut);
+    nexus.AllowLinkBetween(dut, *r[2]);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);
@@ -180,8 +177,7 @@ void Test5_5_5(void)
      * - Pass Criteria: N/A
      */
     SuccessOrQuit(dut.Get<Mle::Mle>().SetRouterEligible(true));
-    dut.AllowList(*r[1]);
-    r[1]->AllowList(dut);
+    nexus.AllowLinkBetween(dut, *r[1]);
     nexus.AdvanceTime(kReattachTime);
 
     Log("---------------------------------------------------------------------------------------");
