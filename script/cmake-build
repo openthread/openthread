@@ -67,7 +67,7 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET-}
 OT_SRCDIR="$(cd "$(dirname "$0")"/.. && pwd)"
 readonly OT_SRCDIR
 
-OT_PLATFORMS=(simulation posix android-ndk)
+OT_PLATFORMS=(simulation posix android-ndk toranj)
 readonly OT_PLATFORMS
 
 OT_CLEAN_INTERMEDIATES="${OT_CLEAN_INTERMEDIATES-${GITHUB_ACTION-}}"
@@ -120,7 +120,7 @@ readonly OT_POSIX_SIM_COMMON_OPTIONS
 
 die()
 {
-    echo " ** ERROR: Openthread CMake doesn't support platform \"$1\""
+    echo " ** ERROR: OpenThread CMake doesn't support platform \"$1\""
     exit 1
 }
 
@@ -234,6 +234,24 @@ Could not fild the Android NDK CMake toolchain file
                 "-DOT_UDP_FORWARD=ON"
             )
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
+            ;;
+        toranj)
+            platform="simulation"
+            OT_CMAKE_BUILD_DIR="build/toranj"
+            local_options+=(
+                "-DOT_15_4=ON"
+                "-DOT_APP_CLI=ON"
+                "-DOT_APP_NCP=OFF"
+                "-DOT_APP_RCP=OFF"
+                "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
+                "-DOT_PLATFORM_KEY_REF=OFF"
+                "-DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h"
+                "-DOT_THREAD_VERSION=1.4"
+                "-DOT_TORANJ_CLI=ON"
+                "-DOT_COVERAGE=ON"
+                "-DOT_TREL=OFF"
+            )
+            options=("${local_options[@]}")
             ;;
         *)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")
