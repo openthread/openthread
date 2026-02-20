@@ -61,6 +61,9 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     , mNat64PrefixManager(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+    , mIsDistinctAilPrefixPublished(false)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     , mPdPrefixManager(aInstance)
 #endif
@@ -266,6 +269,10 @@ void RoutingManager::Start(void)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+        mIsDistinctAilPrefixPublished = false;
+        mPublishedAilPrefix.Clear();
+#endif
     }
 }
 
@@ -280,6 +287,9 @@ void RoutingManager::Stop(void)
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+    UpdateDistinctAilPrefixPublication();
 #endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
@@ -387,6 +397,9 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     mPdPrefixManager.Evaluate();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+    UpdateDistinctAilPrefixPublication();
 #endif
 
     if (IsInitialPolicyEvaluationDone())
@@ -635,6 +648,54 @@ void RoutingManager::HandleLocalOnLinkPrefixChanged(void)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+void RoutingManager::UpdateDistinctAilPrefixPublication(void)
+{
+    // This method is called when MultiAilDetector state changes or when
+    // the favored on-link prefix on the AIL changes.
+
+    Ip6::Prefix ailPrefix = mOnLinkPrefixManager.GetFavoredPrefix();
+    bool shouldPublish    = mMultiAilDetector.IsDetected() && ailPrefix.IsValid() && (ailPrefix != mPublishedAilPrefix);
+
+    // If we are currently publishing a prefix, check if we should withdraw it.
+    if (mIsDistinctAilPrefixPublished)
+    {
+        if (!shouldPublish || (mPublishedAilPrefix != ailPrefix))
+        {
+            // Withdraw the old prefix if we no longer should publish,
+            // or if the AIL prefix itself has changed.
+            IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(mPublishedAilPrefix));
+            mIsDistinctAilPrefixPublished = false;
+        }
+    }
+
+    // If we should publish a prefix, check if we can.
+    if (shouldPublish && !mIsDistinctAilPrefixPublished)
+    {
+        NetworkData::OnMeshPrefixConfig config;
+
+        config.Clear();
+        config.mPrefix       = ailPrefix;
+        config.mStable       = true;
+        config.mSlaac        = true;
+        config.mPreferred    = true;
+        config.mOnMesh       = true;
+        config.mDefaultRoute = false;
+
+        if (Get<NetworkData::Local>().AddOnMeshPrefix(config) == kErrorNone)
+        {
+            mPublishedAilPrefix           = ailPrefix;
+            mIsDistinctAilPrefixPublished = true;
+            LogInfo("Published distinct AIL prefix %s", mPublishedAilPrefix.ToString().AsCString());
+        }
+        else
+        {
+            LogWarn("Failed to publish distinct AIL prefix %s", ailPrefix.ToString().AsCString());
+        }
+    }
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
 
 bool RoutingManager::NetworkDataContainsUlaRoute(void) const
 {
@@ -1228,6 +1289,74 @@ void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
+void RoutingManager::OnLinkPrefixManager::UpdateLocalPrefixForMultiAil(void)
+{
+    Ip6::Prefix oldLocalPrefix = mLocalPrefix;
+
+    // Re-run the prefix generation logic, which will now consider the multi-AIL state.
+    GenerateLocalPrefix();
+
+    // If the prefix has changed (e.g., from ExtPANID-derived to Random-ULA)
+    if (mLocalPrefix != oldLocalPrefix)
+    {
+        LogNote("Local on-link prefix changed due to multi-AIL state change: %s -> %s",
+                oldLocalPrefix.ToString().AsCString(), mLocalPrefix.ToString().AsCString());
+
+        // Deprecate the old prefix to allow devices to transition smoothly.
+        // This existing mechanism will add it to an "old prefixes" list and
+        // advertise it with a zero preferred lifetime.
+        DeprecateOldPrefix(oldLocalPrefix, mExpireTime);
+
+        // Trigger a re-evaluation of the entire routing policy to advertise
+        // the new prefix and deprecate the old one.
+        Get<RoutingManager>().HandleLocalOnLinkPrefixChanged();
+    }
+}
+
+Ip6::Prefix RoutingManager::OnLinkPrefixManager::GenerateRandomStableUlaPrefix(void)
+{
+    // This function generates a ULA prefix that is random-looking but stable for this device on this infrastructure
+    // link. It is guaranteed to be numerically smaller than the default Extended PAN ID-derived prefix, making it
+    // always win over default Extended PAN ID-derived prefix in the OnLinkPrefixManager::Evaluate() method
+
+    const MeshCoP::ExtendedPanId &extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
+    Crypto::Sha256::Hash          hash;
+    Crypto::Sha256                sha256;
+    uint64_t                      extPanIdPrefixValue;
+    uint64_t                      randomValue;
+    Ip6::Prefix                   extPanIdDerivedPrefix;
+    Ip6::Prefix                   randomUlaPrefix;
+
+    // Global ID: 40 most significant bits of Extended PAN ID
+    // Subnet ID: 16 least significant bits of Extended PAN ID
+    memcpy(extPanIdDerivedPrefix.mPrefix.mFields.m8 + 1, extPanId.m8, 5);
+    memcpy(extPanIdDerivedPrefix.mPrefix.mFields.m8 + 6, extPanId.m8 + 6, 2);
+
+    mLocalPrefix.SetLength(kOnLinkPrefixLength);
+
+    // Get the 56-bit value of the Extended PAN ID derived prefix, which serves as the exclusive upper bound for our
+    // random number generation.
+    memcpy(reinterpret_cast<uint8_t *>(&extPanIdPrefixValue) + 1, extPanIdDerivedPrefix.mPrefix.mFields.m8 + 1, 7);
+
+    // Generate a 256-bit hash from the device's extended address.
+    sha256.Start();
+    sha256.Update(Get<Mac::Mac>().GetExtAddress());
+    sha256.Finish(hash);
+
+    // Take the first 64 bits of the hash and use modulo to map it into the range [0, extPanIdPrefixValue - 1].
+    memcpy(&randomValue, hash.m8, sizeof(randomValue));
+    randomValue %= extPanIdPrefixValue;
+
+    // Construct the new ULA prefix from the generated random value.
+    randomUlaPrefix.mPrefix.mFields.m8[0] = 0xfd;
+    memcpy(&randomUlaPrefix.mPrefix.mFields.m8[1], reinterpret_cast<uint8_t *>(&randomValue) + 1, 7);
+    randomUlaPrefix.SetLength(kOnLinkPrefixLength);
+
+    return randomUlaPrefix;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DISTINCT_AIL_PREFIX_ENABLE
 
 void RoutingManager::OnLinkPrefixManager::SetFavoredPrefix(const Ip6::Prefix &aPrefix)
 {
