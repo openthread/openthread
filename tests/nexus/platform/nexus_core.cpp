@@ -270,6 +270,7 @@ void Core::Process(Node &aNode)
 
     if (aNode.mAlarm.ShouldTrigger(mNow))
     {
+        aNode.mAlarm.mScheduled = false;
         otPlatAlarmMilliFired(&aNode.GetInstance());
     }
 }
