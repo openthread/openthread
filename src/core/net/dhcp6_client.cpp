@@ -358,8 +358,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     Header header;
 
-    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), header));
-    aMessage.MoveOffset(sizeof(header));
+    SuccessOrExit(aMessage.ReadAtAndAdvanceOffset(header));
 
     if ((header.GetMsgType() == kMsgTypeReply) && (header.GetTransactionId() == mTransactionId))
     {
