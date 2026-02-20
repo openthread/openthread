@@ -119,6 +119,7 @@ DEFAULT_TESTS=(
     "6_6_2"
     "7_1_1"
     "7_1_2"
+    "7_1_3"
 )
 
 # Use provided arguments or the default test list
