@@ -57,6 +57,11 @@
 #include "thread/network_data_leader.hpp"
 #include "thread/thread_link_info.hpp"
 
+/* =========================================================================== */
+#include "utils/ipfix.hpp"   
+/* =========================================================================== */
+
+
 namespace ot {
 
 namespace Mle {
