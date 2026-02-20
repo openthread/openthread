@@ -1178,7 +1178,7 @@ exit:
 
     if (error == kErrorNone)
     {
-        if (message->GetOffset() >= message->GetLength())
+        if (message->DetermineLengthAfterOffset() == 0)
         {
             mReassemblyList.Dequeue(*message);
             IgnoreError(HandleDatagram(*message, aRxInfo.GetSrcAddr()));

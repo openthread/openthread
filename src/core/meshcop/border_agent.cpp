@@ -821,7 +821,7 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
                       forwardMessage->Init(Coap::kTypeNonConfirmable, static_cast<Coap::Code>(aResponse->GetCode())));
     SuccessOrExit(error = forwardMessage->WriteToken(aForwardContext.mToken));
 
-    if (aResponse->mMessage.GetLength() > aResponse->mMessage.GetOffset())
+    if (aResponse->mMessage.DetermineLengthAfterOffset() > 0)
     {
         SuccessOrExit(error = forwardMessage->AppendPayloadMarker());
     }

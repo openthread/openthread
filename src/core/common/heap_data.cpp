@@ -54,7 +54,7 @@ exit:
 
 Error Data::SetFrom(const Message &aMessage)
 {
-    return SetFrom(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
+    return SetFrom(aMessage, aMessage.GetOffset(), aMessage.DetermineLengthAfterOffset());
 }
 
 Error Data::SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)

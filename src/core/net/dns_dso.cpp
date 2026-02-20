@@ -766,7 +766,7 @@ Error Dso::Connection::ReadPrimaryTlv(const Message &aMessage, Tlv::Type &aPrima
     aPrimaryTlvType = Tlv::kReservedType;
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), tlv));
-    VerifyOrExit(aMessage.GetOffset() + tlv.GetSize() <= aMessage.GetLength(), error = kErrorParse);
+    VerifyOrExit(tlv.GetSize() <= aMessage.DetermineLengthAfterOffset(), error = kErrorParse);
     aPrimaryTlvType = tlv.GetType();
     error           = kErrorNone;
 

@@ -327,6 +327,11 @@ void Message::SetOffset(uint16_t aOffset)
     GetMetadata().mOffset = aOffset;
 }
 
+uint16_t Message::DetermineLengthAfterOffset(void) const
+{
+    return (GetOffset() <= GetLength()) ? GetLength() - GetOffset() : 0;
+}
+
 bool Message::IsMleCommand(Mle::Command aMleCommand) const
 {
     return (GetSubType() == kSubTypeMle) && (GetMetadata().mMleCommand == aMleCommand);
