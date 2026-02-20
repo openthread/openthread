@@ -89,6 +89,13 @@ def verify(pv):
                           } <= set(p.mle.tlv.type)).\
         must_next()
 
+    if 'SED_1' in pv.vars:
+        with pkts.save_index():
+            pkts.filter(lambda p: p.wpan.src16 == pv.vars['SED_1_RLOC16'] and
+                                  p.wpan.dst16 == pv.vars['LEADER_RLOC16']).\
+                filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
+                must_next()
+
     # Step 4: Leader
     # - Description: Automatically sends an MLE Child Update Response with a status of “Error”.
     # - Pass Criteria: N/A
