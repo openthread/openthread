@@ -608,7 +608,7 @@ void Address::ToString(char *aBuffer, uint16_t aSize) const
 
 void Address::ToString(StringWriter &aWriter) const
 {
-    AppendHexWords(aWriter, static_cast<uint8_t>(GetArrayLength(mFields.m16)));
+    AppendHexWords(aWriter, static_cast<uint8_t>(GetArrayLength(mFields.m8) / 2));
 }
 
 void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
@@ -623,7 +623,7 @@ void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
             aWriter.Append(":");
         }
 
-        aWriter.Append("%x", BigEndian::HostSwap16(mFields.m16[index]));
+        aWriter.Append("%x", BigEndian::ReadUint16(&mFields.m8[index * 2]));
     }
 }
 
