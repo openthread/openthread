@@ -36,7 +36,7 @@ import network_diag
 import network_layer
 import thread_cert
 from network_diag import TlvType
-from pktverify.consts import DIAG_GET_QRY_URI, DIAG_GET_ANS_URI, DG_MAC_EXTENDED_ADDRESS_TLV, DG_MAC_ADDRESS_TLV, DG_MODE_TLV, DG_CONNECTIVITY_TLV, DG_ROUTE64_TLV, DG_LEADER_DATA_TLV, DG_NETWORK_DATA_TLV, DG_IPV6_ADDRESS_LIST_TLV, DG_CHANNEL_PAGES_TLV, DG_TYPE_LIST_TLV, DG_MAC_COUNTERS_TLV, DG_TIMEOUT_TLV, DG_CHILD_TABLE_TLV, REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
+from pktverify.consts import DIAG_GET_QRY_URI, DIAG_GET_ANS_URI, DG_MAC_EXTENDED_ADDRESS_TLV, DG_MAC_ADDRESS_TLV, DG_MODE_TLV, DG_CONNECTIVITY_TLV, DG_ROUTE64_TLV, DG_LEADER_DATA_TLV, DG_NETWORK_DATA_TLV, DG_IPV6_ADDRESS_LIST_TLV, DG_CHANNEL_PAGES_TLV, DG_TYPE_LIST_TLV, DG_MAC_COUNTERS_TLV, DG_TIMEOUT_TLV, DG_CHILD_TABLE_TLV, REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.utils import colon_hex
 
@@ -133,7 +133,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
             ]
 
         # 2 - Leader sends DIAG_GET.query
-        self.nodes[LEADER].send_network_diag_get(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, tlv_types)
+        self.nodes[LEADER].send_network_diag_get(REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS, tlv_types)
         self.simulator.go(2)
 
     def verify(self, pv):
@@ -180,7 +180,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
         #             TLV Type 5 – Route64
         #             TLV Type 16 – Child Table
         _qr_pkt = pkts.filter_wpan_src64(LEADER).\
-            filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
+            filter_ipv6_dst(REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS).\
             filter_coap_request(DIAG_GET_QRY_URI).\
             must_next()
         dut_payload_tlvs = {
@@ -218,7 +218,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
             #         the DIAG_GET.query to SED
             dut_payload_tlvs.add(DG_TYPE_LIST_TLV)
             pkts.filter_wpan_src64(DUT).\
-                filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
+                filter_ipv6_dst(REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS).\
                 filter_coap_request(DIAG_GET_QRY_URI).\
                 filter(lambda p:
                        dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type)

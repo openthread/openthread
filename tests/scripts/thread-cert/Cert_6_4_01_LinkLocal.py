@@ -32,7 +32,7 @@ import copy
 
 import config
 import thread_cert
-from pktverify.consts import LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
+from pktverify.consts import LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -90,10 +90,10 @@ class Cert_6_4_1_LinkLocal_Base(thread_cert.TestCase):
         self.assertTrue(self.nodes[LEADER].ping(dut_addr))
         self.simulator.go(1)
 
-        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS,
                                                 size=FRAGMENTED_DATA_LEN))
         self.simulator.go(1)
-        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS))
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS))
         self.simulator.go(1)
 
         if self.TOPOLOGY[MTD]['mode'] == 'rn':

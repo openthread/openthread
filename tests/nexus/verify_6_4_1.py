@@ -109,7 +109,7 @@ def verify(pv):
         "Step 4: Leader sends a fragmented ICMPv6 Echo Request to the Link-Local All Thread Nodes multicast address.")
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(LEADER).\
-        filter_ipv6_dst(consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
+        filter_ipv6_dst(consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS).\
         filter(lambda p: p.ipv6.plen > 1000).\
         must_next()
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
@@ -125,7 +125,7 @@ def verify(pv):
     print("Step 5: Leader sends an ICMPv6 Echo Request to the Link-Local All Thread Nodes multicast address.")
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(LEADER).\
-        filter_ipv6_dst(consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
+        filter_ipv6_dst(consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS).\
         filter(lambda p: p.ipv6.plen < 100).\
         must_next()
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
