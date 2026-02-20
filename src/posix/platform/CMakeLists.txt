@@ -105,6 +105,13 @@ if(OT_POSIX_RCP_VENDOR_BUS)
     )
 endif()
 
+option(OT_POSIX_NETIF_INFRA_EXIT_ON_LOSS "exit on network interface lost" OFF)
+if(OT_POSIX_NETIF_INFRA_EXIT_ON_LOSS)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE=1"
+    )
+endif()
+
 set(OT_POSIX_NAT64_CIDR "192.168.255.0/24" CACHE STRING "NAT64 CIDR for OpenThread NAT64")
 if(OT_POSIX_NAT64_CIDR)
     target_compile_definitions(ot-posix-config
