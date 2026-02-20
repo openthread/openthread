@@ -102,7 +102,8 @@ def thread_coap_tlv_parse(t, v, layer=None):
             if i + 16 <= len(v):
                 kvs.append(('ipv6_address', str(Ipv6Addr(v[i:i + 16]))))
     elif t == consts.DG_LEADER_DATA_TLV and len(v) == 8:
-        # Leader data contains Partition ID (4), Weighting (1), Data Version (1), Stable Data Version (1), Leader Router ID (1)
+        # Leader data contains Partition ID (4), Weighting (1), Data Version (1),
+        # Stable Data Version (1), Leader Router ID (1)
         kvs.append(('partition_id', hex(struct.unpack('>I', v[0:4])[0])))
         kvs.append(('leader_router_id', str(v[7])))
     elif t == consts.DG_ROUTE64_TLV:
