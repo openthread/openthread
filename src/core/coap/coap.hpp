@@ -991,7 +991,7 @@ public:
      * @retval kErrorNone    Successfully started the CoAP service.
      * @retval kErrorFailed  Failed to start CoAP agent.
      */
-    Error Start(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier = Ip6::kNetifUnspecified);
+    Error Start(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier = Ip6::kNetifThreadInternal);
 
     /**
      * Stops the CoAP service.
