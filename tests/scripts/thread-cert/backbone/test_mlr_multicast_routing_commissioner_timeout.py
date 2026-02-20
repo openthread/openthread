@@ -116,19 +116,19 @@ class TestMlrCommissionerTimeout(TestMlrTimeout):
         # Ping 2: Host pings Router after MLR.req
         ping2 = pkts.filter_eth_src(HOST_ETH).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         # PBBR should forward this ping request to Thread network
-        pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR).filter_MPL().filter_ping_request(
             identifier=ping2.icmpv6.echo.identifier).must_next()
 
         # Ping 3: Host pings Router after delayed MLR Timeout
         ping3 = pkts.filter_eth_src(HOST_ETH).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         # PBBR should forward this ping request to Thread network because MA doesn't expire yet
-        pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR).filter_MPL().filter_ping_request(
             identifier=ping3.icmpv6.echo.identifier).must_next()
 
         # Ping 4: Host pings Router after delayed Commissioner MLR Timeout
         ping4 = pkts.filter_eth_src(HOST_ETH).filter_ipv6_dst(MA1).filter_ping_request().must_next()
         # PBBR should NOT forward this ping request to Thread network because MLR has timeout
-        pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
+        pkts.filter_wpan_src64(PBBR).filter_MPL().filter_ping_request(
             identifier=ping4.icmpv6.echo.identifier).must_not_next()
 
 

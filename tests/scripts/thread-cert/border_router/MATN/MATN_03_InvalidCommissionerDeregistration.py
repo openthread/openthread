@@ -167,7 +167,7 @@ class MATN_03_InvalidCommissionerDeregistration(thread_cert.TestCase):
         # 4. BR_1 forwards the ping packet with multicast address, MA1, to its
         # Thread Network encapsulated in an MPL packet.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA(mpl_seed_id=vars['BR_1_RLOC']) \
+            .filter_MPL(mpl_seed_id=vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 
