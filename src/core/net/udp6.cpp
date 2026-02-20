@@ -450,13 +450,12 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     Error  error = kErrorNone;
     Header udpHeader;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), udpHeader));
-
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoUdp));
 #endif
 
-    aMessage.MoveOffset(sizeof(udpHeader));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(udpHeader));
+
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 

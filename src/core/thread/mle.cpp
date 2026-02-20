@@ -1564,13 +1564,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = kErrorParse);
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), securitySuite));
-    aMessage.MoveOffset(sizeof(securitySuite));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(securitySuite));
 
     if (securitySuite == kNoSecurity)
     {
-        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), command));
-        aMessage.MoveOffset(sizeof(command));
+        SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(command));
 
         switch (command)
         {
@@ -1593,8 +1591,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(securitySuite == k154Security, error = kErrorParse);
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), header));
-    aMessage.MoveOffset(sizeof(header));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(header));
 
     VerifyOrExit(header.IsSecurityControlValid(), error = kErrorParse);
 
@@ -1604,8 +1601,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     SuccessOrExit(
         error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessageInfo, aMessage.GetOffset(), header));
 
-    IgnoreError(aMessage.Read(aMessage.GetOffset(), command));
-    aMessage.MoveOffset(sizeof(command));
+    IgnoreError(aMessage.ReadAtAndAdvanceOffset(command));
 
     extAddr.SetFromIid(aMessageInfo.GetPeerAddr().GetIid());
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)

@@ -261,7 +261,7 @@ Error Lowpan::Compress(Message              &aMessage,
     uint8_t     headerDepth    = 0;
     uint8_t     headerMaxDepth = aHeaderDepth;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), ip6Header));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(ip6Header));
 
     FindContextToCompressAddress(ip6Header.GetSource(), srcContext);
     FindContextToCompressAddress(ip6Header.GetDestination(), dstContext);
@@ -395,8 +395,6 @@ Error Lowpan::Compress(Message              &aMessage,
 
     headerDepth++;
 
-    aMessage.MoveOffset(sizeof(ip6Header));
-
     nextHeader = static_cast<uint8_t>(ip6Header.GetNextHeader());
 
     while (headerDepth < headerMaxDepth)
@@ -450,8 +448,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     uint16_t             padLength = 0;
     uint8_t              tmpByte;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), extHeader));
-    aMessage.MoveOffset(sizeof(extHeader));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(extHeader));
 
     tmpByte = kExtHdrDispatch | kExtHdrEidHbh;
 
@@ -526,7 +523,7 @@ Error Lowpan::CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder)
     uint16_t         source;
     uint16_t         destination;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), udpHeader));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(udpHeader));
 
     source      = udpHeader.GetSourcePort();
     destination = udpHeader.GetDestinationPort();
@@ -555,8 +552,6 @@ Error Lowpan::CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder)
     }
 
     SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(udpHeader.GetChecksum()));
-
-    aMessage.MoveOffset(sizeof(udpHeader));
 
 exit:
     if (error != kErrorNone)

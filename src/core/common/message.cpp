@@ -663,6 +663,17 @@ exit:
     return error;
 }
 
+Error Message::ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength)
+{
+    Error error;
+
+    SuccessOrExit(error = Read(GetOffset(), aBuf, aLength));
+    MoveOffset(aLength);
+
+exit:
+    return error;
+}
+
 bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher) const
 {
     uint16_t       bytesToCompare = aLength;
