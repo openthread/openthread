@@ -972,25 +972,18 @@ void Client::SendUpdate(void)
         /* (7) kRemoved    -> */ kRemoved,
     };
 
-    Error    error = kErrorNone;
-    MsgInfo  info;
-    uint32_t length;
-    bool     anyChanged;
+    Error  error = kErrorNone;
+    bool   anyChanged;
+    Update update(GetInstance());
 
-    info.mMessage.Reset(mSocket.NewMessage());
-    VerifyOrExit(info.mMessage != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = update.SetMessage(mSocket.NewMessage()));
+    SuccessOrExit(error = PrepareUpdateMessage(update));
 
-    info.mSingleServiceMode = false;
-    SuccessOrExit(error = PrepareUpdateMessage(info));
-
-    length = info.mMessage->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
-
-    if (length >= Ip6::kMaxDatagramLength)
+    if (update.GetMessageLength() >= Ip6::kMaxDatagramLength)
     {
-        LogInfo("Msg len %lu is larger than MTU, enabling single service mode", ToUlong(length));
+        LogInfo("Msg len %lu is larger than MTU, enabling single service mode", ToUlong(update.GetMessageLength()));
 
-        info.mSingleServiceMode = true;
-        IgnoreError(info.mMessage->SetLength(0));
+        update.SetSingleServiceMode(true);
 
         // State changes:
         //   kAdding     -> kToRefresh
@@ -999,7 +992,7 @@ void Client::SendUpdate(void)
 
         ChangeHostAndServiceStates(kNewStateOnSingleServiceMode, kForServicesAppendedInMessage);
 
-        SuccessOrExit(error = PrepareUpdateMessage(info));
+        SuccessOrExit(error = PrepareUpdateMessage(update));
     }
 
     // State changes:
@@ -1014,14 +1007,13 @@ void Client::SendUpdate(void)
         SelectNewMessageId();
     }
 
-    SuccessOrExit(error = UpdateIdAndSignatureInUpdateMessage(info));
+    SuccessOrExit(error = update.UpdateIdAndSignatureInUpdateMessage(mCurMessageId));
 
-    SuccessOrExit(error = mSocket.SendTo(*info.mMessage, Ip6::MessageInfo()));
+    SuccessOrExit(error = mSocket.SendTo(update.GetMessage(), Ip6::MessageInfo()));
 
     // Ownership of the message is transferred to the socket upon a
     // successful `SendTo()` call.
-
-    info.mMessage.Release();
+    update.ReleaseMessage();
 
     LogInfo("Send update, msg-id:0x%x", mCurMessageId);
 
@@ -1083,77 +1075,64 @@ exit:
     }
 }
 
-Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
+Error Client::PrepareUpdateMessage(Update &aUpdate)
 {
-    constexpr uint16_t kHeaderOffset = 0;
+    Error error = kErrorNone;
 
-    Error             error = kErrorNone;
-    Dns::UpdateHeader header;
-
-    aInfo.mDomainNameOffset = MsgInfo::kUnknownOffset;
-    aInfo.mHostNameOffset   = MsgInfo::kUnknownOffset;
-    aInfo.mRecordCount      = 0;
+    aUpdate.ClearMessage();
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aInfo.mKeyInfo.SetKeyRef(Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kEcdsa));
+    aUpdate.GetKeyInfo().SetKeyRef(
+        Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kEcdsa));
 #endif
 
-    SuccessOrExit(error = ReadOrGenerateKey(aInfo.mKeyInfo));
+    SuccessOrExit(error = ReadOrGenerateKey(aUpdate.GetKeyInfo()));
 
-    header.SetMessageId(mCurMessageId);
+    // Prepare Update Header
 
-    // SRP Update (DNS Update) message must have exactly one record in
-    // Zone section, no records in Prerequisite Section, can have
-    // multiple records in Update Section (tracked as they are added),
-    // and two records in Additional Data Section (OPT and SIG records).
-    // The SIG record itself should not be included in calculation of
-    // SIG(0) signature, so the addition record count is set to one
-    // here. After signature calculation and appending of SIG record,
-    // the additional record count is updated to two and the header is
-    // rewritten in the message.
-
-    header.SetZoneRecordCount(1);
-    header.SetAdditionalRecordCount(1);
-    SuccessOrExit(error = aInfo.mMessage->Append(header));
+    SuccessOrExit(error = aUpdate.AppendUpdateHeader(mCurMessageId));
 
     // Prepare Zone section
 
-    aInfo.mDomainNameOffset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = Dns::Name::AppendName(mDomainName, *aInfo.mMessage));
-    SuccessOrExit(error = aInfo.mMessage->Append(Dns::Zone()));
+    SuccessOrExit(error = aUpdate.AppendZoneSection());
 
     // Prepare Update section
 
-    SuccessOrExit(error = AppendServiceInstructions(aInfo));
-    SuccessOrExit(error = AppendHostDescriptionInstruction(aInfo));
-
-    header.SetUpdateRecordCount(aInfo.mRecordCount);
-    aInfo.mMessage->Write(kHeaderOffset, header);
+    SuccessOrExit(error = AppendServiceInstructions(aUpdate));
+    SuccessOrExit(error = AppendHostDescriptionInstruction(aUpdate));
+    aUpdate.UpdateRecordCountInUpdateHeader();
 
     // Prepare Additional Data section
 
-    SuccessOrExit(error = AppendUpdateLeaseOptRecord(aInfo));
-    SuccessOrExit(error = AppendSignature(aInfo, kAppendEmptySignature));
+    SuccessOrExit(error = aUpdate.AppendUpdateLeaseOptRecord(mLease, mKeyLease));
+    SuccessOrExit(error = aUpdate.AppendSignature(kAppendEmptySignature));
 
 exit:
     return error;
 }
 
-Error Client::UpdateIdAndSignatureInUpdateMessage(MsgInfo &aInfo)
+void Client::Update::UpdateRecordCountInUpdateHeader(void)
 {
-    constexpr uint16_t kHeaderOffset = 0;
+    Dns::UpdateHeader header;
 
+    IgnoreError(mMessage->Read(kHeaderOffset, header));
+    header.SetUpdateRecordCount(mRecordCount);
+    mMessage->Write(kHeaderOffset, header);
+}
+
+Error Client::Update::UpdateIdAndSignatureInUpdateMessage(uint16_t aMessageId)
+{
     Error             error;
     Dns::UpdateHeader header;
 
-    IgnoreError(aInfo.mMessage->Read(kHeaderOffset, header));
-    header.SetMessageId(mCurMessageId);
-    aInfo.mMessage->Write(kHeaderOffset, header);
+    IgnoreError(mMessage->Read(kHeaderOffset, header));
+    header.SetMessageId(aMessageId);
+    mMessage->Write(kHeaderOffset, header);
 
-    SuccessOrExit(error = AppendSignature(aInfo, kOverwriteWithNewSignature));
+    SuccessOrExit(error = AppendSignature(kOverwriteWithNewSignature));
 
     header.SetAdditionalRecordCount(2); // Lease OPT and SIG RRs
-    aInfo.mMessage->Write(kHeaderOffset, header);
+    mMessage->Write(kHeaderOffset, header);
 
 exit:
     return error;
@@ -1208,7 +1187,7 @@ exit:
 }
 #endif //  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
-Error Client::AppendServiceInstructions(MsgInfo &aInfo)
+Error Client::AppendServiceInstructions(Update &aUpdate)
 {
     Error error = kErrorNone;
 
@@ -1280,9 +1259,11 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
 
         if ((service.GetState() != kRegistered) && CanAppendService(service))
         {
-            SuccessOrExit(error = AppendServiceInstruction(service, aInfo));
+            bool removing = (service.GetState() == kToRemove) || (service.GetState() == kRemoving);
 
-            if (aInfo.mSingleServiceMode)
+            SuccessOrExit(error = aUpdate.AppendServiceInstruction(service, DetermineTtl(), removing));
+
+            if (aUpdate.IsSingleServiceMode())
             {
                 // In "single service mode", we allow only one service
                 // to be appended in the message.
@@ -1291,7 +1272,7 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
         }
     }
 
-    if (!aInfo.mSingleServiceMode)
+    if (!aUpdate.IsSingleServiceMode())
     {
         for (Service &service : mServices)
         {
@@ -1303,7 +1284,7 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
                 // services on the same lease refresh schedule.
 
                 service.SetState(kToRefresh);
-                SuccessOrExit(error = AppendServiceInstruction(service, aInfo));
+                SuccessOrExit(error = aUpdate.AppendServiceInstruction(service, DetermineTtl(), false /*aRemoving*/));
             }
         }
     }
@@ -1321,6 +1302,13 @@ Error Client::AppendServiceInstructions(MsgInfo &aInfo)
     // to make sure it is not greater than the selected `mKeyLease`.
 
     mLease = Min(mLease, mKeyLease);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mUseShortLeaseOption)
+    {
+        mKeyLease = mLease;
+    }
+#endif
 
 exit:
     return error;
@@ -1367,10 +1355,9 @@ exit:
     return canAppend;
 }
 
-Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
+Error Client::Update::AppendServiceInstruction(Service &aService, uint32_t aTtl, bool aRemoving)
 {
-    Error               error    = kErrorNone;
-    bool                removing = ((aService.GetState() == kToRemove) || (aService.GetState() == kRemoving));
+    Error               error = kErrorNone;
     Dns::ResourceRecord rr;
     Dns::SrvRecord      srv;
     uint16_t            serviceNameOffset;
@@ -1385,27 +1372,27 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
     // PTR record
 
     // "service name labels" + (pointer to) domain name.
-    serviceNameOffset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = Dns::Name::AppendMultipleLabels(aService.GetName(), *aInfo.mMessage));
-    SuccessOrExit(error = Dns::Name::AppendPointerLabel(aInfo.mDomainNameOffset, *aInfo.mMessage));
+    serviceNameOffset = mMessage->GetLength();
+    SuccessOrExit(error = Dns::Name::AppendMultipleLabels(aService.GetName(), *mMessage));
+    SuccessOrExit(error = Dns::Name::AppendPointerLabel(mDomainNameOffset, *mMessage));
 
     // On remove, we use "Delete an RR from an RRSet" where class is set
     // to NONE and TTL to zero (RFC 2136 - section 2.5.4).
 
-    rr.Init(Dns::ResourceRecord::kTypePtr, removing ? Dns::PtrRecord::kClassNone : Dns::PtrRecord::kClassInternet);
-    rr.SetTtl(removing ? 0 : DetermineTtl());
-    offset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = aInfo.mMessage->Append(rr));
+    rr.Init(Dns::ResourceRecord::kTypePtr, aRemoving ? Dns::PtrRecord::kClassNone : Dns::PtrRecord::kClassInternet);
+    rr.SetTtl(aRemoving ? 0 : aTtl);
+    offset = mMessage->GetLength();
+    SuccessOrExit(error = mMessage->Append(rr));
 
     // "Instance name" + (pointer to) service name.
-    instanceNameOffset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = Dns::Name::AppendLabel(aService.GetInstanceName(), *aInfo.mMessage));
-    SuccessOrExit(error = Dns::Name::AppendPointerLabel(serviceNameOffset, *aInfo.mMessage));
+    instanceNameOffset = mMessage->GetLength();
+    SuccessOrExit(error = Dns::Name::AppendLabel(aService.GetInstanceName(), *mMessage));
+    SuccessOrExit(error = Dns::Name::AppendPointerLabel(serviceNameOffset, *mMessage));
 
-    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
-    aInfo.mRecordCount++;
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*mMessage, offset);
+    mRecordCount++;
 
-    if (aService.HasSubType() && !removing)
+    if (aService.HasSubType() && !aRemoving)
     {
         const char *subTypeLabel;
         uint16_t    subServiceNameOffset = 0;
@@ -1414,26 +1401,26 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
         {
             // subtype label + "_sub" label + (pointer to) service name.
 
-            SuccessOrExit(error = Dns::Name::AppendLabel(subTypeLabel, *aInfo.mMessage));
+            SuccessOrExit(error = Dns::Name::AppendLabel(subTypeLabel, *mMessage));
 
             if (index == 0)
             {
-                subServiceNameOffset = aInfo.mMessage->GetLength();
-                SuccessOrExit(error = Dns::Name::AppendLabel("_sub", *aInfo.mMessage));
-                SuccessOrExit(error = Dns::Name::AppendPointerLabel(serviceNameOffset, *aInfo.mMessage));
+                subServiceNameOffset = mMessage->GetLength();
+                SuccessOrExit(error = Dns::Name::AppendLabel("_sub", *mMessage));
+                SuccessOrExit(error = Dns::Name::AppendPointerLabel(serviceNameOffset, *mMessage));
             }
             else
             {
-                SuccessOrExit(error = Dns::Name::AppendPointerLabel(subServiceNameOffset, *aInfo.mMessage));
+                SuccessOrExit(error = Dns::Name::AppendPointerLabel(subServiceNameOffset, *mMessage));
             }
 
             // `rr` is already initialized as PTR.
-            offset = aInfo.mMessage->GetLength();
-            SuccessOrExit(error = aInfo.mMessage->Append(rr));
+            offset = mMessage->GetLength();
+            SuccessOrExit(error = mMessage->Append(rr));
 
-            SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
-            Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
-            aInfo.mRecordCount++;
+            SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *mMessage));
+            Dns::ResourceRecord::UpdateRecordLengthInMessage(*mMessage, offset);
+            mRecordCount++;
         }
     }
 
@@ -1442,46 +1429,45 @@ Error Client::AppendServiceInstruction(Service &aService, MsgInfo &aInfo)
 
     // "Delete all RRsets from a name" for Instance Name.
 
-    SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
-    SuccessOrExit(error = AppendDeleteAllRrsets(aInfo));
-    aInfo.mRecordCount++;
+    SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *mMessage));
+    SuccessOrExit(error = AppendDeleteAllRrsets());
 
-    VerifyOrExit(!removing);
+    VerifyOrExit(!aRemoving);
 
     // SRV RR
 
-    SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
+    SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *mMessage));
     srv.Init();
-    srv.SetTtl(DetermineTtl());
+    srv.SetTtl(aTtl);
     srv.SetPriority(aService.GetPriority());
     srv.SetWeight(aService.GetWeight());
     srv.SetPort(aService.GetPort());
-    offset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = aInfo.mMessage->Append(srv));
-    SuccessOrExit(error = AppendHostName(aInfo));
-    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
-    aInfo.mRecordCount++;
+    offset = mMessage->GetLength();
+    SuccessOrExit(error = mMessage->Append(srv));
+    SuccessOrExit(error = AppendHostName());
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*mMessage, offset);
+    mRecordCount++;
 
     // TXT RR
 
-    SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
+    SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *mMessage));
     rr.Init(Dns::ResourceRecord::kTypeTxt);
-    offset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = aInfo.mMessage->Append(rr));
-    SuccessOrExit(
-        error = Dns::TxtEntry::AppendEntries(aService.GetTxtEntries(), aService.GetNumTxtEntries(), *aInfo.mMessage));
-    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
-    aInfo.mRecordCount++;
+    offset = mMessage->GetLength();
+    SuccessOrExit(error = mMessage->Append(rr));
+    SuccessOrExit(error =
+                      Dns::TxtEntry::AppendEntries(aService.GetTxtEntries(), aService.GetNumTxtEntries(), *mMessage));
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*mMessage, offset);
+    mRecordCount++;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (mServiceKeyRecordEnabled)
+    if (Get<Client>().mServiceKeyRecordEnabled)
     {
         // KEY RR is optional in "Service Description Instruction". It
         // is added here under `REFERENCE_DEVICE` config and is intended
         // for testing only.
 
-        SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *aInfo.mMessage));
-        SuccessOrExit(error = AppendKeyRecord(aInfo));
+        SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, *mMessage));
+        SuccessOrExit(error = AppendKeyRecord(aTtl));
     }
 #endif
 
@@ -1489,18 +1475,18 @@ exit:
     return error;
 }
 
-Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
+Error Client::AppendHostDescriptionInstruction(Update &aUpdate)
 {
-    Error error = kErrorNone;
+    Error    error = kErrorNone;
+    uint32_t ttl   = DetermineTtl();
 
     //----------------------------------
     // Host Description Instruction
 
     // "Delete all RRsets from a name" for Host Name.
 
-    SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = AppendDeleteAllRrsets(aInfo));
-    aInfo.mRecordCount++;
+    SuccessOrExit(error = aUpdate.AppendHostName());
+    SuccessOrExit(error = aUpdate.AppendDeleteAllRrsets());
 
     // AAAA RRs
 
@@ -1516,7 +1502,7 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
         {
             if (ShouldHostAutoAddressRegister(unicastAddress))
             {
-                SuccessOrExit(error = AppendAaaaRecord(unicastAddress.GetAddress(), aInfo));
+                SuccessOrExit(error = aUpdate.AppendAaaaRecord(unicastAddress.GetAddress(), ttl));
                 unicastAddress.mSrpRegistered = true;
                 mAutoHostAddressCount++;
             }
@@ -1530,7 +1516,7 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
         {
             Ip6::Netif::UnicastAddress &mlEid = Get<Mle::Mle>().GetMeshLocalEidUnicastAddress();
 
-            SuccessOrExit(error = AppendAaaaRecord(mlEid.GetAddress(), aInfo));
+            SuccessOrExit(error = aUpdate.AppendAaaaRecord(mlEid.GetAddress(), ttl));
             mlEid.mSrpRegistered = true;
             mAutoHostAddressCount++;
         }
@@ -1539,74 +1525,148 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
     {
         for (uint8_t index = 0; index < mHostInfo.GetNumAddresses(); index++)
         {
-            SuccessOrExit(error = AppendAaaaRecord(mHostInfo.GetAddress(index), aInfo));
+            SuccessOrExit(error = aUpdate.AppendAaaaRecord(mHostInfo.GetAddress(index), ttl));
         }
     }
 
     // KEY RR
 
-    SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = AppendKeyRecord(aInfo));
+    SuccessOrExit(error = aUpdate.AppendHostName());
+    SuccessOrExit(error = aUpdate.AppendKeyRecord(ttl));
 
 exit:
     return error;
 }
 
-Error Client::AppendAaaaRecord(const Ip6::Address &aAddress, MsgInfo &aInfo) const
+Client::Update::Update(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mDomainNameOffset(0)
+    , mHostNameOffset(0)
+    , mRecordCount(0)
+    , mSigRecordOffset(0)
+    , mSingleServiceMode(false)
+{
+}
+
+Error Client::Update::SetMessage(Message *aMessage)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit((aMessage != nullptr), error = kErrorInvalidArgs);
+    mMessage.Reset(aMessage);
+
+exit:
+    return error;
+}
+
+void Client::Update::ClearMessage(void)
+{
+    mDomainNameOffset = kUnknownOffset;
+    mHostNameOffset   = kUnknownOffset;
+    mRecordCount      = 0;
+
+    IgnoreError(mMessage->SetLength(0));
+}
+
+uint16_t Client::Update::GetMessageLength(void) const
+{
+    return mMessage->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
+}
+
+Error Client::Update::AppendUpdateHeader(uint16_t aMessageId)
+{
+    Dns::UpdateHeader header;
+
+    header.SetMessageId(aMessageId);
+
+    // SRP Update (DNS Update) message must have exactly one record in
+    // Zone section, no records in Prerequisite Section, can have
+    // multiple records in Update Section (tracked as they are added),
+    // and two records in Additional Data Section (OPT and SIG records).
+    // The SIG record itself should not be included in calculation of
+    // SIG(0) signature, so the addition record count is set to one
+    // here. After signature calculation and appending of SIG record,
+    // the additional record count is updated to two and the header is
+    // rewritten in the message.
+
+    header.SetZoneRecordCount(1);
+    header.SetAdditionalRecordCount(1);
+
+    return mMessage->Append(header);
+}
+
+Error Client::Update::AppendZoneSection(void)
+{
+    Error error;
+
+    mDomainNameOffset = mMessage->GetLength();
+    SuccessOrExit(error = Dns::Name::AppendName(Get<Client>().mDomainName, *mMessage));
+    SuccessOrExit(error = mMessage->Append(Dns::Zone()));
+
+exit:
+    return error;
+}
+
+Error Client::Update::AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl)
 {
     Error               error;
     Dns::ResourceRecord rr;
 
     rr.Init(Dns::ResourceRecord::kTypeAaaa);
-    rr.SetTtl(DetermineTtl());
+    rr.SetTtl(aTtl);
     rr.SetLength(sizeof(Ip6::Address));
 
-    SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = aInfo.mMessage->Append(rr));
-    SuccessOrExit(error = aInfo.mMessage->Append(aAddress));
-    aInfo.mRecordCount++;
+    SuccessOrExit(error = AppendHostName());
+    SuccessOrExit(error = mMessage->Append(rr));
+    SuccessOrExit(error = mMessage->Append(aAddress));
+    mRecordCount++;
 
 exit:
     return error;
 }
 
-Error Client::AppendKeyRecord(MsgInfo &aInfo) const
+Error Client::Update::AppendKeyRecord(uint32_t aTtl)
 {
     Error                          error;
     Dns::KeyRecord                 key;
     Crypto::Ecdsa::P256::PublicKey publicKey;
 
     key.Init();
-    key.SetTtl(DetermineTtl());
+    key.SetTtl(aTtl);
     key.SetFlags(Dns::KeyRecord::kAuthConfidPermitted, Dns::KeyRecord::kOwnerNonZone,
                  Dns::KeyRecord::kSignatoryFlagGeneral);
     key.SetProtocol(Dns::KeyRecord::kProtocolDnsSec);
     key.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
     key.SetLength(sizeof(Dns::KeyRecord) - sizeof(Dns::ResourceRecord) + sizeof(Crypto::Ecdsa::P256::PublicKey));
-    SuccessOrExit(error = aInfo.mMessage->Append(key));
-    SuccessOrExit(error = aInfo.mKeyInfo.GetPublicKey(publicKey));
-    SuccessOrExit(error = aInfo.mMessage->Append(publicKey));
-    aInfo.mRecordCount++;
+    SuccessOrExit(error = mMessage->Append(key));
+    SuccessOrExit(error = mKeyInfo.GetPublicKey(publicKey));
+    SuccessOrExit(error = mMessage->Append(publicKey));
+    mRecordCount++;
 
 exit:
     return error;
 }
 
-Error Client::AppendDeleteAllRrsets(MsgInfo &aInfo) const
+Error Client::Update::AppendDeleteAllRrsets(void)
 {
     // "Delete all RRsets from a name" (RFC 2136 - 2.5.3)
     // Name should be already appended in the message.
 
+    Error               error;
     Dns::ResourceRecord rr;
 
     rr.Init(Dns::ResourceRecord::kTypeAny, Dns::ResourceRecord::kClassAny);
     rr.SetTtl(0);
     rr.SetLength(0);
 
-    return aInfo.mMessage->Append(rr);
+    SuccessOrExit(error = mMessage->Append(rr));
+    mRecordCount++;
+
+exit:
+    return error;
 }
 
-Error Client::AppendHostName(MsgInfo &aInfo, bool aDoNotCompress) const
+Error Client::Update::AppendHostName(bool aDoNotCompress)
 {
     Error error;
 
@@ -1614,8 +1674,8 @@ Error Client::AppendHostName(MsgInfo &aInfo, bool aDoNotCompress) const
     {
         // Uncompressed (canonical form) of host name is used for SIG(0)
         // calculation.
-        SuccessOrExit(error = Dns::Name::AppendMultipleLabels(mHostInfo.GetName(), *aInfo.mMessage));
-        error = Dns::Name::AppendName(mDomainName, *aInfo.mMessage);
+        SuccessOrExit(error = Dns::Name::AppendMultipleLabels(Get<Client>().mHostInfo.GetName(), *mMessage));
+        error = Dns::Name::AppendName(Get<Client>().mDomainName, *mMessage);
         ExitNow();
     }
 
@@ -1623,20 +1683,20 @@ Error Client::AppendHostName(MsgInfo &aInfo, bool aDoNotCompress) const
     // compressed as pointer to the previous one. Otherwise,
     // append it and remember the offset.
 
-    if (aInfo.mHostNameOffset != MsgInfo::kUnknownOffset)
+    if (mHostNameOffset != Update::kUnknownOffset)
     {
-        ExitNow(error = Dns::Name::AppendPointerLabel(aInfo.mHostNameOffset, *aInfo.mMessage));
+        ExitNow(error = Dns::Name::AppendPointerLabel(mHostNameOffset, *mMessage));
     }
 
-    aInfo.mHostNameOffset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = Dns::Name::AppendMultipleLabels(mHostInfo.GetName(), *aInfo.mMessage));
-    error = Dns::Name::AppendPointerLabel(aInfo.mDomainNameOffset, *aInfo.mMessage);
+    mHostNameOffset = mMessage->GetLength();
+    SuccessOrExit(error = Dns::Name::AppendMultipleLabels(Get<Client>().mHostInfo.GetName(), *mMessage));
+    error = Dns::Name::AppendPointerLabel(mDomainNameOffset, *mMessage);
 
 exit:
     return error;
 }
 
-Error Client::AppendUpdateLeaseOptRecord(MsgInfo &aInfo)
+Error Client::Update::AppendUpdateLeaseOptRecord(uint32_t aLease, uint32_t aKeyLease)
 {
     Error            error;
     Dns::OptRecord   optRecord;
@@ -1644,7 +1704,7 @@ Error Client::AppendUpdateLeaseOptRecord(MsgInfo &aInfo)
     uint16_t         optionSize;
 
     // Append empty (root domain) as OPT RR name.
-    SuccessOrExit(error = Dns::Name::AppendTerminator(*aInfo.mMessage));
+    SuccessOrExit(error = Dns::Name::AppendTerminator(*mMessage));
 
     // `Init()` sets the type and clears (set to zero) the extended
     // Response Code, version and all flags.
@@ -1653,30 +1713,29 @@ Error Client::AppendUpdateLeaseOptRecord(MsgInfo &aInfo)
     optRecord.SetDnsSecurityFlag();
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (mUseShortLeaseOption)
+    if (Get<Client>().mUseShortLeaseOption)
     {
         LogInfo("Test mode - appending short variant of Lease Option");
-        mKeyLease = mLease;
-        leaseOption.InitAsShortVariant(mLease);
+        leaseOption.InitAsShortVariant(aLease);
     }
     else
 #endif
     {
-        leaseOption.InitAsLongVariant(mLease, mKeyLease);
+        leaseOption.InitAsLongVariant(aLease, aKeyLease);
     }
 
     optionSize = static_cast<uint16_t>(leaseOption.GetSize());
 
     optRecord.SetLength(optionSize);
 
-    SuccessOrExit(error = aInfo.mMessage->Append(optRecord));
-    error = aInfo.mMessage->AppendBytes(&leaseOption, optionSize);
+    SuccessOrExit(error = mMessage->Append(optRecord));
+    error = mMessage->AppendBytes(&leaseOption, optionSize);
 
 exit:
     return error;
 }
 
-Error Client::AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode)
+Error Client::Update::AppendSignature(SignatureAppendMode aMode)
 {
     Error                          error;
     Dns::SigRecord                 sig;
@@ -1699,20 +1758,20 @@ Error Client::AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode)
     switch (aMode)
     {
     case kAppendEmptySignature:
-        aInfo.mSigRecordOffset = aInfo.mMessage->GetLength();
+        mSigRecordOffset = mMessage->GetLength();
         break;
 
     case kOverwriteWithNewSignature:
         // Revert back to the start of signature record.
-        IgnoreError(aInfo.mMessage->SetLength(aInfo.mSigRecordOffset));
+        IgnoreError(mMessage->SetLength(mSigRecordOffset));
 
         // Append the SIG RR with full uncompressed form of the host name
         // as the signer's name. This is used for SIG(0) calculation only.
         // It will be overwritten with host name compressed.
 
-        offset = aInfo.mMessage->GetLength();
-        SuccessOrExit(error = aInfo.mMessage->Append(sig));
-        SuccessOrExit(error = AppendHostName(aInfo, /* aDoNotCompress */ true));
+        offset = mMessage->GetLength();
+        SuccessOrExit(error = mMessage->Append(sig));
+        SuccessOrExit(error = AppendHostName(/* aDoNotCompress */ true));
 
         // Calculate signature (RFC 2931): Calculated over "data" which is
         // concatenation of (1) the SIG RR RDATA wire format (including
@@ -1724,30 +1783,30 @@ Error Client::AppendSignature(MsgInfo &aInfo, SignatureAppendMode aMode)
         sha256.Start();
 
         // (1) SIG RR RDATA wire format
-        len = aInfo.mMessage->GetLength() - offset - sizeof(Dns::ResourceRecord);
-        sha256.Update(*aInfo.mMessage, offset + sizeof(Dns::ResourceRecord), len);
+        len = mMessage->GetLength() - offset - sizeof(Dns::ResourceRecord);
+        sha256.Update(*mMessage, offset + sizeof(Dns::ResourceRecord), len);
 
         // (2) Message from DNS header before SIG
-        sha256.Update(*aInfo.mMessage, 0, offset);
+        sha256.Update(*mMessage, 0, offset);
 
         sha256.Finish(hash);
-        SuccessOrExit(error = aInfo.mKeyInfo.Sign(hash, signature));
+        SuccessOrExit(error = mKeyInfo.Sign(hash, signature));
 
         // Move back in message and append SIG RR now with compressed host
         // name (as signer's name) along with the calculated signature.
 
-        IgnoreError(aInfo.mMessage->SetLength(offset));
+        IgnoreError(mMessage->SetLength(offset));
         break;
     }
 
     // SIG(0) uses owner name of root (single zero byte).
-    SuccessOrExit(error = Dns::Name::AppendTerminator(*aInfo.mMessage));
+    SuccessOrExit(error = Dns::Name::AppendTerminator(*mMessage));
 
-    offset = aInfo.mMessage->GetLength();
-    SuccessOrExit(error = aInfo.mMessage->Append(sig));
-    SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = aInfo.mMessage->Append(signature));
-    Dns::ResourceRecord::UpdateRecordLengthInMessage(*aInfo.mMessage, offset);
+    offset = mMessage->GetLength();
+    SuccessOrExit(error = mMessage->Append(sig));
+    SuccessOrExit(error = AppendHostName());
+    SuccessOrExit(error = mMessage->Append(signature));
+    Dns::ResourceRecord::UpdateRecordLengthInMessage(*mMessage, offset);
 
 exit:
     return error;
@@ -1775,9 +1834,8 @@ void Client::ProcessResponse(Message &aMessage)
 
     Error               error = kErrorNone;
     Dns::UpdateHeader   header;
-    uint16_t            offset = aMessage.GetOffset();
-    uint16_t            recordCount;
     LinkedList<Service> removedServices;
+    Response            response(aMessage);
 
     switch (GetState())
     {
@@ -1791,11 +1849,7 @@ void Client::ProcessResponse(Message &aMessage)
         ExitNow();
     }
 
-    SuccessOrExit(error = aMessage.Read(offset, header));
-
-    VerifyOrExit(header.GetType() == Dns::Header::kTypeResponse, error = kErrorParse);
-    VerifyOrExit(header.GetQueryType() == Dns::Header::kQueryTypeUpdate, error = kErrorParse);
-
+    SuccessOrExit(error = response.ReadUpdateHeader(header));
     VerifyOrExit(header.GetMessageId() == mCurMessageId, error = kErrorDrop);
 
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
@@ -1855,41 +1909,7 @@ void Client::ProcessResponse(Message &aMessage)
         ExitNow(error = kErrorNone);
     }
 
-    offset += sizeof(header);
-
-    // Skip over all sections till Additional Data section
-    // SPEC ENHANCEMENT: Server can echo the request back or not
-    // include any of RRs. Would be good to explicitly require SRP server
-    // to not echo back RRs.
-
-    if (header.GetZoneRecordCount() != 0)
-    {
-        VerifyOrExit(header.GetZoneRecordCount() == 1, error = kErrorParse);
-        SuccessOrExit(error = Dns::Name::ParseName(aMessage, offset));
-        VerifyOrExit(offset + sizeof(Dns::Zone) <= aMessage.GetLength(), error = kErrorParse);
-        offset += sizeof(Dns::Zone);
-    }
-
-    // Check for Update Lease OPT RR. This determines the lease
-    // interval accepted by server. If not present, then use the
-    // transmitted lease interval from the update request message.
-
-    recordCount =
-        header.GetPrerequisiteRecordCount() + header.GetUpdateRecordCount() + header.GetAdditionalRecordCount();
-
-    while (recordCount > 0)
-    {
-        uint16_t            startOffset = offset;
-        Dns::ResourceRecord rr;
-
-        SuccessOrExit(error = ReadResourceRecord(aMessage, offset, rr));
-        recordCount--;
-
-        if (rr.GetType() == Dns::ResourceRecord::kTypeOpt)
-        {
-            SuccessOrExit(error = ProcessOptRecord(aMessage, startOffset, static_cast<Dns::OptRecord &>(rr)));
-        }
-    }
+    SuccessOrExit(error = response.ProcessRecords(header, mLease, mKeyLease));
 
     // Calculate the lease renew time based on update message tx time
     // and the lease time. `kLeaseRenewGuardInterval` is used to
@@ -1966,7 +1986,35 @@ void Client::GetRemovedServices(LinkedList<Service> &aRemovedServices)
     mServices.RemoveAllMatching(aRemovedServices, kRemoved);
 }
 
-Error Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord)
+Error Client::Response::ReadUpdateHeader(Dns::UpdateHeader &aHeader)
+{
+    Error    error;
+    uint16_t offset = mMessage.GetOffset();
+
+    SuccessOrExit(error = mMessage.Read(offset, aHeader));
+
+    VerifyOrExit(aHeader.GetType() == Dns::Header::kTypeResponse, error = kErrorParse);
+    VerifyOrExit(aHeader.GetQueryType() == Dns::Header::kQueryTypeUpdate, error = kErrorParse);
+
+    mOffset = offset + sizeof(Dns::UpdateHeader);
+
+exit:
+    return error;
+}
+
+Error Client::Response::SkipZoneRecord(void)
+{
+    Error error;
+
+    SuccessOrExit(error = Dns::Name::ParseName(mMessage, mOffset));
+    VerifyOrExit(mOffset + sizeof(Dns::Zone) <= mMessage.GetLength(), error = kErrorParse);
+    mOffset += sizeof(Dns::Zone);
+
+exit:
+    return error;
+}
+
+Error Client::Response::ReadResourceRecord(Dns::ResourceRecord &aRecord)
 {
     // Reads and skips over a Resource Record (RR) from message at
     // given offset. On success, `aOffset` is updated to point to end
@@ -1974,16 +2022,19 @@ Error Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns
 
     Error error;
 
-    SuccessOrExit(error = Dns::Name::ParseName(aMessage, aOffset));
-    SuccessOrExit(error = aMessage.Read(aOffset, aRecord));
-    VerifyOrExit(aOffset + aRecord.GetSize() <= aMessage.GetLength(), error = kErrorParse);
-    aOffset += static_cast<uint16_t>(aRecord.GetSize());
+    SuccessOrExit(error = Dns::Name::ParseName(mMessage, mOffset));
+    SuccessOrExit(error = mMessage.Read(mOffset, aRecord));
+    VerifyOrExit(mOffset + aRecord.GetSize() <= mMessage.GetLength(), error = kErrorParse);
+    mOffset += static_cast<uint16_t>(aRecord.GetSize());
 
 exit:
     return error;
 }
 
-Error Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const Dns::OptRecord &aOptRecord)
+Error Client::Response::ReadOptRecord(uint16_t              aOffset,
+                                      const Dns::OptRecord &aOptRecord,
+                                      uint32_t             &aLease,
+                                      uint32_t             &aKeyLease)
 {
     // Read and process all options (in an OPT RR) from a message.
     // The `aOffset` points to beginning of record in `aMessage`.
@@ -1991,14 +2042,14 @@ Error Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const 
     Error            error = kErrorNone;
     Dns::LeaseOption leaseOption;
 
-    IgnoreError(Dns::Name::ParseName(aMessage, aOffset));
+    IgnoreError(Dns::Name::ParseName(mMessage, aOffset));
     aOffset += sizeof(Dns::OptRecord);
 
-    switch (error = leaseOption.ReadFrom(aMessage, aOffset, aOptRecord.GetLength()))
+    switch (error = leaseOption.ReadFrom(mMessage, aOffset, aOptRecord.GetLength()))
     {
     case kErrorNone:
-        mLease    = Min(leaseOption.GetLeaseInterval(), kMaxLease);
-        mKeyLease = Min(leaseOption.GetKeyLeaseInterval(), kMaxLease);
+        aLease    = Min(leaseOption.GetLeaseInterval(), kMaxLease);
+        aKeyLease = Min(leaseOption.GetKeyLeaseInterval(), kMaxLease);
         break;
 
     case kErrorNotFound:
@@ -2009,6 +2060,48 @@ Error Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const 
 
     default:
         ExitNow();
+    }
+
+exit:
+    return error;
+}
+
+Error Client::Response::ProcessRecords(const Dns::UpdateHeader &aHeader, uint32_t &aLease, uint32_t &aKeyLease)
+{
+    Error    error = kErrorNone;
+    uint16_t recordCount;
+
+    // Skip over all sections till Additional Data section
+    // SPEC ENHANCEMENT: Server can echo the request back or not
+    // include any of RRs. Would be good to explicitly require SRP server
+    // to not echo back RRs.
+
+    if (aHeader.GetZoneRecordCount() != 0)
+    {
+        VerifyOrExit(aHeader.GetZoneRecordCount() == 1, error = kErrorParse);
+        SuccessOrExit(error = SkipZoneRecord());
+    }
+
+    // Check for Update Lease OPT RR. This determines the lease
+    // interval accepted by server. If not present, then use the
+    // transmitted lease interval from the update request message.
+
+    recordCount =
+        aHeader.GetPrerequisiteRecordCount() + aHeader.GetUpdateRecordCount() + aHeader.GetAdditionalRecordCount();
+
+    while (recordCount > 0)
+    {
+        uint16_t            offset;
+        Dns::ResourceRecord rr;
+
+        offset = mOffset;
+        SuccessOrExit(error = ReadResourceRecord(rr));
+        recordCount--;
+
+        if (rr.GetType() == Dns::ResourceRecord::kTypeOpt)
+        {
+            SuccessOrExit(error = ReadOptRecord(offset, static_cast<Dns::OptRecord &>(rr), aLease, aKeyLease));
+        }
     }
 
 exit:
