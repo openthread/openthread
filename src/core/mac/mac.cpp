@@ -872,24 +872,36 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     case Frame::kKeyIdMode2:
     {
-        uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
+        uint8_t            keySource[] = {0xff, 0xff, 0xff, 0xff};
+        uint8_t            keyId;
+        const KeyMaterial *macKey;
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
         if (aFrame.IsWakeupFrame())
         {
-            // Just set the key source here, further security processing will happen in SubMac
-            BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
-            aFrame.SetKeySource(keySource);
-            ExitNow();
+            uint32_t keySequence = keyManager.GetCurrentKeySequence();
+
+            BigEndian::WriteUint32(keySequence, keySource);
+
+            macKey     = mLinks.GetCurrentMacKey(aFrame);
+            extAddress = &GetExtAddress();
+            keyId      = static_cast<uint8_t>((keySequence & 0x7f) + 1);
         }
+        else
 #endif
-        aFrame.SetAesKey(mMode2KeyMaterial);
+        {
+            macKey     = &mMode2KeyMaterial;
+            extAddress = &AsCoreType(&sMode2ExtAddress);
+            keyId      = 0xff;
+        }
+
+        aFrame.SetAesKey(*macKey);
 
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
-        aFrame.SetKeyId(0xff);
-        extAddress = &AsCoreType(&sMode2ExtAddress);
+        aFrame.SetKeyId(keyId);
+
         break;
     }
 

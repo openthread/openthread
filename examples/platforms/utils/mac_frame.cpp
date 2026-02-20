@@ -316,15 +316,9 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
     otMacKeyMaterial *key = nullptr;
     uint8_t           keyId;
     uint32_t          frameCounter;
-    bool              processKeyId;
 
-    processKeyId =
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        otMacFrameIsKeyIdMode2(aFrame) ||
-#endif
-        otMacFrameIsKeyIdMode1(aFrame);
-
-    VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && processKeyId && !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+    VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
+                 !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
     if (otMacFrameIsAck(aFrame))
     {
