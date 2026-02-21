@@ -312,7 +312,7 @@ public:
      *
      * @param[in]  aAddress A reference to the specified address.
      */
-    void ClearRequests(const Ip6::Address &aAddress);
+    void ClearRequests(const Ip6::Address &aAddress) { mPendingRequests.AbortRequestsMatching(aAddress); }
 
     /**
      * Adds a resource to the CoAP server.
@@ -834,45 +834,52 @@ private:
         struct Iterator;
 
     public:
+        explicit PendingRequests(Instance &aInstance, CoapBase &aCoapBase);
+
         Error AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest);
         void  Remove(Request &aRequest);
         Error FindRelatedRequest(const Msg &aMsg, Request &aRequest);
+        void  FinalizeRequest(Request &aRequest, Error aResult);
+        void  FinalizeRequest(Request &aRequest, Error aResult, Msg *aResponse);
+        void  AbortAllRequests(void);
+        void  AbortRequestsMatching(const Ip6::Address &aAddress);
+        Error AbortRequestsMatching(ResponseHandler aHandler, void *aContext);
         void  GetInfo(MessageQueue::Info &aInfo) const { mRequestMessages.GetInfo(aInfo); }
 
-        // Similar to the MessageQueue iterator, as we iterate over
-        // the PendingRequests entries, the current request can
-        // be safely removed without invalidating the iterator.
-        Iterator begin(void) { return Iterator(mRequestMessages.GetHead()); }
-        Iterator end(void) { return Iterator(); }
-
     private:
-        struct Iterator : public Unequatable<Iterator>
+        class Matcher
         {
-            Iterator(void)
-                : mMessageIterator()
+        public:
+            using Handler = ResponseHandler;
+
+            Matcher(void) { mMode = kAny; }
+            Matcher(const Ip6::Address &aSourceAddress) { mMode = kAddress, mAddress = &aSourceAddress; }
+            Matcher(Handler aHandler, void *aContext) { mMode = kHandler, mHandler = aHandler, mContext = aContext; }
+
+            bool Matches(const Request &aRequest) const;
+
+        private:
+            enum MatchMode
             {
-            }
+                kAny,
+                kAddress,
+                kHandler,
+            };
 
-            explicit Iterator(Message *aMessage)
-                : mMessageIterator(aMessage)
-            {
-            }
-
-            void operator++(void) { mMessageIterator++; }
-            void operator++(int) { mMessageIterator++; }
-            bool operator==(const Iterator &aOther) const { return mMessageIterator == aOther.mMessageIterator; }
-
-            Request &operator*(void)
-            {
-                mRequest.InitFrom(*mMessageIterator);
-                return mRequest;
-            }
-
-            Message::Iterator mMessageIterator;
-            Request           mRequest;
+            MatchMode           mMode;
+            const Ip6::Address *mAddress;
+            Handler             mHandler;
+            void               *mContext;
         };
 
-        MessageQueue mRequestMessages;
+        Error       AbortAllMatching(const Matcher &aMatcher);
+        void        RetransmitRequest(const Request &aRequest);
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+
+        CoapBase         &mCoapBase;
+        MessageQueue      mRequestMessages;
+        TimerMilliContext mTimer;
     };
 
     class ResponseCache
@@ -905,23 +912,17 @@ private:
         TimerMilliContext mTimer;
     };
 
-    Message    *InitMessage(Message *aMessage, Type aType, Uri aUri);
-    Message    *InitResponse(Message *aMessage, const Message &aRequest);
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    void        HandleRetransmissionTimer(void);
-    void        ClearRequests(const Ip6::Address *aAddress);
-    void        FinalizeRequest(Request &aRequest, Error aResult);
-    void        FinalizeRequest(Request &aRequest, Error aResult, Msg *aResponse);
-    bool        InvokeResponseFallback(Msg &aRxMsg) const;
-    void        ProcessReceivedRequest(Msg &aRxMsg);
-    void        ProcessReceivedResponse(Msg &aRxMsg);
-    Error       SendMessage(Message                &aMessage,
-                            const Ip6::MessageInfo &aMessageInfo,
-                            const TxParameters     *aTxParameters,
-                            const SendCallbacks    &aCallbacks);
-    void        RetransmitRequest(const Request &aRequest);
-    Error       SendEmptyMessage(Type aType, const Msg &aRxMsg);
-    Error       Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Message *InitMessage(Message *aMessage, Type aType, Uri aUri);
+    Message *InitResponse(Message *aMessage, const Message &aRequest);
+    bool     InvokeResponseFallback(Msg &aRxMsg) const;
+    void     ProcessReceivedRequest(Msg &aRxMsg);
+    void     ProcessReceivedResponse(Msg &aRxMsg);
+    Error    SendMessage(Message                &aMessage,
+                         const Ip6::MessageInfo &aMessageInfo,
+                         const TxParameters     *aTxParameters,
+                         const SendCallbacks    &aCallbacks);
+    Error    SendEmptyMessage(Type aType, const Msg &aRxMsg);
+    Error    Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
@@ -947,22 +948,15 @@ private:
     Error ProcessObserveSend(Msg &aTxMsg, Request &aRequest);
 #endif
 
-    PendingRequests   mPendingRequests;
-    uint16_t          mMessageId;
-    TimerMilliContext mRetransmissionTimer;
-
-    LinkedList<Resource> mResources;
-
-    Callback<Interceptor> mInterceptor;
-    ResponseCache         mResponseCache;
-
+    PendingRequests            mPendingRequests;
+    ResponseCache              mResponseCache;
+    LinkedList<Resource>       mResources;
+    Callback<Interceptor>      mInterceptor;
     Callback<RequestHandler>   mDefaultHandler;
     Callback<ResponseFallback> mResponseFallback;
-
-    ResourceHandler mResourceHandler;
-
-    const Sender mSender;
-
+    ResourceHandler            mResourceHandler;
+    Sender                     mSender;
+    uint16_t                   mMessageId;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     LinkedList<ResourceBlockWise> mBlockWiseResources;
     Message                      *mLastResponse;
