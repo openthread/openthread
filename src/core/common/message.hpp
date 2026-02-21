@@ -526,7 +526,7 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      */
-    void MoveOffset(int aDelta);
+    void MoveOffset(int16_t aDelta);
 
     /**
      * Sets the byte offset within the message.
