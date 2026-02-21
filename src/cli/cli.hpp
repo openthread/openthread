@@ -273,6 +273,10 @@ private:
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+    void OutputBorderAgentTxtDataInfo(uint8_t aIndentSize, const otBorderAgentTxtDataInfo &aInfo);
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void OutputTrelCounters(const otTrelCounters &aCounters);
 #endif

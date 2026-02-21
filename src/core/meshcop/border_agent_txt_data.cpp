@@ -444,6 +444,68 @@ void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
     aInfo.mAdmitterSupported = aBitmap & kFlagAdmitterSupported;
 }
 
+const char *TxtData::ConnModeToString(ConnMode aConnMode)
+{
+#define ConnModeMapList(_)           \
+    _(kConnModeDisabled, "disabled") \
+    _(kConnModePskc, "pskc")         \
+    _(kConnModePskd, "pskd")         \
+    _(kConnModeVendor, "vendor")     \
+    _(kConnModeX509, "x509")
+
+    DefineEnumStringArray(ConnModeMapList);
+
+    return (static_cast<uint8_t>(aConnMode) < GetArrayLength(kStrings)) ? kStrings[aConnMode] : "invalid";
+}
+
+const char *TxtData::IfStateToString(IfState aIfState)
+{
+#define IfStateMapList(_)           \
+    _(kThreadIfNotInit, "not-init") \
+    _(kThreadIfInit, "init")        \
+    _(kThreadIfActive, "active")
+
+    DefineEnumStringArray(IfStateMapList);
+
+    return (static_cast<uint8_t>(aIfState) < GetArrayLength(kStrings)) ? kStrings[aIfState] : "invalid";
+}
+
+const char *TxtData::AvailabilityToString(Availability aAvailability)
+{
+#define AvailabilityMapList(_)       \
+    _(kAvailabilityInfreq, "infreq") \
+    _(kAvailabilityHigh, "high")
+
+    DefineEnumStringArray(AvailabilityMapList);
+
+    return (static_cast<uint8_t>(aAvailability) < GetArrayLength(kStrings)) ? kStrings[aAvailability] : "invalid";
+}
+
+const char *TxtData::RoleToString(Role aRole)
+{
+#define RoleMapList(_)                            \
+    _(kRoleDisabledDetached, "disabled-detached") \
+    _(kRoleChild, "child")                        \
+    _(kRoleRouter, "router")                      \
+    _(kRoleLeader, "leader")
+
+    DefineEnumStringArray(RoleMapList);
+
+    return (static_cast<uint8_t>(aRole) < GetArrayLength(kStrings)) ? kStrings[aRole] : "invalid";
+}
+
+const char *TxtData::MultiAilStateToString(MultiAilState aState)
+{
+#define MultiAilStateMapList(_)             \
+    _(kMultiAilDisabled, "disabled")        \
+    _(kMultiAilNotDetected, "not-detected") \
+    _(kMultiAilDetected, "detected")
+
+    DefineEnumStringArray(MultiAilStateMapList);
+
+    return (static_cast<uint8_t>(aState) < GetArrayLength(kStrings)) ? kStrings[aState] : "invalid";
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
