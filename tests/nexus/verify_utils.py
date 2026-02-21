@@ -49,11 +49,33 @@ from pktverify.bytes import Bytes
 
 
 # Monkey-patch CoapTlvParser to parse Thread TLVs in CoAP payload
-def thread_coap_tlv_parse(t, v):
+def thread_coap_tlv_parse(t, v, layer=None):
     kvs = []
-    if t == consts.NL_TARGET_EID_TLV and len(v) == 16:
+
+    uri_path = None
+    if layer is not None:
+        uri_path = layer.uri_path
+
+    # If the URI starts with '/d/', it is likely a Diagnostic message.
+    # Otherwise, we assume it's MeshCoP or other Thread TLVs.
+    is_diag = uri_path is not None and uri_path.startswith('/d/')
+
+    # MeshCoP TLVs (often overlap with Diagnostic TLVs)
+    if t == consts.NM_COMMISSIONER_SESSION_ID_TLV and len(v) == 2 and not is_diag:
+        kvs.append(('comm_sess_id', str(struct.unpack('>H', v)[0])))
+    elif t == consts.NM_STATE_TLV and len(v) == 1 and not is_diag:
+        kvs.append(('state', str(v[0])))
+    elif t == consts.NM_STEERING_DATA_TLV and not is_diag:  # DG_IPV6_ADDRESS_LIST_TLV is 16*n
+        kvs.append(('steering_data', v.hex()))
+    elif t == consts.NM_BORDER_AGENT_LOCATOR_TLV and len(v) == 2 and not is_diag:  # DG_MAC_COUNTERS_TLV is 4*n
+        kvs.append(('border_agent_rloc16', hex(struct.unpack('>H', v)[0])))
+    elif t == consts.NM_CHANNEL_TLV and len(v) == 3 and not is_diag:  # DG_MAC_EXTENDED_ADDRESS_TLV is 8
+        kvs.append(('channel', str(struct.unpack('>H', v[1:3])[0])))
+
+    # Other Thread TLVs
+    elif t == consts.NL_TARGET_EID_TLV and len(v) == 16:
         kvs.append(('target_eid', str(Ipv6Addr(v))))
-    elif t == consts.DG_MAC_EXTENDED_ADDRESS_TLV and len(v) == 8:
+    elif t == consts.DG_MAC_EXTENDED_ADDRESS_TLV and len(v) == 8 and is_diag:
         kvs.append(('mac_addr', v.hex()))
     elif t == consts.DG_MAC_ADDRESS_TLV and len(v) == 2:
         kvs.append(('rloc16', hex(struct.unpack('>H', v)[0])))
@@ -67,16 +89,18 @@ def thread_coap_tlv_parse(t, v):
         kvs.append(('status', str(v[0])))
     elif t == consts.NL_ROUTER_MASK_TLV:
         kvs.append(('router_mask', v.hex()))
-    elif t == consts.DG_MAC_COUNTERS_TLV:
+    elif t == consts.DG_MAC_COUNTERS_TLV and is_diag:
         # MAC counters are a list of 4-byte values
         for i in range(0, len(v), 4):
-            val = struct.unpack('>I', v[i:i + 4])[0]
-            kvs.append(('mac_counter', str(val)))
+            if i + 4 <= len(v):
+                val = struct.unpack('>I', v[i:i + 4])[0]
+                kvs.append(('mac_counter', str(val)))
     elif t == consts.DG_MODE_TLV and len(v) == 1:
         kvs.append(('mode', hex(v[0])))
-    elif t == consts.DG_IPV6_ADDRESS_LIST_TLV:
+    elif t == consts.DG_IPV6_ADDRESS_LIST_TLV and is_diag:
         for i in range(0, len(v), 16):
-            kvs.append(('ipv6_address', str(Ipv6Addr(v[i:i + 16]))))
+            if i + 16 <= len(v):
+                kvs.append(('ipv6_address', str(Ipv6Addr(v[i:i + 16]))))
     elif t == consts.DG_LEADER_DATA_TLV and len(v) == 8:
         # Leader data contains Partition ID (4), Weighting (1), Data Version (1), Stable Data Version (1), Leader Router ID (1)
         kvs.append(('partition_id', hex(struct.unpack('>I', v[0:4])[0])))
@@ -85,7 +109,7 @@ def thread_coap_tlv_parse(t, v):
         # Route64 contains Router ID Sequence (1), and Router ID Mask (8), then link qualities
         kvs.append(('router_id_sequence', str(v[0])))
         kvs.append(('router_id_mask', v[1:9].hex()))
-    elif t == consts.DG_CHILD_TABLE_TLV:
+    elif t == consts.DG_CHILD_TABLE_TLV and is_diag:
         # Child table contains a list of child entries.
         # Each entry: [Timeout(5 bits), LQI(2 bits), Child ID(9 bits), Mode(8 bits)] -> total 3 bytes
         for i in range(0, len(v), 3):
@@ -111,6 +135,11 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.child_id'] = layer_fields._list(layer_fields._auto)
     layer_fields._LAYER_FIELDS['coap.tlv.child_mode'] = layer_fields._list(layer_fields._auto)
     layer_fields._LAYER_FIELDS['coap.tlv.channel_pages'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.steering_data'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.comm_sess_id'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.state'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.border_agent_rloc16'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.channel'] = layer_fields._auto
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'
