@@ -498,7 +498,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
         }
     }
 
-    VerifyOrExit(aMessage.GetOffset() + len + padLength <= aMessage.GetLength(), error = kErrorParse);
+    VerifyOrExit(len + padLength <= aMessage.DetermineLengthAfterOffset(), error = kErrorParse);
 
     aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
 

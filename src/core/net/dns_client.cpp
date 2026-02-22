@@ -1199,7 +1199,7 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     }
 #endif
 
-    length = message->GetLength() - message->GetOffset();
+    length = message->DetermineLengthAfterOffset();
 
     if (aInfo.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
@@ -1893,7 +1893,7 @@ exit:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 void Client::PrepareTcpMessage(Message &aMessage)
 {
-    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t length = aMessage.DetermineLengthAfterOffset();
 
     // Prepending the DNS query with length of the packet according to RFC1035.
     BigEndian::WriteUint16(length, mSendBufferBytes + mSendLink.mLength);

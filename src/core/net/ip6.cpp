@@ -565,7 +565,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 
     uint16_t maxPayloadFragment =
         FragmentHeader::MakeDivisibleByEight(kMinimalMtu - aMessage.GetOffset() - sizeof(fragmentHeader));
-    uint16_t payloadLeft = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t payloadLeft = aMessage.DetermineLengthAfterOffset();
 
     SuccessOrExit(error = aMessage.Read(0, header));
     header.SetNextHeader(kProtoFragment);

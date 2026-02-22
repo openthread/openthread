@@ -278,7 +278,7 @@ start:
 
         frameBuilder.SetMaxLength(maxFrameLength);
 
-        payloadLength = aMessage.GetLength() - aMessage.GetOffset();
+        payloadLength = aMessage.DetermineLengthAfterOffset();
 
         if (aAddFragHeader || (payloadLength > frameBuilder.GetRemainingLength()))
         {
@@ -319,7 +319,7 @@ start:
                             aMessage.GetOffset());
         SuccessOrAssert(frameBuilder.Append(nextFragHeader));
 
-        payloadLength = aMessage.GetLength() - aMessage.GetOffset();
+        payloadLength = aMessage.DetermineLengthAfterOffset();
     }
 
     if (payloadLength > frameBuilder.GetRemainingLength())

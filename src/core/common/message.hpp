@@ -538,6 +538,13 @@ public:
     void SetOffset(uint16_t aOffset);
 
     /**
+     * Determines the length (number of bytes) in the message from the current message offset to the end of the message.
+     *
+     * @return Number of bytes in the message starting from the current message offset to the end of the message.
+     */
+    uint16_t DetermineLengthAfterOffset(void) const;
+
+    /**
      * Returns the type of the message.
      *
      * @returns The type of the message.

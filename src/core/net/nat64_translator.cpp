@@ -187,7 +187,7 @@ Error Translator::TranslateIp6ToIp4(Message &aMessage)
     }
 
     // TODO: Implement the logic for replying ICMP messages.
-    ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
+    ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.DetermineLengthAfterOffset());
 
     Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
                                     ip4Header.GetProtocol());
@@ -285,7 +285,7 @@ Error Translator::TranslateIp4ToIp6(Message &aMessage)
     }
 
     // TODO: Implement the logic for replying ICMP datagrams.
-    ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
+    ip6Header.SetPayloadLength(aMessage.DetermineLengthAfterOffset());
 
     Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
                                     ip6Header.GetNextHeader());
