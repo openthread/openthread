@@ -229,6 +229,15 @@ public:
     explicit KeyManager(Instance &aInstance);
 
     /**
+     * Initializes the `KeyManager`.
+     *
+     * This method is called after OpenThread `Instance` is fully initialized (from `Instance::AfterInit()`). This
+     * ensures that all `Instance` components (including `KeyManager`) have been constructed and are safe to interact
+     * with (e.g., to save a default key in `Crypto::Storage::KeyRefManager`).
+     */
+    void Init(void);
+
+    /**
      * Starts KeyManager rotation timer and sets guard timer to initial value.
      */
     void Start(void);
