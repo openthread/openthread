@@ -752,7 +752,7 @@ running
 Done
 ```
 
-### batracker agents
+### batracker agents [rawtxt]
 
 Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE`.
 
@@ -761,13 +761,54 @@ Outputs the list of discovered Border Agents. Information per Agent:
 - Service name
 - Port number
 - Host name
-- TXT data (key/value pairs per line)
+- TXT data (parsed human-readable information, or raw key/value pairs)
 - Host addresses
 - Milliseconds since agent was first discovered
 - Milliseconds since the last change to agent info (port, addresses, TXT data)
 
+By default, if `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE` is enabled, the TXT data is parsed and displayed in a human-readable format.
+
+The optional `rawtxt` argument forces the output of TXT data in its raw format (key/value pairs), even when the parser is enabled. If the parser is disabled, the raw format is always used.
+
 ```bash
 > batracker agents
+ServiceName: OTBR-by-Google-a7215b46a4f1fd
+    Port: 49154
+    Host: otbe345eefb12f7f9c
+    TxtData:
+        RecordVersion: 1
+        AgentId: e12f639deb66987e11a7215cd123
+        ThreadVersion: 1.4.0
+        NetworkName: ota7215b46a4f1fd
+        ExtendedPanId: 16dd92d88a32e63f
+        ActiveTimestamp: 1771558107
+        PartitionId: 0x10930b04
+        DomainName: DefaultDomain
+        BbrSeqNum: 23
+        BbrPort: 61631
+        OmrPrefix: fd70:ad65:47d9:1::/64
+        ExtAddress: 8e5d342e265b279c
+        VendorName: Google
+        ModelName: OTBR
+        StateBitmap:
+            ConnMode: pskc
+            ThreadIfState: active
+            Availability: high
+            ThreadRole: leader
+            BbrIsActive: yes
+            BbrIsPrimary: yes
+            EpskcSupported: yes
+            MultiAilState: not-detected
+            AdmitterSupported: yes
+    Address(es):
+        fd7c:af54:fada:4dcc:6aec:8aff:fe0d:e90b
+    MilliSecondsSinceDiscovered: 3523
+    MilliSecondsSinceLastChange: 3523
+Done
+```
+
+```bash
+> batracker agents rawtxt
 ServiceName: OTBR-by-Google-be345eefb12f7f9c
     Port: 49152
     Host: otbe345eefb12f7f9c

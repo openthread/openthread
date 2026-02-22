@@ -184,6 +184,61 @@ typedef struct otBorderAgentTxtDataInfo
 otError otBorderAgentTxtDataParse(const uint8_t *aTxtData, uint16_t aTxtDataLength, otBorderAgentTxtDataInfo *aInfo);
 
 /**
+ * Converts a given Connection Mode in a Border Agent State Bitmap to human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aConnMode   The Connection Mode to convert.
+ *
+ * @return The string representation of @p aConnMode.
+ */
+const char *otBorderAgentConnModeToString(otBorderAgentConnMode aConnMode);
+
+/**
+ * Converts a given Thread Interface State in a Border Agent State Bitmap to human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aIfState   The Thread Interface State to convert.
+ *
+ * @return The string representation of @p aIfState.
+ */
+const char *otBorderAgentIfStateToString(otBorderAgentThreadIfState aIfState);
+
+/**
+ * Converts a given Availability Status in a Border Agent State Bitmap to human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aAvailability   The Availability Status to convert.
+ *
+ * @return The string representation of @p aAvailability.
+ */
+const char *otBorderAgentAvailabilityToString(otBorderAgentAvailability aAvailability);
+
+/**
+ * Converts a given Thread Role in a Border Agent State Bitmap to human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aRole   The Thread Role to convert.
+ *
+ * @return The string representation of @p aRole.
+ */
+const char *otBorderAgentThreadRoleToString(otBorderAgentThreadRole aRole);
+
+/**
+ * Converts a given Multi-AIL State in a Border Agent State Bitmap to human-readable string.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE`.
+ *
+ * @param[in] aState   The Multi-AIL State to convert.
+ *
+ * @return The string representation of @p aState.
+ */
+const char *otBorderAgentMultiAilStateToString(otBorderAgentMultiAilState aState);
+
+/**
  * @}
  *
  */
