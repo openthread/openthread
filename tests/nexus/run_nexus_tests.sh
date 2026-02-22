@@ -134,6 +134,7 @@ DEFAULT_TESTS=(
     "9_2_2"
     "9_2_3"
     "9_2_4"
+    "9_2_5"
 )
 
 # Use provided arguments or the default test list

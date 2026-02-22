@@ -77,6 +77,15 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
         pass
 
     try:
+        # ISO format: '1970-01-01T00:00:20.000000000+0000'
+        # we only care about the seconds part
+        time_str = dv.split('.')[0]
+        dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
+        return int(dt.replace(tzinfo=datetime.timezone.utc).timestamp())
+    except (ValueError, TypeError, IndexError):
+        pass
+
+    try:
         int(rv, 16)
         return int(dv)
     except Exception:
