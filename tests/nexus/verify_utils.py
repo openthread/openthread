@@ -71,6 +71,22 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('border_agent_rloc16', hex(struct.unpack('>H', v)[0])))
     elif t == consts.NM_CHANNEL_TLV and len(v) == 3 and not is_diag:  # DG_MAC_EXTENDED_ADDRESS_TLV is 8
         kvs.append(('channel', str(struct.unpack('>H', v[1:3])[0])))
+    elif t == consts.NM_ACTIVE_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
+        kvs.append(('active_timestamp', str(struct.unpack('>Q', v)[0] >> 16)))
+    elif t == consts.NM_CHANNEL_MASK_TLV and not is_diag:
+        kvs.append(('channel_mask', v.hex()))
+    elif t == consts.NM_EXTENDED_PAN_ID_TLV and len(v) == 8 and not is_diag:
+        kvs.append(('ext_pan_id', v.hex()))
+    elif t == consts.NM_NETWORK_NAME_TLV and not is_diag:
+        kvs.append(('network_name', v.decode('utf-8', errors='replace')))
+    elif t == consts.NM_PSKC_TLV and len(v) == 16 and not is_diag:
+        kvs.append(('pskc', v.hex()))
+    elif t == consts.NM_SECURITY_POLICY_TLV and not is_diag:
+        kvs.append(('security_policy', v.hex()))
+    elif t == consts.NM_NETWORK_KEY_TLV and len(v) == 16 and not is_diag:
+        kvs.append(('network_key', v.hex()))
+    elif t == consts.NM_PAN_ID_TLV and len(v) == 2 and not is_diag:
+        kvs.append(('pan_id', hex(struct.unpack('>H', v)[0])))
 
     # Other Thread TLVs
     elif t == consts.NL_TARGET_EID_TLV and len(v) == 16:
@@ -141,6 +157,14 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.state'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.border_agent_rloc16'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.channel'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.active_timestamp'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.channel_mask'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.ext_pan_id'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.network_name'] = layer_fields._str
+    layer_fields._LAYER_FIELDS['coap.tlv.pskc'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.security_policy'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.network_key'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.pan_id'] = layer_fields._auto
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'
