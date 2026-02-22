@@ -192,6 +192,7 @@ ot_nexus_test(7_1_4 "cert;nexus")
 ot_nexus_test(7_1_5 "cert;nexus")
 ot_nexus_test(7_1_6 "cert;nexus")
 ot_nexus_test(9_2_1 "cert;nexus")
+ot_nexus_test(9_2_2 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
