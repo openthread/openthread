@@ -169,6 +169,7 @@ void Test5_5_5(void)
      * - Pass Criteria: N/A
      */
     r[3]->Reset();
+    SuccessOrQuit(r[1]->Get<Mle::Mle>().SetRouterEligible(false));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Router_1");
