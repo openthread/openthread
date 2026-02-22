@@ -281,10 +281,7 @@ Error Message::SetLength(uint16_t aLength)
     GetMetadata().mLength = aLength;
 
     // Correct the offset in case shorter length is set.
-    if (GetOffset() > aLength)
-    {
-        SetOffset(aLength);
-    }
+    SetOffset(GetOffset());
 
 exit:
     return error;
@@ -314,18 +311,16 @@ uint8_t Message::GetBufferCount(void) const
     return rval;
 }
 
-void Message::MoveOffset(int aDelta)
+void Message::MoveOffset(int16_t aDelta)
 {
-    OT_ASSERT(GetOffset() + aDelta <= GetLength());
-    GetMetadata().mOffset += static_cast<int16_t>(aDelta);
-    OT_ASSERT(GetMetadata().mOffset <= GetLength());
+    int32_t newOffset = static_cast<int32_t>(GetOffset()) + aDelta;
+
+    newOffset = Clamp<int32_t>(newOffset, 0, NumericLimits<uint16_t>::kMax);
+
+    SetOffset(static_cast<uint16_t>(newOffset));
 }
 
-void Message::SetOffset(uint16_t aOffset)
-{
-    OT_ASSERT(aOffset <= GetLength());
-    GetMetadata().mOffset = aOffset;
-}
+void Message::SetOffset(uint16_t aOffset) { GetMetadata().mOffset = Min(aOffset, GetLength()); }
 
 uint16_t Message::DetermineLengthAfterOffset(void) const
 {
