@@ -827,10 +827,21 @@ public:
     Error AppendPayloadMarker(void);
 
     /**
+     * Creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    Message *Clone(void) const;
+
+    /**
      * Creates a copy of this CoAP message.
      *
      * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the
      * cloned message are also copied from the original one.
      *
      * @param[in] aLength  Number of payload bytes to copy.
@@ -840,15 +851,17 @@ public:
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * Creates a copy of the message.
+     * Creates a copy of the message using a given configuration.
      *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * It allocates the new message from the same message pool as the original one. The `Type`, `SubType`,
+     * `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are copied from the original one.
+     *
+     * @param[in] aLength         Number of message bytes to copy.
+     * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(void) const { return Clone(GetLength()); }
+    Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
 
     /**
      * Returns a pointer to the next message after this as a `Coap::Message`.
