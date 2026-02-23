@@ -30,8 +30,11 @@
 #include <string.h>
 
 #include "meshcop/commissioner.hpp"
+#include "meshcop/dataset.hpp"
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
+#include "thread/mle.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -195,6 +198,27 @@ static const uint8_t kSteeringDataStep18[] = {0x11, 0x33, 0x20, 0x44, 0x00, 0x00
 static constexpr uint8_t kFutureTlvType = 130;
 
 /**
+ * Initial Channel.
+ */
+static constexpr uint16_t kInitialChannel = 11;
+
+/**
+ * Initial PAN ID.
+ */
+static constexpr uint16_t kInitialPanId = 0xabcd;
+
+/**
+ * Initial Network Key.
+ */
+static const uint8_t kInitialNetworkKey[] = {0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee,
+                                             0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee};
+
+/**
+ * Initial Mesh-Local Prefix.
+ */
+static const uint8_t kInitialMeshLocalPrefix[] = {0xfd, 0x00, 0xab, 0xba, 0x00, 0x00, 0x00, 0x00};
+
+/**
  * Future TLV Value.
  */
 static const uint8_t kFutureTlvValue[] = {0xaa, 0x55};
@@ -251,7 +275,30 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
     leader.AllowList(commissioner);
     commissioner.AllowList(leader);
 
-    leader.Form();
+    {
+        MeshCoP::Dataset::Info datasetInfo;
+
+        SuccessOrQuit(datasetInfo.GenerateRandom(leader.GetInstance()));
+
+        datasetInfo.Set<MeshCoP::Dataset::kChannel>(kInitialChannel);
+        datasetInfo.Set<MeshCoP::Dataset::kPanId>(kInitialPanId);
+
+        {
+            NetworkKey &networkKey = datasetInfo.Update<MeshCoP::Dataset::kNetworkKey>();
+            memcpy(networkKey.m8, kInitialNetworkKey, sizeof(networkKey));
+        }
+
+        {
+            Ip6::NetworkPrefix &prefix = datasetInfo.Update<MeshCoP::Dataset::kMeshLocalPrefix>();
+            memcpy(prefix.m8, kInitialMeshLocalPrefix, sizeof(prefix.m8));
+        }
+
+        leader.Get<MeshCoP::ActiveDatasetManager>().SaveLocal(datasetInfo);
+
+        leader.Get<ThreadNetif>().Up();
+        SuccessOrQuit(leader.Get<Mle::Mle>().Start());
+    }
+
     nexus.AdvanceTime(kFormNetworkTime);
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
