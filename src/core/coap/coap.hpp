@@ -873,6 +873,7 @@ private:
         };
 
         Error       AbortAllMatching(const Matcher &aMatcher);
+        void        FinalizeRemovedRequestsIn(MessageQueue &aQueue, Error aResult);
         void        RetransmitRequest(const Request &aRequest);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);

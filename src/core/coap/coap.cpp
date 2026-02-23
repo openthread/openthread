@@ -472,6 +472,7 @@ void CoapBase::PendingRequests::HandleTimer(Timer &aTimer)
 void CoapBase::PendingRequests::HandleTimer(void)
 {
     NextFireTime nextTime;
+    MessageQueue expiredMessages;
 
     for (Message &message : mRequestMessages)
     {
@@ -493,7 +494,14 @@ void CoapBase::PendingRequests::HandleTimer(void)
         {
             if (!request.mMetadata.ShouldRetransmit())
             {
-                FinalizeRequest(request, kErrorResponseTimeout);
+                // We move the expired request to a separate queue to
+                // finalize it after the loop. This ensures that the
+                // iterator over `mRequestMessages` remains valid
+                // even if the user callback (invoked during
+                // finalization) modifies any pending requests
+
+                mRequestMessages.Dequeue(message);
+                expiredMessages.Enqueue(message);
                 continue;
             }
 
@@ -510,6 +518,8 @@ void CoapBase::PendingRequests::HandleTimer(void)
     }
 
     mTimer.FireAt(nextTime);
+
+    FinalizeRemovedRequestsIn(expiredMessages, kErrorResponseTimeout);
 }
 
 void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult)
@@ -1690,7 +1700,8 @@ Error CoapBase::PendingRequests::AbortRequestsMatching(ResponseHandler aHandler,
 
 Error CoapBase::PendingRequests::AbortAllMatching(const Matcher &aMatcher)
 {
-    Error error = kErrorNotFound;
+    Error        error = kErrorNotFound;
+    MessageQueue abortedMessages;
 
     for (Message &message : mRequestMessages)
     {
@@ -1700,12 +1711,28 @@ Error CoapBase::PendingRequests::AbortAllMatching(const Matcher &aMatcher)
 
         if (aMatcher.Matches(request))
         {
-            FinalizeRequest(request, kErrorAbort);
+            mRequestMessages.Dequeue(message);
+            abortedMessages.Enqueue(message);
             error = kErrorNone;
         }
     }
 
+    FinalizeRemovedRequestsIn(abortedMessages, kErrorAbort);
+
     return error;
+}
+
+void CoapBase::PendingRequests::FinalizeRemovedRequestsIn(MessageQueue &aQueue, Error aResult)
+{
+    for (Message &message : aQueue)
+    {
+        Request request;
+
+        request.InitFrom(message);
+        request.mMetadata.mCallbacks.InvokeResponseHandler(/* aResponse */ nullptr, aResult);
+    }
+
+    aQueue.DequeueAndFreeAll();
 }
 
 bool CoapBase::PendingRequests::Matcher::Matches(const Request &aRequest) const
