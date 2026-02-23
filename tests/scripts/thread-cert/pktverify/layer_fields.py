@@ -26,6 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import calendar
 import datetime
 import sys
 import time
@@ -71,7 +72,7 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     # there are integer seconds applied in the test cases
     try:
         time_str = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
-        time_in_sec = time.mktime(time_str.utctimetuple())
+        time_in_sec = calendar.timegm(time_str.utctimetuple())
         return int(time_in_sec)
     except (ValueError, TypeError):
         pass
@@ -97,6 +98,15 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
         return 0
 
     raise ValueError((v, v.get_default_value(), v.raw_value))
+
+
+def _thread_timestamp(v: Union[LayerFieldsContainer, LayerField]) -> int:
+    """parse the layer field as a Thread timestamp (8 bytes)"""
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1
+    rv = v.raw_value
+    if rv and len(rv) == 16:
+        return int(rv, 16) >> 16
+    return _auto(v)
 
 
 def _payload(v: Union[LayerFieldsContainer, LayerField]) -> bytearray:
@@ -306,8 +316,8 @@ _LAYER_FIELDS = {
     'mle.tlv.scan_mask.e': _auto,
     'mle.tlv.version': _auto,
     'mle.tlv.source_addr': _auto,
-    'mle.tlv.active_tstamp': _auto,
-    'mle.tlv.pending_tstamp': _auto,
+    'mle.tlv.active_tstamp': _thread_timestamp,
+    'mle.tlv.pending_tstamp': _thread_timestamp,
     'mle.tlv.leader_data.partition_id': _auto,
     'mle.tlv.leader_data.weighting': _auto,
     'mle.tlv.leader_data.data_version': _auto,
@@ -616,8 +626,8 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.jr_locator': _auto,
-    'thread_meshcop.tlv.active_tstamp': _auto,
-    'thread_meshcop.tlv.pending_tstamp': _auto,
+    'thread_meshcop.tlv.active_tstamp': _thread_timestamp,
+    'thread_meshcop.tlv.pending_tstamp': _thread_timestamp,
     'thread_meshcop.tlv.delay_timer': _auto,
     'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
