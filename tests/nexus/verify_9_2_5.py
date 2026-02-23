@@ -39,10 +39,10 @@ from pktverify import consts
 
 
 def verify(pv):
-    # 9.2.5 Updating the Active Operational Dataset via Thread node
+    # 9.2.5 Updating the Active Operational Dataset via Thread Node
     #
     # 9.2.5.1 Topology
-    # DUT as Leader, Router_1
+    # * DUT as Leader, Router_1
     #
     # 9.2.5.2 Purpose & Description
     # The purpose of this test case is to verify the DUT’s behavior when receiving MGMT_ACTIVE_SET.req from an active
@@ -61,7 +61,7 @@ def verify(pv):
     # Step 1: All
     # - Description: Ensure topology is formed correctly.
     # - Pass Criteria: N/A.
-    print("Step 1: Ensure topology is formed correctly.")
+    print("Step 1: All")
 
     # Step 2: Router_1
     # - Description: Harness instructs Router_1 to send a MGMT_ACTIVE_SET.req to the Leader (DUT)’s Routing or Anycast
@@ -82,7 +82,7 @@ def verify(pv):
     #     - PAN ID (old value)
     #     - Channel (old value)
     #   - The DUT’s Anycast Locator uses the Mesh local prefix with an IID of 0000:00FF:FE00:FC00.
-    print("Step 2: Router_1 sends MGMT_ACTIVE_SET.req with new valid Active Timestamp.")
+    print("Step 2: Router_1")
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
@@ -97,8 +97,8 @@ def verify(pv):
             consts.NM_PAN_ID_TLV,
             consts.NM_CHANNEL_TLV
         } <= set(p.coap.tlv.type)).\
-        filter(lambda p: p.coap.tlv.active_timestamp == 20 and\
-                         p.coap.tlv.network_name == 'nexus-test').\
+        filter(lambda p: p.coap.tlv.active_timestamp == 100 and\
+                         p.coap.tlv.network_name == 'TEST_1').\
         filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
         must_next()
 
@@ -107,7 +107,7 @@ def verify(pv):
     # - Pass Criteria: The DUT MUST send MGMT_ACTIVE_SET.rsp to Router_1 with the following format:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: State TLV (value = Accept (01))
-    print("Step 3: Leader sends MGMT_ACTIVE_SET.rsp with State TLV = Accept.")
+    print("Step 3: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: p.coap.tlv.state == 1).\
@@ -122,7 +122,7 @@ def verify(pv):
     #     - Stable Version field [incremented]
     #   - Network Data TLV
     #   - Active Timestamp TLV [new value set in Step 2]
-    print("Step 4: Leader sends a Multicast MLE Data Response.")
+    print("Step 4: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
@@ -132,16 +132,17 @@ def verify(pv):
             consts.NETWORK_DATA_TLV,
             consts.ACTIVE_TIMESTAMP_TLV
         } <= set(p.mle.tlv.type)).\
-        filter(lambda p: p.mle.tlv.active_tstamp == 20).\
+        filter(lambda p: p.mle.tlv.active_tstamp == 100).\
         must_next()
 
     # Step 5: Router_1
-    # - Description: Automatically sends a unicast MLE Data Request to Leader, including the following TLVs:
+    # - Description: Automatically sends a unicast MLE Data Request to Router_1 (Note: this appears to be a typo in the
+    #   specification, as Router_1 would likely send it to the Leader), including the following TLVs:
     #   - TLV Request TLV:
     #     - Network Data TLV
     #   - Active Timestamp TLV
     # - Pass Criteria: N/A.
-    print("Step 5: Router_1 sends a unicast MLE Data Request to Leader.")
+    print("Step 5: Router_1")
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst64(LEADER).\
         filter_mle_cmd(consts.MLE_DATA_REQUEST).\
@@ -168,7 +169,7 @@ def verify(pv):
     #     - PSKc TLV [new value set in Step 2]
     #     - Security Policy TLV [new value set in Step 2]
     #   - Active Timestamp TLV [new value set in Step 2]
-    print("Step 6: Leader sends a unicast MLE Data Response to Router_1.")
+    print("Step 6: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_wpan_dst64(ROUTER_1).\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
@@ -179,7 +180,7 @@ def verify(pv):
             consts.ACTIVE_OPERATION_DATASET_TLV,
             consts.ACTIVE_TIMESTAMP_TLV
         } <= set(p.mle.tlv.type)).\
-        filter(lambda p: p.mle.tlv.active_tstamp == 20).\
+        filter(lambda p: p.mle.tlv.active_tstamp == 100).\
         must_next()
 
     # Step 7: Router_1
@@ -201,10 +202,23 @@ def verify(pv):
     #     - PAN ID (old value)
     #     - Channel (old value)
     #   - The DUT’s Anycast Locator uses the Mesh local prefix with an IID of 0000:00FF:FE00:FC00.
-    print("Step 7: Router_1 sends MGMT_ACTIVE_SET.req with old invalid Active Timestamp.")
+    print("Step 7: Router_1")
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
-        filter(lambda p: p.coap.tlv.active_timestamp == 10).\
+        filter(lambda p: {
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_CHANNEL_MASK_TLV,
+            consts.NM_EXTENDED_PAN_ID_TLV,
+            consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
+            consts.NM_NETWORK_NAME_TLV,
+            consts.NM_PSKC_TLV,
+            consts.NM_SECURITY_POLICY_TLV,
+            consts.NM_NETWORK_KEY_TLV,
+            consts.NM_PAN_ID_TLV,
+            consts.NM_CHANNEL_TLV
+        } <= set(p.coap.tlv.type)).\
+        filter(lambda p: p.coap.tlv.active_timestamp == 99 and\
+                         p.coap.tlv.network_name == 'TEST_2').\
         filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
         must_next()
 
@@ -213,7 +227,7 @@ def verify(pv):
     # - Pass Criteria: The DUT MUST send MGMT_ACTIVE_SET.rsp to Router_1, with the following format:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: State TLV (value = Reject (ff))
-    print("Step 8: Leader sends MGMT_ACTIVE_SET.rsp with State TLV = Reject.")
+    print("Step 8: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: p.coap.tlv.state == 255).\
@@ -243,19 +257,23 @@ def verify(pv):
     #       - Length 2
     #       - Value (aa 55)
     #   - The DUT’s Anycast Locator uses the Mesh local prefix with an IID of 0000:00FF:FE00:FC00.
-    print("Step 9: Router_1 sends MGMT_ACTIVE_SET.req with new valid Active Timestamp and Future TLV.")
+    print("Step 9: Router_1")
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
             consts.NM_ACTIVE_TIMESTAMP_TLV,
             consts.NM_CHANNEL_MASK_TLV,
             consts.NM_EXTENDED_PAN_ID_TLV,
+            consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
             consts.NM_NETWORK_NAME_TLV,
             consts.NM_PSKC_TLV,
-            consts.NM_SECURITY_POLICY_TLV
+            consts.NM_SECURITY_POLICY_TLV,
+            consts.NM_NETWORK_KEY_TLV,
+            consts.NM_PAN_ID_TLV,
+            consts.NM_CHANNEL_TLV
         } <= set(p.coap.tlv.type)).\
-        filter(lambda p: p.coap.tlv.active_timestamp == 30 and\
-                         p.coap.tlv.network_name == 'nexus-925').\
+        filter(lambda p: p.coap.tlv.active_timestamp == 101 and\
+                         p.coap.tlv.network_name == 'TEST_3').\
         filter(lambda p: 130 in p.coap.tlv.type).\
         filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
         must_next()
@@ -265,7 +283,7 @@ def verify(pv):
     # - Pass Criteria: The DUT MUST send MGMT_ACTIVE_SET.rsp to Router_1 with the following format:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: State TLV (value = Accept (01))
-    print("Step 10: Leader sends MGMT_ACTIVE_SET.rsp with State TLV = Accept.")
+    print("Step 10: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: p.coap.tlv.state == 1).\
@@ -280,11 +298,11 @@ def verify(pv):
     #     - Stable Version field [incremented]
     #   - Network Data TLV
     #   - Active Timestamp TLV [new value set in Step 9]
-    print("Step 11: Leader sends a Multicast MLE Data Response.")
+    print("Step 11: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-        filter(lambda p: p.mle.tlv.active_tstamp == 30).\
+        filter(lambda p: p.mle.tlv.active_tstamp == 101).\
         must_next()
 
     # Step 12: Router_1
@@ -293,7 +311,7 @@ def verify(pv):
     #     - Network Data TLV
     #   - Active Timestamp TLV
     # - Pass Criteria: N/A.
-    print("Step 12: Router_1 sends a unicast MLE Data Request to Leader.")
+    print("Step 12: Router_1")
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst64(LEADER).\
         filter_mle_cmd(consts.MLE_DATA_REQUEST).\
@@ -321,7 +339,7 @@ def verify(pv):
     #     - PSKc TLV [new value set in Step 9]
     #     - Security Policy TLV [new value set in Step 9]
     #   - Active Timestamp TLV [new value set in Step 9]
-    print("Step 13: Leader sends a unicast MLE Data Response to Router_1.")
+    print("Step 13: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_wpan_dst64(ROUTER_1).\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
@@ -332,7 +350,7 @@ def verify(pv):
             consts.ACTIVE_OPERATION_DATASET_TLV,
             consts.ACTIVE_TIMESTAMP_TLV
         } <= set(p.mle.tlv.type)).\
-        filter(lambda p: p.mle.tlv.active_tstamp == 30).\
+        filter(lambda p: p.mle.tlv.active_tstamp == 101).\
         must_next()
 
     # Step 14: Router_1
@@ -354,10 +372,22 @@ def verify(pv):
     #     - Network Master Key (old value)
     #     - PAN ID (old value)
     #   - The DUT Anycast Locator uses the Mesh local prefix with an IID of 0000:00FF:FE00:FC00.
-    print("Step 14: Router_1 sends MGMT_ACTIVE_SET.req with unsupported Channel.")
+    print("Step 14: Router_1")
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
-        filter(lambda p: p.coap.tlv.active_timestamp == 40 and\
+        filter(lambda p: {
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_CHANNEL_TLV,
+            consts.NM_CHANNEL_MASK_TLV,
+            consts.NM_EXTENDED_PAN_ID_TLV,
+            consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
+            consts.NM_NETWORK_NAME_TLV,
+            consts.NM_PSKC_TLV,
+            consts.NM_SECURITY_POLICY_TLV,
+            consts.NM_NETWORK_KEY_TLV,
+            consts.NM_PAN_ID_TLV
+        } <= set(p.coap.tlv.type)).\
+        filter(lambda p: p.coap.tlv.active_timestamp == 102 and\
                          p.coap.tlv.channel == 63).\
         filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
         must_next()
@@ -367,7 +397,7 @@ def verify(pv):
     # - Pass Criteria: The DUT MUST send MGMT_ACTIVE_SET.rsp to Router_1 with the following format:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: State TLV (value = Reject (ff))
-    print("Step 15: Leader sends MGMT_ACTIVE_SET.rsp with State TLV = Reject.")
+    print("Step 15: Leader (DUT)")
     pkts.filter_wpan_src64(LEADER).\
         filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: p.coap.tlv.state == 255).\
@@ -376,7 +406,7 @@ def verify(pv):
     # Step 16: All
     # - Description: Verify connectivity by sending an ICMPv6 Echo Request to the DUT mesh local address.
     # - Pass Criteria: The DUT must respond with an ICMPv6 Echo Reply.
-    print("Step 16: Verify connectivity by sending an ICMPv6 Echo Request.")
+    print("Step 16: All")
     # Match any ping request and reply.
     _pkt = pkts.filter_ping_request().\
         must_next()

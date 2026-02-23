@@ -55,28 +55,35 @@ static constexpr uint32_t kResponseTime = 2000;
  */
 static constexpr uint32_t kEchoTimeout = 5000;
 
-static constexpr uint64_t kActiveTimestampStep2 = 20;
-static constexpr uint32_t kChannelMaskStep2     = 0x07fff800;
-static constexpr uint8_t  kExtendedPanIdStep2[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
-static constexpr char     kNetworkNameStep2[]   = "nexus-test";
-static constexpr uint8_t  kPskcStep2[]          = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                                                   0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+static constexpr uint64_t kActiveTimestampStep2 = 100;
+static constexpr uint32_t kChannelMaskStep2     = 0x03fff800;
+static constexpr uint8_t  kExtendedPanIdStep2[] = {0x00, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x01};
+static constexpr char     kNetworkNameStep2[]   = "TEST_1";
+static constexpr uint8_t  kPskcStep2[]          = {0xd2, 0xaa, 0x9c, 0xd8, 0xdf, 0xf7, 0x91, 0x91,
+                                                   0x22, 0xd7, 0x7d, 0x37, 0xec, 0x3c, 0x1b, 0x5f};
 static constexpr uint16_t kRotationTimeStep2    = 3600;
-static constexpr uint8_t  kSecurityFlagsStep2[] = {0xfb};
+static constexpr uint8_t  kSecurityFlagsStep2[] = {0xef};
 
-static constexpr uint64_t kActiveTimestampStep7 = 10;
+static constexpr uint64_t kActiveTimestampStep7 = 99;
+static constexpr uint32_t kChannelMaskStep7     = 0x01fff800;
+static constexpr uint8_t  kExtendedPanIdStep7[] = {0x00, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x02};
+static constexpr char     kNetworkNameStep7[]   = "TEST_2";
+static constexpr uint8_t  kPskcStep7[]          = {0x17, 0xd6, 0x72, 0xbe, 0x32, 0xb0, 0xc2, 0x4a,
+                                                   0x2f, 0x83, 0x85, 0xf2, 0xfb, 0xaf, 0x1d, 0x97};
+static constexpr uint8_t  kSecurityFlagsStep7[] = {0xff};
 
-static constexpr uint64_t kActiveTimestampStep9 = 30;
-static constexpr uint32_t kChannelMaskStep9     = 0x001fffe0;
-static constexpr uint8_t  kExtendedPanIdStep9[] = {0x01, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
-static constexpr char     kNetworkNameStep9[]   = "nexus-925";
-static constexpr uint8_t  kPskcStep9[]          = {0x11, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                                                   0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+static constexpr uint64_t kActiveTimestampStep9 = 101;
+static constexpr uint32_t kChannelMaskStep9     = 0x00fff800;
+static constexpr uint8_t  kExtendedPanIdStep9[] = {0x00, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x03};
+static constexpr char     kNetworkNameStep9[]   = "TEST_3";
+static constexpr uint8_t  kPskcStep9[]          = {0x08, 0xf4, 0xe9, 0x53, 0x1e, 0x8e, 0xfa, 0x8e,
+                                                   0x85, 0x2d, 0x5f, 0x4f, 0xb9, 0x51, 0xb1, 0x3e};
 static constexpr uint16_t kRotationTimeStep9    = 7200;
-static constexpr uint8_t  kSecurityFlagsStep9[] = {0x7b};
+static constexpr uint8_t  kSecurityFlagsStep9[] = {0xff};
 static constexpr uint8_t  kFutureTlv[]          = {130, 2, 0xaa, 0x55};
 
-static constexpr uint64_t kActiveTimestampStep14 = 40;
+static constexpr uint64_t kActiveTimestampStep14 = 102;
+static constexpr uint8_t  kSecurityFlagsStep14[] = {0xf8};
 static constexpr uint16_t kUnsupportedChannel    = 63;
 
 void Test9_2_5(void)
@@ -205,7 +212,8 @@ void Test9_2_5(void)
 
     /**
      * Step 5: Router_1
-     * - Description: Automatically sends a unicast MLE Data Request to Leader, including the following TLVs:
+     * - Description: Automatically sends a unicast MLE Data Request to Router_1 (Note: this appears to be a typo in the
+     *   specification, as Router_1 would likely send it to the Leader), including the following TLVs:
      *   - TLV Request TLV:
      *     - Network Data TLV
      *   - Active Timestamp TLV
@@ -264,6 +272,12 @@ void Test9_2_5(void)
 
     timestamp.SetSeconds(kActiveTimestampStep7);
     datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
+    datasetInfo.Set<MeshCoP::Dataset::kChannelMask>(kChannelMaskStep7);
+    datasetInfo.Set<MeshCoP::Dataset::kExtendedPanId>(
+        AsCoreType(reinterpret_cast<const otExtendedPanId *>(kExtendedPanIdStep7)));
+    SuccessOrQuit(datasetInfo.Update<MeshCoP::Dataset::kNetworkName>().Set(kNetworkNameStep7));
+    datasetInfo.Set<MeshCoP::Dataset::kPskc>(AsCoreType(reinterpret_cast<const otPskc *>(kPskcStep7)));
+    datasetInfo.Update<MeshCoP::Dataset::kSecurityPolicy>().SetFlags(kSecurityFlagsStep7, sizeof(kSecurityFlagsStep7));
 
     SuccessOrQuit(
         router1.Get<MeshCoP::ActiveDatasetManager>().SendSetRequest(datasetInfo, nullptr, 0, nullptr, nullptr));
@@ -418,6 +432,8 @@ void Test9_2_5(void)
     timestamp.SetSeconds(kActiveTimestampStep14);
     datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
     datasetInfo.Set<MeshCoP::Dataset::kChannel>(kUnsupportedChannel);
+    datasetInfo.Update<MeshCoP::Dataset::kSecurityPolicy>().SetFlags(kSecurityFlagsStep14,
+                                                                     sizeof(kSecurityFlagsStep14));
 
     SuccessOrQuit(
         router1.Get<MeshCoP::ActiveDatasetManager>().SendSetRequest(datasetInfo, nullptr, 0, nullptr, nullptr));
