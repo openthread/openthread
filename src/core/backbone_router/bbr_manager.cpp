@@ -686,7 +686,7 @@ void Manager::HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::Inter
         Ip6::Address dest;
 
         dest.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), ndProxy->GetRloc16());
-        Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, &dest);
+        Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, dest);
     }
 
     ot::BackboneRouter::NdProxyTable::NotifyDadComplete(*ndProxy, duplicate);
@@ -739,7 +739,7 @@ void Manager::HandleProactiveBackboneNotification(const Ip6::Address            
     {
         // Duplicated address detected, send ADDR_ERR.ntf to ff03::2 in the Thread network
         BackboneRouter::NdProxyTable::Erase(*ndProxy);
-        Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, nullptr);
+        Get<AddressResolver>().SendAddressError(aDua, aMeshLocalIid, Ip6::Address::GetRealmLocalAllRoutersMulticast());
     }
 
 exit:
