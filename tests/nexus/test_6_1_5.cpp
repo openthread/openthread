@@ -161,8 +161,8 @@ void Test6_1_5(void)
     router1.AllowList(sed1);
     reed2.AllowList(sed1);
 
-    IgnoreError(sed1.Get<Mac::Filter>().AddRssIn(reed2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
-    IgnoreError(reed2.Get<Mac::Filter>().AddRssIn(sed1.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
+    SuccessOrQuit(sed1.Get<Mac::Filter>().AddRssIn(reed2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
+    SuccessOrQuit(reed2.Get<Mac::Filter>().AddRssIn(sed1.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Automatically begins attach process by sending a multicast MLE Parent Request.");

@@ -134,24 +134,24 @@ void Test7_1_2(void)
         NetworkData::OnMeshPrefixConfig config;
 
         config.Clear();
-        IgnoreError(static_cast<Ip6::Address &>(config.mPrefix.mPrefix).FromString(kPrefix1));
+        SuccessOrQuit(static_cast<Ip6::Address &>(config.mPrefix.mPrefix).FromString(kPrefix1));
         config.mPrefix.mLength = kPrefixLength;
         config.mStable         = true;
         config.mOnMesh         = true;
         config.mPreferred      = true;
         config.mSlaac          = true;
         config.mDefaultRoute   = true;
-        IgnoreError(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+        SuccessOrQuit(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
 
         config.Clear();
-        IgnoreError(static_cast<Ip6::Address &>(config.mPrefix.mPrefix).FromString(kPrefix2));
+        SuccessOrQuit(static_cast<Ip6::Address &>(config.mPrefix.mPrefix).FromString(kPrefix2));
         config.mPrefix.mLength = kPrefixLength;
         config.mStable         = false;
         config.mOnMesh         = true;
         config.mPreferred      = true;
         config.mSlaac          = true;
         config.mDefaultRoute   = true;
-        IgnoreError(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+        SuccessOrQuit(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
     }
 
     router1.Join(leader);

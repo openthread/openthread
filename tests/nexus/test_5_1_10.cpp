@@ -146,8 +146,8 @@ void Test5_1_10(void)
     router1.AllowList(dut);
     router2.AllowList(dut);
 
-    IgnoreError(dut.Get<Mac::Filter>().AddRssIn(router2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
-    IgnoreError(router2.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
+    SuccessOrQuit(dut.Get<Mac::Filter>().AddRssIn(router2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
+    SuccessOrQuit(router2.Get<Mac::Filter>().AddRssIn(dut.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality2));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Router_3 (DUT)");

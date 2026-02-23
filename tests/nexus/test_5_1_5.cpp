@@ -133,7 +133,7 @@ void Test5_1_5(void)
      *   - Router_1 automatically sends a link request, re-attaches and requests its original Router ID.
      * - Pass Criteria: N/A
      */
-    IgnoreError(router1.Get<Mle::Mle>().Start());
+    SuccessOrQuit(router1.Get<Mle::Mle>().Start());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Leader (DUT)");
@@ -179,7 +179,7 @@ void Test5_1_5(void)
      *   - Router_1 reattaches and requests its most recent Router ID.
      * - Pass Criteria: N/A
      */
-    IgnoreError(router1.Get<Mle::Mle>().Start());
+    SuccessOrQuit(router1.Get<Mle::Mle>().Start());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 7: Leader (DUT)");

@@ -157,22 +157,22 @@ void Test7_1_8(const char *aJsonFile)
         NetworkData::OnMeshPrefixConfig config;
 
         config.Clear();
-        IgnoreError(config.GetPrefix().FromString(kPrefix1));
+        SuccessOrQuit(config.GetPrefix().FromString(kPrefix1));
         config.mStable       = true;
         config.mDefaultRoute = true;
         config.mSlaac        = true;
         config.mOnMesh       = true;
         config.mPreferred    = true;
-        IgnoreError(fed1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+        SuccessOrQuit(fed1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
 
         config.Clear();
-        IgnoreError(config.GetPrefix().FromString(kPrefix2));
+        SuccessOrQuit(config.GetPrefix().FromString(kPrefix2));
         config.mStable       = false;
         config.mDefaultRoute = true;
         config.mSlaac        = true;
         config.mOnMesh       = true;
         config.mPreferred    = true;
-        IgnoreError(fed1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+        SuccessOrQuit(fed1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
 
         fed1.Get<NetworkData::Notifier>().HandleServerDataUpdated();
     }

@@ -156,22 +156,22 @@ void Test5_6_4(void)
         NetworkData::OnMeshPrefixConfig config;
 
         config.Clear();
-        IgnoreError(config.GetPrefix().FromString(kPrefix1));
+        SuccessOrQuit(config.GetPrefix().FromString(kPrefix1));
         config.mStable       = true;
         config.mOnMesh       = true;
         config.mPreferred    = true;
         config.mSlaac        = true;
         config.mDefaultRoute = true;
-        IgnoreError(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+        SuccessOrQuit(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
 
         config.Clear();
-        IgnoreError(config.GetPrefix().FromString(kPrefix2));
+        SuccessOrQuit(config.GetPrefix().FromString(kPrefix2));
         config.mStable       = false;
         config.mOnMesh       = true;
         config.mPreferred    = true;
         config.mSlaac        = true;
         config.mDefaultRoute = true;
-        IgnoreError(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
+        SuccessOrQuit(router1.Get<NetworkData::Local>().AddOnMeshPrefix(config));
 
         router1.Get<NetworkData::Notifier>().HandleServerDataUpdated();
     }
