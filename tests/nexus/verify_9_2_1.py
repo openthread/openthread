@@ -40,20 +40,6 @@ from pktverify import consts
 from pktverify.null_field import nullField
 
 
-# Monkey-patch CoapTlvParser to parse MeshCoP TLVs in CoAP payload
-def meshcop_coap_tlv_parse(t, v, layer=None):
-    kvs = []
-    if t == consts.NM_COMMISSIONER_SESSION_ID_TLV:
-        kvs.append(('comm_sess_id', str(struct.unpack('>H', v)[0])))
-    elif t == consts.NM_STEERING_DATA_TLV:
-        kvs.append(('steering_data', v.hex()))
-    elif t == consts.NM_BORDER_AGENT_LOCATOR_TLV:
-        kvs.append(('border_agent_rloc16', hex(struct.unpack('>H', v)[0])))
-    elif t == consts.TLV_REQUEST_TLV:
-        kvs.append(('tlv_request', v.hex()))
-    return kvs
-
-
 def verify(pv):
     # 9.2.1 Commissioner – MGMT_COMMISSIONER_GET.req & rsp
     #
@@ -70,20 +56,6 @@ def verify(pv):
     # Spec Reference                    | V1.1 Section | V1.3.0 Section
     # ----------------------------------|--------------|---------------
     # Updating the Commissioner Dataset | 8.7.3        | 8.7.3
-
-    # Add MeshCoP TLVs to CoapTlvParser
-    old_parse = verify_utils.CoapTlvParser.parse
-
-    from pktverify import layer_fields
-    layer_fields._LAYER_FIELDS['coap.tlv.tlv_request'] = layer_fields._bytes
-
-    def new_parse(t, v, layer=None):
-        if t in (consts.NM_COMMISSIONER_SESSION_ID_TLV, consts.NM_STEERING_DATA_TLV,
-                 consts.NM_BORDER_AGENT_LOCATOR_TLV, consts.TLV_REQUEST_TLV):
-            return meshcop_coap_tlv_parse(t, v, layer=layer)
-        return old_parse(t, v, layer=layer)
-
-    verify_utils.CoapTlvParser.parse = staticmethod(new_parse)
 
     pkts = pv.pkts
     pv.summary.show()

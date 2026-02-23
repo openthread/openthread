@@ -62,17 +62,19 @@ def thread_coap_tlv_parse(t, v, layer=None):
 
     # MeshCoP TLVs (often overlap with Diagnostic TLVs)
     if t == consts.NM_COMMISSIONER_SESSION_ID_TLV and len(v) == 2 and not is_diag:
-        kvs.append(('comm_sess_id', str(struct.unpack('>H', v)[0])))
+        kvs.append(('comm_sess_id', struct.unpack('>H', v)[0]))
     elif t == consts.NM_STATE_TLV and len(v) == 1 and not is_diag:
-        kvs.append(('state', str(v[0])))
+        kvs.append(('state', v[0]))
     elif t == consts.NM_STEERING_DATA_TLV and not is_diag:  # DG_IPV6_ADDRESS_LIST_TLV is 16*n
         kvs.append(('steering_data', v.hex()))
     elif t == consts.NM_BORDER_AGENT_LOCATOR_TLV and len(v) == 2 and not is_diag:  # DG_MAC_COUNTERS_TLV is 4*n
-        kvs.append(('border_agent_rloc16', hex(struct.unpack('>H', v)[0])))
+        kvs.append(('border_agent_rloc16', struct.unpack('>H', v)[0]))
+    elif t == consts.TLV_REQUEST_TLV:
+        kvs.append(('tlv_request', v.hex()))
     elif t == consts.NM_CHANNEL_TLV and len(v) == 3 and not is_diag:  # DG_MAC_EXTENDED_ADDRESS_TLV is 8
-        kvs.append(('channel', str(struct.unpack('>H', v[1:3])[0])))
+        kvs.append(('channel', struct.unpack('>H', v[1:3])[0]))
     elif t == consts.NM_ACTIVE_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
-        kvs.append(('active_timestamp', str(struct.unpack('>Q', v)[0] >> 16)))
+        kvs.append(('active_timestamp', struct.unpack('>Q', v)[0] >> 16))
     elif t == consts.NM_CHANNEL_MASK_TLV and not is_diag:
         kvs.append(('channel_mask', v.hex()))
     elif t == consts.NM_EXTENDED_PAN_ID_TLV and len(v) == 8 and not is_diag:
@@ -86,7 +88,11 @@ def thread_coap_tlv_parse(t, v, layer=None):
     elif t == consts.NM_NETWORK_KEY_TLV and len(v) == 16 and not is_diag:
         kvs.append(('network_key', v.hex()))
     elif t == consts.NM_PAN_ID_TLV and len(v) == 2 and not is_diag:
-        kvs.append(('pan_id', hex(struct.unpack('>H', v)[0])))
+        kvs.append(('pan_id', struct.unpack('>H', v)[0]))
+    elif t == consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV and len(v) == 8 and not is_diag:
+        kvs.append(('mesh_local_prefix', v.hex()))
+    elif t == consts.NM_FUTURE_TLV:
+        kvs.append(('future_tlv', v.hex()))
 
     # Other Thread TLVs
     elif t == consts.NL_TARGET_EID_TLV and len(v) == 16:
@@ -145,6 +151,9 @@ def apply_patches():
     CoapTlvParser.parse = staticmethod(thread_coap_tlv_parse)
 
     from pktverify import layer_fields
+    layer_fields._LAYER_FIELDS['coap.tlv.tlv_request'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['mle.tlv.active_operational_dataset'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['mle.tlv.pending_operational_dataset'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.ipv6_address'] = layer_fields._list(layer_fields._ipv6_addr)
     layer_fields._LAYER_FIELDS['coap.tlv.rloc16'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.mode'] = layer_fields._auto
@@ -153,6 +162,7 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.child_mode'] = layer_fields._list(layer_fields._auto)
     layer_fields._LAYER_FIELDS['coap.tlv.channel_pages'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.steering_data'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.future_tlv'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.comm_sess_id'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.state'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.border_agent_rloc16'] = layer_fields._auto
@@ -165,6 +175,7 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.security_policy'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.network_key'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.pan_id'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.mesh_local_prefix'] = layer_fields._bytes
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'

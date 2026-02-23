@@ -40,56 +40,6 @@ from pktverify import consts
 from pktverify.null_field import nullField
 from pktverify.addrs import Ipv6Addr
 
-# MeshCop TLVs constants for Active Dataset
-NM_ACTIVE_TIMESTAMP_TLV = 14
-NM_CHANNEL_TLV = 0
-NM_CHANNEL_MASK_TLV = 53
-NM_EXTENDED_PAN_ID_TLV = 2
-NM_NETWORK_MESH_LOCAL_PREFIX_TLV = 7
-NM_NETWORK_KEY_TLV = 5
-NM_NETWORK_NAME_TLV = 3
-NM_PAN_ID_TLV = 1
-NM_PSKC_TLV = 4
-NM_SECURITY_POLICY_TLV = 12
-NM_STATE_TLV = 16
-NM_COMMISSIONER_SESSION_ID_TLV = 11
-NM_STEERING_DATA_TLV = 8
-NM_FUTURE_TLV = 130
-
-
-# Monkey-patch CoapTlvParser to parse MeshCoP TLVs in CoAP payload
-def meshcop_coap_tlv_parse(t, v, layer=None):
-    kvs = []
-    if t == NM_COMMISSIONER_SESSION_ID_TLV:
-        kvs.append(('comm_sess_id', str(struct.unpack('>H', v)[0])))
-    elif t == NM_STATE_TLV:
-        kvs.append(('state', str(v[0])))
-    elif t == NM_ACTIVE_TIMESTAMP_TLV:
-        kvs.append(('active_timestamp', str(struct.unpack('>Q', v)[0] >> 16)))
-    elif t == NM_CHANNEL_TLV:
-        kvs.append(('channel', str(struct.unpack('>H', v[1:3])[0])))
-    elif t == NM_CHANNEL_MASK_TLV:
-        kvs.append(('channel_mask', v.hex()))
-    elif t == NM_EXTENDED_PAN_ID_TLV:
-        kvs.append(('ext_pan_id', v.hex()))
-    elif t == NM_NETWORK_MESH_LOCAL_PREFIX_TLV:
-        kvs.append(('mesh_local_prefix', v.hex()))
-    elif t == NM_NETWORK_KEY_TLV:
-        kvs.append(('network_key', v.hex()))
-    elif t == NM_NETWORK_NAME_TLV:
-        kvs.append(('network_name', v.decode('utf-8')))
-    elif t == NM_PAN_ID_TLV:
-        kvs.append(('pan_id', hex(struct.unpack('>H', v)[0])))
-    elif t == NM_PSKC_TLV:
-        kvs.append(('pskc', v.hex()))
-    elif t == NM_SECURITY_POLICY_TLV:
-        kvs.append(('security_policy', v.hex()))
-    elif t == NM_STEERING_DATA_TLV:
-        kvs.append(('steering_data', v.hex()))
-    elif t == NM_FUTURE_TLV:
-        kvs.append(('future_tlv', v.hex()))
-    return kvs
-
 
 def verify(pv):
     # 9.2.4 Updating the Active Operational Dataset via Commissioner
@@ -107,35 +57,6 @@ def verify(pv):
     # Spec Reference                          | V1.1 Section | V1.3.0 Section
     # ----------------------------------------|--------------|---------------
     # Updating the Active Operational Dataset | 8.7.4        | 8.7.4
-
-    # Add MeshCoP TLVs to CoapTlvParser
-    old_parse = verify_utils.CoapTlvParser.parse
-
-    from pktverify import layer_fields
-    layer_fields._LAYER_FIELDS['coap.tlv.comm_sess_id'] = layer_fields._auto
-    layer_fields._LAYER_FIELDS['coap.tlv.state'] = layer_fields._auto
-    layer_fields._LAYER_FIELDS['coap.tlv.active_timestamp'] = layer_fields._auto
-    layer_fields._LAYER_FIELDS['coap.tlv.channel'] = layer_fields._auto
-    layer_fields._LAYER_FIELDS['coap.tlv.channel_mask'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.ext_pan_id'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.mesh_local_prefix'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.network_key'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.network_name'] = layer_fields._str
-    layer_fields._LAYER_FIELDS['coap.tlv.pan_id'] = layer_fields._auto
-    layer_fields._LAYER_FIELDS['coap.tlv.pskc'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.security_policy'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.steering_data'] = layer_fields._bytes
-    layer_fields._LAYER_FIELDS['coap.tlv.future_tlv'] = layer_fields._bytes
-
-    def new_parse(t, v, layer=None):
-        if t in (NM_COMMISSIONER_SESSION_ID_TLV, NM_STATE_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_TLV,
-                 NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_KEY_TLV,
-                 NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV, NM_STEERING_DATA_TLV,
-                 NM_FUTURE_TLV):
-            return meshcop_coap_tlv_parse(t, v, layer=layer)
-        return old_parse(t, v, layer=layer)
-
-    verify_utils.CoapTlvParser.parse = staticmethod(new_parse)
 
     pkts = pv.pkts
     pv.summary.show()
@@ -166,13 +87,13 @@ def verify(pv):
     print("Step 2: Commissioner sends MGMT_ACTIVE_SET.req to Leader.")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_CHANNEL_MASK_TLV,
-            NM_EXTENDED_PAN_ID_TLV,
-            NM_NETWORK_NAME_TLV,
-            NM_PSKC_TLV,
-            NM_SECURITY_POLICY_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_CHANNEL_MASK_TLV,
+            consts.NM_EXTENDED_PAN_ID_TLV,
+            consts.NM_NETWORK_NAME_TLV,
+            consts.NM_PSKC_TLV,
+            consts.NM_SECURITY_POLICY_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 101 and
                p.coap.tlv.channel_mask == '0004001fffe0' and
@@ -218,16 +139,16 @@ def verify(pv):
     print("Step 5: Leader sends MGMT_ACTIVE_GET.rsp to Commissioner.")
     pkts.filter_coap_ack(consts.MGMT_ACTIVE_GET_URI).\
         filter(lambda p: {
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_CHANNEL_TLV,
-            NM_CHANNEL_MASK_TLV,
-            NM_EXTENDED_PAN_ID_TLV,
-            NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
-            NM_NETWORK_KEY_TLV,
-            NM_NETWORK_NAME_TLV,
-            NM_PAN_ID_TLV,
-            NM_PSKC_TLV,
-            NM_SECURITY_POLICY_TLV
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_CHANNEL_TLV,
+            consts.NM_CHANNEL_MASK_TLV,
+            consts.NM_EXTENDED_PAN_ID_TLV,
+            consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
+            consts.NM_NETWORK_KEY_TLV,
+            consts.NM_NETWORK_NAME_TLV,
+            consts.NM_PAN_ID_TLV,
+            consts.NM_PSKC_TLV,
+            consts.NM_SECURITY_POLICY_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 101 and
                p.coap.tlv.channel_mask == '0004001fffe0' and
@@ -253,11 +174,11 @@ def verify(pv):
     print("Step 6: Commissioner sends MGMT_ACTIVE_SET.req with Channel TLV (invalid for active set).")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_CHANNEL_TLV,
-            NM_EXTENDED_PAN_ID_TLV,
-            NM_NETWORK_NAME_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_CHANNEL_TLV,
+            consts.NM_EXTENDED_PAN_ID_TLV,
+            consts.NM_NETWORK_NAME_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 102 and
                p.coap.tlv.channel == 12 and
@@ -292,12 +213,12 @@ def verify(pv):
     print("Step 8: Commissioner sends MGMT_ACTIVE_SET.req with Mesh-Local Prefix TLV (invalid for active set).")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_CHANNEL_MASK_TLV,
-            NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
-            NM_NETWORK_NAME_TLV,
-            NM_PSKC_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_CHANNEL_MASK_TLV,
+            consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
+            consts.NM_NETWORK_NAME_TLV,
+            consts.NM_PSKC_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 103 and
                p.coap.tlv.channel_mask == '0004001ffee0' and
@@ -333,10 +254,10 @@ def verify(pv):
     print("Step 10: Commissioner sends MGMT_ACTIVE_SET.req with Network Key TLV (invalid for active set).")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_NETWORK_KEY_TLV,
-            NM_SECURITY_POLICY_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_NETWORK_KEY_TLV,
+            consts.NM_SECURITY_POLICY_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 104 and
                p.coap.tlv.network_key == '00112233445566778899aabbccddeeff' and
@@ -368,9 +289,9 @@ def verify(pv):
     print("Step 12: Commissioner sends MGMT_ACTIVE_SET.req with PAN ID TLV (invalid for active set).")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_PAN_ID_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_PAN_ID_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 105 and
                p.coap.tlv.pan_id == 0xafce).\
@@ -401,13 +322,12 @@ def verify(pv):
     print("Step 14: Commissioner sends MGMT_ACTIVE_SET.req with invalid Session ID.")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 106 and
                p.coap.tlv.comm_sess_id == 65535).\
         must_next()
-
     # Step 15: Leader
     # - Description: Automatically sends MGMT_ACTIVE_SET.rsp to the Commissioner.
     # - Pass Criteria: For DUT = Leader: The DUT MUST send MGMT_ACTIVE_SET.rsp to the Commissioner with the following
@@ -433,8 +353,8 @@ def verify(pv):
     print("Step 16: Commissioner sends MGMT_ACTIVE_SET.req with old Active Timestamp.")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 101).\
         must_next()
@@ -465,9 +385,9 @@ def verify(pv):
     print("Step 18: Commissioner sends MGMT_ACTIVE_SET.req with unexpected Steering Data TLV.")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_STEERING_DATA_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_STEERING_DATA_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 107 and
                p.coap.tlv.steering_data == '113320440000').\
@@ -499,9 +419,9 @@ def verify(pv):
     print("Step 20: Commissioner sends MGMT_ACTIVE_SET.req with Future TLV.")
     pkts.filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
         filter(lambda p: {
-            NM_COMMISSIONER_SESSION_ID_TLV,
-            NM_ACTIVE_TIMESTAMP_TLV,
-            NM_FUTURE_TLV
+            consts.NM_COMMISSIONER_SESSION_ID_TLV,
+            consts.NM_ACTIVE_TIMESTAMP_TLV,
+            consts.NM_FUTURE_TLV
         } <= set(p.coap.tlv.type) and
                p.coap.tlv.active_timestamp == 108 and
                p.coap.tlv.future_tlv == 'aa55').\
