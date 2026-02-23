@@ -115,7 +115,7 @@ exit:
         break;
 
     default:
-        LogWarn("Unexpected error %s requesting data poll", ErrorToString(error));
+        LogWarnOnError(error, "request data poll tx");
         ScheduleNextPoll(kRecalculatePollPeriod);
         break;
     }
@@ -194,6 +194,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
+    uint8_t      maxRetxAttempts;
 
     VerifyOrExit(mEnabled);
 
@@ -244,18 +245,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         mPollTxFailureCounter++;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts);
+        maxRetxAttempts = aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts;
 #else
-        LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                kMaxPollRetxAttempts);
+        maxRetxAttempts = kMaxPollRetxAttempts;
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (mPollTxFailureCounter < (aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
-#else
-        if (mPollTxFailureCounter < kMaxPollRetxAttempts)
-#endif
+        LogInfoOnError(aError, "send data poll, retx:%u/%u", mPollTxFailureCounter, maxRetxAttempts);
+
+        if (mPollTxFailureCounter < maxRetxAttempts)
         {
             if (!mRetxMode)
             {

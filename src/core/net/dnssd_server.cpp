@@ -1653,7 +1653,7 @@ void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error
     else
     {
         mCounters.mUpstreamDnsCounters.mFailures++;
-        LogWarn("Upstream query transaction %d closed: %s.", index, ErrorToString(aError));
+        LogWarnOnError(aError, "handle upstream query transaction %d", index);
     }
     aTxn.Reset();
 }

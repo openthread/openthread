@@ -384,8 +384,7 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 
     if (error != kErrorNone)
     {
-        LogInfo("Failed to connect to server %s: %s", aServerSockAddr.GetAddress().ToString().AsCString(),
-                ErrorToString(error));
+        LogInfoOnError(error, "connect to server %s", aServerSockAddr.GetAddress().ToString().AsCString());
         IgnoreError(mSocket.Close());
         ExitNow();
     }
@@ -1049,7 +1048,7 @@ exit:
         // continue to retry using the `mRetryWaitInterval` (which keeps
         // growing on each failure).
 
-        LogInfo("Failed to send update: %s", ErrorToString(error));
+        LogInfoOnError(error, "send update");
 
         SetState(kStateToRetry);
 
@@ -1928,10 +1927,7 @@ void Client::ProcessResponse(Message &aMessage)
     UpdateState();
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to process response %s", ErrorToString(error));
-    }
+    LogInfoOnError(error, "process response");
 }
 
 void Client::SelectNewMessageId(void)

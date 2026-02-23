@@ -956,10 +956,7 @@ void AdvertisingProxy::RegisterHost(Host &aHost)
     Get<Dnssd>().RegisterHost(hostInfo, aHost.mAdvId, HandleRegistered);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s registering host '%s'", ErrorToString(error), hostName);
-    }
+    LogWarnOnError(error, "register host '%s'", hostName);
 }
 
 void AdvertisingProxy::UnregisterHost(Host &aHost)
@@ -1030,11 +1027,7 @@ void AdvertisingProxy::RegisterService(Service &aService)
     Get<Dnssd>().RegisterService(serviceInfo, aService.mAdvId, HandleRegistered);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s registering service '%s' '%s'", ErrorToString(error), aService.GetInstanceLabel(),
-                serviceName);
-    }
+    LogWarnOnError(error, "register service '%s' '%s'", aService.GetInstanceLabel(), serviceName);
 }
 
 void AdvertisingProxy::UnregisterService(Service &aService)

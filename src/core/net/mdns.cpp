@@ -4271,12 +4271,7 @@ Error Core::RxMessage::Init(Instance          &aInstance,
     mMessagePtr = aMessagePtr.PassOwnership();
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to parse message from %s, error:%s", aSenderAddress.GetAddress().ToString().AsCString(),
-                ErrorToString(error));
-    }
-
+    LogInfoOnError(error, "parse message from %s", aSenderAddress.GetAddress().ToString().AsCString());
     return error;
 }
 

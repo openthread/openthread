@@ -1876,7 +1876,7 @@ void RxRaTracker::RsSender::HandleTimer(void)
     }
     else
     {
-        LogCrit("RsSender: Failed to send RS %u/%u: %s", mTxCount + 1, kMaxTxCount, ErrorToString(error));
+        LogCritOnError(error, "send RS %u/%u", mTxCount + 1, kMaxTxCount);
 
         // Note that `mTxCount` is intentionally not incremented
         // if the tx fails.

@@ -1345,9 +1345,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
             if (requiredRadios.Contains(radio) && (aError != kErrorNone))
             {
-                LogDebg("Frame tx failed on required radio link %s with error %s", RadioTypeToString(radio),
-                        ErrorToString(aError));
-
+                LogDebgOnError(aError, "tx frame on required radio link %s", RadioTypeToString(radio));
                 mTxError = aError;
             }
         }

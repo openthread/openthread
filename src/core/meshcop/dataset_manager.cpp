@@ -183,12 +183,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<ChannelTlv>().GetChannel());
 
             error = Get<Mac::Mac>().SetPanChannel(channel);
-
-            if (error != kErrorNone)
-            {
-                LogCrit("Failed to set PAN channel to %u when applying dataset: %s", channel, ErrorToString(error));
-            }
-
+            LogCritOnError(error, "set PAN channel to %u when applying dataset", channel);
             break;
         }
 
@@ -198,10 +193,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
             error           = Get<Mac::Mac>().SetWakeupChannel(channel);
 
-            if (error != kErrorNone)
-            {
-                LogCrit("Failed to set wake-up channel to %u when applying dataset: %s", channel, ErrorToString(error));
-            }
+            LogCritOnError(error, "set wake-up channel to %u when applying dataset", channel);
 #endif
             break;
         }

@@ -891,15 +891,11 @@ void CoapBase::ProcessReceivedRequest(Msg &aRxMsg)
     error = kErrorNotFound;
 
 exit:
+    LogInfoOnError(error, "process request");
 
-    if (error != kErrorNone)
+    if (error == kErrorNotFound && !aRxMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        LogInfo("Failed to process request: %s", ErrorToString(error));
-
-        if (error == kErrorNotFound && !aRxMsg.mMessageInfo.GetSockAddr().IsMulticast())
-        {
-            IgnoreError(SendNotFound(aRxMsg));
-        }
+        IgnoreError(SendNotFound(aRxMsg));
     }
 }
 

@@ -2856,13 +2856,13 @@ void Mle::LogError(MessageAction aAction, MessageType aType, Error aError)
     {
         if (aAction == kMessageReceive && (aError == kErrorDrop || aError == kErrorNoRoute))
         {
-            LogInfo("Failed to %s %s%s: %s", "process", MessageTypeToString(aType),
-                    MessageTypeActionToSuffixString(aType, aAction), ErrorToString(aError));
+            LogInfoOnError(aError, "%s %s%s", "process", MessageTypeToString(aType),
+                           MessageTypeActionToSuffixString(aType, aAction));
         }
         else
         {
-            LogWarn("Failed to %s %s%s: %s", aAction == kMessageSend ? "send" : "process", MessageTypeToString(aType),
-                    MessageTypeActionToSuffixString(aType, aAction), ErrorToString(aError));
+            LogWarnOnError(aError, "%s %s%s", aAction == kMessageSend ? "send" : "process", MessageTypeToString(aType),
+                           MessageTypeActionToSuffixString(aType, aAction));
         }
     }
 }

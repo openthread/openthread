@@ -591,7 +591,7 @@ exit:
         // mSendMessage is most likely not initialized; so appending a GeneralError status TLV to mSendMessage would
         // fail also. In this case it's not possible to recover TLV integrity and client/server sync.
         // It's handled by logging the error and (necessarily) closing the secure connection.
-        LogCrit("HandleTlsReceive: %s", ErrorToString(error));
+        LogCritOnError(error, "HandleTlsReceive");
         Disconnect();
     }
 }

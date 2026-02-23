@@ -1947,8 +1947,8 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         }
         else
         {
-            LogWarn("Error %s adding IPv6 address %s to child 0x%04x", ErrorToString(error),
-                    address.ToString().AsCString(), aChild.GetRloc16());
+            LogWarnOnError(error, "add IPv6 address %s to child 0x%04x", address.ToString().AsCString(),
+                           aChild.GetRloc16());
         }
 
         if (address.IsMulticast())

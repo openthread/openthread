@@ -559,8 +559,9 @@ exit:
     if (error != kErrorNone)
     {
         Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
-        LogWarn("Failed to send RA on %s: %s", Get<InfraIf>().ToString().AsCString(), ErrorToString(error));
     }
+
+    LogWarnOnError(error, "send RA on %s", Get<InfraIf>().ToString().AsCString());
 }
 
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
@@ -993,20 +994,14 @@ Error RoutingManager::OmrPrefixManager::AddOrUpdateLocalInNetData(void)
     config.mDefaultRoute = mDefaultRoute;
     config.mPreference   = mLocalPrefix.GetPreference();
 
-    error = Get<NetworkData::Local>().AddOnMeshPrefix(config);
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to %s %s in Thread Network Data: %s", !mIsLocalAddedInNetData ? "add" : "update",
-                LocalToString().AsCString(), ErrorToString(error));
-        ExitNow();
-    }
-
+    SuccessOrExit(error = Get<NetworkData::Local>().AddOnMeshPrefix(config));
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
     LogInfo("%s %s in Thread Network Data", !mIsLocalAddedInNetData ? "Added" : "Updated", LocalToString().AsCString());
 
 exit:
+    LogWarnOnError(error, "%s %s in Thread Network Data", !mIsLocalAddedInNetData ? "add" : "update",
+                   LocalToString().AsCString());
     return error;
 }
 
@@ -1018,10 +1013,7 @@ void RoutingManager::OmrPrefixManager::RemoveLocalFromNetData(void)
 
     error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalPrefix.GetPrefix());
 
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to remove %s from Thread Network Data: %s", LocalToString().AsCString(), ErrorToString(error));
-    }
+    LogWarnOnError(error, "remove %s from Thread Network Data", LocalToString().AsCString());
 
     mIsLocalAddedInNetData = false;
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
@@ -2387,8 +2379,9 @@ void RoutingManager::Nat64PrefixManager::Discover(void)
     {
         if (error != kErrorNotImplemented)
         {
-            LogWarn("Failed to discover infraif NAT64 prefix: %s", ErrorToString(error));
+            LogWarnOnError(error, "discover infraif NAT64 prefix");
         }
+
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 }

@@ -747,12 +747,8 @@ void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
     LogInfo("Sent %s for target %s", UriToString<kUriAddressError>(), aTarget.ToString().AsCString());
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        FreeMessage(message);
-        LogInfo("Failed to send %s: %s", UriToString<kUriAddressError>(), ErrorToString(error));
-    }
+    FreeMessageOnError(message, error);
+    LogInfoOnError(error, "send %s", UriToString<kUriAddressError>());
 }
 
 #endif // OPENTHREAD_FTD
@@ -829,11 +825,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
 #endif // OPENTHREAD_FTD
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s when processing %s", ErrorToString(error), UriToString<kUriAddressError>());
-    }
+    LogWarnOnError(error, "process %s", UriToString<kUriAddressError>());
 }
 
 #if OPENTHREAD_FTD

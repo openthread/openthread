@@ -315,8 +315,7 @@ void PeerDiscoverer::HandleRegisterDone(Error aError)
     }
     else
     {
-        LogInfo("Failed to register DNS-SD service with name:%s, Error:%s", mServiceName.GetName(),
-                ErrorToString(aError));
+        LogInfoOnError(aError, "register DNS-SD service with name:%s", mServiceName.GetName());
         UnregisterService();
 
         // Generate a new name (appending a suffix index to the name)

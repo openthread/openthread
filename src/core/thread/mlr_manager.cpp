@@ -408,7 +408,7 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
     LogInfo("Sent MLR.req: addressNum=%d", aAddressNum);
 
 exit:
-    LogInfo("SendMlrMessage(): %s", ErrorToString(error));
+    LogInfoOnError(error, "SendMlrMessage()");
     FreeMessageOnError(message, error);
     return error;
 }

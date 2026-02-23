@@ -133,10 +133,7 @@ void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, co
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogDebg("Dropped ICMPv6 message: %s", ErrorToString(error));
-    }
+    LogDebgOnError(error, "process ICMPv6 msg");
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -158,10 +155,7 @@ void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPre
     Get<RoutingManager>().HandlePlatformDiscoveredNat64PrefixDone(aPrefix);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogDebg("Failed to handle discovered NAT64 synthetic addresses: %s", ErrorToString(error));
-    }
+    LogDebgOnError(error, "handle discovered NAT64 synthetic addresses");
 }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -229,10 +223,7 @@ void InfraIf::HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex)
     Get<Dhcp6PdClient>().HandleReceived(aMessage);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogDebg("Dropped DHCPv6 message: %s", ErrorToString(error));
-    }
+    LogDebgOnError(error, "process DHCPv6 msg");
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE

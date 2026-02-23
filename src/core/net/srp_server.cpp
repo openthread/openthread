@@ -1573,7 +1573,7 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
     }
     else
     {
-        LogInfo("Error %s processing received SRP update", ErrorToString(aError));
+        LogInfoOnError(aError, "process received SRP update");
     }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
