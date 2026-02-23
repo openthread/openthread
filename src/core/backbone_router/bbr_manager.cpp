@@ -631,12 +631,10 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     Error            error   = kErrorNone;
     Coap::Message   *message = nullptr;
     Ip6::MessageInfo messageInfo;
-    bool             proactive = aDstAddr.IsMulticast();
 
     VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->Init(proactive ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost,
-                                        kUriBackboneAnswer));
+    SuccessOrExit(error = message->InitAsPost(aDstAddr, kUriBackboneAnswer));
     SuccessOrExit(error = message->AppendPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
@@ -662,8 +660,8 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     error = mBackboneTmfAgent.SendMessage(*message, messageInfo);
 
 exit:
-    LogInfo("Send %s for %s (rloc16=%04x): %s", proactive ? "PRO_BB.ntf" : "BB.ans", aDua.ToString().AsCString(),
-            aSrcRloc16, ErrorToString(error));
+    LogInfo("Send %s for %s (rloc16=%04x): %s", aDstAddr.IsMulticast() ? "PRO_BB.ntf" : "BB.ans",
+            aDua.ToString().AsCString(), aSrcRloc16, ErrorToString(error));
 
     FreeMessageOnError(message, error);
     return error;
