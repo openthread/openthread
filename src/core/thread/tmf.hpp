@@ -108,11 +108,6 @@ public:
     }
 
     /**
-     * Sets the local socket port to TMF port.
-     */
-    void SetSockPortToTmf(void) { SetSockPort(kUdpPort); }
-
-    /**
      * Sets the local socket address to mesh-local RLOC address.
      */
     void SetSockAddrToRloc(void);

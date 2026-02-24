@@ -520,7 +520,6 @@ Error Manager::EvictActiveCommissioner(void)
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, sessionId));
 
     messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    messageInfo.SetSockPortToTmf();
 
     error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo);
 
@@ -722,7 +721,6 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Msg &aMsg, Uri aUri)
     SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 
     messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    messageInfo.SetSockPortToTmf();
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo,
                                                         HandleLeaderResponseToFwdTmf, forwardContext.Get()));
@@ -1039,7 +1037,6 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Msg &aMsg)
     SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(joinerRouterRloc);
-    messageInfo.SetSockPortToTmf();
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo));
 
