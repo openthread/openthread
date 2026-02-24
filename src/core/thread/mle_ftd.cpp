@@ -3264,7 +3264,7 @@ Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
 
     VerifyOrExit(!mAddressSolicitPending);
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressSolicit);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriAddressSolicit);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadExtMacAddressTlv>(*message, Get<Mac::Mac>().GetExtAddress()));
@@ -3298,7 +3298,7 @@ void Mle::SendAddressRelease(void)
     Tmf::MessageInfo messageInfo(GetInstance());
     Coap::Message   *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressRelease);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriAddressRelease);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(mRouterId)));
@@ -3576,7 +3576,7 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Msg &aMsg)
 
     // Prepare and send response
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    response = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
     VerifyOrExit(response != nullptr);
 
     SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*response, info.mResponse));

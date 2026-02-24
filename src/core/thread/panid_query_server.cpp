@@ -93,7 +93,7 @@ void PanIdQueryServer::SendConflict(void)
     Tmf::MessageInfo messageInfo(GetInstance());
     Coap::Message   *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriPanIdConflict);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriPanIdConflict);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*message, mChannelMask));

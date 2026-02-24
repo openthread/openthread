@@ -187,7 +187,7 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
     Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriServerData);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriServerData);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aNetworkData != nullptr)

@@ -380,7 +380,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewPriorityConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitPriorityConfirmablePostMessage(Uri aUri);
 
     /**
      * Allocates and initializes a new CoAP Confirmable Post message with normal priority level.
@@ -394,11 +394,10 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitConfirmablePostMessage(Uri aUri);
 
     /**
-     * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority
-     * level.
+     * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority level.
      *
      * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI and a randomly
      * generated token (of default length). This method also sets the payload marker (calling `AppendPayloadMarker()`).
@@ -409,7 +408,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewPriorityNonConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitPriorityNonConfirmablePostMessage(Uri aUri);
 
     /**
      * Allocates and initializes a new CoAP Non-confirmable Post message with normal priority level.
@@ -423,11 +422,11 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewNonConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitNonConfirmablePostMessage(Uri aUri);
 
     /**
-     * Allocates and initializes a new CoAP response message with Network Control priority level for a
-     * given request message.
+     * Allocates and initializes a new CoAP response message with Network Control priority level for a given request
+     * message.
      *
      * The CoAP header is initialized as `kTypeAck` with `kCodeChanged`. The token and message ID is copied from
      * @p aRequest. This method also sets the payload marker (calling `AppendPayloadMarker()`). Even if message has
@@ -436,11 +435,10 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewPriorityResponseMessage(const Message &aRequest);
+    Message *AllocateAndInitPriorityResponseFor(const Message &aRequest);
 
     /**
-     * Allocates and initializes a new CoAP response message with regular priority level for a given
-     * request message.
+     * Allocates and initializes a new CoAP response message with regular priority level for a given request message.
      *
      * The CoAP header is initialized as `kTypeAck` with `kCodeChanged`. The token and message ID is copied from
      * @p aRequest. This method also sets the payload marker (calling `AppendPayloadMarker()`). Even if message has
@@ -449,7 +447,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewResponseMessage(const Message &aRequest);
+    Message *AllocateAndInitResponseFor(const Message &aRequest);
 
     /**
      * Sends a CoAP message with custom transmission parameters.

@@ -54,7 +54,7 @@ Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, LocatorCallbac
     VerifyOrExit((aCallback != nullptr) && Get<Mle::Mle>().IsAnycastLocator(aAnycastAddress),
                  error = kErrorInvalidArgs);
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriAnycastLocate);
+    message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriAnycastLocate);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (mCallback.IsSet())
@@ -104,7 +104,7 @@ template <> void AnycastLocator::HandleTmf<kUriAnycastLocate>(Coap::Msg &aMsg)
 
     VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
-    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr);
 
     SuccessOrExit(Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocalEid().GetIid()));

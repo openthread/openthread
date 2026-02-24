@@ -605,7 +605,7 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
     AnswerTlv        answerTlv;
     uint16_t         queryId;
 
-    answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    answer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(answer != nullptr, error = kErrorNoBufs);
 
     IgnoreError(answer->SetPriority(aRequest.GetPriority()));
@@ -640,7 +640,7 @@ Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 
     Error error = kErrorNone;
 
-    aAnswer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    aAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
     IgnoreError(aAnswer->SetPriority(aInfo.mPriority));
 
@@ -941,7 +941,7 @@ template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Msg &aMsg)
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    response = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    response = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     IgnoreError(response->SetPriority(aMsg.mMessage.GetPriority()));
@@ -1059,12 +1059,12 @@ Error Client::SendCommand(Uri                   aUri,
     switch (aUri)
     {
     case kUriDiagnosticGetQuery:
-        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(aUri);
+        message = Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(aUri);
         break;
 
     case kUriDiagnosticGetRequest:
     case kUriDiagnosticReset:
-        message = Get<Tmf::Agent>().NewConfirmablePostMessage(aUri);
+        message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(aUri);
         break;
 
     default:

@@ -164,7 +164,7 @@ void TestBorderAgent(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send `Commissioner Petition` TMF command to become full commissioner");
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -194,7 +194,7 @@ void TestBorderAgent(void)
     VerifyOrQuit(sessionInfo.mIsCommissioner);
     VerifyOrQuit(iter.GetNextSessionInfo(sessionInfo) == kErrorNotFound);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
@@ -224,7 +224,7 @@ void TestBorderAgent(void)
 
     VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -968,7 +968,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1000,7 +1000,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1009,7 +1009,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriActiveGet);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriActiveGet);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1041,7 +1041,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1050,7 +1050,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriActiveGet);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriActiveGet);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1059,7 +1059,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriPendingGet);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriPendingGet);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1090,7 +1090,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1099,7 +1099,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_PETITIONED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriActiveGet);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriActiveGet);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1108,7 +1108,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_RETRIEVED_ACTIVE_DATASET);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriPendingGet);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriPendingGet);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1139,7 +1139,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
     epskcEvent = GetNewestEpskcEvent(node0);
     VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_CONNECTED);
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
@@ -1154,7 +1154,8 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
         {
             break;
         }
-        message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
+        message =
+            node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
         VerifyOrQuit(message != nullptr);
         SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
@@ -1165,7 +1166,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
         VerifyOrQuit(epskcEvent == OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_KEEP_ALIVE);
     }
 
-    message = node1.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerKeepAlive);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));

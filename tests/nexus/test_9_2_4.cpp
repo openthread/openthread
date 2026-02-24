@@ -338,7 +338,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -397,7 +397,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveGet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveGet);
         VerifyOrQuit(message != nullptr);
 
         Tmf::MessageInfo messageInfo(commissioner.GetInstance());
@@ -444,7 +444,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -510,7 +510,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -581,7 +581,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -649,7 +649,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -713,7 +713,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, kInvalidSessionId));
@@ -776,7 +776,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -840,7 +840,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -906,7 +906,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));

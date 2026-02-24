@@ -138,7 +138,7 @@ void Test9_2_2(void)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriCommissionerSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet);
         VerifyOrQuit(message != nullptr);
 
         AppendSteeringDataTlv(*message);
@@ -183,7 +183,7 @@ void Test9_2_2(void)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriCommissionerSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -230,7 +230,7 @@ void Test9_2_2(void)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriCommissionerSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -265,7 +265,7 @@ void Test9_2_2(void)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriCommissionerSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
@@ -302,7 +302,7 @@ void Test9_2_2(void)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriCommissionerSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, kInvalidSessionId));
@@ -337,7 +337,7 @@ void Test9_2_2(void)
 
     {
         Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriCommissionerSet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
