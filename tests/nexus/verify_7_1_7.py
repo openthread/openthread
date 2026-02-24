@@ -85,6 +85,7 @@ def verify(pv):
     #   - CoAP Payload: Thread Network Data TLV.
     # - Pass Criteria: N/A.
     print("Step 2: Router_1 sends a CoAP Server Data Notification message.")
+    step2_index = pkts.index
     pkts.filter_coap_request(consts.SVR_DATA_URI).\
       must_next()
 
@@ -105,10 +106,18 @@ def verify(pv):
     #   - The DUT MUST send a CoAP ACK frame (2.04 Changed) to Router_1.
     #   - The DUT MUST send a CoAP ACK frame (2.04 Changed) to Router_2.
     print("Step 4: Leader (DUT) sends a CoAP ACK frame to Router_1 and Router_2.")
-    pkts.filter_coap_ack(consts.SVR_DATA_URI).\
-      must_next()
-    pkts.filter_coap_ack(consts.SVR_DATA_URI).\
-      must_next()
+    # Check for an ACK to Router_1 and Router_2 independently, as their order is not guaranteed.
+    # We start searching from step2_index to ensure we find all ACKs even if interleaved with requests.
+    with pkts.save_index():
+        pkts.index = step2_index
+        pkts.copy().\
+            filter_wpan_dst16(pv.vars['ROUTER_1_RLOC16']).\
+            filter_coap_ack(consts.SVR_DATA_URI).\
+            must_next()
+        pkts.copy().\
+            filter_wpan_dst16(pv.vars['ROUTER_2_RLOC16']).\
+            filter_coap_ack(consts.SVR_DATA_URI).\
+            must_next()
 
     # Step 5: Leader (DUT)
     # - Description: Automatically sends new network data to neighbors and rx-on-when idle Children (MED_1).
@@ -128,14 +137,14 @@ def verify(pv):
     #       - Stable Flag set.
     print("Step 5: Leader (DUT) multicasts a MLE Data Response with new network data.")
     pkts.filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p: {
-        consts.SOURCE_ADDRESS_TLV,
-        consts.LEADER_DATA_TLV,
-        consts.NETWORK_DATA_TLV
-      } <= set(p.mle.tlv.type)).\
-      filter(lambda p: PREFIX_1 in set(p.thread_nwd.tlv.prefix)).\
-      must_next()
+        filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+        filter(lambda p: {
+            consts.SOURCE_ADDRESS_TLV,
+            consts.LEADER_DATA_TLV,
+            consts.NETWORK_DATA_TLV
+        } <= set(p.mle.tlv.type)).\
+        filter(lambda p: PREFIX_1 in set(p.thread_nwd.tlv.prefix)).\
+        must_next()
 
     # Step 6: Leader (DUT)
     # - Description: Automatically sends notification of new network data to SED_1 via a unicast MLE Child Update Request
@@ -156,15 +165,15 @@ def verify(pv):
     print("Step 6: Leader (DUT) sends notification of new network data to SED_1.")
     with pkts.save_index():
         pkts.filter_wpan_dst64(SED_1).\
-          filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
-          filter(lambda p: {
-            consts.SOURCE_ADDRESS_TLV,
-            consts.LEADER_DATA_TLV,
-            consts.NETWORK_DATA_TLV,
-            consts.ACTIVE_TIMESTAMP_TLV
-          } <= set(p.mle.tlv.type)).\
-          filter(lambda p: PREFIX_1 in set(p.thread_nwd.tlv.prefix)).\
-          must_next()
+            filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
+            filter(lambda p: {
+                consts.SOURCE_ADDRESS_TLV,
+                consts.LEADER_DATA_TLV,
+                consts.NETWORK_DATA_TLV,
+                consts.ACTIVE_TIMESTAMP_TLV
+            } <= set(p.mle.tlv.type)).\
+            filter(lambda p: PREFIX_1 in set(p.thread_nwd.tlv.prefix)).\
+            must_next()
 
     # Step 7: Router_2
     # - Description: Harness removes connectivity between Router_2 and the Leader (DUT), and waits ~50s.
@@ -192,14 +201,16 @@ def verify(pv):
     # - Pass Criteria: N/A.
     print("Step 10: Router_2 reattaches and sends a CoAP Server Data Notification.")
     pkts.filter_coap_request(consts.SVR_DATA_URI).\
-      must_next()
+        must_next()
 
     # Step 11: Leader (DUT)
     # - Description: Automatically sends a CoAP ACK frame to Router_2.
     # - Pass Criteria: The DUT MUST send a CoAP ACK frame (2.04 Changed) to Router_2.
     print("Step 11: Leader (DUT) sends a CoAP ACK frame to Router_2.")
-    pkts.filter_coap_ack(consts.SVR_DATA_URI).\
-      must_next()
+    with pkts.save_index():
+        pkts.filter_wpan_dst16(pv.vars['ROUTER_2_RLOC16']).\
+            filter_coap_ack(consts.SVR_DATA_URI).\
+            must_next()
 
     # Step 12: Leader (DUT)
     # - Description: Automatically sends new updated network data to neighbors and rx-on-when idle Children (MED_1).
@@ -222,10 +233,12 @@ def verify(pv):
     #       - 6LoWPAN ID sub-TLV.
     #       - Stable Flag set.
     print("Step 12: Leader (DUT) multicasts updated network data.")
-    pkts.filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
-      must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_LLANMA().\
+        filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+        filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
+        filter(lambda p: len(p.thread_nwd.tlv.border_router_16) == 2).\
+        must_next()
 
     # Step 13: Leader (DUT)
     # - Description: Automatically sends notification of new network data to SED_1 via a unicast MLE Child Update Request
@@ -253,10 +266,12 @@ def verify(pv):
     #   - Active Timestamp TLV.
     print("Step 13: Leader (DUT) sends notification of new network data to SED_1.")
     with pkts.save_index():
-        pkts.filter_wpan_dst64(SED_1).\
-          filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
-          filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
-          must_next()
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(SED_1).\
+            filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
+            filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
+            filter(lambda p: len(p.thread_nwd.tlv.border_router_16) == 2).\
+            must_next()
 
     # Step 14: Router_1, SED_1
     # - Description: Harness verifies connectivity by sending ICMPv6 Echo Requests from Router_1 and SED_1 to the DUT
@@ -286,14 +301,16 @@ def verify(pv):
     # - Pass Criteria: N/A.
     print("Step 15: Router_2 sends a CoAP Server Data Notification with empty payload.")
     pkts.filter_coap_request(consts.SVR_DATA_URI).\
-      must_next()
+        must_next()
 
     # Step 16: Leader (DUT)
     # - Description: Automatically sends a CoAP Response to Router_2.
     # - Pass Criteria: The DUT MUST send a CoAP response (2.04 Changed) to Router_2.
     print("Step 16: Leader (DUT) sends a CoAP Response to Router_2.")
-    pkts.filter_coap_ack(consts.SVR_DATA_URI).\
-      must_next()
+    with pkts.save_index():
+        pkts.filter_wpan_dst16(pv.vars['ROUTER_2_RLOC16']).\
+            filter_coap_ack(consts.SVR_DATA_URI).\
+            must_next()
 
     # Step 17: Leader (DUT)
     # - Description: Automatically sends new updated network data to neighbors and rx-on-when idle Children (MED_1).
@@ -316,10 +333,12 @@ def verify(pv):
     #       - Stable Flag set.
     #       - compression flag set to 0.
     print("Step 17: Leader (DUT) multicasts updated network data.")
-    pkts.filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
-      must_next()
+    pkts.filter_wpan_src64(LEADER).\
+        filter_LLANMA().\
+        filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+        filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
+        filter(lambda p: len(p.thread_nwd.tlv.border_router_16) == 1).\
+        must_next()
 
     # Step 18: Leader (DUT)
     # - Description: Automatically sends notification of new network data to SED_1 via a unicast MLE Child Update Request
@@ -345,10 +364,12 @@ def verify(pv):
     #   - Active Timestamp TLV.
     print("Step 18: Leader (DUT) sends notification of new network data to SED_1.")
     with pkts.save_index():
-        pkts.filter_wpan_dst64(SED_1).\
-          filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
-          filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
-          must_next()
+        pkts.filter_wpan_src64(LEADER).\
+            filter_wpan_dst64(SED_1).\
+            filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
+            filter(lambda p: {PREFIX_1, PREFIX_2} <= set(p.thread_nwd.tlv.prefix)).\
+            filter(lambda p: len(p.thread_nwd.tlv.border_router_16) == 1).\
+            must_next()
 
     # Step 19: End of test
     # - Description: End of test.

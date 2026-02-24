@@ -69,6 +69,11 @@ static const char kPrefix1[] = "2001:db8:1::/64";
  */
 static const char kPrefix2[] = "2001:db8:2::/64";
 
+/**
+ * SED poll period, in milliseconds.
+ */
+static constexpr uint32_t kSedPollPeriod = 500;
+
 void Test7_1_7(const char *aJsonFile)
 {
     /**
@@ -138,6 +143,8 @@ void Test7_1_7(const char *aJsonFile)
     router2.Join(leader, Node::kAsFtd);
     med1.Join(leader, Node::kAsMed);
     sed1.Join(leader, Node::kAsSed);
+
+    SuccessOrQuit(sed1.Get<DataPollSender>().SetExternalPollPeriod(kSedPollPeriod));
 
     nexus.AdvanceTime(kAttachToRouterTime);
 
@@ -492,6 +499,8 @@ void Test7_1_7(const char *aJsonFile)
      *       - Stable Flag set.
      *       - compression flag set to 0.
      */
+
+    nexus.AdvanceTime(kStabilizationTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 18: Leader (DUT)");
