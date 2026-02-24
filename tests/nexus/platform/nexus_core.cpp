@@ -70,6 +70,7 @@ void Core::SaveTestInfo(const char *aFilename)
     const char *dot;
     const char *version;
     int         testcaseLen;
+    Node       *leaderNode = nullptr;
 
     VerifyOrExit(file != nullptr);
 
@@ -109,23 +110,28 @@ void Core::SaveTestInfo(const char *aFilename)
 
     if (!mNodes.IsEmpty())
     {
+        leaderNode = mNodes.GetTail();
         NetworkKey                          networkKey;
-        Node                               &node = *mNodes.GetHead();
         String<OT_NETWORK_KEY_SIZE * 2 + 1> keyString;
 
-        node.Get<KeyManager>().GetNetworkKey(networkKey);
+        for (Node &node : mNodes)
+        {
+            if (node.Get<Mle::Mle>().IsLeader())
+            {
+                leaderNode = &node;
+                break;
+            }
+        }
+
+        leaderNode->Get<KeyManager>().GetNetworkKey(networkKey);
         keyString.AppendHexBytes(networkKey.m8, OT_NETWORK_KEY_SIZE);
         fprintf(file, "  \"network_key\": \"%s\",\n", keyString.AsCString());
 
-        for (Node &leaderNode : mNodes)
+        if (leaderNode->Get<Mle::Mle>().IsLeader())
         {
-            if (leaderNode.Get<Mle::Mle>().IsLeader())
-            {
-                Ip6::Address aloc;
-                leaderNode.Get<Mle::Mle>().GetLeaderAloc(aloc);
-                fprintf(file, "  \"leader_aloc\": \"%s\",\n", aloc.ToString().AsCString());
-                break;
-            }
+            Ip6::Address aloc;
+            leaderNode->Get<Mle::Mle>().GetLeaderAloc(aloc);
+            fprintf(file, "  \"leader_aloc\": \"%s\",\n", aloc.ToString().AsCString());
         }
     }
 
@@ -189,12 +195,10 @@ void Core::SaveTestInfo(const char *aFilename)
     fprintf(file, "  },\n");
 
     fprintf(file, "  \"extra_vars\": {\n");
-    if (!mNodes.IsEmpty())
+    if (leaderNode != nullptr)
     {
-        Node       &node = *mNodes.GetHead();
         Ip6::Prefix prefix;
-
-        prefix.Set(node.Get<Mle::Mle>().GetMeshLocalPrefix());
+        prefix.Set(leaderNode->Get<Mle::Mle>().GetMeshLocalPrefix());
         fprintf(file, "    \"mesh_local_prefix\": \"%s\"\n", prefix.ToString().AsCString());
     }
     fprintf(file, "  }\n");

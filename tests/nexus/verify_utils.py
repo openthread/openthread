@@ -89,6 +89,29 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('pskc', v.hex()))
     elif t == consts.NM_SECURITY_POLICY_TLV and not is_diag:
         kvs.append(('security_policy', v.hex()))
+        if len(v) >= 3:
+            # v[0:2] is rotation time
+            # v[2] is the first byte of flags
+            # Bits in first byte of flags (v[2]):
+            # Bits in first byte of flags (v[2]):
+            # 7: o (obtaining network key)
+            # 6: n (native commissioning)
+            # 5: r (routers)
+            # 4: c (external commissioner)
+            # 3: b (beacons)
+            # 2: C (commercial commissioning)
+            # 1: e (autonomous enrollment)
+            # 0: p (network key provisioning)
+            flags = v[2]
+            kvs.append(('sec_policy_o', (flags >> 7) & 1))
+            kvs.append(('sec_policy_n', (flags >> 6) & 1))
+            kvs.append(('sec_policy_r', (flags >> 5) & 1))
+            kvs.append(('sec_policy_c', (flags >> 4) & 1))
+            kvs.append(('sec_policy_b', (flags >> 3) & 1))
+            kvs.append(('sec_policy_C', (flags >> 2) & 1))
+            kvs.append(('sec_policy_e', (flags >> 1) & 1))
+            kvs.append(('sec_policy_p', flags & 1))
+
     elif t == consts.NM_NETWORK_KEY_TLV and len(v) == 16 and not is_diag:
         kvs.append(('network_key', v.hex()))
     elif t == consts.NM_PAN_ID_TLV and len(v) == 2 and not is_diag:
@@ -148,6 +171,11 @@ def thread_coap_tlv_parse(t, v, layer=None):
                 kvs.append(('child_mode', hex(mode)))
     elif t == consts.DG_CHANNEL_PAGES_TLV:
         kvs.append(('channel_pages', v.hex()))
+    elif t == consts.NM_DISCOVERY_RESPONSE_TLV:  # Discovery Response TLV
+        # Bits 7-4: Version, Bit 3: Native Commissioner
+        if len(v) >= 1:
+            kvs.append(('discovery_version', (v[0] >> 4) & 0xf))
+            kvs.append(('discovery_native_commissioner', (v[0] >> 3) & 1))
     return kvs
 
 
@@ -206,9 +234,19 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.network_name'] = layer_fields._str
     layer_fields._LAYER_FIELDS['coap.tlv.pskc'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.security_policy'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_o'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_n'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_r'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_c'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_b'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_C'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_e'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_p'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.network_key'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.pan_id'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.mesh_local_prefix'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['thread_meshcop.tlv.discovery_version'] = layer_fields._dec
+    layer_fields._LAYER_FIELDS['thread_meshcop.tlv.discovery_native_commissioner'] = layer_fields._dec
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'
