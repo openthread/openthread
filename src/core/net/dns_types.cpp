@@ -285,7 +285,7 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
     uint16_t value;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (!Instance::IsDnsNameCompressionEnabled())
+    if (!aMessage.GetInstance().IsDnsNameCompressionEnabled())
     {
         // If "DNS name compression" mode is disabled, instead of
         // appending the pointer label, read the name from the message

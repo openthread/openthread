@@ -141,6 +141,10 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex, Requester aRequeste
     {
         LogInfo("%snabling on infra-if-index %lu", (aRequester == kRequesterAuto) ? "Auto-e" : "E",
                 ToUlong(mInfraIfIndex));
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        SuccessOrAssert(GetInstance().SetDnsNameCompressionEnabled(true));
+#endif
     }
     else
     {
