@@ -75,6 +75,10 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('channel', struct.unpack('>H', v[1:3])[0]))
     elif t == consts.NM_ACTIVE_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
         kvs.append(('active_timestamp', struct.unpack('>Q', v)[0] >> 16))
+    elif t == consts.NM_PENDING_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
+        kvs.append(('pending_timestamp', struct.unpack('>Q', v)[0] >> 16))
+    elif t == consts.NM_DELAY_TIMER_TLV and len(v) == 4 and not is_diag:
+        kvs.append(('delay_timer', struct.unpack('>I', v)[0]))
     elif t == consts.NM_CHANNEL_MASK_TLV and not is_diag:
         kvs.append(('channel_mask', v.hex()))
     elif t == consts.NM_EXTENDED_PAN_ID_TLV and len(v) == 8 and not is_diag:
@@ -150,7 +154,32 @@ def thread_coap_tlv_parse(t, v, layer=None):
 def apply_patches():
     CoapTlvParser.parse = staticmethod(thread_coap_tlv_parse)
 
-    from pktverify import layer_fields
+    from pktverify import consts, layer_fields
+    consts.VALID_LAYER_NAMES.add('wpan_tap')
+    consts.VALID_LAYER_NAMES.add('wpan-tap')
+
+    # Patch _get_candidate_layers to map wpan_tap to wpan-tap
+    old_get_candidate_layers = layer_fields._get_candidate_layers
+
+    def patched_get_candidate_layers(packet, layer_name):
+        if layer_name == 'wpan_tap':
+            layer_name = 'wpan-tap'
+        return old_get_candidate_layers(packet, layer_name)
+
+    layer_fields._get_candidate_layers = patched_get_candidate_layers
+
+    # Patch Layer.get_field to handle wpan_tap.ch_num
+    from pyshark.packet.layer import Layer
+    old_get_field = Layer.get_field
+
+    def patched_get_field(self, name):
+        v = old_get_field(self, name)
+        if v is None and name == 'wpan_tap.ch_num':
+            v = old_get_field(self, 'wpan-tap.ch_num')
+        return v
+
+    Layer.get_field = patched_get_field
+
     layer_fields._LAYER_FIELDS['coap.tlv.tlv_request'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.active_operational_dataset'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.pending_operational_dataset'] = layer_fields._bytes
@@ -168,7 +197,11 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.border_agent_rloc16'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.channel'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.active_timestamp'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.pending_timestamp'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.delay_timer'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.channel_mask'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['wpan_tap.ch_num'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['wpan-tap.ch_num'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.ext_pan_id'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.network_name'] = layer_fields._str
     layer_fields._LAYER_FIELDS['coap.tlv.pskc'] = layer_fields._bytes

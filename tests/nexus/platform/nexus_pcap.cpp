@@ -99,60 +99,47 @@ void Pcap::WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs)
     OT_TOOL_PACKED_BEGIN
     struct TapHeader
     {
-        uint8_t  mVersion;
-        uint8_t  mReserved;
+        uint16_t mVersion;
         uint16_t mLength;
     } OT_TOOL_PACKED_END tapHeader;
-
-    OT_TOOL_PACKED_BEGIN
-    struct TapFcsTlv
-    {
-        uint16_t mType;
-        uint16_t mLength;
-        uint8_t  mValue;
-        uint8_t  mPadding[3];
-    } OT_TOOL_PACKED_END fcsTlv;
-
-    OT_TOOL_PACKED_BEGIN
-    struct TapChannelTlv
-    {
-        uint16_t mType;
-        uint16_t mLength;
-        uint8_t  mPage;
-        uint16_t mChannel;
-        uint8_t  mPadding[1];
-    } OT_TOOL_PACKED_END channelTlv;
 
     uint32_t tapLength;
 
     VerifyOrExit(mFile != nullptr);
 
-    tapLength = sizeof(tapHeader) + sizeof(fcsTlv) + sizeof(channelTlv);
+    tapLength = sizeof(tapHeader) + 8 + 8;
+    // Note: tshark expects specific lengths for TLVs.
+    // FCS TLV: Type(2), Length(2), Value(1), Padding(3) -> Total 8 bytes. Value length = 1.
+    // Channel TLV: Type(2), Length(2), Channel(2), Page(1), Padding(1) -> Total 8 bytes. Value length = 3.
 
     ClearAllBytes(recordHeader);
     recordHeader.mTsSec   = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs / 1000000));
     recordHeader.mTsUsec  = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs % 1000000));
-    recordHeader.mInclLen = LittleEndian::HostSwap(tapLength + aFrame.mLength);
+    recordHeader.mInclLen = LittleEndian::HostSwap(static_cast<uint32_t>(tapLength + aFrame.mLength));
     recordHeader.mOrigLen = recordHeader.mInclLen;
     VerifyOrExit(fwrite(&recordHeader, sizeof(recordHeader), 1, mFile) == 1, Close());
 
     ClearAllBytes(tapHeader);
-    tapHeader.mVersion = LittleEndian::HostSwap(kTapVersion);
+    tapHeader.mVersion = LittleEndian::HostSwap(static_cast<uint16_t>(kTapVersion));
     tapHeader.mLength  = LittleEndian::HostSwap(static_cast<uint16_t>(tapLength));
     VerifyOrExit(fwrite(&tapHeader, sizeof(tapHeader), 1, mFile) == 1, Close());
 
+    // FCS TLV
+    uint8_t fcsTlv[8];
     ClearAllBytes(fcsTlv);
-    fcsTlv.mType   = LittleEndian::HostSwap(kTapFcsType);
-    fcsTlv.mLength = LittleEndian::HostSwap(kTapFcsLength);
-    fcsTlv.mValue  = LittleEndian::HostSwap(kTapFcsValue);
-    VerifyOrExit(fwrite(&fcsTlv, sizeof(fcsTlv), 1, mFile) == 1, Close());
+    LittleEndian::WriteUint16(kTapFcsType, &fcsTlv[0]);
+    LittleEndian::WriteUint16(kTapFcsLength, &fcsTlv[2]);
+    fcsTlv[4] = kTapFcsValue;
+    VerifyOrExit(fwrite(fcsTlv, sizeof(fcsTlv), 1, mFile) == 1, Close());
 
+    // Channel TLV
+    uint8_t channelTlv[8];
     ClearAllBytes(channelTlv);
-    channelTlv.mType    = LittleEndian::HostSwap(kTapChannelType);
-    channelTlv.mLength  = LittleEndian::HostSwap(kTapChannelLength);
-    channelTlv.mPage    = LittleEndian::HostSwap(kTapChannelPage);
-    channelTlv.mChannel = LittleEndian::HostSwap(aFrame.mChannel);
-    VerifyOrExit(fwrite(&channelTlv, sizeof(channelTlv), 1, mFile) == 1, Close());
+    LittleEndian::WriteUint16(kTapChannelType, &channelTlv[0]);
+    LittleEndian::WriteUint16(kTapChannelLength, &channelTlv[2]);
+    LittleEndian::WriteUint16(aFrame.mChannel, &channelTlv[4]);
+    channelTlv[6] = kTapChannelPage;
+    VerifyOrExit(fwrite(channelTlv, sizeof(channelTlv), 1, mFile) == 1, Close());
 
     VerifyOrExit(fwrite(aFrame.mPsdu, aFrame.mLength, 1, mFile) == 1, Close());
     VerifyOrExit(fflush(mFile) == 0, Close());
