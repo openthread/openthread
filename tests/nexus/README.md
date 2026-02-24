@@ -16,15 +16,47 @@ Nexus is a test framework for OpenThread testing.
 
 ### How to build and run tests
 
-To build Nexus test cases, the `build.sh` script can be used:
+To build Nexus test cases, the `tests/nexus/build.sh` script can be used:
 
 ```bash
 mkdir nexus_test
 top_builddir=nexus_test ./tests/nexus/build.sh
 ```
 
-Afterwards, each test can be run directly:
+By default, the script builds for IEEE 802.15.4. To build for TREL tests, use the `trel` argument:
 
 ```bash
-./nexus_test/tests/nexus/nexus_form_join
+top_builddir=nexus_test ./tests/nexus/build.sh trel
+```
+
+#### Automated testing and packet verification
+
+The `tests/nexus/run_nexus_tests.sh` script automates the process of running tests and performing packet verification using corresponding Python scripts.
+
+To run all default tests:
+
+```bash
+top_builddir=nexus_test ./tests/nexus/run_nexus_tests.sh
+```
+
+To run a specific test:
+
+```bash
+top_builddir=nexus_test ./tests/nexus/run_nexus_tests.sh 5_1_1
+```
+
+The script runs the Nexus C++ test (which generates a JSON file and optionally a PCAP file) and then executes the Python verification script (e.g., `verify_5_1_1.py`) if it exists. Artifacts for each test are preserved in a temporary directory if the test fails.
+
+#### Manual execution
+
+Each test can be run directly from the build directory. C++ tests typically take a topology name (if applicable) and a JSON output filename as arguments.
+
+```bash
+./nexus_test/tests/nexus/nexus_6_1_1 A test_6_1_1.json
+```
+
+The verification script can then be run manually:
+
+```bash
+python3 ./tests/nexus/verify_6_1_1.py test_6_1_1.json
 ```
