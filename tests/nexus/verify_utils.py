@@ -259,6 +259,10 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.mesh_local_prefix'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.discovery_version'] = layer_fields._dec
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.discovery_native_commissioner'] = layer_fields._dec
+    layer_fields._LAYER_FIELDS['thread_meshcop.tlv.active_tstamp'] = layer_fields._list(layer_fields._thread_timestamp)
+    layer_fields._LAYER_FIELDS['thread_meshcop.tlv.pending_tstamp'] = layer_fields._list(
+        layer_fields._thread_timestamp)
+    layer_fields._LAYER_FIELDS['thread_meshcop.tlv.delay_timer'] = layer_fields._auto
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'

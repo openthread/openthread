@@ -75,7 +75,7 @@ def verify(pv):
             p.mle.tlv.active_tstamp == 1 and
             p.mle.tlv.pending_tstamp == 10 and
             p.thread_meshcop.tlv.delay_timer > 200 and
-            p.thread_meshcop.tlv.active_tstamp == 10
+            10 in p.thread_meshcop.tlv.active_tstamp
         )).\
         must_next()
 
@@ -127,7 +127,7 @@ def verify(pv):
             p.mle.tlv.active_tstamp == 10 and
             p.mle.tlv.pending_tstamp == 20 and
             p.thread_meshcop.tlv.delay_timer > 300 and
-            p.thread_meshcop.tlv.active_tstamp == 70
+            70 in p.thread_meshcop.tlv.active_tstamp
         )).\
         must_next()
 
