@@ -79,7 +79,6 @@ Error Client::SendQuery(Tlv::Type aTlvType, uint16_t aMaxEntries, uint32_t aMaxE
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
-    Tmf::MessageInfo        messageInfo(GetInstance());
     RequestTlv              requestTlv;
 
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
@@ -94,10 +93,7 @@ Error Client::SendQuery(Tlv::Type aTlvType, uint16_t aMaxEntries, uint32_t aMaxE
     requestTlv.Init(aTlvType, aMaxEntries, aMaxEntryAge);
     SuccessOrExit(error = message->Append(requestTlv));
 
-    messageInfo.SetSockAddrToRloc();
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, aRloc16));
     message.Release();
 
     LogInfo("Sent %s for TLV %u to 0x%04x", UriToString<kUriHistoryQuery>(), aTlvType, aRloc16);

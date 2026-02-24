@@ -39,41 +39,6 @@ namespace ot {
 namespace Tmf {
 
 //----------------------------------------------------------------------------------------------------------------------
-// MessageInfo
-
-void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::Mle>().GetMeshLocalRloc()); }
-
-void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
-{
-    SetSockAddrToRloc();
-    Get<Mle::Mle>().GetLeaderAloc(GetPeerAddr());
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderRloc(void)
-{
-    SetSockAddrToRloc();
-    Get<Mle::Mle>().GetLeaderRloc(GetPeerAddr());
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
-{
-    SetSockAddrToRloc();
-    SetPeerAddr(Ip6::Address::GetRealmLocalAllRoutersMulticast());
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16)
-{
-    SetSockAddrToRloc();
-    GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
-{
-    SetSockAddrToRloc();
-    SetPeerAddr(aPeerAddress);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 // Agent
 
 Agent::Agent(Instance &aInstance)
@@ -227,6 +192,81 @@ bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address 
 
 exit:
     return isTmf;
+}
+
+Error Agent::SendMessageTo(Message &aMessage, const Ip6::Address &aDest)
+{
+    return SendMessageTo(aMessage, aDest, nullptr, nullptr);
+}
+
+Error Agent::SendMessageTo(Message &aMessage, const Ip6::Address &aDest, ResponseHandler aHandler, void *aContext)
+{
+    return Send(aMessage, aDest, /* aAllowMulticastLoop */ false, aHandler, aContext);
+}
+
+Error Agent::SendMessageAllowMulticastLoop(Message &aMessage, const Ip6::Address &aDest)
+{
+    return SendMessageAllowMulticastLoop(aMessage, aDest, nullptr, nullptr);
+}
+
+Error Agent::SendMessageAllowMulticastLoop(Message            &aMessage,
+                                           const Ip6::Address &aDest,
+                                           ResponseHandler     aHandler,
+                                           void               *aContext)
+{
+    return Send(aMessage, aDest, /* aAllowMulticastLoop */ true, aHandler, aContext);
+}
+
+Error Agent::Send(Message            &aMessage,
+                  const Ip6::Address &aDest,
+                  bool                aAllowMulticastLoop,
+                  ResponseHandler     aHandler,
+                  void               *aContext)
+{
+    Ip6::MessageInfo messageInfo;
+
+    messageInfo.SetPeerAddr(aDest);
+    PrepareMessageInfo(messageInfo);
+    messageInfo.SetMulticastLoop(aAllowMulticastLoop);
+
+    return SendMessage(aMessage, messageInfo, aHandler, aContext);
+}
+
+Error Agent::SendMessageToRloc(Message &aMessage, uint16_t aRloc16)
+{
+    return SendMessageToRloc(aMessage, aRloc16, nullptr, nullptr);
+}
+
+Error Agent::SendMessageToRloc(Message &aMessage, uint16_t aRloc16, ResponseHandler aHandler, void *aContext)
+{
+    Ip6::MessageInfo messageInfo;
+
+    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    PrepareMessageInfo(messageInfo);
+
+    return SendMessage(aMessage, messageInfo, aHandler, aContext);
+}
+
+Error Agent::SendMessageToLeaderAloc(Message &aMessage) { return SendMessageToLeaderAloc(aMessage, nullptr, nullptr); }
+
+Error Agent::SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler, void *aContext)
+{
+    Ip6::MessageInfo messageInfo;
+
+    Get<Mle::Mle>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    PrepareMessageInfo(messageInfo);
+
+    return SendMessage(aMessage, messageInfo, aHandler, aContext);
+}
+
+void Agent::PrepareMessageInfo(Ip6::MessageInfo &aMessageInfo) const
+{
+    // `GetPeerAddr()` must be already set.
+
+    aMessageInfo.SetPeerPort(kUdpPort);
+    aMessageInfo.SetSockAddr(aMessageInfo.GetPeerAddr().IsLinkLocalUnicastOrMulticast()
+                                 ? Get<Mle::Mle>().GetLinkLocalAddress()
+                                 : Get<Mle::Mle>().GetMeshLocalRloc());
 }
 
 uint8_t Agent::PriorityToDscp(Message::Priority aPriority)

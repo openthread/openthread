@@ -358,10 +358,10 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
 {
     OT_UNUSED_VARIABLE(aTimeout);
 
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Ip6AddressesTlv  addressesTlv;
+    Error           error   = kErrorNone;
+    Coap::Message  *message = nullptr;
+    Ip6::Address    destAddr;
+    Ip6AddressesTlv addressesTlv;
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
@@ -393,17 +393,14 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
+        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, destAddr);
     }
     else
     {
-        messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                      Get<BackboneRouter::Leader>().GetServer16());
+        destAddr.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetSockAddrToRloc();
-
-    error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aContext);
+    error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, aResponseHandler, aContext);
 
     LogInfo("Sent MLR.req: addressNum=%d", aAddressNum);
 

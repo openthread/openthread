@@ -3258,9 +3258,9 @@ void Mle::SetRouterId(uint8_t aRouterId)
 
 Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message = nullptr;
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+    Ip6::Address   leaderRloc;
 
     VerifyOrExit(!mAddressSolicitPending);
 
@@ -3280,12 +3280,12 @@ Error Mle::SendAddressSolicit(RouterUpgradeReason aReason)
     SuccessOrExit(error = Tlv::Append<XtalAccuracyTlv>(*message, otPlatTimeGetXtalAccuracy()));
 #endif
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderRloc();
+    GetLeaderRloc(leaderRloc);
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleAddressSolicitResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, leaderRloc, HandleAddressSolicitResponse, this));
     mAddressSolicitPending = true;
 
-    Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressSolicit, leaderRloc);
 
 exit:
     FreeMessageOnError(message, error);
@@ -3294,9 +3294,9 @@ exit:
 
 void Mle::SendAddressRelease(void)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message;
+    Error          error = kErrorNone;
+    Coap::Message *message;
+    Ip6::Address   leaderRloc;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressRelease);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -3304,11 +3304,11 @@ void Mle::SendAddressRelease(void)
     SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(mRouterId)));
     SuccessOrExit(error = Tlv::Append<ThreadExtMacAddressTlv>(*message, Get<Mac::Mac>().GetExtAddress()));
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderRloc();
+    GetLeaderRloc(leaderRloc);
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, leaderRloc));
 
-    Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
+    Log(kMessageSend, kTypeAddressRelease, leaderRloc);
 
 exit:
     FreeMessageOnError(message, error);

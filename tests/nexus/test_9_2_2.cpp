@@ -143,9 +143,7 @@ void Test9_2_2(void)
 
         AppendSteeringDataTlv(*message);
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     /**
@@ -190,9 +188,7 @@ void Test9_2_2(void)
 
         AppendSteeringDataTlv(*message);
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     /**
@@ -236,9 +232,7 @@ void Test9_2_2(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         SuccessOrQuit(Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, kBorderAgentRloc));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     /**
@@ -274,9 +268,7 @@ void Test9_2_2(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, kBorderAgentRloc));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     /**
@@ -309,9 +301,7 @@ void Test9_2_2(void)
 
         AppendSteeringDataTlv(*message);
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     /**
@@ -346,9 +336,7 @@ void Test9_2_2(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::ChannelTlv>(*message, Mle::ChannelTlvValue(11)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     /**

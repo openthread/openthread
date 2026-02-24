@@ -112,9 +112,7 @@ static void SendMgmtEnergyScanQuery(Node &aCommissioner, const Ip6::Address &aDe
     SuccessOrQuit(Tlv::Append<MeshCoP::PeriodTlv>(*message, kScanPeriod));
     SuccessOrQuit(Tlv::Append<MeshCoP::ScanDurationTlv>(*message, kScanDuration));
 
-    Tmf::MessageInfo messageInfo(aCommissioner.GetInstance());
-    messageInfo.SetPeerAddr(aDestAddr);
-    SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+    SuccessOrQuit(agent.SendMessageTo(*message, aDestAddr));
 }
 
 void Test9_2_13(void)

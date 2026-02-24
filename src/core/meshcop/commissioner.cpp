@@ -605,7 +605,6 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
-    Tmf::MessageInfo        messageInfo(GetInstance());
 
     message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerGet));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -615,9 +614,8 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
         SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kGet, aTlvs, aLength));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo,
-                                                        HandleMgmtCommissionerGetResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleMgmtCommissionerGetResponse, this));
+    message.Release();
 
     LogInfo("Sent %s to leader", UriToString<kUriCommissionerGet>());
 
@@ -640,7 +638,6 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &a
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
-    Tmf::MessageInfo        messageInfo(GetInstance());
 
     message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerSet));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -672,9 +669,8 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &a
         SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo,
-                                                        HandleMgmtCommissionerSetResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleMgmtCommissionerSetResponse, this));
+    message.Release();
 
     LogInfo("Sent %s to leader", UriToString<kUriCommissionerSet>());
 
@@ -702,7 +698,6 @@ Error Commissioner::SendPetition(void)
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
-    Tmf::MessageInfo        messageInfo(GetInstance());
 
     mTransmitAttempts++;
 
@@ -711,9 +706,8 @@ Error Commissioner::SendPetition(void)
 
     SuccessOrExit(error = Tlv::Append<CommissionerIdTlv>(*message, mCommissionerId));
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo,
-                                                        HandleLeaderPetitionResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleLeaderPetitionResponse, this));
+    message.Release();
 
     LogInfo("Sent %s", UriToString<kUriLeaderPetition>());
 
@@ -774,7 +768,6 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
-    Tmf::MessageInfo        messageInfo(GetInstance());
 
     message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -784,9 +777,8 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, aSessionId));
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo,
-                                                        HandleLeaderKeepAliveResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleLeaderKeepAliveResponse, this));
+    message.Release();
 
     LogInfo("Sent %s", UriToString<kUriLeaderKeepAlive>());
 
@@ -985,7 +977,6 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     Error                   error = kErrorNone;
     ExtendedTlv             tlv;
     OwnedPtr<Coap::Message> message;
-    Tmf::MessageInfo        messageInfo(GetInstance());
     Kek                     kek;
 
     Get<KeyManager>().ExtractKek(kek);
@@ -1007,9 +998,8 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(mJoinerRloc);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(message.PassOwnership(), messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, mJoinerRloc));
+    message.Release();
 
     aMessage.Free();
 

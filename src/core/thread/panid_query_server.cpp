@@ -89,9 +89,8 @@ void PanIdQueryServer::HandleScanResult(const ScanResult *aScanResult)
 
 void PanIdQueryServer::SendConflict(void)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message;
+    Error          error = kErrorNone;
+    Coap::Message *message;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriPanIdConflict);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -100,9 +99,7 @@ void PanIdQueryServer::SendConflict(void)
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, mPanId));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, mCommissioner));
 
     LogInfo("Sent %s", UriToString<kUriPanIdConflict>());
 

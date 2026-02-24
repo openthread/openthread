@@ -465,9 +465,8 @@ exit:
 
 Error DatasetManager::SendSetRequest(const Dataset &aDataset)
 {
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
 
     VerifyOrExit(!mMgmtPending, error = kErrorAlready);
 
@@ -475,9 +474,8 @@ Error DatasetManager::SendSetRequest(const Dataset &aDataset)
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleMgmtSetResponse, this));
     mMgmtPending = true;
 
     LogInfo("Sent dataset set request to leader");
@@ -621,12 +619,11 @@ exit:
 Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponents,
                                      const uint8_t             *aTlvTypes,
                                      uint8_t                    aLength,
-                                     const otIp6Address        *aAddress) const
+                                     const Ip6::Address        *aAddress) const
 {
-    Error            error = kErrorNone;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    TlvList          tlvList;
+    Error          error = kErrorNone;
+    Coap::Message *message;
+    TlvList        tlvList;
 
     if (aDatasetComponents.IsPresent<Dataset::kActiveTimestamp>())
     {
@@ -706,15 +703,16 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kGet, tlvList.GetArrayBuffer(), tlvList.GetLength()));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-
     if (aAddress != nullptr)
     {
-        // Use leader ALOC if `aAddress` is `nullptr`.
-        messageInfo.SetPeerAddr(AsCoreType(aAddress));
+        error = Get<Tmf::Agent>().SendMessageTo(*message, *aAddress);
+    }
+    else
+    {
+        error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message);
     }
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error);
 
     LogInfo("sent dataset get request");
 

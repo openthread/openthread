@@ -894,15 +894,12 @@ exit:
 
 Error Admitter::CommissionerPetitioner::SendToLeader(OwnedPtr<Coap::Message> aMessage, Coap::ResponseHandler aHandler)
 {
-    Error            error;
-    Tmf::MessageInfo messageInfo(GetInstance());
-
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
+    Error error;
 
     // On success the message ownership is transferred.
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*aMessage, messageInfo, aHandler,
-                                                        (aHandler != nullptr) ? this : nullptr));
+    SuccessOrExit(
+        error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*aMessage, aHandler, (aHandler != nullptr) ? this : nullptr));
     aMessage.Release();
 
 exit:

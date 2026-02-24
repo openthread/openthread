@@ -177,15 +177,13 @@ exit:
 
 void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message;
+    Error          error = kErrorNone;
+    Coap::Message *message;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));
 
     LogInfo("Sent %s", UriToString<kUriDatasetChanged>());
 

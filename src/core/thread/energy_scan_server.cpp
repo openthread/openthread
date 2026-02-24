@@ -172,17 +172,14 @@ exit:
 
 void EnergyScanServer::SendReport(void)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    uint16_t         offset;
+    Error    error = kErrorNone;
+    uint16_t offset;
 
     // Update the Energy List TLV length in Report message
     offset = mReportMessage->GetLength() - mNumScanResults - sizeof(uint8_t);
     mReportMessage->Write(offset, mNumScanResults);
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*mReportMessage, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*mReportMessage, mCommissioner));
     mReportMessage.Release();
 
     LogInfo("Sent %s", UriToString<kUriEnergyReport>());

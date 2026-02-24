@@ -220,9 +220,7 @@ void Test9_2_6(void)
                 Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
         }
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
     nexus.AdvanceTime(kResponseTime);
 
@@ -308,9 +306,7 @@ void Test9_2_6(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::NetworkNameTlv>(*message, kNetworkName));
         SuccessOrQuit(Tlv::Append<MeshCoP::PskcTlv>(*message, AsCoreType(reinterpret_cast<const otPskc *>(kPskc))));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
     nexus.AdvanceTime(kResponseTime);
 
@@ -516,9 +512,7 @@ void Test9_2_6(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerTime));
         SuccessOrQuit(Tlv::Append<MeshCoP::ChannelTlv>(*message, Mle::ChannelTlvValue(kSecondaryChannel)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
     nexus.AdvanceTime(kResponseTime);
 

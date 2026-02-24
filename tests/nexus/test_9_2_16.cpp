@@ -282,9 +282,7 @@ void Test9_2_16(void)
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerStep3));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -439,9 +437,7 @@ void Test9_2_16(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::PanIdTlv>(*message, kPanIdStep11));
         SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerStep11));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -493,9 +489,7 @@ void Test9_2_16(void)
             SuccessOrQuit(Tlv::Append<MeshCoP::PskcTlv>(*message, pskc));
         }
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -622,9 +616,7 @@ void Test9_2_16(void)
         Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveGet);
         VerifyOrQuit(message != nullptr);
 
-        Tmf::MessageInfo messageInfo(leader.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrTo(router2.Get<Mle::Mle>().GetRloc16());
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToRloc(*message, router2.Get<Mle::Mle>().GetRloc16()));
     }
 
     Log("---------------------------------------------------------------------------------------");

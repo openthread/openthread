@@ -50,25 +50,6 @@ Server::Server(Instance &aInstance)
 {
 }
 
-void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
-{
-    if (aDestination.IsMulticast())
-    {
-        aMessageInfo.SetMulticastLoop(true);
-    }
-
-    if (aDestination.IsLinkLocalUnicastOrMulticast())
-    {
-        aMessageInfo.SetSockAddr(Get<Mle::Mle>().GetLinkLocalAddress());
-    }
-    else
-    {
-        aMessageInfo.SetSockAddrToRloc();
-    }
-
-    aMessageInfo.SetPeerAddr(aDestination);
-}
-
 Error Server::AppendIp6AddressList(Message &aMessage)
 {
     Error         error;
@@ -599,11 +580,10 @@ exit:
 
 void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Error            error  = kErrorNone;
-    Coap::Message   *answer = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    AnswerTlv        answerTlv;
-    uint16_t         queryId;
+    Error          error  = kErrorNone;
+    Coap::Message *answer = nullptr;
+    AnswerTlv      answerTlv;
+    uint16_t       queryId;
 
     answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(answer != nullptr, error = kErrorNoBufs);
@@ -620,9 +600,7 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
     answerTlv.Init(0, AnswerTlv::kIsLast);
     SuccessOrExit(answer->Append(answerTlv));
 
-    PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    error = Get<Tmf::Agent>().SendMessage(*answer, messageInfo);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*answer, aDestination);
 
 exit:
     FreeMessageOnError(answer, error);
@@ -778,18 +756,15 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
     // This method send the given next `aAnswer` associated with
     // a query to the  `aDestination`.
 
-    Error            error      = kErrorNone;
-    Coap::Message   *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error      = kErrorNone;
+    Coap::Message *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
 
     mAnswerQueue.Dequeue(aAnswer);
-
-    PrepareMessageInfoForDest(aDestination, messageInfo);
 
     // When sending the message, we pass `nextAnswer` as `aContext`
     // to be used when invoking callback `HandleAnswerResponse()`.
 
-    error = Get<Tmf::Agent>().SendMessage(aAnswer, messageInfo, HandleAnswerResponse, nextAnswer);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(aAnswer, aDestination, HandleAnswerResponse, nextAnswer);
 
     if (error != kErrorNone)
     {
@@ -1052,9 +1027,8 @@ Error Client::SendCommand(Uri                   aUri,
                           Coap::ResponseHandler aHandler,
                           void                 *aContext)
 {
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message = nullptr;
 
     switch (aUri)
     {
@@ -1084,9 +1058,7 @@ Error Client::SendCommand(Uri                   aUri,
         SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*message, ++mQueryId));
     }
 
-    Get<Server>().PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*message, aDestination, aHandler, aContext));
 
     LogInfo("Sent %s to %s", UriToString(aUri), aDestination.ToString().AsCString());
 

@@ -52,9 +52,8 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
                                   otCommissionerPanIdConflictCallback aCallback,
                                   void                               *aContext)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message = nullptr;
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
@@ -69,8 +68,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, aPanId));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));
 
     LogInfo("Sent %s", UriToString<kUriPanIdQuery>());
 

@@ -363,9 +363,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(
             Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicy, sizeof(kSecurityPolicy)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -400,9 +398,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveGet);
         VerifyOrQuit(message != nullptr);
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -470,9 +466,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(
             Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicy, sizeof(kSecurityPolicy)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -541,9 +535,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(
             Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicy, sizeof(kSecurityPolicy)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -611,9 +603,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicyStep10,
                                      sizeof(kSecurityPolicyStep10)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -675,9 +665,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicyStep10,
                                      sizeof(kSecurityPolicyStep10)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -738,9 +726,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicyStep10,
                                      sizeof(kSecurityPolicyStep10)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -801,9 +787,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kSecurityPolicy, kSecurityPolicyStep10,
                                      sizeof(kSecurityPolicyStep10)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -867,9 +851,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(
             Tlv::AppendTlv(*message, MeshCoP::Tlv::kSteeringData, kSteeringDataStep18, sizeof(kSteeringDataStep18)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");
@@ -932,9 +914,7 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
                                      sizeof(kSecurityPolicyStep10)));
         SuccessOrQuit(Tlv::AppendTlv(*message, kFutureTlvType, kFutureTlvValue, sizeof(kFutureTlvValue)));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");

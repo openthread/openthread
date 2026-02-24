@@ -264,9 +264,7 @@ void Test9_2_18(void)
             dataset.SetFrom(activeDatasetInfo);
             SuccessOrQuit(message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
         }
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
     nexus.AdvanceTime(kStabilizationTime);
 
@@ -321,9 +319,7 @@ void Test9_2_18(void)
             dataset.SetFrom(pendingDatasetInfo1);
             SuccessOrQuit(message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
         }
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
     nexus.AdvanceTime(kStabilizationTime);
 
@@ -383,9 +379,7 @@ void Test9_2_18(void)
             dataset.SetFrom(pendingDatasetInfo2);
             SuccessOrQuit(message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
         }
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
     nexus.AdvanceTime(kStabilizationTime);
 

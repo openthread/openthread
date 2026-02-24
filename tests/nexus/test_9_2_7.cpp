@@ -291,9 +291,7 @@ void Test9_2_7(void)
         SuccessOrQuit(updatedDataset.WriteTlvsFrom(datasetInfo));
         SuccessOrQuit(message->AppendBytes(updatedDataset.GetBytes(), updatedDataset.GetLength()));
 
-        Tmf::MessageInfo messageInfo(router.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     nexus.AdvanceTime(kResponseTime);
@@ -417,9 +415,7 @@ void Test9_2_7(void)
 
         SuccessOrQuit(message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
 
-        Tmf::MessageInfo messageInfo(router.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     // Wait for acceptance and retransmissions if needed
@@ -550,9 +546,7 @@ void Test9_2_7(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::ChannelTlv>(*message, MeshCoP::ChannelTlvValue(0, kSecondaryChannel)));
         SuccessOrQuit(Tlv::Append<MeshCoP::PanIdTlv>(*message, kPanIdStep17));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");

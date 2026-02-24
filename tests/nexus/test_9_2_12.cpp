@@ -235,10 +235,7 @@ void Test9_2_12(void)
         SuccessOrQuit(MeshCoP::Tlv::Append<MeshCoP::CountTlv>(*message, kAnnounceCount));
         SuccessOrQuit(MeshCoP::Tlv::Append<MeshCoP::PeriodTlv>(*message, kAnnouncePeriod));
 
-        Tmf::MessageInfo messageInfo(leader1.GetInstance());
-        messageInfo.SetPeerAddr(router1.Get<Mle::Mle>().GetMeshLocalRloc());
-
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageTo(*message, router1.Get<Mle::Mle>().GetMeshLocalRloc()));
     }
     nexus.AdvanceTime(kResponseTime);
 

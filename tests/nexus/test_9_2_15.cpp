@@ -166,9 +166,7 @@ void SendPendingSet(Node           &aCommissioner,
         SuccessOrQuit(Tlv::Append<MeshCoP::PanIdTlv>(*message, *aPanId));
     }
 
-    Tmf::MessageInfo messageInfo(aCommissioner.GetInstance());
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+    SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
 }
 
 void Test9_2_15(void)
@@ -531,9 +529,7 @@ void Test9_2_15(void)
         Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveGet);
         VerifyOrQuit(message != nullptr);
 
-        Tmf::MessageInfo messageInfo(leader.GetInstance());
-        messageInfo.SetPeerAddr(dut.Get<Mle::Mle>().GetMeshLocalEid());
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageTo(*message, dut.Get<Mle::Mle>().GetMeshLocalEid()));
     }
 
     Log("---------------------------------------------------------------------------------------");

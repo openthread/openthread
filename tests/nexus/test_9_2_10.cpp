@@ -276,9 +276,7 @@ void Test9_2_10(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::ChannelTlv>(*message, MeshCoP::ChannelTlvValue(0, kSecondaryChannel)));
         SuccessOrQuit(Tlv::Append<MeshCoP::PanIdTlv>(*message, kSecondaryPanId));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
-        messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-        SuccessOrQuit(agent.SendMessage(*message, messageInfo));
+        SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));
     }
 
     Log("---------------------------------------------------------------------------------------");

@@ -54,9 +54,8 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
                                   otCommissionerEnergyReportCallback aCallback,
                                   void                              *aContext)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message = nullptr;
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
@@ -73,8 +72,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     SuccessOrExit(error = Tlv::Append<MeshCoP::PeriodTlv>(*message, aPeriod));
     SuccessOrExit(error = Tlv::Append<MeshCoP::ScanDurationTlv>(*message, aScanDuration));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));
 
     LogInfo("Sent %s", UriToString<kUriEnergyScan>());
 

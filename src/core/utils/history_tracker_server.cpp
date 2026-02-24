@@ -211,18 +211,15 @@ exit:
 
 void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination)
 {
-    Error            error      = kErrorNone;
-    Coap::Message   *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error      = kErrorNone;
+    Coap::Message *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
 
     mAnswerQueue.Dequeue(aAnswer);
-
-    PrepareMessageInfoForDest(aDestination, messageInfo);
 
     // When sending the message, we pass `nextAnswer` as `aContext`
     // to be used when invoking callback `HandleAnswerResponse()`.
 
-    error = Get<Tmf::Agent>().SendMessage(aAnswer, messageInfo, HandleAnswerResponse, nextAnswer);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(aAnswer, aDestination, HandleAnswerResponse, nextAnswer);
 
     if (error != kErrorNone)
     {
@@ -236,25 +233,6 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
             FreeAllRelatedAnswers(*nextAnswer);
         }
     }
-}
-
-void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
-{
-    if (aDestination.IsMulticast())
-    {
-        aMessageInfo.SetMulticastLoop(true);
-    }
-
-    if (aDestination.IsLinkLocalUnicastOrMulticast())
-    {
-        aMessageInfo.SetSockAddr(Get<Mle::Mle>().GetLinkLocalAddress());
-    }
-    else
-    {
-        aMessageInfo.SetSockAddrToRloc();
-    }
-
-    aMessageInfo.SetPeerAddr(aDestination);
 }
 
 void Server::HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult)

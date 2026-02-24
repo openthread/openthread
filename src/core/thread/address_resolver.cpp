@@ -611,18 +611,15 @@ exit:
 
 Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
     message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriAddressQuery);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
 
-    messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, Ip6::Address::GetRealmLocalAllRoutersMulticast()));
 
     LogInfo("Sent %s for %s", UriToString<kUriAddressQuery>(), aEid.ToString().AsCString());
 
@@ -720,9 +717,8 @@ void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
                                        const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                        const Ip6::Address             &aDestination)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -732,9 +728,7 @@ void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aDestination);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 
     LogInfo("Sent %s for target %s", UriToString<kUriAddressError>(), aTarget.ToString().AsCString());
 
@@ -877,9 +871,8 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
                                                const uint32_t                 *aLastTransactionTime,
                                                const Ip6::Address             &aDestination)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -893,9 +886,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
         SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, *aLastTransactionTime));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aDestination);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 
     LogInfo("Sent %s for target %s", UriToString<kUriAddressNotify>(), aTarget.ToString().AsCString());
 
