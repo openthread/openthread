@@ -107,7 +107,7 @@ def verify(pv):
     pkts.filter_wpan_src64(COMMISSIONER).\
         filter_coap_request(consts.MGMT_ACTIVE_GET_URI).\
         filter(lambda p: p.coap.payload is nullField or len(p.coap.payload) == 0).\
-        filter(lambda p: p.ipv6.dst[8:14] == Bytes("000000fffe00")).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 3: Leader
@@ -159,7 +159,7 @@ def verify(pv):
             consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
             consts.NM_NETWORK_NAME_TLV
         }).\
-        filter(lambda p: p.ipv6.dst[8:14] == Bytes("000000fffe00")).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 5: Leader
@@ -207,7 +207,7 @@ def verify(pv):
             consts.NM_SCAN_DURATION,
             consts.NM_ENERGY_LIST_TLV
         }).\
-        filter(lambda p: p.ipv6.dst[8:14] == Bytes("000000fffe00")).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 7: Leader

@@ -99,7 +99,7 @@ def verify(pv):
         } <= set(p.coap.tlv.type)).\
         filter(lambda p: p.coap.tlv.active_timestamp == 100 and\
                          p.coap.tlv.network_name == 'TEST_1').\
-        filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 3: Leader (DUT)
@@ -219,7 +219,7 @@ def verify(pv):
         } <= set(p.coap.tlv.type)).\
         filter(lambda p: p.coap.tlv.active_timestamp == 99 and\
                          p.coap.tlv.network_name == 'TEST_2').\
-        filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 8: Leader (DUT)
@@ -275,7 +275,7 @@ def verify(pv):
         filter(lambda p: p.coap.tlv.active_timestamp == 101 and\
                          p.coap.tlv.network_name == 'TEST_3').\
         filter(lambda p: 130 in p.coap.tlv.type).\
-        filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 10: Leader (DUT)
@@ -389,7 +389,7 @@ def verify(pv):
         } <= set(p.coap.tlv.type)).\
         filter(lambda p: p.coap.tlv.active_timestamp == 102 and\
                          p.coap.tlv.channel == 63).\
-        filter(lambda p: p.ipv6.dst.endswith(bytes.fromhex("000000fffe00fc00"))).\
+        filter(lambda p: verify_utils.is_leader_aloc_or_rloc(p.ipv6.dst)).\
         must_next()
 
     # Step 15: Leader (DUT)

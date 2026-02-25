@@ -301,10 +301,10 @@ int main(int argc, char *argv[])
     }
     else
     {
-        fprintf(stderr, "Error: Invalid topology '%s'. Must be 'A' or 'B'.\\n", argv[1]);
+        fprintf(stderr, "Error: Invalid topology '%s'. Must be 'A' or 'B'.\n", argv[1]);
         return 1;
     }
 
-    printf("All tests passed\\n");
+    printf("All tests passed\n");
     return 0;
 }

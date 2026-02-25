@@ -33,6 +33,7 @@ import json
 import traceback
 import struct
 import logging
+import ipaddress
 
 # Add the thread-cert directory to sys.path to find pktverify
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -186,6 +187,17 @@ def thread_coap_tlv_parse(t, v, layer=None):
             kvs.append(('discovery_version', (v[0] >> 4) & 0xf))
             kvs.append(('discovery_native_commissioner', (v[0] >> 3) & 1))
     return kvs
+
+
+def is_leader_aloc_or_rloc(addr_str: str) -> bool:
+    """Checks if an IPv6 address is a Leader ALOC or an RLOC."""
+    addr = ipaddress.ip_address(addr_str)
+    iid = addr.packed[8:]
+    # Leader ALOC IID is 0000:00ff:fe00:fc00
+    is_aloc = (iid == b'\x00\x00\x00\xff\xfe\x00\xfc\x00')
+    # RLOC IID is 0000:00ff:fe00:xxxx
+    is_rloc = (iid[:6] == b'\x00\x00\x00\xff\xfe\x00')
+    return is_aloc or is_rloc
 
 
 def apply_patches():
