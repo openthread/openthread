@@ -61,7 +61,7 @@ Core::Core(void)
     }
 }
 
-void Core::SaveTestInfo(const char *aFilename)
+void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
 {
     FILE       *file = fopen(aFilename, "w");
     Node       *tail = mNodes.GetTail();
@@ -70,7 +70,7 @@ void Core::SaveTestInfo(const char *aFilename)
     const char *dot;
     const char *version;
     int         testcaseLen;
-    Node       *leaderNode = nullptr;
+    Node       *leaderNode = aLeaderNode;
 
     VerifyOrExit(file != nullptr);
 
@@ -108,12 +108,8 @@ void Core::SaveTestInfo(const char *aFilename)
     fprintf(file, "  \"testcase\": \"%.*s\",\n", testcaseLen, testcase);
     fprintf(file, "  \"pcap\": \"%s\",\n", getenv("OT_NEXUS_PCAP_FILE") ? getenv("OT_NEXUS_PCAP_FILE") : "");
 
-    if (!mNodes.IsEmpty())
+    if (leaderNode == nullptr)
     {
-        leaderNode = mNodes.GetTail();
-        NetworkKey                          networkKey;
-        String<OT_NETWORK_KEY_SIZE * 2 + 1> keyString;
-
         for (Node &node : mNodes)
         {
             if (node.Get<Mle::Mle>().IsLeader())
@@ -122,6 +118,17 @@ void Core::SaveTestInfo(const char *aFilename)
                 break;
             }
         }
+    }
+
+    if (leaderNode == nullptr)
+    {
+        leaderNode = mNodes.GetTail();
+    }
+
+    if (leaderNode != nullptr)
+    {
+        NetworkKey                          networkKey;
+        String<OT_NETWORK_KEY_SIZE * 2 + 1> keyString;
 
         leaderNode->Get<KeyManager>().GetNetworkKey(networkKey);
         keyString.AppendHexBytes(networkKey.m8, OT_NETWORK_KEY_SIZE);

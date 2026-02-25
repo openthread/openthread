@@ -66,11 +66,11 @@ def thread_coap_tlv_parse(t, v, layer=None):
     elif t == consts.NM_STATE_TLV and len(v) == 1 and not is_diag:
         kvs.append(('state', v[0]))
     elif t == consts.NM_STEERING_DATA_TLV and not is_diag:  # DG_IPV6_ADDRESS_LIST_TLV is 16*n
-        kvs.append(('steering_data', v.hex()))
+        kvs.append(('steering_data', v))
     elif t == consts.NM_BORDER_AGENT_LOCATOR_TLV and len(v) == 2 and not is_diag:  # DG_MAC_COUNTERS_TLV is 4*n
         kvs.append(('border_agent_rloc16', struct.unpack('>H', v)[0]))
     elif t == consts.TLV_REQUEST_TLV:
-        kvs.append(('tlv_request', v.hex()))
+        kvs.append(('tlv_request', v))
     elif t == consts.NM_CHANNEL_TLV and len(v) == 3 and not is_diag:  # DG_MAC_EXTENDED_ADDRESS_TLV is 8
         kvs.append(('channel', struct.unpack('>H', v[1:3])[0]))
     elif t == consts.NM_ACTIVE_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
@@ -80,15 +80,23 @@ def thread_coap_tlv_parse(t, v, layer=None):
     elif t == consts.NM_DELAY_TIMER_TLV and len(v) == 4 and not is_diag:
         kvs.append(('delay_timer', struct.unpack('>I', v)[0]))
     elif t == consts.NM_CHANNEL_MASK_TLV and not is_diag:
-        kvs.append(('channel_mask', v.hex()))
+        kvs.append(('channel_mask', v))
+    elif t == consts.NM_COUNT_TLV and len(v) == 1 and not is_diag:
+        kvs.append(('count', v[0]))
+    elif t == consts.NM_PERIOD_TLV and len(v) == 2 and not is_diag:
+        kvs.append(('period', struct.unpack('>H', v)[0]))
+    elif t == consts.NM_SCAN_DURATION and len(v) == 2 and not is_diag:
+        kvs.append(('scan_duration', struct.unpack('>H', v)[0]))
+    elif t == consts.NM_ENERGY_LIST_TLV and not is_diag:
+        kvs.append(('energy_list', v))
     elif t == consts.NM_EXTENDED_PAN_ID_TLV and len(v) == 8 and not is_diag:
-        kvs.append(('ext_pan_id', v.hex()))
+        kvs.append(('ext_pan_id', v))
     elif t == consts.NM_NETWORK_NAME_TLV and not is_diag:
         kvs.append(('network_name', v.decode('utf-8', errors='replace')))
     elif t == consts.NM_PSKC_TLV and len(v) == 16 and not is_diag:
-        kvs.append(('pskc', v.hex()))
+        kvs.append(('pskc', v))
     elif t == consts.NM_SECURITY_POLICY_TLV and not is_diag:
-        kvs.append(('security_policy', v.hex()))
+        kvs.append(('security_policy', v))
         if len(v) >= 3:
             # v[0:2] is rotation time
             # v[2] is the first byte of flags
@@ -113,13 +121,13 @@ def thread_coap_tlv_parse(t, v, layer=None):
             kvs.append(('sec_policy_p', flags & 1))
 
     elif t == consts.NM_NETWORK_KEY_TLV and len(v) == 16 and not is_diag:
-        kvs.append(('network_key', v.hex()))
+        kvs.append(('network_key', v))
     elif t == consts.NM_PAN_ID_TLV and len(v) == 2 and not is_diag:
         kvs.append(('pan_id', struct.unpack('>H', v)[0]))
     elif t == consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV and len(v) == 8 and not is_diag:
-        kvs.append(('mesh_local_prefix', v.hex()))
+        kvs.append(('mesh_local_prefix', v))
     elif t == consts.NM_FUTURE_TLV:
-        kvs.append(('future_tlv', v.hex()))
+        kvs.append(('future_tlv', v))
 
     # Other Thread TLVs
     elif t == consts.NL_TARGET_EID_TLV and len(v) == 16:
@@ -170,7 +178,7 @@ def thread_coap_tlv_parse(t, v, layer=None):
                 kvs.append(('child_id', hex(child_id)))
                 kvs.append(('child_mode', hex(mode)))
     elif t == consts.DG_CHANNEL_PAGES_TLV:
-        kvs.append(('channel_pages', v.hex()))
+        kvs.append(('channel_pages', v))
     elif t == consts.NM_DISCOVERY_RESPONSE_TLV:  # Discovery Response TLV
         # Bits 7-4: Version, Bit 3: Native Commissioner
         if len(v) >= 1:
@@ -228,6 +236,10 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.pending_timestamp'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.delay_timer'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.channel_mask'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.count'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.period'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.scan_duration'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.energy_list'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['wpan_tap.ch_num'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['wpan-tap.ch_num'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.ext_pan_id'] = layer_fields._bytes
@@ -300,6 +312,12 @@ def run_main(verify_func):
 
         pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
         pv.add_common_vars()
+
+        # Add RLOC16 variables for convenience
+        for node_id, rloc16 in data.get('rloc16s', {}).items():
+            name = pv.test_info.get_node_name(int(node_id))
+            pv.add_vars(**{f'{name}_RLOC16': int(rloc16, 16)})
+
         verify_func(pv)
         print("Verification PASSED")
     except Exception as e:

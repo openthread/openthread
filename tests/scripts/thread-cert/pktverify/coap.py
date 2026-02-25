@@ -91,6 +91,8 @@ class CoapLayer(Layer):
             self._add_field('coap.tlv.type', hex(t))
             for k, v in tvs:
                 assert isinstance(k, str), (t, k, v)
+                if isinstance(v, (bytes, bytearray)):
+                    v = v.hex()
                 assert isinstance(v, (str, int)), (t, k, v)
                 self._add_field('coap.tlv.' + k, str(v))
 
