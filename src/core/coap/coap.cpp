@@ -1337,6 +1337,7 @@ Error CoapBase::SendNextBlock2Request(Request &aRequest, Msg &aRxMsg, uint32_t a
 
     requestBlockInfo = msgBlockInfo;
     requestBlockInfo.mBlockNumber++;
+    requestBlockInfo.mMoreBlocks = false; // RFC 7959 Section 2.3 second bullet: MUST be 0 in request.
 
     SuccessOrExit(error = PrepareNextBlockRequest(kOptionBlock2, aRequest, *request, requestBlockInfo));
 
