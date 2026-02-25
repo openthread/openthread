@@ -241,7 +241,13 @@ def run_main(verify_func):
 
         network_key = data.get('network_key')
         if network_key:
-            wireshark_prefs['uat:ieee802154_keys'] = f'"{network_key}","1","Thread hash"'
+            existing_keys = wireshark_prefs.get('uat:ieee802154_keys', '')
+            new_key = f'"{network_key}","1","Thread hash"'
+            if network_key not in existing_keys:
+                if existing_keys:
+                    wireshark_prefs['uat:ieee802154_keys'] = existing_keys + '\n' + new_key
+                else:
+                    wireshark_prefs['uat:ieee802154_keys'] = new_key
 
         mesh_local_prefix = data.get('extra_vars', {}).get('mesh_local_prefix')
         if mesh_local_prefix:
