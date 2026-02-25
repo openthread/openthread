@@ -67,6 +67,25 @@ def verify(pv):
     MED_1 = pv.vars['MED_1']
     SED_1 = pv.vars['SED_1']
 
+    def _verify_child_update_exchange(pkts, child_node, parent_node=ROUTER_1):
+        pkts_copy = pkts.copy()
+
+        # Verify Child Update Request from child
+        pkts_copy.filter_wpan_src64(child_node).\
+            filter_mle_cmd(consts.MLE_CHILD_UPDATE_REQUEST).\
+            filter(lambda p: consts.ADDRESS_REGISTRATION_TLV in p.mle.tlv.type).\
+            must_next()
+
+        # Verify Child Update Response from parent
+        pkts_copy.filter_wpan_src64(parent_node).\
+            filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
+            filter(lambda p: {
+                              consts.SOURCE_ADDRESS_TLV,
+                              consts.ADDRESS_REGISTRATION_TLV,
+                              consts.MODE_TLV
+                             } <= set(p.mle.tlv.type)).\
+            must_next()
+
     # Step 1: All
     # - Description: Topology Ensure topology is formed correctly.
     # - Pass Criteria: N/A
@@ -130,8 +149,8 @@ def verify(pv):
     #     - 6LowPAN ID TLV
     #     - Border Router TLV
     print("Step 5: Router_1 (DUT)")
-    index_before_step5 = pkts.index
-    pkts.filter_wpan_src64(ROUTER_1).\
+    pkts.copy().\
+        filter_wpan_src64(ROUTER_1).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: p.thread_nwd.tlv.prefix is not nullField and\
@@ -147,27 +166,16 @@ def verify(pv):
     #   - Address Registration TLV (Echoes back the addresses MED_1 has configured)
     #   - Mode TLV
     print("Step 6: MED_1")
-    pkts.filter_wpan_src64(MED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_UPDATE_REQUEST).\
-        filter(lambda p: consts.ADDRESS_REGISTRATION_TLV in p.mle.tlv.type).\
-        must_next()
-
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
-        filter(lambda p: {
-                          consts.SOURCE_ADDRESS_TLV,
-                          consts.ADDRESS_REGISTRATION_TLV,
-                          consts.MODE_TLV
-                         } <= set(p.mle.tlv.type)).\
-        must_next()
+    _verify_child_update_exchange(pkts, MED_1)
 
     # Step 7: Router_1 (DUT)
     # - Description: Automatically sends notification of new network data to SED_1 via a unicast MLE Child Update
     #   Request or MLE Data Response.
     # - Pass Criteria: The DUT MUST unicast MLE Child Update Request or MLE Data Response to SED_1.
     print("Step 7: Router_1 (DUT)")
-    pkts.index = index_before_step5
-    pkts.filter_wpan_src64(ROUTER_1).\
+    pkts.copy().\
+        filter_wpan_src64(ROUTER_1).\
+        filter_wpan_dst64(SED_1).\
         filter_mle_cmd2(consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE).\
         filter(lambda p: p.thread_nwd.tlv.prefix is not nullField and\
                          '2001::' in p.thread_nwd.tlv.prefix and\
@@ -175,15 +183,11 @@ def verify(pv):
         must_next()
 
     # Step 8: SED_1
-    # - Description: After receiving the MLE Data Response or MLE Child Update Request, automatically sends the global
+    #   - Description: After receiving the MLE Data Response or MLE Child Update Request, automatically sends the global
     #   address configured to Router_1 (DUT), via the Address Registration TLV, included as part of the Child Update
     #   request command.
     # - Pass Criteria: N/A
     print("Step 8: SED_1")
-    pkts.filter_wpan_src64(SED_1).\
-        filter_mle_cmd(consts.MLE_CHILD_UPDATE_REQUEST).\
-        filter(lambda p: consts.ADDRESS_REGISTRATION_TLV in p.mle.tlv.type).\
-        must_next()
 
     # Step 9: Router_1 (DUT)
     # - Description: Automatically sends a Child Update Response to SED_1, echoing back the configured addresses
@@ -194,14 +198,7 @@ def verify(pv):
     #   - Address Registration TLV (Echoes back the addresses SED_1 has configured)
     #   - Mode TLV
     print("Step 9: Router_1 (DUT)")
-    pkts.filter_wpan_src64(ROUTER_1).\
-        filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
-        filter(lambda p: {
-                          consts.SOURCE_ADDRESS_TLV,
-                          consts.ADDRESS_REGISTRATION_TLV,
-                          consts.MODE_TLV
-                         } <= set(p.mle.tlv.type)).\
-        must_next()
+    _verify_child_update_exchange(pkts, SED_1)
 
 
 if __name__ == '__main__':
