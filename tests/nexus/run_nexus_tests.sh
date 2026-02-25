@@ -142,6 +142,7 @@ DEFAULT_TESTS=(
     "9_2_10"
     "9_2_11"
     "9_2_14"
+    "9_2_15"
 )
 
 # Use provided arguments or the default test list
