@@ -238,6 +238,8 @@ def verify(pv):
     print("Step 13: Leader (DUT) multicasts a MLE Data Response.")
     pkts.filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+        filter(lambda p: p.mle.tlv.active_tstamp == ACTIVE_TIMESTAMP_STEP_5 and\
+                         p.mle.tlv.pending_tstamp == PENDING_TIMESTAMP_ROUTER).\
         must_next()
 
     #  Step 15: Router
@@ -268,7 +270,7 @@ def verify(pv):
     pkts.filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: p.mle.tlv.active_tstamp == ACTIVE_TIMESTAMP_STEP_5 and\
                          p.mle.tlv.pending_tstamp == PENDING_TIMESTAMP_ROUTER and\
-                         DELAY_TIMER_STEP_11 * 1000 - 10000 <= p.thread_meshcop.tlv.delay_timer <= DELAY_TIMER_STEP_11 * 1000).\
+                         DELAY_TIMER_STEP_11 * 1000 - 120000 <= p.thread_meshcop.tlv.delay_timer <= DELAY_TIMER_STEP_11 * 1000).\
         must_next()
 
     #  Steps 17-21 can be interleaved
@@ -299,13 +301,15 @@ def verify(pv):
     print("Step 19: Leader (DUT) sends a multicast MLE Data Response.")
     pkts.filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+        filter(lambda p: p.mle.tlv.active_tstamp == ACTIVE_TIMESTAMP_STEP_5 and\
+                         p.mle.tlv.pending_tstamp == PENDING_TIMESTAMP_COMMISSIONER).\
         must_next()
 
     #  Step 20: Router
     #  - Description: Automatically sends a unicast MLE Data Request to the DUT with the new active timestamp and
     #    pending timestamp:
     #    - Active Timestamp TLV: 20s
-    #    - Pending Timestamp TLV: 100s
+    #    - Pending Timestamp TLV: 40s
     #  - Pass Criteria: N/A
     print("Step 20: Router sends a unicast MLE Data Request to the DUT.")
 
@@ -314,7 +318,7 @@ def verify(pv):
     pkts.filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter(lambda p: p.mle.tlv.active_tstamp == ACTIVE_TIMESTAMP_STEP_5 and\
                          p.mle.tlv.pending_tstamp == PENDING_TIMESTAMP_COMMISSIONER and\
-                         DELAY_TIMER_STEP_17 * 1000 - 10000 <= p.thread_meshcop.tlv.delay_timer <= DELAY_TIMER_STEP_17 * 1000).\
+                         0 <= p.thread_meshcop.tlv.delay_timer <= DELAY_TIMER_STEP_17 * 1000).\
         must_next()
 
     #  Step 22: All

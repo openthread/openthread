@@ -323,7 +323,7 @@ void Test9_2_7(void)
      *   - Leader Data TLV
      *     - Data Version field incremented
      *     - Stable Version field incremented
-     *   - Active Timestamp TLV: 15s
+     *   - Active Timestamp TLV: 20s
      *   - Network Data TLV:
      *     - Commissioner Data TLV:
      *       - Stable flag set to 0
@@ -382,11 +382,11 @@ void Test9_2_7(void)
     nexus.AdvanceTime(kResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 11: Commissioner");
+    Log("Step 11: Router");
 
     /**
-     * Step 11: Commissioner
-     * - Description: Harness instructs the Commissioner to send a MGMT_PENDING_SET.req to the DUT’s Anycast or Routing
+     * Step 11: Router
+     * - Description: Harness instructs the Router to send a MGMT_PENDING_SET.req to the DUT’s Anycast or Routing
      *   Locator:
      *   - CoAP Request URI: coap://[<L>]:MM/c/ps
      *   - CoAP Payload: < Commissioner Session ID TLV not present>, Pending Timestamp TLV: 30s, Active Timestamp TLV:
@@ -395,41 +395,35 @@ void Test9_2_7(void)
      */
 
     {
-        Tmf::Agent    &agent   = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(ot::kUriPendingSet);
+        Tmf::Agent        &agent = router.Get<Tmf::Agent>();
+        Coap::Message     *message;
+        MeshCoP::Dataset   dataset;
+        MeshCoP::Timestamp timestamp;
 
+        message = agent.NewPriorityConfirmablePostMessage(ot::kUriPendingSet);
         VerifyOrQuit(message != nullptr);
 
-        {
-            MeshCoP::Timestamp timestamp;
-            timestamp.SetSeconds(kPendingTimestampRouter);
-            timestamp.SetTicks(0);
-            SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
-        }
+        SuccessOrQuit(router.Get<MeshCoP::ActiveDatasetManager>().Read(dataset));
 
-        {
-            MeshCoP::Timestamp timestamp;
-            timestamp.SetSeconds(kActiveTimestampRouter);
-            timestamp.SetTicks(0);
-            SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
-        }
+        timestamp.SetSeconds(kActiveTimestampRouter);
+        timestamp.SetTicks(0);
+        SuccessOrQuit(dataset.Write<MeshCoP::ActiveTimestampTlv>(timestamp));
 
-        SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerStep11 * 1000));
+        timestamp.SetSeconds(kPendingTimestampRouter);
+        timestamp.SetTicks(0);
+        SuccessOrQuit(dataset.Write<MeshCoP::PendingTimestampTlv>(timestamp));
 
-        Tmf::MessageInfo messageInfo(commissioner.GetInstance());
+        SuccessOrQuit(dataset.Write<MeshCoP::DelayTimerTlv>(kDelayTimerStep11 * 1000));
+
+        SuccessOrQuit(message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
+
+        Tmf::MessageInfo messageInfo(router.GetInstance());
         messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
         SuccessOrQuit(agent.SendMessage(*message, messageInfo));
     }
 
     // Wait for acceptance and retransmissions if needed
     nexus.AdvanceTime(2 * kResponseTime);
-
-    {
-        MeshCoP::Timestamp timestamp;
-        timestamp = leader.Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
-        Log("Pending Timestamp: %s, seconds: %llu", timestamp.IsValid() ? "valid" : "invalid",
-            (unsigned long long)timestamp.GetSeconds());
-    }
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 12: Leader (DUT)");
@@ -514,7 +508,7 @@ void Test9_2_7(void)
      *     - PSKc TLV
      *     - Security Policy TLV
      *   - Active Timestamp TLV: 20s
-     *   - Pending Timestamp TLV: 100s
+     *   - Pending Timestamp TLV: 30s
      */
 
     nexus.AdvanceTime(kResponseTime);
@@ -605,7 +599,7 @@ void Test9_2_7(void)
      * - Description: Automatically sends a unicast MLE Data Request to the DUT with the new active timestamp and
      *   pending timestamp:
      *   - Active Timestamp TLV: 20s
-     *   - Pending Timestamp TLV: 100s
+     *   - Pending Timestamp TLV: 40s
      * - Pass Criteria: N/A
      */
 
