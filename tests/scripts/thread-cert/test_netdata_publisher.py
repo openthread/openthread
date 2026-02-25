@@ -464,10 +464,11 @@ class NetDataPublisher(thread_cert.TestCase):
 
         # Verify that publishing an anycast entry will update the
         # limit for the server data unicast address entry and all are
-        # removed.
+        # removed quickly. We validate this by waiting for a short
+        # time (15 msec) after publishing anycast.
 
         leader.netdata_publish_dnssrp_anycast(ANYCAST_SEQ_NUM)
-        self.simulator.go(WAIT_TIME)
+        self.simulator.go(15)
         services = leader.get_services()
         self.assertEqual(len(services), 1)
         self.verify_anycast_services(services)
