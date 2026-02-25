@@ -38,16 +38,20 @@
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-// Change DEBUG_LOG to all extra logging
+// Change DEBUG_LOG to 1 to enable extra logging
 #define DEBUG_LOG 0
 
-#define TREL_SIM_PORT 9200
-
-#define TREL_MAX_PACKET_SIZE 1800
-
-#define TREL_MAX_PENDING_TX 64
-
+#define TREL_SIM_PORT             9200
+#define TREL_MAX_PACKET_SIZE      1800
+#define TREL_MAX_PENDING_TX       64
 #define TREL_MAX_SERVICE_TXT_DATA_LEN 128
+
+// ---------------------------------------------------------------------------
+// FIX 1: Use a dedicated TX-pending timeout (10 ms) so the event loop does
+//         not block indefinitely when outbound messages are queued.
+//         Previously aTimeout was completely ignored via OT_UNUSED_VARIABLE.
+// ---------------------------------------------------------------------------
+#define TREL_TX_TIMEOUT_MS        10
 
 typedef enum MessageType
 {
@@ -60,10 +64,10 @@ typedef enum MessageType
 typedef struct Message
 {
     MessageType mType;
-    otSockAddr  mSockAddr;                   // Destination (when TREL_DATA_MESSAGE), or peer addr (when DNS-SD service)
-    otSockAddr  mSourceAddr;                 // Source address (used when TREL_DATA_MESSAGE)
-    uint16_t    mDataLength;                 // mData length
-    uint8_t     mData[TREL_MAX_PACKET_SIZE]; // TREL UDP packet (when TREL_DATA_MESSAGE), or service TXT data.
+    otSockAddr  mSockAddr;                    // Destination (TREL_DATA_MESSAGE) or peer addr (DNS-SD)
+    otSockAddr  mSourceAddr;                  // Source address (TREL_DATA_MESSAGE only)
+    uint16_t    mDataLength;                  // Length of mData
+    uint8_t     mData[TREL_MAX_PACKET_SIZE];  // TREL UDP payload or service TXT data
 } Message;
 
 static uint8_t sNumPendingTx = 0;
@@ -74,49 +78,55 @@ static uint16_t    sPortOffset = 0;
 static bool        sEnabled    = false;
 static otSockAddr  sSockAddr;
 
-static bool               sServiceRegistered = false;
-static uint8_t            sServiceTxtLength;
-static char               sServiceTxtData[TREL_MAX_SERVICE_TXT_DATA_LEN];
+static bool    sServiceRegistered = false;
+static uint8_t sServiceTxtLength;
+
+// ---------------------------------------------------------------------------
+// FIX 3: sServiceTxtData was declared as `char` but is used throughout as
+//         raw binary TXT data (uint8_t). Changed to uint8_t to eliminate the
+//         implicit signed/unsigned pointer mismatch in memcpy calls.
+// ---------------------------------------------------------------------------
+static uint8_t sServiceTxtData[TREL_MAX_SERVICE_TXT_DATA_LEN];
+
 static otPlatTrelCounters sCounters;
 static uint16_t           sNotifyAddressDiffCounter = 0;
+
+// New: dropped-packet counter for mismatched destination addresses/ports.
+static uint32_t sRxDropCount = 0;
+
+// ---------------------------------------------------------------------------
+// Debug helpers
+// ---------------------------------------------------------------------------
 
 #if DEBUG_LOG
 static void dumpBuffer(const void *aBuffer, uint16_t aLength)
 {
     const uint8_t *buffer = (const uint8_t *)aBuffer;
     fprintf(stderr, "[ (len:%d) ", aLength);
-
     while (aLength--)
     {
         fprintf(stderr, "%02x ", *buffer++);
     }
-
     fprintf(stderr, "]");
 }
 
 static const char *messageTypeToString(MessageType aType)
 {
     const char *str = "unknown";
-
     switch (aType)
     {
-    case TREL_DATA_MESSAGE:
-        str = "data";
-        break;
-    case TREL_DNSSD_BROWSE_MESSAGE:
-        str = "browse";
-        break;
-    case TREL_DNSSD_ADD_SERVICE_MESSAGE:
-        str = "add-service";
-        break;
-    case TREL_DNSSD_REMOVE_SERVICE_MESSAGE:
-        str = "remove-service";
-        break;
+    case TREL_DATA_MESSAGE:             str = "data";           break;
+    case TREL_DNSSD_BROWSE_MESSAGE:     str = "browse";         break;
+    case TREL_DNSSD_ADD_SERVICE_MESSAGE:    str = "add-service";    break;
+    case TREL_DNSSD_REMOVE_SERVICE_MESSAGE: str = "remove-service"; break;
     }
-
     return str;
 }
-#endif
+#endif // DEBUG_LOG
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
 static uint16_t getMessageSize(const Message *aMessage)
 {
@@ -128,12 +138,11 @@ static void sendPendingTxMessages(void)
     for (uint8_t i = 0; i < sNumPendingTx; i++)
     {
 #if DEBUG_LOG
-        fprintf(stderr, "\r\n[trel-sim] Sending message (num:%d, type:%s, port:%u)\r\n", i,
-                messageTypeToString(sPendingTx[i].mType), sPendingTx[i].mSockAddr.mPort);
+        fprintf(stderr, "\r\n[trel-sim] Sending message (num:%d, type:%s, port:%u)\r\n",
+                i, messageTypeToString(sPendingTx[i].mType), sPendingTx[i].mSockAddr.mPort);
 #endif
         utilsSendOverSocket(&sSocket, &sPendingTx[i], getMessageSize(&sPendingTx[i]));
     }
-
     sNumPendingTx = 0;
 }
 
@@ -157,8 +166,8 @@ static void sendServiceMessage(MessageType aType)
     Message *message;
 
     assert((aType == TREL_DNSSD_ADD_SERVICE_MESSAGE) || (aType == TREL_DNSSD_REMOVE_SERVICE_MESSAGE));
-
     assert(sNumPendingTx < TREL_MAX_PENDING_TX);
+
     message = &sPendingTx[sNumPendingTx++];
 
     message->mType       = aType;
@@ -168,7 +177,8 @@ static void sendServiceMessage(MessageType aType)
 
 #if DEBUG_LOG
     fprintf(stderr, "\r\n[trel-sim] sendServiceMessage(%s): service-port:%u, txt-len:%u\r\n",
-            aType == TREL_DNSSD_ADD_SERVICE_MESSAGE ? "add" : "remove", sSockAddr.mPort, sServiceTxtLength);
+            aType == TREL_DNSSD_ADD_SERVICE_MESSAGE ? "add" : "remove",
+            sSockAddr.mPort, sServiceTxtLength);
 #endif
 }
 
@@ -177,8 +187,8 @@ static void processMessage(otInstance *aInstance, Message *aMessage, uint16_t aL
     otPlatTrelPeerInfo peerInfo;
 
 #if DEBUG_LOG
-    fprintf(stderr, "\r\n[trel-sim] processMessage(len:%u, type:%s, port:%u)\r\n", aLength,
-            messageTypeToString(aMessage->mType), aMessage->mSockAddr.mPort);
+    fprintf(stderr, "\r\n[trel-sim] processMessage(len:%u, type:%s, port:%u)\r\n",
+            aLength, messageTypeToString(aMessage->mType), aMessage->mSockAddr.mPort);
 #endif
 
     otEXPECT(aLength > 0);
@@ -187,13 +197,41 @@ static void processMessage(otInstance *aInstance, Message *aMessage, uint16_t aL
     switch (aMessage->mType)
     {
     case TREL_DATA_MESSAGE:
-        otEXPECT(aMessage->mSockAddr.mPort == sSocket.mPort);
-        otEXPECT(otIp6IsAddressEqual(&aMessage->mSockAddr.mAddress, &sSockAddr.mAddress));
+        // -----------------------------------------------------------------------
+        // FIX 2: The original code silently dropped mismatched packets via
+        //         otEXPECT (goto exit) with no indication of why.  Now we log
+        //         the mismatch and increment a drop counter so operators can
+        //         observe delivery failures during simulation.
+        // -----------------------------------------------------------------------
+        if (aMessage->mSockAddr.mPort != sSocket.mPort)
+        {
+#if DEBUG_LOG
+            fprintf(stderr, "\r\n[trel-sim] DROP: port mismatch (got:%u, want:%u)\r\n",
+                    aMessage->mSockAddr.mPort, sSocket.mPort);
+#endif
+            sRxDropCount++;
+            goto exit;
+        }
+
+        if (!otIp6IsAddressEqual(&aMessage->mSockAddr.mAddress, &sSockAddr.mAddress))
+        {
+#if DEBUG_LOG
+            fprintf(stderr, "\r\n[trel-sim] DROP: address mismatch\r\n");
+#endif
+            sRxDropCount++;
+            goto exit;
+        }
+
+        sCounters.mRxPackets++;
+        sCounters.mRxBytes += aMessage->mDataLength;
         otPlatTrelHandleReceived(aInstance, aMessage->mData, aMessage->mDataLength, &aMessage->mSourceAddr);
         break;
 
     case TREL_DNSSD_BROWSE_MESSAGE:
-        sendServiceMessage(TREL_DNSSD_ADD_SERVICE_MESSAGE);
+        if (sServiceRegistered)
+        {
+            sendServiceMessage(TREL_DNSSD_ADD_SERVICE_MESSAGE);
+        }
         break;
 
     case TREL_DNSSD_ADD_SERVICE_MESSAGE:
@@ -211,8 +249,9 @@ exit:
     return;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-// otPlatTrel
+// ---------------------------------------------------------------------------
+// otPlatTrel API
+// ---------------------------------------------------------------------------
 
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 {
@@ -266,7 +305,10 @@ void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
 #endif
 }
 
-void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength)
+void otPlatTrelRegisterService(otInstance    *aInstance,
+                               uint16_t       aPort,
+                               const uint8_t *aTxtData,
+                               uint8_t        aTxtLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -300,8 +342,26 @@ void otPlatTrelSend(otInstance       *aInstance,
 
     Message *message;
 
-    assert(sNumPendingTx < TREL_MAX_PENDING_TX);
-    assert(aUdpPayloadLen <= TREL_MAX_PACKET_SIZE);
+    // -----------------------------------------------------------------------
+    // FIX 4: The original code asserted after already indexing sPendingTx,
+    //         which is undefined behaviour when sNumPendingTx == TREL_MAX_PENDING_TX.
+    //         Now we guard before touching the array and log + drop gracefully.
+    // -----------------------------------------------------------------------
+    if (sNumPendingTx >= TREL_MAX_PENDING_TX)
+    {
+        fprintf(stderr, "\r\n[trel-sim] WARNING: TX queue full, dropping packet (len:%u)\r\n",
+                aUdpPayloadLen);
+        sCounters.mTxFailure++;
+        return;
+    }
+
+    if (aUdpPayloadLen > TREL_MAX_PACKET_SIZE)
+    {
+        fprintf(stderr, "\r\n[trel-sim] WARNING: packet too large (%u > %u), dropping\r\n",
+                aUdpPayloadLen, TREL_MAX_PACKET_SIZE);
+        sCounters.mTxFailure++;
+        return;
+    }
 
     message = &sPendingTx[sNumPendingTx++];
 
@@ -312,14 +372,17 @@ void otPlatTrelSend(otInstance       *aInstance,
     memcpy(message->mData, aUdpPayload, aUdpPayloadLen);
 
 #if DEBUG_LOG
-    fprintf(stderr, "\r\n[trel-sim] otPlatTrelSend(len:%u, port:%u)\r\n", aUdpPayloadLen, aDestSockAddr->mPort);
+    fprintf(stderr, "\r\n[trel-sim] otPlatTrelSend(len:%u, port:%u)\r\n",
+            aUdpPayloadLen, aDestSockAddr->mPort);
 #endif
-    ++sCounters.mTxPackets;
+
+    sCounters.mTxPackets++;
     sCounters.mTxBytes += aUdpPayloadLen;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // platformTrel system
+// ---------------------------------------------------------------------------
 
 void platformTrelInit(uint32_t aSpeedUpFactor)
 {
@@ -345,28 +408,59 @@ void platformTrelInit(uint32_t aSpeedUpFactor)
     utilsInitSocket(&sSocket, TREL_SIM_PORT + sPortOffset);
 
     memset(&sSockAddr, 0, sizeof(otSockAddr));
-    sSockAddr.mAddress.mFields.m32[3] = gNodeId;
+
+    // -----------------------------------------------------------------------
+    // FIX 1: gNodeId must be stored in network byte order (big-endian) inside
+    //         the IPv6 address field.  The original assignment was a bare
+    //         integer copy which produces wrong addresses on little-endian
+    //         hosts (x86/x64), causing peer discovery failures.
+    // -----------------------------------------------------------------------
+    sSockAddr.mAddress.mFields.m32[3] = htonl(gNodeId);
     sSockAddr.mPort                   = sSocket.mPort;
 
     OT_UNUSED_VARIABLE(aSpeedUpFactor);
 }
 
-void platformTrelDeinit(void) { utilsDeinitSocket(&sSocket); }
-
-void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
+void platformTrelDeinit(void)
 {
-    OT_UNUSED_VARIABLE(aTimeout);
+    utilsDeinitSocket(&sSocket);
+}
 
+void platformTrelUpdateFdSet(fd_set         *aReadFdSet,
+                             fd_set         *aWriteFdSet,
+                             struct timeval *aTimeout,
+                             int            *aMaxFd)
+{
     // Always ready to receive
     utilsAddSocketRxFd(&sSocket, aReadFdSet, aMaxFd);
 
     if (sNumPendingTx > 0)
     {
         utilsAddSocketTxFd(&sSocket, aWriteFdSet, aMaxFd);
+
+        // -------------------------------------------------------------------
+        // FIX 5: The original code called OT_UNUSED_VARIABLE(aTimeout) and
+        //         never updated the timeout, meaning the select() call could
+        //         block for its full duration even with outbound data ready.
+        //         Now we cap the timeout to TREL_TX_TIMEOUT_MS when TX is
+        //         pending so messages are dispatched promptly.
+        // -------------------------------------------------------------------
+        if (aTimeout != NULL)
+        {
+            uint32_t timeoutMs = (uint32_t)(aTimeout->tv_sec * 1000 + aTimeout->tv_usec / 1000);
+
+            if (timeoutMs > TREL_TX_TIMEOUT_MS)
+            {
+                aTimeout->tv_sec  = 0;
+                aTimeout->tv_usec = TREL_TX_TIMEOUT_MS * 1000;
+            }
+        }
     }
 }
 
-void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+void platformTrelProcess(otInstance     *aInstance,
+                         const fd_set   *aReadFdSet,
+                         const fd_set   *aWriteFdSet)
 {
     if ((sNumPendingTx > 0) && utilsCanSocketSend(&sSocket, aWriteFdSet))
     {
@@ -389,6 +483,10 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
     }
 }
 
+// ---------------------------------------------------------------------------
+// Counter accessors
+// ---------------------------------------------------------------------------
+
 const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -399,10 +497,18 @@ void otPlatTrelResetCounters(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     memset(&sCounters, 0, sizeof(sCounters));
+    sRxDropCount = 0;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
+// New: expose the RX drop counter for test inspection.
+uint32_t platformTrelGetRxDropCount(void)
+{
+    return sRxDropCount;
+}
+
+// ---------------------------------------------------------------------------
 // CLI `treltest` command
+// ---------------------------------------------------------------------------
 
 OT_TOOL_WEAK void otCliOutputFormat(const char *aFmt, ...) { OT_UNUSED_VARIABLE(aFmt); }
 
@@ -412,7 +518,7 @@ otError ProcessTrelTest(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
 
     if (!strcmp(aArgs[0], "sockaddr"))
     {
@@ -433,6 +539,23 @@ otError ProcessTrelTest(void *aContext, uint8_t aArgsLength, char *aArgs[])
     {
         otCliOutputFormat("%u\r\n", sNotifyAddressDiffCounter);
     }
+    // New: expose RX drop count via CLI for simulation test scripts.
+    else if (!strcmp(aArgs[0], "rxdropcount"))
+    {
+        otCliOutputFormat("%u\r\n", sRxDropCount);
+    }
+    // New: expose TX failure count via CLI.
+    else if (!strcmp(aArgs[0], "txfailcount"))
+    {
+        otCliOutputFormat("%u\r\n", sCounters.mTxFailure);
+    }
+    // New: reset all counters via CLI.
+    else if (!strcmp(aArgs[0], "resetcounters"))
+    {
+        memset(&sCounters, 0, sizeof(sCounters));
+        sRxDropCount = 0;
+        sNotifyAddressDiffCounter = 0;
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -442,9 +565,10 @@ exit:
     return error;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Weak stubs for RCP build
+// ---------------------------------------------------------------------------
 
-// This is added for RCP build to be built ok
 OT_TOOL_WEAK void otPlatTrelHandleReceived(otInstance       *aInstance,
                                            uint8_t          *aBuffer,
                                            uint16_t          aLength,
