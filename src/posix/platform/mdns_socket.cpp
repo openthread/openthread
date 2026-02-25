@@ -475,6 +475,7 @@ void MdnsSocket::ReceiveMessage(MsgType aMsgType)
         VerifyOrExit(rval >= 0, LogCrit("recvfrom() for IPv6 socket failed, errno: %s", strerror(errno)));
         length = static_cast<uint16_t>(rval);
         ReadIp6AddressFrom(&sockaddr6.sin6_addr, addrInfo.mAddress);
+        addrInfo.mPort = ntohs(sockaddr6.sin6_port);
         break;
 
     case kIp4Msg:
@@ -485,6 +486,7 @@ void MdnsSocket::ReceiveMessage(MsgType aMsgType)
         VerifyOrExit(rval >= 0, LogCrit("recvfrom() for IPv4 socket failed, errno: %s", strerror(errno)));
         length = static_cast<uint16_t>(rval);
         otIp4ToIp4MappedIp6Address((otIp4Address *)(&sockaddr.sin_addr.s_addr), &addrInfo.mAddress);
+        addrInfo.mPort = ntohs(sockaddr.sin_port);
         break;
     }
 
@@ -494,7 +496,6 @@ void MdnsSocket::ReceiveMessage(MsgType aMsgType)
     VerifyOrExit(message != nullptr);
     SuccessOrExit(otMessageAppend(message, buffer, length));
 
-    addrInfo.mPort         = kMdnsPort;
     addrInfo.mInfraIfIndex = mInfraIfIndex;
 
     otPlatMdnsHandleReceive(mInstance, message, /* aInUnicast */ false, &addrInfo);
