@@ -210,8 +210,22 @@ def apply_patches():
 
     def patched_get_field(self, name):
         v = old_get_field(self, name)
-        if v is None and name == 'wpan_tap.ch_num':
-            v = old_get_field(self, 'wpan-tap.ch_num')
+        if v is None:
+            if name == 'wpan_tap.ch_num':
+                v = old_get_field(self, 'wpan-tap.ch_num')
+            elif name.startswith('mle.aux_sec.'):
+                # Map MLE security fields from WPAN layer if missing in MLE layer
+                try:
+                    wpan_layer = self._packet.wpan
+                    wpan_name = name.replace('mle.aux_sec.', 'wpan.aux_sec.')
+                    v = wpan_layer.get_field(wpan_name)
+                except AttributeError:
+                    pass
+            elif name == 'mle.sec_suite':
+                try:
+                    v = self._packet.wpan.get_field('wpan.aux_sec.sec_suite')
+                except AttributeError:
+                    pass
         return v
 
     Layer.get_field = patched_get_field
@@ -219,6 +233,10 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.tlv_request'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.active_operational_dataset'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.pending_operational_dataset'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['mle.aux_sec.key_id_mode'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.aux_sec.key_source'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.aux_sec.key_index'] = layer_fields._auto
+    layer_fields._layer_containers.add('mle.aux_sec')
     layer_fields._LAYER_FIELDS['coap.tlv.ipv6_address'] = layer_fields._list(layer_fields._ipv6_addr)
     layer_fields._LAYER_FIELDS['coap.tlv.rloc16'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.mode'] = layer_fields._auto
