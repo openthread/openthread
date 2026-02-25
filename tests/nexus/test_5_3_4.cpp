@@ -112,20 +112,11 @@ void Test5_3_4(void)
      */
 
     /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(router1, sed1);
     for (Node *med : meds)
     {
-        leader.AllowList(*med);
-    }
-
-    router1.AllowList(leader);
-    router1.AllowList(sed1);
-
-    sed1.AllowList(router1);
-
-    for (Node *med : meds)
-    {
-        med->AllowList(leader);
+        nexus.AllowLinkBetween(leader, *med);
     }
 
     leader.Form();

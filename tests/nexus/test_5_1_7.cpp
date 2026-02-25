@@ -110,12 +110,11 @@ static void CreateNodes(Core &aNexus, Node *aNodes[], uint16_t aCount, const cha
     }
 }
 
-static void AllowListNodes(Node &aRouter, Node *aNodes[], uint16_t aCount)
+static void AllowLinkBetweenNodes(Core &aNexus, Node &aRouter, Node *aNodes[], uint16_t aCount)
 {
     for (uint16_t i = 0; i < aCount; i++)
     {
-        aRouter.AllowList(*aNodes[i]);
-        aNodes[i]->AllowList(aRouter);
+        aNexus.AllowLinkBetween(aRouter, *aNodes[i]);
     }
 }
 
@@ -165,11 +164,10 @@ void Test5_1_7(void)
     nexus.AdvanceTime(0);
 
     // Use AllowList feature to restrict the topology.
-    leader.AllowList(router);
-    router.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router);
 
-    AllowListNodes(router, meds, kNumMeds);
-    AllowListNodes(router, seds, kNumSeds);
+    AllowLinkBetweenNodes(nexus, router, meds, kNumMeds);
+    AllowLinkBetweenNodes(nexus, router, seds, kNumSeds);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Leader, Router_1 (DUT), Children");

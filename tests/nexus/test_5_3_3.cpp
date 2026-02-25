@@ -121,24 +121,19 @@ void Test5_3_3(void)
      */
 
     /** Link between Leader and Router 1 */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router1);
 
     /** Link between Leader and Router 2 (DUT) */
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    nexus.AllowLinkBetween(leader, dut);
 
     /** Link between Leader and Router 3 */
-    leader.AllowList(router3);
-    router3.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router3);
 
     /** Link between Router 2 (DUT) and Router 3 */
-    dut.AllowList(router3);
-    router3.AllowList(dut);
+    nexus.AllowLinkBetween(dut, router3);
 
     /** Link between Router 2 (DUT) and MED 1 */
-    dut.AllowList(med1);
-    med1.AllowList(dut);
+    nexus.AllowLinkBetween(dut, med1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

@@ -107,32 +107,27 @@ void Test5_1_11(void)
     /**
      * Leader <-> REED_1
      */
-    leader.AllowList(reed1);
-    reed1.AllowList(leader);
+    nexus.AllowLinkBetween(leader, reed1);
 
     /**
      * Leader <-> Router_2
      */
-    leader.AllowList(router2);
-    router2.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router2);
 
     /**
      * REED_1 <-> DUT
      */
-    reed1.AllowList(dut);
-    dut.AllowList(reed1);
+    nexus.AllowLinkBetween(reed1, dut);
 
     /**
      * Router_2 <-> DUT
      */
-    router2.AllowList(dut);
-    dut.AllowList(router2);
+    nexus.AllowLinkBetween(router2, dut);
 
     /**
      * REED_1 <-> Router_2 (to ensure they can see each other if needed, though not strictly required by topology)
      */
-    reed1.AllowList(router2);
-    router2.AllowList(reed1);
+    nexus.AllowLinkBetween(reed1, router2);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Leader, REED_1, Router_2");

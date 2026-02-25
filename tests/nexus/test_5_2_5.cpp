@@ -117,18 +117,12 @@ void Test5_2_5(void)
      */
     for (uint16_t i = 0; i < kRouterCount; i++)
     {
-        leader.AllowList(*routers[i]);
-        routers[i]->AllowList(leader);
+        nexus.AllowLinkBetween(leader, *routers[i]);
     }
 
-    leader.AllowList(br);
-    br.AllowList(leader);
-
-    leader.AllowList(med1);
-    med1.AllowList(leader);
-
-    routers[0]->AllowList(reed1);
-    reed1.AllowList(*routers[0]);
+    nexus.AllowLinkBetween(leader, br);
+    nexus.AllowLinkBetween(leader, med1);
+    nexus.AllowLinkBetween(*routers[0], reed1);
 
     Log("Step 1: Configure the Leader to be a DHCPv6 Border Router for prefix 2001::");
 

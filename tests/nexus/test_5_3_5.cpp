@@ -117,17 +117,10 @@ void Test5_3_5(void)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(dut);
-    leader.AllowList(router2);
-
-    dut.AllowList(leader);
-    dut.AllowList(router2);
-    dut.AllowList(router3);
-
-    router2.AllowList(leader);
-    router2.AllowList(dut);
-
-    router3.AllowList(dut);
+    nexus.AllowLinkBetween(leader, dut);
+    nexus.AllowLinkBetween(leader, router2);
+    nexus.AllowLinkBetween(dut, router2);
+    nexus.AllowLinkBetween(dut, router3);
 
     /** Leader and Router 2 Link Quality 3 */
     SuccessOrQuit(leader.Get<Mac::Filter>().AddRssIn(router2.Get<Mac::Mac>().GetExtAddress(), kRssiLinkQuality3));

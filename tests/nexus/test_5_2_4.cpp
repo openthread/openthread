@@ -112,17 +112,14 @@ void Test5_2_4(void)
     /** Use AllowList feature to restrict the topology. */
     for (uint16_t i = 0; i < kNumRouters; i++)
     {
-        leader.AllowList(*routers[i]);
-        routers[i]->AllowList(leader);
+        nexus.AllowLinkBetween(leader, *routers[i]);
     }
 
     /** Router 15 and REED_1 (DUT) have a link */
-    routers[kNumRouters - 1]->AllowList(reed1);
-    reed1.AllowList(*routers[kNumRouters - 1]);
+    nexus.AllowLinkBetween(*routers[kNumRouters - 1], reed1);
 
     /** REED_1 (DUT) and MED_1 have a link. */
-    reed1.AllowList(med1);
-    med1.AllowList(reed1);
+    nexus.AllowLinkBetween(reed1, med1);
 
     Log("Step 1: Ensure topology is formed correctly without the DUT.");
 

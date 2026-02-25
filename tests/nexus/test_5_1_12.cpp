@@ -78,12 +78,10 @@ void Test5_1_12(void)
     dut.SetName("DUT");
 
     // Leader <-> Router_2
-    leader.AllowList(router2);
-    router2.AllowList(leader);
+    nexus.AllowLinkBetween(leader, router2);
 
     // Leader <-> DUT
-    leader.AllowList(dut);
-    dut.AllowList(leader);
+    nexus.AllowLinkBetween(leader, dut);
 
     nexus.AdvanceTime(0);
 
@@ -133,8 +131,7 @@ void Test5_1_12(void)
      * - Description: Harness enables communication between Router_1 (DUT) and Router_2.
      * - Pass Criteria: N/A
      */
-    dut.AllowList(router2);
-    router2.AllowList(dut);
+    nexus.AllowLinkBetween(dut, router2);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: The DUT and Router_2 automatically exchange unicast Link Request and unicast Link Accept messages.");

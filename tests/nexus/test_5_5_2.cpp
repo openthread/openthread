@@ -114,11 +114,8 @@ void Test5_5_2(void)
      */
     Log("Step 1: All");
 
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    router1.AllowList(med1);
-    med1.AllowList(router1);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(router1, med1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

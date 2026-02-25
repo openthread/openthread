@@ -115,21 +115,14 @@ void Test5_3_7(void)
      * - Pass Criteria: N/A
      */
 
-    leader.AllowList(router1);
-    leader.AllowList(router2);
-    leader.AllowList(med2);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(leader, router2);
+    nexus.AllowLinkBetween(leader, med2);
 
-    router1.AllowList(leader);
-    router1.AllowList(router2);
-    router1.AllowList(med1);
+    nexus.AllowLinkBetween(router1, router2);
+    nexus.AllowLinkBetween(router1, med1);
 
-    router2.AllowList(leader);
-    router2.AllowList(router1);
-    router2.AllowList(sed1);
-
-    med1.AllowList(router1);
-    med2.AllowList(leader);
-    sed1.AllowList(router2);
+    nexus.AllowLinkBetween(router2, sed1);
 
     leader.Form();
     nexus.AdvanceTime(kFormNetworkTime);

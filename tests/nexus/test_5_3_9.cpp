@@ -164,14 +164,10 @@ void Test5_3_9(void)
      * - Pass Criteria: N/A
      */
     Log("Step 2: All");
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-    leader.AllowList(dut);
-    dut.AllowList(leader);
-    leader.AllowList(router3);
-    router3.AllowList(leader);
-    dut.AllowList(sed1);
-    sed1.AllowList(dut);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(leader, dut);
+    nexus.AllowLinkBetween(leader, router3);
+    nexus.AllowLinkBetween(dut, sed1);
 
     router1.Join(leader);
     dut.Join(leader);

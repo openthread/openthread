@@ -122,14 +122,9 @@ void Test5_1_3(void)
      */
 
     /** Use AllowList feature to restrict the topology. */
-    leader.AllowList(router1);
-    router1.AllowList(leader);
-
-    leader.AllowList(router2);
-    router2.AllowList(leader);
-
-    router1.AllowList(router2);
-    router2.AllowList(router1);
+    nexus.AllowLinkBetween(leader, router1);
+    nexus.AllowLinkBetween(leader, router2);
+    nexus.AllowLinkBetween(router1, router2);
 
     leader.Get<Mle::Mle>().SetPreferredLeaderPartitionId(kMaxPartitionId);
     leader.Form();

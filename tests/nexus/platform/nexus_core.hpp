@@ -59,6 +59,9 @@ public:
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test specific helper methods
 
+    void AllowLinkBetween(Node &aFirstNode, Node &aSecondNode);
+    void UnallowLinkBetween(Node &aFirstNode, Node &aSecondNode);
+
     void SaveTestInfo(const char *aFilename);
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
