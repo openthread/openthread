@@ -32,6 +32,7 @@ import os
 import json
 import traceback
 import struct
+import logging
 
 # Add the thread-cert directory to sys.path to find pktverify
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -289,15 +290,28 @@ def run_main(verify_func):
     try:
         wireshark_prefs = consts.WIRESHARK_OVERRIDE_PREFS.copy()
 
+        # Clean up existing keys from consts.py to avoid formatting issues
+        existing_keys_str = wireshark_prefs.get('uat:ieee802154_keys', '')
+        keys = []
+        for line in existing_keys_str.split('\n'):
+            line = line.strip()
+            if line:
+                keys.append(line)
+
         network_key = data.get('network_key')
         if network_key:
-            existing_keys = wireshark_prefs.get('uat:ieee802154_keys', '')
             new_key = f'"{network_key}","1","Thread hash"'
-            if network_key not in existing_keys:
-                if existing_keys:
-                    wireshark_prefs['uat:ieee802154_keys'] = existing_keys + '\n' + new_key
-                else:
-                    wireshark_prefs['uat:ieee802154_keys'] = new_key
+            if not any(network_key in k for k in keys):
+                keys.append(new_key)
+
+        # Add all network keys specified in the test info
+        network_keys = data.get('network_keys', [])
+        for k in network_keys:
+            new_key = f'"{k}","1","Thread hash"'
+            if not any(k in existing for existing in keys):
+                keys.append(new_key)
+
+        wireshark_prefs['uat:ieee802154_keys'] = '\n'.join(keys)
 
         mesh_local_prefix = data.get('extra_vars', {}).get('mesh_local_prefix')
         if mesh_local_prefix:

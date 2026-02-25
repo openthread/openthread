@@ -134,6 +134,15 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
         keyString.AppendHexBytes(networkKey.m8, OT_NETWORK_KEY_SIZE);
         fprintf(file, "  \"network_key\": \"%s\",\n", keyString.AsCString());
 
+        fprintf(file, "  \"network_keys\": [\n");
+        for (const NetworkKey &key : mNetworkKeys)
+        {
+            String<OT_NETWORK_KEY_SIZE * 2 + 1> keyStr;
+            keyStr.AppendHexBytes(key.m8, OT_NETWORK_KEY_SIZE);
+            fprintf(file, "    \"%s\"%s\n", keyStr.AsCString(), (&key == mNetworkKeys.Back()) ? "" : ",");
+        }
+        fprintf(file, "  ],\n");
+
         if (leaderNode->Get<Mle::Mle>().IsLeader())
         {
             Ip6::Address aloc;
@@ -218,6 +227,8 @@ exit:
         fclose(file);
     }
 }
+
+void Core::AddNetworkKey(const NetworkKey &aKey) { SuccessOrQuit(mNetworkKeys.PushBack(aKey)); }
 
 Core::~Core(void) { sInUse = false; }
 

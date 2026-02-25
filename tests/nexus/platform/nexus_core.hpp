@@ -29,8 +29,10 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
+#include "common/array.hpp"
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
+#include "thread/key_manager.hpp"
 
 #include "nexus_alarm.hpp"
 #include "nexus_pcap.hpp"
@@ -60,6 +62,7 @@ public:
     // Test specific helper methods
 
     void SaveTestInfo(const char *aFilename, Node *aLeaderNode = nullptr);
+    void AddNetworkKey(const NetworkKey &aKey);
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
                                   uint16_t            aPayloadSize     = 0,
@@ -109,13 +112,14 @@ private:
     static Core *sCore;
     static bool  sInUse;
 
-    OwningList<Node> mNodes;
-    Pcap             mPcap;
-    uint16_t         mCurNodeId;
-    bool             mPendingAction;
-    TimeMilli        mNow;
-    TimeMilli        mNextAlarmTime;
-    Node            *mActiveNode;
+    OwningList<Node>      mNodes;
+    Pcap                  mPcap;
+    Array<NetworkKey, 16> mNetworkKeys;
+    uint16_t              mCurNodeId;
+    bool                  mPendingAction;
+    TimeMilli             mNow;
+    TimeMilli             mNextAlarmTime;
+    Node                 *mActiveNode;
 };
 
 void Log(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
