@@ -37,6 +37,10 @@ sys.path.append(CUR_DIR)
 import verify_utils
 from pktverify import consts
 
+# Channel Mask for Channel 20 (1 << (31 - 20) = 1 << 11 = 0x800).
+# The implementation uses a big-endian bit mask where bit 0 is MSB.
+CONFLICTING_CHANNEL_MASK = bytes([0x00, 0x04, 0x00, 0x00, 0x08, 0x00])
+
 
 def verify(pv):
     # 9.2.14 PAN ID Query Requests
@@ -104,6 +108,7 @@ def verify(pv):
                           consts.NM_CHANNEL_MASK_TLV,
                           consts.NM_PAN_ID_TLV
                           } <= set(p.coap.tlv.type)).\
+        filter(lambda p: p.coap.tlv.channel_mask == CONFLICTING_CHANNEL_MASK).\
         must_next()
 
     # Step 4: Commissioner
@@ -142,6 +147,7 @@ def verify(pv):
                           consts.NM_CHANNEL_MASK_TLV,
                           consts.NM_PAN_ID_TLV
                           } <= set(p.coap.tlv.type)).\
+        filter(lambda p: p.coap.tlv.channel_mask == CONFLICTING_CHANNEL_MASK).\
         must_next()
 
     # Step 6: Commissioner
