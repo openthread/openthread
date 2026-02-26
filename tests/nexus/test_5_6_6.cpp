@@ -159,6 +159,7 @@ void Test5_6_6(void)
     {
         NetworkData::OnMeshPrefixConfig config;
 
+        config.Clear();
         SuccessOrQuit(config.GetPrefix().FromString(kPrefix1));
         config.mStable       = true;
         config.mOnMesh       = true;
