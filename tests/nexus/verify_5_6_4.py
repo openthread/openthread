@@ -170,8 +170,7 @@ def verify(pv):
     #     - The Prefix 2 TLV MUST NOT be included
     #   - Active Timestamp TLV
     print("Step 9: Leader (DUT)")
-    pkts.filter(lambda p: p.mle.cmd is not nullField).\
-      filter(lambda p: p.mle.cmd in {consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE}).\
+    pkts.filter(lambda p: p.mle.cmd and p.mle.cmd in {consts.MLE_CHILD_UPDATE_REQUEST, consts.MLE_DATA_RESPONSE}).\
       filter(lambda p: p.wpan.src64 == DUT).\
       filter(lambda p: p.wpan.dst64 == SED_1).\
       filter(lambda p: {

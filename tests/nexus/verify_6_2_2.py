@@ -66,6 +66,10 @@ def verify(pv):
     ROUTER_1 = pv.vars['ROUTER_1']
     ROUTER_2 = pv.vars['ROUTER_2']
 
+    def is_mle_announce_or_child_id_request(p):
+        """Checks if a packet is an MLE Announce or Child ID Request."""
+        return p.mle.cmd and p.mle.cmd in {consts.MLE_ANNOUNCE, consts.MLE_CHILD_ID_REQUEST}
+
     if 'ED_1' in pv.vars:
         DUT = pv.vars['ED_1']
         IS_TOPOLOGY_A = True
@@ -143,10 +147,10 @@ def verify(pv):
             must_next()
 
         # Verify no MLE Announce or additional Child ID Request from DUT
-        pkts.filter_wpan_src64(DUT).\
-            filter(lambda p: hasattr(p, 'mle') and\
-                   p.mle.cmd in [consts.MLE_ANNOUNCE, consts.MLE_CHILD_ID_REQUEST]).\
-            must_not_next()
+        with pkts.save_index():
+            pkts.filter_wpan_src64(DUT).\
+                filter(is_mle_announce_or_child_id_request).\
+                must_not_next()
 
     else:
         # Step 8: SED_1 (DUT) [Topology B only]
@@ -157,16 +161,17 @@ def verify(pv):
         #   - The DUT MUST NOT transmit a MLE Announce message or an additional MLE Child ID Request. If it does, the
         #     test has failed.
         print("Step 8: SED_1 (DUT) [Topology B only]")
-        # We look for any packet from DUT to its parent ROUTER_1 as a sign of connectivity and keep-alive.
+        # We look for a Data Request from DUT to its parent ROUTER_1 as a sign of connectivity and keep-alive.
         pkts.filter_wpan_src64(DUT).\
-            filter_wpan_dst64(ROUTER_1).\
+            filter(lambda p: p.wpan.dst64 == ROUTER_1 or p.wpan.dst16 == pv.vars['ROUTER_1_RLOC16']).\
+            filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
             must_next()
 
         # Verify no MLE Announce or additional Child ID Request from DUT
-        pkts.filter_wpan_src64(DUT).\
-            filter(lambda p: hasattr(p, 'mle') and\
-                   p.mle.cmd in [consts.MLE_ANNOUNCE, consts.MLE_CHILD_ID_REQUEST]).\
-            must_not_next()
+        with pkts.save_index():
+            pkts.filter_wpan_src64(DUT).\
+                filter(is_mle_announce_or_child_id_request).\
+                must_not_next()
 
     # Step 9: Router_1
     # - Description: To verify connectivity, Harness instructs Router_1 to send an ICMPv6 Echo Request to the DUT link

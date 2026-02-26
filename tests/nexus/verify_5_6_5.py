@@ -171,7 +171,7 @@ def verify(pv):
     pkts.copy().\
         filter_wpan_src64(LEADER).\
         filter_wpan_dst64(SED_1).\
-        filter(lambda p: p.mle.cmd in {
+        filter(lambda p: p.mle.cmd and p.mle.cmd in {
             consts.MLE_CHILD_UPDATE_REQUEST,
             consts.MLE_DATA_RESPONSE
         }).\
