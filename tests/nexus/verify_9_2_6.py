@@ -396,7 +396,7 @@ def verify(pv):
                     } <= set(p.mle.tlv.type)).\
             must_next()
 
-    pkts.index = max(med_pkts.index, sed_pkts.index)
+    pkts.index = max(pkts.index, med_pkts.index, sed_pkts.index)
 
     # Step 18: Commissioner
     # - Description: Harness instructs Commissioner to send MGMT_PENDING_SET.req to the Leader Anycast or Routing
@@ -408,7 +408,8 @@ def verify(pv):
     print("Step 18: Commissioner sends MGMT_PENDING_SET.req")
     # Commissioner sends MGMT_PENDING_SET.req after Step 12.
     # It might overlap with MED/SED updates (Steps 13-17).
-    pkts_step18 = pv.pkts.range(index12)
+    # We search from index9 to be robust.
+    pkts_step18 = pkts.range(index9)
     pkts_step18.filter_coap_request(consts.MGMT_PENDING_SET_URI).\
         filter(lambda p: p.coap.tlv.type is not nullField and\
                {
@@ -646,7 +647,7 @@ def verify(pv):
                     } <= set(p.mle.tlv.type)).\
             must_next()
 
-    pkts.index = max(med_pkts.index, sed_pkts.index)
+    pkts.index = max(pkts.index, med_pkts.index, sed_pkts.index)
 
     # Step 29: Harness
     # - Description: Wait for delay timer to expire.
