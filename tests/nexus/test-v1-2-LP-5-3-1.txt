@@ -1,0 +1,34 @@
+### 5.3.1 SSED Attachment
+
+#### 5.3.1.1 Topology
+*(Note: The specific topology diagram is not included in the provided text, but it involves a Leader/DUT, Router_1, and SSED_1.)*
+
+#### 5.3.1.2 Purpose & Description
+The purpose of this test is to validate that the DUT can successfully support a SSED that establishes CSL Synchronization after attach using Child Update Request.
+
+**Specification Reference:** 4.6.5.2
+
+#### 5.3.1.3 Test Procedure Description
+
+**Step 1: All**
+*   **Description:** Topology formation: DUT, Router_1, SSED_1.
+*   **Pass Criteria:** N/A.
+
+**Step 2: SSED_1**
+*   **Description:** Automatically attaches to the DUT. Automatically initiates a CSL connection via a MLE Child Update Request that contains the CSL IEs and the CSL Synchronized Timeout TLV.
+*   **Pass Criteria:** N/A.
+
+**Step 3: Leader (DUT)**
+*   **Description:** Automatically completes the CSL connection with SSED_1 by unicasting MLE Child Update Response.
+*   **Pass Criteria:** The DUT MUST unicast MLE Child Update Response to SSED_1.
+    *   The Frame Version of the packet MUST be: IEEE Std 802.15.4-2015 (value = 0b10).
+
+**Step 4: Router_1**
+*   **Description:** Harness verifies connectivity by instructing the device to send an ICMPv6 Echo Request to the SSED_1 mesh-local address (via the DUT).
+*   **Pass Criteria:** 
+    *   The DUT MUST forward the ICMPv6 Echo Request to SSED_1.
+    *   The Frame Version of the packet MUST be: IEEE Std 802.15.4-2015 (value = 0b10).
+    *   SSED_1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request from the Leader.
+    *   Router_1 MUST receive an ICMPv6 Echo Response from SSED_1.
+
+*(End of Test Case)*
