@@ -163,10 +163,10 @@ typedef struct otIp6Prefix otIp6Prefix;
  */
 enum
 {
-    OT_ADDRESS_ORIGIN_THREAD = 0, ///< Thread assigned address (ALOC, RLOC, MLEID, etc)
-    OT_ADDRESS_ORIGIN_SLAAC  = 1, ///< SLAAC assigned address
-    OT_ADDRESS_ORIGIN_DHCPV6 = 2, ///< DHCPv6 assigned address
-    OT_ADDRESS_ORIGIN_MANUAL = 3, ///< Manually assigned address
+    OT_ADDRESS_ORIGIN_THREAD = 0, ///< Thread assigned (ALOC, RLOC, MLEID, etc.)
+    OT_ADDRESS_ORIGIN_SLAAC  = 1, ///< SLAAC assigned (used in `otNetifAddress` and not in `otNetifMulticastAddress`).
+    OT_ADDRESS_ORIGIN_DHCPV6 = 2, ///< DHCPv6 assigned (used in `otNetifAddress` and not in `otNetifMulticastAddress`).
+    OT_ADDRESS_ORIGIN_MANUAL = 3, ///< Manually assigned address.
 };
 
 /**
@@ -176,7 +176,7 @@ typedef struct otNetifAddress
 {
     otIp6Address mAddress;                ///< The IPv6 unicast address.
     uint8_t      mPrefixLength;           ///< The Prefix length (in bits).
-    uint8_t      mAddressOrigin;          ///< The IPv6 address origin.
+    uint8_t      mAddressOrigin;          ///< The IPv6 address origin (OT_ADDRESS_ORIGIN_* values).
     bool         mPreferred : 1;          ///< TRUE if the address is preferred, FALSE otherwise.
     bool         mValid : 1;              ///< TRUE if the address is valid, FALSE otherwise.
     bool         mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
@@ -189,11 +189,25 @@ typedef struct otNetifAddress
 
 /**
  * Represents an IPv6 network interface multicast address.
+ *
+ * The `mAddressOrigin` field is set to either `OT_ADDRESS_ORIGIN_THREAD` if the multicast address is subscribed by
+ * OpenThread core or `OT_ADDRESS_ORIGIN_MANUAL` if it is subscribed manually using `otIp6SubscribeMulticastAddress()`.
+ *
+ * The multicast addresses subscribed by OpenThread core include addresses such as
+ * - link-local all nodes (`ff02::01`),
+ * - realm-local all nodes (`ff03::01`),
+ * - link-local all routers (`ff02::02`),
+ * - realm-local all routers (`ff03::02`),
+ * - realm-local all MPL forwarders (`ff03::fc`),
+ * - link-local all Thread nodes,
+ * - realm-local all Thread nodes.
  */
 typedef struct otNetifMulticastAddress
 {
-    otIp6Address                          mAddress; ///< The IPv6 multicast address.
-    const struct otNetifMulticastAddress *mNext;    ///< A pointer to the next network interface multicast address.
+    otIp6Address                          mAddress;       ///< The IPv6 multicast address.
+    const struct otNetifMulticastAddress *mNext;          ///< A pointer to the next multicast address.
+    uint8_t                               mAddressOrigin; ///< The multicast address origin.
+    uint8_t                               mData;          ///< Opaque data used by OpenThread core.
 } otNetifMulticastAddress;
 
 /**

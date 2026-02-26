@@ -527,17 +527,6 @@ public:
     static constexpr uint8_t kGlobalScope         = 14; ///< Global scope
 
     /**
-     * Defines IPv6 address type filter.
-     */
-    enum TypeFilter : uint8_t
-    {
-        kTypeAny,                           ///< Accept any IPv6 address (unicast or multicast).
-        kTypeUnicast,                       ///< Accept unicast IPv6 addresses only.
-        kTypeMulticast,                     ///< Accept multicast IPv6 addresses only.
-        kTypeMulticastLargerThanRealmLocal, ///< Accept multicast IPv6 addresses with scope larger than Realm Local.
-    };
-
-    /**
      * Defines the fixed-length `String` object returned from `ToString()`.
      */
     typedef String<kInfoStringSize> InfoString;
@@ -848,16 +837,6 @@ public:
      * @returns The number of IPv6 prefix bits that match.
      */
     uint8_t PrefixMatch(const Address &aOther) const;
-
-    /**
-     * Indicates whether address matches a given type filter.
-     *
-     * @param[in] aFilter   An address type filter.
-     *
-     * @retval TRUE   The address matches @p aFilter.
-     * @retval FALSE  The address does not match @p aFilter.
-     */
-    bool MatchesFilter(TypeFilter aFilter) const;
 
     /**
      * Sets the IPv6 address by performing NAT64 address translation from a given IPv4 address as specified
