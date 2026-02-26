@@ -55,7 +55,7 @@ Coap::Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer)
     , mNotificationSeriesCount(0)
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    , mBlockCount(1)
+    , mBlockCount(3)
 #endif
 {
     ClearAllBytes(mResource);
@@ -879,8 +879,12 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     bool     observePresent = false;
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    uint64_t blockValue   = 0;
-    bool     blockPresent = false;
+    bool     checkForBlock1 = false;
+    bool     checkForBlock2 = false;
+    uint64_t block1Value    = 0;
+    bool     block1Present  = false;
+    uint64_t block2Value    = 0;
+    bool     block2Present  = false;
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE || OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otCoapOptionIterator iterator;
@@ -894,10 +898,11 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
     case OT_COAP_CODE_GET:
         OutputFormat("GET");
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE || OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        checkForBlock2 = true;
 #endif
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
         if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE) != nullptr)
         {
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &observe));
@@ -905,13 +910,6 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 
             OutputFormat(" OBS=");
             OutputUint64(observe);
-        }
-#endif
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != nullptr)
-        {
-            SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &blockValue));
-            blockPresent = true;
         }
 #endif
         break;
@@ -922,10 +920,17 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 
     case OT_COAP_CODE_PUT:
         OutputFormat("PUT");
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        checkForBlock1 = true;
+#endif
         break;
 
     case OT_COAP_CODE_POST:
         OutputFormat("POST");
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        checkForBlock1 = true;
+        checkForBlock2 = true;
+#endif
         break;
 
     default:
@@ -933,118 +938,150 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
         ExitNow(error = OT_ERROR_PARSE);
     }
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    // Init iterator and check for Block1 (only for POST/PUT requests i.e. checkForBlock1 set)
+    SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
+    if (checkForBlock1 && otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK1) != nullptr)
+    {
+        SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &block1Value));
+        block1Present = true;
+    }
+
+    // Check for Block2 (only for GET/POST requests  i.e. checkForBlock2 set)
+    if (checkForBlock2 && otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != nullptr)
+    {
+        SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &block2Value));
+        block2Present = true;
+    }
+#endif
+
     PrintPayload(aMessage);
 
-    if (otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE ||
-        otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    if (observePresent && (mSubscriberToken.mLength > 0) && (observe == 0))
+    {
+        // There is already a subscriber: ignore the Observe option per Section 4.1 of RFC7641.
+        observePresent = false;
+    }
+#endif
+
+    if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
+    {
+        responseCode = OT_COAP_CODE_CONTENT;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        if (observePresent)
+        {
+            if (observe == 0)
+            {
+                // New subscriber
+                OutputLine("Subscribing client");
+                mSubscriberSock.mAddress = aMessageInfo->mPeerAddr;
+                mSubscriberSock.mPort    = aMessageInfo->mPeerPort;
+                mValidateObserveClient   = false;
+                mNotificationSeriesCount = 0;
+                SuccessOrExit(error = otCoapMessageReadToken(aMessage, &mSubscriberToken));
+
+                /*
+                 * Implementer note.
+                 *
+                 * Here, we try to match a confirmable GET request with confirmable
+                 * notifications, however this is not a requirement of RFC7641:
+                 * the server can send notifications of either type regardless of
+                 * what the client used to subscribe initially.
+                 */
+                mSubscriberConfirmableNotifications = (otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE);
+            }
+            else if (observe == 1)
+            {
+                // See if it matches our subscriber token
+
+                otCoapToken token;
+
+                SuccessOrExit(error = otCoapMessageReadToken(aMessage, &token));
+
+                if (otCoapMessageAreTokensEqual(&token, &mSubscriberToken))
+                {
+                    CancelSubscriber();
+                }
+            }
+        }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    }
+    else if (block1Present && block2Present)
+    {
+        // POST supports both Block1/Block2, but the current codebase not yet.
+        responseCode = OT_COAP_CODE_NOT_IMPLEMENTED;
+#endif
+    }
+    else
+    {
+        responseCode = OT_COAP_CODE_CHANGED;
+    }
+
+    responseMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
+    VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = otCoapMessageInitResponse(responseMessage, aMessage,
+                                                    otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE
+                                                        ? OT_COAP_TYPE_ACKNOWLEDGMENT
+                                                        : OT_COAP_TYPE_NON_CONFIRMABLE,
+                                                    responseCode));
+
+    if (responseCode == OT_COAP_CODE_CONTENT)
     {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        if (observePresent && (mSubscriberToken.mLength > 0) && (observe == 0))
+        if (observePresent && (observe == 0))
         {
-            // There is already a subscriber: ignore the Observe option per Section 4.1 of RFC7641.
-            observePresent = false;
+            SuccessOrExit(error = otCoapMessageAppendObserveOption(responseMessage, mObserveSerial++));
         }
-#endif
-
-        if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
-        {
-            responseCode = OT_COAP_CODE_CONTENT;
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            if (observePresent)
-            {
-                if (observe == 0)
-                {
-                    // New subscriber
-                    OutputLine("Subscribing client");
-                    mSubscriberSock.mAddress = aMessageInfo->mPeerAddr;
-                    mSubscriberSock.mPort    = aMessageInfo->mPeerPort;
-                    mValidateObserveClient   = false;
-                    mNotificationSeriesCount = 0;
-                    SuccessOrExit(error = otCoapMessageReadToken(aMessage, &mSubscriberToken));
-
-                    /*
-                     * Implementer note.
-                     *
-                     * Here, we try to match a confirmable GET request with confirmable
-                     * notifications, however this is not a requirement of RFC7641:
-                     * the server can send notifications of either type regardless of
-                     * what the client used to subscribe initially.
-                     */
-                    mSubscriberConfirmableNotifications = (otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE);
-                }
-                else if (observe == 1)
-                {
-                    // See if it matches our subscriber token
-
-                    otCoapToken token;
-
-                    SuccessOrExit(error = otCoapMessageReadToken(aMessage, &token));
-
-                    if (otCoapMessageAreTokensEqual(&token, &mSubscriberToken))
-                    {
-                        CancelSubscriber();
-                    }
-                }
-            }
-#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        }
-        else
-        {
-            responseCode = OT_COAP_CODE_CHANGED;
-        }
-
-        responseMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
-        VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
-
-        SuccessOrExit(error = otCoapMessageInitResponse(responseMessage, aMessage,
-                                                        otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE
-                                                            ? OT_COAP_TYPE_ACKNOWLEDGMENT
-                                                            : OT_COAP_TYPE_NON_CONFIRMABLE,
-                                                        responseCode));
-
-        if (responseCode == OT_COAP_CODE_CONTENT)
-        {
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            if (observePresent && (observe == 0))
-            {
-                SuccessOrExit(error = otCoapMessageAppendObserveOption(responseMessage, mObserveSerial++));
-            }
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-            if (blockPresent)
-            {
-                SuccessOrExit(error = otCoapMessageAppendBlock2Option(responseMessage,
-                                                                      static_cast<uint32_t>(blockValue >> 4), true,
-                                                                      static_cast<otCoapBlockSzx>(blockValue & 0x7)));
-                SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
-            }
-            else
-            {
-#endif
-                SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
-                SuccessOrExit(error = otMessageAppend(responseMessage, mResourceContent,
-                                                      static_cast<uint16_t>(strlen(mResourceContent))));
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-            }
-#endif
-        }
-
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        if (blockPresent)
-        {
-            SuccessOrExit(error = otCoapSendResponseBlockWiseWithParameters(GetInstancePtr(), responseMessage,
-                                                                            aMessageInfo, GetResponseTxParameters(),
-                                                                            this, mResource.mTransmitHook));
-        }
-        else
+        if (!block2Present && !block1Present)
         {
 #endif
-            SuccessOrExit(error = otCoapSendResponseWithParameters(GetInstancePtr(), responseMessage, aMessageInfo,
-                                                                   GetResponseTxParameters()));
+            SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
+            SuccessOrExit(error = otMessageAppend(responseMessage, mResourceContent,
+                                                  static_cast<uint16_t>(strlen(mResourceContent))));
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         }
 #endif
     }
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    if (block1Present != block2Present) // logical XOR
+    {
+        if (block1Present)
+        {
+            // Echo back the Block1 option to acknowledge the final block of the PUT/POST
+            SuccessOrExit(error =
+                              otCoapMessageAppendBlock1Option(responseMessage, static_cast<uint32_t>(block1Value >> 4),
+                                                              false, // M flag is always 0 for final response
+                                                              static_cast<otCoapBlockSzx>(block1Value & 0x7)));
+            // No payload marker is set: current implementation does not return a payload for POST, but just
+            // treats it like a PUT.
+        }
+        else if (block2Present)
+        {
+            // Echo back the Block2 option in the first response to the GET, but with M=1
+            SuccessOrExit(error =
+                              otCoapMessageAppendBlock2Option(responseMessage, static_cast<uint32_t>(block2Value >> 4),
+                                                              true, // M flag is always 1 for first response
+                                                              static_cast<otCoapBlockSzx>(block2Value & 0x7)));
+            SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
+        }
+        SuccessOrExit(error = otCoapSendResponseBlockWiseWithParameters(GetInstancePtr(), responseMessage, aMessageInfo,
+                                                                        GetResponseTxParameters(), this,
+                                                                        mResource.mTransmitHook));
+    }
+    else
+    {
+#endif
+        SuccessOrExit(error = otCoapSendResponseWithParameters(GetInstancePtr(), responseMessage, aMessageInfo,
+                                                               GetResponseTxParameters()));
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    }
+#endif
 
 exit:
 
