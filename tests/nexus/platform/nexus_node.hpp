@@ -46,7 +46,8 @@ class Platform
 {
 public:
     Radio    mRadio;
-    Alarm    mAlarm;
+    Alarm    mAlarmMilli;
+    Alarm    mAlarmMicro;
     Mdns     mMdns;
     Settings mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -121,7 +122,8 @@ public:
 
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
-    using Platform::mAlarm;
+    using Platform::mAlarmMicro;
+    using Platform::mAlarmMilli;
     using Platform::mMdns;
     using Platform::mPendingTasklet;
     using Platform::mRadio;
