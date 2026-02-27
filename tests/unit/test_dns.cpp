@@ -34,6 +34,7 @@
 #include "test_util.hpp"
 
 #include "common/array.hpp"
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
@@ -1632,10 +1633,8 @@ void TestHeaderAndResourceRecords(void)
 
 void TestDnsTxtEntry(void)
 {
-    enum
-    {
-        kMaxTxtDataSize = 255,
-    };
+    static constexpr uint16_t kMaxTxtDataSize   = 255;
+    static constexpr uint16_t kMaxKeyStringSize = Dns::TxtEntry::kMaxIterKeyLength;
 
     struct EncodedTxtData
     {
@@ -1718,6 +1717,7 @@ void TestDnsTxtEntry(void)
     Dns::TxtEntry                  txtEntry;
     Dns::TxtEntry::Iterator        iterator;
     MutableData<kWithUint16Length> data;
+    char                           keyString[kMaxKeyStringSize];
 
     printf("================================================================\n");
     printf("TestDnsTxtEntry()\n");
@@ -1772,6 +1772,14 @@ void TestDnsTxtEntry(void)
         }
 
         VerifyOrQuit(strcmp(txtEntry.mKey, expectedTxtEntry.mKey) == 0);
+
+        SuccessOrQuit(StringCopy(keyString, expectedTxtEntry.mKey));
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToLowercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToUppercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+
         VerifyOrQuit(txtEntry.mValueLength == expectedTxtEntry.mValueLength);
 
         if (txtEntry.mValueLength != 0)

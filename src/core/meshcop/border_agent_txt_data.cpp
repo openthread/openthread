@@ -303,28 +303,21 @@ Error TxtData::Info::ParseFrom(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 
 void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
 {
-    if (aEntry.mKey == nullptr)
-    {
-        // If the TXT data happens to have entries with key longer
-        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
-        // entry would be placed in `mValue`. We skip over such
-        // entries.
-    }
-    else if (StringMatch(aEntry.mKey, Key::kRecordVersion))
+    if (aEntry.MatchesKey(Key::kRecordVersion))
     {
         ReadStringValue(aEntry, mRecordVersion);
         mHasRecordVersion = true;
     }
-    else if (StringMatch(aEntry.mKey, Key::kAgentId))
+    else if (aEntry.MatchesKey(Key::kAgentId))
     {
         mHasAgentId = ReadValue(aEntry, mAgentId);
     }
-    else if (StringMatch(aEntry.mKey, Key::kThreadVersion))
+    else if (aEntry.MatchesKey(Key::kThreadVersion))
     {
         ReadStringValue(aEntry, mThreadVersion);
         mHasThreadVersion = true;
     }
-    else if (StringMatch(aEntry.mKey, Key::kStateBitmap))
+    else if (aEntry.MatchesKey(Key::kStateBitmap))
     {
         uint32_t bitmap;
 
@@ -334,16 +327,16 @@ void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
             mHasStateBitmap = true;
         }
     }
-    else if (StringMatch(aEntry.mKey, Key::kNetworkName))
+    else if (aEntry.MatchesKey(Key::kNetworkName))
     {
         ReadStringValue(aEntry, mNetworkName.m8);
         mHasNetworkName = true;
     }
-    else if (StringMatch(aEntry.mKey, Key::kExtendedPanId))
+    else if (aEntry.MatchesKey(Key::kExtendedPanId))
     {
         mHasExtendedPanId = ReadValue(aEntry, mExtendedPanId);
     }
-    else if (StringMatch(aEntry.mKey, Key::kActiveTimestamp))
+    else if (aEntry.MatchesKey(Key::kActiveTimestamp))
     {
         Timestamp timestamp;
 
@@ -353,37 +346,37 @@ void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
             mHasActiveTimestamp = true;
         }
     }
-    else if (StringMatch(aEntry.mKey, Key::kPartitionId))
+    else if (aEntry.MatchesKey(Key::kPartitionId))
     {
         mHasPartitionId = ReadBigEndianUintValue(aEntry, mPartitionId);
     }
-    else if (StringMatch(aEntry.mKey, Key::kDomainName))
+    else if (aEntry.MatchesKey(Key::kDomainName))
     {
         ReadStringValue(aEntry, mDomainName.m8);
         mHasDomainName = true;
     }
-    else if (StringMatch(aEntry.mKey, Key::kBbrSeqNum))
+    else if (aEntry.MatchesKey(Key::kBbrSeqNum))
     {
         mHasBbrSeqNum = ReadBigEndianUintValue(aEntry, mBbrSeqNum);
     }
-    else if (StringMatch(aEntry.mKey, Key::kBbrPort))
+    else if (aEntry.MatchesKey(Key::kBbrPort))
     {
         mHasBbrPort = ReadBigEndianUintValue(aEntry, mBbrPort);
     }
-    else if (StringMatch(aEntry.mKey, Key::kOmrPrefix))
+    else if (aEntry.MatchesKey(Key::kOmrPrefix))
     {
         mHasOmrPrefix = ReadOmrPrefix(aEntry, AsCoreType(&mOmrPrefix));
     }
-    else if (StringMatch(aEntry.mKey, Key::kExtAddress))
+    else if (aEntry.MatchesKey(Key::kExtAddress))
     {
         mHasExtAddress = ReadValue(aEntry, mExtAddress);
     }
-    else if (StringMatch(aEntry.mKey, Key::kVendorName))
+    else if (aEntry.MatchesKey(Key::kVendorName))
     {
         ReadStringValue(aEntry, mVendorName);
         mHasVendorName = true;
     }
-    else if (StringMatch(aEntry.mKey, Key::kModelName))
+    else if (aEntry.MatchesKey(Key::kModelName))
     {
         ReadStringValue(aEntry, mModelName);
         mHasModelName = true;

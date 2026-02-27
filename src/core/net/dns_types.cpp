@@ -1380,6 +1380,11 @@ exit:
     return error;
 }
 
+bool TxtEntry::MatchesKey(const char *aKey) const
+{
+    return (mKey != nullptr) && StringMatch(mKey, aKey, kStringCaseInsensitiveMatch);
+}
+
 Error TxtEntry::AppendTo(Message &aMessage) const
 {
     Appender appender(aMessage);
