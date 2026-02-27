@@ -82,6 +82,13 @@ void Data::TakeFrom(Data &&aData)
     }
 }
 
+void Data::TakeFrom(uint8_t *&aHeapAllocatedBuffer, uint16_t aLength)
+{
+    Free();
+    mData.Init(aHeapAllocatedBuffer, aLength);
+    aHeapAllocatedBuffer = nullptr;
+}
+
 bool Data::Matches(const uint8_t *aBuffer, uint16_t aLength) const
 {
     bool matches = false;

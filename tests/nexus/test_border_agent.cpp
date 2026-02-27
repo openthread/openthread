@@ -1293,7 +1293,7 @@ struct TxtData
     uint16_t       mLength;
 };
 
-void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
+void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode, bool aExpectVendorInfo, const char *aVendorName = nullptr)
 {
     // State bitmap masks and field values
     static constexpr uint32_t kMaskConnectionMode           = 7 << 0;
@@ -1447,6 +1447,28 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode)
         VerifyOrQuit(!(stateBitmap & kFlagAdmitterSupported));
         VerifyOrQuit(!info.mStateBitmap.mAdmitterSupported);
     }
+
+    if (aExpectVendorInfo)
+    {
+        const char *expectedVendorName = (aVendorName != nullptr) ? aVendorName : aNode.Get<VendorInfo>().GetName();
+        const char *expectedModelName  = aNode.Get<VendorInfo>().GetModel();
+
+        aTxtData.ValidateKey("vn", expectedVendorName);
+        VerifyOrQuit(info.mHasVendorName);
+        VerifyOrQuit(StringMatch(info.mVendorName, expectedVendorName));
+
+        aTxtData.ValidateKey("mn", expectedModelName);
+        VerifyOrQuit(info.mHasModelName);
+        VerifyOrQuit(StringMatch(info.mModelName, expectedModelName));
+    }
+    else
+    {
+        VerifyOrQuit(!aTxtData.ContainsKey("vn"));
+        VerifyOrQuit(!info.mHasVendorName);
+
+        VerifyOrQuit(!aTxtData.ContainsKey("mn"));
+        VerifyOrQuit(!info.mHasModelName);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1466,7 +1488,7 @@ void ReadAndValidateMeshCoPTxtData(Node &aNode)
     SuccessOrQuit(aNode.Get<BaTxtData>().Prepare(serviceTxtData));
     txtData.Init(serviceTxtData.mData, serviceTxtData.mLength);
 
-    ValidateMeshCoPTxtData(txtData, aNode);
+    ValidateMeshCoPTxtData(txtData, aNode, /* aExpectVendorInfo */ false);
 }
 
 void TestBorderAgentTxtDataCallback(void)
@@ -1553,7 +1575,7 @@ void TestBorderAgentTxtDataCallback(void)
 
 static constexpr uint32_t kInfraIfIndex   = 1;
 static constexpr uint16_t kMaxEntries     = 5;
-static constexpr uint16_t kMaxTxtDataSize = 128;
+static constexpr uint16_t kMaxTxtDataSize = 400;
 
 typedef Dns::Name::Buffer DnsName;
 
@@ -1626,12 +1648,14 @@ void HandleTxtCallback(otInstance *aInstance, const Dns::Multicast::Core::TxtRes
     outcome->mTtl           = aResult->mTtl;
 }
 
-void ValidateRegisteredServiceData(Dns::Multicast::Core::Service &aService, Node &aNode)
+void ValidateRegisteredServiceData(Dns::Multicast::Core::Service &aService,
+                                   Node                          &aNode,
+                                   const char                    *aVendorName = nullptr)
 {
     TxtData txtData;
 
     txtData.Init(aService.mTxtData, aService.mTxtDataLength);
-    ValidateMeshCoPTxtData(txtData, aNode);
+    ValidateMeshCoPTxtData(txtData, aNode, /* aExpectVendorInfo */ true, aVendorName);
 }
 
 void TestBorderAgentServiceRegistration(void)
@@ -1749,7 +1773,7 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(sTxtOutcomes.GetLength() == 1);
     VerifyOrQuit(sTxtOutcomes[0].mTtl > 0);
     txtData.Init(sTxtOutcomes[0].mTxtData, sTxtOutcomes[0].mTxtDataLength);
-    ValidateMeshCoPTxtData(txtData, node0);
+    ValidateMeshCoPTxtData(txtData, node0, /* aExptecVendorInfo */ true);
 
     sBrowseOutcomes.Clear();
     sSrvOutcomes.Clear();
@@ -2086,11 +2110,10 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(service.mTtl > 0);
     VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
-    ValidateRegisteredServiceData(service, node0);
+    ValidateRegisteredServiceData(service, node0, /* aExpectedVendorName */ "nexus");
 
     // Check that vendor TXT data is included at the end of
     // the registered service TXT data.
-    VerifyOrQuit(service.mTxtDataLength > txtDataLengthWithNoVendorData);
     VerifyOrQuit(service.mTxtDataLength > sizeof(kVendorTxtData));
     VerifyOrQuit(!memcmp(&service.mTxtData[service.mTxtDataLength - sizeof(kVendorTxtData)], kVendorTxtData,
                          sizeof(kVendorTxtData)));
@@ -2126,6 +2149,68 @@ void TestBorderAgentServiceRegistration(void)
     VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
     ValidateRegisteredServiceData(service, node0);
     VerifyOrQuit(service.mTxtDataLength == txtDataLengthWithNoVendorData);
+
+    // Check that there is no more registered mDNS service
+    VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Change vendor name and validate that the registered mDNS service is updated accordingly");
+
+    SuccessOrQuit(node0.Get<VendorInfo>().SetName("RD:v"));
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
+    Log("  HostName: %s", service.mHostName);
+    Log("  ServiceInstance: %s", service.mServiceInstance);
+    Log("  ServiceType: %s", service.mServiceType);
+    Log("  Port: %u", service.mPort);
+    Log("  TTL: %lu", ToUlong(service.mTtl));
+
+    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
+    VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
+    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+    VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
+    VerifyOrQuit(service.mTtl > 0);
+    VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
+    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+    ValidateRegisteredServiceData(service, node0);
+
+    // Check that there is no more registered mDNS service
+    VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Change vendor model and validate that the registered mDNS service is updated accordingly");
+
+    SuccessOrQuit(node0.Get<VendorInfo>().SetModel("model"));
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    SuccessOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
+    Log("  HostName: %s", service.mHostName);
+    Log("  ServiceInstance: %s", service.mServiceInstance);
+    Log("  ServiceType: %s", service.mServiceType);
+    Log("  Port: %u", service.mPort);
+    Log("  TTL: %lu", ToUlong(service.mTtl));
+
+    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
+    VerifyOrQuit(StringStartsWith(service.mServiceInstance, "OpenThreadAgent"));
+    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+    VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+    VerifyOrQuit(service.mPort == node0.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
+    VerifyOrQuit(service.mTtl > 0);
+    VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
+    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+    ValidateRegisteredServiceData(service, node0);
 
     // Check that there is no more registered mDNS service
     VerifyOrQuit(node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
