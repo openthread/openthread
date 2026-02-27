@@ -366,6 +366,11 @@ def run_main(verify_func):
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_RLOC16': int(rloc16, 16)})
 
+        # Add channel variables
+        for node_id, channel in data.get('channels', {}).items():
+            name = pv.test_info.get_node_name(int(node_id))
+            pv.add_vars(**{f'{name}_CHANNEL': int(channel)})
+
         verify_func(pv)
         print("Verification PASSED")
     except Exception as e:

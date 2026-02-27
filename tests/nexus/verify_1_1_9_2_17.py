@@ -74,12 +74,12 @@ def verify(pv):
     pkts.filter_wpan_src64(LEADER_1).\
       filter_LLANMA().\
       filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-      filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+      filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
       must_next()
     pkts.filter_wpan_src64(LEADER_2).\
       filter_LLANMA().\
       filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
-      filter(lambda p: p.wpan_tap.ch_num == SECONDARY_CHANNEL).\
+      filter(lambda p: p.wpan.channel == SECONDARY_CHANNEL).\
       must_next()
 
     # Step 2: Leader_1
@@ -100,7 +100,7 @@ def verify(pv):
     print("Step 4: The DUT MUST send a MLE Parent Request")
     pkts.filter_wpan_src64(DUT).\
       filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-      filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+      filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
       must_next()
 
     # Step 5: DUT
@@ -120,7 +120,7 @@ def verify(pv):
     print("Step 6: The DUT MUST send a MLE Announce Message")
     pkts.filter_wpan_src64(DUT).\
       filter_mle_cmd(consts.MLE_ANNOUNCE).\
-      filter(lambda p: p.wpan_tap.ch_num == SECONDARY_CHANNEL).\
+      filter(lambda p: p.wpan.channel == SECONDARY_CHANNEL).\
       filter(lambda p: {
         consts.CHANNEL_TLV,
         consts.ACTIVE_TIMESTAMP_TLV,
@@ -138,7 +138,7 @@ def verify(pv):
     print("Step 7: Leader_2 sends a MLE Announce on the Primary channel")
     pkts.filter_wpan_src64(LEADER_2).\
       filter_mle_cmd(consts.MLE_ANNOUNCE).\
-      filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+      filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
       must_next()
 
     # Step 8: DUT
@@ -149,7 +149,7 @@ def verify(pv):
     print("Step 8: The DUT MUST send a Parent Request on the Secondary channel")
     pkts.filter_wpan_src64(DUT).\
       filter_mle_cmd(consts.MLE_PARENT_REQUEST).\
-      filter(lambda p: p.wpan_tap.ch_num == SECONDARY_CHANNEL).\
+      filter(lambda p: p.wpan.channel == SECONDARY_CHANNEL).\
       filter(lambda p: p.wpan.dst_pan == LEADER_2_PAN_ID).\
       must_next()
 

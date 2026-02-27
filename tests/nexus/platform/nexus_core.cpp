@@ -191,6 +191,14 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     }
     fprintf(file, "  },\n");
 
+    fprintf(file, "  \"channels\": {\n");
+    for (Node &node : mNodes)
+    {
+        fprintf(file, "    \"%u\": %u%s\n", node.GetInstance().GetId(), node.Get<Mac::Mac>().GetPanChannel(),
+                (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
     fprintf(file, "  \"ipaddrs\": {\n");
     for (Node &node : mNodes)
     {

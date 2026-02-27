@@ -300,6 +300,8 @@ REAL_LAYER_NAMES = {
     'coap',
     'dtls',
     'wpan',
+    'wpan-tap',
+    'wpan_tap',
     'eth',
     'tcp',
     'udp',

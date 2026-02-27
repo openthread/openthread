@@ -69,6 +69,20 @@ class Packet(object):
                 logging.debug("stripping eth: src=%s, dst=%s", eth_src, eth_dst)
                 channel = eth_src[5]
                 self.wpan._add_field('wpan.channel', hex(channel))
+            elif layer.layer_name in ('wpan-tap', 'wpan_tap'):
+                channel_val = getattr(layer, 'ch_num', None)
+                if channel_val is None:
+                    channel_val = getattr(layer, 'channel', None)
+                if channel_val is None and hasattr(layer, '_all_fields'):
+                    channel_val = layer._all_fields.get(f'{layer.layer_name}.ch_num') or \
+                                  layer._all_fields.get(f'{layer.layer_name}.channel')
+
+                if channel_val is not None:
+                    try:
+                        channel = int(str(channel_val))
+                        self.wpan._add_field('wpan.channel', hex(channel))
+                    except (ValueError, TypeError):
+                        pass
 
         return
 

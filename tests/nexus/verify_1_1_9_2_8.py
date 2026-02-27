@@ -193,13 +193,13 @@ def verify(pv):
         # We start searching from the same point for each DUT to allow intermingled packets.
         pkts_dut = pkts.copy()
         pkts_dut.filter_wpan_src64(dut). \
-            filter(lambda p: p.wpan_tap.ch_num == 11 and p.wpan.dst_pan == 0xFACE). \
+            filter(lambda p: p.wpan.channel == 11 and p.wpan.dst_pan == 0xFACE). \
             filter(lambda p: p.mle.cmd == consts.MLE_PARENT_REQUEST). \
             must_next()
 
         # Then, it MUST attach using the new params.
         pkts_dut.filter_wpan_src64(dut). \
-            filter(lambda p: p.wpan_tap.ch_num == 12 and p.wpan.dst_pan == 0xAFCE). \
+            filter(lambda p: p.wpan.channel == 12 and p.wpan.dst_pan == 0xAFCE). \
             filter(lambda p: p.mle.cmd == consts.MLE_PARENT_REQUEST). \
             must_next()
 

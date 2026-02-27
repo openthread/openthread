@@ -65,6 +65,7 @@ def verify(pv):
     COMMISSIONER_RLOC = pv.vars['COMMISSIONER_RLOC']
     COMMISSIONER_MLEID = pv.vars['COMMISSIONER_MLEID']
     ROUTER_1_MLEID = pv.vars['ROUTER_1_MLEID']
+    PRIMARY_CHANNEL = pv.vars['ROUTER_1_CHANNEL']
 
     # Step 1: All
     #   - Description: Topology Ensure topology is formed correctly.
@@ -83,7 +84,8 @@ def verify(pv):
     #       - Channel Mask TLV
     #       - PAN ID TLV
     print("Step 2: Commissioner")
-    pkts.filter_wpan_src64(COMMISSIONER).\
+    pkts.filter_wpan_channel(PRIMARY_CHANNEL).\
+        filter_ipv6_src(COMMISSIONER_RLOC).\
         filter_ipv6_dst(ROUTER_1_RLOC).\
         filter_coap_request(consts.MGMT_PANID_QUERY).\
         filter(lambda p: {
@@ -95,13 +97,14 @@ def verify(pv):
 
     # Step 3: Router_1
     #   - Description: Automatically sends a MGMT_PANID_CONFLICT.ans reponse to the Commissioner.
-    #   - Pass Criteria: For DUT = Router: The DUT MUST send MGMT_ED_REPORT.ans to the Commissioner:
+    #   - Pass Criteria: For DUT = Router: The DUT MUST send MGMT_PANID_CONFLICT.ans to the Commissioner:
     #     - CoAP Request URI: coap://[Commissioner]:MM/c/pc
     #     - CoAP Payload:
     #       - Channel Mask TLV
     #       - PAN ID TLV
     print("Step 3: Router_1")
-    pkts.filter_wpan_src64(ROUTER_1).\
+    pkts.filter_wpan_channel(PRIMARY_CHANNEL).\
+        filter_ipv6_src(ROUTER_1_RLOC).\
         filter_ipv6_dst(COMMISSIONER_RLOC).\
         filter_coap_request(consts.MGMT_PANID_CONFLICT).\
         filter(lambda p: {
@@ -122,7 +125,8 @@ def verify(pv):
     #       - Channel Mask TLV
     #       - PAN ID TLV
     print("Step 4: Commissioner")
-    pkts.filter_wpan_src64(COMMISSIONER).\
+    pkts.filter_wpan_channel(PRIMARY_CHANNEL).\
+        filter_ipv6_src(COMMISSIONER_RLOC).\
         filter_coap_request(consts.MGMT_PANID_QUERY).\
         filter(lambda p: str(p.ipv6.dst).startswith('ff33:0040:')).\
         filter(lambda p: {
@@ -140,7 +144,8 @@ def verify(pv):
     #       - Channel Mask TLV
     #       - PAN ID TLV
     print("Step 5: Router_1")
-    pkts.filter_wpan_src64(ROUTER_1).\
+    pkts.filter_wpan_channel(PRIMARY_CHANNEL).\
+        filter_ipv6_src(ROUTER_1_RLOC).\
         filter_ipv6_dst(COMMISSIONER_RLOC).\
         filter_coap_request(consts.MGMT_PANID_CONFLICT).\
         filter(lambda p: {
@@ -154,11 +159,13 @@ def verify(pv):
     #   - Description: Verify connectivity by sending an ICMPv6 Echo Request to the DUT mesh local address.
     #   - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply.
     print("Step 6: Commissioner")
-    _pkt = pkts.filter_ping_request().\
+    _pkt = pkts.filter_wpan_channel(PRIMARY_CHANNEL).\
+        filter_ping_request().\
         filter_ipv6_src(COMMISSIONER_MLEID).\
         filter_ipv6_dst(ROUTER_1_MLEID).\
         must_next()
-    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+    pkts.filter_wpan_channel(PRIMARY_CHANNEL).\
+        filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
         filter_ipv6_src(ROUTER_1_MLEID).\
         filter_ipv6_dst(COMMISSIONER_MLEID).\
         must_next()
