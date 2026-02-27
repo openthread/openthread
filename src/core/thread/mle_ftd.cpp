@@ -422,6 +422,9 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
     Get<Mac::Mac>().SetBeaconEnabled(true);
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMle);
 
+    // Avoid informing an old parent when attaching next as a child after becoming an active router
+    mPreviousParentRloc = kInvalidRloc16;
+
     if (aRole == kRoleLeader)
     {
         GetLeaderAloc(mLeaderAloc.GetAddress());
@@ -1407,7 +1410,7 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     Error              error = kErrorNone;
     uint16_t           version;
     uint8_t            scanMask;
-    Child             *child;
+    Child             *child = nullptr;
     DeviceMode         mode;
     uint32_t           delay;
     ParentResponseInfo info;
@@ -1485,6 +1488,12 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     mDelayedSender.ScheduleParentResponse(info, delay);
 
 exit:
+    // Remove the child if an error occurred when newly added such that a Parent/Child ID Response can't be sent.
+    // Includes children in kStateParentRequest and kStateChildIdRequest states.
+    if (error != kErrorNone && child != nullptr && !child->IsStateInvalid() && !child->IsStateValidOrRestoring())
+    {
+        RemoveNeighbor(*child);
+    }
     LogProcessError(kTypeParentRequest, error);
 }
 
@@ -1616,10 +1625,10 @@ void Mle::HandleTimeTick(void)
         switch (child.GetState())
         {
         case Neighbor::kStateInvalid:
-        case Neighbor::kStateChildIdRequest:
             continue;
 
         case Neighbor::kStateParentRequest:
+        case Neighbor::kStateChildIdRequest:
         case Neighbor::kStateValid:
         case Neighbor::kStateRestored:
         case Neighbor::kStateChildUpdateRequest:
@@ -1764,7 +1773,7 @@ void Mle::SendParentResponse(const ParentResponseInfo &aInfo)
 {
     Error        error   = kErrorNone;
     TxMessage   *message = nullptr;
-    Child       *child;
+    Child       *child   = nullptr;
     Ip6::Address destination;
 
     child = mChildTable.FindChild(aInfo.mChildExtAddress, Child::kInStateAnyExceptInvalid);
@@ -1802,6 +1811,12 @@ void Mle::SendParentResponse(const ParentResponseInfo &aInfo)
     Log(kMessageSend, kTypeParentResponse, destination);
 
 exit:
+    // Remove the child if an error occurred when newly added such that a Parent/Child ID Response can't be sent.
+    // Includes children in kStateParentRequest and kStateChildIdRequest states.
+    if (error != kErrorNone && child != nullptr && !child->IsStateInvalid() && !child->IsStateValidOrRestoring())
+    {
+        RemoveNeighbor(*child);
+    }
     FreeMessageOnError(message, error);
     LogSendError(kTypeParentResponse, error);
 }
@@ -2055,7 +2070,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
     uint32_t           timeout;
     TlvList            tlvList;
     MeshCoP::Timestamp timestamp;
-    Child             *child;
+    Child             *child = nullptr;
     Router            *router;
     uint16_t           supervisionInterval;
 
@@ -2188,7 +2203,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
     {
     case kRoleChild:
         child->SetState(Neighbor::kStateChildIdRequest);
-        IgnoreError(BecomeRouter(kReasonHaveChildIdRequest));
+        SuccessOrExit(error = BecomeRouter(kReasonHaveChildIdRequest));
         break;
 
     case kRoleRouter:
@@ -2202,6 +2217,12 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
     }
 
 exit:
+    // Remove the child if an error occurred when newly added such that a Parent/Child ID Response can't be sent.
+    // Includes children in kStateParentRequest and kStateChildIdRequest states.
+    if (error != kErrorNone && child != nullptr && !child->IsStateInvalid() && !child->IsStateValidOrRestoring())
+    {
+        RemoveNeighbor(*child);
+    }
     LogProcessError(kTypeChildIdRequest, error);
 }
 
@@ -2904,8 +2925,6 @@ Error Mle::SendChildIdResponse(Child &aChild)
         SuccessOrExit(error = message->AppendAddressRegistrationTlv(aChild));
     }
 
-    SetChildStateToValid(aChild);
-
     if (!aChild.IsRxOnWhenIdle())
     {
         Get<IndirectSender>().SetChildUseShortAddress(aChild, false);
@@ -2920,6 +2939,8 @@ Error Mle::SendChildIdResponse(Child &aChild)
 
     destination.SetToLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
+
+    SetChildStateToValid(aChild);
 
     Log(kMessageSend, kTypeChildIdResponse, destination, aChild.GetRloc16());
 
@@ -3416,7 +3437,15 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {
-        IgnoreError(SendChildIdResponse(child));
+        if (SendChildIdResponse(child) != kErrorNone)
+        {
+            // Remove the child if an error occurred when newly added such that a Parent/Child ID Response can't be sent
+            // Includes children in kStateParentRequest and kStateChildIdRequest states.
+            if (!child.IsStateInvalid() && !child.IsStateValidOrRestoring())
+            {
+                RemoveNeighbor(child);
+            }
+        }
     }
 
 exit:
