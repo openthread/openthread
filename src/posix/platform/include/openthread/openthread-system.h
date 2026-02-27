@@ -330,6 +330,23 @@ void otSysTrelDeinit(void);
  */
 void otSysSetRcpRestorationEnabled(bool aEnabled);
 
+/**
+ * Represents a callback function to be called when openthread crashes.
+ *
+ * @note This callback is invoked from a signal handler context. The callback implementation must only use
+ *       async-signal-safe functions.
+ */
+typedef void (*otSysCrashCallback)(void);
+
+/**
+ * Registers the callback function to be called when openthread crashes.
+ *
+ * Requires `OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE`.
+ *
+ * @param[in] aCallback  The callback function.
+ */
+void otSysRegisterCrashCallback(otSysCrashCallback aCallback);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
