@@ -464,80 +464,6 @@ exit:
     return error;
 }
 
-void CoapBase::PendingRequests::HandleTimer(Timer &aTimer)
-{
-    static_cast<PendingRequests *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
-}
-
-void CoapBase::PendingRequests::HandleTimer(void)
-{
-    NextFireTime nextTime;
-    MessageQueue expiredMessages;
-
-    for (Message &message : mRequestMessages)
-    {
-        Request request;
-
-        request.InitFrom(message);
-
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        if (request.mMetadata.IsObserveSubscription())
-        {
-            // This is an RFC7641 subscription which is already
-            // acknowledged. We do not time it out, so skip it when
-            // determining the next fire time.
-            continue;
-        }
-#endif
-
-        if (nextTime.GetNow() >= request.mMetadata.mTimerFireTime)
-        {
-            if (!request.mMetadata.ShouldRetransmit())
-            {
-                // We move the expired request to a separate queue to
-                // finalize it after the loop. This ensures that the
-                // iterator over `mRequestMessages` remains valid
-                // even if the user callback (invoked during
-                // finalization) modifies any pending requests
-
-                mRequestMessages.Dequeue(message);
-                expiredMessages.Enqueue(message);
-                continue;
-            }
-
-            request.mMetadata.UpdateRetxCounterAndTimeout(nextTime.GetNow());
-            request.WriteMetadataInMessage();
-
-            if (!request.mMetadata.mAcknowledged)
-            {
-                RetransmitRequest(request);
-            }
-        }
-
-        nextTime.UpdateIfEarlier(request.mMetadata.mTimerFireTime);
-    }
-
-    mTimer.FireAt(nextTime);
-
-    FinalizeRemovedRequestsIn(expiredMessages, kErrorResponseTimeout);
-}
-
-void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult)
-{
-    FinalizeRequest(aRequest, aResult, /* aResponse */ nullptr);
-}
-
-void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult, Msg *aResponse)
-{
-    VerifyOrExit(aRequest.HasMessage());
-
-    Remove(aRequest);
-    aRequest.mMetadata.mCallbacks.InvokeResponseHandler(aResponse, aResult);
-
-exit:
-    return;
-}
-
 Error CoapBase::AbortTransaction(ResponseHandler aHandler, void *aContext)
 {
     return mPendingRequests.AbortRequestsMatching(aHandler, aContext);
@@ -550,92 +476,6 @@ void CoapBase::GetRequestAndCachedResponsesQueueInfo(MessageQueue::Info &aQueueI
     mPendingRequests.GetInfo(aQueueInfo);
     mResponseCache.GetInfo(info);
     MessageQueue::AddQueueInfos(aQueueInfo, info);
-}
-
-Error CoapBase::PendingRequests::AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest)
-{
-    Error error = kErrorNone;
-
-    aRequest.mMessage = aMessage.Clone(aCopyLength);
-    VerifyOrExit(aRequest.HasMessage(), error = kErrorNoBufs);
-
-    SuccessOrExit(error = aRequest.AppendMetadataToMessage());
-
-    mRequestMessages.Enqueue(*aRequest.mMessage);
-
-    mTimer.FireAtIfEarlier(aRequest.mMetadata.mTimerFireTime);
-
-exit:
-    FreeAndNullMessageOnError(aRequest.mMessage, error);
-    return error;
-}
-
-void CoapBase::PendingRequests::Remove(Request &aRequest)
-{
-    VerifyOrExit(aRequest.HasMessage());
-    mRequestMessages.DequeueAndFree(*aRequest.mMessage);
-    aRequest.Clear();
-
-exit:
-    return;
-}
-
-void CoapBase::PendingRequests::RetransmitRequest(const Request &aRequest)
-{
-    Error            error;
-    Message         *clone;
-    Ip6::MessageInfo messageInfo;
-
-    clone = aRequest.mMessage->Clone(aRequest.mMessage->GetLength() - sizeof(Request::Metadata));
-    VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
-
-    aRequest.mMetadata.CopyInfoTo(messageInfo);
-
-    SuccessOrExit(error = mCoapBase.Send(*clone, messageInfo));
-
-exit:
-    FreeMessageOnError(clone, error);
-}
-
-Error CoapBase::PendingRequests::FindRelatedRequest(const Msg &aMsg, Request &aRequest)
-{
-    Error error = kErrorNotFound;
-
-    for (Message &message : mRequestMessages)
-    {
-        aRequest.InitFrom(message);
-
-        if (aRequest.mMetadata.HasSamePeerAddrAndPort(aMsg.mMessageInfo) ||
-            aRequest.mMetadata.mDestinationAddress.IsMulticast() ||
-            aRequest.mMetadata.mDestinationAddress.GetIid().IsAnycastLocator())
-        {
-            switch (aMsg.GetType())
-            {
-            case kTypeReset:
-            case kTypeAck:
-                if (aMsg.GetMessageId() == message.ReadMessageId())
-                {
-                    ExitNow(error = kErrorNone);
-                }
-
-                break;
-
-            case kTypeConfirmable:
-            case kTypeNonConfirmable:
-                if (aMsg.mMessage.HasSameTokenAs(message))
-                {
-                    ExitNow(error = kErrorNone);
-                }
-
-                break;
-            }
-        }
-    }
-
-    aRequest.Clear();
-
-exit:
-    return error;
 }
 
 void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1673,10 +1513,98 @@ bool CoapBase::Request::Metadata::IsObserveSubscription(void) const
 }
 #endif
 
+//---------------------------------------------------------------------------------------------------------------------
+// CoapBase::PendingRequests
+
 CoapBase::PendingRequests::PendingRequests(Instance &aInstance, CoapBase &aCoapBase)
     : mCoapBase(aCoapBase)
     , mTimer(aInstance, HandleTimer, this)
 {
+}
+
+Error CoapBase::PendingRequests::AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest)
+{
+    Error error = kErrorNone;
+
+    aRequest.mMessage = aMessage.Clone(aCopyLength);
+    VerifyOrExit(aRequest.HasMessage(), error = kErrorNoBufs);
+
+    SuccessOrExit(error = aRequest.AppendMetadataToMessage());
+
+    mRequestMessages.Enqueue(*aRequest.mMessage);
+
+    mTimer.FireAtIfEarlier(aRequest.mMetadata.mTimerFireTime);
+
+exit:
+    FreeAndNullMessageOnError(aRequest.mMessage, error);
+    return error;
+}
+
+void CoapBase::PendingRequests::Remove(Request &aRequest)
+{
+    VerifyOrExit(aRequest.HasMessage());
+    mRequestMessages.DequeueAndFree(*aRequest.mMessage);
+    aRequest.Clear();
+
+exit:
+    return;
+}
+
+Error CoapBase::PendingRequests::FindRelatedRequest(const Msg &aMsg, Request &aRequest)
+{
+    Error error = kErrorNotFound;
+
+    for (Message &message : mRequestMessages)
+    {
+        aRequest.InitFrom(message);
+
+        if (aRequest.mMetadata.HasSamePeerAddrAndPort(aMsg.mMessageInfo) ||
+            aRequest.mMetadata.mDestinationAddress.IsMulticast() ||
+            aRequest.mMetadata.mDestinationAddress.GetIid().IsAnycastLocator())
+        {
+            switch (aMsg.GetType())
+            {
+            case kTypeReset:
+            case kTypeAck:
+                if (aMsg.GetMessageId() == message.ReadMessageId())
+                {
+                    ExitNow(error = kErrorNone);
+                }
+
+                break;
+
+            case kTypeConfirmable:
+            case kTypeNonConfirmable:
+                if (aMsg.mMessage.HasSameTokenAs(message))
+                {
+                    ExitNow(error = kErrorNone);
+                }
+
+                break;
+            }
+        }
+    }
+
+    aRequest.Clear();
+
+exit:
+    return error;
+}
+
+void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult)
+{
+    FinalizeRequest(aRequest, aResult, /* aResponse */ nullptr);
+}
+
+void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult, Msg *aResponse)
+{
+    VerifyOrExit(aRequest.HasMessage());
+
+    Remove(aRequest);
+    aRequest.mMetadata.mCallbacks.InvokeResponseHandler(aResponse, aResult);
+
+exit:
+    return;
 }
 
 void CoapBase::PendingRequests::AbortAllRequests(void)
@@ -1731,6 +1659,84 @@ void CoapBase::PendingRequests::FinalizeRemovedRequestsIn(MessageQueue &aQueue, 
 
     aQueue.DequeueAndFreeAll();
 }
+
+void CoapBase::PendingRequests::RetransmitRequest(const Request &aRequest)
+{
+    Error            error;
+    Message         *clone;
+    Ip6::MessageInfo messageInfo;
+
+    clone = aRequest.mMessage->Clone(aRequest.mMessage->GetLength() - sizeof(Request::Metadata));
+    VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
+
+    aRequest.mMetadata.CopyInfoTo(messageInfo);
+
+    SuccessOrExit(error = mCoapBase.Send(*clone, messageInfo));
+
+exit:
+    FreeMessageOnError(clone, error);
+}
+
+void CoapBase::PendingRequests::HandleTimer(Timer &aTimer)
+{
+    static_cast<PendingRequests *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
+}
+
+void CoapBase::PendingRequests::HandleTimer(void)
+{
+    NextFireTime nextTime;
+    MessageQueue expiredMessages;
+
+    for (Message &message : mRequestMessages)
+    {
+        Request request;
+
+        request.InitFrom(message);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        if (request.mMetadata.IsObserveSubscription())
+        {
+            // This is an RFC7641 subscription which is already
+            // acknowledged. We do not time it out, so skip it when
+            // determining the next fire time.
+            continue;
+        }
+#endif
+
+        if (nextTime.GetNow() >= request.mMetadata.mTimerFireTime)
+        {
+            if (!request.mMetadata.ShouldRetransmit())
+            {
+                // We move the expired request to a separate queue to
+                // finalize it after the loop. This ensures that the
+                // iterator over `mRequestMessages` remains valid
+                // even if the user callback (invoked during
+                // finalization) modifies any pending requests
+
+                mRequestMessages.Dequeue(message);
+                expiredMessages.Enqueue(message);
+                continue;
+            }
+
+            request.mMetadata.UpdateRetxCounterAndTimeout(nextTime.GetNow());
+            request.WriteMetadataInMessage();
+
+            if (!request.mMetadata.mAcknowledged)
+            {
+                RetransmitRequest(request);
+            }
+        }
+
+        nextTime.UpdateIfEarlier(request.mMetadata.mTimerFireTime);
+    }
+
+    mTimer.FireAt(nextTime);
+
+    FinalizeRemovedRequestsIn(expiredMessages, kErrorResponseTimeout);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// CoapBase::PendingRequests::Matcher
 
 bool CoapBase::PendingRequests::Matcher::Matches(const Request &aRequest) const
 {
