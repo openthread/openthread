@@ -300,6 +300,7 @@ void Test9_2_6(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampNew);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
@@ -501,11 +502,13 @@ void Test9_2_6(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampFinal);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kPendingTimestamp);
             SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
         }

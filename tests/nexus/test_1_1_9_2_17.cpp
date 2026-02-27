@@ -180,8 +180,8 @@ void Test9_2_17(void)
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kLeader1Timestamp);
-            timestamp.SetTicks(0);
             datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
         }
         datasetInfo.Set<MeshCoP::Dataset::kChannelMask>((1 << kPrimaryChannel) | (1 << kSecondaryChannel));
@@ -204,8 +204,8 @@ void Test9_2_17(void)
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kLeader2Timestamp);
-            timestamp.SetTicks(0);
             datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
         }
 

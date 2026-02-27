@@ -170,6 +170,7 @@ void Test9_2_18(void)
     SuccessOrQuit(datasetInfo.GenerateRandom(leader.GetInstance()));
     {
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
         timestamp.SetSeconds(1);
         datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
     }
@@ -238,6 +239,7 @@ void Test9_2_18(void)
     activeDatasetInfo.Clear();
     {
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
         timestamp.SetSeconds(kActiveTimestamp20000);
         activeDatasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
     }
@@ -291,6 +293,7 @@ void Test9_2_18(void)
     pendingDatasetInfo1.Clear();
     {
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
         timestamp.SetSeconds(kPendingTimestamp20);
         pendingDatasetInfo1.Set<MeshCoP::Dataset::kPendingTimestamp>(timestamp);
         timestamp.SetSeconds(kActiveTimestamp20);
@@ -349,6 +352,7 @@ void Test9_2_18(void)
     pendingDatasetInfo2.Clear();
     {
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
         timestamp.SetSeconds(kPendingTimestamp20);
         pendingDatasetInfo2.Set<MeshCoP::Dataset::kPendingTimestamp>(timestamp);
         timestamp.SetSeconds(kActiveTimestamp20);

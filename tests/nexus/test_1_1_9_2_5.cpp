@@ -165,8 +165,8 @@ void Test9_2_5(void)
 
     SuccessOrQuit(router1.Get<MeshCoP::ActiveDatasetManager>().Read(datasetInfo));
 
+    timestamp.Clear();
     timestamp.SetSeconds(kActiveTimestampStep2);
-    timestamp.SetTicks(0);
     datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
     datasetInfo.Set<MeshCoP::Dataset::kChannelMask>(kChannelMaskStep2);
     datasetInfo.Set<MeshCoP::Dataset::kExtendedPanId>(

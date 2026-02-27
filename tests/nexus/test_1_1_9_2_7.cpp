@@ -280,9 +280,9 @@ void Test9_2_7(void)
 
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             // Deviation from spec: Step 5 uses 15 instead of 20 to ensure it is older than the timestamp in Step 11.
             timestamp.SetSeconds(kActiveTimestampStep5);
-            timestamp.SetTicks(0);
             datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
         }
 
@@ -397,6 +397,7 @@ void Test9_2_7(void)
         Coap::Message     *message;
         MeshCoP::Dataset   dataset;
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
 
         message = agent.NewPriorityConfirmablePostMessage(ot::kUriPendingSet);
         VerifyOrQuit(message != nullptr);
@@ -404,11 +405,9 @@ void Test9_2_7(void)
         SuccessOrQuit(router.Get<MeshCoP::ActiveDatasetManager>().Read(dataset));
 
         timestamp.SetSeconds(kActiveTimestampRouter);
-        timestamp.SetTicks(0);
         SuccessOrQuit(dataset.Write<MeshCoP::ActiveTimestampTlv>(timestamp));
 
         timestamp.SetSeconds(kPendingTimestampRouter);
-        timestamp.SetTicks(0);
         SuccessOrQuit(dataset.Write<MeshCoP::PendingTimestampTlv>(timestamp));
 
         SuccessOrQuit(dataset.Write<MeshCoP::DelayTimerTlv>(kDelayTimerStep11 * 1000));
@@ -532,14 +531,14 @@ void Test9_2_7(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kPendingTimestampCommissioner);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampCommissioner);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerStep17 * 1000));

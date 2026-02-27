@@ -144,14 +144,14 @@ void SendPendingSet(Node           &aCommissioner,
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aSessionId));
     {
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
         timestamp.SetSeconds(aActiveTimestamp);
-        timestamp.SetTicks(0);
         SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
     }
     {
         MeshCoP::Timestamp timestamp;
+        timestamp.Clear();
         timestamp.SetSeconds(aPendingTimestamp);
-        timestamp.SetTicks(0);
         SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
     }
     {

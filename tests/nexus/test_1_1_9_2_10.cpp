@@ -200,8 +200,8 @@ void Test9_2_10(void)
         datasetInfo.Set<MeshCoP::Dataset::kPanId>(kPrimaryPanId);
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kLeaderActiveTimestamp);
-            timestamp.SetTicks(0);
             datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
         }
         leader.Get<MeshCoP::ActiveDatasetManager>().SaveLocal(datasetInfo);
@@ -262,14 +262,14 @@ void Test9_2_10(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep2);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kPendingTimestampStep2);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerStep2));

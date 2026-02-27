@@ -344,8 +344,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep2);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));
@@ -446,8 +446,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep6);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::ChannelTlv>(*message, MeshCoP::ChannelTlvValue(0, kSecondaryChannel)));
@@ -510,8 +510,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep8);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(
@@ -579,8 +579,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep10);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));
@@ -645,8 +645,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep12);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));
@@ -707,8 +707,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, kInvalidSessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep14);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));
@@ -768,8 +768,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep2);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));
@@ -830,8 +830,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep18);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));
@@ -894,8 +894,8 @@ void RunTest9_2_4(Topology aTopology, const char *aJsonFile)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep20);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::AppendTlv(*message, MeshCoP::Tlv::kChannelMask, kChannelMask, sizeof(kChannelMask)));

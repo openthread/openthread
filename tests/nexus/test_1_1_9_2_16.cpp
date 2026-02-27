@@ -262,14 +262,14 @@ void Test9_2_16(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep3);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kPendingTimestampStep3);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
         }
         {
@@ -415,14 +415,14 @@ void Test9_2_16(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep11);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kPendingTimestampStep11);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::PendingTimestampTlv>(*message, timestamp));
         }
         {
@@ -478,8 +478,8 @@ void Test9_2_16(void)
         SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, sessionId));
         {
             MeshCoP::Timestamp timestamp;
+            timestamp.Clear();
             timestamp.SetSeconds(kActiveTimestampStep13);
-            timestamp.SetTicks(0);
             SuccessOrQuit(Tlv::Append<MeshCoP::ActiveTimestampTlv>(*message, timestamp));
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::NetworkNameTlv>(*message, kNetworkNameStep13));
