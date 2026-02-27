@@ -422,6 +422,9 @@ void Mle::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStart
     Get<Mac::Mac>().SetBeaconEnabled(true);
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMle);
 
+    // Avoid informing an old parent when attaching next as a child after becoming an active router
+    mPreviousParentRloc = kInvalidRloc16;
+
     if (aRole == kRoleLeader)
     {
         GetLeaderAloc(mLeaderAloc.GetAddress());
@@ -1616,10 +1619,10 @@ void Mle::HandleTimeTick(void)
         switch (child.GetState())
         {
         case Neighbor::kStateInvalid:
-        case Neighbor::kStateChildIdRequest:
             continue;
 
         case Neighbor::kStateParentRequest:
+        case Neighbor::kStateChildIdRequest:
         case Neighbor::kStateValid:
         case Neighbor::kStateRestored:
         case Neighbor::kStateChildUpdateRequest:
@@ -2904,8 +2907,6 @@ Error Mle::SendChildIdResponse(Child &aChild)
         SuccessOrExit(error = message->AppendAddressRegistrationTlv(aChild));
     }
 
-    SetChildStateToValid(aChild);
-
     if (!aChild.IsRxOnWhenIdle())
     {
         Get<IndirectSender>().SetChildUseShortAddress(aChild, false);
@@ -2920,6 +2921,8 @@ Error Mle::SendChildIdResponse(Child &aChild)
 
     destination.SetToLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
+
+    SetChildStateToValid(aChild);
 
     Log(kMessageSend, kTypeChildIdResponse, destination, aChild.GetRloc16());
 
