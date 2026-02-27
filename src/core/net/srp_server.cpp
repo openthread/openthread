@@ -629,8 +629,11 @@ void Server::CommitSrpUpdate(Error                    aError,
 
     if (grantedKeyLease == 0)
     {
-        VerifyOrExit(existingHost != nullptr);
-        LogInfo("Fully remove host %s", aHost.GetFullName());
+        if (existingHost != nullptr)
+        {
+            LogInfo("Fully remove host %s", aHost.GetFullName());
+        }
+
         aHost.Free();
         ExitNow();
     }
