@@ -33,7 +33,7 @@ import shlex
 from typing import Optional
 
 from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand,
-                               ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand, GetPskdHash,
+                               ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand,
                                GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand, PingCommand,
                                GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash,
                                DiagnosticTlvsCommand, GetApplicationLayersCommand, SendVendorData,
@@ -74,7 +74,6 @@ class CLI:
             'simulation': SimulationCommand(),
             'random_challenge': GetRandomNumberChallenge(),
             'present_hash': PresentHash(),
-            'peer_pskd_hash': GetPskdHash(),
             'tlv': TlvCommand(),
             'get_comm_cert': GetCommissionerCertificate(),
             'diagnostic_tlvs': DiagnosticTlvsCommand()
