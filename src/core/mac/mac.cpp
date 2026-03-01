@@ -115,7 +115,6 @@ Mac::Mac(Instance &aInstance)
 
     SetEnabled(true);
 
-    Get<KeyManager>().UpdateKeyMaterial();
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
@@ -125,6 +124,8 @@ Mac::Mac(Instance &aInstance)
 
     mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
 }
+
+void Mac::Init(void) { Get<KeyManager>().UpdateKeyMaterial(); }
 
 void Mac::SetEnabled(bool aEnable)
 {
