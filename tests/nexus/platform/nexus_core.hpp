@@ -55,7 +55,8 @@ public:
     Node             &CreateNode(void);
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
-    TimeMilli GetNow(void) { return mNow; }
+    TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
+    TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
     void      AdvanceTime(uint32_t aDuration);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -75,7 +76,8 @@ public:
     void  SetActiveNode(Node *aNode) { mActiveNode = aNode; }
     Node *GetActiveNode(void) { return mActiveNode; }
 
-    void UpdateNextAlarmTime(const Alarm &aAlarm);
+    void UpdateNextAlarmMilli(const Alarm &aAlarm);
+    void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
 
 private:
@@ -117,8 +119,8 @@ private:
     Array<NetworkKey, 16> mNetworkKeys;
     uint16_t              mCurNodeId;
     bool                  mPendingAction;
-    TimeMilli             mNow;
-    TimeMilli             mNextAlarmTime;
+    uint64_t              mNow;
+    uint64_t              mNextAlarmTime;
     Node                 *mActiveNode;
 };
 

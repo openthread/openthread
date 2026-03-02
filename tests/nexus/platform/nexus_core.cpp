@@ -51,7 +51,7 @@ Core::Core(void)
     sCore  = this;
     sInUse = true;
 
-    mNextAlarmTime = mNow.GetDistantFuture();
+    mNextAlarmTime = NumericLimits<uint64_t>::kMax;
 
     pcapFile = getenv("OT_NEXUS_PCAP_FILE");
 
@@ -256,27 +256,58 @@ Node &Core::CreateNode(void)
     return *node;
 }
 
-void Core::UpdateNextAlarmTime(const Alarm &aAlarm)
+void Core::UpdateNextAlarmMilli(const Alarm &aAlarm)
 {
     if (aAlarm.mScheduled)
     {
-        mNextAlarmTime = Min(mNextAlarmTime, Max(mNow, aAlarm.mAlarmTime));
+        uint64_t alarmTime;
+
+        if (GetNow() >= aAlarm.mAlarmTime)
+        {
+            alarmTime = mNow;
+        }
+        else
+        {
+            alarmTime = mNow - (mNow % 1000u) + (static_cast<uint64_t>(aAlarm.mAlarmTime - GetNow()) * 1000u);
+        }
+
+        mNextAlarmTime = Min(mNextAlarmTime, alarmTime);
+    }
+}
+
+void Core::UpdateNextAlarmMicro(const Alarm &aAlarm)
+{
+    if (aAlarm.mScheduled)
+    {
+        uint64_t alarmTime;
+
+        if (GetNowMicro() >= aAlarm.mAlarmTime)
+        {
+            alarmTime = mNow;
+        }
+        else
+        {
+            alarmTime = mNow + static_cast<uint64_t>(aAlarm.mAlarmTime - GetNowMicro());
+        }
+
+        mNextAlarmTime = Min(mNextAlarmTime, alarmTime);
     }
 }
 
 void Core::AdvanceTime(uint32_t aDuration)
 {
-    TimeMilli targetTime = mNow + aDuration;
+    uint64_t targetTime = mNow + (static_cast<uint64_t>(aDuration) * 1000u);
 
     while (mPendingAction || (mNextAlarmTime <= targetTime))
     {
-        mNextAlarmTime = mNow.GetDistantFuture();
+        mNextAlarmTime = NumericLimits<uint64_t>::kMax;
         mPendingAction = false;
 
         for (Node &node : mNodes)
         {
             Process(node);
-            UpdateNextAlarmTime(node.mAlarm);
+            UpdateNextAlarmMilli(node.mAlarmMilli);
+            UpdateNextAlarmMicro(node.mAlarmMicro);
         }
 
         if (!mPendingAction)
@@ -298,10 +329,16 @@ void Core::Process(Node &aNode)
     ProcessTrel(aNode);
 #endif
 
-    if (aNode.mAlarm.ShouldTrigger(mNow))
+    if (aNode.mAlarmMilli.mScheduled && (GetNow() >= aNode.mAlarmMilli.mAlarmTime))
     {
-        aNode.mAlarm.mScheduled = false;
+        aNode.mAlarmMilli.mScheduled = false;
         otPlatAlarmMilliFired(&aNode.GetInstance());
+    }
+
+    if (aNode.mAlarmMicro.mScheduled && (GetNowMicro() >= aNode.mAlarmMicro.mAlarmTime))
+    {
+        aNode.mAlarmMicro.mScheduled = false;
+        otPlatAlarmMicroFired(&aNode.GetInstance());
     }
 }
 
@@ -326,7 +363,7 @@ void Core::ProcessRadio(Node &aNode)
 
     ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
 
-    mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow.GetValue() * 1000ull);
+    mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow);
 
     otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
 
@@ -347,7 +384,7 @@ void Core::ProcessRadio(Node &aNode)
 
             Radio::Frame rxFrame(aNode.mRadio.mTxFrame);
 
-            rxFrame.mInfo.mRxInfo.mTimestamp = (mNow.GetValue() * 1000u);
+            rxFrame.mInfo.mRxInfo.mTimestamp = mNow;
             rxFrame.mInfo.mRxInfo.mRssi      = kDefaultRxRssi;
             rxFrame.mInfo.mRxInfo.mLqi       = 0;
 
@@ -388,7 +425,7 @@ void Core::ProcessRadio(Node &aNode)
             (ackMode == kSendAckFramePending));
 
         ackFrame.UpdateFcs();
-        mPcap.WriteFrame(ackFrame, mNow.GetValue() * 1000ull);
+        mPcap.WriteFrame(ackFrame, mNow);
 
         otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
     }
