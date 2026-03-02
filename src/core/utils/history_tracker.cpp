@@ -261,16 +261,14 @@ exit:
     return;
 }
 
-void Local::RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
-                               const Ip6::Netif::MulticastAddress &aMulticastAddress,
-                               Ip6::Netif::AddressOrigin           aAddressOrigin)
+void Local::RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::MulticastAddress &aMulticastAddress)
 {
     MulticastAddressInfo *entry = mMulticastAddressHistory.AddNewEntry();
 
     VerifyOrExit(entry != nullptr);
 
     entry->mAddress       = aMulticastAddress.GetAddress();
-    entry->mAddressOrigin = aAddressOrigin;
+    entry->mAddressOrigin = aMulticastAddress.GetOrigin();
     entry->mEvent         = (aEvent == Ip6::Netif::kAddressAdded) ? kAddressAdded : kAddressRemoved;
 
 exit:

@@ -420,31 +420,6 @@ uint8_t Address::PrefixMatch(const Address &aOther) const
     return static_cast<uint8_t>(CountMatchingBits(mFields.m8, aOther.mFields.m8, BitSizeOf(Address)));
 }
 
-bool Address::MatchesFilter(TypeFilter aFilter) const
-{
-    bool matches = true;
-
-    switch (aFilter)
-    {
-    case kTypeAny:
-        break;
-
-    case kTypeUnicast:
-        matches = !IsUnspecified() && !IsMulticast();
-        break;
-
-    case kTypeMulticast:
-        matches = IsMulticast();
-        break;
-
-    case kTypeMulticastLargerThanRealmLocal:
-        matches = IsMulticastLargerThanRealmLocal();
-        break;
-    }
-
-    return matches;
-}
-
 void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added

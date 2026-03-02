@@ -233,6 +233,16 @@ public:
 
     public:
         /**
+         * Clears and initializes the multicast address as a thread-origin address.
+         */
+        void InitAsThreadOrigin(void);
+
+        /**
+         * Clears and initializes the multicast address as a manual-origin address.
+         */
+        void InitAsManualOrigin(void);
+
+        /**
          * Returns the multicast address.
          *
          * @returns The multicast address.
@@ -245,6 +255,13 @@ public:
          * @returns The multicast address.
          */
         Address &GetAddress(void) { return AsCoreType(&mAddress); }
+
+        /**
+         * Gets the IPv6 address origin.
+         *
+         * @returns The address origin.
+         */
+        AddressOrigin GetOrigin(void) const { return static_cast<AddressOrigin>(mAddressOrigin); }
 
         /**
          * Returns the next multicast address subscribed to the interface.
@@ -260,91 +277,46 @@ public:
          */
         MulticastAddress *GetNext(void) { return static_cast<MulticastAddress *>(AsNonConst(mNext)); }
 
-    private:
-        bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
-    };
-
-    class ExternalMulticastAddress : public MulticastAddress
-    {
-        friend class Netif;
-        friend class LinkedList<ExternalMulticastAddress>;
-
-    public:
-        /**
-         * Represents an iterator for iterating external multicast addresses in a `Netif` instance.
-         */
-        class Iterator : public ItemPtrIterator<ExternalMulticastAddress, Iterator>
-        {
-            friend class ItemPtrIterator<ExternalMulticastAddress, Iterator>;
-            friend class Netif;
-
-        public:
-            /**
-             * Initializes an `Iterator` instance to start from the first external multicast address
-             * that matches a given IPv6 address type filter.
-             *
-             * @param[in] aNetif   A reference to the `Netif` instance.
-             * @param[in] aFilter  The IPv6 address type filter.
-             */
-            explicit Iterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny);
-
-        private:
-            class Builder
-            {
-            public:
-                Builder(const Netif &aNetif, Address::TypeFilter aFilter)
-                    : mNetif(aNetif)
-                    , mFilter(aFilter)
-                {
-                }
-
-                Iterator begin(void) { return Iterator(mNetif, mFilter); }
-                Iterator end(void) { return Iterator(mNetif, Iterator::kEndIterator); }
-
-            private:
-                const Netif        &mNetif;
-                Address::TypeFilter mFilter;
-            };
-
-            enum IteratorType : uint8_t
-            {
-                kEndIterator,
-            };
-
-            Iterator(const Netif &aNetif, IteratorType)
-                : mNetif(aNetif)
-            {
-            }
-
-            void AdvanceFrom(const MulticastAddress *aAddr);
-            void Advance(void) { AdvanceFrom(mItem->GetNext()); }
-
-            const Netif        &mNetif;
-            Address::TypeFilter mFilter;
-        };
-
 #if OPENTHREAD_CONFIG_MLR_ENABLE
+        /**
+         * Indicates whether or not the address is a Multicast Listener Registration (MLR) candidate.
+         *
+         * An address is an MLR candidate if it is an external address (origin `kOriginManual`) and its scope
+         * is larger than realm-local.
+         *
+         * @retval TRUE  If the address is an MLR candidate.
+         * @retval FALSE If the address is not an MLR candidate.
+         */
+        bool IsMlrCandidate(void) const;
+
         /**
          * Returns the current Multicast Listener Registration (MLR) state.
          *
          * @returns The current Multicast Listener Registration state.
          */
-        MlrState GetMlrState(void) const { return mMlrState; }
+        MlrState GetMlrState(void) const { return static_cast<MlrState>(mData); }
 
         /**
          * Sets the Multicast Listener Registration (MLR) state.
          *
          * @param[in] aState  The new Multicast Listener Registration state.
          */
-        void SetMlrState(MlrState aState) { mMlrState = aState; }
+        void SetMlrState(MlrState aState) { mData = aState; }
+
+        /**
+         * Indicates whether or not the address is an MLR candidate and matches a given MLR state.
+         *
+         * @param[in] aMlrState  The MLR state to match against.
+         *
+         * @retval TRUE  If the address is an MLR candidate and its state matches @p aMlrState.
+         * @retval FALSE If the address is not an MLR candidate or its state does not match @p aMlrState.
+         */
+        bool Matches(MlrState aMlrState) const;
 #endif
 
     private:
-        ExternalMulticastAddress *GetNext(void) { return static_cast<ExternalMulticastAddress *>(AsNonConst(mNext)); }
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE
-        MlrState mMlrState;
-#endif
+        bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
+        bool Matches(AddressOrigin aOrigin) const { return GetOrigin() == aOrigin; }
     };
 
     /**
@@ -506,14 +478,11 @@ public:
     const LinkedList<MulticastAddress> &GetMulticastAddresses(void) const { return mMulticastAddresses; }
 
     /**
-     * Indicates whether a multicast address is an external or internal address.
+     * Returns the linked list of multicast addresses.
      *
-     * @param[in] aAddress  A reference to the multicast address.
-     *
-     * @retval TRUE   The address is an external address.
-     * @retval FALSE  The address is not an external address (it is an OpenThread internal address).
+     * @returns The linked list of multicast addresses.
      */
-    bool IsMulticastAddressExternal(const MulticastAddress &aAddress) const;
+    LinkedList<MulticastAddress> &GetMulticastAddresses(void) { return mMulticastAddresses; }
 
     /**
      * Subscribes the network interface to a multicast address.
@@ -570,37 +539,12 @@ public:
     void UnsubscribeAllExternalMulticastAddresses(void);
 
     /**
-     * Enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
-     * a given IPv6 address type filter.
-     *
-     * Should be used like follows: to iterate over all external multicast addresses
-     *
-     *     for (Ip6::Netif::ExternalMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
-     *     { ... }
-     *
-     * or to iterate over a subset of external multicast addresses determined by a given address type filter
-     *
-     *     for (Ip6::Netif::ExternalMulticastAddress &addr :
-     *          Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
-     *     { ... }
-     *
-     * @param[in] aFilter  The IPv6 address type filter.
-     *
-     * @returns An `ExternalMulticastAddress::Iterator::Builder` instance.
-     */
-    ExternalMulticastAddress::Iterator::Builder IterateExternalMulticastAddresses(
-        Address::TypeFilter aFilter = Address::kTypeAny)
-    {
-        return ExternalMulticastAddress::Iterator::Builder(*this, aFilter);
-    }
-
-    /**
-     * Indicates whether or not the network interfaces is subscribed to any external multicast address.
+     * Indicates whether or not the network interface is subscribed to any external multicast address.
      *
      * @retval TRUE  The network interface is subscribed to at least one external multicast address.
      * @retval FALSE The network interface is not subscribed to any external multicast address.
      */
-    bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddress::Iterator(*this).IsDone(); }
+    bool HasAnyExternalMulticastAddress(void) const;
 
     /**
      * Applies the new mesh local prefix.
@@ -625,12 +569,15 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
-    typedef otIp6AddressInfo AddressInfo;
+    static constexpr uint16_t kMaxExtUnicastAddrs   = OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS;
+    static constexpr uint16_t kMaxExtMulticastAddrs = OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS;
 
     static constexpr uint8_t kMulticastPrefixLength = 128; // Multicast prefix length used in `AdressInfo`.
 
+    typedef otIp6AddressInfo AddressInfo;
+
     void SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress &aAddress);
-    void SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAddress &aAddress, AddressOrigin aOrigin);
+    void SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAddress &aAddress);
     void SignalMulticastAddressesChange(AddressEvent            aEvent,
                                         const MulticastAddress *aStart,
                                         const MulticastAddress *aEnd);
@@ -640,8 +587,8 @@ private:
 
     Callback<otIp6AddressCallback> mAddressCallback;
 
-    Pool<UnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>           mExtUnicastAddressPool;
-    Pool<ExternalMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;
+    Pool<UnicastAddress, kMaxExtUnicastAddrs>     mExtUnicastAddressPool;
+    Pool<MulticastAddress, kMaxExtMulticastAddrs> mExtMulticastAddressPool;
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
     static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;
