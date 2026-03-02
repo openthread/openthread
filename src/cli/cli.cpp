@@ -6797,6 +6797,7 @@ template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
         "channel",
         "panid",
         "extpanid",
+        "dataset active -ns",
         "ipaddr -v",
         "ipmaddr",
         "netdata show",
