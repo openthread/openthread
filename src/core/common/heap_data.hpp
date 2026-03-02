@@ -141,6 +141,19 @@ public:
     void TakeFrom(Data &&aData);
 
     /**
+     * Sets the `Heap::Data` by taking ownership of a given heap-allocated buffer.
+     *
+     * After this call, the `Heap::Data` will take ownership of the buffer and free it when done.  The
+     * @p aHeapAllocatedBuffer pointer is set to `nullptr` to ensure the caller does not retain a pointer to the
+     * transferred buffer.
+     *
+     * @param[in,out] aHeapAllocatedBuffer  A reference to a pointer to a heap-allocated buffer.
+     *                                      On exit, it is set to `nullptr`.
+     * @param[in]     aLength               The length of the buffer (number of bytes).
+     */
+    void TakeFrom(uint8_t *&aHeapAllocatedBuffer, uint16_t aLength);
+
+    /**
      * Casts the `Heap::Data` to an rvalue reference.
      *
      * This method is intended to be used with `TakeFrom()` to explicitly indicate a move operation and transfer of
