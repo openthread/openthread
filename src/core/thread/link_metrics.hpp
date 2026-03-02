@@ -331,7 +331,7 @@ private:
                                           Neighbor      &aNeighbor);
     Status ConfigureEnhAckProbing(uint8_t aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor);
 
-    Pool<SeriesInfo, kMaxSeriesSupported> mSeriesInfoPool;
+    StaticPool<SeriesInfo, kMaxSeriesSupported> mSeriesInfoPool;
 };
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

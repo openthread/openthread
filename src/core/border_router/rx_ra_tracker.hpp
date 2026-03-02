@@ -675,8 +675,8 @@ private:
     TimeMilli            mLocalRaHeaderUpdateTime;
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-    Pool<SharedEntry, kMaxEntries>   mEntryPool;
-    Pool<Entry<Router>, kMaxRouters> mRouterPool;
+    StaticPool<SharedEntry, kMaxEntries>   mEntryPool;
+    StaticPool<Entry<Router>, kMaxRouters> mRouterPool;
 #endif
 };
 

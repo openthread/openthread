@@ -1990,7 +1990,7 @@ private:
     Error   ReclaimBuffers(Message::Priority aPriority);
 
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    Pool<Buffer, kNumBuffers> mBufferPool;
+    StaticPool<Buffer, kNumBuffers> mBufferPool;
 #endif
     uint16_t mNumAllocated;
     uint16_t mMaxAllocated;

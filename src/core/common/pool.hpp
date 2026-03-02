@@ -54,43 +54,34 @@ class Instance;
  */
 
 /**
- * Represents an object pool.
+ * Represents a generic object pool operating on a provided memory buffer.
  *
- * @tparam Type         The object type. Type should provide `GetNext() and `SetNext()` so that it can be added to a
+ * @tparam Type         The object type. Type should provide `GetNext()` and `SetNext()` so that it can be added to a
  *                      linked list.
- * @tparam kPoolSize    Specifies the pool size (maximum number of objects in the pool).
  */
-template <class Type, uint16_t kPoolSize> class Pool : private NonCopyable
+template <class Type> class Pool : private NonCopyable
 {
 public:
     /**
-     * Initializes the pool.
+     * Initializes the pool as empty and unlinked to any buffer.
      */
     Pool(void)
-        : mFreeList()
+        : mEntryArray(nullptr)
+        , mNumEntries(0)
     {
-        for (Type &entry : mPool)
-        {
-            mFreeList.Push(entry);
-        }
     }
 
     /**
-     * Initializes the pool.
+     * Initializes the pool with a given array of entries.
      *
-     * Version requires the `Type` class to provide method `void Init(Instance &)` to initialize
-     * each `Type` entry object. This can be realized by the `Type` class inheriting from `InstanceLocatorInit()`.
-     *
-     * @param[in] aInstance   A reference to the OpenThread instance.
+     * @param[in] aEntryArray  A pointer to an array of entries.
+     * @param[in] aNumEntries  The number of entries in the array.
      */
-    explicit Pool(Instance &aInstance)
-        : mFreeList()
+    void Init(Type *aEntryArray, uint16_t aNumEntries)
     {
-        for (Type &entry : mPool)
-        {
-            entry.Init(aInstance);
-            mFreeList.Push(entry);
-        }
+        mEntryArray = aEntryArray;
+        mNumEntries = aNumEntries;
+        FreeAll();
     }
 
     /**
@@ -118,9 +109,9 @@ public:
     {
         mFreeList.Clear();
 
-        for (Type &entry : mPool)
+        for (uint16_t i = 0; i < mNumEntries; i++)
         {
-            mFreeList.Push(entry);
+            mFreeList.Push(mEntryArray[i]);
         }
     }
 
@@ -129,17 +120,20 @@ public:
      *
      * @returns The pool size (maximum number of objects in the pool).
      */
-    uint16_t GetSize(void) const { return kPoolSize; }
+    uint16_t GetSize(void) const { return mNumEntries; }
 
     /**
      * Indicates whether or not a given `Type` object is from the pool.
      *
      * @param[in]  aObject   A reference to a `Type` object.
      *
-     * @retval TRUE if @p aObject is from the pool.
-     * @retval FALSE if @p aObject is not from the pool.
+     * @retval TRUE   If @p aObject is from the pool.
+     * @retval FALSE  If @p aObject is not from the pool.
      */
-    bool IsPoolEntry(const Type &aObject) const { return (&mPool[0] <= &aObject) && (&aObject < GetArrayEnd(mPool)); }
+    bool IsPoolEntry(const Type &aObject) const
+    {
+        return (&mEntryArray[0] <= &aObject) && (&aObject < &mEntryArray[mNumEntries]);
+    }
 
     /**
      * Returns the associated index of a given entry from the pool.
@@ -150,7 +144,7 @@ public:
      *
      * @returns The associated index of @p aEntry.
      */
-    uint16_t GetIndexOf(const Type &aEntry) const { return static_cast<uint16_t>(&aEntry - mPool); }
+    uint16_t GetIndexOf(const Type &aEntry) const { return static_cast<uint16_t>(&aEntry - mEntryArray); }
 
     /**
      * Retrieves a pool entry at a given index.
@@ -161,7 +155,7 @@ public:
      *
      * @returns A reference to entry at index @p aIndex.
      */
-    Type &GetEntryAt(uint16_t aIndex) { return mPool[aIndex]; }
+    Type &GetEntryAt(uint16_t aIndex) { return mEntryArray[aIndex]; }
 
     /**
      * Retrieves a pool entry at a given index.
@@ -172,11 +166,51 @@ public:
      *
      * @returns A reference to entry at index @p aIndex.
      */
-    const Type &GetEntryAt(uint16_t aIndex) const { return mPool[aIndex]; }
+    const Type &GetEntryAt(uint16_t aIndex) const { return mEntryArray[aIndex]; }
 
 private:
     LinkedList<Type> mFreeList;
-    Type             mPool[kPoolSize];
+    Type            *mEntryArray;
+    uint16_t         mNumEntries;
+};
+
+/**
+ * Represents an object pool with a statically allocated fixed-size array.
+ *
+ * @tparam Type         The object type. Type should provide `GetNext()` and `SetNext()` so that it can be added to a
+ *                      linked list.
+ * @tparam kPoolSize    Specifies the pool size (maximum number of objects in the pool).
+ */
+template <class Type, uint16_t kPoolSize> class StaticPool : public Pool<Type>
+{
+public:
+    /**
+     * Initializes the `StaticPool`.
+     */
+    StaticPool(void) { Init(); }
+
+    /**
+     * Initializes the `StaticPool`.
+     *
+     * Version requires the `Type` class to provide method `void Init(Instance &)` to initialize
+     * each `Type` entry object. This can be realized by the `Type` class inheriting from `InstanceLocatorInit()`.
+     *
+     * @param[in] aInstance   A reference to the OpenThread instance.
+     */
+    explicit StaticPool(Instance &aInstance)
+    {
+        for (Type &entry : mEntries)
+        {
+            entry.Init(aInstance);
+        }
+
+        Init();
+    }
+
+private:
+    void Init(void) { Pool<Type>::Init(mEntries, kPoolSize); }
+
+    Type mEntries[kPoolSize];
 };
 
 /**

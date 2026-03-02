@@ -151,7 +151,7 @@ enum
     kMaxEnhAckProbingInitiator = OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED,
 };
 
-typedef Pool<LinkMetricsDataInfo, kMaxEnhAckProbingInitiator> LinkMetricsDataInfoPool;
+typedef StaticPool<LinkMetricsDataInfo, kMaxEnhAckProbingInitiator> LinkMetricsDataInfoPool;
 
 typedef LinkedList<LinkMetricsDataInfo> LinkMetricsDataInfoList;
 

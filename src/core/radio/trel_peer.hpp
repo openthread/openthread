@@ -368,7 +368,7 @@ private:
 
     PeerTimer mTimer;
 #if !OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
-    Pool<Peer, PoolSize> mPool;
+    StaticPool<Peer, PoolSize> mPool;
 #endif
 };
 

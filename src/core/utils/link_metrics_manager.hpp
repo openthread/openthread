@@ -208,10 +208,10 @@ private:
 
     using LinkMetricsMgrTimer = TimerMilliIn<LinkMetricsManager, &LinkMetricsManager::HandleTimer>;
 
-    Pool<Subject, kMaximumSubjectToTrack> mPool;
-    LinkedList<Subject>                   mSubjectList;
-    LinkMetricsMgrTimer                   mTimer;
-    bool                                  mEnabled;
+    StaticPool<Subject, kMaximumSubjectToTrack> mPool;
+    LinkedList<Subject>                         mSubjectList;
+    LinkMetricsMgrTimer                         mTimer;
+    bool                                        mEnabled;
 };
 
 /**

@@ -364,18 +364,18 @@ private:
 
     using TranslatorTimer = TimerMilliIn<Translator, &Translator::HandleTimer>;
 
-    State                    mState;
-    uint64_t                 mNextMappingId;
-    Pool<Mapping, kPoolSize> mMappingPool;
-    OwningList<Mapping>      mActiveMappings;
-    Ip6::Prefix              mNat64Prefix;
-    Ip4::Cidr                mIp4Cidr;
-    uint32_t                 mMinHostId;
-    uint32_t                 mMaxHostId;
-    uint32_t                 mNextHostId;
-    TranslatorTimer          mTimer;
-    ProtocolCounters         mCounters;
-    ErrorCounters            mErrorCounters;
+    State                          mState;
+    uint64_t                       mNextMappingId;
+    StaticPool<Mapping, kPoolSize> mMappingPool;
+    OwningList<Mapping>            mActiveMappings;
+    Ip6::Prefix                    mNat64Prefix;
+    Ip4::Cidr                      mIp4Cidr;
+    uint32_t                       mMinHostId;
+    uint32_t                       mMaxHostId;
+    uint32_t                       mNextHostId;
+    TranslatorTimer                mTimer;
+    ProtocolCounters               mCounters;
+    ErrorCounters                  mErrorCounters;
 };
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 

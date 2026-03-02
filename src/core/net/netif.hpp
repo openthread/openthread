@@ -587,8 +587,8 @@ private:
 
     Callback<otIp6AddressCallback> mAddressCallback;
 
-    Pool<UnicastAddress, kMaxExtUnicastAddrs>     mExtUnicastAddressPool;
-    Pool<MulticastAddress, kMaxExtMulticastAddrs> mExtMulticastAddressPool;
+    StaticPool<UnicastAddress, kMaxExtUnicastAddrs>     mExtUnicastAddressPool;
+    StaticPool<MulticastAddress, kMaxExtMulticastAddrs> mExtMulticastAddressPool;
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
     static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;

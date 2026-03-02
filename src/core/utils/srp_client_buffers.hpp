@@ -238,9 +238,9 @@ public:
     void FreeAllServices(void) { mServicePool.FreeAll(); }
 
 private:
-    char                             mHostName[kHostNameSize];
-    Ip6::Address                     mHostAddresses[kMaxHostAddresses];
-    Pool<ServiceEntry, kMaxServices> mServicePool;
+    char                                   mHostName[kHostNameSize];
+    Ip6::Address                           mHostAddresses[kMaxHostAddresses];
+    StaticPool<ServiceEntry, kMaxServices> mServicePool;
 };
 
 } // namespace Utils

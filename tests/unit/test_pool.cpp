@@ -60,7 +60,7 @@ private:
 
 constexpr uint16_t kPoolSize = 11;
 
-typedef Pool<Entry, kPoolSize> EntryPool;
+typedef StaticPool<Entry, kPoolSize> EntryPool;
 
 static Entry sNonPoolEntry;
 

@@ -315,7 +315,7 @@ private:
         } mInfo;
     };
 
-    typedef Pool<CacheEntry, kCacheEntries> CacheEntryPool;
+    typedef StaticPool<CacheEntry, kCacheEntries> CacheEntryPool;
 
     class CacheEntryList : public LinkedList<CacheEntry>
     {
