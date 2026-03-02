@@ -32,6 +32,7 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/tests/nexus
     ${PROJECT_SOURCE_DIR}/tests/nexus/platform
+    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
 )
 
 set(COMMON_COMPILE_OPTIONS
@@ -51,6 +52,7 @@ add_library(ot-nexus-platform
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp
+    ../../examples/platforms/utils/mac_frame.cpp
 )
 
 target_include_directories(ot-nexus-platform

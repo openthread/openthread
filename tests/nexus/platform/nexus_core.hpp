@@ -57,6 +57,7 @@ public:
 
     TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
     TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
+    uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

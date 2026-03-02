@@ -29,6 +29,7 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_
 
+#include "mac_frame.h"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -72,11 +73,13 @@ struct Radio
     State                                   mState;
     bool                                    mPromiscuous : 1;
     bool                                    mSrcMatchEnabled : 1;
+    bool                                    mMacFrameCounterReset : 1;
     uint8_t                                 mChannel;
     Mac::PanId                              mPanId;
     Mac::ShortAddress                       mShortAddress;
     Mac::ExtAddress                         mExtAddress;
     Frame                                   mTxFrame;
+    otRadioContext                          mRadioContext;
     Array<uint16_t, kMaxSrcMaatchShort>     mSrcMatchShortEntries;
     Array<Mac::ExtAddress, kMaxSrcMatchExt> mSrcMatchExtEntries;
 };
