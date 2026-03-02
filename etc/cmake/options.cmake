@@ -264,6 +264,9 @@ ot_option(OT_SRP_SERVER OPENTHREAD_CONFIG_SRP_SERVER_ENABLE "SRP server")
 ot_option(OT_SRP_SERVER_FAST_START_MODE OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE "SRP server fast start")
 ot_option(OT_STEERING_DATA OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE "MeshCoP Steering Data APIs")
 ot_option(OT_TCP OPENTHREAD_CONFIG_TCP_ENABLE "TCP")
+# ==============================================================================================================
+ot_option(OT_TIME_EXCEEDED_DETECTION OPENTHREAD_CONFIG_TIME_EXCEEDED_DETECTION_ENABLE "Time Exceeded Detection Functionality")
+# ======================================================================================================================
 ot_option(OT_TIME_SYNC OPENTHREAD_CONFIG_TIME_SYNC_ENABLE "time synchronization service")
 ot_option(OT_TREL OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE "TREL radio link for Thread over Infrastructure feature")
 ot_option(OT_TREL_MANAGE_DNSSD OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE "TREL to manage DNSSD and peer discovery")
