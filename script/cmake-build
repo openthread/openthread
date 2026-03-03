@@ -51,13 +51,9 @@
 #
 #      OT_CMAKE_BUILD_DIR="./build/temp"  script/cmake-build ${platform}
 #
-#  For Android NDK, set the NDK environment variable and add the NDK toolchain to PATH:
+#  For Android NDK builds, set the NDK environment variable:
 #
-#      NDK=/path/to/android-ndk-r25c
-#      export PATH="${NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
-#      export CC=clang
-#      export CXX=clang++
-#      script/cmake-build android-ndk
+#      NDK=/path/to/android-ndk-r25c script/cmake-build android-ndk
 #
 #  Examples:
 #
@@ -211,47 +207,15 @@ Could not fild the Android NDK CMake toolchain file
             done
 
             if [ -z "${NDK_LLVM_PREBUILT}" ]; then
-                echo "
-ERROR: Android NDK LLVM prebuilt directory not found!
-- NDK=${NDK}
-- Expected to find: ${NDK}/toolchains/llvm/prebuilt/<host>/
-
-Please verify that:
-1. The NDK is properly installed and extracted at ${NDK}
-2. The NDK has the correct directory structure
-3. You are using Android NDK r25c or compatible version
-
-Current NDK directory structure:
-            "
-                find "${NDK}" -maxdepth 3 -type d 2>/dev/null | head -20 || echo "  (Unable to list NDK directory)"
+                echo "ERROR: Android NDK LLVM prebuilt directory not found at ${NDK}/toolchains/llvm/prebuilt/"
                 exit 3
             fi
 
-            # Verify that NDK has clang compilers (versioned like aarch64-linux-android24-clang)
-            if [ ! -d "${NDK_LLVM_PREBUILT}/bin" ] || [ -z "$(ls -1 "${NDK_LLVM_PREBUILT}/bin"/*-clang 2>/dev/null | head -1)" ]; then
-                echo "
-ERROR: Android NDK compiler tools not found!
-- NDK=${NDK}
-- NDK LLVM Prebuilt: ${NDK_LLVM_PREBUILT}
-- Expected to find versioned clang executables at: ${NDK_LLVM_PREBUILT}/bin/*-clang
+            # Create symlinks for generic clang/clang++ to the versioned compilers
+            ln -sf aarch64-linux-android24-clang "${NDK_LLVM_PREBUILT}/bin/clang" 2>/dev/null || true
+            ln -sf aarch64-linux-android24-clang++ "${NDK_LLVM_PREBUILT}/bin/clang++" 2>/dev/null || true
 
-Contents of ${NDK_LLVM_PREBUILT}/bin:
-            "
-                ls -la "${NDK_LLVM_PREBUILT}/bin" 2>/dev/null | head -30 || echo "  (bin directory not found)"
-                exit 3
-            fi
-
-            # Create symlinks for generic clang/clang++ to the arm64-v8a API 24 compilers
-            # The NDK only provides versioned compilers like aarch64-linux-android24-clang
-            # but CMake expects generic clang and clang++ in PATH
-            if [ ! -f "${NDK_LLVM_PREBUILT}/bin/clang" ]; then
-                ln -sf aarch64-linux-android24-clang "${NDK_LLVM_PREBUILT}/bin/clang"
-            fi
-            if [ ! -f "${NDK_LLVM_PREBUILT}/bin/clang++" ]; then
-                ln -sf aarch64-linux-android24-clang++ "${NDK_LLVM_PREBUILT}/bin/clang++"
-            fi
-
-            # Add NDK LLVM bin directory to PATH so CMake can find clang
+            # Add NDK LLVM bin directory to PATH and set compiler environment variables
             export PATH="${NDK_LLVM_PREBUILT}/bin:$PATH"
             export CC=clang
             export CXX=clang++
