@@ -482,9 +482,9 @@ void Test9_2_9(void)
      */
 
     SuccessOrQuit(router2.Get<Mle::Mle>().BecomeLeader(Mle::Mle::kIgnoreLeaderWeight));
-    nexus.AdvanceTime(kStabilizeTime * 6);
+    nexus.AdvanceTime(kAttachToRouterTime);
     VerifyOrQuit(router2.Get<Mle::Mle>().IsLeader());
-    VerifyOrQuit(router1.Get<Mle::Mle>().IsAttached());
+    VerifyOrQuit(router1.Get<Mle::Mle>().IsRouter());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 11: Router_2");

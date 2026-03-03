@@ -39,6 +39,16 @@ MGMT_PENDING_SET_URI = "/c/ps"
 MGMT_DATASET_CHANGED_URI = "/c/dc"
 
 
+def _verify_packet_in_group(pkts, pv, base_index, max_index, description, filter_chain_func):
+    """Verifies a packet within an out-of-order group."""
+    with pkts.save_index():
+        pkts.index = base_index
+        print(description)
+        filter_chain_func(pkts)
+        pkts.must_next()
+        return pv.max_index(max_index, pkts.index)
+
+
 def verify(pv):
     pkts = pv.pkts
     pv.summary.show()
@@ -87,6 +97,11 @@ def verify(pv):
       filter(lambda p: p.coap.tlv.state == 1).\
       must_next()
 
+    # Steps 4-5: Leader and Router_1 synchronize data.
+    # Order of multicast from Leader and Data Request from Router_1 is not guaranteed.
+    base_step4_index = pkts.index
+    max_step4_index = base_step4_index
+
     # Step 4: Leader
     # - Description: Automatically sends a multicast MLE Data Response.
     # - Pass Criteria: For DUT = Leader: The DUT MUST multicast a MLE Data Response with the new
@@ -102,14 +117,10 @@ def verify(pv):
     #       - Stable flag set to 0
     #   - Active Timestamp TLV: 10s
     #   - Pending Timestamp TLV: 30s
-    print("Step 4: Leader multicasts a MLE Data Response.")
-    pkts.filter_wpan_src64(LEADER).\
-      filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 10 and\
-             p.mle.tlv.pending_tstamp == 30).\
-      must_next()
+    max_step4_index = _verify_packet_in_group(
+        pkts, pv, base_step4_index, max_step4_index, "Step 4: Leader multicasts a MLE Data Response.",
+        lambda p: p.filter_wpan_src64(LEADER).filter_LLANMA().filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 10 and pkt.mle.tlv.pending_tstamp == 30))
 
     # Step 4: Router_1
     # - Description: Automatically sends unicast MLE Data Request to the Leader.
@@ -118,11 +129,9 @@ def verify(pv):
     #   - TLV Request TLV:
     #     - Network Data TLV
     #   - Active Timestamp TLV (10s)
-    print("Step 4: Router_1 sends unicast MLE Data Request to the Leader.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_wpan_dst64(LEADER).\
-      filter_mle_cmd(consts.MLE_DATA_REQUEST).\
-      must_next()
+    max_step4_index = _verify_packet_in_group(
+        pkts, pv, base_step4_index, max_step4_index, "Step 4: Router_1 sends unicast MLE Data Request to the Leader.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(LEADER).filter_mle_cmd(consts.MLE_DATA_REQUEST))
 
     # Step 5: Leader
     # - Description: Automatically sends unicast MLE Data Response to Router_1.
@@ -142,15 +151,16 @@ def verify(pv):
     #     - Delay Timer TLV: ~1000s
     #     - Channel TLV: ‘Secondary’
     #     - PAN ID TLV: 0xAFCE
-    print("Step 5: Leader sends unicast MLE Data Response to Router_1.")
-    pkts.filter_wpan_src64(LEADER).\
-      filter_wpan_dst64(ROUTER_1).\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 10 and\
-             p.mle.tlv.pending_tstamp == 30 and\
-             (p.thread_meshcop.tlv.active_tstamp is not nullField and 210 in p.thread_meshcop.tlv.active_tstamp)).\
-      must_next()
+    max_step4_index = _verify_packet_in_group(
+        pkts, pv, base_step4_index, max_step4_index, "Step 5: Leader sends unicast MLE Data Response to Router_1.",
+        lambda p: p.filter_wpan_src64(LEADER).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(consts.MLE_DATA_RESPONSE).
+        filter(lambda pkt: pkt.mle.tlv.active_tstamp == 10 and pkt.mle.tlv.pending_tstamp == 30 and (
+            pkt.thread_meshcop.tlv.active_tstamp is not nullField and 210 in pkt.thread_meshcop.tlv.active_tstamp)))
+    pkts.index = max_step4_index
+
+    # Steps 6-8: Router_1 and Router_2 synchronize data.
+    base_step6_index = pkts.index
+    max_step6_index = base_step6_index
 
     # Step 6: Router_1
     # - Description: Automatically sends multicast MLE Data Response.
@@ -167,14 +177,10 @@ def verify(pv):
     #       - Stable flag set to 0
     #   - Active Timestamp TLV: 10s
     #   - Pending Timestamp TLV: 30s
-    print("Step 6: Router_1 sends multicast MLE Data Response.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 10 and\
-             p.mle.tlv.pending_tstamp == 30).\
-      must_next()
+    max_step6_index = _verify_packet_in_group(
+        pkts, pv, base_step6_index, max_step6_index, "Step 6: Router_1 sends multicast MLE Data Response.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_LLANMA().filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 10 and pkt.mle.tlv.pending_tstamp == 30))
 
     # Step 7: Router_2
     # - Description: Automatically sends a unicast MLE Data Request to Router_1, including the
@@ -183,11 +189,10 @@ def verify(pv):
     #     - Network Data TLV
     #   - Active Timestamp TLV
     # - Pass Criteria: N/A
-    print("Step 7: Router_2 sends a unicast MLE Data Request.")
-    pkts.filter_wpan_src64(ROUTER_2).\
-      filter_mle_cmd(consts.MLE_DATA_REQUEST).\
-      filter(lambda p: p.mle.tlv.active_tstamp == 10 or p.mle.tlv.active_tstamp == nullField).\
-      must_next()
+    max_step6_index = _verify_packet_in_group(
+        pkts, pv, base_step6_index, max_step6_index, "Step 7: Router_2 sends a unicast MLE Data Request.",
+        lambda p: p.filter_wpan_src64(ROUTER_2).filter_mle_cmd(consts.MLE_DATA_REQUEST).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 10 or pkt.mle.tlv.active_tstamp == nullField))
 
     # Step 8: Router_1
     # - Description: Automatically sends a unicast MLE Data Response to Router_2.
@@ -207,15 +212,13 @@ def verify(pv):
     #     - Delay Timer TLV: ~1000s
     #     - Channel TLV: ‘Secondary’
     #     - PAN ID TLV: 0xAFCE
-    print("Step 8: Router_1 sends a unicast MLE Data Response to Router_2.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_wpan_dst64(ROUTER_2).\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 10 and\
-             p.mle.tlv.pending_tstamp == 30 and\
-             (p.thread_meshcop.tlv.active_tstamp is not nullField and 210 in p.thread_meshcop.tlv.active_tstamp)).\
-      must_next()
+    max_step6_index = _verify_packet_in_group(
+        pkts, pv, base_step6_index, max_step6_index, "Step 8: Router_1 sends a unicast MLE Data Response to Router_2.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(ROUTER_2).filter_mle_cmd(consts.MLE_DATA_RESPONSE).
+        filter(lambda pkt: pkt.mle.tlv.active_tstamp == 10 and pkt.mle.tlv.pending_tstamp == 30 and (
+            pkt.thread_meshcop.tlv.active_tstamp is not nullField and 210 in pkt.thread_meshcop.tlv.active_tstamp)))
+
+    pkts.index = max_step6_index
 
     # Step 9: User
     # - Description: Places (Router_1 and Router_2) OR (Leader and Commissioner) in RF isolation for
@@ -238,6 +241,10 @@ def verify(pv):
     # - Pass Criteria: N/A
     print("Step 11: Router_2 configures new Active Dataset.")
 
+    # Steps 12-14: Router_1 synchronizes data in Partition 2.
+    base_step12_index = pkts.index
+    max_step12_index = base_step12_index
+
     # Step 12: Router_1
     # - Description: Automatically unicasts MLE Data Request to Router_2.
     # - Pass Criteria: For DUT = Router: The DUT MUST send a unicast MLE Data Request to Router_2,
@@ -246,22 +253,18 @@ def verify(pv):
     #     - Network Data TLV
     #   - Active Timestamp TLV (10s)
     #   - Pending Timestamp TLV (30s)
-    print("Step 12: Router_1 unicasts MLE Data Request to Router_2.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_wpan_dst64(ROUTER_2).\
-      filter_mle_cmd(consts.MLE_DATA_REQUEST).\
-      filter(lambda p: p.mle.tlv.active_tstamp == 10 and p.mle.tlv.pending_tstamp == 30).\
-      must_next()
+    max_step12_index = _verify_packet_in_group(
+        pkts, pv, base_step12_index, max_step12_index, "Step 12: Router_1 unicasts MLE Data Request to Router_2.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(ROUTER_2).filter_mle_cmd(consts.MLE_DATA_REQUEST).
+        filter(lambda pkt: pkt.mle.tlv.active_tstamp == 10 and pkt.mle.tlv.pending_tstamp == 30))
 
     # Step 13: Router_2
     # - Description: Automatically unicasts MLE Data Response to Router_1.
     # - Pass Criteria: N/A
-    print("Step 13: Router_2 unicasts MLE Data Response to Router_1.")
-    pkts.filter_wpan_src64(ROUTER_2).\
-      filter_wpan_dst64(ROUTER_1).\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p: p.mle.tlv.active_tstamp == 15).\
-      must_next()
+    max_step12_index = _verify_packet_in_group(
+        pkts, pv, base_step12_index, max_step12_index, "Step 13: Router_2 unicasts MLE Data Response to Router_1.",
+        lambda p: p.filter_wpan_src64(ROUTER_2).filter_wpan_dst64(ROUTER_1).filter_mle_cmd(
+            consts.MLE_DATA_RESPONSE).filter(lambda pkt: pkt.mle.tlv.active_tstamp == 15))
 
     # Step 14: Router_1
     # - Description: Automatically sends multicast MLE Data Response.
@@ -278,14 +281,12 @@ def verify(pv):
     #       - Stable flag set to 0
     #   - Active Timestamp TLV: 15s
     #   - Pending Timestamp TLV: 30s
-    print("Step 14: Router_1 multicasts MLE Data Response.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 15 and\
-             p.mle.tlv.pending_tstamp == 30).\
-      must_next()
+    max_step12_index = _verify_packet_in_group(
+        pkts, pv, base_step12_index, max_step12_index, "Step 14: Router_1 multicasts MLE Data Response.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_LLANMA().filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 15 and pkt.mle.tlv.pending_tstamp == 30))
+
+    pkts.index = max_step12_index
 
     # Step 15: Router_2
     # - Description: Harness configures the device with a new Pending Operational Dataset with the
@@ -298,6 +299,10 @@ def verify(pv):
     #   - Pending Timestamp TLV: 50s
     # - Pass Criteria: N/A
     print("Step 15: Router_2 configures new Pending Operational Dataset.")
+
+    # Steps 16-19: Router_1 synchronizes new Pending Dataset in Partition 2.
+    base_step16_index = pkts.index
+    max_step16_index = base_step16_index
 
     # Step 16: Router_2
     # - Description: Automatically sends multicast MLE Data Response with the new information
@@ -314,14 +319,10 @@ def verify(pv):
     #   - Active Timestamp TLV: 15s
     #   - Pending Timestamp TLV: 50s
     # - Pass Criteria: N/A
-    print("Step 16: Router_2 multicasts MLE Data Response.")
-    pkts.filter_wpan_src64(ROUTER_2).\
-      filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 15 and\
-             p.mle.tlv.pending_tstamp == 50).\
-      must_next()
+    max_step16_index = _verify_packet_in_group(
+        pkts, pv, base_step16_index, max_step16_index, "Step 16: Router_2 multicasts MLE Data Response.",
+        lambda p: p.filter_wpan_src64(ROUTER_2).filter_LLANMA().filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 15 and pkt.mle.tlv.pending_tstamp == 50))
 
     # Step 17: Router_1
     # - Description: Automatically sends unicast MLE Data Request to Router_2.
@@ -331,27 +332,20 @@ def verify(pv):
     #     - Network Data TLV
     #   - Active Timestamp TLV (15s)
     #   - Pending Timestamp TLV (30s)
-    print("Step 17: Router_1 sends unicast MLE Data Request to Router_2.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_wpan_dst64(ROUTER_2).\
-      filter_mle_cmd(consts.MLE_DATA_REQUEST).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 15 and\
-             p.mle.tlv.pending_tstamp == 30).\
-      must_next()
+    max_step16_index = _verify_packet_in_group(
+        pkts, pv, base_step16_index, max_step16_index, "Step 17: Router_1 sends unicast MLE Data Request to Router_2.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_wpan_dst64(ROUTER_2).filter_mle_cmd(consts.MLE_DATA_REQUEST).
+        filter(lambda pkt: pkt.mle.tlv.active_tstamp == 15 and pkt.mle.tlv.pending_tstamp == 30))
 
     # Step 18: Router_2
     # - Description: Automatically sends unicast MLE Data Response to Router_1 ….
     # - Pass Criteria: N/A
-    print("Step 18: Router_2 sends unicast MLE Data Response to Router_1.")
-    pkts.filter_wpan_src64(ROUTER_2).\
-      filter_wpan_dst64(ROUTER_1).\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 15 and\
-             p.mle.tlv.pending_tstamp == 50 and\
-             (p.thread_meshcop.tlv.active_tstamp is not nullField and 410 in p.thread_meshcop.tlv.active_tstamp)).\
-      must_next()
+    max_step16_index = _verify_packet_in_group(
+        pkts, pv, base_step16_index, max_step16_index,
+        "Step 18: Router_2 sends unicast MLE Data Response to Router_1.", lambda p: p.filter_wpan_src64(ROUTER_2).
+        filter_wpan_dst64(ROUTER_1).filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 15 and pkt.mle.tlv.pending_tstamp == 50 and
+            (pkt.thread_meshcop.tlv.active_tstamp is not nullField and 410 in pkt.thread_meshcop.tlv.active_tstamp)))
 
     # Step 19: Router_1
     # - Description: Automatically sends multicast MLE Data Response.
@@ -368,14 +362,12 @@ def verify(pv):
     #       - Stable flag set to 0
     #   - Active Timestamp TLV: 15s
     #   - Pending Timestamp TLV: 50s
-    print("Step 19: Router_1 multicasts MLE Data Response.")
-    pkts.filter_wpan_src64(ROUTER_1).\
-      filter_LLANMA().\
-      filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-      filter(lambda p:
-             p.mle.tlv.active_tstamp == 15 and\
-             p.mle.tlv.pending_tstamp == 50).\
-      must_next()
+    max_step16_index = _verify_packet_in_group(
+        pkts, pv, base_step16_index, max_step16_index, "Step 19: Router_1 multicasts MLE Data Response.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_LLANMA().filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 15 and pkt.mle.tlv.pending_tstamp == 50))
+
+    pkts.index = max_step16_index
 
     # Step 20: User
     # - Description: Removes RF isolation.
@@ -418,6 +410,7 @@ def verify(pv):
     # Dataset synchronization after merge (Steps 23-30).
     # All these happen from the same base index after re-attachment.
     base_sync_index = pkts.index
+    max_sync_index = base_sync_index
 
     # Step 23: Router_1
     # - Description: Automatically sends a MGMT_ACTIVE_SET.req to the Leader RLOC or Anycast Locator.
@@ -438,15 +431,10 @@ def verify(pv):
     #     - PSKc TLV
     #     - NO Commissioner Session ID TLV
     #   - The Leader Anycast Locator uses the Mesh local prefix with an IID of 0000:00FF:FE00:FC00
-    with pkts.save_index():
-        pkts.index = base_sync_index
-        print("Step 23: Router_1 sends MGMT_ACTIVE_SET.req.")
-        pkts.filter_wpan_src64(ROUTER_1).\
-          filter_coap_request(consts.MGMT_ACTIVE_SET_URI).\
-          filter(lambda p:
-                 p.coap.tlv.active_timestamp == 15 and\
-                 p.coap.tlv.network_name == "TEST").\
-          must_next()
+    max_sync_index = _verify_packet_in_group(
+        pkts, pv, base_sync_index, max_sync_index, "Step 23: Router_1 sends MGMT_ACTIVE_SET.req.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_coap_request(consts.MGMT_ACTIVE_SET_URI).filter(
+            lambda pkt: pkt.coap.tlv.active_timestamp == 15 and pkt.coap.tlv.network_name == "TEST"))
 
     # Step 27: Router_1
     # - Description: Automatically sends MGMT_PENDING_SET.req to the Leader Router or Anycast Locator
@@ -464,44 +452,31 @@ def verify(pv):
     #     - Entire Pending Operational Dataset
     #     - NO Commissioner Session ID TLV
     #   - The Leader Anycast Locator uses the Mesh local prefix with an IID of 0000:00FF:FE00:FC00.
-    with pkts.save_index():
-        pkts.index = base_sync_index
-        print("Step 27: Router_1 sends MGMT_PENDING_SET.req.")
-        pkts.filter_wpan_src64(ROUTER_1).\
-          filter_coap_request(consts.MGMT_PENDING_SET_URI).\
-          filter(lambda p:
-                 p.coap.tlv.pending_timestamp == 50 and\
-                 p.coap.tlv.active_timestamp == 410 and\
-                 p.coap.tlv.delay_timer <= 200000 and\
-                 p.coap.tlv.channel == 11 and\
-                 p.coap.tlv.pan_id == 0xABCD).\
-          must_next()
+    max_sync_index = _verify_packet_in_group(
+        pkts, pv, base_sync_index, max_sync_index, "Step 27: Router_1 sends MGMT_PENDING_SET.req.",
+        lambda p: p.filter_wpan_src64(ROUTER_1).filter_coap_request(consts.MGMT_PENDING_SET_URI).filter(
+            lambda pkt: pkt.coap.tlv.pending_timestamp == 50 and pkt.coap.tlv.active_timestamp == 410 and pkt.coap.tlv.
+            delay_timer <= 200000 and pkt.coap.tlv.channel == 11 and pkt.coap.tlv.pan_id == 0xABCD))
 
     # Step 24: Leader
     # - Description: Automatically sends a MGMT_ACTIVE_SET.rsp to Router_1.
     # - Pass Criteria: For DUT = Leader: The DUT MUST send MGMT_ACTIVE_SET.rsp to Router_1:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: State TLV <value = Accept>
-    with pkts.save_index():
-        pkts.index = base_sync_index
-        print("Step 24: Leader sends MGMT_ACTIVE_SET.rsp.")
-        pkts.filter_wpan_src64(LEADER).\
-          filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).\
-          filter(lambda p: p.coap.tlv.state == 1).\
-          must_next()
+    max_sync_index = _verify_packet_in_group(
+        pkts, pv, base_sync_index, max_sync_index, "Step 24: Leader sends MGMT_ACTIVE_SET.rsp.",
+        lambda p: p.filter_wpan_src64(LEADER).filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).filter(lambda pkt: pkt.coap.
+                                                                                                 tlv.state == 1))
 
     # Step 28: Leader
     # - Description: Automatically sends MGMT_PENDING_SET.rsp to Router_1.
     # - Pass Criteria: For DUT = Leader: The DUT MUST send MGMT_PENDING_SET.rsp to Router_1:
     #   - CoAP Response Code: 2.04 Changed
     #   - CoAP Payload: State TLV <value = Accept>
-    with pkts.save_index():
-        pkts.index = base_sync_index
-        print("Step 28: Leader sends MGMT_PENDING_SET.rsp.")
-        pkts.filter_wpan_src64(LEADER).\
-          filter_coap_ack(consts.MGMT_PENDING_SET_URI).\
-          filter(lambda p: p.coap.tlv.state == 1).\
-          must_next()
+    max_sync_index = _verify_packet_in_group(
+        pkts, pv, base_sync_index, max_sync_index, "Step 28: Leader sends MGMT_PENDING_SET.rsp.",
+        lambda p: p.filter_wpan_src64(LEADER).filter_coap_ack(consts.MGMT_PENDING_SET_URI).filter(lambda pkt: pkt.coap.
+                                                                                                  tlv.state == 1))
 
     # Step 25: Leader
     # - Description: Automatically sends MGMT_DATASET_CHANGED.ntf to the Commissioner.
@@ -516,12 +491,10 @@ def verify(pv):
     #   Commissioner:
     #   - CoAP Request: coap://[ Commissioner]:MM/c/dc
     #   - CoAP Payload: <empty>
-    with pkts.save_index():
-        pkts.index = base_sync_index
-        print("Step 25/29: Leader sends MGMT_DATASET_CHANGED.ntf to the Commissioner.")
-        pkts.filter_wpan_src64(LEADER).\
-          filter_coap_request(consts.MGMT_DATASET_CHANGED_URI).\
-          must_next()
+    max_sync_index = _verify_packet_in_group(
+        pkts, pv, base_sync_index, max_sync_index,
+        "Step 25/29: Leader sends MGMT_DATASET_CHANGED.ntf to the Commissioner.",
+        lambda p: p.filter_wpan_src64(LEADER).filter_coap_request(consts.MGMT_DATASET_CHANGED_URI))
 
     # Step 26: Leader
     # - Description: Automatically sends multicast MLE Data Response with the new information.
@@ -542,16 +515,12 @@ def verify(pv):
     #       - Stable flag set to 0
     #   - Active Timestamp TLV: 15s
     #   - Pending Timestamp TLV: 50s
-    with pkts.save_index():
-        pkts.index = base_sync_index
-        print("Step 26/30: Leader multicasts final MLE Data Response.")
-        pkts.filter_wpan_src64(LEADER).\
-          filter_LLANMA().\
-          filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-          filter(lambda p:
-                 p.mle.tlv.active_tstamp == 15 and\
-                 p.mle.tlv.pending_tstamp == 50).\
-          must_next()
+    max_sync_index = _verify_packet_in_group(
+        pkts, pv, base_sync_index, max_sync_index, "Step 26/30: Leader multicasts final MLE Data Response.",
+        lambda p: p.filter_wpan_src64(LEADER).filter_LLANMA().filter_mle_cmd(consts.MLE_DATA_RESPONSE).filter(
+            lambda pkt: pkt.mle.tlv.active_tstamp == 15 and pkt.mle.tlv.pending_tstamp == 50))
+
+    pkts.index = max_sync_index
 
     # Step 31: Commissioner
     # - Description: Automatically sends a MLE Data Request to the Leader, including the following
