@@ -242,6 +242,9 @@ Contents of ${NDK_LLVM_PREBUILT}/bin:
                 # Android API needs to be >= android-24 for `getifsaddrs()`
                 "-DANDROID_PLATFORM=android-24"
 
+                # Specify the target ABI - default to arm64-v8a (64-bit ARM)
+                "-DANDROID_ABI=arm64-v8a"
+
                 # Store thread settings in the CWD when executing ot-cli or ot-daemon
                 '-DOT_POSIX_SETTINGS_PATH="./thread"'
             )
