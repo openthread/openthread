@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <sys/select.h>
 
+#include <openthread/cli.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
@@ -79,6 +80,15 @@ typedef struct otPlatformCoprocessorUrls
 } otPlatformCoprocessorUrls;
 
 /**
+ * Represents the POSIX daemon modes.
+ */
+enum
+{
+    OT_POSIX_DAEMON_MODE_UNIX_SOCKET = 1 << 0, ///< Enable Unix socket.
+    OT_POSIX_DAEMON_MODE_CONSOLE     = 1 << 1, ///< Enable interactive console.
+};
+
+/**
  * Represents platform specific configurations.
  */
 typedef struct otPlatformConfig
@@ -93,6 +103,7 @@ typedef struct otPlatformConfig
     bool                      mPersistentInterface;   ///< Whether persistent the interface
     bool                      mDryRun;                ///< If 'DryRun' is set, the posix daemon will exit
                                                       ///< directly after initialization.
+    uint8_t         mDaemonMode;                      ///< The POSIX daemon mode.
     CoprocessorType mCoprocessorType;                 ///< The co-processor type. This field is used to pass
                                                       ///< the type to the app layer.
     const char *mDataPath;                            ///< Data path.
@@ -280,18 +291,6 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
 bool otSysInfraIfIsRunning(void);
 
 /**
- * Initializes the CLI module using the daemon.
- *
- * This function initializes the CLI module, and assigns the daemon to handle
- * the CLI output. This function can be invoked multiple times. The typical use case
- * is that, after OTBR/vendor_server's CLI output redirection, it uses this API to
- * restore the original daemon's CLI output.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-void otSysCliInitUsingDaemon(otInstance *aInstance);
-
-/**
  * Sets whether to retrieve upstream DNS servers from "resolv.conf".
  *
  * @param[in] aEnabled  TRUE if enable retrieving upstream DNS servers from "resolv.conf", FALSE otherwise.
@@ -329,6 +328,15 @@ void otSysTrelDeinit(void);
  * @param[in]  aEnabled  TRUE to enable the RCP restoration feature, FALSE otherwise.
  */
 void otSysSetRcpRestorationEnabled(bool aEnabled);
+
+/**
+ * Processes a CLI command with a callback for output.
+ *
+ * @param[in]  aContext   A pointer to a user context.
+ * @param[in]  aCallback  A pointer to a callback method.
+ * @param[in]  aLine      A pointer to a null-terminated string.
+ */
+void otSysCliProcessCommand(void *aContext, otCliOutputCallback aCallback, const char *aLine);
 
 /**
  * Represents a callback function to be called when openthread crashes.

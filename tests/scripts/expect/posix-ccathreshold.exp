@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-100"
+spawn $env(OT_POSIX_APPS)/ot-daemon -i "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-100"
 expect_after {
     timeout { exit 1 }
 }
@@ -39,7 +39,7 @@ expect_line "Done"
 send "\x04"
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-128"
+spawn $env(OT_POSIX_APPS)/ot-daemon -i "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-128"
 expect_after {
     timeout { exit 1 }
 }
@@ -49,7 +49,7 @@ expect_line "Done"
 send "\x04"
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=127"
+spawn $env(OT_POSIX_APPS)/ot-daemon -i "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=127"
 expect_after {
     timeout { exit 1 }
 }
@@ -59,13 +59,13 @@ expect_line "Done"
 send "\x04"
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-129"
+spawn $env(OT_POSIX_APPS)/ot-daemon -i "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=-129"
 expect_after {
     timeout { exit 1 }
 }
 expect eof
 
-spawn $env(OT_POSIX_APPS)/ot-cli "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=128"
+spawn $env(OT_POSIX_APPS)/ot-daemon -i "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=1&cca-threshold=128"
 expect_after {
     timeout { exit 1 }
 }

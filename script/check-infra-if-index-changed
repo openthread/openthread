@@ -94,7 +94,7 @@ setup_veth()
 do_build()
 {
     ./script/cmake-build simulation
-    ./script/cmake-build posix -DOT_BORDER_ROUTING=ON -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_DAEMON=ON
+    ./script/cmake-build posix -DOT_BORDER_ROUTING=ON -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1
 }
 
 do_check()

@@ -28,10 +28,12 @@
 #ifndef OT_POSIX_PLATFORM_DAEMON_HPP_
 #define OT_POSIX_PLATFORM_DAEMON_HPP_
 
-#include "openthread-posix-config.h"
+#include "openthread-posix-config.h" // IWYU pragma: keep
 
 #include <stdarg.h>
 
+#include <openthread/cli.h>
+#include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
 #include "core/common/non_copyable.hpp"
@@ -49,20 +51,60 @@ public:
 
     static Daemon &Get(void);
 
-    void SetUp(void);
+    void SetUp(uint8_t aMode);
     void TearDown(void);
     void Update(Mainloop::Context &aContext) override;
     void Process(const Mainloop::Context &aContext) override;
-    int  OutputFormatV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+    void ProcessLine(char *aLine, int aOutputFd);
+    void ProcessCommand(const char *aLine, void *aContext, otCliOutputCallback aCallback);
 
 private:
-    int  OutputFormat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void createListenSocketOrDie(void);
+#if defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE)
+    class Readline
+    {
+    public:
+        void Init(void);
+        void Deinit(void);
+        void Update(Mainloop::Context &aContext);
+        void Process(const Mainloop::Context &aContext);
+
+    private:
+        static void InputCallback(char *aLine);
+    };
+
+    Readline mReadline;
+#else
+    class Stdio
+    {
+    public:
+        void Init(void);
+        void Deinit(void);
+        void Update(Mainloop::Context &aContext);
+        void Process(const Mainloop::Context &aContext);
+    };
+
+    Stdio mStdio;
+#endif
+
+    int  UnixSocketOutputV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+    int  UnixSocketOutput(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
+    void UnixSocketCreate(void);
     void InitializeSessionSocket(void);
 
-    int mListenSocket  = -1;
-    int mDaemonLock    = -1;
-    int mSessionSocket = -1;
+    otError    SetOutputFd(int aFd);
+    static int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+
+    void Reject(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
+
+    otCliOutputCallback mExternalOutputCallback        = nullptr;
+    void               *mExternalOutputCallbackContext = nullptr;
+
+    int     mListenSocket  = -1;
+    int     mDaemonLock    = -1;
+    int     mSessionSocket = -1;
+    int     mOutputFd      = -1;
+    uint8_t mDaemonMode    = OT_POSIX_DAEMON_MODE_UNIX_SOCKET;
 };
 
 } // namespace Posix

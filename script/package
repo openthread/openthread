@@ -49,12 +49,8 @@ main()
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" ./script/cmake-build simulation "${options[@]}" "$@"
     ls "${builddir}"/openthread-simulation-*.deb
 
-    builddir="${OT_BUILDDIR}/openthread-host"
+    builddir="${OT_BUILDDIR}/openthread-posix"
     OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" ./script/cmake-build posix "${options[@]}" "$@"
-    ls "${builddir}"/openthread-standalone-*.deb
-
-    builddir="${OT_BUILDDIR}/openthread-daemon"
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" ./script/cmake-build posix "${options[@]}" -DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON -DOT_PLATFORM_UDP=ON "-DOT_REFERENCE_DEVICE=OFF" "$@"
     ls "${builddir}"/openthread-daemon-*.deb
 }
 

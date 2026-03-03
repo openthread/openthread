@@ -312,10 +312,10 @@ class OtbrDocker:
                     ('google.com.', 'IN', 'AAAA')
                 ],
                 "ANSWER": [
-                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::71'),
-                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::8a'),
-                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::66'),
-                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::8b'),
+                    ('google.com.', 107, 'IN', 'AAAA', '2404:6800:4008:c00::71'),
+                    ('google.com.', 107, 'IN', 'AAAA', '2404:6800:4008:c00::8a'),
+                    ('google.com.', 107, 'IN', 'AAAA', '2404:6800:4008:c00::66'),
+                    ('google.com.', 107, 'IN', 'AAAA', '2404:6800:4008:c00::8b'),
                 ],
                 "ADDITIONAL": [
                 ],
@@ -620,7 +620,7 @@ class OtCli:
         # Default command if no match below, will be overridden if below conditions are met.
         cmd = './ot-cli-%s' % (mode)
 
-        # For Thread 1.2 MTD node, use ot-cli-mtd build regardless of OT_CLI_PATH
+        # For Thread 1.2 MTD node, use ot-cli-mtd build regardless of OT_DAEMON_PATH
         if self.version != '1.1' and mode == 'mtd' and 'top_builddir' in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s %d' % (srcdir, mode, nodeid)
@@ -630,22 +630,22 @@ class OtCli:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
             if self.version != '1.1' and self.is_bbr:
-                if 'OT_CLI_PATH_BBR' in os.environ:
-                    cmd = os.environ['OT_CLI_PATH_BBR']
+                if 'OT_DAEMON_PATH_BBR' in os.environ:
+                    cmd = os.environ['OT_DAEMON_PATH_BBR']
                 elif 'top_builddir_1_4_bbr' in os.environ:
                     srcdir = os.environ['top_builddir_1_4_bbr']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             # Load Thread device of the testing environment version (may be 1.1 or 1.2)
             else:
-                if 'OT_CLI_PATH' in os.environ:
-                    cmd = os.environ['OT_CLI_PATH']
+                if 'OT_DAEMON_PATH' in os.environ:
+                    cmd = os.environ['OT_DAEMON_PATH']
                 elif 'top_builddir' in os.environ:
                     srcdir = os.environ['top_builddir']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                cmd += ' --real-time-signal=+1 -v -i spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
@@ -654,8 +654,8 @@ class OtCli:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability
         elif self.version == '1.1':
             # Posix app
-            if 'OT_CLI_PATH_1_1' in os.environ:
-                cmd = os.environ['OT_CLI_PATH_1_1']
+            if 'OT_DAEMON_PATH_1_1' in os.environ:
+                cmd = os.environ['OT_DAEMON_PATH_1_1']
             elif 'top_builddir_1_1' in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
@@ -3820,7 +3820,7 @@ class NodeImpl:
     def get_channel_monitor_info(self) -> Dict:
         """
         Returns:
-            Dict of channel monitor info, e.g. 
+            Dict of channel monitor info, e.g.
                 {'enabled': '1',
                  'interval': '41000',
                  'threshold': '-75',

@@ -8712,6 +8712,8 @@ extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, 
 
 extern "C" void otCliInputLine(char *aBuf) { Interpreter::GetInterpreter().ProcessLine(aBuf); }
 
+extern "C" bool otCliIsCommandPending(void) { return Interpreter::GetInterpreter().IsCommandPending(); }
+
 extern "C" otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
     return Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);

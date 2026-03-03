@@ -183,15 +183,10 @@ jobs:
         path: tmp/coverage.info
 
   pty-linux:
-    name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
+    name: pty-linux
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        OT_DAEMON: ['off', 'on']
     env:
       COVERAGE: 1
-      OT_DAEMON: ${{ matrix.OT_DAEMON }}
       OT_READLINE: 'readline'
     steps:
     - name: Harden Runner
@@ -222,7 +217,6 @@ jobs:
       run: |
         script/check-posix-pty check
     - name: Run (OT_DAEMON_ALLOW_ALL)
-      if: matrix.OT_DAEMON == 'on'
       env:
         OT_DAEMON_ALLOW_ALL: 1
       run: |
@@ -232,7 +226,7 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
-        name: cov-pty-linux-${{ matrix.OT_DAEMON }}
+        name: cov-pty-linux
         path: tmp/coverage.info
         retention-days: 1
 
@@ -260,14 +254,9 @@ jobs:
         script/check-infra-if-index-changed check
 
   pty-macos:
-    name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
+    name: pty-macos
     runs-on: macos-14
-    strategy:
-      fail-fast: false
-      matrix:
-        OT_DAEMON: ['off', 'on']
     env:
-      OT_DAEMON: ${{ matrix.OT_DAEMON }}
       OT_READLINE: 'off'
     steps:
     - name: Harden Runner

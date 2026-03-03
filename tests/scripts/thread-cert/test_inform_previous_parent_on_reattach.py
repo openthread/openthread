@@ -77,7 +77,7 @@ class TestReset(thread_cert.TestCase):
     }
 
     def test(self):
-        if 'posix' in os.getenv('OT_CLI_PATH', ''):
+        if 'posix' in os.getenv('OT_DAEMON_PATH', ''):
             self.skipTest("skip for posix tests")
 
         self.nodes[LEADER].start()

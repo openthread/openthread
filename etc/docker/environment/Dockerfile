@@ -46,4 +46,4 @@ RUN set -x \
 WORKDIR /
 RUN set -x \
     && cd openthread \
-    && ./script/cmake-build posix -DOT_DAEMON=ON
+    && ./script/cmake-build posix

@@ -36,6 +36,7 @@
 #define OPENTHREAD_CLI_H_
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
@@ -94,6 +95,14 @@ void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aCont
  * @param[in]  aBuf        A pointer to a null-terminated string.
  */
 void otCliInputLine(char *aBuf);
+
+/**
+ * Indicates whether or not a CLI command is pending.
+ *
+ * @retval true   A CLI command is pending.
+ * @retval false  A CLI command is not pending.
+ */
+bool otCliIsCommandPending(void);
 
 /**
  * Set a user command table.

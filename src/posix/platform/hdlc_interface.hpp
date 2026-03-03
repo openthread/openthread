@@ -41,6 +41,7 @@
 #include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel_interface.hpp"
+#include "lib/url/url.hpp"
 
 namespace ot {
 namespace Posix {

@@ -251,8 +251,8 @@ void platformSetUp(otPlatformConfig *aPlatformConfig)
     ot::Posix::MdnsSocket::Get().SetUp();
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    ot::Posix::Daemon::Get().SetUp();
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+    ot::Posix::Daemon::Get().SetUp(aPlatformConfig->mDaemonMode);
 #endif
 
     SuccessOrDie(otSetStateChangedCallback(gInstance, processStateChange, gInstance));
@@ -291,7 +291,7 @@ void platformTearDown(void)
 {
     VerifyOrExit(!gDryRun);
 
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
     ot::Posix::Daemon::Get().TearDown();
 #endif
 
@@ -495,16 +495,3 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 }
 
 bool IsSystemDryRun(void) { return gDryRun; }
-
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
-namespace {
-int OutputCallback(void *aContext, const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
-
-int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
-{
-    return static_cast<ot::Posix::Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
-}
-} // namespace
-
-void otSysCliInitUsingDaemon(otInstance *aInstance) { otCliInit(aInstance, OutputCallback, &ot::Posix::Daemon::Get()); }
-#endif

@@ -150,6 +150,14 @@ public:
     }
 
     /**
+     * Indicates whether or not a CLI command is pending.
+     *
+     * @retval true   A CLI command is pending.
+     * @retval false  A CLI command is not pending.
+     */
+    bool IsCommandPending(void) const { return mCommandIsPending; }
+
+    /**
      * Initializes the Console interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.

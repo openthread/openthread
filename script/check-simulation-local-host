@@ -77,7 +77,7 @@ test_ipv4()
 
 main()
 {
-    ./script/cmake-build posix
+    ./script/cmake-build posix -DOT_PLATFORM_NETIF=OFF -DOT_PLATFORM_UDP=OFF
     ./script/cmake-build simulation
 
     test_ipv4

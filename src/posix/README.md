@@ -16,13 +16,13 @@ The figure below shows the architecture of OpenThread running in transceiver mod
          POSIX                                          Chip
 ```
 
-## Build POSIX CLI
+## Build
 
 ```sh
 ./script/cmake-build posix
 ```
 
-If built successfully, the binary should be found at: `build/posix/src/posix/ot-cli`.
+If built successfully, the binary should be found at: `build/posix/src/posix/ot-daemon`.
 
 ## Transceivers on different platforms
 
@@ -39,10 +39,10 @@ OpenThread provides an implementation on the simulation platform which enables r
 
 #### Run
 
-**NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md). You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
+**NOTE** Assuming the build system is 64bit Linux, you can use the OpenThread CLI as described in the [command line document](../../src/cli/README.md). You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
 
 ```sh
-./build/posix/src/posix/ot-cli 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 ```
 
 ### Nordic Semiconductor nRF52840
@@ -139,20 +139,28 @@ To build and program the device with RCP application, complete the following ste
 #### Run
 
 ```sh
-./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800'
 ```
 
-## Daemon Mode
+## Usage
 
-OpenThread Posix Daemon mode uses a unix socket as input and output, so that OpenThread core can run as a service. And a client can communicate with it by connecting to the socket. The protocol is OpenThread CLI.
+The `ot-daemon` can run as a service, using a unix socket as input and output. A client can communicate with it by connecting to the socket. The protocol is OpenThread CLI.
 
-```
-# build daemon mode core stack for POSIX
-./script/cmake-build posix -DOT_DAEMON=ON
+```sh
 # Daemon with simulation
 ./build/posix/src/posix/ot-daemon 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 # Daemon with real device
 ./build/posix/src/posix/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=460800'
-# Built-in controller
+```
+
+You can use `ot-ctl` to communicate with the daemon:
+
+```sh
 ./build/posix/src/posix/ot-ctl
+```
+
+You can also run `ot-daemon` with interactive CLI enabled by `-i` or `--interactive` option:
+
+```sh
+./build/posix/src/posix/ot-daemon -i 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 ```
