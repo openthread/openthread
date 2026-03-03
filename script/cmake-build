@@ -191,6 +191,49 @@ Could not fild the Android NDK CMake toolchain file
             "
                 exit 2
             fi
+
+            # Verify that the NDK compiler tools exist
+            # Try to find the LLVM prebuilt tools directory
+            NDK_LLVM_PREBUILT=""
+            for PREBUILT_DIR in "${NDK}"/toolchains/llvm/prebuilt/*/; do
+                if [ -d "${PREBUILT_DIR}" ]; then
+                    NDK_LLVM_PREBUILT="${PREBUILT_DIR%/}"
+                    break
+                fi
+            done
+
+            if [ -z "${NDK_LLVM_PREBUILT}" ]; then
+                echo "
+ERROR: Android NDK LLVM prebuilt directory not found!
+- NDK=${NDK}
+- Expected to find: ${NDK}/toolchains/llvm/prebuilt/<host>/
+
+Please verify that:
+1. The NDK is properly installed and extracted at ${NDK}
+2. The NDK has the correct directory structure
+3. You are using Android NDK r25c or compatible version
+
+Current NDK directory structure:
+            "
+                find "${NDK}" -maxdepth 3 -type d 2>/dev/null | head -20 || echo "  (Unable to list NDK directory)"
+                exit 3
+            fi
+
+            NDK_CLANG="${NDK_LLVM_PREBUILT}/bin/clang"
+            NDK_CLANGXX="${NDK_LLVM_PREBUILT}/bin/clang++"
+            if [ ! -f "${NDK_CLANG}" ] || [ ! -f "${NDK_CLANGXX}" ]; then
+                echo "
+ERROR: Android NDK compiler tools not found!
+- NDK=${NDK}
+- NDK LLVM Prebuilt: ${NDK_LLVM_PREBUILT}
+- Expected clang at: ${NDK_CLANG}
+- Expected clang++ at: ${NDK_CLANGXX}
+
+Contents of ${NDK_LLVM_PREBUILT}/bin:
+            "
+                ls -la "${NDK_LLVM_PREBUILT}/bin" 2>/dev/null | head -20 || echo "  (bin directory not found)"
+                exit 3
+            fi
             local_options+=(
                 "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
 
