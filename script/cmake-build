@@ -241,6 +241,16 @@ Contents of ${NDK_LLVM_PREBUILT}/bin:
                 exit 3
             fi
 
+            # Create symlinks for generic clang/clang++ to the arm64-v8a API 24 compilers
+            # The NDK only provides versioned compilers like aarch64-linux-android24-clang
+            # but CMake expects generic clang and clang++ in PATH
+            if [ ! -f "${NDK_LLVM_PREBUILT}/bin/clang" ]; then
+                ln -sf aarch64-linux-android24-clang "${NDK_LLVM_PREBUILT}/bin/clang"
+            fi
+            if [ ! -f "${NDK_LLVM_PREBUILT}/bin/clang++" ]; then
+                ln -sf aarch64-linux-android24-clang++ "${NDK_LLVM_PREBUILT}/bin/clang++"
+            fi
+
             # Add NDK LLVM bin directory to PATH so CMake can find clang
             export PATH="${NDK_LLVM_PREBUILT}/bin:$PATH"
             export CC=clang
