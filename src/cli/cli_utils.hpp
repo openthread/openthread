@@ -351,6 +351,15 @@ public:
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
 
+    /**
+     * Outputs a given duration interval in seconds including the msec remainder.
+     *
+     * The duration is outputted in seconds with msec remainder, e.g., 12.047.
+     *
+     * @param[in] aMsecDuration   A duration interval in msec.
+     */
+    void OutputMsecDurationInSec(uint32_t aMsecDuration);
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
