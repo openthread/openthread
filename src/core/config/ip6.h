@@ -47,9 +47,29 @@
 #include "config/misc.h"
 
 /**
+ * @def OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+ *
+ * Define as 1 to enable feature to require Thread Network interface initialization which allows configuring
+ * the external unicast/multicast address pool used by the OpenThread stack.
+ *
+ * This feature allows the OpenThread stack to be compiled as a library without specifying the address pool sizes.
+ * It delegates the configuration of the pools to the next layer, making it run-time configurable after OpenThread
+ * instance initialization. This allows the OpenThread stack to be integrated into various projects without requiring a
+ * new OpenThread stack configuration to be built.
+ *
+ * When this feature is enabled, the configs `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS` and
+ * `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS` are no longer applicable or used.
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+#define OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
  *
  * The maximum number of supported IPv6 addresses allows to be externally added.
+ *
+ * If `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is enabled, this config is not used.
  */
 #ifndef OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
 #define OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS 4
@@ -59,6 +79,8 @@
  * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
  *
  * The maximum number of supported IPv6 multicast addresses allows to be externally added.
+ *
+ * If `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is enabled, this config is not used.
  */
 #ifndef OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
