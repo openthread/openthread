@@ -241,6 +241,11 @@ Contents of ${NDK_LLVM_PREBUILT}/bin:
                 exit 3
             fi
 
+            # Add NDK LLVM bin directory to PATH so CMake can find clang
+            export PATH="${NDK_LLVM_PREBUILT}/bin:$PATH"
+            export CC=clang
+            export CXX=clang++
+
             local_options+=(
                 "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
 

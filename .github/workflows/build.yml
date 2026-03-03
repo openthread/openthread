@@ -414,23 +414,15 @@ jobs:
       env:
         NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
       run: |
-        # Detect the host platform for NDK prebuilt tools
-        if [[ "${{ runner.os }}" == "Linux" ]]; then
-          NDK_HOST="linux-x86_64"
-        elif [[ "${{ runner.os }}" == "macOS" ]]; then
-          NDK_HOST="darwin-x86_64"
+        # Verify NDK toolchain is available
+        echo "Verifying NDK toolchain..."
+        if [ -d "${NDK}/toolchains/llvm/prebuilt" ]; then
+          echo "✓ NDK LLVM prebuilt directory found"
+          find "${NDK}/toolchains/llvm/prebuilt" -name "*clang" -type f | head -3 | xargs ls -lh
         else
-          NDK_HOST="windows-x86_64"
+          echo "✗ NDK LLVM prebuilt directory not found"
+          exit 1
         fi
-        
-        # Add NDK clang to PATH and set C/C++ compiler environment variables
-        export PATH="${NDK}/toolchains/llvm/prebuilt/${NDK_HOST}/bin:$PATH"
-        export CC=clang
-        export CXX=clang++
-        
-        # Verify clang is found
-        echo "Checking clang availability..."
-        which clang && clang --version
         
         rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-daemon ot-ctl" script/cmake-build android-ndk
         rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-cli" script/cmake-build android-ndk
