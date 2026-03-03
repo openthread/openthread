@@ -400,29 +400,9 @@ jobs:
         ndk-version: r25c
         local-cache: true
 
-    - name: Verify NDK Installation
-      run: |
-        NDK_PATH="${{ steps.setup-ndk.outputs.ndk-path }}"
-        echo "NDK Path: ${NDK_PATH}"
-        echo "Checking NDK structure..."
-        ls -la "${NDK_PATH}/" || echo "ERROR: NDK directory not found"
-        [ -f "${NDK_PATH}/build/cmake/android.toolchain.cmake" ] && echo "✓ Toolchain file exists" || echo "✗ Toolchain file missing"
-        [ -d "${NDK_PATH}/toolchains/llvm/prebuilt" ] && echo "✓ LLVM prebuilt directory exists" || echo "✗ LLVM prebuilt directory missing"
-        find "${NDK_PATH}/toolchains/llvm/prebuilt" -name "clang" -type f 2>/dev/null && echo "✓ clang executable found" || echo "✗ clang executable not found"
-
     - name: Build
       env:
         NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
       run: |
-        # Verify NDK toolchain is available
-        echo "Verifying NDK toolchain..."
-        if [ -d "${NDK}/toolchains/llvm/prebuilt" ]; then
-          echo "✓ NDK LLVM prebuilt directory found"
-          find "${NDK}/toolchains/llvm/prebuilt" -name "*clang" -type f | head -3 | xargs ls -lh
-        else
-          echo "✗ NDK LLVM prebuilt directory not found"
-          exit 1
-        fi
-        
         rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-daemon ot-ctl" script/cmake-build android-ndk
         rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-cli" script/cmake-build android-ndk
