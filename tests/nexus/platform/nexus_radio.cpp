@@ -42,7 +42,7 @@ extern "C" {
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_RADIO_CAPS_NONE;
+    return OT_RADIO_CAPS_TRANSMIT_SEC;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
@@ -65,12 +65,23 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId) { AsNode(aInstan
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    AsNode(aInstance).mRadio.mExtAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    radio.mExtAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    AsCoreType(&radio.mRadioContext.mExtAddress).Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
 {
-    AsNode(aInstance).mRadio.mShortAddress = aShortAddress;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    radio.mShortAddress               = aShortAddress;
+    radio.mRadioContext.mShortAddress = aShortAddress;
+}
+
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    AsNode(aInstance).mRadio.mRadioContext.mAlternateShortAddress = aShortAddress;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance) { return AsNode(aInstance).mRadio.mPromiscuous; }
@@ -135,14 +146,19 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     VerifyOrExit(radio.mState == Radio::kStateReceive, error = kErrorInvalidState);
     OT_ASSERT(aFrame == &AsNode(aInstance).mRadio.mTxFrame);
 
-    static_cast<Radio::Frame *>(aFrame)->UpdateFcs();
-
     radio.mState = Radio::kStateTransmit;
 
     Core::Get().MarkPendingAction();
 
 exit:
     return error;
+}
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return Core::Get().GetNowMicro64();
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
@@ -223,6 +239,47 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance) { AsNode(aInstance).mRadio.mSrcMatchExtEntries.Clear(); }
 
+void otPlatRadioSetMacKey(otInstance             *aInstance,
+                          uint8_t                 aKeyIdMode,
+                          uint8_t                 aKeyId,
+                          const otMacKeyMaterial *aPrevKey,
+                          const otMacKeyMaterial *aCurrKey,
+                          const otMacKeyMaterial *aNextKey,
+                          otRadioKeyType          aKeyType)
+{
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    OT_UNUSED_VARIABLE(aKeyIdMode);
+
+    radio.mRadioContext.mKeyId   = aKeyId;
+    radio.mRadioContext.mKeyType = aKeyType;
+
+    if (!radio.mMacFrameCounterReset)
+    {
+        radio.mRadioContext.mPrevMacFrameCounter = radio.mRadioContext.mMacFrameCounter;
+        radio.mRadioContext.mMacFrameCounter     = 0;
+    }
+
+    radio.mMacFrameCounterReset = false;
+
+    memcpy(&radio.mRadioContext.mPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
+    memcpy(&radio.mRadioContext.mCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
+    memcpy(&radio.mRadioContext.mNextKey, aNextKey, sizeof(otMacKeyMaterial));
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    if (aMacFrameCounter == 0)
+    {
+        radio.mRadioContext.mPrevMacFrameCounter = radio.mRadioContext.mMacFrameCounter;
+        radio.mMacFrameCounterReset              = true;
+    }
+
+    radio.mRadioContext.mMacFrameCounter = aMacFrameCounter;
+}
+
 // Not supported
 
 otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t) { return kErrorNotImplemented; }
@@ -236,10 +293,53 @@ otError otPlatRadioSetFemLnaGain(otInstance *, int8_t) { return kErrorNotImpleme
 bool    otPlatRadioIsCoexEnabled(otInstance *) { return false; }
 otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return kErrorNotImplemented; }
 otError otPlatRadioGetCoexMetrics(otInstance *, otRadioCoexMetrics *) { return kErrorNotImplemented; }
-otError otPlatRadioEnableCsl(otInstance *, uint32_t, otShortAddress, const otExtAddress *) { return kErrorNone; }
-otError otPlatRadioResetCsl(otInstance *) { return kErrorNotImplemented; }
-void    otPlatRadioUpdateCslSampleTime(otInstance *, uint32_t) {}
-uint8_t otPlatRadioGetCslAccuracy(otInstance *) { return 0; }
+otError otPlatRadioEnableCsl(otInstance         *aInstance,
+                             uint32_t            aCslPeriod,
+                             otShortAddress      aShortAddr,
+                             const otExtAddress *aExtAddr)
+{
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    if (aCslPeriod > 0)
+    {
+        VerifyOrExit((aShortAddr != OT_RADIO_BROADCAST_SHORT_ADDR) && (aShortAddr != OT_RADIO_INVALID_SHORT_ADDR),
+                     error = kErrorFailed);
+        VerifyOrExit(aExtAddr != nullptr, error = kErrorFailed);
+    }
+
+    radio.mRadioContext.mCslPeriod       = static_cast<uint16_t>(aCslPeriod);
+    radio.mRadioContext.mCslShortAddress = aShortAddr;
+
+    if (aExtAddr != nullptr)
+    {
+        AsCoreType(&radio.mRadioContext.mCslExtAddress).Set(aExtAddr->m8, Mac::ExtAddress::kReverseByteOrder);
+    }
+    else
+    {
+        AsCoreType(&radio.mRadioContext.mCslExtAddress).Clear();
+    }
+
+exit:
+    return error;
+}
+
+otError otPlatRadioResetCsl(otInstance *aInstance)
+{
+    AsNode(aInstance).mRadio.mRadioContext.mCslPeriod = 0;
+    return kErrorNone;
+}
+
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+{
+    AsNode(aInstance).mRadio.mRadioContext.mCslSampleTime = aCslSampleTime;
+}
+
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return 0;
+}
 otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return kErrorNotImplemented; }
 otError otPlatRadioClearCalibratedPowers(otInstance *) { return kErrorNotImplemented; }
 otError otPlatRadioAddCalibratedPower(otInstance *, uint8_t, int16_t, const uint8_t *, uint16_t)
@@ -256,16 +356,28 @@ Radio::Radio(void)
     : mState(kStateDisabled)
     , mPromiscuous(false)
     , mSrcMatchEnabled(false)
+    , mMacFrameCounterReset(false)
+    , mChannel(0)
+    , mPanId(0)
+    , mShortAddress(Mac::kShortAddrInvalid)
 {
+    mExtAddress.Clear();
+    ClearAllBytes(mRadioContext);
 }
 
 void Radio::Reset(void)
 {
-    mState           = kStateDisabled;
-    mPromiscuous     = false;
-    mSrcMatchEnabled = false;
+    mState                = kStateDisabled;
+    mPromiscuous          = false;
+    mSrcMatchEnabled      = false;
+    mMacFrameCounterReset = false;
+    mChannel              = 0;
+    mPanId                = 0;
+    mShortAddress         = Mac::kShortAddrInvalid;
+    mExtAddress.Clear();
     mSrcMatchShortEntries.Clear();
     mSrcMatchExtEntries.Clear();
+    ClearAllBytes(mRadioContext);
 }
 
 bool Radio::CanReceiveOnChannel(uint8_t aChannel) const

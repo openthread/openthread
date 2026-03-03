@@ -31,6 +31,8 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/tests/nexus
+    ${PROJECT_SOURCE_DIR}/tests/nexus/platform
+    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
 )
 
 set(COMMON_COMPILE_OPTIONS
