@@ -517,14 +517,14 @@ public:
      *
      * @returns The MAC header size.
      */
-    uint8_t GetHeaderLength(void) const;
+    uint16_t GetHeaderLength(void) const;
 
     /**
      * Returns the MAC footer size.
      *
      * @returns The MAC footer size.
      */
-    uint8_t GetFooterLength(void) const;
+    uint16_t GetFooterLength(void) const;
 
     /**
      * Returns the current MAC Payload length.
@@ -848,22 +848,22 @@ protected:
     static constexpr uint8_t kKeySourceSizeMode2 = 4;
     static constexpr uint8_t kKeySourceSizeMode3 = 8;
 
-    static constexpr uint8_t kInvalidIndex = 0xff;
-    static constexpr uint8_t kInvalidSize  = kInvalidIndex;
-    static constexpr uint8_t kMaxPsduSize  = kInvalidSize - 1;
+    static constexpr uint16_t kInvalidIndex = 0xffff;
+    static constexpr uint16_t kInvalidSize  = kInvalidIndex;
+    static constexpr uint16_t kMaxPsduSize  = kInvalidSize - 1;
 
-    void    SetFrameControlField(uint16_t aFcf);
-    uint8_t SkipSequenceIndex(void) const;
-    uint8_t FindDstPanIdIndex(void) const;
-    uint8_t FindDstAddrIndex(void) const;
-    uint8_t FindSrcPanIdIndex(void) const;
-    uint8_t FindSrcAddrIndex(void) const;
-    uint8_t SkipAddrFieldIndex(void) const;
-    uint8_t FindSecurityHeaderIndex(void) const;
-    uint8_t SkipSecurityHeaderIndex(void) const;
-    uint8_t FindPayloadIndex(void) const;
+    void     SetFrameControlField(uint16_t aFcf);
+    uint16_t SkipSequenceIndex(void) const;
+    uint16_t FindDstPanIdIndex(void) const;
+    uint16_t FindDstAddrIndex(void) const;
+    uint16_t FindSrcPanIdIndex(void) const;
+    uint16_t FindSrcAddrIndex(void) const;
+    uint16_t SkipAddrFieldIndex(void) const;
+    uint16_t FindSecurityHeaderIndex(void) const;
+    uint16_t SkipSecurityHeaderIndex(void) const;
+    uint16_t FindPayloadIndex(void) const;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    uint8_t FindHeaderIeIndex(void) const;
+    uint16_t FindHeaderIeIndex(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
@@ -919,10 +919,10 @@ protected:
 
     static uint16_t DetermineFcfAddrType(const Address &aAddress, uint16_t aBitShift);
 
-    static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
-    static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
-    static uint8_t CalculateKeySourceSize(uint8_t aSecurityControl);
-    static uint8_t CalculateMicSize(uint8_t aSecurityControl);
+    static uint16_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
+    static uint16_t CalculateKeySourceSize(uint8_t aSecurityControl);
+    static uint16_t CalculateMicSize(uint8_t aSecurityControl);
+    static uint16_t CalculateAddrFieldSize(uint16_t aFcf);
 };
 
 /**
