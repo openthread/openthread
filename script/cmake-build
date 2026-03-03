@@ -219,19 +219,17 @@ Current NDK directory structure:
                 exit 3
             fi
 
-            NDK_CLANG="${NDK_LLVM_PREBUILT}/bin/clang"
-            NDK_CLANGXX="${NDK_LLVM_PREBUILT}/bin/clang++"
-            if [ ! -f "${NDK_CLANG}" ] || [ ! -f "${NDK_CLANGXX}" ]; then
+            # Verify that NDK has clang compilers (versioned like aarch64-linux-android24-clang)
+            if [ ! -d "${NDK_LLVM_PREBUILT}/bin" ] || [ -z "$(ls -1 "${NDK_LLVM_PREBUILT}/bin"/*-clang 2>/dev/null | head -1)" ]; then
                 echo "
 ERROR: Android NDK compiler tools not found!
 - NDK=${NDK}
 - NDK LLVM Prebuilt: ${NDK_LLVM_PREBUILT}
-- Expected clang at: ${NDK_CLANG}
-- Expected clang++ at: ${NDK_CLANGXX}
+- Expected to find versioned clang executables at: ${NDK_LLVM_PREBUILT}/bin/*-clang
 
 Contents of ${NDK_LLVM_PREBUILT}/bin:
             "
-                ls -la "${NDK_LLVM_PREBUILT}/bin" 2>/dev/null | head -20 || echo "  (bin directory not found)"
+                ls -la "${NDK_LLVM_PREBUILT}/bin" 2>/dev/null | head -30 || echo "  (bin directory not found)"
                 exit 3
             fi
             local_options+=(
