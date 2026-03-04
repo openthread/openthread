@@ -87,15 +87,6 @@ void Node::Join(Node &aNode, JoinMode aJoinMode)
         break;
     case kAsSed:
         break;
-    case kAsSsed:
-    {
-        static constexpr uint32_t kDefaultCslPeriod  = 100 * 1000 / OT_US_PER_TEN_SYMBOLS; // 100 ms
-        static constexpr uint32_t kDefaultCslTimeout = 30;                                 // 30 seconds
-
-        Get<Mac::Mac>().SetCslPeriod(kDefaultCslPeriod);
-        Get<Mle::Mle>().SetCslTimeout(kDefaultCslTimeout);
-        break;
-    }
     }
 
     SuccessOrQuit(Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(mode)));

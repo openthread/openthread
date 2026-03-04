@@ -50,6 +50,21 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kAttachAsSsedTime = 20 * 1000;
 
 /**
+ * CSL Period in milliseconds.
+ */
+static constexpr uint32_t kCslPeriodMs = 100;
+
+/**
+ * CSL Period in units of 10 symbols.
+ */
+static constexpr uint32_t kCslPeriod = kCslPeriodMs * 1000 / OT_US_PER_TEN_SYMBOLS;
+
+/**
+ * Time to advance for CSL synchronization to complete, in milliseconds.
+ */
+static constexpr uint32_t kCslSyncTime = 5 * 1000;
+
+/**
  * Payload size for a standard ICMPv6 Echo Request.
  */
 static constexpr uint16_t kEchoPayloadSize = 10;
@@ -121,7 +136,11 @@ void Test1_2_LP_5_3_1(void)
      * - Pass Criteria: N/A.
      */
 
-    ssed1.Join(leader, Node::kAsSsed);
+    ssed1.Join(leader, Node::kAsSed);
+    nexus.AdvanceTime(kAttachAsSsedTime);
+    VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
+
+    ssed1.Get<Mac::Mac>().SetCslPeriod(kCslPeriod);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Leader (DUT)");
@@ -134,8 +153,8 @@ void Test1_2_LP_5_3_1(void)
      *   - The Frame Version of the packet MUST be: IEEE Std 802.15.4-2015 (value = 0b10).
      */
 
-    nexus.AdvanceTime(kAttachAsSsedTime);
-    VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
+    nexus.AdvanceTime(kCslSyncTime);
+    VerifyOrQuit(ssed1.Get<Mac::Mac>().IsCslEnabled());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Router_1");

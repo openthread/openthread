@@ -61,6 +61,7 @@ def verify(pv):
     LEADER = pv.vars['LEADER']
     LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
     ROUTER_1 = pv.vars['ROUTER_1']
+    ROUTER_1_RLOC16 = pv.vars['ROUTER_1_RLOC16']
     SSED_1 = pv.vars['SSED_1']
     SSED_1_RLOC16 = pv.vars['SSED_1_RLOC16']
 
@@ -89,10 +90,10 @@ def verify(pv):
     #   - The Frame Version of the packet MUST be: IEEE Std 802.15.4-2015 (value = 0b10).
     print("Step 3: Leader completes CSL connection")
 
-    pkts.filter_wpan_src64(LEADER).\
+    _response_pkt = pkts.filter_wpan_src64(LEADER).\
         filter_wpan_dst64(SSED_1).\
         filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
-        filter(lambda p: p.wpan.version == 2).\
+        filter(lambda p: p.wpan.version == consts.MAC_FRAME_VERSION_2015).\
         must_next()
 
     # Step 4: Router_1
@@ -105,24 +106,36 @@ def verify(pv):
     #   - Router_1 MUST receive an ICMPv6 Echo Response from SSED_1.
     print("Step 4: Router_1 sends Echo Request to SSED_1")
 
+    # Echo Request from ROUTER_1 to LEADER
+    pkts.filter_ping_request().\
+        filter_wpan_src64(ROUTER_1).\
+        filter_wpan_dst16(LEADER_RLOC16).\
+        must_next()
+
     # Forwarded Echo Request from LEADER to SSED_1
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(LEADER).\
         filter_wpan_dst16(SSED_1_RLOC16).\
-        filter(lambda p: p.wpan.version == 2).\
+        filter(lambda p: p.wpan.version == consts.MAC_FRAME_VERSION_2015).\
         must_next()
 
     # SSED_1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request from the Leader.
-    pkts.range((0, 0), (_pkt.number, _pkt.number)).\
+    pkts.range((_response_pkt.number, _response_pkt.number), (_pkt.number, _pkt.number)).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(LEADER_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
         must_not_next()
 
-    # Echo Response from SSED_1 to ROUTER_1
+    # Echo Response from SSED_1 to LEADER
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(LEADER_RLOC16).\
+        must_next()
+
+    # Forwarded Echo Response from LEADER to ROUTER_1
+    pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+        filter_wpan_src64(LEADER).\
+        filter_wpan_dst16(ROUTER_1_RLOC16).\
         must_next()
 
 
