@@ -271,6 +271,7 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.period'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.scan_duration'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.energy_list'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['wpan.header_ie.csl.phase'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['wpan_tap.ch_num'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['wpan-tap.ch_num'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.ext_pan_id'] = layer_fields._bytes
