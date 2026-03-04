@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "mac_frame.h"
 #include "nexus_node.hpp"
 
 namespace ot {
@@ -391,7 +392,7 @@ void Core::ProcessRadio(Node &aNode)
 
             rxFrame.mInfo.mRxInfo.mTimestamp = mNow;
             rxFrame.mInfo.mRxInfo.mRssi      = kDefaultRxRssi;
-            rxFrame.mInfo.mRxInfo.mLqi       = 0;
+            rxFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
 
             if (matchesDst && !dstAddr.IsNone() && !dstAddr.IsBroadcast() && ackRequested)
             {
@@ -441,6 +442,26 @@ void Core::ProcessRadio(Node &aNode)
             if (ackNode->mRadio.mRadioContext.mCslPresent)
             {
                 ackIeDataLength = otMacFrameGenerateCslIeTemplate(ackIeData);
+            }
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+            {
+                uint8_t      linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
+                uint8_t      linkMetricsDataLen;
+                Mac::Address srcAddr;
+
+                if (aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone)
+                {
+                    linkMetricsDataLen = ackNode->mRadio.GenerateEnhAckProbingData(srcAddr, kDefaultRxLqi,
+                                                                                   kDefaultRxRssi, linkMetricsData);
+
+                    if (linkMetricsDataLen > 0)
+                    {
+                        ackIeDataLength += otMacFrameGenerateEnhAckProbingIe(ackIeData + ackIeDataLength,
+                                                                             linkMetricsData, linkMetricsDataLen);
+                    }
+                }
             }
 #endif
             SuccessOrExit(
