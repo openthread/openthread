@@ -118,7 +118,6 @@ endmacro()
 
 
 #----------------------------------------------------------------------------------------------------------------------
-
 # Cert tests
 ot_nexus_test(1_1_5_1_1 "cert;nexus")
 ot_nexus_test(1_1_5_1_2 "cert;nexus")
@@ -216,6 +215,7 @@ ot_nexus_test(1_1_9_2_16 "cert;nexus")
 ot_nexus_test(1_1_9_2_17 "cert;nexus")
 ot_nexus_test(1_1_9_2_18 "cert;nexus")
 ot_nexus_test(1_1_9_2_19 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_1 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
