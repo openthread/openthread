@@ -49,9 +49,6 @@
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
-#include "meshcop/announce_begin_client.hpp"
-#include "meshcop/energy_scan_client.hpp"
-#include "meshcop/panid_query_client.hpp"
 #include "meshcop/secure_transport.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
@@ -316,25 +313,60 @@ public:
     Error SendMgmtCommissionerSetRequest(const CommissioningDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
     /**
-     * Returns a reference to the AnnounceBeginClient instance.
+     * Sends a Announce Begin message.
      *
-     * @returns A reference to the AnnounceBeginClient instance.
+     * @param[in]  aChannelMask   The channel mask value.
+     * @param[in]  aCount         The number of Announce messages sent per channel.
+     * @param[in]  aPeriod        The time between two successive MLE Announce transmissions (in milliseconds).
+     * @param[in]  aAddress       The destination address.
+     *
+     * @retval kErrorNone    Successfully enqueued the Announce Begin message.
+     * @retval kErrorNoBufs  Insufficient buffers to generate a Announce Begin message.
      */
-    AnnounceBeginClient &GetAnnounceBeginClient(void) { return mAnnounceBegin; }
+    Error SendAnnounceBeginRequest(uint32_t            aChannelMask,
+                                   uint8_t             aCount,
+                                   uint16_t            aPeriod,
+                                   const Ip6::Address &aAddress);
 
     /**
-     * Returns a reference to the EnergyScanClient instance.
+     * Sends an Energy Scan Query message.
      *
-     * @returns A reference to the EnergyScanClient instance.
+     * @param[in]  aChannelMask   The channel mask value.
+     * @param[in]  aCount         The number of energy measurements per channel.
+     * @param[in]  aPeriod        The time between energy measurements (milliseconds).
+     * @param[in]  aScanDuration  The scan duration for each energy measurement (milliseconds).
+     * @param[in]  aAddress       A pointer to the IPv6 destination.
+     * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+     * @param[in]  aContext       A pointer to application-specific context.
+     *
+     * @retval kErrorNone     Successfully enqueued the Energy Scan Query message.
+     * @retval kErrorNoBufs   Insufficient buffers to generate an Energy Scan Query message.
      */
-    EnergyScanClient &GetEnergyScanClient(void) { return mEnergyScan; }
+    Error SendEnergyScanQuery(uint32_t                           aChannelMask,
+                              uint8_t                            aCount,
+                              uint16_t                           aPeriod,
+                              uint16_t                           aScanDuration,
+                              const Ip6::Address                &aAddress,
+                              otCommissionerEnergyReportCallback aCallback,
+                              void                              *aContext);
 
     /**
-     * Returns a reference to the PanIdQueryClient instance.
+     * Sends a PAN ID Query message.
      *
-     * @returns A reference to the PanIdQueryClient instance.
+     * @param[in]  aPanId         The PAN ID to query.
+     * @param[in]  aChannelMask   The channel mask value.
+     * @param[in]  aAddress       A pointer to the IPv6 destination.
+     * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+     * @param[in]  aContext       A pointer to application-specific context.
+     *
+     * @retval kErrorNone    Successfully enqueued the PAN ID Query message.
+     * @retval kErrorNoBufs  Insufficient buffers to generate a PAN ID Query message.
      */
-    PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
+    Error SendPanIdQuery(uint16_t                            aPanId,
+                         uint32_t                            aChannelMask,
+                         const Ip6::Address                 &aAddress,
+                         otCommissionerPanIdConflictCallback aCallback,
+                         void                               *aContext);
 
 private:
     static constexpr uint32_t kPetitionAttemptDelay = 5;  // COMM_PET_ATTEMPT_DELAY (seconds)
@@ -440,10 +472,6 @@ private:
     CommissionerTimer        mTimer;
     JoinerSessionTimer       mJoinerSessionTimer;
 
-    AnnounceBeginClient mAnnounceBegin;
-    EnergyScanClient    mEnergyScan;
-    PanIdQueryClient    mPanIdQuery;
-
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
     ProvisioningUrlTlv::StringType mProvisioningUrl;
@@ -451,13 +479,17 @@ private:
 
     State mState;
 
-    Callback<StateCallback>  mStateCallback;
-    Callback<JoinerCallback> mJoinerCallback;
+    Callback<StateCallback>                       mStateCallback;
+    Callback<JoinerCallback>                      mJoinerCallback;
+    Callback<otCommissionerEnergyReportCallback>  mEnergyReportCallback;
+    Callback<otCommissionerPanIdConflictCallback> mPanIdConflictCallback;
 };
 
 DeclareTmfHandler(Commissioner, kUriDatasetChanged);
 DeclareTmfHandler(Commissioner, kUriRelayRx);
 DeclareTmfHandler(Commissioner, kUriJoinerFinalize);
+DeclareTmfHandler(Commissioner, kUriEnergyReport);
+DeclareTmfHandler(Commissioner, kUriPanIdConflict);
 
 } // namespace MeshCoP
 
