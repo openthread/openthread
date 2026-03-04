@@ -51,6 +51,10 @@
 #
 #      OT_CMAKE_BUILD_DIR="./build/temp"  script/cmake-build ${platform}
 #
+#  For Android NDK builds, set the NDK environment variable:
+#
+#      NDK=/path/to/android-ndk-r25c script/cmake-build android-ndk
+#
 #  Examples:
 #
 #      script/cmake-build simulation
@@ -191,6 +195,31 @@ Could not fild the Android NDK CMake toolchain file
             "
                 exit 2
             fi
+
+            # Verify that the NDK compiler tools exist
+            # Try to find the LLVM prebuilt tools directory
+            NDK_LLVM_PREBUILT=""
+            for PREBUILT_DIR in "${NDK}"/toolchains/llvm/prebuilt/*/; do
+                if [ -d "${PREBUILT_DIR}" ]; then
+                    NDK_LLVM_PREBUILT="${PREBUILT_DIR%/}"
+                    break
+                fi
+            done
+
+            if [ -z "${NDK_LLVM_PREBUILT}" ]; then
+                echo "ERROR: Android NDK LLVM prebuilt directory not found at ${NDK}/toolchains/llvm/prebuilt/"
+                exit 3
+            fi
+
+            # Create symlinks for generic clang/clang++ to the versioned compilers
+            ln -sf aarch64-linux-android24-clang "${NDK_LLVM_PREBUILT}/bin/clang" 2>/dev/null || true
+            ln -sf aarch64-linux-android24-clang++ "${NDK_LLVM_PREBUILT}/bin/clang++" 2>/dev/null || true
+
+            # Add NDK LLVM bin directory to PATH and set compiler environment variables
+            export PATH="${NDK_LLVM_PREBUILT}/bin:$PATH"
+            export CC=clang
+            export CXX=clang++
+
             local_options+=(
                 "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
 
@@ -200,6 +229,9 @@ Could not fild the Android NDK CMake toolchain file
 
                 # Android API needs to be >= android-24 for `getifsaddrs()`
                 "-DANDROID_PLATFORM=android-24"
+
+                # Specify the target ABI - default to arm64-v8a (64-bit ARM)
+                "-DANDROID_ABI=arm64-v8a"
 
                 # Store thread settings in the CWD when executing ot-cli or ot-daemon
                 '-DOT_POSIX_SETTINGS_PATH="./thread"'
