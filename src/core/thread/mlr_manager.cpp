@@ -363,7 +363,7 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriMlr);
+    message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     addressesTlv.Init();

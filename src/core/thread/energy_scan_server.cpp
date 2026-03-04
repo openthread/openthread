@@ -69,7 +69,7 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
     VerifyOrExit(mask != 0);
 
-    mReportMessage.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriEnergyReport));
+    mReportMessage.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnergyReport));
     VerifyOrExit(mReportMessage != nullptr);
 
     SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*mReportMessage, mask));

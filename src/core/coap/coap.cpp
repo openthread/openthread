@@ -163,29 +163,32 @@ Message *CoapBase::NewPriorityMessage(void)
     return NewMessage(Message::Settings(kWithLinkSecurity, Message::kPriorityNet));
 }
 
-Message *CoapBase::NewPriorityConfirmablePostMessage(Uri aUri)
+Message *CoapBase::AllocateAndInitPriorityConfirmablePostMessage(Uri aUri)
 {
     return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUri);
 }
 
-Message *CoapBase::NewConfirmablePostMessage(Uri aUri) { return InitMessage(NewMessage(), kTypeConfirmable, aUri); }
+Message *CoapBase::AllocateAndInitConfirmablePostMessage(Uri aUri)
+{
+    return InitMessage(NewMessage(), kTypeConfirmable, aUri);
+}
 
-Message *CoapBase::NewPriorityNonConfirmablePostMessage(Uri aUri)
+Message *CoapBase::AllocateAndInitPriorityNonConfirmablePostMessage(Uri aUri)
 {
     return InitMessage(NewPriorityMessage(), kTypeNonConfirmable, aUri);
 }
 
-Message *CoapBase::NewNonConfirmablePostMessage(Uri aUri)
+Message *CoapBase::AllocateAndInitNonConfirmablePostMessage(Uri aUri)
 {
     return InitMessage(NewMessage(), kTypeNonConfirmable, aUri);
 }
 
-Message *CoapBase::NewPriorityResponseMessage(const Message &aRequest)
+Message *CoapBase::AllocateAndInitPriorityResponseFor(const Message &aRequest)
 {
     return InitResponse(NewPriorityMessage(), aRequest);
 }
 
-Message *CoapBase::NewResponseMessage(const Message &aRequest) { return InitResponse(NewMessage(), aRequest); }
+Message *CoapBase::AllocateAndInitResponseFor(const Message &aRequest) { return InitResponse(NewMessage(), aRequest); }
 
 Message *CoapBase::InitMessage(Message *aMessage, Type aType, Uri aUri)
 {

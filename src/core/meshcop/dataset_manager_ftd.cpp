@@ -236,7 +236,7 @@ void DatasetManager::SendSetOrReplaceResponse(const Coap::Msg &aMsg, StateTlv::S
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));

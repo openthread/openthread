@@ -470,7 +470,8 @@ Error DatasetManager::SendSetRequest(const Dataset &aDataset)
 
     VerifyOrExit(!mMgmtPending, error = kErrorAlready);
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet : kUriPendingSet);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet
+                                                                                                : kUriPendingSet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
@@ -561,7 +562,7 @@ Coap::Message *DatasetManager::ProcessGetRequest(const Coap::Message    &aReques
 
     IgnoreError(Read(dataset));
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    response = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aRequest);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     for (const Tlv *tlv = dataset.GetTlvsStart(); tlv < dataset.GetTlvsEnd(); tlv = tlv->GetNext())
@@ -695,7 +696,8 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         tlvList.Add(aTlvTypes[index]);
     }
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveGet : kUriPendingGet);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveGet
+                                                                                                : kUriPendingGet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (!tlvList.IsEmpty())

@@ -126,7 +126,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc));
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayRx);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aMessageInfo.GetPeerPort()));
@@ -278,7 +278,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Coap::Message *message = nullptr;
     Dataset        dataset;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriJoinerEntrust);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerEntrust);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);

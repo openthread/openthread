@@ -86,7 +86,7 @@ void Leader::SendPetitionResponse(const Coap::Msg &aMsg, StateTlv::State aState)
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
@@ -161,7 +161,7 @@ void Leader::SendKeepAliveResponse(const Coap::Msg &aMsg, StateTlv::State aState
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
@@ -180,7 +180,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriDatasetChanged);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));

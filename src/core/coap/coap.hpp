@@ -380,7 +380,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewPriorityConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitPriorityConfirmablePostMessage(Uri aUri);
 
     /**
      * Allocates and initializes a new CoAP Confirmable Post message with normal priority level.
@@ -394,7 +394,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitConfirmablePostMessage(Uri aUri);
 
     /**
      * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority
@@ -409,7 +409,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewPriorityNonConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitPriorityNonConfirmablePostMessage(Uri aUri);
 
     /**
      * Allocates and initializes a new CoAP Non-confirmable Post message with normal priority level.
@@ -423,7 +423,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewNonConfirmablePostMessage(Uri aUri);
+    Message *AllocateAndInitNonConfirmablePostMessage(Uri aUri);
 
     /**
      * Allocates and initializes a new CoAP response message with Network Control priority level for a
@@ -436,7 +436,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewPriorityResponseMessage(const Message &aRequest);
+    Message *AllocateAndInitPriorityResponseFor(const Message &aRequest);
 
     /**
      * Allocates and initializes a new CoAP response message with regular priority level for a given
@@ -449,7 +449,7 @@ public:
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
-    Message *NewResponseMessage(const Message &aRequest);
+    Message *AllocateAndInitResponseFor(const Message &aRequest);
 
     /**
      * Sends a CoAP message with custom transmission parameters.
