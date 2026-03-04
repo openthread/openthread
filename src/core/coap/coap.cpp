@@ -1021,11 +1021,10 @@ Error CoapBase::CacheLastBlockResponse(Message *aResponse)
 
     FreeLastBlockResponse();
 
-    if ((mLastResponse = aResponse->Clone()) == nullptr)
-    {
-        error = kErrorNoBufs;
-    }
+    mLastResponse = AsCoapMessagePtr(aResponse->Clone());
+    VerifyOrExit(mLastResponse != nullptr, error = kErrorNoBufs);
 
+exit:
     return error;
 }
 
@@ -1526,7 +1525,7 @@ Error CoapBase::PendingRequests::AddClone(const Message &aMessage, uint16_t aCop
 {
     Error error = kErrorNone;
 
-    aRequest.mMessage = aMessage.Clone(aCopyLength);
+    aRequest.mMessage = AsCoapMessagePtr(aMessage.Clone(aCopyLength));
     VerifyOrExit(aRequest.HasMessage(), error = kErrorNoBufs);
 
     SuccessOrExit(error = aRequest.AppendMetadataToMessage());
@@ -1666,7 +1665,7 @@ void CoapBase::PendingRequests::RetransmitRequest(const Request &aRequest)
     Message         *clone;
     Ip6::MessageInfo messageInfo;
 
-    clone = aRequest.mMessage->Clone(aRequest.mMessage->GetLength() - sizeof(Request::Metadata));
+    clone = AsCoapMessagePtr(aRequest.mMessage->Clone(aRequest.mMessage->GetLength() - sizeof(Request::Metadata)));
     VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
 
     aRequest.mMetadata.CopyInfoTo(messageInfo);
@@ -1781,7 +1780,7 @@ Error CoapBase::ResponseCache::SendCachedResponse(const Msg &aRxMsg, CoapBase &a
 
     VerifyOrExit(match != nullptr, error = kErrorNotFound);
 
-    response = match->Clone(match->GetLength() - sizeof(ResponseMetadata));
+    response = AsCoapMessagePtr(match->Clone(match->GetLength() - sizeof(ResponseMetadata)));
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     error = aCoapBase.Send(*response, aRxMsg.mMessageInfo);
@@ -1827,7 +1826,7 @@ void CoapBase::ResponseCache::Add(const Msg &aTxMsg, uint32_t aExchangeLifetime)
 
     MaintainCacheSize();
 
-    responseClone = aTxMsg.mMessage.Clone();
+    responseClone = AsCoapMessagePtr(aTxMsg.mMessage.Clone());
     VerifyOrExit(responseClone != nullptr);
 
     metadata.mExpireTime  = TimerMilli::GetNow() + aExchangeLifetime;
