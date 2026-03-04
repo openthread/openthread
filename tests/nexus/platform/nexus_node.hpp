@@ -79,7 +79,6 @@ public:
         kAsFed,
         kAsMed,
         kAsSed,
-        kAsSsed,
         kAsSedWithFullNetData,
     };
 
