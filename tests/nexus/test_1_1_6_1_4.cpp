@@ -57,6 +57,11 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kAttachTime = 20 * 1000;
 
 /**
+ * Time for the DUT to perform parent discovery scans, in milliseconds.
+ */
+static constexpr uint32_t kParentSelectionTime = 2000;
+
+/**
  * Time to wait for ICMPv6 Echo response, in milliseconds.
  */
 static constexpr uint32_t kEchoTimeout = 5000;
@@ -248,6 +253,7 @@ void Test6_1_4(void)
     /**
      * Enable REED_1 (Router 3) to upgrade to router.
      */
+    nexus.AdvanceTime(kParentSelectionTime);
     router3.Get<Mle::Mle>().SetRouterUpgradeThreshold(kDefaultThreshold);
 
     Log("---------------------------------------------------------------------------------------");
