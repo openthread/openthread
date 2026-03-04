@@ -227,7 +227,7 @@ void Test9_2_12(void)
         uint32_t channelMask = (1 << kPrimaryChannel);
 
         Tmf::Agent    &agent   = leader1.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriAnnounceBegin);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriAnnounceBegin);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(MeshCoP::Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, kCommissionerSessionId));

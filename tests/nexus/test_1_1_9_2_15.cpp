@@ -138,7 +138,7 @@ void SendPendingSet(Node           &aCommissioner,
                     const uint16_t *aPanId = nullptr)
 {
     Tmf::Agent    &agent   = aCommissioner.Get<Tmf::Agent>();
-    Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriPendingSet);
+    Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriPendingSet);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aSessionId));
@@ -526,7 +526,7 @@ void Test9_2_15(void)
 
     {
         Tmf::Agent    &agent   = leader.Get<Tmf::Agent>();
-        Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriActiveGet);
+        Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriActiveGet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(agent.SendMessageTo(*message, dut.Get<Mle::Mle>().GetMeshLocalEid()));

@@ -83,7 +83,7 @@ Error Client::SendQuery(Tlv::Type aTlvType, uint16_t aMaxEntries, uint32_t aMaxE
 
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
 
-    message.Reset(Get<Tmf::Agent>().NewNonConfirmablePostMessage(kUriHistoryQuery));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(kUriHistoryQuery));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
     IgnoreError(message->SetPriority(Message::kPriorityLow));
 

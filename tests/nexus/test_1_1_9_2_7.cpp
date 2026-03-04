@@ -272,7 +272,7 @@ void Test9_2_7(void)
         MeshCoP::Dataset       dataset;
         MeshCoP::Dataset::Info datasetInfo;
 
-        message = agent.NewPriorityConfirmablePostMessage(ot::kUriActiveSet);
+        message = agent.AllocateAndInitPriorityConfirmablePostMessage(ot::kUriActiveSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(router.Get<MeshCoP::ActiveDatasetManager>().Read(dataset));
@@ -399,7 +399,7 @@ void Test9_2_7(void)
         MeshCoP::Timestamp timestamp;
         timestamp.Clear();
 
-        message = agent.NewPriorityConfirmablePostMessage(ot::kUriPendingSet);
+        message = agent.AllocateAndInitPriorityConfirmablePostMessage(ot::kUriPendingSet);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(router.Get<MeshCoP::ActiveDatasetManager>().Read(dataset));
@@ -523,7 +523,7 @@ void Test9_2_7(void)
      */
     {
         Tmf::Agent    &agent     = commissioner.Get<Tmf::Agent>();
-        Coap::Message *message   = agent.NewPriorityConfirmablePostMessage(ot::kUriPendingSet);
+        Coap::Message *message   = agent.AllocateAndInitPriorityConfirmablePostMessage(ot::kUriPendingSet);
         uint16_t       sessionId = commissioner.Get<MeshCoP::Commissioner>().GetSessionId();
 
         VerifyOrQuit(message != nullptr);
