@@ -1166,7 +1166,9 @@ void TcatAgent::AdaptToExistingActivePeriod(uint32_t &aPeriodDelayMs, uint32_t &
     {
         TimeMilli now = TimerMilli::GetNow();
         uint32_t  remainingMs;
-        remainingMs = (mActiveOrStandbyTimer.GetFireTime() > now) ? mActiveOrStandbyTimer.GetFireTime() - now : 0;
+
+        remainingMs = mActiveOrStandbyTimer.GetFireTime().DetermineRemainingDurationFrom(now);
+
         if (mTimerSetsToActive)
         {
             aPeriodDelayMs    = Min(aPeriodDelayMs, remainingMs);

@@ -343,7 +343,7 @@ void Translator::Mapping::CopyTo(AddressMapping &aMapping, TimeMilli aNow) const
     // might become active again before actually removed. Report the
     // mapping to be "just expired" to avoid confusion.
 
-    aMapping.mRemainingTimeMs = (mExpirationTime < aNow) ? 0 : mExpirationTime - aNow;
+    aMapping.mRemainingTimeMs = mExpirationTime.DetermineRemainingDurationFrom(aNow);
 }
 
 void Translator::Mapping::Free(void)
