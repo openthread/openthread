@@ -60,6 +60,7 @@ set(COMMON_SOURCES
     api/icmp6_api.cpp
     api/instance_api.cpp
     api/ip6_api.cpp
+    api/ipfix_api.cpp
     api/jam_detection_api.cpp
     api/joiner_api.cpp
     api/link_api.cpp
@@ -293,6 +294,7 @@ set(COMMON_SOURCES
     utils/history_tracker_client.cpp
     utils/history_tracker_server.cpp
     utils/history_tracker_tlvs.cpp
+    utils/ipfix.cpp
     utils/jam_detector.cpp
     utils/link_metrics_manager.cpp
     utils/mesh_diag.cpp
