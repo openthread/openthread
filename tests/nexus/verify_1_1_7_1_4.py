@@ -118,6 +118,11 @@ def verify(pv):
         filter(lambda p: consts.NL_THREAD_NETWORK_DATA_TLV in p.coap.tlv.type).\
         must_next()
 
+    # Save the cursor after Step 3 to search from here in Step 5.
+    # ROUTER_1's multicast MLE Data Response (Step 5) can arrive before or after
+    # the Leader's MLE Data Response or CoAP ACK (Step 4).
+    pkts_after_step3 = pkts.copy()
+
     # Step 4: Leader
     # - Description: Automatically transmits a 2.04 Changed CoAP response to the DUT. Automatically multicasts a MLE
     #   Data Response, including the new information collected from the DUT.
@@ -149,7 +154,7 @@ def verify(pv):
     #     - 6LowPAN ID TLV
     #     - Border Router TLV
     print("Step 5: Router_1 (DUT)")
-    pkts.copy().\
+    pkts_after_step3.\
         filter_wpan_src64(ROUTER_1).\
         filter_LLANMA().\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
