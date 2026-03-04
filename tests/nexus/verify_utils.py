@@ -49,6 +49,11 @@ from pktverify.coap import CoapTlvParser
 from pktverify.addrs import Ipv6Addr
 from pktverify.bytes import Bytes
 
+# CSL period constants (in units of 10 symbols)
+CSL_PERIOD_500MS = 500000 // consts.US_PER_TEN_SYMBOLS
+CSL_PERIOD_3300MS = 3300000 // consts.US_PER_TEN_SYMBOLS
+CSL_PERIOD_400MS = 400000 // consts.US_PER_TEN_SYMBOLS
+
 
 # Monkey-patch CoapTlvParser to parse Thread TLVs in CoAP payload
 def thread_coap_tlv_parse(t, v, layer=None):
