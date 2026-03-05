@@ -33,7 +33,10 @@
 
 #include <openthread/random_crypto.h>
 
+#include <mbedtls/version.h>
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
 #include <mbedtls/ctr_drbg.h>
+#endif
 
 #include "common/random.hpp"
 
