@@ -48,8 +48,10 @@
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
 #include <mbedtls/debug.h>
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER <= 0x03060500)
 #include <mbedtls/ecjpake.h>
 #include "crypto/mbedtls.hpp"
+#endif
 #endif
 
 namespace ot {
@@ -163,7 +165,6 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 #endif
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER <= 0x03060500)
-#include "crypto/mbedtls.hpp"
             int rv = mbedtls_pk_parse_key(&mPKey, reinterpret_cast<const unsigned char *>(sSrvKey), sSrvKeyLength,
                                           nullptr, 0, Crypto::MbedTls::CryptoSecurePrng, nullptr);
 #else
