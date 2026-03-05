@@ -191,7 +191,7 @@ void Test9_2_14(void)
 
     {
         uint32_t channelMask = (1 << kSecondaryChannel);
-        SuccessOrQuit(commissioner.Get<MeshCoP::Commissioner>().GetPanIdQueryClient().SendQuery(
+        SuccessOrQuit(commissioner.Get<MeshCoP::Commissioner>().SendPanIdQuery(
             kPanId, channelMask, router1.Get<Mle::Mle>().GetMeshLocalRloc(), nullptr, nullptr));
     }
 
@@ -228,7 +228,7 @@ void Test9_2_14(void)
 
     {
         uint32_t channelMask = (1 << kSecondaryChannel);
-        SuccessOrQuit(commissioner.Get<MeshCoP::Commissioner>().GetPanIdQueryClient().SendQuery(
+        SuccessOrQuit(commissioner.Get<MeshCoP::Commissioner>().SendPanIdQuery(
             kPanId, channelMask, commissioner.Get<Mle::Mle>().GetRealmLocalAllThreadNodesAddress(), nullptr, nullptr));
     }
 
