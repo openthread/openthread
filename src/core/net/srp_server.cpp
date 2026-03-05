@@ -454,7 +454,7 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName)
 {
     VerifyOrExit(aHost != nullptr);
 
-    aHost->mLease = 0;
+    aHost->SetLease(0);
     aHost->ClearResources();
 
     if (aRetainName)
@@ -463,7 +463,7 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName)
     }
     else
     {
-        aHost->mKeyLease = 0;
+        aHost->SetKeyLease(0);
         IgnoreError(mHosts.Remove(*aHost));
         LogInfo("Fully remove host %s", aHost->GetFullName());
     }
@@ -642,9 +642,10 @@ void Server::CommitSrpUpdate(Error                    aError,
 
     for (Service &service : aHost.mServices)
     {
-        service.mLease       = grantedLease;
-        service.mKeyLease    = grantedKeyLease;
-        service.mTtl         = grantedTtl;
+        service.SetLease(service.mIsDeleted ? 0 : grantedLease);
+        service.SetKeyLease(grantedKeyLease);
+        service.SetTtl(grantedTtl);
+
         service.mIsCommitted = true;
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -1311,7 +1312,7 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
             VerifyOrExit(!service->mParsedSrv, error = kErrorParse);
             service->mParsedSrv = true;
 
-            service->mTtl      = srvRecord.GetTtl();
+            service->SetTtl(srvRecord.GetTtl());
             service->mPriority = srvRecord.GetPriority();
             service->mWeight   = srvRecord.GetWeight();
             service->mPort     = srvRecord.GetPort();
@@ -1395,8 +1396,8 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
             service.mIsDeleted = true;
         }
 
-        service.mLease    = service.mIsDeleted ? 0 : leaseOption.GetLeaseInterval();
-        service.mKeyLease = leaseOption.GetKeyLeaseInterval();
+        service.SetLease(service.mIsDeleted ? 0 : leaseOption.GetLeaseInterval());
+        service.SetKeyLease(leaseOption.GetKeyLeaseInterval());
     }
 
     // If the client included the short variant of Lease Option,
@@ -1525,7 +1526,7 @@ void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
 
         SuccessOrExit(error = service->mServiceName.Set(existingService.GetServiceName()));
         service->mIsDeleted = true;
-        service->mKeyLease  = existingService.mKeyLease;
+        service->SetKeyLease(existingService.GetKeyLease());
     }
 
 exit:
@@ -1941,21 +1942,64 @@ exit:
 #endif
 
 //---------------------------------------------------------------------------------------------------------------------
+// Server::LeaseTracker
+
+void Server::LeaseTracker::Init(TimeMilli aUpdateTime)
+{
+    mLease      = 0;
+    mKeyLease   = 0;
+    mTtl        = 0;
+    mUpdateTime = aUpdateTime;
+}
+
+TimeMilli Server::LeaseTracker::GetExpireTime(void) const { return mUpdateTime + Time::SecToMsec(mLease); }
+
+TimeMilli Server::LeaseTracker::GetKeyExpireTime(void) const { return mUpdateTime + Time::SecToMsec(mKeyLease); }
+
+void Server::LeaseTracker::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
+{
+    TimeMilli now = TimerMilli::GetNow();
+
+    aLeaseInfo.mLease             = Time::SecToMsec(mLease);
+    aLeaseInfo.mKeyLease          = Time::SecToMsec(mKeyLease);
+    aLeaseInfo.mRemainingLease    = (mLease != 0) ? GetExpireTime().DetermineRemainingDurationFrom(now) : 0;
+    aLeaseInfo.mRemainingKeyLease = GetKeyExpireTime().DetermineRemainingDurationFrom(now);
+}
+
+Error Server::LeaseTracker::ProcessTtl(uint32_t aTtl)
+{
+    // This method processes the TTL value received in a resource record.
+    //
+    // If no TTL value is stored, this method will set the stored value to @p aTtl and return `kErrorNone`.
+    // If a TTL value is stored and @p aTtl equals the stored value, this method returns `kErrorNone`.
+    // Otherwise, this method returns `kErrorRejected`.
+
+    Error error = kErrorRejected;
+
+    VerifyOrExit(aTtl && (mTtl == 0 || mTtl == aTtl));
+
+    mTtl = aTtl;
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Server::Service
 
 Error Server::Service::Init(const char *aInstanceName, const char *aInstanceLabel, Host &aHost, TimeMilli aUpdateTime)
 {
     Error error;
 
+    LeaseTracker::Init(aUpdateTime);
+
     mNext        = nullptr;
     mHost        = &aHost;
     mPriority    = 0;
     mWeight      = 0;
-    mTtl         = 0;
     mPort        = 0;
-    mLease       = 0;
-    mKeyLease    = 0;
-    mUpdateTime  = aUpdateTime;
     mIsDeleted   = false;
     mIsCommitted = false;
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
@@ -2012,34 +2056,6 @@ Error Server::Service::ParseSubTypeServiceName(const char *aSubTypeServiceName, 
 
 exit:
     return error;
-}
-
-TimeMilli Server::Service::GetExpireTime(void) const
-{
-    OT_ASSERT(!mIsDeleted);
-    OT_ASSERT(!GetHost().IsDeleted());
-
-    return mUpdateTime + Time::SecToMsec(mLease);
-}
-
-TimeMilli Server::Service::GetKeyExpireTime(void) const { return mUpdateTime + Time::SecToMsec(mKeyLease); }
-
-void Server::Service::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
-{
-    TimeMilli now = TimerMilli::GetNow();
-
-    aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
-    aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingKeyLease = GetKeyExpireTime().DetermineRemainingDurationFrom(now);
-
-    if (!mIsDeleted)
-    {
-        aLeaseInfo.mRemainingLease = GetExpireTime().DetermineRemainingDurationFrom(now);
-    }
-    else
-    {
-        aLeaseInfo.mRemainingLease = 0;
-    }
 }
 
 bool Server::Service::MatchesInstanceName(const char *aInstanceName) const { return Matches(aInstanceName); }
@@ -2129,10 +2145,6 @@ exit:
 Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
     : InstanceLocator(aInstance)
     , mNext(nullptr)
-    , mTtl(0)
-    , mLease(0)
-    , mKeyLease(0)
-    , mUpdateTime(aUpdateTime)
     , mParsedKey(false)
     , mUseShortLeaseOption(false)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
@@ -2145,6 +2157,7 @@ Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
     , mKeyAdvId(kInvalidRequestId)
 #endif
 {
+    LeaseTracker::Init(aUpdateTime);
 }
 
 Server::Host::~Host(void) { FreeAllServices(); }
@@ -2172,53 +2185,6 @@ Error Server::Host::SetFullName(const char *aFullName)
 bool Server::Host::Matches(const char *aFullName) const
 {
     return StringMatch(mFullName.AsCString(), aFullName, kStringCaseInsensitiveMatch);
-}
-
-TimeMilli Server::Host::GetExpireTime(void) const
-{
-    OT_ASSERT(!IsDeleted());
-
-    return mUpdateTime + Time::SecToMsec(mLease);
-}
-
-TimeMilli Server::Host::GetKeyExpireTime(void) const { return mUpdateTime + Time::SecToMsec(mKeyLease); }
-
-void Server::Host::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
-{
-    TimeMilli now = TimerMilli::GetNow();
-
-    aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
-    aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingKeyLease = GetKeyExpireTime().DetermineRemainingDurationFrom(now);
-
-    if (!IsDeleted())
-    {
-        aLeaseInfo.mRemainingLease = GetExpireTime().DetermineRemainingDurationFrom(now);
-    }
-    else
-    {
-        aLeaseInfo.mRemainingLease = 0;
-    }
-}
-
-Error Server::Host::ProcessTtl(uint32_t aTtl)
-{
-    // This method processes the TTL value received in a resource record.
-    //
-    // If no TTL value is stored, this method will set the stored value to @p aTtl and return `kErrorNone`.
-    // If a TTL value is stored and @p aTtl equals the stored value, this method returns `kErrorNone`.
-    // Otherwise, this method returns `kErrorRejected`.
-
-    Error error = kErrorRejected;
-
-    VerifyOrExit(aTtl && (mTtl == 0 || mTtl == aTtl));
-
-    mTtl = aTtl;
-
-    error = kErrorNone;
-
-exit:
-    return error;
 }
 
 const Server::Service *Server::Host::GetNextService(const Service *aPrevService) const
@@ -2252,11 +2218,11 @@ void Server::Host::RemoveService(Service *aService, RetainName aRetainName, Noti
     VerifyOrExit(aService != nullptr);
 
     aService->mIsDeleted = true;
-    aService->mLease     = 0;
+    aService->SetLease(0);
 
     if (!aRetainName)
     {
-        aService->mKeyLease = 0;
+        aService->SetKeyLease(0);
     }
 
     aService->Log(aRetainName ? Service::kRemoveButRetainName : Service::kFullyRemove);

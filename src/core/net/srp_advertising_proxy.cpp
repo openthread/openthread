@@ -259,7 +259,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
             {
                 service->mShouldAdvertise = true;
 
-                if (aHost.mKeyLease == 0)
+                if (aHost.GetKeyLease() == 0)
                 {
                     advService.mIsKeyRegistered = false;
                 }
@@ -270,7 +270,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
             advService.mIsReplaced = true;
         }
 
-        if (aHost.mKeyLease == 0)
+        if (aHost.GetKeyLease() == 0)
         {
             advHost.mIsKeyRegistered = false;
         }
@@ -291,7 +291,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
             UnregisterService(service);
         }
 
-        if (aHost.mKeyLease == 0)
+        if (aHost.GetKeyLease() == 0)
         {
             UnregisterKey(service);
         }
@@ -302,7 +302,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
         UnregisterHost(aHost);
     }
 
-    if (aHost.mKeyLease == 0)
+    if (aHost.GetKeyLease() == 0)
     {
         UnregisterKey(aHost);
     }
@@ -352,7 +352,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Service &aService)
         UnregisterService(aService);
     }
 
-    if (aService.mKeyLease == 0)
+    if (aService.GetKeyLease() == 0)
     {
         UnregisterKey(aService);
     }
@@ -473,7 +473,7 @@ exit:
 void AdvertisingProxy::Advertise(Host &aHost)
 {
     bool shouldUnregisterHostAndServices = aHost.IsDeleted();
-    bool shouldUnregisterKeys            = (aHost.mKeyLease == 0);
+    bool shouldUnregisterKeys            = (aHost.GetKeyLease() == 0);
 
     DecideToAdvertise(aHost, shouldUnregisterHostAndServices, shouldUnregisterKeys);
 
@@ -817,7 +817,7 @@ bool AdvertisingProxy::CompareAndUpdateHost(Host &aHost, Host &aExistingHost)
         // we need to unregister keys for any services on
         // existing host that are not present in `aHost`.
 
-        if (aHost.mKeyLease == 0)
+        if (aHost.GetKeyLease() == 0)
         {
             for (Service &existingService : aExistingHost.mServices)
             {
