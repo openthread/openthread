@@ -154,14 +154,9 @@ void Test1_2_LP_5_2_1(void)
      * - SED_2 – disable polling via 802.15.4 MAC Data Requests.
      * - SED_3 – enable polling via 802.15.4 MAC Data Requests.
      */
-    sed1.Get<DataPollSender>().SetExternalPollPeriod(1000);
-    sed1.Get<DataPollSender>().StartPolling();
-
-    sed2.Get<DataPollSender>().SetExternalPollPeriod(3600 * 1000);
-    sed2.Get<DataPollSender>().StartPolling();
-
-    sed3.Get<DataPollSender>().SetExternalPollPeriod(1000);
-    sed3.Get<DataPollSender>().StartPolling();
+    SuccessOrQuit(sed1.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    SuccessOrQuit(sed2.Get<DataPollSender>().SetExternalPollPeriod(3600 * 1000));
+    SuccessOrQuit(sed3.Get<DataPollSender>().SetExternalPollPeriod(1000));
 
     /**
      * Step 2: SED_2
