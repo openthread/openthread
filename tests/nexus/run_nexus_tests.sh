@@ -158,6 +158,7 @@ DEFAULT_TESTS=(
     "1_2_LP_5_3_6"
     "1_2_LP_5_3_7"
     "1_2_LP_5_3_8"
+    "1_2_LP_5_2_1"
 )
 
 # Use provided arguments or the default test list
