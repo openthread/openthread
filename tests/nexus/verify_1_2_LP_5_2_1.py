@@ -58,6 +58,9 @@ def verify(pv):
     # ------------------------|--------------
     # Enhanced Frame Pending  | 3.2.6.2
 
+    FRAME_PENDING_SET = 1
+    FRAME_PENDING_CLEAR = 0
+
     pkts = pv.pkts
     pv.summary.show()
 
@@ -77,7 +80,23 @@ def verify(pv):
         return p.wpan.src64 == addr or p.wpan.src16 == rloc16
 
     def is_to(p, addr, rloc16):
-        return p.wpan.dst64 == addr or p.wpan.dst16 == rloc16
+        return p.wpan.dst16 == rloc16 or p.wpan.dst64 == addr
+
+    def _verify_ping_echo_for_sed(sed, sed_rloc16):
+        """Helper to verify ping echo from ROUTER_1 to a SED."""
+        _echo_req = pkts.filter_ping_request().\
+            filter(lambda p: is_from(p, ROUTER_1, ROUTER_1_RLOC16)).\
+            filter(lambda p: is_to(p, LEADER, LEADER_RLOC16)).\
+            must_next()
+
+        pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
+            filter(lambda p: is_from(p, sed, sed_rloc16)).\
+            filter(lambda p: is_to(p, LEADER, LEADER_RLOC16)).\
+            must_next()
+        pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
+            filter(lambda p: is_from(p, LEADER, LEADER_RLOC16)).\
+            filter(lambda p: is_to(p, ROUTER_1, ROUTER_1_RLOC16)).\
+            must_next()
 
     # Step 1: All Devices
     # - Topology formation.
@@ -96,7 +115,7 @@ def verify(pv):
     pkts.filter_wpan_ack().\
         filter_wpan_seq(_pkt.wpan.seq_no).\
         must_next().\
-        must_verify(lambda p: p.wpan.pending == 0)
+        must_verify(lambda p: p.wpan.pending == FRAME_PENDING_CLEAR)
 
     # Step 3: Router_1
     # - Harness instructs the device to send an ICMPv6 Echo Request to SED_2.
@@ -120,7 +139,7 @@ def verify(pv):
     pkts.filter_wpan_ack().\
         filter_wpan_seq(_pkt.wpan.seq_no).\
         must_next().\
-        must_verify(lambda p: p.wpan.pending == 1)
+        must_verify(lambda p: p.wpan.pending == FRAME_PENDING_SET)
 
     # Step 5: SED_2
     # - Harness instructs the device to send an 802.15.4 Data Request message to the DUT (Leader).
@@ -138,7 +157,7 @@ def verify(pv):
     pkts.filter_wpan_ack().\
         filter_wpan_seq(_pkt.wpan.seq_no).\
         must_next().\
-        must_verify(lambda p: p.wpan.pending == 1)
+        must_verify(lambda p: p.wpan.pending == FRAME_PENDING_SET)
 
     # Step 7: DUT
     # Step 7: DUT forwards Echo Request to SED_2
@@ -157,7 +176,6 @@ def verify(pv):
         filter_wpan_seq(_pkt.wpan.seq_no).\
         must_next()
 
-
     # Step 9: SED_2
     # Step 9: SED_2 sends Echo Reply to Router_1
     # - Pass Criteria: Router_1 MUST receive the ICMPv6 Echo Reply.
@@ -173,7 +191,7 @@ def verify(pv):
     pkts.filter_wpan_ack().\
         filter_wpan_seq(_reply1.wpan.seq_no).\
         must_next().\
-        must_verify(lambda p: p.wpan.pending == 0)
+        must_verify(lambda p: p.wpan.pending == FRAME_PENDING_CLEAR)
 
     # Continue Step 9 verification: verify the forwarded Echo Reply to Router_1
     pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
@@ -185,45 +203,23 @@ def verify(pv):
     # - Harness instructs the device to send an ICMPv6 Echo Request to SED_3.
     # - Pass Criteria: N/A.
     print("Step 11: Router_1 sends Echo Request to SED_3")
-    _echo_req = pkts.filter_ping_request().\
-        filter(lambda p: is_from(p, ROUTER_1, ROUTER_1_RLOC16)).\
-        filter(lambda p: is_to(p, LEADER, LEADER_RLOC16)).\
-        must_next()
 
     # Step 12: SED_3
     # - Automatically replies with an ICMPv6 Echo Reply to Router_1.
     # - Pass Criteria: Router_1 MUST receive the Echo Reply.
     print("Step 12: SED_3 sends Echo Reply to Router_1")
-    pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
-        filter(lambda p: is_from(p, SED_3, SED_3_RLOC16)).\
-        filter(lambda p: is_to(p, LEADER, LEADER_RLOC16)).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
-        filter(lambda p: is_from(p, LEADER, LEADER_RLOC16)).\
-        filter(lambda p: is_to(p, ROUTER_1, ROUTER_1_RLOC16)).\
-        must_next()
+    _verify_ping_echo_for_sed(SED_3, SED_3_RLOC16)
 
     # Step 13: Router_1
     # - Harness instructs the device to send an ICMPv6 Echo Request to SED_1.
     # - Pass Criteria: N/A.
     print("Step 13: Router_1 sends Echo Request to SED_1")
-    _echo_req = pkts.filter_ping_request().\
-        filter(lambda p: is_from(p, ROUTER_1, ROUTER_1_RLOC16)).\
-        filter(lambda p: is_to(p, LEADER, LEADER_RLOC16)).\
-        must_next()
 
     # Step 14: SED_1
     # - Automatically replies with an ICMPv6 Echo Reply to Router_1.
     # - Pass Criteria: Router_1 MUST receive the Echo Reply.
     print("Step 14: SED_1 sends Echo Reply to Router_1")
-    pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
-        filter(lambda p: is_from(p, SED_1, SED_1_RLOC16)).\
-        filter(lambda p: is_to(p, LEADER, LEADER_RLOC16)).\
-        must_next()
-    pkts.filter_ping_reply(identifier=_echo_req.icmpv6.echo.identifier).\
-        filter(lambda p: is_from(p, LEADER, LEADER_RLOC16)).\
-        filter(lambda p: is_to(p, ROUTER_1, ROUTER_1_RLOC16)).\
-        must_next()
+    _verify_ping_echo_for_sed(SED_1, SED_1_RLOC16)
 
 
 if __name__ == '__main__':

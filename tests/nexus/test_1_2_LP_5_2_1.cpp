@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdarg.h>
 #include <stdio.h>
 
 #include "platform/nexus_core.hpp"
@@ -63,6 +62,31 @@ static constexpr uint16_t kEchoPayloadSize = 10;
  * ICMPv6 Echo Request identifier.
  */
 static constexpr uint16_t kEchoIdentifier = 0x1234;
+
+/**
+ * Data poll period in milliseconds.
+ */
+static constexpr uint32_t kPollPeriod = 1000;
+
+/**
+ * Very long data poll period in milliseconds (effectively disabling periodic polling).
+ */
+static constexpr uint32_t kLongPollPeriod = 3600 * 1000;
+
+/**
+ * Short wait time to advance nexus time, in milliseconds.
+ */
+static constexpr uint32_t kShortWaitTime = 100;
+
+/**
+ * Wait time for ICMPv6 Echo Reply, in milliseconds.
+ */
+static constexpr uint32_t kEchoReplyWaitTime = 500;
+
+/**
+ * Wait time to ensure a data poll has occurred, in milliseconds.
+ */
+static constexpr uint32_t kPollWaitTime = 2000;
 
 void Test1_2_LP_5_2_1(void)
 {
@@ -154,9 +178,9 @@ void Test1_2_LP_5_2_1(void)
      * - SED_2 – disable polling via 802.15.4 MAC Data Requests.
      * - SED_3 – enable polling via 802.15.4 MAC Data Requests.
      */
-    SuccessOrQuit(sed1.Get<DataPollSender>().SetExternalPollPeriod(1000));
-    SuccessOrQuit(sed2.Get<DataPollSender>().SetExternalPollPeriod(3600 * 1000));
-    SuccessOrQuit(sed3.Get<DataPollSender>().SetExternalPollPeriod(1000));
+    SuccessOrQuit(sed1.Get<DataPollSender>().SetExternalPollPeriod(kPollPeriod));
+    SuccessOrQuit(sed2.Get<DataPollSender>().SetExternalPollPeriod(kLongPollPeriod));
+    SuccessOrQuit(sed3.Get<DataPollSender>().SetExternalPollPeriod(kPollPeriod));
 
     /**
      * Step 2: SED_2
@@ -165,7 +189,7 @@ void Test1_2_LP_5_2_1(void)
      */
     Log("Step 2: SED_2 sends empty MAC Data frame to Leader");
     SuccessOrQuit(sed2.Get<MeshForwarder>().SendEmptyMessage());
-    nexus.AdvanceTime(100);
+    nexus.AdvanceTime(kShortWaitTime);
 
     /**
      * Step 3: Router_1
@@ -174,7 +198,7 @@ void Test1_2_LP_5_2_1(void)
      */
     Log("Step 3: Router_1 sends Echo Request to SED_2");
     router1.SendEchoRequest(sed2.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdentifier, kEchoPayloadSize);
-    nexus.AdvanceTime(100);
+    nexus.AdvanceTime(kShortWaitTime);
 
     /**
      * Step 4: SED_2
@@ -183,7 +207,7 @@ void Test1_2_LP_5_2_1(void)
      */
     Log("Step 4: SED_2 sends empty MAC Data frame to Leader");
     SuccessOrQuit(sed2.Get<MeshForwarder>().SendEmptyMessage());
-    nexus.AdvanceTime(100);
+    nexus.AdvanceTime(kShortWaitTime);
 
     /**
      * Step 5: SED_2
@@ -192,7 +216,7 @@ void Test1_2_LP_5_2_1(void)
      */
     Log("Step 5: SED_2 sends Data Request to Leader");
     SuccessOrQuit(sed2.Get<DataPollSender>().SendDataPoll());
-    nexus.AdvanceTime(100);
+    nexus.AdvanceTime(kShortWaitTime);
 
     /**
      * Step 6: DUT
@@ -224,7 +248,7 @@ void Test1_2_LP_5_2_1(void)
      * - Pass Criteria: N/A.
      */
     Log("Step 9: SED_2 sends Echo Reply to Router_1");
-    nexus.AdvanceTime(500);
+    nexus.AdvanceTime(kEchoReplyWaitTime);
 
     /**
      * Step 10: DUT
@@ -241,7 +265,7 @@ void Test1_2_LP_5_2_1(void)
      */
     Log("Step 11: Router_1 sends Echo Request to SED_3");
     router1.SendEchoRequest(sed3.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdentifier, kEchoPayloadSize);
-    nexus.AdvanceTime(2000); // Wait for poll
+    nexus.AdvanceTime(kPollWaitTime); // Wait for poll
 
     /**
      * Step 12: SED_3
@@ -249,7 +273,7 @@ void Test1_2_LP_5_2_1(void)
      * - Pass Criteria: Router_1 MUST receive the Echo Reply.
      */
     Log("Step 12: SED_3 sends Echo Reply to Router_1");
-    nexus.AdvanceTime(2000);
+    nexus.AdvanceTime(kPollWaitTime);
 
     /**
      * Step 13: Router_1
@@ -258,7 +282,7 @@ void Test1_2_LP_5_2_1(void)
      */
     Log("Step 13: Router_1 sends Echo Request to SED_1");
     router1.SendEchoRequest(sed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdentifier, kEchoPayloadSize);
-    nexus.AdvanceTime(2000); // Wait for poll
+    nexus.AdvanceTime(kPollWaitTime); // Wait for poll
 
     /**
      * Step 14: SED_1
@@ -266,7 +290,7 @@ void Test1_2_LP_5_2_1(void)
      * - Pass Criteria: Router_1 MUST receive the Echo Reply.
      */
     Log("Step 14: SED_1 sends Echo Reply to Router_1");
-    nexus.AdvanceTime(2000);
+    nexus.AdvanceTime(kPollWaitTime);
 
     nexus.SaveTestInfo("test_1_2_LP_5_2_1.json");
 }
