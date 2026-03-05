@@ -632,10 +632,8 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     Coap::Message   *message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsPost(aDstAddr, kUriBackboneAnswer));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = mBackboneTmfAgent.AllocateAndInitPriorityPostMessageTo(kUriBackboneAnswer, aDstAddr);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
 

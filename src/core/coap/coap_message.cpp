@@ -131,11 +131,6 @@ exit:
     return error;
 }
 
-Error Message::InitAsPost(const Ip6::Address &aDestination, Uri aUri)
-{
-    return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUri);
-}
-
 Error Message::InitAsResponse(Type aType, Code aCode, const Message &aRequest)
 {
     Error error;
