@@ -48,7 +48,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return Radio::kRadioSensetivity;
+    return Radio::kRadioSensitivity;
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -164,7 +164,7 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return Radio::kRadioSensetivity;
+    return Radio::kRadioSensitivity;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
@@ -347,6 +347,14 @@ otError otPlatRadioAddCalibratedPower(otInstance *, uint8_t, int16_t, const uint
     return kErrorNotImplemented;
 }
 
+otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
+                                          otLinkMetrics       aLinkMetrics,
+                                          otShortAddress      aShortAddress,
+                                          const otExtAddress *aExtAddress)
+{
+    return AsNode(aInstance).mRadio.ConfigureEnhAckProbing(aShortAddress, AsCoreTypePtr(aExtAddress), aLinkMetrics);
+}
+
 } // extern "C"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -363,6 +371,7 @@ Radio::Radio(void)
 {
     mExtAddress.Clear();
     ClearAllBytes(mRadioContext);
+    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
 }
 
 void Radio::Reset(void)
@@ -377,7 +386,96 @@ void Radio::Reset(void)
     mExtAddress.Clear();
     mSrcMatchShortEntries.Clear();
     mSrcMatchExtEntries.Clear();
+    mLinkMetricsEntries.Clear();
     ClearAllBytes(mRadioContext);
+    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
+}
+
+Error Radio::ConfigureEnhAckProbing(Mac::ShortAddress      aShortAddress,
+                                    const Mac::ExtAddress *aExtAddress,
+                                    otLinkMetrics          aMetrics)
+{
+    Error            error    = kErrorNone;
+    LinkMetricsInfo *dataInfo = mLinkMetricsEntries.FindMatching(aShortAddress);
+
+    if (!aMetrics.mPduCount && !aMetrics.mLqi && !aMetrics.mLinkMargin && !aMetrics.mRssi) // Remove entry
+    {
+        VerifyOrExit(dataInfo != nullptr, error = kErrorNotFound);
+        mLinkMetricsEntries.Remove(*dataInfo);
+    }
+    else
+    {
+        VerifyOrExit(aExtAddress != nullptr, error = kErrorInvalidArgs);
+
+        if (dataInfo == nullptr)
+        {
+            dataInfo = mLinkMetricsEntries.PushBack();
+            VerifyOrExit(dataInfo != nullptr, error = kErrorNoBufs);
+        }
+
+        dataInfo->mShortAddress = aShortAddress;
+        dataInfo->mExtAddress   = *aExtAddress;
+        dataInfo->mMetrics      = aMetrics;
+    }
+
+exit:
+    return error;
+}
+
+uint8_t Radio::GenerateEnhAckProbingData(const Mac::Address &aAddress, uint8_t aLqi, int8_t aRssi, uint8_t *aData) const
+{
+    uint8_t                bytes    = 0;
+    const LinkMetricsInfo *dataInfo = nullptr;
+
+    if (aAddress.IsShort())
+    {
+        dataInfo = mLinkMetricsEntries.FindMatching(aAddress.GetShort());
+    }
+    else if (aAddress.IsExtended())
+    {
+        dataInfo = mLinkMetricsEntries.FindMatching(aAddress.GetExtended());
+    }
+
+    VerifyOrExit(dataInfo != nullptr);
+
+    if (dataInfo->mMetrics.mLqi)
+    {
+        aData[bytes++] = aLqi;
+    }
+
+    if (dataInfo->mMetrics.mLinkMargin)
+    {
+        uint8_t linkMargin = ComputeLinkMargin(kRadioSensitivity, aRssi);
+
+        // Linear scale Link Margin from [0, 130] to [0, 255]
+        if (linkMargin > kLinkMetricsScale)
+        {
+            linkMargin = kLinkMetricsScale;
+        }
+
+        aData[bytes++] = static_cast<uint8_t>(static_cast<uint16_t>(linkMargin) * kLinkMetricsMax / kLinkMetricsScale);
+    }
+
+    if (bytes < kEnhAckProbingDataMaxLen && dataInfo->mMetrics.mRssi)
+    {
+        int16_t rssi = aRssi;
+
+        // Linear scale RSSI from [-130, 0] to [0, 255]
+        if (rssi > 0)
+        {
+            rssi = 0;
+        }
+        else if (rssi < -static_cast<int16_t>(kRssiOffset))
+        {
+            rssi = -static_cast<int16_t>(kRssiOffset);
+        }
+
+        aData[bytes++] =
+            static_cast<uint8_t>((static_cast<uint16_t>(rssi + kRssiOffset)) * kLinkMetricsMax / kLinkMetricsScale);
+    }
+
+exit:
+    return bytes;
 }
 
 bool Radio::CanReceiveOnChannel(uint8_t aChannel) const

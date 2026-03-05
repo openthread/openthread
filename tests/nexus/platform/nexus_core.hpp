@@ -82,7 +82,8 @@ public:
     void MarkPendingAction(void) { mPendingAction = true; }
 
 private:
-    static constexpr int8_t kDefaultRxRssi = -20;
+    static constexpr int8_t  kDefaultRxRssi = -20;
+    static constexpr uint8_t kDefaultRxLqi  = 255;
 
     enum AckMode : uint8_t
     {

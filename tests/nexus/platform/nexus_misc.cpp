@@ -158,6 +158,7 @@ static void LogVarArgs(Node *aActiveNode, const char *aFormat, va_list aArgs)
 
     vprintf(aFormat, aArgs);
     printf("\n");
+    fflush(stdout);
 }
 
 } // namespace Nexus
