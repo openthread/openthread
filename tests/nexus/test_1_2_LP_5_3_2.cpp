@@ -55,7 +55,7 @@ static constexpr uint32_t kAttachToRouterTime = 200 * kMsPerSecond;
 /**
  * Time to advance for a node to join as a SSED.
  */
-static constexpr uint32_t kAttachAsSsedTime = 20 * kMsPerSecond;
+static constexpr uint32_t kAttachAsSsedTime = 5 * kMsPerSecond;
 
 /**
  * Time to wait in the test, in milliseconds.
