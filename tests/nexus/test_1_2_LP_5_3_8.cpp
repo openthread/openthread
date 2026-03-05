@@ -209,6 +209,7 @@ void Test5_3_8(void)
 
     ssed1.Join(router1, Node::kAsSed);
     nexus.AdvanceTime(kAttachAsSsedTime);
+    ssed1.Get<DataPollSender>().StopPolling();
     VerifyOrQuit(ssed1.Get<Mle::Mle>().IsAttached());
     VerifyOrQuit(ssed1.Get<Mac::Mac>().IsCslEnabled());
 
@@ -250,6 +251,7 @@ void Test5_3_8(void)
      */
 
     nexus.AdvanceTime(kChildUpdateResponseWaitTime);
+    ssed1.Get<DataPollSender>().StopPolling();
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 6: Harness");
@@ -302,6 +304,7 @@ void Test5_3_8(void)
      */
 
     nexus.AdvanceTime(kChildUpdateResponseWaitTime);
+    ssed1.Get<DataPollSender>().StopPolling();
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 10: Harness");
@@ -359,7 +362,9 @@ void Test5_3_8(void)
         leader.Get<MeshCoP::PendingDatasetManager>().SaveLocal(datasetInfo);
     }
 
-    nexus.AdvanceTime(kWaitPendingDatasetTime);
+    nexus.AdvanceTime(2 * kChildUpdateResponseWaitTime);
+    ssed1.Get<DataPollSender>().StopPolling();
+    nexus.AdvanceTime(kWaitPendingDatasetTime - 2 * kChildUpdateResponseWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 13: Leader");

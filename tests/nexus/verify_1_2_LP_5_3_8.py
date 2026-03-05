@@ -266,7 +266,11 @@ def verify(pv):
         filter(lambda p: p.wpan_tap.ch_num == TERNARY_CHANNEL).\
         must_next()
 
+    # Pass Criteria 13.2: SSED_1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request.
+    # We only disallow Data Requests that happen close to the Echo Request (within 1 second)
+    # to allow for re-attachment polls that may occur early in the channel switch transition.
     pkts.range(checkpoint, pkts.index).\
+        filter(lambda p: p.sniff_timestamp > _pkt.sniff_timestamp - 1.0).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
