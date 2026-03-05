@@ -4325,8 +4325,7 @@ void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
         retxDelayMax = kLeaderRetxDelayMax;
     }
 
-    delay = (mAttempts == 0) ? kLinkRequestTimeout
-                             : Random::NonCrypto::GetUint32InRange(retxDelayMin, retxDelayMax);
+    delay = (mAttempts == 0) ? kLinkRequestTimeout : Random::NonCrypto::GetUint32InRange(retxDelayMin, retxDelayMax);
 
     mTimer.Start(delay);
 

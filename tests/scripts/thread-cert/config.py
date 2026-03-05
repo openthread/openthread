@@ -153,11 +153,11 @@ PACKET_VERIFICATION_NONE = 0
 PACKET_VERIFICATION_DEFAULT = 1
 PACKET_VERIFICATION_TREL = 2
 
-# After leader reset it may retransmit link request 6 times with max 5.5s interval
-LEADER_RESET_DELAY = 41
-# After router reset it may retransmit link request 3 times with max 5.5s interval
-ROUTER_RESET_DELAY = 23
-MLE_MAX_CRITICAL_TRANSMISSION_COUNT = 6
+# After leader reset it may retransmit link request 4 times with max 2.2s interval
+LEADER_RESET_DELAY = 17
+# After router reset it may retransmit link request 4 times with max 5.5s interval
+ROUTER_RESET_DELAY = 30
+MLE_MAX_RESTORING_TRANSMISSION_COUNT = 4
 MLE_MAX_TRANSMISSION_COUNT = 3
 
 
