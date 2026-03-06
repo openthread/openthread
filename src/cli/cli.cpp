@@ -49,6 +49,7 @@
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/dns.h>
+#include <openthread/heap.h>
 #include <openthread/icmp6.h>
 #include <openthread/nat64.h>
 #include <openthread/ncp.h>
@@ -3316,6 +3317,12 @@ template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
     {
         SuccessOrExit(error = otIp6SetEnabled(GetInstancePtr(), false));
     }
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+    else if (aArgs[0] == "init")
+    {
+        error = ProcessIfconfigInit(aArgs + 1);
+    }
+#endif
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -3324,6 +3331,60 @@ template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+
+otError Interpreter::ProcessIfconfigInit(Arg aArgs[])
+{
+    /**
+     * @cli ifconfig init
+     * @code
+     * ifconfig init 5 6
+     * Done
+     * @endcode
+     * @cparam ifconfig @ca{unicast-addr-pool-size} @ca{multicast-addr-pool-size}
+     * @par
+     * This command is intended for testing purposes only and requires `OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE`
+     * and `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE`.
+     * @par api_copy
+     * #otIp6Init
+     */
+
+    otError                  error;
+    uint16_t                 unicastPoolSize;
+    uint16_t                 multicastPoolSize;
+    otNetifAddress          *unicastPool   = nullptr;
+    otNetifMulticastAddress *multicastPool = nullptr;
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint16(unicastPoolSize));
+    SuccessOrExit(error = aArgs[1].ParseAsUint16(multicastPoolSize));
+    VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    if (unicastPoolSize > 0)
+    {
+        unicastPool = static_cast<otNetifAddress *>(otHeapCAlloc(unicastPoolSize, sizeof(otNetifAddress)));
+        VerifyOrExit(unicastPool != nullptr, error = OT_ERROR_NO_BUFS);
+    }
+
+    if (multicastPoolSize > 0)
+    {
+        multicastPool =
+            static_cast<otNetifMulticastAddress *>(otHeapCAlloc(multicastPoolSize, sizeof(otNetifMulticastAddress)));
+        VerifyOrExit(multicastPool != nullptr, error = OT_ERROR_NO_BUFS);
+    }
+
+    SuccessOrExit(error = otIp6Init(GetInstancePtr(), unicastPool, unicastPoolSize, multicastPool, multicastPoolSize));
+    unicastPool   = nullptr;
+    multicastPool = nullptr;
+
+exit:
+    otHeapFree(unicastPool);
+    otHeapFree(multicastPool);
+
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
 
 template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
 {
