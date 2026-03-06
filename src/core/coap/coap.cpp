@@ -183,6 +183,16 @@ Message *CoapBase::AllocateAndInitNonConfirmablePostMessage(Uri aUri)
     return InitMessage(NewMessage(), kTypeNonConfirmable, aUri);
 }
 
+Message *CoapBase::AllocateAndInitPostMessageTo(Uri aUri, const Ip6::Address &aDestination)
+{
+    return InitMessage(NewMessage(), aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, aUri);
+}
+
+Message *CoapBase::AllocateAndInitPriorityPostMessageTo(Uri aUri, const Ip6::Address &aDestination)
+{
+    return InitMessage(NewPriorityMessage(), aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, aUri);
+}
+
 Message *CoapBase::AllocateAndInitPriorityResponseFor(const Message &aRequest)
 {
     return InitResponse(NewPriorityMessage(), aRequest);

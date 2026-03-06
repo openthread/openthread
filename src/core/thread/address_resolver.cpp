@@ -720,10 +720,8 @@ void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
     Error          error;
     Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsPost(aDestination, kUriAddressError));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPostMessageTo(kUriAddressError, aDestination);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));

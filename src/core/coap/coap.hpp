@@ -397,8 +397,7 @@ public:
     Message *AllocateAndInitConfirmablePostMessage(Uri aUri);
 
     /**
-     * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority
-     * level.
+     * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority level.
      *
      * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI and a randomly
      * generated token (of default length). This method also sets the payload marker (calling `AppendPayloadMarker()`).
@@ -424,6 +423,42 @@ public:
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
     Message *AllocateAndInitNonConfirmablePostMessage(Uri aUri);
+
+    /**
+     * Allocates and initializes a new CoAP Post message with normal priority level.
+     *
+     * If the provided @p aDestination address is multicast, the message will be Non-Confirmable. Otherwise, it will be
+     * Confirmable.
+     *
+     * The CoAP header is initialized as either `kTypeNonConfirmable` or `kTypeConfirmable` and `kCodePost` with the
+     * given URI and a randomly generated token (of default length). This method also sets the payload marker (calling
+     * `AppendPayloadMarker()`). Even if the message has no payload, calling `AppendPayloadMarker()` is harmless, since
+     * `SendMessage()` will check and remove the payload marker when there is no payload.
+     *
+     * @param[in] aUri         The URI.
+     * @param[in] aDestination The destination IPv6 address.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     */
+    Message *AllocateAndInitPostMessageTo(Uri aUri, const Ip6::Address &aDestination);
+
+    /**
+     * Allocates and initializes a new CoAP Post message with Network Control priority level.
+     *
+     * If the provided @p aDestination address is multicast, the message will be Non-Confirmable. Otherwise, it will be
+     * Confirmable.
+     *
+     * The CoAP header is initialized as either `kTypeNonConfirmable` or `kTypeConfirmable` and `kCodePost` with the
+     * given URI and a randomly generated token (of default length). This method also sets the payload marker (calling
+     * `AppendPayloadMarker()`). Even if the message has no payload, calling `AppendPayloadMarker()` is harmless, since
+     * `SendMessage()` will check and remove the payload marker when there is no payload.
+     *
+     * @param[in] aUri         The URI.
+     * @param[in] aDestination The destination IPv6 address.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     */
+    Message *AllocateAndInitPriorityPostMessageTo(Uri aUri, const Ip6::Address &aDestination);
 
     /**
      * Allocates and initializes a new CoAP response message with Network Control priority level for a

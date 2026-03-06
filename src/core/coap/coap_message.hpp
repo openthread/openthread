@@ -486,23 +486,6 @@ public:
     Error Init(Type aType, Code aCode, Uri aUri);
 
     /**
-     * Initializes a CoAP POST message, appends a URI Path, and adds a random token.
-     *
-     * This method erases any previously written content in the message.
-     *
-     * The CoAP Type is determined from the destination IPv6 address: `kTypeNonConfirmable` for multicast and
-     * `kTypeConfirmable` otherwise. The Message ID is set to zero. A random token of default length
-     * (`Token::kDefaultLength`) is generated and added.
-     *
-     * @param[in] aDestination  The message destination IPv6 address, used to determine the CoAP Type.
-     * @param[in] aUri          The URI string.
-     *
-     * @retval kErrorNone    Successfully initialized the message and appended the URI-path option.
-     * @retval kErrorNoBufs  Could not grow the message to append the option.
-     */
-    Error InitAsPost(const Ip6::Address &aDestination, Uri aUri);
-
-    /**
      * Initializes a CoAP message as a response to a request message.
      *
      * This method erases any previously written content in the message. The Message ID and Token are copied from the

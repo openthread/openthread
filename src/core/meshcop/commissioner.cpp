@@ -1013,10 +1013,9 @@ Error Commissioner::SendAnnounceBeginRequest(uint32_t            aChannelMask,
     Coap::Message *message = nullptr;
 
     VerifyOrExit(IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, kUriAnnounceBegin));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityPostMessageTo(kUriAnnounceBegin, aAddress);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, GetSessionId()));
 
@@ -1046,10 +1045,9 @@ Error Commissioner::SendEnergyScanQuery(uint32_t                           aChan
     Coap::Message *message = nullptr;
 
     VerifyOrExit(IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, kUriEnergyScan));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityPostMessageTo(kUriEnergyScan, aAddress);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, GetSessionId()));
 
@@ -1103,10 +1101,9 @@ Error Commissioner::SendPanIdQuery(uint16_t                            aPanId,
     Coap::Message *message = nullptr;
 
     VerifyOrExit(IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, kUriPanIdQuery));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityPostMessageTo(kUriPanIdQuery, aAddress);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, GetSessionId()));
 
