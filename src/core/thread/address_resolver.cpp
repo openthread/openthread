@@ -702,7 +702,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriAddressNotify>());
     }
@@ -753,7 +753,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+        if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
         {
             LogInfo("Sent %s ack", UriToString<kUriAddressError>());
         }

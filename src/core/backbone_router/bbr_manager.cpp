@@ -420,7 +420,7 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (duaRespCoapCode != Coap::kCodeEmpty)
         {
-            IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg, duaRespCoapCode));
+            IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg, duaRespCoapCode));
         }
         else
 #endif
@@ -599,7 +599,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Msg &aMsg)
         HandleExtendedBackboneAnswer(dua, meshLocalIid, timeSinceLastTransaction, srcRloc16);
     }
 
-    SuccessOrExit(error = mBackboneTmfAgent.SendEmptyAck(aMsg));
+    SuccessOrExit(error = mBackboneTmfAgent.SendAckResponse(aMsg));
 
 exit:
     LogInfo("HandleBackboneAnswer: %s", ErrorToString(error));

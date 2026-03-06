@@ -64,7 +64,7 @@ template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
         LogInfo("Sent %s ack", UriToString<kUriPanIdQuery>());
     }
 

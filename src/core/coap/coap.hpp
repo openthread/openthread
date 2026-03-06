@@ -591,71 +591,64 @@ public:
     Error SendMessage(OwnedPtr<Message> aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Sends a CoAP reset message.
+     * Sends an empty CoAP message (using `kCodeEmpty` Code 0.00).
+     *
+     * An empty CoAP message has no options and no payload (only a 4-byte header). This is typically used for sending
+     * Empty Acknowledgments or Resets.
+     *
+     * @param[in]  aType           The CoAP Type of the empty message (e.g., `kTypeAck`, `kTypeReset`).
+     * @param[in]  aRxMsg          The received CoAP message to which this message responds (provides Message ID).
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP message.
+     * @retval kErrorInvalidArgs   The @p aType is not valid for an empty message (e.g., `kTypeNonConfirmable`),
+     *                             or is `kTypeAck` but the @p aRxMsg is not confirmable.
+     */
+    Error SendEmptyMessage(Type aType, const Msg &aRxMsg);
+
+    /**
+     * Sends a CoAP response message without a payload to a given request message.
+     *
+     * The response will dynamically be an ACK (`kTypeAck`) or NON (`kTypeNonConfirmable`) message depending on the
+     * request @p aRxMsg type, containing the specified response code @p aCode and matching token, without any payload.
+     *
+     * @param[in]  aCode           The CoAP response Code.
+     * @param[in]  aRxMsg          The received CoAP request message.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a request, or is neither confirmable nor non-confirmable.
+     */
+    Error SendResponse(Message::Code aCode, const Msg &aRxMsg);
+
+    /**
+     * Sends a CoAP ACK (`kTypeAck`) response without a payload and a given status code.
+     *
+     * This method strictly ensures the @p aRxMsg is a confirmable request message. It then sends a piggybacked
+     * ACK (`kTypeAck`) response containing the provided CoAP @p aCode and matching token without a payload.
+     *
+     * @param[in]  aRxMsg          The received CoAP request message.
+     * @param[in]  aCode           The CoAP Code of the ACK response.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a confirmable request.
+     */
+    Error SendAckResponse(const Msg &aRxMsg, Code aCode);
+
+    /**
+     * Sends a CoAP ACK response without a payload using `kCodeChanged` Code 2.04.
+     *
+     * This method strictly ensures the @p aRxMsg is a confirmable request message. It then sends a piggybacked
+     * ACK (`kTypeAck`) response containing `kCodeChanged` and matching token without a payload.
      *
      * @param[in]  aRxMsg          The received CoAP request message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg is not of confirmable type.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a confirmable request.
      */
-    Error SendReset(const Msg &aRxMsg);
-
-    /**
-     * Sends header-only CoAP response message.
-     *
-     * @param[in]  aCode           The CoAP code of this response.
-     * @param[in]  aRxMsg          The received request message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
-     */
-    Error SendHeaderResponse(Message::Code aCode, const Msg &aRxMsg);
-
-    /**
-     * Sends a CoAP ACK empty message which is used in Separate Response for confirmable requests.
-     *
-     * @param[in]  aRxMsg         `Msg` for the received CoAP request message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
-     */
-    Error SendAck(const Msg &aRxMsg);
-
-    /**
-     * Sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
-     *
-     * @param[in]  aRxMsg          The received CoAP request Message.
-     * @param[in]  aCode           The CoAP code of the dummy CoAP response.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
-     */
-    Error SendEmptyAck(const Msg &aRxMsg, Code aCode);
-
-    /**
-     * Sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
-     *
-     * @param[in]  aRxMsg          The received CoAP request Message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
-     */
-    Error SendEmptyAck(const Msg &aRxMsg);
-
-    /**
-     * Sends a header-only CoAP message to indicate no resource matched for the request.
-     *
-     * @param[in]  aRxMsg          The received request CoAP Message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     */
-    Error SendNotFound(const Msg &aRxMsg);
+    Error SendAckResponse(const Msg &aRxMsg);
 
     /**
      * Aborts CoAP transactions associated with given handler and context.
@@ -739,7 +732,7 @@ public:
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
      */
-    Error SendRequestEntityIncomplete(const Msg &aRxMsg) { return SendHeaderResponse(kCodeRequestIncomplete, aRxMsg); }
+    Error SendRequestEntityIncomplete(const Msg &aRxMsg) { return SendResponse(kCodeRequestIncomplete, aRxMsg); }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 protected:
@@ -957,7 +950,6 @@ private:
                          const Ip6::MessageInfo &aMessageInfo,
                          const TxParameters     *aTxParameters,
                          const SendCallbacks    &aCallbacks);
-    Error    SendEmptyMessage(Type aType, const Msg &aRxMsg);
     Error    Transmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE

@@ -574,7 +574,7 @@ template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMs
 
     VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
 
-    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }

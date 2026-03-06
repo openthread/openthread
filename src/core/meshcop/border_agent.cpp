@@ -685,7 +685,10 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Msg &aMsg, Uri aUri)
         OT_ASSERT(false);
     }
 
-    SuccessOrExit(error = SendAck(aMsg));
+    if (aMsg.IsConfirmable())
+    {
+        SuccessOrExit(error = SendEmptyMessage(Coap::kTypeAck, aMsg));
+    }
 
     forwardContext.Reset(ForwardContext::Allocate(*this, aMsg.mMessage, aUri));
     VerifyOrExit(!forwardContext.IsNull(), error = kErrorNoBufs);
