@@ -920,6 +920,8 @@ void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     unsigned char        keyBlock[kSecureTransportKeyBlockSize];
     unsigned char        randBytes[2 * kSecureTransportRandomBufferSize];
 
+    mKeylogCallback.InvokeIfSet(aType, aMasterSecret, aMasterSecretLen, aClientRandom, aServerRandom, aTlsPrfType);
+
     VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
     VerifyOrExit(aType == MBEDTLS_SSL_KEY_EXPORT_TLS12_MASTER_SECRET);
 
