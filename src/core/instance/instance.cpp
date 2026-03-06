@@ -505,6 +505,7 @@ Error Instance::ErasePersistentInfo(void)
     Error error = kErrorNone;
 
     VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+    Get<Mle::Mle>().ClearCaches();
     Get<Settings>().Wipe();
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Get<KeyManager>().DestroyTemporaryKeys();
