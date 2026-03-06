@@ -252,6 +252,9 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series_flags'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_status_sub_tlv'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.query_id'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.link_requested_type_id_flags'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['mle.tlv.link_enh_ack_flags'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['wpan.payload_ie.vendor.variable'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.type'] = layer_fields._list(layer_fields._hex)
     layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.metric'] = layer_fields._list(layer_fields._hex)
     layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.l'] = layer_fields._list(layer_fields._hex)
