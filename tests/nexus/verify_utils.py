@@ -248,6 +248,13 @@ def apply_patches():
 
     Layer.get_field = patched_get_field
 
+    layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series_flags'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.link_status_sub_tlv'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.query_id'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.type'] = layer_fields._list(layer_fields._hex)
+    layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.metric'] = layer_fields._list(layer_fields._hex)
+    layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.l'] = layer_fields._list(layer_fields._hex)
     layer_fields._LAYER_FIELDS['coap.tlv.tlv_request'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.active_operational_dataset'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.pending_operational_dataset'] = layer_fields._bytes
