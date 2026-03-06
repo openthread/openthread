@@ -139,7 +139,7 @@ def verify(pv):
     #     information collected, adding also the 6LoWPAN ID TLV for the prefix
     #     set on Router_1.
     print("Step 5: Leader (DUT) sends a CoAP Response frame and MLE Data Response message.")
-    pkts.filter_coap_ack(consts.SVR_DATA_URI).\
+    pkts.copy().filter_coap_ack(consts.SVR_DATA_URI).\
         must_next()
 
     pkts.filter_LLANMA().\
