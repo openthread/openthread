@@ -105,7 +105,7 @@ Error DatasetManager::Read(Dataset &aDataset) const
 
     SuccessOrExit(error = Get<Settings>().ReadOperationalDataset(mType, aDataset));
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     EmplaceSecurelyStoredKeys(aDataset);
 #endif
 
@@ -244,7 +244,7 @@ void DatasetManager::Clear(void)
 
     mLocalSaved = false;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     DestroySecurelyStoredKeys();
 #endif
     Get<Settings>().DeleteOperationalDataset(mType);
@@ -345,7 +345,7 @@ void DatasetManager::SaveLocal(const Dataset &aDataset)
 
 void DatasetManager::LocalSave(const Dataset &aDataset)
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     DestroySecurelyStoredKeys();
 #endif
 
@@ -357,7 +357,7 @@ void DatasetManager::LocalSave(const Dataset &aDataset)
     }
     else
     {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         // Store the network key and PSKC in the secure storage instead of settings.
         Dataset dataset;
 
@@ -731,7 +731,7 @@ void DatasetManager::TlvList::Add(uint8_t aTlvType)
     }
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 const DatasetManager::SecurelyStoredTlv DatasetManager::kSecurelyStoredTlvs[] = {
     {
@@ -829,7 +829,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 //---------------------------------------------------------------------------------------------------------------------
 // ActiveDatasetManager

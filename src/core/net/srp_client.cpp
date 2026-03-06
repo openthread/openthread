@@ -1093,7 +1093,7 @@ Error Client::PrepareUpdateMessage(MsgInfo &aInfo)
     aInfo.mHostNameOffset   = MsgInfo::kUnknownOffset;
     aInfo.mRecordCount      = 0;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     aInfo.mKeyInfo.SetKeyRef(Get<Crypto::Storage::KeyRefManager>().KeyRefFor(Crypto::Storage::KeyRefManager::kEcdsa));
 #endif
 
@@ -1158,7 +1158,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
 {
     Error                        error = kErrorNone;
@@ -1205,7 +1205,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
 exit:
     return error;
 }
-#endif //  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 Error Client::AppendServiceInstructions(MsgInfo &aInfo)
 {

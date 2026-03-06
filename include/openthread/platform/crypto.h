@@ -241,7 +241,8 @@ void otPlatCryptoInit(void);
  *       If OT_CRYPTO_KEY_STORAGE_VOLATILE is passed for aKeyPersistence then @p aKeyRef is output, the initial
  *       value does not matter and platform API MUST update it to return the new key ref.
  *
- *       This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ *       This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
@@ -263,7 +264,8 @@ otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
  * @retval OT_ERROR_FAILED        Failed to export @p aKeyRef.
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was NULL
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen);
 
@@ -275,7 +277,8 @@ otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t a
  * @retval OT_ERROR_NONE          Successfully destroyed the key.
  * @retval OT_ERROR_FAILED        Failed to destroy the key.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
 
@@ -287,7 +290,8 @@ otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
  * @retval TRUE                 There is an associated key with @p aKeyRef.
  * @retval FALSE                There is no associated key with @p aKeyRef.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef);
 
@@ -651,7 +655,8 @@ otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
  * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature calculation.
  * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoEcdsaSignUsingKeyRef(otCryptoKeyRef                aKeyRef,
                                          const otPlatCryptoSha256Hash *aHash,
@@ -673,7 +678,8 @@ otError otPlatCryptoEcdsaSignUsingKeyRef(otCryptoKeyRef                aKeyRef,
  * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
  * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoEcdsaExportPublicKey(otCryptoKeyRef aKeyRef, otPlatCryptoEcdsaPublicKey *aPublicKey);
 
@@ -687,7 +693,8 @@ otError otPlatCryptoEcdsaExportPublicKey(otCryptoKeyRef aKeyRef, otPlatCryptoEcd
  * @retval OT_ERROR_NOT_CAPABLE   Feature not supported.
  * @retval OT_ERROR_FAILED        Failed to generate key-pair.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef);
 
@@ -705,7 +712,8 @@ otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef);
  * @retval OT_ERROR_INVALID_ARGS  The key or hash is invalid.
  * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature verification.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note This API is only used by OT core when using PSA crypto library
+ *       (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKeyRef,
                                            const otPlatCryptoSha256Hash     *aHash,

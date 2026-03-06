@@ -512,7 +512,7 @@ OT_TOOL_WEAK void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
@@ -595,7 +595,7 @@ otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKe
     return OT_ERROR_NONE;
 }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {

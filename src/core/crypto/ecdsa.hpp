@@ -75,7 +75,7 @@ public:
 
     class PublicKey;
     class KeyPair;
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     class KeyPairAsRef;
 #endif
 
@@ -90,7 +90,7 @@ public:
     {
         friend class KeyPair;
         friend class PublicKey;
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         friend class KeyPairAsRef;
 #endif
 
@@ -196,7 +196,7 @@ public:
         }
     };
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Represents a key pair (public and private keys) as a PSA KeyRef.
      */
@@ -297,7 +297,7 @@ public:
     class PublicKey : public otPlatCryptoEcdsaPublicKey, public Equatable<PublicKey>
     {
         friend class KeyPair;
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         friend class KeyPairAsRef;
 #endif
 

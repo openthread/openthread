@@ -182,7 +182,7 @@ jobs:
         ./tests/toranj/build.sh --log-level NONE all
         #- - - - - - - - - - - - - - - - - - - - - - - - - - -
         git clean -dfx
-        ./tests/toranj/build.sh --enable-plat-key-ref all
+        ./tests/toranj/build.sh --crypto-lib PSA all
 
   toranj-macos:
     name: toranj-macos

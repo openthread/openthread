@@ -237,7 +237,7 @@ private:
         void Add(uint8_t aTlvType);
     };
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     using KeyRef        = Crypto::Storage::KeyRef;
     using KeyRefManager = Crypto::Storage::KeyRefManager;
     using KeyRefType    = Crypto::Storage::KeyRefManager::Type;
@@ -289,7 +289,7 @@ private:
 
     DeclareTmfResponseHandlerIn(DatasetManager, HandleMgmtSetResponse);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     void  MoveKeysToSecureStorage(Dataset &aDataset) const;
     void  DestroySecurelyStoredKeys(void) const;
     void  EmplaceSecurelyStoredKeys(Dataset &aDataset) const;

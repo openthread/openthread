@@ -48,7 +48,7 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 namespace Storage {
 
@@ -261,13 +261,13 @@ inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
 
 } // namespace Storage
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 /**
  * Represents a crypto key.
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
- * or a `KeyRef` (if `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled).
+ * or a `KeyRef` (if `OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  */
 class Key : public otCryptoKey, public Clearable<Key>
 {
@@ -287,7 +287,7 @@ public:
     /**
      * Gets the pointer to the bye array containing the key.
      *
-     * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
+     * If `OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA` and `IsKeyRef()` returns `true`, then this
      * method returns `nullptr`.
      *
      * @returns The pointer to the byte array containing the key, or `nullptr` if the `Key` represents a `KeyRef`
@@ -297,7 +297,7 @@ public:
     /**
      * Gets the key length (number of bytes).
      *
-     * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
+     * If `OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA` and `IsKeyRef()` returns `true`, then this
      * method returns zero.
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`), or zero if `Key` represents a
@@ -305,7 +305,7 @@ public:
      */
     uint16_t GetLength(void) const { return mKeyLength; }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Indicates whether or not the key is represented as a `KeyRef`.
      *
@@ -348,7 +348,7 @@ public:
      * @retval kErrorNoBufs  Key does not fit in @p aKeyBuffer (extracted key length is larger than @p aKeyLength).
      */
     Error ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const;
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 };
 
 /**
@@ -386,7 +386,7 @@ public:
 private:
     const uint8_t *mKey;
     uint16_t       mLength;
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     uint8_t mBuffer[kMaxSize];
 #endif
 };

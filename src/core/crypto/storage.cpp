@@ -38,7 +38,7 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 {
@@ -72,13 +72,13 @@ void Storage::KeyRefManager::DestroyPersistentKeys(void)
 
 #endif
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 LiteralKey::LiteralKey(const Key &aKey)
     : mKey(aKey.GetBytes())
     , mLength(aKey.GetLength())
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     if (aKey.IsKeyRef())
     {
         mKey    = mBuffer;

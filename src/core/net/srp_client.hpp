@@ -902,7 +902,7 @@ private:
         kOverwriteWithNewSignature,
     };
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     typedef Crypto::Ecdsa::P256::KeyPairAsRef KeyInfo;
 #else
     typedef Crypto::Ecdsa::P256::KeyPair KeyInfo;
