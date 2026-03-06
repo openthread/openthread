@@ -1242,6 +1242,11 @@ public:
     void HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo);
 #endif
 
+    /**
+     * Clears all cached variables that are restored from the settings file.
+     */
+    void ClearCaches(void);
+
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
