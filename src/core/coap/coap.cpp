@@ -707,6 +707,8 @@ void CoapBase::ProcessReceivedRequest(Msg &aRxMsg)
         ExitNow();
     }
 
+    SuccessOrExit(error = aRxMsg.mMessage.ReadUriPathOptions(uriPath));
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     {
         bool didHandle = false;
@@ -714,8 +716,6 @@ void CoapBase::ProcessReceivedRequest(Msg &aRxMsg)
         SuccessOrExit(error = ProcessBlockwiseRequest(aRxMsg, uriPath, didHandle));
         VerifyOrExit(!didHandle);
     }
-#else
-    SuccessOrExit(error = aRxMsg.mMessage.ReadUriPathOptions(uriPath));
 #endif
 
     if ((mResourceHandler != nullptr) && mResourceHandler(*this, uriPath, aRxMsg))
@@ -896,11 +896,10 @@ exit:
     return error;
 }
 
-Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle)
+Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStringBuffer &aUriPath, bool &aDidHandle)
 {
     Error            error = kErrorNone;
     Option::Iterator iterator;
-    char            *curUriPath        = aUriPath;
     uint8_t          blockOptionType   = 0;
     uint32_t         totalTransferSize = 0;
 
@@ -910,18 +909,6 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffe
     {
         switch (iterator.GetOption()->GetNumber())
         {
-        case kOptionUriPath:
-            if (curUriPath != aUriPath)
-            {
-                *curUriPath++ = '/';
-            }
-
-            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < GetArrayEnd(aUriPath), error = kErrorParse);
-
-            IgnoreError(iterator.ReadOptionValue(curUriPath));
-            curUriPath += iterator.GetOption()->GetLength();
-            break;
-
         case kOptionBlock1:
             blockOptionType += 1;
             break;
@@ -941,8 +928,6 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffe
 
         SuccessOrExit(error = iterator.Advance());
     }
-
-    curUriPath[0] = kNullChar;
 
     for (const ResourceBlockWise &resource : mBlockWiseResources)
     {

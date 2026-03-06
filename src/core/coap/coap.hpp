@@ -929,7 +929,7 @@ private:
 
     Error ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks);
     Error ProcessBlockwiseResponse(Msg &aRxMsg, Request &aRequest);
-    Error ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
+    Error ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
