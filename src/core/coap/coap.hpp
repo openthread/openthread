@@ -759,31 +759,31 @@ protected:
     typedef bool (*ResourceHandler)(CoapBase &aCoapBase, const char *aUriPath, Msg &aRxMsg);
 
     /**
-     * Pointer is called to send a CoAP message.
+     * Represents a function reference used to pass a prepared CoAP message to the transport layer for transmission.
      *
      * @param[in]  aCoapBase     A reference to the CoAP agent.
-     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessage      A reference to the message to transmit.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      * @retval kErrorNone    Successfully sent CoAP message.
      * @retval kErrorNoBufs  Failed to allocate retransmission data.
      */
-    typedef Error (*Sender)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef Error (&Transmitter)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Initializes the object.
+     * Initializes the `CoapBase` object.
      *
-     * @param[in]  aInstance        A reference to the OpenThread instance.
-     * @param[in]  aSender          A function pointer to send CoAP message, which SHOULD be a static
-     *                              member method of a descendant of this class.
+     * @param[in]  aInstance       The OpenThread instance.
+     * @param[in]  aTransmitter    A `Transmitter` function reference used to pass a CoAP message to the transport
+     *                             layer for transmission.
      */
-    CoapBase(Instance &aInstance, Sender aSender);
+    CoapBase(Instance &aInstance, Transmitter aTransmitter);
 
     /**
-     * Receives a CoAP message.
+     * Receives a CoAP message from the transport layer.
      *
-     * @param[in]  aMessage      A reference to the received message.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aMessage      The received message.
+     * @param[in]  aMessageInfo  The message info associated with @p aMessage.
      */
     void Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -958,7 +958,7 @@ private:
                          const TxParameters     *aTxParameters,
                          const SendCallbacks    &aCallbacks);
     Error    SendEmptyMessage(Type aType, const Msg &aRxMsg);
-    Error    Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error    Transmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
@@ -991,7 +991,7 @@ private:
     Callback<RequestHandler>   mDefaultHandler;
     Callback<ResponseFallback> mResponseFallback;
     ResourceHandler            mResourceHandler;
-    Sender                     mSender;
+    Transmitter                mTransmitter;
     uint16_t                   mMessageId;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     LinkedList<ResourceBlockWise> mBlockWiseResources;
@@ -1039,8 +1039,8 @@ protected:
     CoapSocket mSocket;
 
 private:
-    static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static Error Transmit(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error        Transmit(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 };
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE

@@ -118,12 +118,12 @@ void Msg::UpdateMessageId(uint16_t aMessageId)
 //---------------------------------------------------------------------------------------------------------------------
 // CoapBase
 
-CoapBase::CoapBase(Instance &aInstance, Sender aSender)
+CoapBase::CoapBase(Instance &aInstance, Transmitter aTransmitter)
     : InstanceLocator(aInstance)
     , mPendingRequests(aInstance, *this)
     , mResponseCache(aInstance)
     , mResourceHandler(nullptr)
-    , mSender(aSender)
+    , mTransmitter(aTransmitter)
     , mMessageId(Random::NonCrypto::GetUint16())
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     , mLastResponse(nullptr)
@@ -228,20 +228,20 @@ exit:
     return aMessage;
 }
 
-Error CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error CoapBase::Transmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error error;
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitCoapSend(AsCoapMessage(&aMessage), aMessageInfo);
+    Get<Utils::Otns>().EmitCoapSend(aMessage, aMessageInfo);
 #endif
 
-    error = mSender(*this, aMessage, aMessageInfo);
+    error = mTransmitter(*this, aMessage, aMessageInfo);
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     if (error != kErrorNone)
     {
-        Get<Utils::Otns>().EmitCoapSendFailure(error, AsCoapMessage(&aMessage), aMessageInfo);
+        Get<Utils::Otns>().EmitCoapSendFailure(error, aMessage, aMessageInfo);
     }
 #endif
     return error;
@@ -309,7 +309,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
         SuccessOrExit(error = mPendingRequests.AddClone(txMsg.mMessage, copyLength, request));
     }
 
-    SuccessOrExit(error = Send(txMsg.mMessage, txMsg.mMessageInfo));
+    SuccessOrExit(error = Transmit(txMsg.mMessage, txMsg.mMessageInfo));
 
 exit:
 
@@ -439,7 +439,7 @@ Error CoapBase::SendEmptyMessage(Type aType, const Msg &aRxMsg)
     VerifyOrExit((message = NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->Init(aType, kCodeEmpty, aRxMsg.GetMessageId()));
-    SuccessOrExit(error = Send(*message, aRxMsg.mMessageInfo));
+    SuccessOrExit(error = Transmit(*message, aRxMsg.mMessageInfo));
 
 exit:
     FreeMessageOnError(message, error);
@@ -1668,7 +1668,7 @@ void CoapBase::PendingRequests::RetransmitRequest(const Request &aRequest)
 
     aRequest.mMetadata.CopyInfoTo(messageInfo);
 
-    SuccessOrExit(error = mCoapBase.Send(*clone, messageInfo));
+    SuccessOrExit(error = mCoapBase.Transmit(*clone, messageInfo));
 
 exit:
     FreeMessageOnError(clone, error);
@@ -1781,7 +1781,7 @@ Error CoapBase::ResponseCache::SendCachedResponse(const Msg &aRxMsg, CoapBase &a
     response = AsCoapMessagePtr(match->Clone(match->GetLength() - sizeof(ResponseMetadata)));
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
-    error = aCoapBase.Send(*response, aRxMsg.mMessageInfo);
+    error = aCoapBase.Transmit(*response, aRxMsg.mMessageInfo);
 
 exit:
     FreeMessageOnError(response, error);
@@ -2013,7 +2013,7 @@ Resource::Resource(Uri aUri, RequestHandler aHandler, void *aContext)
 // Coap
 
 Coap::Coap(Instance &aInstance)
-    : CoapBase(aInstance, &Coap::Send)
+    : CoapBase(aInstance, Coap::Transmit)
     , mSocket(aInstance, *this)
 {
 }
@@ -2057,12 +2057,12 @@ void Coap::HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMess
     Receive(AsCoapMessage(&aMessage), aMessageInfo);
 }
 
-Error Coap::Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Coap::Transmit(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    return static_cast<Coap &>(aCoapBase).Send(aMessage, aMessageInfo);
+    return static_cast<Coap &>(aCoapBase).Transmit(aMessage, aMessageInfo);
 }
 
-Error Coap::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Coap::Transmit(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return mSocket.IsBound() ? mSocket.SendTo(aMessage, aMessageInfo) : kErrorInvalidState;
 }
