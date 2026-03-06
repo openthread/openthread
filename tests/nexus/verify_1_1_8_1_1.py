@@ -46,6 +46,7 @@ JOIN_ENT_URI = '/c/je'
 NM_PROVISIONING_URL_TLV = 32
 MLE_SEC_SUITE_NONE = 255
 JOINER_UDP_PORT = 49153
+
 ALERT_DESC_CLOSE_NOTIFY = 0
 ALERT_LEVEL_FATAL = 2
 DTLS_PORT = 1000
@@ -245,20 +246,9 @@ def verify(pv):
         filter(lambda p: p.udp.srcport in COMMISSIONER_UDP_PORTS).\
         must_next()
 
-    #   - 13. Joiner_1 sends an encrypted DTLS-Alert record with a code of 0 (close_notify) to Commissioner.
-    #   Note: OpenThread Joiner sends close_notify immediately after receiving JOIN_FIN.rsp, while it expects
-    #   JOIN_ENT.ntf over the mesh. The spec lists 11, 12, 13 but these are independent exchanges.
-    print("Step 5.13: Joiner_1 sends DTLS-Alert (close_notify).")
-    pkts.filter_wpan_src64(JOINER).\
-        filter_wpan_dst64(COMMISSIONER).\
-        filter(lambda p: consts.CONTENT_ALERT in p.dtls.record.content_type).\
-        filter(lambda p: p.dtls.alert_message.desc == ALERT_DESC_CLOSE_NOTIFY).\
-        filter(lambda p: p.udp.dstport in COMMISSIONER_UDP_PORTS).\
-        must_next()
-
     #   - 11. Commissioner sends an encrypted JOIN_ENT.ntf message to Joiner_1.
     print("Step 5.11: Commissioner sends JOIN_ENT.ntf (Encrypted).")
-    pkts.filter_wpan_src64(COMMISSIONER).\
+    pkts.copy().filter_wpan_src64(COMMISSIONER).\
         filter_wpan_dst64(JOINER).\
         filter(lambda p: p.wpan.security == True).\
         must_next()
@@ -266,9 +256,20 @@ def verify(pv):
     #   - 12. Joiner_1 receives the encrypted JOIN_ENT.ntf message and sends an encrypted JOIN_ENT.ntf dummy response
     #     to Commissioner.
     print("Step 5.12: Joiner_1 sends JOIN_ENT.ntf response (Encrypted).")
-    pkts.filter_wpan_src64(JOINER).\
+    pkts.copy().filter_wpan_src64(JOINER).\
         filter_wpan_dst64(COMMISSIONER).\
         filter(lambda p: p.wpan.security == True).\
+        must_next()
+
+    #   - 13. Joiner_1 sends an encrypted DTLS-Alert record with a code of 0 (close_notify) to Commissioner.
+    #   Note: OpenThread Joiner sends close_notify immediately after receiving JOIN_FIN.rsp, while it expects
+    #   JOIN_ENT.ntf over the mesh. The spec lists 11, 12, 13 but these are independent exchanges.
+    print("Step 5.13: Joiner_1 sends DTLS-Alert (close_notify).")
+    pkts.copy().filter_wpan_src64(JOINER).\
+        filter_wpan_dst64(COMMISSIONER).\
+        filter(lambda p: consts.CONTENT_ALERT in p.dtls.record.content_type).\
+        filter(lambda p: p.dtls.alert_message.desc == ALERT_DESC_CLOSE_NOTIFY).\
+        filter(lambda p: p.udp.dstport in COMMISSIONER_UDP_PORTS).\
         must_next()
 
     # Fail Conditions:
