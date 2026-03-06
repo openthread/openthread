@@ -223,7 +223,7 @@ def apply_patches():
     layer_fields._get_candidate_layers = patched_get_candidate_layers
 
     # Patch Layer.get_field to handle wpan_tap.ch_num
-    from pyshark.packet.layer import Layer
+    from pyshark.packet.layers.base import BaseLayer as Layer
     old_get_field = Layer.get_field
 
     def patched_get_field(self, name):

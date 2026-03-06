@@ -109,20 +109,20 @@ def verify(pv):
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst16(SSED_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     pkts.range(checkpoint, pkts.index).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_not_next()
 
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     checkpoint = pkts.index
@@ -136,7 +136,7 @@ def verify(pv):
     pkts.filter_wpan_src64(SSED_1).\
         filter_wpan_dst64(ROUTER_1).\
         filter_mle_cmd(consts.MLE_CHILD_UPDATE_REQUEST).\
-        filter(lambda p: CSL_CHANNEL_TLV in p.mle.tlv.type and p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: CSL_CHANNEL_TLV in p.mle.tlv.type and p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     # Step 5: Router_1 (DUT)
@@ -148,7 +148,7 @@ def verify(pv):
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst64(SSED_1).\
         filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
-        filter(lambda p: p.wpan_tap.ch_num == SECONDARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == SECONDARY_CHANNEL).\
         must_next()
 
     # Step 6: Harness
@@ -168,20 +168,20 @@ def verify(pv):
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst16(SSED_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == SECONDARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == SECONDARY_CHANNEL).\
         must_next()
 
     pkts.range(checkpoint, pkts.index).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
-        filter(lambda p: p.wpan_tap.ch_num == SECONDARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == SECONDARY_CHANNEL).\
         must_not_next()
 
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     checkpoint = pkts.index
@@ -196,7 +196,7 @@ def verify(pv):
     pkts.filter_wpan_src64(SSED_1).\
         filter_wpan_dst64(ROUTER_1).\
         filter_mle_cmd(consts.MLE_CHILD_UPDATE_REQUEST).\
-        filter(lambda p: CSL_CHANNEL_TLV in p.mle.tlv.type and p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: CSL_CHANNEL_TLV in p.mle.tlv.type and p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     # Step 9: Router_1 (DUT)
@@ -208,7 +208,7 @@ def verify(pv):
     pkts.filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst64(SSED_1).\
         filter_mle_cmd(consts.MLE_CHILD_UPDATE_RESPONSE).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     # Step 10: Harness
@@ -228,20 +228,20 @@ def verify(pv):
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst16(SSED_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     pkts.range(checkpoint, pkts.index).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_not_next()
 
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == PRIMARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == PRIMARY_CHANNEL).\
         must_next()
 
     checkpoint = pkts.index
@@ -263,7 +263,7 @@ def verify(pv):
     _pkt = pkts.filter_ping_request().\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst16(SSED_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == TERNARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == TERNARY_CHANNEL).\
         must_next()
 
     # Pass Criteria 13.2: SSED_1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request.
@@ -274,13 +274,13 @@ def verify(pv):
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
-        filter(lambda p: p.wpan_tap.ch_num == TERNARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == TERNARY_CHANNEL).\
         must_not_next()
 
     pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
-        filter(lambda p: p.wpan_tap.ch_num == TERNARY_CHANNEL).\
+        filter(lambda p: p.wpan.channel == TERNARY_CHANNEL).\
         must_next()
 
 
