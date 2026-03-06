@@ -98,7 +98,7 @@ void otThreadGetNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey)
     AsCoreType(aInstance).Get<KeyManager>().GetNetworkKey(AsCoreType(aNetworkKey));
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<KeyManager>().GetNetworkKeyRef();
@@ -121,7 +121,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
 {
     Error     error    = kErrorNone;

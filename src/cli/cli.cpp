@@ -4081,7 +4081,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -4876,7 +4876,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -8554,7 +8554,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("networkidtimeout"),
 #endif
         CmdEntry("networkkey"),
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         CmdEntry("networkkeyref"),
 #endif
         CmdEntry("networkname"),
@@ -8587,7 +8587,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("promiscuous"),
 #if OPENTHREAD_FTD
         CmdEntry("pskc"),
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         CmdEntry("pskcref"),
 #endif
 #endif

@@ -3567,7 +3567,7 @@ Done
 
 Get pskc key reference.
 
-`OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is required.
+PSA crypto library is required (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
 
 ```bash
 > pskcref
@@ -3579,7 +3579,7 @@ Done
 
 Set pskc key reference as \<keyref\>.
 
-`OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is required.
+PSA crypto library is required (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
 
 ```bash
 > pskcref 0x20017

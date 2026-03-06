@@ -152,7 +152,7 @@ public:
 
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 /**
  * Provides a representation for Network Key reference.
  */
@@ -178,7 +178,7 @@ public:
 #endif
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 /**
  * Provides a representation for Network Key reference.
  */
@@ -261,7 +261,7 @@ public:
      */
     void SetNetworkKey(const NetworkKey &aNetworkKey);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Returns a Key Ref to Thread Network Key.
      *
@@ -301,7 +301,7 @@ public:
      */
     void SetPskc(const Pskc &aPskc);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Returns a Key Ref to PSKc.
      *
@@ -543,7 +543,7 @@ public:
      */
     void MacFrameCounterUsed(uint32_t aMacFrameCounter);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Destroys all the volatile mac keys stored in PSA ITS.
      */
@@ -590,7 +590,7 @@ private:
     void HandleKeyRotationTimer(void);
     void CheckForKeyRotation(void);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     void StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteExisting);
     void StorePskc(const Pskc &aPskc);
 #endif
@@ -606,7 +606,7 @@ private:
     static const uint8_t kTrelInfoString[];
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     NetworkKeyRef mNetworkKeyRef;
 #else
     NetworkKey mNetworkKey;
@@ -635,7 +635,7 @@ private:
     uint16_t      mKeySwitchGuardTimer;
     RotationTimer mKeyRotationTimer;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     PskcRef mPskcRef;
 #else
     Pskc mPskc;

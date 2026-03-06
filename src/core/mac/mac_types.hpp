@@ -529,12 +529,12 @@ public:
     KeyMaterial(void)
     {
         GetKey().Clear();
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         SetKeyRef(kInvalidKeyRef);
 #endif
     }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Overload `=` operator to assign the `KeyMaterial` from another one.
      *
@@ -553,12 +553,12 @@ public:
     /**
      *  This method clears the `KeyMaterial`.
      *
-     * Under `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE`, if the `KeyMaterial` currently stores a valid previous
+     * When using PSA crypto, if the `KeyMaterial` currently stores a valid previous
      * `KeyRef`, the `Clear()` call will ensure to delete the previous `KeyRef` and set it to `kInvalidKeyRef`.
      */
     void Clear(void);
 
-#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if !(OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     /**
      * Gets the literal `Key`.
      *
@@ -582,8 +582,8 @@ public:
      * one before creating and using a new `KeyRef` associated with the new `Key`.
      *
      * @param[in] aKey           A reference to the new key.
-     * @param[in] aIsExportable  Boolean indicating if the key is exportable (this is only applicable under
-     *                           `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` config).
+     * @param[in] aIsExportable  Boolean indicating if the key is exportable (this is only applicable when
+     *                           using PSA crypto library).
      */
     void SetFrom(const Key &aKey, bool aIsExportable = false);
 
@@ -612,7 +612,7 @@ public:
     bool operator==(const KeyMaterial &aOther) const;
 
 private:
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     static constexpr KeyRef kInvalidKeyRef = Crypto::Storage::kInvalidKeyRef;
 
     void DestroyKey(void);

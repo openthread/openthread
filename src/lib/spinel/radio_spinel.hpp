@@ -1203,7 +1203,7 @@ private:
                       const otMacKey &aPrevKey,
                       const otMacKey &aCurrKey,
                       const otMacKey &NextKey);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
 #endif
 

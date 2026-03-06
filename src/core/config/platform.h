@@ -151,15 +151,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
- *
- * Define to 1 if you want to enable key ref usage support as defined by platform.
- */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE
  *
  * Define to 1 if you want to make MAC keys exportable.

@@ -839,7 +839,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 otError RadioSpinel::ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey)
 {
@@ -885,7 +885,7 @@ otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
                      aNextKey->mKeyMaterial.mKey);
 }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 otError RadioSpinel::SetMacKey(uint8_t         aKeyIdMode,
                                uint8_t         aKeyId,
