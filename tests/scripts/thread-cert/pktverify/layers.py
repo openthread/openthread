@@ -30,7 +30,7 @@ import logging
 from typing import Optional
 
 from pyshark.packet.fields import LayerField, LayerFieldsContainer
-from pyshark.packet.layer import Layer as RawLayer
+from pyshark.packet.layers.base import BaseLayer as RawLayer
 from pyshark.packet.packet import Packet as RawPacket
 
 from pktverify.layer_fields import get_layer_field, check_layer_field_exists
