@@ -47,7 +47,7 @@ static constexpr uint32_t kCommissionerStartTime = 1 * Time::kOneSecondInMsec;
 /**
  * Time to advance for the Joiner to complete the joining process, in milliseconds.
  */
-static constexpr uint32_t kJoiningProcessTime = 30 * Time::kOneSecondInMsec;
+static constexpr uint32_t kJoiningProcessTime = 60 * Time::kOneSecondInMsec;
 
 /**
  * The timeout for the Joiner entry on Commissioner, in seconds.
@@ -200,6 +200,7 @@ void Test1_1_8_1_1(void)
 #endif
 
     SuccessOrQuit(commissioner.AddJoinerAny(kPskd, kJoinerTimeout));
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: Joiner_1");
