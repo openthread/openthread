@@ -886,7 +886,7 @@ template <> void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Msg &aMsg)
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Sent %s ack", UriToString<kUriDatasetChanged>());
 
@@ -1083,7 +1083,7 @@ template <> void Commissioner::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
 
     mEnergyReportCallback.InvokeIfSet(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength());
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Sent %s ack", UriToString<kUriEnergyReport>());
 
@@ -1137,7 +1137,7 @@ template <> void Commissioner::HandleTmf<kUriPanIdConflict>(Coap::Msg &aMsg)
 
     mPanIdConflictCallback.InvokeIfSet(panId, mask);
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Sent %s response", UriToString<kUriPanIdConflict>());
 

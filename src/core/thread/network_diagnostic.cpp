@@ -563,7 +563,7 @@ template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
     // DIAG_GET.qry may be sent as a confirmable request.
     if (aMsg.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
     }
 
 #if OPENTHREAD_MTD
@@ -967,7 +967,7 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
         }
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
 exit:
     return;
@@ -1092,7 +1092,7 @@ template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
         mGetCallback.InvokeIfSet(kErrorNone, &aMsg.mMessage, &aMsg.mMessageInfo);
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
 exit:
     return;

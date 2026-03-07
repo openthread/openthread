@@ -252,7 +252,7 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
         }
     }
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Sent %s ack", UriToString<kUriServerData>());
 
