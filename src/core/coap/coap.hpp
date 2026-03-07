@@ -871,7 +871,7 @@ private:
     public:
         explicit PendingRequests(Instance &aInstance, CoapBase &aCoapBase);
 
-        Error AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest);
+        Error Add(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks, Request &aRequest);
         void  Remove(Request &aRequest);
         Error FindRelatedRequest(const Msg &aMsg, Request &aRequest);
         void  FinalizeRequest(Request &aRequest, Error aResult);
@@ -981,7 +981,7 @@ private:
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    Error ProcessObserveSend(Msg &aTxMsg, Request &aRequest);
+    Error ProcessObserveSend(const Msg &aTxMsg, Request &aRequest);
 #endif
 
     PendingRequests            mPendingRequests;
