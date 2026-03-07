@@ -279,7 +279,7 @@ public:
      *
      * @returns The Type value.
      */
-    uint8_t GetType(void) const { return mType; }
+    Type GetType(void) const { return mType; }
 
     /**
      * Returns the Code value.
@@ -418,7 +418,7 @@ public:
     bool RequireResetOnError(void) { return IsConfirmable() || IsNonConfirmable(); }
 
 private:
-    uint8_t  mType;
+    Type     mType;
     uint8_t  mCode;
     uint16_t mMessageId;
     Token    mToken;
@@ -878,7 +878,7 @@ private:
 
         uint8_t  GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mVersionTypeToken); }
         void     SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mVersionTypeToken, aVersion); }
-        uint8_t  GetType(void) const { return ReadBits<uint8_t, kTypeMask>(mVersionTypeToken); }
+        Type     GetType(void) const { return static_cast<Type>(ReadBits<uint8_t, kTypeMask>(mVersionTypeToken)); }
         void     SetType(Type aType) { WriteBits<uint8_t, kTypeMask>(mVersionTypeToken, aType); }
         uint8_t  GetCode(void) const { return mCode; }
         void     SetCode(Code aCode) { mCode = aCode; }
