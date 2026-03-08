@@ -133,6 +133,8 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('pan_id', struct.unpack('>H', v)[0]))
     elif t == consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV and len(v) == 8 and not is_diag:
         kvs.append(('mesh_local_prefix', v))
+    elif t == consts.NM_PROVISIONING_URL_TLV and not is_diag:
+        kvs.append(('provisioning_url', v.decode('utf-8', errors='replace')))
     elif t == consts.NM_FUTURE_TLV:
         kvs.append(('future_tlv', v))
 
@@ -271,6 +273,7 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.leader_router_id'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.child_id'] = layer_fields._list(layer_fields._auto)
     layer_fields._LAYER_FIELDS['coap.tlv.child_mode'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['coap.tlv.provisioning_url'] = layer_fields._str
     layer_fields._LAYER_FIELDS['coap.tlv.channel_pages'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.steering_data'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.future_tlv'] = layer_fields._bytes
