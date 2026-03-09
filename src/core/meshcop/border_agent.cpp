@@ -400,7 +400,7 @@ Error Manager::SetServiceBaseName(const char *aBaseName)
     VerifyOrExit(StringLength(aBaseName, kBaseServiceNameMaxLen + 1) <= kBaseServiceNameMaxLen,
                  error = kErrorInvalidArgs);
 
-    ConstrcutServiceName(aBaseName, newName);
+    ConstructServiceName(aBaseName, newName);
 
     VerifyOrExit(!StringMatch(newName, mServiceName));
 
@@ -416,13 +416,13 @@ const char *Manager::GetServiceName(void)
 {
     if (IsServiceNameEmpty())
     {
-        ConstrcutServiceName(kDefaultBaseServiceName, mServiceName);
+        ConstructServiceName(kDefaultBaseServiceName, mServiceName);
     }
 
     return mServiceName;
 }
 
-void Manager::ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
+void Manager::ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
 {
     StringWriter writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
 
