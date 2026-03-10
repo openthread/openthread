@@ -33,11 +33,14 @@ namespace Nexus {
 
 extern "C" {
 
-bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_NONE;
+}
 
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 
 } // extern "C"
 

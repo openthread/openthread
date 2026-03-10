@@ -287,14 +287,16 @@ uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatInfraIf
 
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
+    VerifyOrQuit(aInstance == sInstance);
     VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
 
     return AsCoreType(aAddress) == sInfraIfAddress;
 }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
+                                 uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
@@ -305,6 +307,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     Log("otPlatInfraIfSendIcmp6Nd(aDestAddr: %s, aBufferLength:%u)", AsCoreType(aDestAddress).ToString().AsCString(),
         aBufferLength);
 
+    VerifyOrQuit(aInstance == sInstance);
     VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
 
     packet.Init(aBuffer, aBufferLength);
