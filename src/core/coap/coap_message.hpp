@@ -279,7 +279,7 @@ public:
      *
      * @returns The Type value.
      */
-    uint8_t GetType(void) const { return mType; }
+    Type GetType(void) const { return mType; }
 
     /**
      * Returns the Code value.
@@ -418,7 +418,7 @@ public:
     bool RequireResetOnError(void) { return IsConfirmable() || IsNonConfirmable(); }
 
 private:
-    uint8_t  mType;
+    Type     mType;
     uint8_t  mCode;
     uint16_t mMessageId;
     Token    mToken;
@@ -484,23 +484,6 @@ public:
      * @retval kErrorNoBufs  Could not grow the message to append the option.
      */
     Error Init(Type aType, Code aCode, Uri aUri);
-
-    /**
-     * Initializes a CoAP POST message, appends a URI Path, and adds a random token.
-     *
-     * This method erases any previously written content in the message.
-     *
-     * The CoAP Type is determined from the destination IPv6 address: `kTypeNonConfirmable` for multicast and
-     * `kTypeConfirmable` otherwise. The Message ID is set to zero. A random token of default length
-     * (`Token::kDefaultLength`) is generated and added.
-     *
-     * @param[in] aDestination  The message destination IPv6 address, used to determine the CoAP Type.
-     * @param[in] aUri          The URI string.
-     *
-     * @retval kErrorNone    Successfully initialized the message and appended the URI-path option.
-     * @retval kErrorNoBufs  Could not grow the message to append the option.
-     */
-    Error InitAsPost(const Ip6::Address &aDestination, Uri aUri);
 
     /**
      * Initializes a CoAP message as a response to a request message.
@@ -827,43 +810,6 @@ public:
     Error AppendPayloadMarker(void);
 
     /**
-     * Creates a copy of the message.
-     *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *Clone(void) const;
-
-    /**
-     * Creates a copy of this CoAP message.
-     *
-     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the
-     * cloned message are also copied from the original one.
-     *
-     * @param[in] aLength  Number of payload bytes to copy.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *Clone(uint16_t aLength) const;
-
-    /**
-     * Creates a copy of the message using a given configuration.
-     *
-     * It allocates the new message from the same message pool as the original one. The `Type`, `SubType`,
-     * `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are copied from the original one.
-     *
-     * @param[in] aLength         Number of message bytes to copy.
-     * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
-
-    /**
      * Returns a pointer to the next message after this as a `Coap::Message`.
      *
      * Should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
@@ -932,7 +878,7 @@ private:
 
         uint8_t  GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mVersionTypeToken); }
         void     SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mVersionTypeToken, aVersion); }
-        uint8_t  GetType(void) const { return ReadBits<uint8_t, kTypeMask>(mVersionTypeToken); }
+        Type     GetType(void) const { return static_cast<Type>(ReadBits<uint8_t, kTypeMask>(mVersionTypeToken)); }
         void     SetType(Type aType) { WriteBits<uint8_t, kTypeMask>(mVersionTypeToken, aType); }
         uint8_t  GetCode(void) const { return mCode; }
         void     SetCode(Code aCode) { mCode = aCode; }

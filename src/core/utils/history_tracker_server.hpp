@@ -88,7 +88,6 @@ private:
     void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest);
     Error CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo);
     void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
-    void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
     Error AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, const RequestTlv &aRequestTlv);
 
     static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);

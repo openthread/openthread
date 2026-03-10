@@ -116,18 +116,17 @@ void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 
 void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    ExtendedTlv      tlv;
-    uint16_t         borderAgentRloc;
-    OffsetRange      offsetRange;
+    Error          error;
+    Coap::Message *message = nullptr;
+    ExtendedTlv    tlv;
+    uint16_t       borderAgentRloc;
+    OffsetRange    offsetRange;
 
     LogInfo("JoinerRouter::HandleUdpReceive");
 
     SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc));
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayRx);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aMessageInfo.GetPeerPort()));
@@ -141,9 +140,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = message->Append(tlv));
     SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(borderAgentRloc);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, borderAgentRloc));
 
     LogInfo("Sent %s", UriToString<kUriRelayRx>());
 
@@ -281,7 +278,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Coap::Message *message = nullptr;
     Dataset        dataset;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriJoinerEntrust);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerEntrust);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);

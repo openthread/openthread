@@ -1916,9 +1916,11 @@ Done
 
 Enable/Disable the "DNS name compression" mode.
 
-By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This is applicable to OpenThread's DNS and SRP client/server modules.
+By default, DNS name compression is enabled. When disabled, DNS names are appended in full and are never compressed. This applies to OpenThread's DNS and SRP client/server modules.
 
-This is intended for testing only and available under `REFERENCE_DEVICE` config.
+DNS name compression cannot be disabled if the OpenThread mDNS module is enabled. Enabling the mDNS module will automatically enable name compression if it was previously disabled. Attempting to disable compression while the mDNS module is active will fail.
+
+This is intended for testing only and requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
 
 Get the current "DNS name compression" mode.
 

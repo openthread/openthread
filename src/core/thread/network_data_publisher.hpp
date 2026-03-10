@@ -379,7 +379,7 @@ private:
     private:
         void               Add(void);
         void               Remove(State aNextState);
-        void               LogUpdateTime(void) const;
+        void               LogUpdateTime(TimeMilli aNow) const;
         static const char *StateToString(State aState);
 
         TimeMilli mUpdateTime;

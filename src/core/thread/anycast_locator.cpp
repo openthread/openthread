@@ -47,14 +47,13 @@ AnycastLocator::AnycastLocator(Instance &aInstance)
 
 Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, LocatorCallback aCallback, void *aContext)
 {
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
 
     VerifyOrExit((aCallback != nullptr) && Get<Mle::Mle>().IsAnycastLocator(aAnycastAddress),
                  error = kErrorInvalidArgs);
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriAnycastLocate);
+    message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriAnycastLocate);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (mCallback.IsSet())
@@ -62,9 +61,7 @@ Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, LocatorCallbac
         IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleResponse, this));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aAnycastAddress);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAnycastAddress, HandleResponse, this));
 
     mCallback.Set(aCallback, aContext);
 
@@ -104,7 +101,7 @@ template <> void AnycastLocator::HandleTmf<kUriAnycastLocate>(Coap::Msg &aMsg)
 
     VerifyOrExit(aMsg.IsConfirmablePostRequest());
 
-    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr);
 
     SuccessOrExit(Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocalEid().GetIid()));

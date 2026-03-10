@@ -280,6 +280,8 @@ _LAYER_FIELDS = {
     'wpan.dst16': _auto,
     'wpan.src64': _ext_addr,
     'wpan.dst64': _ext_addr,
+    'wpan-tap.channel': _auto,
+    'wpan_tap.channel': _auto,
     'wpan.fcs': _raw_hex_rev,
     'wpan.fcs_ok': _auto,
     'wpan.frame_length': _dec,
@@ -560,6 +562,7 @@ _LAYER_FIELDS = {
     'dtls.handshake.cookie': _auto,
     'dtls.record.content_type': _list(_auto),
     'dtls.alert_message.desc': _auto,
+    'dtls.alert_message.level': _auto,
 
     # thread beacon
     'thread_bcn.protocol': _auto,

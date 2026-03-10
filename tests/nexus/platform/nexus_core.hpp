@@ -29,8 +29,10 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
+#include "common/array.hpp"
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
+#include "thread/key_manager.hpp"
 
 #include "nexus_alarm.hpp"
 #include "nexus_pcap.hpp"
@@ -53,13 +55,16 @@ public:
     Node             &CreateNode(void);
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
-    TimeMilli GetNow(void) { return mNow; }
+    TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
+    TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
+    uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test specific helper methods
 
-    void SaveTestInfo(const char *aFilename);
+    void SaveTestInfo(const char *aFilename, Node *aLeaderNode = nullptr);
+    void AddNetworkKey(const NetworkKey &aKey);
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
                                   uint16_t            aPayloadSize     = 0,
@@ -72,11 +77,13 @@ public:
     void  SetActiveNode(Node *aNode) { mActiveNode = aNode; }
     Node *GetActiveNode(void) { return mActiveNode; }
 
-    void UpdateNextAlarmTime(const Alarm &aAlarm);
+    void UpdateNextAlarmMilli(const Alarm &aAlarm);
+    void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
 
 private:
-    static constexpr int8_t kDefaultRxRssi = -20;
+    static constexpr int8_t  kDefaultRxRssi = -20;
+    static constexpr uint8_t kDefaultRxLqi  = 255;
 
     enum AckMode : uint8_t
     {
@@ -109,13 +116,14 @@ private:
     static Core *sCore;
     static bool  sInUse;
 
-    OwningList<Node> mNodes;
-    Pcap             mPcap;
-    uint16_t         mCurNodeId;
-    bool             mPendingAction;
-    TimeMilli        mNow;
-    TimeMilli        mNextAlarmTime;
-    Node            *mActiveNode;
+    OwningList<Node>      mNodes;
+    Pcap                  mPcap;
+    Array<NetworkKey, 16> mNetworkKeys;
+    uint16_t              mCurNodeId;
+    bool                  mPendingAction;
+    uint64_t              mNow;
+    uint64_t              mNextAlarmTime;
+    Node                 *mActiveNode;
 };
 
 void Log(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);

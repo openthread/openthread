@@ -48,11 +48,8 @@ RegisterLogModule("TcatAgent");
 
 bool TcatAgent::VendorInfo::IsValid(void) const
 {
-    return (mProvisioningUrl == nullptr ||
-            (IsValidUtf8String(mProvisioningUrl) &&
-             (static_cast<uint8_t>(StringLength(mProvisioningUrl, kProvisioningUrlMaxLength)) <
-              kProvisioningUrlMaxLength))) &&
-           mPskdString != nullptr;
+    // Note: mProvisioningUrl can be nullptr, if not present
+    return mPskdString != nullptr && Tlv::ValidateStringValue<ProvisioningUrlTlv>(mProvisioningUrl) == kErrorNone;
 }
 
 TcatAgent::TcatAgent(Instance &aInstance)
@@ -254,58 +251,50 @@ uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequir
     {
         if (aFlagsRequired & flag)
         {
+            bool authorized = false;
+
             switch (flag)
             {
             case kPskdFlag:
-                if (mPskdVerified)
-                {
-                    res |= flag;
-                }
+                authorized = mPskdVerified;
                 break;
 
             case kNetworkNameFlag:
-                if (aDatasetInfo != nullptr && mCommissionerHasNetworkName &&
-                    aDatasetInfo->IsPresent<Dataset::kNetworkName>() &&
-                    (aDatasetInfo->Get<Dataset::kNetworkName>() == mCommissionerNetworkName))
-                {
-                    res |= flag;
-                }
+                authorized = mCommissionerHasNetworkName && aDatasetInfo != nullptr &&
+                             aDatasetInfo->IsPresent<Dataset::kNetworkName>() &&
+                             aDatasetInfo->Get<Dataset::kNetworkName>() == mCommissionerNetworkName;
                 break;
 
             case kExtendedPanIdFlag:
-                if (aDatasetInfo != nullptr && mCommissionerHasExtendedPanId &&
-                    aDatasetInfo->IsPresent<Dataset::kExtendedPanId>() &&
-                    (aDatasetInfo->Get<Dataset::kExtendedPanId>() == mCommissionerExtendedPanId))
-                {
-                    res |= flag;
-                }
+                authorized = mCommissionerHasExtendedPanId && aDatasetInfo != nullptr &&
+                             aDatasetInfo->IsPresent<Dataset::kExtendedPanId>() &&
+                             aDatasetInfo->Get<Dataset::kExtendedPanId>() == mCommissionerExtendedPanId;
                 break;
 
             case kThreadDomainFlag:
-
                 if (mCommissionerHasDomainName)
                 {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_4)
-                    if (Get<MeshCoP::NetworkIdentity>().GetDomainName() == mCommissionerDomainName)
+                    authorized = Get<MeshCoP::NetworkIdentity>().GetDomainName() == mCommissionerDomainName;
 #else
-                    if (StringMatch(mCommissionerDomainName.GetAsCString(), NetworkIdentity::kDefaultDomainName))
+                    authorized =
+                        StringMatch(mCommissionerDomainName.GetAsCString(), NetworkIdentity::kDefaultDomainName);
 #endif
-                    {
-                        res |= flag;
-                    }
                 }
                 break;
 
             case kPskcFlag:
-                if (mPskcVerified)
-                {
-                    res |= flag;
-                }
+                authorized = mPskcVerified;
                 break;
 
             default:
-                LogCrit("Error in access flags. Unexpected flag %d", flag);
-                OT_ASSERT(false); // Should not get here
+                // A requirement for an unknown/future flag will always fail (see spec).
+                break;
+            }
+
+            if (authorized)
+            {
+                res |= flag;
             }
         }
     }
@@ -313,40 +302,36 @@ uint8_t TcatAgent::CheckAuthorizationRequirements(CommandClassFlags aFlagsRequir
     return res;
 }
 
-bool TcatAgent::CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
-                                                    CommandClassFlags aDeviceCommandClassFlags,
-                                                    Dataset          *aDataset) const
+bool TcatAgent::IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissionerCommandClassFlags,
+                                                  CommandClassFlags aDeviceCommandClassFlags,
+                                                  const Dataset    *aCommSuppliedDataset) const
 {
-    bool          authorized = false;
-    uint8_t       deviceRequirementMet;
-    uint8_t       commissionerRequirementMet;
-    Dataset::Info datasetInfo;
-    Error         datasetError = kErrorNone;
+    bool           authorized = false;
+    uint8_t        deviceRequirementMet;
+    uint8_t        commissionerRequirementMet;
+    Dataset::Info  datasetInfo;
+    Dataset::Info *datasetInfoPtr = nullptr;
 
     VerifyOrExit(IsConnected());
 
-    if (aDataset == nullptr)
+    datasetInfo.Clear();
+    if (aCommSuppliedDataset != nullptr)
     {
-        datasetError = Get<ActiveDatasetManager>().Read(datasetInfo);
+        aCommSuppliedDataset->ConvertTo(datasetInfo);
+        datasetInfoPtr = &datasetInfo;
     }
-    else
+    else if (Get<ActiveDatasetManager>().Read(datasetInfo) == kErrorNone)
     {
-        aDataset->ConvertTo(datasetInfo);
-    }
-
-    if (datasetError == kErrorNone)
-    {
-        deviceRequirementMet       = CheckAuthorizationRequirements(aDeviceCommandClassFlags, &datasetInfo);
-        commissionerRequirementMet = CheckAuthorizationRequirements(aCommissionerCommandClassFlags, &datasetInfo);
-    }
-    else
-    {
-        deviceRequirementMet       = CheckAuthorizationRequirements(aDeviceCommandClassFlags, nullptr);
-        commissionerRequirementMet = CheckAuthorizationRequirements(aCommissionerCommandClassFlags, nullptr);
+        datasetInfoPtr = &datasetInfo;
     }
 
-    if (aDataset != nullptr) // For set active operational dataset TLV the PSKc check is always successful
+    deviceRequirementMet       = CheckAuthorizationRequirements(aDeviceCommandClassFlags, datasetInfoPtr);
+    commissionerRequirementMet = CheckAuthorizationRequirements(aCommissionerCommandClassFlags, datasetInfoPtr);
+
+    if (aCommSuppliedDataset != nullptr)
     {
+        // If Commissioner supplies a dataset (only for Set Active Operational Dataset TLV commands),
+        // then the PSKc check is always considered successful. Table 13-9, bit 5.
         deviceRequirementMet |= kPskcFlag;
         commissionerRequirementMet |= (aCommissionerCommandClassFlags & kPskcFlag);
     }
@@ -362,6 +347,8 @@ bool TcatAgent::IsCommandClassAuthorized(CommandClass aCommandClass) const
 {
     bool authorized = false;
 
+    VerifyOrExit(IsConnected());
+
     switch (aCommandClass)
     {
     case kGeneral:
@@ -369,31 +356,38 @@ bool TcatAgent::IsCommandClassAuthorized(CommandClass aCommandClass) const
         break;
 
     case kCommissioning:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
-                                                         mDeviceAuthorizationField.mCommissioningFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                                       mDeviceAuthorizationField.mCommissioningFlags, nullptr);
         break;
 
     case kExtraction:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mExtractionFlags,
-                                                         mDeviceAuthorizationField.mExtractionFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mExtractionFlags,
+                                                       mDeviceAuthorizationField.mExtractionFlags, nullptr);
         break;
 
     case kDecommissioning:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mDecommissioningFlags,
-                                                         mDeviceAuthorizationField.mDecommissioningFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mDecommissioningFlags,
+                                                       mDeviceAuthorizationField.mDecommissioningFlags, nullptr);
         break;
 
     case kApplication:
-        authorized = CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,
-                                                         mDeviceAuthorizationField.mApplicationFlags, nullptr);
+        authorized = IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mApplicationFlags,
+                                                       mDeviceAuthorizationField.mApplicationFlags, nullptr);
         break;
 
-    case kInvalid:
-        authorized = false;
+    default:
         break;
     }
 
+exit:
     return authorized;
+}
+
+bool TcatAgent::IsSetActiveDatasetAuthorized(const Dataset *aDataset) const
+{
+    return !mIsCommissioned &&
+           IsCommandClassAuthorizedWithFlags(mCommissionerAuthorizationField.mCommissioningFlags,
+                                             mDeviceAuthorizationField.mCommissioningFlags, aDataset);
 }
 
 Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage)
@@ -590,12 +584,7 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     SuccessOrExit(error = dataset.ValidateTlvs());
     VerifyOrExit(dataset.ContainsTlv(Tlv::kNetworkKey), error = kErrorInvalidArgs);
 
-    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
-                                             mDeviceAuthorizationField.mCommissioningFlags, &dataset))
-    {
-        error = kErrorRejected;
-        ExitNow();
-    }
+    VerifyOrExit(IsSetActiveDatasetAuthorized(&dataset), error = kErrorRejected);
 
     SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
     Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
@@ -648,12 +637,7 @@ Error TcatAgent::HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
     uint16_t        initialLength;
     uint16_t        length;
 
-    if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mCommissioningFlags,
-                                             mDeviceAuthorizationField.mCommissioningFlags, nullptr))
-    {
-        error = kErrorRejected;
-        ExitNow();
-    }
+    VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
 
     offsetRange.Init(aOffset, aLength);
     initialLength = aOutgoingMessage.GetLength();
@@ -825,10 +809,10 @@ Error TcatAgent::HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &aResp
     uint16_t length;
 
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
-    VerifyOrExit(mVendorInfo->mProvisioningUrl != nullptr, error = kErrorInvalidState);
+    VerifyOrExit(mVendorInfo->mProvisioningUrl != nullptr, error = kErrorNotImplemented);
 
     length = StringLength(mVendorInfo->mProvisioningUrl, kProvisioningUrlMaxLength);
-    VerifyOrExit(length > 0 && length <= Tlv::kBaseTlvMaxLength, error = kErrorNotFound);
+    VerifyOrExit(length > 0, error = kErrorNotImplemented);
 
     SuccessOrExit(error =
                       Tlv::AppendTlv(aOutgoingMessage, kTlvResponseWithPayload, mVendorInfo->mProvisioningUrl, length));
@@ -1122,7 +1106,7 @@ template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Msg &aMsg)
     VerifyOrExit(aMsg.IsConfirmablePostRequest());
     LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
-    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Find<DelayTimerTlv>(aMsg.mMessage, delayTimerMs));
@@ -1169,7 +1153,9 @@ void TcatAgent::AdaptToExistingActivePeriod(uint32_t &aPeriodDelayMs, uint32_t &
     {
         TimeMilli now = TimerMilli::GetNow();
         uint32_t  remainingMs;
-        remainingMs = (mActiveOrStandbyTimer.GetFireTime() > now) ? mActiveOrStandbyTimer.GetFireTime() - now : 0;
+
+        remainingMs = mActiveOrStandbyTimer.GetFireTime().DetermineRemainingDurationFrom(now);
+
         if (mTimerSetsToActive)
         {
             aPeriodDelayMs    = Min(aPeriodDelayMs, remainingMs);
@@ -1197,7 +1183,7 @@ void SerializeTcatAdvertisementTlv(uint8_t                 *aBuffer,
     aOffset += aLength;
 }
 
-Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData)
+Error TcatAgent::GetAdvertisementData(uint16_t &aLen, uint8_t *aAdvertisementData) const
 {
     Error                 error = kErrorNone;
     DeviceTypeAndStatus   tas;

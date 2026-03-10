@@ -69,7 +69,7 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
     VerifyOrExit(mask != 0);
 
-    mReportMessage.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriEnergyReport));
+    mReportMessage.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnergyReport));
     VerifyOrExit(mReportMessage != nullptr);
 
     SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*mReportMessage, mask));
@@ -89,7 +89,7 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
         LogInfo("Sent %s ack", UriToString<kUriEnergyScan>());
     }
 
@@ -172,17 +172,14 @@ exit:
 
 void EnergyScanServer::SendReport(void)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    uint16_t         offset;
+    Error    error = kErrorNone;
+    uint16_t offset;
 
     // Update the Energy List TLV length in Report message
     offset = mReportMessage->GetLength() - mNumScanResults - sizeof(uint8_t);
     mReportMessage->Write(offset, mNumScanResults);
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*mReportMessage, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*mReportMessage, mCommissioner));
     mReportMessage.Release();
 
     LogInfo("Sent %s", UriToString<kUriEnergyReport>());

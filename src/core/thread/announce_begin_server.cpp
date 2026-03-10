@@ -68,7 +68,7 @@ template <> void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Msg &aM
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
         LogInfo("Sent %s response", UriToString<kUriAnnounceBegin>());
     }
 

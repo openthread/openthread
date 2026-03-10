@@ -331,7 +331,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     Error                 error = kErrorNone;
     VendorStackVersionTlv vendorStackVersionTlv;
 
-    mFinalizeMessage = Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
+    mFinalizeMessage = Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerFinalize);
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -452,7 +452,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
     Coap::Message   *message;
     Ip6::MessageInfo responseInfo(aMsg.mMessageInfo);
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);

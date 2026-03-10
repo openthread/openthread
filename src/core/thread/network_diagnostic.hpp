@@ -147,7 +147,6 @@ private:
     Error AppendIp6AddressList(Message &aMessage);
     Error AppendMacCounters(Message &aMessage);
     Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
-    void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
     Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);

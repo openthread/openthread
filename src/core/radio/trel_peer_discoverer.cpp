@@ -750,23 +750,14 @@ Error PeerDiscoverer::TxtData::Decode(Info &aInfo)
 
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
-        // If the TXT data happens to have entries with key longer
-        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
-        // entry would be placed in `mValue`. We skip over such
-        // entries.
-        if (entry.mKey == nullptr)
-        {
-            continue;
-        }
-
-        if (StringMatch(entry.mKey, kExtAddressKey))
+        if (entry.MatchesKey(kExtAddressKey))
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(Mac::ExtAddress), error = kErrorParse);
             aInfo.mExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
-        else if (StringMatch(entry.mKey, kExtPanIdKey))
+        else if (entry.MatchesKey(kExtPanIdKey))
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(MeshCoP::ExtendedPanId), error = kErrorParse);

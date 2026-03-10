@@ -376,33 +376,3 @@ jobs:
       run: |
         script/check-posix-build
         script/check-simulation-build
-
-  android-ndk:
-    name: android-ndk
-    runs-on: ubuntu-24.04
-    container:
-      image: openthread/environment
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: recursive
-    - name: Install unzip
-      run: apt update && apt install -y unzip
-    - name: Setup NDK
-      id: setup-ndk
-      uses: nttld/setup-ndk@afb4c9964b521afb97c864b7d40b11e6911bd410 # v1.5.0
-      with:
-        ndk-version: r25c
-        local-cache: true
-
-    - name: Build
-      env:
-        NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
-      run: |
-        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-daemon ot-ctl" script/cmake-build android-ndk
-        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-cli" script/cmake-build android-ndk

@@ -1157,7 +1157,11 @@ class NodeImpl:
                'fullname': 'my-host.default.service.arpa.',
                'name': 'my-host',
                'deleted': 'false',
-               'addresses': ['2001::1', '2001::2']
+               'addresses': ['2001::1', '2001::2'],
+               'lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459'
            }]
         """
 
@@ -1173,12 +1177,21 @@ class NodeImpl:
 
             host['deleted'] = lines.pop(0).strip().split(':')[1].strip()
             if host['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = lines.pop(0).strip().split(':')
+                    host[key_value[0].strip()] = key_value[1].strip()
                 host_list.append(host)
                 continue
 
             addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
             host['addresses'] = [addr.strip() for addr in addresses if addr]
+
+            for _ in range(4):
+                # `lease`, `key-lease`, `remaining lease` and `remaining key-lease`
+                key_value = lines.pop(0).strip().split(':')
+                host[key_value[0].strip()] = key_value[1].strip()
 
             host_list.append(host)
 
@@ -1210,7 +1223,9 @@ class NodeImpl:
                'weight': '0',
                'ttl': '7200',
                'lease': '7200',
-               'key-lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -1235,11 +1250,15 @@ class NodeImpl:
 
             service['deleted'] = lines.pop(0).strip().split(':')[1].strip()
             if service['deleted'] == 'true':
+                for _ in range(2):
+                    key_value = lines.pop(0).strip().split(':')
+                    service[key_value[0].strip()] = key_value[1].strip()
                 service_list.append(service)
                 continue
 
-            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', and 'key-lease'
-            for i in range(0, 7):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease',
+            # 'remaining lease', and `remaining key-lease`
+            for i in range(0, 9):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 

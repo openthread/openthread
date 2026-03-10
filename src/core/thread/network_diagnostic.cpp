@@ -50,25 +50,6 @@ Server::Server(Instance &aInstance)
 {
 }
 
-void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
-{
-    if (aDestination.IsMulticast())
-    {
-        aMessageInfo.SetMulticastLoop(true);
-    }
-
-    if (aDestination.IsLinkLocalUnicastOrMulticast())
-    {
-        aMessageInfo.SetSockAddr(Get<Mle::Mle>().GetLinkLocalAddress());
-    }
-    else
-    {
-        aMessageInfo.SetSockAddrToRloc();
-    }
-
-    aMessageInfo.SetPeerAddr(aDestination);
-}
-
 Error Server::AppendIp6AddressList(Message &aMessage)
 {
     Error         error;
@@ -582,7 +563,7 @@ template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
     // DIAG_GET.qry may be sent as a confirmable request.
     if (aMsg.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
     }
 
 #if OPENTHREAD_MTD
@@ -599,13 +580,12 @@ exit:
 
 void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Error            error  = kErrorNone;
-    Coap::Message   *answer = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    AnswerTlv        answerTlv;
-    uint16_t         queryId;
+    Error          error  = kErrorNone;
+    Coap::Message *answer = nullptr;
+    AnswerTlv      answerTlv;
+    uint16_t       queryId;
 
-    answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    answer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(answer != nullptr, error = kErrorNoBufs);
 
     IgnoreError(answer->SetPriority(aRequest.GetPriority()));
@@ -620,9 +600,7 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
     answerTlv.Init(0, AnswerTlv::kIsLast);
     SuccessOrExit(answer->Append(answerTlv));
 
-    PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    error = Get<Tmf::Agent>().SendMessage(*answer, messageInfo);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*answer, aDestination);
 
 exit:
     FreeMessageOnError(answer, error);
@@ -640,7 +618,7 @@ Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 
     Error error = kErrorNone;
 
-    aAnswer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    aAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
     IgnoreError(aAnswer->SetPriority(aInfo.mPriority));
 
@@ -778,18 +756,15 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
     // This method send the given next `aAnswer` associated with
     // a query to the  `aDestination`.
 
-    Error            error      = kErrorNone;
-    Coap::Message   *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error      = kErrorNone;
+    Coap::Message *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
 
     mAnswerQueue.Dequeue(aAnswer);
-
-    PrepareMessageInfoForDest(aDestination, messageInfo);
 
     // When sending the message, we pass `nextAnswer` as `aContext`
     // to be used when invoking callback `HandleAnswerResponse()`.
 
-    error = Get<Tmf::Agent>().SendMessage(aAnswer, messageInfo, HandleAnswerResponse, nextAnswer);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(aAnswer, aDestination, HandleAnswerResponse, nextAnswer);
 
     if (error != kErrorNone)
     {
@@ -941,7 +916,7 @@ template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Msg &aMsg)
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    response = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    response = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     IgnoreError(response->SetPriority(aMsg.mMessage.GetPriority()));
@@ -992,7 +967,7 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
         }
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
 exit:
     return;
@@ -1052,19 +1027,18 @@ Error Client::SendCommand(Uri                   aUri,
                           Coap::ResponseHandler aHandler,
                           void                 *aContext)
 {
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message = nullptr;
 
     switch (aUri)
     {
     case kUriDiagnosticGetQuery:
-        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(aUri);
+        message = Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(aUri);
         break;
 
     case kUriDiagnosticGetRequest:
     case kUriDiagnosticReset:
-        message = Get<Tmf::Agent>().NewConfirmablePostMessage(aUri);
+        message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(aUri);
         break;
 
     default:
@@ -1084,9 +1058,7 @@ Error Client::SendCommand(Uri                   aUri,
         SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*message, ++mQueryId));
     }
 
-    Get<Server>().PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*message, aDestination, aHandler, aContext));
 
     LogInfo("Sent %s to %s", UriToString(aUri), aDestination.ToString().AsCString());
 
@@ -1120,7 +1092,7 @@ template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
         mGetCallback.InvokeIfSet(kErrorNone, &aMsg.mMessage, &aMsg.mMessageInfo);
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
 exit:
     return;

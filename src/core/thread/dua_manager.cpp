@@ -418,10 +418,10 @@ void DuaManager::UpdateTimeTickerRegistration(void)
 
 void DuaManager::PerformNextRegistration(void)
 {
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Ip6::Address     dua;
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+    Ip6::Address   dua;
+    Ip6::Address   destAddr;
 
     VerifyOrExit(Get<Mle::Mle>().IsAttached());
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary());
@@ -455,7 +455,7 @@ void DuaManager::PerformNextRegistration(void)
     }
 
     // Prepare DUA.req
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDuaRegistrationRequest);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriDuaRegistrationRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -503,17 +503,14 @@ void DuaManager::PerformNextRegistration(void)
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, messageInfo.GetPeerAddr());
+        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, destAddr);
     }
     else
     {
-        messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                      Get<BackboneRouter::Leader>().GetServer16());
+        destAddr.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetSockAddrToRloc();
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleDuaResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, HandleDuaResponse, this));
 
     mIsDuaPending   = true;
     mRegisteringDua = dua;
@@ -577,7 +574,7 @@ template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMs
 
     VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
 
-    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }
@@ -700,19 +697,16 @@ exit:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 void DuaManager::SendAddressNotification(Ip6::Address &aAddress, DuaStatus aStatus, const Child &aChild)
 {
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Error            error;
+    Coap::Message *message = nullptr;
+    Error          error;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDuaRegistrationNotify);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriDuaRegistrationNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aStatus));
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aAddress));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aChild.GetRloc16());
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, aChild.GetRloc16()));
 
     LogInfo("Sent %s for child %04x DUA %s", UriToString<kUriDuaRegistrationNotify>(), aChild.GetRloc16(),
             aAddress.ToString().AsCString());

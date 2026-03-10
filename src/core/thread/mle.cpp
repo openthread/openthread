@@ -127,11 +127,11 @@ Mle::Mle(Instance &aInstance)
     mMeshLocalRloc.GetAddress().GetIid().SetToLocator(0);
     mMeshLocalRloc.mRloc = true;
 
-    mLinkLocalAllThreadNodes.Clear();
+    mLinkLocalAllThreadNodes.InitAsThreadOrigin();
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = BigEndian::HostSwap16(0xff32);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[7] = BigEndian::HostSwap16(0x0001);
 
-    mRealmLocalAllThreadNodes.Clear();
+    mRealmLocalAllThreadNodes.InitAsThreadOrigin();
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = BigEndian::HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = BigEndian::HostSwap16(0x0001);
 
@@ -3637,8 +3637,13 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 
     if (Get<Mle>().ShouldRegisterMulticastAddrsWithParent())
     {
-        for (const Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+        for (const Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().GetMulticastAddresses())
         {
+            if (addr.GetOrigin() != Ip6::Netif::kOriginManual)
+            {
+                continue;
+            }
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
             // For Thread 1.2 MED, skip multicast address with scope not
             // larger than realm local when registering.

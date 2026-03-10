@@ -288,6 +288,8 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
     // entries we aim to have in the Network Data to decide whether or
     // not to take any action (add or remove our entry).
 
+    TimeMilli now = TimerMilli::GetNow();
+
     LogInfo("%s in netdata - total:%d, preferred:%d, desired:%d", ToString().AsCString(), aNumEntries,
             aNumPreferredEntries, aDesiredNumEntries);
 
@@ -303,10 +305,10 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
         if (aNumEntries < aDesiredNumEntries)
         {
-            mUpdateTime = TimerMilli::GetNow() + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToAdd);
+            mUpdateTime = now + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToAdd);
             SetState(kAdding);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
-            LogUpdateTime();
+            LogUpdateTime(now);
         }
         break;
 
@@ -330,28 +332,47 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
         // aDesiredNumEntries`) we add an extra delay before removing
         // the entry. This gives higher chance for a non-preferred
         // entry from another device to be removed before our entry.
+        // If `aDesiredNumEntries` is explicitly set to zero (which
+        // indicates that all entries should be removed), no delay is
+        // added. This helps with SRP/DNS unicast entries, where if
+        // any service data unicast or anycast entry is seen, we set
+        // the desired number to zero to quickly remove any previously
+        // added server data unicast entry.
 
         if (aNumEntries > aDesiredNumEntries)
         {
-            mUpdateTime = TimerMilli::GetNow() + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToRemove);
+            mUpdateTime = now;
 
-            if (aNumPreferredEntries < aDesiredNumEntries)
+            if (aDesiredNumEntries > 0)
             {
-                mUpdateTime += kExtraDelayToRemovePreferred;
+                mUpdateTime += Random::NonCrypto::GetUint32InRange(1, kMaxDelayToRemove);
+
+                if (aNumPreferredEntries < aDesiredNumEntries)
+                {
+                    mUpdateTime += kExtraDelayToRemovePreferred;
+                }
             }
 
             SetState(kRemoving);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
-            LogUpdateTime();
+            LogUpdateTime(now);
         }
         break;
 
     case kRemoving:
-        // Our entry is being removed (wait time before remove). If we
-        // now see that there are enough or too few entries, we stop
+        // Our entry is being removed (wait time before remove). If
+        // `aDesiredNumEntries` is zero, we update `mUpdateTime` to
+        // `now` to quickly remove the entry. Otherwise, if we now
+        // see that there are enough or too few entries, we stop
         // removing our entry.
 
-        if (aNumEntries <= aDesiredNumEntries)
+        if ((aDesiredNumEntries == 0) && (mUpdateTime > now))
+        {
+            mUpdateTime = now;
+            Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
+            LogUpdateTime(now);
+        }
+        else if (aNumEntries <= aDesiredNumEntries)
         {
             SetState(kAdded);
         }
@@ -483,10 +504,14 @@ exit:
     return string;
 }
 
-void Publisher::Entry::LogUpdateTime(void) const
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void Publisher::Entry::LogUpdateTime(TimeMilli aNow) const
 {
-    LogInfo("%s - update in %lu msec", ToString().AsCString(), ToUlong(mUpdateTime - TimerMilli::GetNow()));
+    LogInfo("%s - update in %lu msec", ToString().AsCString(), ToUlong(mUpdateTime - aNow));
 }
+#else
+void Publisher::Entry::LogUpdateTime(TimeMilli) const {}
+#endif
 
 const char *Publisher::Entry::StateToString(State aState)
 {

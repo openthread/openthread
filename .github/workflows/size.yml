@@ -36,6 +36,9 @@ on:
     branches:
       - 'main'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
   cancel-in-progress: true
@@ -51,11 +54,11 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: Checkout Pull Request
+    - name: Fetch Pull Request ref
       if: ${{ github.event_name == 'pull_request_target' }}
       run: |
-        git fetch origin pull/${{ github.event.pull_request.number }}/merge
-        git checkout FETCH_HEAD
+        git fetch --depth 2 origin pull/${{ github.event.pull_request.number }}/merge
+        echo "OT_SHA_NEW=$(git rev-parse FETCH_HEAD)" >> $GITHUB_ENV
     - name: Run
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"

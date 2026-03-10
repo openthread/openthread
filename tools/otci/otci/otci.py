@@ -1164,6 +1164,10 @@ class OTCI(object):
 
                     v = v[1:-1]
                     info['addresses'] = list(map(Ip6Addr, v.split(', ')))
+
+                elif k in ('lease', 'key-lease', 'remaining lease', 'remaining key-lease'):
+                    info[k] = v
+
                 else:
                     raise UnexpectedCommandOutput(output)
 
@@ -1195,6 +1199,8 @@ class OTCI(object):
                     info[k] = list() if v == '(null)' else list(v.split(','))
                 elif k in ('port', 'weight', 'priority', 'ttl', 'lease', 'key-lease'):
                     info[k] = int(v)
+                elif k in ('remaining lease', 'remaining key-lease'):
+                    info[k] = v
                 elif k in ('host',):
                     info[k] = v
                 elif k == 'TXT':

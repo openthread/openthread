@@ -38,7 +38,8 @@ void Node::Reset(void)
     uint32_t  id       = GetId();
 
     mRadio.Reset();
-    mAlarm.Reset();
+    mAlarmMilli.Reset();
+    mAlarmMicro.Reset();
     mMdns.Reset();
     mPendingTasklet = false;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

@@ -1224,6 +1224,16 @@ public:
     }
 
     /**
+     * Indicates whether the entry's key (`mKey`) matches a given key string using a case-insensitive comparison.
+     *
+     * @param[in] aKey  A pointer to a key string to compare with.
+     *
+     * @retval TRUE   The entry's key matches the given @p aKey.
+     * @retval FALSE  The entry's key does not match or `mKey` is `nullptr`.
+     */
+    bool MatchesKey(const char *aKey) const;
+
+    /**
      * Encodes and appends the `TxtEntry` to a message.
      *
      * @param[in] aMessage  The message to append to.
