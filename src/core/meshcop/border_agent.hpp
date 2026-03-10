@@ -408,7 +408,7 @@ private:
 
     const char *GetServiceName(void);
     bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
-    void        ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
+    void        ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
     void        RegisterService(void);
     void        UnregisterService(void);
 #endif
