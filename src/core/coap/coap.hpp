@@ -397,8 +397,7 @@ public:
     Message *AllocateAndInitConfirmablePostMessage(Uri aUri);
 
     /**
-     * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority
-     * level.
+     * Allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority level.
      *
      * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI and a randomly
      * generated token (of default length). This method also sets the payload marker (calling `AppendPayloadMarker()`).
@@ -424,6 +423,42 @@ public:
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      */
     Message *AllocateAndInitNonConfirmablePostMessage(Uri aUri);
+
+    /**
+     * Allocates and initializes a new CoAP Post message with normal priority level.
+     *
+     * If the provided @p aDestination address is multicast, the message will be Non-Confirmable. Otherwise, it will be
+     * Confirmable.
+     *
+     * The CoAP header is initialized as either `kTypeNonConfirmable` or `kTypeConfirmable` and `kCodePost` with the
+     * given URI and a randomly generated token (of default length). This method also sets the payload marker (calling
+     * `AppendPayloadMarker()`). Even if the message has no payload, calling `AppendPayloadMarker()` is harmless, since
+     * `SendMessage()` will check and remove the payload marker when there is no payload.
+     *
+     * @param[in] aUri         The URI.
+     * @param[in] aDestination The destination IPv6 address.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     */
+    Message *AllocateAndInitPostMessageTo(Uri aUri, const Ip6::Address &aDestination);
+
+    /**
+     * Allocates and initializes a new CoAP Post message with Network Control priority level.
+     *
+     * If the provided @p aDestination address is multicast, the message will be Non-Confirmable. Otherwise, it will be
+     * Confirmable.
+     *
+     * The CoAP header is initialized as either `kTypeNonConfirmable` or `kTypeConfirmable` and `kCodePost` with the
+     * given URI and a randomly generated token (of default length). This method also sets the payload marker (calling
+     * `AppendPayloadMarker()`). Even if the message has no payload, calling `AppendPayloadMarker()` is harmless, since
+     * `SendMessage()` will check and remove the payload marker when there is no payload.
+     *
+     * @param[in] aUri         The URI.
+     * @param[in] aDestination The destination IPv6 address.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     */
+    Message *AllocateAndInitPriorityPostMessageTo(Uri aUri, const Ip6::Address &aDestination);
 
     /**
      * Allocates and initializes a new CoAP response message with Network Control priority level for a
@@ -556,71 +591,64 @@ public:
     Error SendMessage(OwnedPtr<Message> aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Sends a CoAP reset message.
+     * Sends an empty CoAP message (using `kCodeEmpty` Code 0.00).
+     *
+     * An empty CoAP message has no options and no payload (only a 4-byte header). This is typically used for sending
+     * Empty Acknowledgments or Resets.
+     *
+     * @param[in]  aType           The CoAP Type of the empty message (e.g., `kTypeAck`, `kTypeReset`).
+     * @param[in]  aRxMsg          The received CoAP message to which this message responds (provides Message ID).
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP message.
+     * @retval kErrorInvalidArgs   The @p aType is not valid for an empty message (e.g., `kTypeNonConfirmable`),
+     *                             or is `kTypeAck` but the @p aRxMsg is not confirmable.
+     */
+    Error SendEmptyMessage(Type aType, const Msg &aRxMsg);
+
+    /**
+     * Sends a CoAP response message without a payload to a given request message.
+     *
+     * The response will dynamically be an ACK (`kTypeAck`) or NON (`kTypeNonConfirmable`) message depending on the
+     * request @p aRxMsg type, containing the specified response code @p aCode and matching token, without any payload.
+     *
+     * @param[in]  aCode           The CoAP response Code.
+     * @param[in]  aRxMsg          The received CoAP request message.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a request, or is neither confirmable nor non-confirmable.
+     */
+    Error SendResponse(Message::Code aCode, const Msg &aRxMsg);
+
+    /**
+     * Sends a CoAP ACK (`kTypeAck`) response without a payload and a given status code.
+     *
+     * This method strictly ensures the @p aRxMsg is a confirmable request message. It then sends a piggybacked
+     * ACK (`kTypeAck`) response containing the provided CoAP @p aCode and matching token without a payload.
+     *
+     * @param[in]  aRxMsg          The received CoAP request message.
+     * @param[in]  aCode           The CoAP Code of the ACK response.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a confirmable request.
+     */
+    Error SendAckResponse(const Msg &aRxMsg, Code aCode);
+
+    /**
+     * Sends a CoAP ACK response without a payload using `kCodeChanged` Code 2.04.
+     *
+     * This method strictly ensures the @p aRxMsg is a confirmable request message. It then sends a piggybacked
+     * ACK (`kTypeAck`) response containing `kCodeChanged` and matching token without a payload.
      *
      * @param[in]  aRxMsg          The received CoAP request message.
      *
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg is not of confirmable type.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a confirmable request.
      */
-    Error SendReset(const Msg &aRxMsg);
-
-    /**
-     * Sends header-only CoAP response message.
-     *
-     * @param[in]  aCode           The CoAP code of this response.
-     * @param[in]  aRxMsg          The received request message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
-     */
-    Error SendHeaderResponse(Message::Code aCode, const Msg &aRxMsg);
-
-    /**
-     * Sends a CoAP ACK empty message which is used in Separate Response for confirmable requests.
-     *
-     * @param[in]  aRxMsg         `Msg` for the received CoAP request message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
-     */
-    Error SendAck(const Msg &aRxMsg);
-
-    /**
-     * Sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
-     *
-     * @param[in]  aRxMsg          The received CoAP request Message.
-     * @param[in]  aCode           The CoAP code of the dummy CoAP response.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
-     */
-    Error SendEmptyAck(const Msg &aRxMsg, Code aCode);
-
-    /**
-     * Sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
-     *
-     * @param[in]  aRxMsg          The received CoAP request Message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     * @retval kErrorInvalidArgs   The @p aRxMsg header is not of confirmable type.
-     */
-    Error SendEmptyAck(const Msg &aRxMsg);
-
-    /**
-     * Sends a header-only CoAP message to indicate no resource matched for the request.
-     *
-     * @param[in]  aRxMsg          The received request CoAP Message.
-     *
-     * @retval kErrorNone          Successfully enqueued the CoAP response message.
-     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
-     */
-    Error SendNotFound(const Msg &aRxMsg);
+    Error SendAckResponse(const Msg &aRxMsg);
 
     /**
      * Aborts CoAP transactions associated with given handler and context.
@@ -704,7 +732,7 @@ public:
      * @retval kErrorNone          Successfully enqueued the CoAP response message.
      * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
      */
-    Error SendRequestEntityIncomplete(const Msg &aRxMsg) { return SendHeaderResponse(kCodeRequestIncomplete, aRxMsg); }
+    Error SendRequestEntityIncomplete(const Msg &aRxMsg) { return SendResponse(kCodeRequestIncomplete, aRxMsg); }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 protected:
@@ -724,31 +752,31 @@ protected:
     typedef bool (*ResourceHandler)(CoapBase &aCoapBase, const char *aUriPath, Msg &aRxMsg);
 
     /**
-     * Pointer is called to send a CoAP message.
+     * Represents a function reference used to pass a prepared CoAP message to the transport layer for transmission.
      *
      * @param[in]  aCoapBase     A reference to the CoAP agent.
-     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessage      A reference to the message to transmit.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      * @retval kErrorNone    Successfully sent CoAP message.
      * @retval kErrorNoBufs  Failed to allocate retransmission data.
      */
-    typedef Error (*Sender)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef Error (&Transmitter)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Initializes the object.
+     * Initializes the `CoapBase` object.
      *
-     * @param[in]  aInstance        A reference to the OpenThread instance.
-     * @param[in]  aSender          A function pointer to send CoAP message, which SHOULD be a static
-     *                              member method of a descendant of this class.
+     * @param[in]  aInstance       The OpenThread instance.
+     * @param[in]  aTransmitter    A `Transmitter` function reference used to pass a CoAP message to the transport
+     *                             layer for transmission.
      */
-    CoapBase(Instance &aInstance, Sender aSender);
+    CoapBase(Instance &aInstance, Transmitter aTransmitter);
 
     /**
-     * Receives a CoAP message.
+     * Receives a CoAP message from the transport layer.
      *
-     * @param[in]  aMessage      A reference to the received message.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aMessage      The received message.
+     * @param[in]  aMessageInfo  The message info associated with @p aMessage.
      */
     void Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -836,7 +864,7 @@ private:
     public:
         explicit PendingRequests(Instance &aInstance, CoapBase &aCoapBase);
 
-        Error AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest);
+        Error Add(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks, Request &aRequest);
         void  Remove(Request &aRequest);
         Error FindRelatedRequest(const Msg &aMsg, Request &aRequest);
         void  FinalizeRequest(Request &aRequest, Error aResult);
@@ -922,14 +950,13 @@ private:
                          const Ip6::MessageInfo &aMessageInfo,
                          const TxParameters     *aTxParameters,
                          const SendCallbacks    &aCallbacks);
-    Error    SendEmptyMessage(Type aType, const Msg &aRxMsg);
-    Error    Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error    Transmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     Error ProcessBlockwiseSend(Msg &aMsg, const SendCallbacks &aCallbacks);
     Error ProcessBlockwiseResponse(Msg &aRxMsg, Request &aRequest);
-    Error ProcessBlockwiseRequest(Msg &aRxMsg, Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
+    Error ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStringBuffer &aUriPath, bool &aDidHandle);
     void  FreeLastBlockResponse(void);
     Error CacheLastBlockResponse(Message *aResponse);
     Error PrepareNextBlockRequest(uint16_t         aBlockOptionNumber,
@@ -946,7 +973,7 @@ private:
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    Error ProcessObserveSend(Msg &aTxMsg, Request &aRequest);
+    Error ProcessObserveSend(const Msg &aTxMsg, Request &aRequest);
 #endif
 
     PendingRequests            mPendingRequests;
@@ -956,7 +983,7 @@ private:
     Callback<RequestHandler>   mDefaultHandler;
     Callback<ResponseFallback> mResponseFallback;
     ResourceHandler            mResourceHandler;
-    Sender                     mSender;
+    Transmitter                mTransmitter;
     uint16_t                   mMessageId;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     LinkedList<ResourceBlockWise> mBlockWiseResources;
@@ -1004,8 +1031,8 @@ protected:
     CoapSocket mSocket;
 
 private:
-    static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error        Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static Error Transmit(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error        Transmit(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 };
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE

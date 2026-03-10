@@ -49,7 +49,8 @@ def _has_csl_ie(p):
 
 
 def _must_not_have_data_request_from_ssed1(pkts, start_pkt, end_pkt, ssed_1, router_1_rloc16):
-    pkts.range((start_pkt.number if start_pkt else 1, 0), (end_pkt.number, 0)).\
+    start_num = start_pkt.number if start_pkt else 1
+    pkts.range((start_num, start_num), (end_pkt.number, end_pkt.number)).\
         filter_wpan_src64(ssed_1).\
         filter_wpan_dst16(router_1_rloc16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
@@ -125,7 +126,7 @@ def verify(pv):
     # - Pass Criteria: SSED_1 MUST NOT send a MAC Data Request prior to receiving the UDP message from the Leader.
     print("Step 4: Leader sends UDP to SSED_1")
 
-    udp_pkt = pkts.range((child_update_resp.number, 0)).\
+    udp_pkt = pkts.range((child_update_resp.number, child_update_resp.number)).\
         filter_wpan_src64(LEADER).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter(lambda p: p.udp).\
@@ -141,7 +142,7 @@ def verify(pv):
     print("Step 5: SSED_1 responds with Enhanced ACK containing CSL IEs")
 
     # Enhanced ACK for the forwarded UDP message (Router 1 to SSED_1)
-    udp_fwd = pkts.range((udp_pkt.number, 0)).\
+    udp_fwd = pkts.range((udp_pkt.number, udp_pkt.number)).\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst16(SSED_1_RLOC16).\
         filter(lambda p: p.udp).\
@@ -150,7 +151,7 @@ def verify(pv):
         must_next()
 
     # The DUT MUST receive an Enhanced ACK from SSED_1
-    ack_step5 = pkts.range((udp_fwd.number, 0)).\
+    ack_step5 = pkts.range((udp_fwd.number, udp_fwd.number)).\
         filter_wpan_ack().\
         filter(_has_csl_ie).\
         must_next()
@@ -168,7 +169,7 @@ def verify(pv):
     #   - The Leader MUST receive an ICMPv6 Echo Reply from SSED_1.
     print("Step 7: Leader sends Echo Request to SSED_1")
 
-    echo_req_1 = pkts.range((ack_step5.number, 0)).\
+    echo_req_1 = pkts.range((ack_step5.number, ack_step5.number)).\
         filter_ping_request().\
         filter_wpan_src64(LEADER).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
@@ -178,7 +179,7 @@ def verify(pv):
     # SSED_1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request from the Leader.
     _must_not_have_data_request_from_ssed1(pkts, udp_fwd, echo_req_1, SSED_1, ROUTER_1_RLOC16)
 
-    echo_reply_1 = pkts.range((echo_req_1.number, 0)).\
+    echo_reply_1 = pkts.range((echo_req_1.number, echo_req_1.number)).\
         filter_ping_reply(identifier=echo_req_1.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
@@ -195,7 +196,7 @@ def verify(pv):
     print("Step 9: SSED_1 sends MAC Data Request with CSL IEs")
 
     # We look for the Data Request starting from echo_req_1 because it could be delayed until Step 9.
-    step9_data_req = pkts.range((echo_req_1.number, 0)).\
+    step9_data_req = pkts.range((echo_req_1.number, echo_req_1.number)).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
@@ -217,7 +218,7 @@ def verify(pv):
 
     # Start search from whichever packet was later: echo_reply_1 or step9_data_req.
     last_pkt_step9 = echo_reply_1 if echo_reply_1.number > step9_data_req.number else step9_data_req
-    echo_req_2 = pkts.range((last_pkt_step9.number, 0)).\
+    echo_req_2 = pkts.range((last_pkt_step9.number, last_pkt_step9.number)).\
         filter_ping_request().\
         filter_wpan_src64(LEADER).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
@@ -227,7 +228,7 @@ def verify(pv):
     # SSED_1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request from the Leader.
     _must_not_have_data_request_from_ssed1(pkts, step9_data_req, echo_req_2, SSED_1, ROUTER_1_RLOC16)
 
-    echo_reply_2 = pkts.range((echo_req_2.number, 0)).\
+    echo_reply_2 = pkts.range((echo_req_2.number, echo_req_2.number)).\
         filter_ping_reply(identifier=echo_req_2.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
@@ -249,7 +250,7 @@ def verify(pv):
     print("Step 13: SSED_1 sends UDP to DUT with CSL IEs")
 
     # UDP could also be delayed until Step 13 if Echo Request 2 was delayed.
-    step13_udp = pkts.range((echo_req_2.number, 0)).\
+    step13_udp = pkts.range((echo_req_2.number, echo_req_2.number)).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter(lambda p: p.udp).\
@@ -263,7 +264,7 @@ def verify(pv):
     #   - The Enhanced ACK must occur within the ACK timeout.
     print("Step 14: Router sends Enhanced ACK (no IEs)")
 
-    ack_step14 = pkts.range((step13_udp.number, 0)).\
+    ack_step14 = pkts.range((step13_udp.number, step13_udp.number)).\
         filter_wpan_ack().\
         filter(lambda p: p.wpan.version == 2 and p.wpan.ie_present == 0).\
         must_next()
@@ -283,17 +284,16 @@ def verify(pv):
 
     # Ensure we search after both echo_reply_2 and ack_step14.
     last_pkt_step14 = echo_reply_2 if echo_reply_2.number > ack_step14.number else ack_step14
-    echo_req_3 = pkts.range((last_pkt_step14.number, 0)).\
+    echo_req_3 = pkts.range((last_pkt_step14.number, last_pkt_step14.number)).\
         filter_ping_request().\
         filter_wpan_src64(LEADER).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_ipv6_dst(SSED_1_ML_EID).\
         must_next()
 
-    # SSED1 MUST NOT send a MAC Data Request prior to receiving the ICMPv6 Echo Request from the Leader.
     _must_not_have_data_request_from_ssed1(pkts, last_pkt_step14, echo_req_3, SSED_1, ROUTER_1_RLOC16)
 
-    pkts.range((echo_req_3.number, 0)).\
+    pkts.range((echo_req_3.number, echo_req_3.number)).\
         filter_ping_reply(identifier=echo_req_3.icmpv6.echo.identifier).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\

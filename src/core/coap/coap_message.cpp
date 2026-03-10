@@ -131,11 +131,6 @@ exit:
     return error;
 }
 
-Error Message::InitAsPost(const Ip6::Address &aDestination, Uri aUri)
-{
-    return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUri);
-}
-
 Error Message::InitAsResponse(Type aType, Code aCode, const Message &aRequest)
 {
     Error error;
@@ -688,22 +683,6 @@ bool Message::HasSameTokenAs(const Message &aMessage) const
 
 exit:
     return hasSame;
-}
-
-Message *Message::Clone(void) const { return Clone(GetLength()); }
-
-Message *Message::Clone(uint16_t aLength) const { return Clone(aLength, GetReserved()); }
-
-Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
-{
-    Message *message = static_cast<Message *>(ot::Message::Clone(aLength, aReserveHeader));
-
-    VerifyOrExit(message != nullptr);
-
-    message->SetHeaderOffset(GetHeaderOffset());
-
-exit:
-    return message;
 }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE

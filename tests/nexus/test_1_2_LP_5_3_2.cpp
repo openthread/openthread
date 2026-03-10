@@ -55,7 +55,7 @@ static constexpr uint32_t kAttachToRouterTime = 200 * kMsPerSecond;
 /**
  * Time to advance for a node to join as a SSED.
  */
-static constexpr uint32_t kAttachAsSsedTime = 20 * kMsPerSecond;
+static constexpr uint32_t kAttachAsSsedTime = 5 * kMsPerSecond;
 
 /**
  * Time to wait in the test, in milliseconds.
@@ -105,6 +105,11 @@ static constexpr uint16_t kEchoId3 = 0x03;
 static constexpr uint32_t kCslWaitMultiplier = 2;
 
 /**
+ * Time to wait for CSL message delivery and response, in milliseconds.
+ */
+static constexpr uint32_t kCslWaitTime = kCslPeriodMs * kCslWaitMultiplier;
+
+/**
  * Helper to send a UDP message.
  */
 static void SendUdpMessage(Node &aNode, const Ip6::Address &aDestination, uint16_t aPort)
@@ -140,7 +145,7 @@ static void VerifyCslTimerReset(Node &aRouter, Node &aSsed)
     // Resetting to 0 means CslLastHeard is updated to current time.
     Log("Checking CSL timer reset: Now=%u, LastHeard=%u", TimerMilli::GetNow().GetValue(),
         child->GetCslLastHeard().GetValue());
-    VerifyOrQuit(TimerMilli::GetNow() - child->GetCslLastHeard() <= kCslPeriodMs);
+    VerifyOrQuit(TimerMilli::GetNow() - child->GetCslLastHeard() <= kCslWaitTime);
 }
 
 void Test1_2_LP_5_3_2(void)
@@ -269,7 +274,7 @@ void Test1_2_LP_5_3_2(void)
      */
     Log("Step 5: SSED_1");
 
-    nexus.AdvanceTime(kCslPeriodMs); // Allow time for message delivery and ACK.
+    nexus.AdvanceTime(kCslWaitTime); // Allow time for message delivery and ACK.
     VerifyCslTimerReset(router1, ssed1);
 
     /**
@@ -292,7 +297,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 7: Leader");
 
     leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoId1, kEchoPayloadSize);
-    nexus.AdvanceTime(kCslPeriodMs * kCslWaitMultiplier); // Allow time for Echo Request and Reply.
+    nexus.AdvanceTime(kCslWaitTime); // Allow time for Echo Request and Reply.
 
     /**
      * Step 8: Harness
@@ -312,7 +317,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 9: SSED_1");
 
     SuccessOrQuit(ssed1.Get<DataPollSender>().SendDataPoll());
-    nexus.AdvanceTime(kCslPeriodMs);
+    nexus.AdvanceTime(kCslWaitTime);
     VerifyCslTimerReset(router1, ssed1);
 
     /**
@@ -335,7 +340,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 11: Leader");
 
     leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoId2, kEchoPayloadSize);
-    nexus.AdvanceTime(kCslPeriodMs * kCslWaitMultiplier);
+    nexus.AdvanceTime(kCslWaitTime);
 
     /**
      * Step 12: Harness
@@ -359,7 +364,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 13: SSED_1");
 
     SendUdpMessage(ssed1, router1.Get<Mle::Mle>().GetMeshLocalEid(), kUdpPort);
-    nexus.AdvanceTime(kCslPeriodMs);
+    nexus.AdvanceTime(kCslWaitTime);
     VerifyCslTimerReset(router1, ssed1);
 
     /**
@@ -391,7 +396,7 @@ void Test1_2_LP_5_3_2(void)
     Log("Step 16: Leader");
 
     leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoId3, kEchoPayloadSize);
-    nexus.AdvanceTime(kCslPeriodMs * kCslWaitMultiplier);
+    nexus.AdvanceTime(kCslWaitTime);
 
     nexus.SaveTestInfo("test_1_2_LP_5_3_2.json");
 }

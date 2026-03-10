@@ -420,7 +420,7 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (duaRespCoapCode != Coap::kCodeEmpty)
         {
-            IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg, duaRespCoapCode));
+            IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg, duaRespCoapCode));
         }
         else
 #endif
@@ -599,7 +599,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Msg &aMsg)
         HandleExtendedBackboneAnswer(dua, meshLocalIid, timeSinceLastTransaction, srcRloc16);
     }
 
-    SuccessOrExit(error = mBackboneTmfAgent.SendEmptyAck(aMsg));
+    SuccessOrExit(error = mBackboneTmfAgent.SendAckResponse(aMsg));
 
 exit:
     LogInfo("HandleBackboneAnswer: %s", ErrorToString(error));
@@ -632,10 +632,8 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     Coap::Message   *message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsPost(aDstAddr, kUriBackboneAnswer));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = mBackboneTmfAgent.AllocateAndInitPriorityPostMessageTo(kUriBackboneAnswer, aDstAddr);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
 

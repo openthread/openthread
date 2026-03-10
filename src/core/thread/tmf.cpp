@@ -107,8 +107,8 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-        Case(kUriPanIdConflict, PanIdQueryClient);
-        Case(kUriEnergyReport, EnergyScanClient);
+        Case(kUriPanIdConflict, MeshCoP::Commissioner);
+        Case(kUriEnergyReport, MeshCoP::Commissioner);
         Case(kUriDatasetChanged, MeshCoP::Commissioner);
         // kUriRelayRx is handled below
 #endif

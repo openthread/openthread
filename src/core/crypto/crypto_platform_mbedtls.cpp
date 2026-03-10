@@ -32,6 +32,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
+
 #include <string.h>
 
 #include <mbedtls/aes.h>
@@ -60,8 +62,6 @@
 
 using namespace ot;
 using namespace Crypto;
-
-#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of crypto platform APIs

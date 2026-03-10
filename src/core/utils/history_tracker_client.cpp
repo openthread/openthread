@@ -111,7 +111,7 @@ exit:
 template <> void Client::HandleTmf<kUriHistoryAnswer>(Coap::Msg &aMsg)
 {
     VerifyOrExit(aMsg.IsConfirmablePostRequest());
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Received %s from %s", ot::UriToString<kUriHistoryAnswer>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());

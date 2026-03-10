@@ -45,11 +45,14 @@ if THREAD_CERT_DIR not in sys.path:
 from pktverify import consts
 from pktverify.packet_verifier import PacketVerifier
 from pktverify import utils as pvutils
+from pktverify import coap
 from pktverify.coap import CoapTlvParser
 from pktverify.addrs import Ipv6Addr
 from pktverify.bytes import Bytes
 
-# CSL period constants (in units of 10 symbols)
+# Constants
+NM_PROVISIONING_URL_TLV = 32
+
 CSL_PERIOD_500MS = 500000 // consts.US_PER_TEN_SYMBOLS
 CSL_PERIOD_3300MS = 3300000 // consts.US_PER_TEN_SYMBOLS
 CSL_PERIOD_400MS = 400000 // consts.US_PER_TEN_SYMBOLS
@@ -133,6 +136,18 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('pan_id', struct.unpack('>H', v)[0]))
     elif t == consts.NM_NETWORK_MESH_LOCAL_PREFIX_TLV and len(v) == 8 and not is_diag:
         kvs.append(('mesh_local_prefix', v))
+    elif t == consts.NM_JOINER_DTLS_ENCAPSULATION_TLV and not is_diag:
+        kvs.append(('joiner_dtls_encap', v))
+    elif t == consts.NM_JOINER_UDP_PORT_TLV and len(v) == 2 and not is_diag:
+        kvs.append(('joiner_udp_port', struct.unpack('>H', v)[0]))
+    elif t == consts.NM_JOINER_IID_TLV and len(v) == 8 and not is_diag:
+        kvs.append(('joiner_iid', v))
+    elif t == consts.NM_JOINER_ROUTER_LOCATOR_TLV and len(v) == 2 and not is_diag:
+        kvs.append(('joiner_router_locator', struct.unpack('>H', v)[0]))
+    elif t == consts.NM_JOINER_ROUTER_KEK_TLV and len(v) == 16 and not is_diag:
+        kvs.append(('joiner_router_kek', v))
+    elif t == NM_PROVISIONING_URL_TLV and not is_diag:
+        kvs.append(('provisioning_url', v.decode('utf-8', errors='replace')))
     elif t == consts.NM_FUTURE_TLV:
         kvs.append(('future_tlv', v))
 
@@ -223,7 +238,7 @@ def apply_patches():
     layer_fields._get_candidate_layers = patched_get_candidate_layers
 
     # Patch Layer.get_field to handle wpan_tap.ch_num
-    from pyshark.packet.layer import Layer
+    from pyshark.packet.layers.base import BaseLayer as Layer
     old_get_field = Layer.get_field
 
     def patched_get_field(self, name):
@@ -248,6 +263,16 @@ def apply_patches():
 
     Layer.get_field = patched_get_field
 
+    layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series_flags'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.link_status_sub_tlv'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.query_id'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.link_requested_type_id_flags'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['mle.tlv.link_enh_ack_flags'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['wpan.payload_ie.vendor.variable'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.type'] = layer_fields._list(layer_fields._hex)
+    layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.metric'] = layer_fields._list(layer_fields._hex)
+    layer_fields._LAYER_FIELDS['mle.tlv.metric_type_id_flags.l'] = layer_fields._list(layer_fields._hex)
     layer_fields._LAYER_FIELDS['coap.tlv.tlv_request'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.active_operational_dataset'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['mle.tlv.pending_operational_dataset'] = layer_fields._bytes
@@ -261,6 +286,7 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.leader_router_id'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.child_id'] = layer_fields._list(layer_fields._auto)
     layer_fields._LAYER_FIELDS['coap.tlv.child_mode'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['coap.tlv.provisioning_url'] = layer_fields._str
     layer_fields._LAYER_FIELDS['coap.tlv.channel_pages'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.steering_data'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.future_tlv'] = layer_fields._bytes
@@ -282,6 +308,11 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.ext_pan_id'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.network_name'] = layer_fields._str
     layer_fields._LAYER_FIELDS['coap.tlv.pskc'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.joiner_dtls_encap'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.joiner_udp_port'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.joiner_iid'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.tlv.joiner_router_locator'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.joiner_router_kek'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.security_policy'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_o'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.sec_policy_n'] = layer_fields._auto
@@ -294,12 +325,41 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.network_key'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['coap.tlv.pan_id'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.mesh_local_prefix'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['coap.opt_content_format'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['dtls.alert_message_level'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['dtls.alert_message_desc'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['dtls.handshake.cookie'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.discovery_version'] = layer_fields._dec
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.discovery_native_commissioner'] = layer_fields._dec
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.active_tstamp'] = layer_fields._list(layer_fields._thread_timestamp)
-    layer_fields._LAYER_FIELDS['thread_meshcop.tlv.pending_tstamp'] = layer_fields._list(
-        layer_fields._thread_timestamp)
+
+    def _parse_next_tlv_patched(payload, read_pos, layer=None) -> tuple:
+        assert read_pos <= len(payload)
+        if read_pos == len(payload):
+            return None, None, read_pos
+
+        t = payload[read_pos]
+        if read_pos + 1 >= len(payload):
+            return None, None, len(payload)
+
+        len_ = payload[read_pos + 1]
+        val_pos = read_pos + 2
+
+        if len_ == 255:
+            if read_pos + 3 >= len(payload):
+                return None, None, len(payload)
+            len_ = (payload[read_pos + 2] << 8) | payload[read_pos + 3]
+            val_pos = read_pos + 4
+
+        if len(payload) - val_pos < len_:
+            return None, None, len(payload)
+
+        kvs = coap.CoapTlvParser.parse(t, payload[val_pos:val_pos + len_], layer=layer)
+        return t, kvs, val_pos + len_
+
+    coap.CoapLayer._parse_next_tlv = staticmethod(_parse_next_tlv_patched)
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.delay_timer'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['mle.tlv.link_query_options'] = layer_fields._bytes
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'

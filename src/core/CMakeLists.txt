@@ -165,7 +165,6 @@ set(COMMON_SOURCES
     mac/sub_mac_csl_receiver.cpp
     mac/sub_mac_wed.cpp
     mac/wakeup_tx_scheduler.cpp
-    meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
     meshcop/border_agent_admitter.cpp
     meshcop/border_agent_ephemeral_key.cpp
@@ -176,7 +175,6 @@ set(COMMON_SOURCES
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp
-    meshcop/energy_scan_client.cpp
     meshcop/extended_panid.cpp
     meshcop/joiner.cpp
     meshcop/joiner_router.cpp
@@ -185,7 +183,6 @@ set(COMMON_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/network_identity.cpp
     meshcop/network_name.cpp
-    meshcop/panid_query_client.cpp
     meshcop/secure_transport.cpp
     meshcop/seeker.cpp
     meshcop/steering_data.cpp

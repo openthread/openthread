@@ -562,6 +562,7 @@ _LAYER_FIELDS = {
     'dtls.handshake.cookie': _auto,
     'dtls.record.content_type': _list(_auto),
     'dtls.alert_message.desc': _auto,
+    'dtls.alert_message.level': _auto,
 
     # thread beacon
     'thread_bcn.protocol': _auto,

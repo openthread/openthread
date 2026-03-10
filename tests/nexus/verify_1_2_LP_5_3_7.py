@@ -110,7 +110,7 @@ def verify(pv):
         must_next()
 
     # Skip first 10 packets after Step 2 to ignore initial resync polls
-    pkts.range((_step2_pkt.number + 10, 0), (_pkt.number, 0)).\
+    pkts.range((_step2_pkt.number + 10, _step2_pkt.number + 10), (_pkt.number, _pkt.number)).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
@@ -162,7 +162,7 @@ def verify(pv):
         filter(lambda p: p.wpan.version == 2).\
         must_next()
 
-    pkts.range((_step6_pkt.number + 5, 0), (_pkt.number, 0)).\
+    pkts.range((_step6_pkt.number + 5, _step6_pkt.number + 5), (_pkt.number, _pkt.number)).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_dst16(ROUTER_1_RLOC16).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
@@ -220,7 +220,7 @@ def verify(pv):
         must_next()
 
     # Verify Step 12.1: DUT MUST NOT relay the frame between Step 12 and Step 13.
-    pkts.range((_pkt12.number, 0), (_pkt13.number, 0)).\
+    pkts.range((_pkt12.number, _pkt12.number), (_pkt13.number, _pkt13.number)).\
         filter_ping_request(identifier=_pkt12.icmpv6.echo.identifier).\
         filter_wpan_src64(ROUTER_1).\
         filter_wpan_dst16(SSED_1_RLOC16).\

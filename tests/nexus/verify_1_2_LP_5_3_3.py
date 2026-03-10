@@ -189,7 +189,7 @@ def verify(pv):
         must_next()
 
     # Verify that the frame was NOT relayed before the Data Request/re-sync (Step 8 Pass Criteria)
-    pkts.range((echo_req_2.number, 0), (data_req.number, 0)).\
+    pkts.range((echo_req_2.number, echo_req_2.number), (data_req.number, data_req.number)).\
         filter_ping_request().\
         filter_wpan_src64(DUT).\
         filter_wpan_dst16(SSED_1_RLOC16).\
@@ -253,7 +253,7 @@ def verify(pv):
         filter(lambda p: p.wpan.version == 2).\
         must_next()
 
-    pkts.range((echo_req_3.number, 0), (relay_req_3.number, 0)).\
+    pkts.range((echo_req_3.number, echo_req_3.number), (relay_req_3.number, relay_req_3.number)).\
         filter_wpan_src64(SSED_1).\
         filter_wpan_cmd(consts.WPAN_DATA_REQUEST).\
         must_not_next()
