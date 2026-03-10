@@ -252,10 +252,9 @@ Error CoapBase::SendMessage(Message                &aMessage,
                             const TxParameters     *aTxParameters,
                             const SendCallbacks    &aCallbacks)
 {
-    Error    error;
-    Request  request;
-    uint16_t copyLength = 0;
-    Msg      txMsg(aMessage, aMessageInfo);
+    Error   error;
+    Request request;
+    Msg     txMsg(aMessage, aMessageInfo);
 
     request.Clear();
 
@@ -280,39 +279,37 @@ Error CoapBase::SendMessage(Message                &aMessage,
         mResponseCache.Add(txMsg, aTxParameters->CalculateExchangeLifetime());
         break;
     case kTypeReset:
-        OT_ASSERT(txMsg.GetCode() == kCodeEmpty);
         break;
-    default:
+    case kTypeConfirmable:
+    case kTypeNonConfirmable:
         txMsg.UpdateMessageId(mMessageId++);
         break;
     }
 
-    if (txMsg.IsConfirmable())
+    switch (txMsg.GetType())
     {
-        copyLength = txMsg.mMessage.GetLength();
-    }
-    else if (txMsg.IsNonConfirmable() && aCallbacks.HasResponseHandler())
-    {
-        // As we do not retransmit non confirmable messages, create a
-        // copy of header only, for token information.
-        copyLength = txMsg.GetHeaderSize();
-    }
+    case kTypeAck:
+    case kTypeReset:
+        break;
 
-    if (copyLength > 0)
-    {
-        request.mMetadata.Init(txMsg, *aTxParameters, aCallbacks);
+    case kTypeNonConfirmable:
+        if (!aCallbacks.HasResponseHandler())
+        {
+            // Since a non-confirmable request is not retransmitted,
+            // we only save it when a response handler is provided.
+            break;
+        }
 
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        SuccessOrExit(error = ProcessObserveSend(txMsg, request));
-#endif
+        OT_FALL_THROUGH;
 
-        SuccessOrExit(error = mPendingRequests.AddClone(txMsg.mMessage, copyLength, request));
+    case kTypeConfirmable:
+        SuccessOrExit(error = mPendingRequests.Add(txMsg, *aTxParameters, aCallbacks, request));
+        break;
     }
 
     SuccessOrExit(error = Transmit(txMsg.mMessage, txMsg.mMessageInfo));
 
 exit:
-
     if (error != kErrorNone)
     {
         mPendingRequests.Remove(request);
@@ -1375,7 +1372,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
-Error CoapBase::ProcessObserveSend(Msg &aTxMsg, Request &aRequest)
+Error CoapBase::ProcessObserveSend(const Msg &aTxMsg, Request &aRequest)
 {
     Error            error;
     Option::Iterator iterator;
@@ -1531,11 +1528,27 @@ CoapBase::PendingRequests::PendingRequests(Instance &aInstance, CoapBase &aCoapB
 {
 }
 
-Error CoapBase::PendingRequests::AddClone(const Message &aMessage, uint16_t aCopyLength, Request &aRequest)
+Error CoapBase::PendingRequests::Add(const Msg           &aTxMsg,
+                                     const TxParameters  &aTxParams,
+                                     const SendCallbacks &aCallbacks,
+                                     Request             &aRequest)
 {
-    Error error = kErrorNone;
+    Error    error = kErrorNone;
+    uint16_t cloneLength;
 
-    aRequest.mMessage = AsCoapMessagePtr(aMessage.Clone(aCopyLength));
+    aRequest.mMetadata.Init(aTxMsg, aTxParams, aCallbacks);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    SuccessOrExit(error = mCoapBase.ProcessObserveSend(aTxMsg, aRequest));
+#endif
+
+    // We clone the full message for confirmable requests to allow for
+    // retransmits, but only the header for non-confirmable requests
+    // to preserve the token.
+
+    cloneLength = aTxMsg.IsConfirmable() ? aTxMsg.mMessage.GetLength() : aTxMsg.GetHeaderSize();
+
+    aRequest.mMessage = AsCoapMessagePtr(aTxMsg.mMessage.Clone(cloneLength));
     VerifyOrExit(aRequest.HasMessage(), error = kErrorNoBufs);
 
     SuccessOrExit(error = aRequest.AppendMetadataToMessage());
