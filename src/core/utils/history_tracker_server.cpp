@@ -49,8 +49,6 @@ Server::Server(Instance &aInstance)
 
 template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMsg.IsPostRequest());
-
     LogInfo("Received %s from %s", UriToString<kUriHistoryQuery>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -60,9 +58,6 @@ template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
     }
 
     PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
-
-exit:
-    return;
 }
 
 Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)

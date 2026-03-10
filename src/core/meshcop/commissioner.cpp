@@ -813,7 +813,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMsg.mMessage, joinerPort));
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMsg.mMessage, joinerIid));
@@ -882,7 +882,7 @@ void Commissioner::HandleJoinerSessionTimer(void)
 template <> void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Msg &aMsg)
 {
     VerifyOrExit(mState == kStateActive);
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
 
@@ -1073,7 +1073,7 @@ template <> void Commissioner::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
     uint32_t      mask;
     EnergyListTlv energyListTlv;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriEnergyReport>());
 
@@ -1127,7 +1127,7 @@ template <> void Commissioner::HandleTmf<kUriPanIdConflict>(Coap::Msg &aMsg)
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriPanIdConflict>());
 

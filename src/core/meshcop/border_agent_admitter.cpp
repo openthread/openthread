@@ -220,7 +220,7 @@ void Admitter::ForwardJoinerRelayToEnrollers(const Coap::Msg &aMsg)
 
     VerifyOrExit(mCommissionerPetitioner.IsActiveCommissioner());
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
     SuccessOrExit(Tlv::Find<JoinerIidTlv>(aMsg.mMessage, joinerIid));
 
     LogInfo("Processing %s from joiner %s", UriToString<kUriRelayRx>(), joinerIid.ToString().AsCString());
@@ -1122,7 +1122,7 @@ void Manager::CoapDtlsSession::HandleEnrollerTmf(Uri aUri, const Coap::Msg &aMsg
     Error           error = kErrorNone;
     StateTlv::State responseState;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Receive %s", Admitter::EnrollerUriToString(aUri));
 

@@ -91,10 +91,6 @@ exit:
 
 bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeDelete); }
 
-bool HeaderInfo::IsConfirmablePostRequest(void) const { return IsConfirmable() && IsPostRequest(); }
-
-bool HeaderInfo::IsNonConfirmablePostRequest(void) const { return IsNonConfirmable() && IsPostRequest(); }
-
 //---------------------------------------------------------------------------------------------------------------------
 // `Message`
 

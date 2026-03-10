@@ -1103,7 +1103,7 @@ template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Msg &aMsg)
     uint16_t       durationSec  = 0;
     uint32_t       durationMs;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
     LogInfo("Received %s from %s", UriToString<kUriTcatEnable>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
     message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);

@@ -652,7 +652,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
     CacheEntry              *entry;
     CacheEntry              *prev;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -747,8 +747,6 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     Ip6::Address    destination;
 #endif
 
-    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorDrop);
-
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
@@ -819,7 +817,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
     Ip6::Address target;
     uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
 
