@@ -416,25 +416,36 @@ Error CoapBase::SendMessageWithResponseHandlerSeparateParams(Message            
     return SendMessage(aMessage, aMessageInfo, aTxParameters, callbacks);
 }
 
-Error CoapBase::SendReset(const Msg &aRxMsg) { return SendEmptyMessage(kTypeReset, aRxMsg); }
-
-Error CoapBase::SendAck(const Msg &aRxMsg) { return SendEmptyMessage(kTypeAck, aRxMsg); }
-
-Error CoapBase::SendEmptyAck(const Msg &aRxMsg, Code aCode)
+Error CoapBase::SendAckResponse(const Msg &aRxMsg, Code aCode)
 {
-    return (aRxMsg.IsConfirmable() ? SendHeaderResponse(aCode, aRxMsg) : kErrorInvalidArgs);
+    return (aRxMsg.IsConfirmable() ? SendResponse(aCode, aRxMsg) : kErrorInvalidArgs);
 }
 
-Error CoapBase::SendEmptyAck(const Msg &aRxMsg) { return SendEmptyAck(aRxMsg, kCodeChanged); }
-
-Error CoapBase::SendNotFound(const Msg &aRxMsg) { return SendHeaderResponse(kCodeNotFound, aRxMsg); }
+Error CoapBase::SendAckResponse(const Msg &aRxMsg) { return SendAckResponse(aRxMsg, kCodeChanged); }
 
 Error CoapBase::SendEmptyMessage(Type aType, const Msg &aRxMsg)
 {
     Error    error   = kErrorNone;
     Message *message = nullptr;
 
-    VerifyOrExit(aRxMsg.IsConfirmable(), error = kErrorInvalidArgs);
+    switch (aType)
+    {
+    case kTypeConfirmable:
+        // An empty confirmable message is not used in normal
+        // operation but only to elicit a Reset response. This is
+        // used as "CoAP ping" (RFC 7573 section 4.3).
+        break;
+
+    case kTypeAck:
+        VerifyOrExit(aRxMsg.IsConfirmable(), error = kErrorInvalidArgs);
+        break;
+
+    case kTypeReset:
+        break;
+
+    case kTypeNonConfirmable:
+        ExitNow(error = kErrorInvalidArgs);
+    }
 
     VerifyOrExit((message = NewMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -446,7 +457,7 @@ exit:
     return error;
 }
 
-Error CoapBase::SendHeaderResponse(Message::Code aCode, const Msg &aRxMsg)
+Error CoapBase::SendResponse(Message::Code aCode, const Msg &aRxMsg)
 {
     Error    error   = kErrorNone;
     Message *message = nullptr;
@@ -503,7 +514,7 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
         if (!aMessageInfo.GetSockAddr().IsMulticast() && rxMsg.IsConfirmable())
         {
-            IgnoreError(SendReset(rxMsg));
+            IgnoreError(SendEmptyMessage(kTypeReset, rxMsg));
         }
     }
     else if (rxMsg.IsRequest())
@@ -538,7 +549,8 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
         {
             // Successfully parsed a header but no matching request was
             // found - reject the message by sending reset.
-            IgnoreError(SendReset(aRxMsg));
+
+            IgnoreError(SendEmptyMessage(kTypeReset, aRxMsg));
         }
 
         ExitNow();
@@ -633,8 +645,8 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
         break;
 
     case kTypeConfirmable:
-        // Send empty ACK if it is a CON message.
-        IgnoreError(SendAck(aRxMsg));
+        // Received a confirmable response, send an Empty Ack message.
+        IgnoreError(SendEmptyMessage(kTypeAck, aRxMsg));
 
         // Handling of RFC7641 and multicast is below.
 
@@ -758,7 +770,7 @@ exit:
 
     if (error == kErrorNotFound && !aRxMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        IgnoreError(SendNotFound(aRxMsg));
+        IgnoreError(SendResponse(kCodeNotFound, aRxMsg));
     }
 }
 
@@ -962,15 +974,15 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStrin
                         error = kErrorNone;
                         break;
                     case kErrorNoBufs:
-                        IgnoreError(SendHeaderResponse(kCodeRequestTooLarge, aRxMsg));
+                        IgnoreError(SendResponse(kCodeRequestTooLarge, aRxMsg));
                         error = kErrorDrop;
                         break;
                     case kErrorNoFrameReceived:
-                        IgnoreError(SendHeaderResponse(kCodeRequestIncomplete, aRxMsg));
+                        IgnoreError(SendResponse(kCodeRequestIncomplete, aRxMsg));
                         error = kErrorDrop;
                         break;
                     default:
-                        IgnoreError(SendHeaderResponse(kCodeInternalError, aRxMsg));
+                        IgnoreError(SendResponse(kCodeInternalError, aRxMsg));
                         error = kErrorDrop;
                         break;
                     }
@@ -981,7 +993,7 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStrin
                 {
                     if ((error = ProcessBlock2Request(aRxMsg, resource)) != kErrorNone)
                     {
-                        IgnoreError(SendHeaderResponse(kCodeInternalError, aRxMsg));
+                        IgnoreError(SendResponse(kCodeInternalError, aRxMsg));
                         error = kErrorDrop;
                     }
                 }

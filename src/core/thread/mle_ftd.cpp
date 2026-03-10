@@ -3648,7 +3648,7 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Msg &aMsg)
 
     IgnoreError(mRouterTable.Release(routerId));
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     Log(kMessageSend, kTypeAddressReleaseReply, aMsg.mMessageInfo.GetPeerAddr());
 

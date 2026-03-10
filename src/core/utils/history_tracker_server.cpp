@@ -56,7 +56,7 @@ template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
 
     if (aMsg.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
     }
 
     PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
