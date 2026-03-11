@@ -259,6 +259,8 @@ public:
     const char *mTestName;
 };
 
+void TestLowpanDecompressRecursion(void);
+
 } // namespace ot
 
 #endif // OT_UNIT_TEST_LOWPAN_HPP_
