@@ -76,8 +76,8 @@ private:
     Ip6::Address mCommissioner;
     uint32_t     mChannelMask;
     uint16_t     mPanId;
-
-    DelayTimer mTimer;
+    bool         mIsRunning;
+    DelayTimer   mTimer;
 };
 
 DeclareTmfHandler(PanIdQueryServer, kUriPanIdQuery);

@@ -420,6 +420,19 @@ Error CoapBase::SendAckResponse(const Msg &aRxMsg, Code aCode)
 
 Error CoapBase::SendAckResponse(const Msg &aRxMsg) { return SendAckResponse(aRxMsg, kCodeChanged); }
 
+Error CoapBase::SendAckResponseIfUnicastRequest(const Msg &aRxMsg, Error aError)
+{
+    Error error;
+
+    VerifyOrExit(aRxMsg.IsConfirmable(), error = kErrorInvalidArgs);
+    VerifyOrExit(!aRxMsg.mMessageInfo.GetSockAddr().IsMulticast(), error = kErrorInvalidArgs);
+
+    error = SendResponse(Message::MapErrorToCoapCode(aError), aRxMsg);
+
+exit:
+    return error;
+}
+
 Error CoapBase::SendEmptyMessage(Type aType, const Msg &aRxMsg)
 {
     Error    error   = kErrorNone;

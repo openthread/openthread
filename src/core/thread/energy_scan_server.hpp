@@ -71,14 +71,13 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
+    bool        IsRunning(void) const { return mReportMessage != nullptr; }
+    void        Stop(void);
     static void HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext);
     void        HandleScanResult(Mac::EnergyScanResult *aResult);
-
-    void HandleTimer(void);
-
-    void HandleNotifierEvents(Events aEvents);
-
-    void SendReport(void);
+    void        HandleTimer(void);
+    void        HandleNotifierEvents(Events aEvents);
+    void        SendReport(void);
 
     using ScanTimer = TimerMilliIn<EnergyScanServer, &EnergyScanServer::HandleTimer>;
 

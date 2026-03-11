@@ -651,6 +651,22 @@ public:
     Error SendAckResponse(const Msg &aRxMsg);
 
     /**
+     * Sends a CoAP ACK response without a payload mapping an `Error` to a CoAP Code.
+     *
+     * This method strictly ensures the @p aRxMsg is a confirmable request message and the request was not sent to
+     * a multicast address. It then sends a piggybacked ACK (`kTypeAck`) response containing a CoAP Code mapped
+     * from @p aError and matching token without a payload.
+     *
+     * @param[in]  aRxMsg          The received CoAP request message.
+     * @param[in]  aError          The error to map to a CoAP Code.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     * @retval kErrorInvalidArgs   The @p aRxMsg is not a confirmable request or was sent to a multicast address.
+     */
+    Error SendAckResponseIfUnicastRequest(const Msg &aRxMsg, Error aError);
+
+    /**
      * Aborts CoAP transactions associated with given handler and context.
      *
      * The associated response handler will be called with kErrorAbort.

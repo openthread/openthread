@@ -684,6 +684,33 @@ exit:
     return hasSame;
 }
 
+Code Message::MapErrorToCoapCode(Error aError)
+{
+    Code code = kCodeInternalError;
+
+    switch (aError)
+    {
+    case kErrorNone:
+        code = kCodeChanged;
+        break;
+    case kErrorBusy:
+        code = kCodeServiceUnavailable;
+        break;
+    case kErrorParse:
+    case kErrorNotFound:
+    case kErrorInvalidArgs:
+        code = kCodeBadRequest;
+        break;
+    case kErrorNotImplemented:
+        code = kCodeNotImplemented;
+        break;
+    default:
+        break;
+    }
+
+    return code;
+}
+
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 const char *Message::CodeToString(void) const
 {
