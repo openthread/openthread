@@ -52,11 +52,12 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
 
 template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
 {
-    uint8_t      count;
-    uint16_t     period;
-    uint16_t     scanDuration;
-    uint32_t     mask;
-    MeshCoP::Tlv tlv;
+    OwnedPtr<Coap::Message> newMessage;
+    uint8_t                 count;
+    uint16_t                period;
+    uint16_t                scanDuration;
+    uint32_t                mask;
+    MeshCoP::Tlv            tlv;
 
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
     count = Clamp(count, kMinCount, kMaxCount);
@@ -67,13 +68,13 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
     VerifyOrExit(mask != 0);
 
-    mReportMessage.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnergyReport));
-    VerifyOrExit(mReportMessage != nullptr);
+    newMessage.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnergyReport));
+    VerifyOrExit(newMessage != nullptr);
 
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*mReportMessage, mask));
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*newMessage, mask));
 
     tlv.SetType(MeshCoP::Tlv::kEnergyList);
-    SuccessOrExit(mReportMessage->Append(tlv));
+    SuccessOrExit(newMessage->Append(tlv));
 
     mNumScanResults     = 0;
     mChannelMask        = mask;
@@ -81,14 +82,16 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
     mCount              = count;
     mPeriod             = period;
     mScanDuration       = scanDuration;
+    mCommissioner       = aMsg.mMessageInfo.GetPeerAddr();
+
+    mReportMessage = newMessage.PassOwnership();
     mTimer.Start(kScanDelay);
 
-    mCommissioner = aMsg.mMessageInfo.GetPeerAddr();
+    LogInfo("Received %s", UriToString<kUriEnergyScan>());
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
-        LogInfo("Sent %s ack", UriToString<kUriEnergyScan>());
     }
 
 exit:
