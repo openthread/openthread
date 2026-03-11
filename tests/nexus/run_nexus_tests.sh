@@ -194,7 +194,7 @@ run_test()
 
     local test_name="nexus_${test_base}"
     local json_file="test_${test_full}.json"
-    local pcap_file="test_${test_full}.pcap"
+    local pcap_file="test_${test_full}.pcapng"
     local verify_script="${REPO_ROOT}/tests/nexus/verify_${test_base}.py"
     local nexus_bin="${NEXUS_BIN_DIR}/${test_name}"
 
