@@ -1070,8 +1070,9 @@ exit:
 
 template <> void Commissioner::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
 {
-    uint32_t      mask;
-    EnergyListTlv energyListTlv;
+    uint32_t    mask;
+    OffsetRange valueOffsetRange;
+    uint8_t     results[kMaxEnergyScanResults];
 
     VerifyOrExit(aMsg.IsConfirmable());
 
@@ -1079,9 +1080,11 @@ template <> void Commissioner::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
 
     SuccessOrExit(ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
-    SuccessOrExit(Tlv::FindTlv(aMsg.mMessage, Tlv::kEnergyList, sizeof(energyListTlv), energyListTlv));
+    SuccessOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kEnergyList, valueOffsetRange));
+    valueOffsetRange.ShrinkLength(sizeof(results));
+    aMsg.mMessage.ReadBytes(valueOffsetRange, results);
 
-    mEnergyReportCallback.InvokeIfSet(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength());
+    mEnergyReportCallback.InvokeIfSet(mask, results, static_cast<uint8_t>(valueOffsetRange.GetLength()));
 
     SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 

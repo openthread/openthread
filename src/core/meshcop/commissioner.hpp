@@ -382,6 +382,8 @@ private:
     static constexpr uint32_t kJoinerSessionTimeoutMillis =
         1000 * OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT; // Expiration time for active Joiner session
 
+    static constexpr uint8_t kMaxEnergyScanResults = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
+
     enum ResignMode : uint8_t
     {
         kSendKeepAliveToResign,
