@@ -88,7 +88,7 @@ private:
     uint16_t                mPeriod;
     uint16_t                mScanDuration;
     uint8_t                 mCount;
-    uint8_t                 mNumScanResults;
+    Tlv::Bookmark           mEnergyListTlvBookmark;
     OwnedPtr<Coap::Message> mReportMessage;
     ScanTimer               mTimer;
 };
