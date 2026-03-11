@@ -810,18 +810,53 @@ private:
 #endif
     };
 
-    struct Request
+    class PendingRequests;
+
+    class Request
     {
+        friend PendingRequests;
+
+    public:
+        void Clear(void) { mMessage = nullptr; }
+        bool HasMessage(void) const { return (mMessage != nullptr); }
+        void InitFrom(Message &aMessage) { mMessage = &aMessage, ReadMetadataFromMessage(); }
+        bool IsAcknowledged(void) const { return mMetadata.mAcknowledged; }
+        void MarkAsAcknowledged(void);
+        bool IsConfirmable(void) const { return mMetadata.mConfirmable; }
+        bool HasSamePeerAddrAndPort(const Ip6::MessageInfo &aMessageInfo) const;
+        bool ShouldRetransmit(void) const;
+        void UpdateRetxCounterAndTimeout(TimeMilli aNow);
+        bool HasResponseHandler(void) const { return GetCallbacks().HasResponseHandler(); }
+        void InvokeResponseHandler(Msg *aMsg, Error aResult) const
+        {
+            GetCallbacks().InvokeResponseHandler(aMsg, aResult);
+        }
+
+        const Message       &GetMessage(void) const { return *mMessage; }
+        const Ip6::Address  &GetSourceAddress(void) const { return mMetadata.mSourceAddress; }
+        const Ip6::Address  &GetDestinationAddress(void) const { return mMetadata.mDestinationAddress; }
+        const SendCallbacks &GetCallbacks(void) const { return mMetadata.mCallbacks; }
+        const TimeMilli     &GetTimerFireTime(void) const { return mMetadata.mTimerFireTime; }
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        bool IsObserve(void) const { return mMetadata.mObserve; }
+        bool IsRequest(void) const { return mMetadata.mIsRequest; }
+        bool IsObserveSubscription(void) const;
+#endif
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        bool HasBlockwiseReceiveHook(void) const { return GetCallbacks().HasBlockwiseReceiveHook(); }
+        bool HasBlockwiseTransmitHook(void) const { return GetCallbacks().HasBlockwiseTransmitHook(); }
+#endif
+        void  ReadMetadataFromMessage(void) { mMetadata.ReadFrom(*mMessage); }
+        void  WriteMetadataInMessage(void) { mMetadata.UpdateIn(*mMessage); }
+        void  RemoveMetadataFromMessage(void) { mMetadata.RemoveFrom(*mMessage); }
+        Error AppendMetadataToMessage(void) { return mMetadata.AppendTo(*mMessage); }
+
+    private:
         struct Metadata : public Message::FooterData<Metadata>
         {
             void Init(const Msg &aTxMsg, const TxParameters &aTxParams, const SendCallbacks &aCallbacks);
-            bool HasSamePeerAddrAndPort(const Ip6::MessageInfo &aMessageInfo) const;
-            bool ShouldRetransmit(void) const;
-            void UpdateRetxCounterAndTimeout(TimeMilli aNow);
             void CopyInfoTo(Ip6::MessageInfo &aMessageInfo) const;
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            bool IsObserveSubscription(void) const;
-#endif
 
             Ip6::Address  mSourceAddress;
             Ip6::Address  mDestinationAddress;
@@ -844,14 +879,6 @@ private:
             bool mIsRequest : 1;
 #endif
         };
-
-        void  Clear(void) { mMessage = nullptr; }
-        bool  HasMessage(void) const { return (mMessage != nullptr); }
-        void  InitFrom(Message &aMessage) { mMessage = &aMessage, ReadMetadataFromMessage(); }
-        void  ReadMetadataFromMessage(void) { mMetadata.ReadFrom(*mMessage); }
-        void  WriteMetadataInMessage(void) { mMetadata.UpdateIn(*mMessage); }
-        void  RemoveMetadataFromMessage(void) { mMetadata.RemoveFrom(*mMessage); }
-        Error AppendMetadataToMessage(void) { return mMetadata.AppendTo(*mMessage); }
 
         Message *mMessage;
         Metadata mMetadata;
@@ -905,6 +932,9 @@ private:
         void        RetransmitRequest(const Request &aRequest);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        Error ProcessObserveSend(const Msg &aTxMsg, Request &aRequest);
+#endif
 
         CoapBase         &mCoapBase;
         MessageQueue      mRequestMessages;
@@ -971,10 +1001,6 @@ private:
     static Error DetermineBlockSzxFromSize(uint16_t aSize, BlockSzx &aBlockSzx);
 
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    Error ProcessObserveSend(const Msg &aTxMsg, Request &aRequest);
-#endif
 
     PendingRequests            mPendingRequests;
     ResponseCache              mResponseCache;
