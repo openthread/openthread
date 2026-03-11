@@ -122,7 +122,22 @@ private:
     static constexpr uint16_t kMaxChildEntries              = 398;
     static constexpr uint16_t kAnswerMessageLengthThreshold = 800;
 
-    typedef BitSet<NumericLimits<uint8_t>::kMax + 1> TlvTypeBitSet; // A bitset to store TLV types.
+    class TlvTypeListIterator
+    {
+        // Iterates through a list of TLV types in a message (e.g., in a
+        // `TypeListTlv`), reading them one by one and skipping over any
+        // duplicate TLV type in the list.
+
+    public:
+        void  Init(const Message &aMessage, const OffsetRange &aOffsetRange);
+        Error InitForTypeListTlv(const Message &aMessage);
+        Error ReadNextTlvType(uint8_t &aTlvType);
+
+    private:
+        const Message                           *mMessage;
+        OffsetRange                              mOffsetRange;
+        BitSet<NumericLimits<uint8_t>::kMax + 1> mProcessedTlvs;
+    };
 
 #if OPENTHREAD_FTD
     struct AnswerInfo
