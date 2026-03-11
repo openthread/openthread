@@ -513,8 +513,11 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
         {
             IgnoreError(SendEmptyMessage(kTypeReset, rxMsg));
         }
+
+        ExitNow();
     }
-    else if (rxMsg.IsRequest())
+
+    if (rxMsg.IsRequest())
     {
         ProcessReceivedRequest(rxMsg);
     }
@@ -526,6 +529,9 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitCoapReceive(rxMsg.mMessage, aMessageInfo);
 #endif
+
+exit:
+    return;
 }
 
 void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
@@ -570,12 +576,9 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
     switch (aRxMsg.GetType())
     {
     case kTypeReset:
-        if (aRxMsg.IsEmpty())
-        {
-            mPendingRequests.FinalizeRequest(request, kErrorAbort);
-        }
-
         // Silently ignore non-empty reset messages (RFC 7252, Section 4.2).
+        VerifyOrExit(aRxMsg.IsEmpty());
+        mPendingRequests.FinalizeRequest(request, kErrorAbort);
         break;
 
     case kTypeAck:
@@ -592,27 +595,27 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
                 // re-sending and the application can move on.
 
                 mPendingRequests.FinalizeRequest(request, kErrorNone, &aRxMsg);
+                ExitNow();
             }
-            else
 #endif
-            {
-                // This is not related to RFC7641 or the outgoing "request" was not a
-                // notification.
-                if (request.mMetadata.mConfirmable)
-                {
-                    request.mMetadata.mAcknowledged = true;
-                    request.WriteMetadataInMessage();
-                }
 
-                // Remove the message if response is not expected, otherwise await
-                // response.
-                if (!request.mMetadata.mCallbacks.HasResponseHandler())
-                {
-                    mPendingRequests.Remove(request);
-                }
+            if (request.mMetadata.mConfirmable)
+            {
+                request.mMetadata.mAcknowledged = true;
+                request.WriteMetadataInMessage();
             }
+
+            // Remove the message if response is not expected, otherwise await
+            // response.
+            if (!request.mMetadata.mCallbacks.HasResponseHandler())
+            {
+                mPendingRequests.Remove(request);
+            }
+
+            ExitNow();
         }
-        else if (aRxMsg.IsResponse() && aRxMsg.mMessage.HasSameTokenAs(*request.mMessage))
+
+        if (aRxMsg.IsResponse() && aRxMsg.mMessage.HasSameTokenAs(*request.mMessage))
         {
             // Piggybacked response.
 
@@ -625,27 +628,26 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
                 // Consider the message acknowledged at this point.
                 request.mMetadata.mAcknowledged = true;
                 request.WriteMetadataInMessage();
+
+                ExitNow();
             }
-            else
 #endif
-            {
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-                SuccessOrExit(error = ProcessBlockwiseResponse(aRxMsg, request));
+            SuccessOrExit(error = ProcessBlockwiseResponse(aRxMsg, request));
 #else
-                mPendingRequests.FinalizeRequest(request, kErrorNone, &aRxMsg);
+            mPendingRequests.FinalizeRequest(request, kErrorNone, &aRxMsg);
 #endif
-            }
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
         // or with no token match (RFC 7252, p. 5.3.2)
+
         break;
 
     case kTypeConfirmable:
         // Received a confirmable response, send an Empty Ack message.
         IgnoreError(SendEmptyMessage(kTypeAck, aRxMsg));
-
-        // Handling of RFC7641 and multicast is below.
 
         OT_FALL_THROUGH;
 
@@ -667,7 +669,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
                 request.WriteMetadataInMessage();
             }
 
-            break;
+            ExitNow();
         }
 #endif
 
