@@ -391,22 +391,6 @@ public:
     bool IsReset(void) const { return (mType == kTypeReset); }
 
     /**
-     * Indicates whether or not the header is a confirmable Post request (`kTypeConfirmable` with`kCodePost`).
-     *
-     * @retval TRUE   Message is a confirmable Post request.
-     * @retval FALSE  Message is not a confirmable Post request.
-     */
-    bool IsConfirmablePostRequest(void) const;
-
-    /**
-     * Indicates whether the message is a non-confirmable Post request (`kTypeNonConfirmable` with `kCodePost`).
-     *
-     * @retval TRUE   Message is a non-confirmable Post request.
-     * @retval FALSE  Message is not a non-confirmable Post request.
-     */
-    bool IsNonConfirmablePostRequest(void) const;
-
-    /**
      * Checks if the message requires a reset response if an error during low level CoAP processing occurred.
      *
      * A reset message is expected to be sent for NON and CON messages if the message can not be processed or a

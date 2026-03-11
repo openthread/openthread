@@ -159,7 +159,7 @@ template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Msg &aMsg)
     Message::Settings        settings(kNoLinkSecurity, Message::kPriorityNet);
     Ip6::MessageInfo         messageInfo;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMsg.IsNonConfirmable(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriRelayTx>());
 

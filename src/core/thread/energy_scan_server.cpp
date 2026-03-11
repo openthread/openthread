@@ -58,8 +58,6 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
     uint32_t     mask;
     MeshCoP::Tlv tlv;
 
-    VerifyOrExit(aMsg.IsPostRequest());
-
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
     count = Clamp(count, kMinCount, kMaxCount);
 

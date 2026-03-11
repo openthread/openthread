@@ -375,7 +375,7 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mIsRunning);
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     LogInfo("Received %s from %s", UriToString<kUriRelayRx>(), aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -589,6 +589,12 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
     switch (uri)
     {
     case kUriCommissionerPetition:
@@ -623,6 +629,7 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
         break;
     }
 
+exit:
     return didHandle;
 }
 
@@ -990,7 +997,7 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Msg &aMsg)
     OwnedPtr<Coap::Message> message;
     OffsetRange             offsetRange;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     if (IsEnroller())

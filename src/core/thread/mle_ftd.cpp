@@ -3462,7 +3462,7 @@ Error Mle::AddrSolicitInfo::ParseFrom(const Coap::Msg &aMsg)
 
     Error error;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsConfirmable(), error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMsg.mMessage, mExtAddress));
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMsg.mMessage, mReason));
@@ -3634,7 +3634,7 @@ template <> void Mle::HandleTmf<kUriAddressRelease>(Coap::Msg &aMsg)
 
     VerifyOrExit(mRole == kRoleLeader);
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     Log(kMessageReceive, kTypeAddressRelease, aMsg.mMessageInfo.GetPeerAddr());
 
