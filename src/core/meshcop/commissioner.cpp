@@ -49,10 +49,10 @@ Commissioner::Commissioner(Instance &aInstance)
     , mJoinerRloc(0)
     , mSessionId(0)
     , mTransmitAttempts(0)
+    , mState(kStateDisabled)
     , mJoinerExpirationTimer(aInstance)
     , mTimer(aInstance)
     , mJoinerSessionTimer(aInstance)
-    , mState(kStateDisabled)
 {
     ClearAllBytes(mJoiners);
 
@@ -1033,13 +1033,13 @@ exit:
     return error;
 }
 
-Error Commissioner::SendEnergyScanQuery(uint32_t                           aChannelMask,
-                                        uint8_t                            aCount,
-                                        uint16_t                           aPeriod,
-                                        uint16_t                           aScanDuration,
-                                        const Ip6::Address                &aAddress,
-                                        otCommissionerEnergyReportCallback aCallback,
-                                        void                              *aContext)
+Error Commissioner::SendEnergyScanQuery(uint32_t             aChannelMask,
+                                        uint8_t              aCount,
+                                        uint16_t             aPeriod,
+                                        uint16_t             aScanDuration,
+                                        const Ip6::Address  &aAddress,
+                                        EnergyReportCallback aCallback,
+                                        void                *aContext)
 {
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
@@ -1091,11 +1091,11 @@ exit:
     return;
 }
 
-Error Commissioner::SendPanIdQuery(uint16_t                            aPanId,
-                                   uint32_t                            aChannelMask,
-                                   const Ip6::Address                 &aAddress,
-                                   otCommissionerPanIdConflictCallback aCallback,
-                                   void                               *aContext)
+Error Commissioner::SendPanIdQuery(uint16_t              aPanId,
+                                   uint32_t              aChannelMask,
+                                   const Ip6::Address   &aAddress,
+                                   PanIdConflictCallback aCallback,
+                                   void                 *aContext)
 {
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
