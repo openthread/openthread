@@ -99,7 +99,7 @@ template <> void AnycastLocator::HandleTmf<kUriAnycastLocate>(Coap::Msg &aMsg)
 {
     Coap::Message *message = nullptr;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr);

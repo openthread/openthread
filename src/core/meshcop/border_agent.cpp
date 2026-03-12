@@ -375,7 +375,7 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mIsRunning);
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     LogInfo("Received %s from %s", UriToString<kUriRelayRx>(), aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -400,7 +400,7 @@ Error Manager::SetServiceBaseName(const char *aBaseName)
     VerifyOrExit(StringLength(aBaseName, kBaseServiceNameMaxLen + 1) <= kBaseServiceNameMaxLen,
                  error = kErrorInvalidArgs);
 
-    ConstrcutServiceName(aBaseName, newName);
+    ConstructServiceName(aBaseName, newName);
 
     VerifyOrExit(!StringMatch(newName, mServiceName));
 
@@ -416,13 +416,13 @@ const char *Manager::GetServiceName(void)
 {
     if (IsServiceNameEmpty())
     {
-        ConstrcutServiceName(kDefaultBaseServiceName, mServiceName);
+        ConstructServiceName(kDefaultBaseServiceName, mServiceName);
     }
 
     return mServiceName;
 }
 
-void Manager::ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
+void Manager::ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
 {
     StringWriter writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
 
@@ -589,6 +589,12 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
     switch (uri)
     {
     case kUriCommissionerPetition:
@@ -623,6 +629,7 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
         break;
     }
 
+exit:
     return didHandle;
 }
 
@@ -990,7 +997,7 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Msg &aMsg)
     OwnedPtr<Coap::Message> message;
     OffsetRange             offsetRange;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     if (IsEnroller())

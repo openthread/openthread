@@ -1843,18 +1843,26 @@ private:
         bool  IsRestoringChildRole(void) const { return mState == kRestoringChildRole; }
         bool  IsRestoringRouterOrLeaderRole(void) const { return mState == kRestoringRouterOrLeaderRole; }
         void  HandleTimer(void);
+        void  HandleChildUpdateRequest(RxInfo &aRxInfo) { CheckIfMessageIsFromParent(aRxInfo); }
 
         void               GenerateRandomChallenge(void) { mChallenge.GenerateRandom(); }
         const TxChallenge &GetChallenge(void) const { return mChallenge; }
 
     private:
-        static constexpr uint32_t kMaxStartDelay                = 25;
-        static constexpr uint8_t  kMaxChildUpdatesToRestoreRole = kMaxChildKeepAliveAttempts;
-        static constexpr uint32_t kChildUpdateRetxDelay         = kUnicastRetxDelay; /// 1000 msec
-        static constexpr uint16_t kRetxJitter                   = 5;
-        static constexpr uint8_t  kRouterLinkRequestAttempts    = 4;
-        static constexpr uint32_t kLeaderRetxDelayMin           = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
-        static constexpr uint32_t kLeaderRetxDelayMax           = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
+        static constexpr uint32_t kMaxStartDelay = 25; // in msec
+
+        // Restoring Child Role (sending "child update request").
+        static constexpr uint8_t  kChildUpdateAttempts                = 4;
+        static constexpr uint8_t  kExtraChildUpdatesAfterRxFromParent = 2;
+        static constexpr uint16_t kChildUpdateMinTimeout              = 1000; // in ms
+        static constexpr uint16_t kChildUpdateStartTimeout            = 4000; // in ms
+        static constexpr uint16_t kChildUpdateRetxJitter              = 25;   // in ms
+        static constexpr uint8_t  kMaxChildUpdatesToRestoreRole       = kMaxChildKeepAliveAttempts;
+        static constexpr uint32_t kChildUpdateRetxDelay               = kUnicastRetxDelay; /// 1000 msec
+        static constexpr uint16_t kRetxJitter                         = 5;
+        static constexpr uint8_t  kRouterLinkRequestAttempts          = 4;
+        static constexpr uint32_t kLeaderRetxDelayMin                 = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
+        static constexpr uint32_t kLeaderRetxDelayMax                 = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
 
         enum State : uint8_t
         {
@@ -1865,6 +1873,7 @@ private:
 
         void SetState(State aState);
         void SendChildUpdate(void);
+        void CheckIfMessageIsFromParent(RxInfo &aRxInfo);
 #if OPENTHREAD_FTD
         void SendMulticastLinkRequest(void);
 #endif
@@ -1872,7 +1881,9 @@ private:
         using DelayTimer = TimerMilliIn<Mle, &Mle::HandleRoleRestorerTimer>;
 
         State       mState;
-        uint8_t     mAttempts;
+        uint8_t     mAttempts : 7;
+        bool        mUseIncreasingTimeout : 1;
+        uint16_t    mCurTimeout;
         DelayTimer  mTimer;
         TxChallenge mChallenge;
     };

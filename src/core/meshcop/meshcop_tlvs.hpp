@@ -724,48 +724,9 @@ private:
 } OT_TOOL_PACKED_BEGIN;
 
 /**
- * Implements Energy List TLV generation and parsing.
+ * Defines Energy List TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class EnergyListTlv : public Tlv, public TlvInfo<Tlv::kEnergyList>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kEnergyList);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return true; }
-
-    /**
-     * Returns a pointer to the start of energy measurement list.
-     *
-     * @returns A pointer to the start start of energy energy measurement list.
-     */
-    const uint8_t *GetEnergyList(void) const { return mEnergyList; }
-
-    /**
-     * Returns the length of energy measurement list.
-     *
-     * @returns The length of energy measurement list.
-     */
-    uint8_t GetEnergyListLength(void) const { return Min(kMaxListLength, GetLength()); }
-
-private:
-    static constexpr uint8_t kMaxListLength = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
-
-    uint8_t mEnergyList[kMaxListLength];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kEnergyList> EnergyListTlv;
 
 /**
  * Defines Provisioning TLV constants and types.

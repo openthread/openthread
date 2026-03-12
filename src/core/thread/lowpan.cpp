@@ -977,13 +977,16 @@ exit:
 Error Lowpan::Decompress(Message              &aMessage,
                          const Mac::Addresses &aMacAddrs,
                          FrameData            &aFrameData,
-                         uint16_t              aDatagramLength)
+                         uint16_t              aDatagramLength,
+                         uint8_t               aRecursionDepth)
 {
     Error       error = kErrorParse;
     Ip6::Header ip6Header;
     bool        compressed;
     uint16_t    ip6PayloadLength;
     uint16_t    currentOffset = aMessage.GetOffset();
+
+    VerifyOrExit(aRecursionDepth <= kMaxRecursionDepth);
 
     SuccessOrExit(DecompressBaseHeader(ip6Header, compressed, aMacAddrs, aFrameData));
 
@@ -1005,7 +1008,7 @@ Error Lowpan::Decompress(Message              &aMessage,
 
                 aFrameData.SkipOver(sizeof(uint8_t));
 
-                SuccessOrExit(Decompress(aMessage, aMacAddrs, aFrameData, aDatagramLength));
+                SuccessOrExit(Decompress(aMessage, aMacAddrs, aFrameData, aDatagramLength, aRecursionDepth + 1));
             }
             else
             {

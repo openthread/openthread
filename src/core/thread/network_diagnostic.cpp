@@ -296,28 +296,14 @@ exit:
 
 Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
-    Error         error;
-    OffsetRange   offsetRange;
-    TlvTypeBitSet processedTlvs;
+    Error               error;
+    TlvTypeListIterator iterator;
+    uint8_t             tlvType;
 
-    processedTlvs.Clear();
+    SuccessOrExit(error = iterator.InitForTypeListTlv(aRequest));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
-
-    while (!offsetRange.IsEmpty())
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        uint8_t tlvType;
-
-        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
-        offsetRange.AdvanceOffset(sizeof(tlvType));
-
-        if (processedTlvs.Has(tlvType))
-        {
-            continue;
-        }
-
-        processedTlvs.Add(tlvType);
-
         SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
     }
 
@@ -328,25 +314,14 @@ exit:
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
 {
-    Error         error = kErrorNone;
-    TlvTypeBitSet processedTlvs;
+    Error               error = kErrorNone;
+    TlvTypeListIterator iterator;
+    uint8_t             tlvType;
 
-    processedTlvs.Clear();
+    iterator.Init(aRequest, aOffsetRange);
 
-    while (!aOffsetRange.IsEmpty())
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        uint8_t tlvType;
-
-        SuccessOrExit(error = aRequest.Read(aOffsetRange, tlvType));
-        aOffsetRange.AdvanceOffset(sizeof(uint8_t));
-
-        if (processedTlvs.Has(tlvType))
-        {
-            continue;
-        }
-
-        processedTlvs.Add(tlvType);
-
 #if OPENTHREAD_FTD
         switch (tlvType)
         {
@@ -555,8 +530,6 @@ exit:
 
 template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMsg.IsPostRequest());
-
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetQuery>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -571,9 +544,6 @@ template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
 #elif OPENTHREAD_FTD
     PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 #endif
-
-exit:
-    return;
 }
 
 #if OPENTHREAD_MTD
@@ -674,11 +644,12 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
 
 void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Coap::Message *answer;
-    Error          error;
-    AnswerInfo     info;
-    OffsetRange    offsetRange;
-    AnswerTlv      answerTlv;
+    Coap::Message      *answer;
+    Error               error;
+    AnswerInfo          info;
+    uint8_t             tlvType;
+    TlvTypeListIterator iterator;
+    AnswerTlv           answerTlv;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
     {
@@ -689,15 +660,10 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
 
     SuccessOrExit(error = AllocateAnswer(answer, info));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
+    SuccessOrExit(error = iterator.InitForTypeListTlv(aRequest));
 
-    while (!offsetRange.IsEmpty())
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        uint8_t tlvType;
-
-        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
-        offsetRange.AdvanceOffset(sizeof(tlvType));
-
         switch (tlvType)
         {
         case ChildTlv::kType:
@@ -911,7 +877,7 @@ template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Msg &aMsg)
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMsg.IsConfirmable(), error = kErrorDrop);
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
@@ -929,26 +895,19 @@ exit:
 
 template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
 {
-    uint16_t offset = 0;
-    uint8_t  type;
-    Tlv      tlv;
+    TlvTypeListIterator iterator;
+    uint8_t             tlvType;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticReset>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    SuccessOrExit(aMsg.mMessage.Read(aMsg.mMessage.GetOffset(), tlv));
+    SuccessOrExit(iterator.InitForTypeListTlv(aMsg.mMessage));
 
-    VerifyOrExit(tlv.GetType() == Tlv::kTypeList);
-
-    offset = aMsg.mMessage.GetOffset() + sizeof(Tlv);
-
-    for (uint8_t i = 0; i < tlv.GetLength(); i++)
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        SuccessOrExit(aMsg.mMessage.Read(offset + i, type));
-
-        switch (type)
+        switch (tlvType)
         {
         case Tlv::kMacCounters:
             Get<Mac::Mac>().ResetCounters();
@@ -971,6 +930,51 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
 
 exit:
     return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Server::TlvTypeListIterator
+
+void Server::TlvTypeListIterator::Init(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    mMessage     = &aMessage;
+    mOffsetRange = aOffsetRange;
+    mProcessedTlvs.Clear();
+}
+
+Error Server::TlvTypeListIterator::InitForTypeListTlv(const Message &aMessage)
+{
+    Error error;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kTypeList, mOffsetRange));
+    mMessage = &aMessage;
+    mProcessedTlvs.Clear();
+
+exit:
+    return error;
+}
+
+Error Server::TlvTypeListIterator::ReadNextTlvType(uint8_t &aTlvType)
+{
+    Error error;
+
+    while (!mOffsetRange.IsEmpty())
+    {
+        SuccessOrExit(error = mMessage->Read(mOffsetRange, aTlvType));
+        mOffsetRange.AdvanceOffset(sizeof(uint8_t));
+
+        if (!mProcessedTlvs.Has(aTlvType))
+        {
+            mProcessedTlvs.Add(aTlvType);
+            error = kErrorNone;
+            ExitNow();
+        }
+    }
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
@@ -1079,7 +1083,7 @@ exit:
 
 template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());

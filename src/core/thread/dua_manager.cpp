@@ -572,8 +572,6 @@ template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMs
 {
     Error error;
 
-    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
-
     if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
@@ -581,7 +579,6 @@ template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMs
 
     error = ProcessDuaResponse(aMsg.mMessage);
 
-exit:
     OT_UNUSED_VARIABLE(error);
     LogInfo("Received %s: %s", UriToString<kUriDuaRegistrationNotify>(), ErrorToString(error));
 }

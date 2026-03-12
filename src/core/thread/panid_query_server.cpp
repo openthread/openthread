@@ -52,7 +52,6 @@ template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.IsPostRequest());
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
     SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));

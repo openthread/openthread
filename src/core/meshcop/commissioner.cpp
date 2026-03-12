@@ -49,10 +49,10 @@ Commissioner::Commissioner(Instance &aInstance)
     , mJoinerRloc(0)
     , mSessionId(0)
     , mTransmitAttempts(0)
+    , mState(kStateDisabled)
     , mJoinerExpirationTimer(aInstance)
     , mTimer(aInstance)
     , mJoinerSessionTimer(aInstance)
-    , mState(kStateDisabled)
 {
     ClearAllBytes(mJoiners);
 
@@ -813,7 +813,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMsg.mMessage, joinerPort));
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMsg.mMessage, joinerIid));
@@ -882,7 +882,7 @@ void Commissioner::HandleJoinerSessionTimer(void)
 template <> void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Msg &aMsg)
 {
     VerifyOrExit(mState == kStateActive);
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
 
@@ -1033,13 +1033,13 @@ exit:
     return error;
 }
 
-Error Commissioner::SendEnergyScanQuery(uint32_t                           aChannelMask,
-                                        uint8_t                            aCount,
-                                        uint16_t                           aPeriod,
-                                        uint16_t                           aScanDuration,
-                                        const Ip6::Address                &aAddress,
-                                        otCommissionerEnergyReportCallback aCallback,
-                                        void                              *aContext)
+Error Commissioner::SendEnergyScanQuery(uint32_t             aChannelMask,
+                                        uint8_t              aCount,
+                                        uint16_t             aPeriod,
+                                        uint16_t             aScanDuration,
+                                        const Ip6::Address  &aAddress,
+                                        EnergyReportCallback aCallback,
+                                        void                *aContext)
 {
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
@@ -1070,18 +1070,21 @@ exit:
 
 template <> void Commissioner::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
 {
-    uint32_t      mask;
-    EnergyListTlv energyListTlv;
+    uint32_t    mask;
+    OffsetRange valueOffsetRange;
+    uint8_t     results[kMaxEnergyScanResults];
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriEnergyReport>());
 
     SuccessOrExit(ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
-    SuccessOrExit(Tlv::FindTlv(aMsg.mMessage, Tlv::kEnergyList, sizeof(energyListTlv), energyListTlv));
+    SuccessOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kEnergyList, valueOffsetRange));
+    valueOffsetRange.ShrinkLength(sizeof(results));
+    aMsg.mMessage.ReadBytes(valueOffsetRange, results);
 
-    mEnergyReportCallback.InvokeIfSet(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength());
+    mEnergyReportCallback.InvokeIfSet(mask, results, static_cast<uint8_t>(valueOffsetRange.GetLength()));
 
     SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
@@ -1091,11 +1094,11 @@ exit:
     return;
 }
 
-Error Commissioner::SendPanIdQuery(uint16_t                            aPanId,
-                                   uint32_t                            aChannelMask,
-                                   const Ip6::Address                 &aAddress,
-                                   otCommissionerPanIdConflictCallback aCallback,
-                                   void                               *aContext)
+Error Commissioner::SendPanIdQuery(uint16_t              aPanId,
+                                   uint32_t              aChannelMask,
+                                   const Ip6::Address   &aAddress,
+                                   PanIdConflictCallback aCallback,
+                                   void                 *aContext)
 {
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
@@ -1127,7 +1130,7 @@ template <> void Commissioner::HandleTmf<kUriPanIdConflict>(Coap::Msg &aMsg)
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriPanIdConflict>());
 

@@ -92,8 +92,10 @@ public:
         kJoinerEventRemoved   = OT_COMMISSIONER_JOINER_REMOVED,
     };
 
-    typedef otCommissionerStateCallback  StateCallback;  ///< State change callback function pointer type.
-    typedef otCommissionerJoinerCallback JoinerCallback; ///< Joiner state change callback function pointer type.
+    typedef otCommissionerStateCallback         StateCallback;         ///< State change callback type.
+    typedef otCommissionerJoinerCallback        JoinerCallback;        ///< Joiner state change callback type.
+    typedef otCommissionerEnergyReportCallback  EnergyReportCallback;  ///< Energy report callback type.
+    typedef otCommissionerPanIdConflictCallback PanIdConflictCallback; ///< PAN ID conflict callback type.
 
     /**
      * Initializes the Commissioner object.
@@ -335,38 +337,38 @@ public:
      * @param[in]  aCount         The number of energy measurements per channel.
      * @param[in]  aPeriod        The time between energy measurements (milliseconds).
      * @param[in]  aScanDuration  The scan duration for each energy measurement (milliseconds).
-     * @param[in]  aAddress       A pointer to the IPv6 destination.
-     * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+     * @param[in]  aAddress       The IPv6 destination.
+     * @param[in]  aCallback      Callback function called to report Energy Scan results.
      * @param[in]  aContext       A pointer to application-specific context.
      *
      * @retval kErrorNone     Successfully enqueued the Energy Scan Query message.
      * @retval kErrorNoBufs   Insufficient buffers to generate an Energy Scan Query message.
      */
-    Error SendEnergyScanQuery(uint32_t                           aChannelMask,
-                              uint8_t                            aCount,
-                              uint16_t                           aPeriod,
-                              uint16_t                           aScanDuration,
-                              const Ip6::Address                &aAddress,
-                              otCommissionerEnergyReportCallback aCallback,
-                              void                              *aContext);
+    Error SendEnergyScanQuery(uint32_t             aChannelMask,
+                              uint8_t              aCount,
+                              uint16_t             aPeriod,
+                              uint16_t             aScanDuration,
+                              const Ip6::Address  &aAddress,
+                              EnergyReportCallback aCallback,
+                              void                *aContext);
 
     /**
      * Sends a PAN ID Query message.
      *
      * @param[in]  aPanId         The PAN ID to query.
      * @param[in]  aChannelMask   The channel mask value.
-     * @param[in]  aAddress       A pointer to the IPv6 destination.
-     * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+     * @param[in]  aAddress       The IPv6 destination.
+     * @param[in]  aCallback      Callback function to report PAN ID conflicts.
      * @param[in]  aContext       A pointer to application-specific context.
      *
      * @retval kErrorNone    Successfully enqueued the PAN ID Query message.
      * @retval kErrorNoBufs  Insufficient buffers to generate a PAN ID Query message.
      */
-    Error SendPanIdQuery(uint16_t                            aPanId,
-                         uint32_t                            aChannelMask,
-                         const Ip6::Address                 &aAddress,
-                         otCommissionerPanIdConflictCallback aCallback,
-                         void                               *aContext);
+    Error SendPanIdQuery(uint16_t              aPanId,
+                         uint32_t              aChannelMask,
+                         const Ip6::Address   &aAddress,
+                         PanIdConflictCallback aCallback,
+                         void                 *aContext);
 
 private:
     static constexpr uint32_t kPetitionAttemptDelay = 5;  // COMM_PET_ATTEMPT_DELAY (seconds)
@@ -375,8 +377,12 @@ private:
     static constexpr uint32_t kKeepAliveTimeout     = 50; // TIMEOUT_COMM_PET (seconds)
     static constexpr uint32_t kRemoveJoinerDelay    = 20; // Delay to remove successfully joined joiner
 
+    static constexpr uint16_t kMaxJoinerEntries = OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES;
+
     static constexpr uint32_t kJoinerSessionTimeoutMillis =
         1000 * OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT; // Expiration time for active Joiner session
+
+    static constexpr uint8_t kMaxEnergyScanResults = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
 
     enum ResignMode : uint8_t
     {
@@ -460,29 +466,24 @@ private:
     using CommissionerTimer     = TimerMilliIn<Commissioner, &Commissioner::HandleTimer>;
     using JoinerSessionTimer    = TimerMilliIn<Commissioner, &Commissioner::HandleJoinerSessionTimer>;
 
-    Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
-
-    Joiner                  *mActiveJoiner;
-    Ip6::InterfaceIdentifier mJoinerIid;
-    uint16_t                 mJoinerPort;
-    uint16_t                 mJoinerRloc;
-    uint16_t                 mSessionId;
-    uint8_t                  mTransmitAttempts;
-    JoinerExpirationTimer    mJoinerExpirationTimer;
-    CommissionerTimer        mTimer;
-    JoinerSessionTimer       mJoinerSessionTimer;
-
-    Ip6::Netif::UnicastAddress mCommissionerAloc;
-
-    ProvisioningUrlTlv::StringType mProvisioningUrl;
-    CommissionerIdTlv::StringType  mCommissionerId;
-
-    State mState;
-
-    Callback<StateCallback>                       mStateCallback;
-    Callback<JoinerCallback>                      mJoinerCallback;
-    Callback<otCommissionerEnergyReportCallback>  mEnergyReportCallback;
-    Callback<otCommissionerPanIdConflictCallback> mPanIdConflictCallback;
+    Joiner                          mJoiners[kMaxJoinerEntries];
+    Joiner                         *mActiveJoiner;
+    Ip6::InterfaceIdentifier        mJoinerIid;
+    uint16_t                        mJoinerPort;
+    uint16_t                        mJoinerRloc;
+    uint16_t                        mSessionId;
+    uint8_t                         mTransmitAttempts;
+    State                           mState;
+    JoinerExpirationTimer           mJoinerExpirationTimer;
+    CommissionerTimer               mTimer;
+    JoinerSessionTimer              mJoinerSessionTimer;
+    Ip6::Netif::UnicastAddress      mCommissionerAloc;
+    ProvisioningUrlTlv::StringType  mProvisioningUrl;
+    CommissionerIdTlv::StringType   mCommissionerId;
+    Callback<StateCallback>         mStateCallback;
+    Callback<JoinerCallback>        mJoinerCallback;
+    Callback<EnergyReportCallback>  mEnergyReportCallback;
+    Callback<PanIdConflictCallback> mPanIdConflictCallback;
 };
 
 DeclareTmfHandler(Commissioner, kUriDatasetChanged);
