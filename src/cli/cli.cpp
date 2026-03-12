@@ -163,6 +163,7 @@ void Interpreter::OutputResult(otError aError)
     {
         if (aError != OT_ERROR_NONE)
         {
+            // prepend `*` to differentiate from the normal end of command.
             OutputLine("* Error %u: %s", aError, otThreadErrorToString(aError));
         }
 
