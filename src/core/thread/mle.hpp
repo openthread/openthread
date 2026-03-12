@@ -1857,9 +1857,6 @@ private:
         static constexpr uint16_t kChildUpdateMinTimeout              = 1000; // in ms
         static constexpr uint16_t kChildUpdateStartTimeout            = 4000; // in ms
         static constexpr uint16_t kChildUpdateRetxJitter              = 25;   // in ms
-        static constexpr uint8_t  kMaxChildUpdatesToRestoreRole       = kMaxChildKeepAliveAttempts;
-        static constexpr uint32_t kChildUpdateRetxDelay               = kUnicastRetxDelay; /// 1000 msec
-        static constexpr uint16_t kRetxJitter                         = 5;
         static constexpr uint8_t  kRouterLinkRequestAttempts          = 4;
         static constexpr uint32_t kLeaderRetxDelayMin = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
         static constexpr uint32_t kLeaderRetxDelayMax = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
