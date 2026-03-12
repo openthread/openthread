@@ -1861,8 +1861,8 @@ private:
         static constexpr uint32_t kChildUpdateRetxDelay               = kUnicastRetxDelay; /// 1000 msec
         static constexpr uint16_t kRetxJitter                         = 5;
         static constexpr uint8_t  kRouterLinkRequestAttempts          = 4;
-        static constexpr uint32_t kLeaderRetxDelayMin                 = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
-        static constexpr uint32_t kLeaderRetxDelayMax                 = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
+        static constexpr uint32_t kLeaderRetxDelayMin = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
+        static constexpr uint32_t kLeaderRetxDelayMax = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
 
         enum State : uint8_t
         {
