@@ -199,7 +199,9 @@ Error SecureSession::Setup(void)
     }
 #endif
 
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
     mbedtls_ssl_conf_rng(&mConf, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#endif
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
     mbedtls_ssl_conf_min_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
     mbedtls_ssl_conf_max_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
@@ -278,7 +280,11 @@ Error SecureSession::Setup(void)
 
         if (mIsServer)
         {
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
             rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#else
+            rval = mbedtls_ssl_cookie_setup(&mCookieCtx);
+#endif
             VerifyOrExit(rval == 0);
 
             mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
@@ -913,6 +919,8 @@ void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     Crypto::Sha256       sha256;
     unsigned char        keyBlock[kSecureTransportKeyBlockSize];
     unsigned char        randBytes[2 * kSecureTransportRandomBufferSize];
+
+    mKeylogCallback.InvokeIfSet(aType, aMasterSecret, aMasterSecretLen, aClientRandom, aServerRandom, aTlsPrfType);
 
     VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
     VerifyOrExit(aType == MBEDTLS_SSL_KEY_EXPORT_TLS12_MASTER_SECRET);

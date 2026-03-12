@@ -58,7 +58,6 @@ template <> void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Msg &aM
     uint8_t  count;
     uint16_t period;
 
-    VerifyOrExit(aMsg.IsPostRequest());
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
@@ -68,7 +67,7 @@ template <> void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Msg &aM
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
         LogInfo("Sent %s response", UriToString<kUriAnnounceBegin>());
     }
 

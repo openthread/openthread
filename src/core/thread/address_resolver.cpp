@@ -614,7 +614,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Error          error;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriAddressQuery);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriAddressQuery);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
@@ -652,7 +652,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
     CacheEntry              *entry;
     CacheEntry              *prev;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -702,7 +702,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriAddressNotify>());
     }
@@ -720,10 +720,8 @@ void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
     Error          error;
     Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsPost(aDestination, kUriAddressError));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPostMessageTo(kUriAddressError, aDestination);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
@@ -749,13 +747,11 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     Ip6::Address    destination;
 #endif
 
-    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorDrop);
-
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+        if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
         {
             LogInfo("Sent %s ack", UriToString<kUriAddressError>());
         }
@@ -821,7 +817,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
     Ip6::Address target;
     uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
 
@@ -874,7 +870,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
     Error          error;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressNotify);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriAddressNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));

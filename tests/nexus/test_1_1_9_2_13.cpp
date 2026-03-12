@@ -102,7 +102,7 @@ static constexpr uint32_t kSedPollRate = 500;
 static void SendMgmtEnergyScanQuery(Node &aCommissioner, const Ip6::Address &aDestAddr, uint16_t aSessionId)
 {
     Tmf::Agent    &agent   = aCommissioner.Get<Tmf::Agent>();
-    Coap::Message *message = agent.NewPriorityConfirmablePostMessage(kUriEnergyScan);
+    Coap::Message *message = agent.AllocateAndInitPriorityConfirmablePostMessage(kUriEnergyScan);
 
     VerifyOrQuit(message != nullptr);
 

@@ -52,7 +52,6 @@ template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.IsPostRequest());
     SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
 
     SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));
@@ -64,7 +63,7 @@ template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
         LogInfo("Sent %s ack", UriToString<kUriPanIdQuery>());
     }
 
@@ -92,7 +91,7 @@ void PanIdQueryServer::SendConflict(void)
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriPanIdConflict);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriPanIdConflict);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*message, mChannelMask));

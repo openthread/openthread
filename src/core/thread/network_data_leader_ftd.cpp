@@ -252,7 +252,7 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
         }
     }
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Sent %s ack", UriToString<kUriServerData>());
 
@@ -320,7 +320,7 @@ exit:
 
 void Leader::SendCommissioningSetResponse(const Coap::Msg &aMsg, MeshCoP::StateTlv::State aState)
 {
-    Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    Coap::Message *message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
 
     VerifyOrExit(message != nullptr);
     SuccessOrExit(Tlv::Append<MeshCoP::StateTlv>(*message, aState));

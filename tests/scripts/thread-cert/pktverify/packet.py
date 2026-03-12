@@ -30,7 +30,7 @@ import logging
 import sys
 from typing import Iterable, List, Union, Callable
 
-from pyshark.packet.layer import Layer as RawLayer
+from pyshark.packet.layers.base import BaseLayer as RawLayer
 from pyshark.packet.packet import Packet as RawPacket
 
 from pktverify import errors

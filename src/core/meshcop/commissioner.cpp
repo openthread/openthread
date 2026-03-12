@@ -49,13 +49,10 @@ Commissioner::Commissioner(Instance &aInstance)
     , mJoinerRloc(0)
     , mSessionId(0)
     , mTransmitAttempts(0)
+    , mState(kStateDisabled)
     , mJoinerExpirationTimer(aInstance)
     , mTimer(aInstance)
     , mJoinerSessionTimer(aInstance)
-    , mAnnounceBegin(aInstance)
-    , mEnergyScan(aInstance)
-    , mPanIdQuery(aInstance)
-    , mState(kStateDisabled)
 {
     ClearAllBytes(mJoiners);
 
@@ -606,7 +603,7 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerGet));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerGet));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aLength > 0)
@@ -639,7 +636,7 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &a
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerSet));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aDataset.IsLocatorSet())
@@ -701,7 +698,7 @@ Error Commissioner::SendPetition(void)
 
     mTransmitAttempts++;
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderPetition));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriLeaderPetition));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerIdTlv>(*message, mCommissionerId));
@@ -769,7 +766,7 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(
@@ -816,7 +813,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMsg.mMessage, joinerPort));
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMsg.mMessage, joinerIid));
@@ -885,11 +882,11 @@ void Commissioner::HandleJoinerSessionTimer(void)
 template <> void Commissioner::HandleTmf<kUriDatasetChanged>(Coap::Msg &aMsg)
 {
     VerifyOrExit(mState == kStateActive);
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s", UriToString<kUriDatasetChanged>());
 
-    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
     LogInfo("Sent %s ack", UriToString<kUriDatasetChanged>());
 
@@ -937,7 +934,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::SecureAgent>().NewPriorityResponseMessage(aRequest);
+    message = Get<Tmf::SecureAgent>().AllocateAndInitPriorityResponseFor(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetOffset(message->GetLength());
@@ -981,7 +978,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 
     Get<KeyManager>().ExtractKek(kek);
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayTx));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriRelayTx));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, mJoinerPort));
@@ -1005,6 +1002,150 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 
 exit:
     return error;
+}
+
+Error Commissioner::SendAnnounceBeginRequest(uint32_t            aChannelMask,
+                                             uint8_t             aCount,
+                                             uint16_t            aPeriod,
+                                             const Ip6::Address &aAddress)
+{
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+
+    VerifyOrExit(IsActive(), error = kErrorInvalidState);
+
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityPostMessageTo(kUriAnnounceBegin, aAddress);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, GetSessionId()));
+
+    SuccessOrExit(error = ChannelMaskTlv::AppendTo(*message, aChannelMask));
+
+    SuccessOrExit(error = Tlv::Append<CountTlv>(*message, aCount));
+    SuccessOrExit(error = Tlv::Append<PeriodTlv>(*message, aPeriod));
+
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));
+
+    LogInfo("Sent %s", UriToString<kUriAnnounceBegin>());
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
+}
+
+Error Commissioner::SendEnergyScanQuery(uint32_t             aChannelMask,
+                                        uint8_t              aCount,
+                                        uint16_t             aPeriod,
+                                        uint16_t             aScanDuration,
+                                        const Ip6::Address  &aAddress,
+                                        EnergyReportCallback aCallback,
+                                        void                *aContext)
+{
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+
+    VerifyOrExit(IsActive(), error = kErrorInvalidState);
+
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityPostMessageTo(kUriEnergyScan, aAddress);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, GetSessionId()));
+
+    SuccessOrExit(error = ChannelMaskTlv::AppendTo(*message, aChannelMask));
+
+    SuccessOrExit(error = Tlv::Append<CountTlv>(*message, aCount));
+    SuccessOrExit(error = Tlv::Append<PeriodTlv>(*message, aPeriod));
+    SuccessOrExit(error = Tlv::Append<ScanDurationTlv>(*message, aScanDuration));
+
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));
+
+    LogInfo("Sent %s", UriToString<kUriEnergyScan>());
+
+    mEnergyReportCallback.Set(aCallback, aContext);
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
+}
+
+template <> void Commissioner::HandleTmf<kUriEnergyReport>(Coap::Msg &aMsg)
+{
+    uint32_t    mask;
+    OffsetRange valueOffsetRange;
+    uint8_t     results[kMaxEnergyScanResults];
+
+    VerifyOrExit(aMsg.IsConfirmable());
+
+    LogInfo("Received %s", UriToString<kUriEnergyReport>());
+
+    SuccessOrExit(ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+
+    SuccessOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kEnergyList, valueOffsetRange));
+    valueOffsetRange.ShrinkLength(sizeof(results));
+    aMsg.mMessage.ReadBytes(valueOffsetRange, results);
+
+    mEnergyReportCallback.InvokeIfSet(mask, results, static_cast<uint8_t>(valueOffsetRange.GetLength()));
+
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
+
+    LogInfo("Sent %s ack", UriToString<kUriEnergyReport>());
+
+exit:
+    return;
+}
+
+Error Commissioner::SendPanIdQuery(uint16_t              aPanId,
+                                   uint32_t              aChannelMask,
+                                   const Ip6::Address   &aAddress,
+                                   PanIdConflictCallback aCallback,
+                                   void                 *aContext)
+{
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+
+    VerifyOrExit(IsActive(), error = kErrorInvalidState);
+
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityPostMessageTo(kUriPanIdQuery, aAddress);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, GetSessionId()));
+
+    SuccessOrExit(error = ChannelMaskTlv::AppendTo(*message, aChannelMask));
+
+    SuccessOrExit(error = Tlv::Append<PanIdTlv>(*message, aPanId));
+
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aAddress));
+
+    LogInfo("Sent %s", UriToString<kUriPanIdQuery>());
+
+    mPanIdConflictCallback.Set(aCallback, aContext);
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
+}
+
+template <> void Commissioner::HandleTmf<kUriPanIdConflict>(Coap::Msg &aMsg)
+{
+    uint16_t panId;
+    uint32_t mask;
+
+    VerifyOrExit(aMsg.IsConfirmable());
+
+    LogInfo("Received %s", UriToString<kUriPanIdConflict>());
+
+    SuccessOrExit(Tlv::Find<PanIdTlv>(aMsg.mMessage, panId));
+
+    SuccessOrExit(ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+
+    mPanIdConflictCallback.InvokeIfSet(panId, mask);
+
+    SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
+
+    LogInfo("Sent %s response", UriToString<kUriPanIdConflict>());
+
+exit:
+    return;
 }
 
 // LCOV_EXCL_START

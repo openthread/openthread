@@ -375,7 +375,7 @@ template <> void Manager::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
 
     VerifyOrExit(mIsRunning);
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     LogInfo("Received %s from %s", UriToString<kUriRelayRx>(), aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -400,7 +400,7 @@ Error Manager::SetServiceBaseName(const char *aBaseName)
     VerifyOrExit(StringLength(aBaseName, kBaseServiceNameMaxLen + 1) <= kBaseServiceNameMaxLen,
                  error = kErrorInvalidArgs);
 
-    ConstrcutServiceName(aBaseName, newName);
+    ConstructServiceName(aBaseName, newName);
 
     VerifyOrExit(!StringMatch(newName, mServiceName));
 
@@ -416,13 +416,13 @@ const char *Manager::GetServiceName(void)
 {
     if (IsServiceNameEmpty())
     {
-        ConstrcutServiceName(kDefaultBaseServiceName, mServiceName);
+        ConstructServiceName(kDefaultBaseServiceName, mServiceName);
     }
 
     return mServiceName;
 }
 
-void Manager::ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
+void Manager::ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
 {
     StringWriter writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
 
@@ -491,7 +491,7 @@ Error Manager::EvictActiveCommissioner(void)
     SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(baRloc16));
     SuccessOrExit(error = Get<NetworkData::Leader>().FindCommissioningSessionId(sessionId));
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, StateTlv::kReject));
@@ -589,6 +589,12 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
     switch (uri)
     {
     case kUriCommissionerPetition:
@@ -623,6 +629,7 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
         break;
     }
 
+exit:
     return didHandle;
 }
 
@@ -685,12 +692,15 @@ Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Msg &aMsg, Uri aUri)
         OT_ASSERT(false);
     }
 
-    SuccessOrExit(error = SendAck(aMsg));
+    if (aMsg.IsConfirmable())
+    {
+        SuccessOrExit(error = SendEmptyMessage(Coap::kTypeAck, aMsg));
+    }
 
     forwardContext.Reset(ForwardContext::Allocate(*this, aMsg.mMessage, aUri));
     VerifyOrExit(!forwardContext.IsNull(), error = kErrorNoBufs);
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(aUri));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(aUri));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     offsetRange.InitFromMessageOffsetToEnd(aMsg.mMessage);
@@ -848,7 +858,7 @@ Error Manager::CoapDtlsSession::ForwardUdpProxy(const Message &aMessage, const I
 
     VerifyOrExit(aMessage.GetLength() > 0);
 
-    message.Reset(NewPriorityNonConfirmablePostMessage(kUriProxyRx));
+    message.Reset(AllocateAndInitPriorityNonConfirmablePostMessage(kUriProxyRx));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
@@ -887,7 +897,7 @@ Error Manager::CoapDtlsSession::ForwardUdpRelay(const Message &aMessage)
     OwnedPtr<Coap::Message> forwardMessage;
     Error                   error = kErrorNone;
 
-    forwardMessage.Reset(NewPriorityNonConfirmablePostMessage(kUriRelayRx));
+    forwardMessage.Reset(AllocateAndInitPriorityNonConfirmablePostMessage(kUriRelayRx));
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
     error = ForwardToCommissioner(forwardMessage.PassOwnership(), aMessage);
@@ -987,7 +997,7 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Msg &aMsg)
     OwnedPtr<Coap::Message> message;
     OffsetRange             offsetRange;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     if (IsEnroller())
@@ -1004,7 +1014,7 @@ void Manager::CoapDtlsSession::HandleTmfRelayTx(Coap::Msg &aMsg)
 
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMsg.mMessage, joinerRouterRloc));
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayTx));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriRelayTx));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     offsetRange.InitFromMessageOffsetToEnd(aMsg.mMessage);

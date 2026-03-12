@@ -964,12 +964,6 @@ template <> inline TimeSync &Instance::Get(void) { return mTimeSync; }
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 template <> inline MeshCoP::Commissioner &Instance::Get(void) { return mCommissioner; }
-
-template <> inline AnnounceBeginClient &Instance::Get(void) { return mCommissioner.GetAnnounceBeginClient(); }
-
-template <> inline EnergyScanClient &Instance::Get(void) { return mCommissioner.GetEnergyScanClient(); }
-
-template <> inline PanIdQueryClient &Instance::Get(void) { return mCommissioner.GetPanIdQueryClient(); }
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE

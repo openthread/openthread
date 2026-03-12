@@ -466,7 +466,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerRegister` message from `enroller` to `admitter`");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
     VerifyOrQuit(message != nullptr);
 
     mode = MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx | MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
@@ -559,7 +559,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerKeepAlive` message");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -606,7 +606,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerKeepAlive` message with an Enroller Mode TLV changing the mode");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
     VerifyOrQuit(message != nullptr);
 
     mode = MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx;
@@ -645,7 +645,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerKeepAlive` message with Steering Data TLV");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(steeringData.Init(MeshCoP::SteeringData::kMaxLength));
@@ -737,7 +737,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Register as enroller again");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
@@ -785,7 +785,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     VerifyOrQuit(admitter.Get<Admitter>().IsPrimeAdmitter());
     VerifyOrQuit(admitter.Get<Admitter>().IsActiveCommissioner());
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kReject));
@@ -811,7 +811,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Register as enroller again");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
@@ -842,7 +842,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerRegister` message while already registered, with different parameters");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
     VerifyOrQuit(message != nullptr);
 
     mode = 0;
@@ -909,7 +909,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an invalid `EnrollerKeepAlive` message without State TLV and validate that it is rejected");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
     VerifyOrQuit(message != nullptr);
 
     responseContext.Clear();
@@ -947,7 +947,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     for (uint16_t testIter = 0; testIter < 3; testIter++)
     {
-        message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+        message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
         VerifyOrQuit(message != nullptr);
 
         // Skip one of the required TLVs for each `testIter`.
@@ -1000,7 +1000,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
         SuccessOrQuit(steeringData.Init(length));
         SuccessOrQuit(steeringData.UpdateBloomFilter(admitter.Get<Mac::Mac>().GetExtAddress()));
 
-        message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+        message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
@@ -1026,7 +1026,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(steeringData.Init(1));
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
@@ -1145,7 +1145,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerRegister` message from `enroller` to `admitter`");
 
-    message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
     VerifyOrQuit(message != nullptr);
 
     mode = MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx | MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
@@ -1243,7 +1243,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
     {
         nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
 
-        message = enroller.Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+        message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -1457,7 +1457,8 @@ void TestBorderAdmitterMultipleEnrollers(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+        message =
+            enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
@@ -1539,7 +1540,8 @@ void TestBorderAdmitterMultipleEnrollers(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send a keep alive from first enroller with reject status (to unregister the enroller)");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kReject));
@@ -1605,7 +1607,8 @@ void TestBorderAdmitterMultipleEnrollers(void)
 
     for (uint8_t i = 2; i < kNumEnrollers; i++)
     {
-        message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+        message =
+            enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -1779,7 +1782,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+        message =
+            enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
@@ -1901,7 +1905,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerAccept` message from `enrollers[0]` to `admitter` accepting `joiners[0]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[0]));
@@ -2040,7 +2045,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+        message =
+            enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -2062,7 +2068,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerAccept` message from `enrollers[0]` to `admitter` accepting `joiners[1]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[1]));
@@ -2174,7 +2181,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("From `enrollers[1]` send `EnrollerJoinerAccept` for `joiners[1]`");
 
-    message = enrollers[1]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+    message =
+        enrollers[1]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[1]));
@@ -2288,7 +2296,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerAccept` message again accepting `joiners[1]` from `enrollers[0]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[1]));
@@ -2354,7 +2363,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerRelease` message from `enrollers[0]` to `admitter` releasing `joiners[0]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[0]));
@@ -2402,7 +2412,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerRelease` message again releasing `joiners[0]` from `enrollers[0]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[0]));
@@ -2421,7 +2432,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerRelease` message releasing `joiners[1]` from `enrollers[0]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
     VerifyOrQuit(message != nullptr);
 
     SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[1]));
@@ -2440,7 +2452,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t j = 0; j < 2; j++)
     {
-        message = enrollers[2]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+        message = enrollers[2]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(
+            kUriEnrollerJoinerAccept);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[j]));
@@ -2508,7 +2521,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerRelease` message from `enrollers[2]` with wildcard IID releasing all joiners");
 
-    message = enrollers[2]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
+    message =
+        enrollers[2]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerRelease);
     VerifyOrQuit(message != nullptr);
 
     wildcardJoinerIid.Clear();
@@ -2546,7 +2560,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an invalid `EnrollerJoinerAccept` message from enrollers[2] with wildcard IID");
 
-    message = enrollers[2]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+    message =
+        enrollers[2]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
     VerifyOrQuit(message != nullptr);
 
     wildcardJoinerIid.Clear();
@@ -2568,7 +2583,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     for (uint8_t j = 0; j < 2; j++)
     {
-        message = enrollers[2]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerJoinerAccept);
+        message = enrollers[2]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(
+            kUriEnrollerJoinerAccept);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::JoinerIidTlv>(*message, joinerIids[j]));
@@ -2644,7 +2660,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         for (uint8_t i = 0; i < kNumEnrollers; i++)
         {
-            message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+            message = enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(
+                kUriEnrollerKeepAlive);
             VerifyOrQuit(message != nullptr);
 
             SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -2834,7 +2851,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         for (uint8_t i = 0; i < kNumEnrollers; i++)
         {
-            message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+            message = enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(
+                kUriEnrollerKeepAlive);
             VerifyOrQuit(message != nullptr);
 
             SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -2895,7 +2913,8 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         for (uint8_t i = 0; i < kNumEnrollers; i++)
         {
-            message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+            message = enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(
+                kUriEnrollerKeepAlive);
             VerifyOrQuit(message != nullptr);
 
             SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
@@ -3048,7 +3067,8 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
     {
-        message = enrollers[i]->Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriEnrollerRegister);
+        message =
+            enrollers[i]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
         VerifyOrQuit(message != nullptr);
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
@@ -3116,7 +3136,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Prepare a `DiagnosticGetQuery` message");
 
-    diagMessage = enrollers[0]->Get<Tmf::Agent>().NewNonConfirmablePostMessage(kUriDiagnosticGetQuery);
+    diagMessage = enrollers[0]->Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(kUriDiagnosticGetQuery);
     VerifyOrQuit(diagMessage != nullptr);
     SuccessOrQuit(Tlv::Append<NetworkDiagnostic::TypeListTlv>(*diagMessage, kDiagTlvs, sizeof(kDiagTlvs)));
     diagMessage->WriteMessageId(0);
@@ -3124,7 +3144,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Embed the `DiagnosticGetQuery` into `ProxyTx` message and send it from `enrollers[0]`");
 
-    message = enrollers[0]->Get<Tmf::SecureAgent>().NewPriorityNonConfirmablePostMessage(kUriProxyTx);
+    message = enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriProxyTx);
     VerifyOrQuit(message != nullptr);
 
     udpEncapHeader.SetSourcePort(Tmf::kUdpPort);

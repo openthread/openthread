@@ -72,6 +72,12 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
 #define Case(kUri, Type)                   \
     case kUri:                             \
         Get<Type>().HandleTmf<kUri>(aMsg); \
@@ -107,8 +113,8 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-        Case(kUriPanIdConflict, PanIdQueryClient);
-        Case(kUriEnergyReport, EnergyScanClient);
+        Case(kUriPanIdConflict, MeshCoP::Commissioner);
+        Case(kUriEnergyReport, MeshCoP::Commissioner);
         Case(kUriDatasetChanged, MeshCoP::Commissioner);
         // kUriRelayRx is handled below
 #endif
@@ -159,6 +165,7 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
 
 #undef Case
 
+exit:
     return didHandle;
 }
 

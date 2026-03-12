@@ -220,7 +220,7 @@ void Admitter::ForwardJoinerRelayToEnrollers(const Coap::Msg &aMsg)
 
     VerifyOrExit(mCommissionerPetitioner.IsActiveCommissioner());
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
     SuccessOrExit(Tlv::Find<JoinerIidTlv>(aMsg.mMessage, joinerIid));
 
     LogInfo("Processing %s from joiner %s", UriToString<kUriRelayRx>(), joinerIid.ToString().AsCString());
@@ -575,7 +575,7 @@ void Admitter::CommissionerPetitioner::SendPetitionIfNoOtherCommissioner(void)
         ExitNow();
     }
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderPetition));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriLeaderPetition));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     writer.Append("otAdmitter");
@@ -707,7 +707,7 @@ Error Admitter::CommissionerPetitioner::SendKeepAlive(StateTlv::State aState)
     Error                   error = kErrorNone;
     OwnedPtr<Coap::Message> message;
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriLeaderKeepAlive));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
@@ -807,7 +807,7 @@ void Admitter::CommissionerPetitioner::SendDataSet(void)
 
     IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDataSetResponse, this));
 
-    message.Reset(Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerSet));
+    message.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerSet));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
@@ -1122,7 +1122,7 @@ void Manager::CoapDtlsSession::HandleEnrollerTmf(Uri aUri, const Coap::Msg &aMsg
     Error           error = kErrorNone;
     StateTlv::State responseState;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Receive %s", Admitter::EnrollerUriToString(aUri));
 
@@ -1362,7 +1362,7 @@ void Manager::CoapDtlsSession::SendEnrollerResponse(Uri                  aUri,
 {
     OwnedPtr<Coap::Message> response;
 
-    response.Reset(NewPriorityResponseMessage(aRequest));
+    response.Reset(AllocateAndInitPriorityResponseFor(aRequest));
     VerifyOrExit(response != nullptr);
 
     SuccessOrExit(Tlv::Append<StateTlv>(*response, static_cast<uint8_t>(aResponseState)));
@@ -1390,7 +1390,7 @@ void Manager::CoapDtlsSession::SendEnrollerReportState(uint8_t aAdmitterState)
 {
     OwnedPtr<Coap::Message> message;
 
-    message.Reset(NewNonConfirmablePostMessage(kUriEnrollerReportState));
+    message.Reset(AllocateAndInitNonConfirmablePostMessage(kUriEnrollerReportState));
     VerifyOrExit(message != nullptr);
 
     SuccessOrExit(AppendAdmitterTlvs(*message, aAdmitterState));

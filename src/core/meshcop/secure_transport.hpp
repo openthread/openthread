@@ -323,7 +323,9 @@ class SecureTransport : private NonCopyable
     friend class SecureSession;
 
 public:
-    static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
+    static constexpr size_t  kSecureTransportKeyBlockSize     = 40;
+    static constexpr size_t  kSecureTransportRandomBufferSize = 32;
+    static constexpr uint8_t kPskMaxLength                    = 32; ///< Maximum PSK length.
 
     /**
      * Pointer to function that is called to send an encrypted message.
@@ -737,6 +739,27 @@ public:
      */
     LinkedList<SecureSession> &GetSessions(void) { return mSessions; }
 
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+    /**
+     * Defines the keylog callback.
+     */
+    typedef void (*KeylogCallback)(void                       *aContext,
+                                   mbedtls_ssl_key_export_type aType,
+                                   const unsigned char        *aMasterSecret,
+                                   size_t                      aMasterSecretLen,
+                                   const unsigned char         aClientRandom[kSecureTransportRandomBufferSize],
+                                   const unsigned char         aServerRandom[kSecureTransportRandomBufferSize],
+                                   mbedtls_tls_prf_types       aTlsPrfType);
+
+    /**
+     * Sets the keylog callback.
+     *
+     * @param[in] aCallback  The keylog callback.
+     * @param[in] aContext   The context.
+     */
+    void SetKeylogCallback(KeylogCallback aCallback, void *aContext) { mKeylogCallback.Set(aCallback, aContext); }
+#endif
+
 protected:
     SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport);
     ~SecureTransport(void) { Close(); }
@@ -746,9 +769,6 @@ protected:
 #endif
 
 private:
-    static constexpr size_t kSecureTransportKeyBlockSize     = 40;
-    static constexpr size_t kSecureTransportRandomBufferSize = 32;
-
     enum CipherSuite : uint8_t
     {
         kEcjpakeWithAes128Ccm8,
@@ -774,20 +794,19 @@ private:
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 
 #if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
-
     static void HandleMbedtlsExportKeys(void                       *aContext,
                                         mbedtls_ssl_key_export_type aType,
                                         const unsigned char        *aMasterSecret,
                                         size_t                      aMasterSecretLen,
-                                        const unsigned char         aClientRandom[32],
-                                        const unsigned char         aServerRandom[32],
+                                        const unsigned char         aClientRandom[kSecureTransportRandomBufferSize],
+                                        const unsigned char         aServerRandom[kSecureTransportRandomBufferSize],
                                         mbedtls_tls_prf_types       aTlsPrfType);
 
     void HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
                                  const unsigned char        *aMasterSecret,
                                  size_t                      aMasterSecretLen,
-                                 const unsigned char         aClientRandom[32],
-                                 const unsigned char         aServerRandom[32],
+                                 const unsigned char         aClientRandom[kSecureTransportRandomBufferSize],
+                                 const unsigned char         aServerRandom[kSecureTransportRandomBufferSize],
                                  mbedtls_tls_prf_types       aTlsPrfType);
 
 #else
@@ -847,6 +866,9 @@ private:
     Callback<AcceptCallback>        mAcceptCallback;
     Callback<RemoveSessionCallback> mRemoveSessionCallback;
     Callback<TransportCallback>     mTransportCallback;
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+    Callback<KeylogCallback> mKeylogCallback;
+#endif
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     Extension *mExtension;
 #endif

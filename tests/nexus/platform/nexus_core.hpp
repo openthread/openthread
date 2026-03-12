@@ -57,6 +57,7 @@ public:
 
     TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
     TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
+    uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -81,7 +82,8 @@ public:
     void MarkPendingAction(void) { mPendingAction = true; }
 
 private:
-    static constexpr int8_t kDefaultRxRssi = -20;
+    static constexpr int8_t  kDefaultRxRssi = -20;
+    static constexpr uint8_t kDefaultRxLqi  = 255;
 
     enum AckMode : uint8_t
     {

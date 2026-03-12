@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "mac_frame.h"
 #include "nexus_node.hpp"
 
 namespace ot {
@@ -348,6 +349,7 @@ void Core::ProcessRadio(Node &aNode)
     uint16_t     dstPanId;
     bool         ackRequested;
     AckMode      ackMode = kNoAck;
+    Node        *ackNode = nullptr;
 
     VerifyOrExit(aNode.mRadio.mState == Radio::kStateTransmit);
 
@@ -361,7 +363,11 @@ void Core::ProcessRadio(Node &aNode)
         dstPanId = Mac::kPanIdBroadcast;
     }
 
-    ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
+    ackRequested                           = aNode.mRadio.mTxFrame.GetAckRequest();
+    aNode.mRadio.mRadioContext.mCslPresent = aNode.mRadio.mTxFrame.mInfo.mTxInfo.mCslPresent;
+
+    SuccessOrQuit(otMacFrameProcessTxSfd(&aNode.mRadio.mTxFrame, mNow, &aNode.mRadio.mRadioContext));
+    static_cast<Radio::Frame &>(aNode.mRadio.mTxFrame).UpdateFcs();
 
     mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow);
 
@@ -386,13 +392,14 @@ void Core::ProcessRadio(Node &aNode)
 
             rxFrame.mInfo.mRxInfo.mTimestamp = mNow;
             rxFrame.mInfo.mRxInfo.mRssi      = kDefaultRxRssi;
-            rxFrame.mInfo.mRxInfo.mLqi       = 0;
+            rxFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
 
             if (matchesDst && !dstAddr.IsNone() && !dstAddr.IsBroadcast() && ackRequested)
             {
                 Mac::Address srcAddr;
 
                 ackMode = kSendAckNoFramePending;
+                ackNode = &rxNode;
 
                 if ((aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone) &&
                     rxNode.mRadio.HasFramePendingFor(srcAddr))
@@ -416,13 +423,55 @@ void Core::ProcessRadio(Node &aNode)
     aNode.mRadio.mChannel = aNode.mRadio.mTxFrame.mChannel;
     aNode.mRadio.mState   = Radio::kStateReceive;
 
-    if (ackMode != kNoAck)
+    if (ackNode != nullptr)
     {
-        Radio::Frame ackFrame;
+        Radio::Frame        ackFrame;
+        const Mac::RxFrame &rxFrame =
+            static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame));
 
-        ackFrame.GenerateImmAck(
-            static_cast<const Mac::RxFrame &>(static_cast<const Mac::Frame &>(aNode.mRadio.mTxFrame)),
-            (ackMode == kSendAckFramePending));
+        if (rxFrame.IsVersion2015())
+        {
+            uint8_t ackIeData[OT_ACK_IE_MAX_SIZE];
+            uint8_t ackIeDataLength = 0;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+            ackNode->mRadio.mRadioContext.mCslPresent =
+                (ackNode->mRadio.mRadioContext.mCslPeriod > 0) &&
+                otMacFrameSrcAddrMatchCslReceiverPeer(&aNode.mRadio.mTxFrame, &ackNode->mRadio.mRadioContext);
+
+            if (ackNode->mRadio.mRadioContext.mCslPresent)
+            {
+                ackIeDataLength = otMacFrameGenerateCslIeTemplate(ackIeData);
+            }
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+            {
+                uint8_t      linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
+                uint8_t      linkMetricsDataLen;
+                Mac::Address srcAddr;
+
+                if (aNode.mRadio.mTxFrame.GetSrcAddr(srcAddr) == kErrorNone)
+                {
+                    linkMetricsDataLen = ackNode->mRadio.GenerateEnhAckProbingData(srcAddr, kDefaultRxLqi,
+                                                                                   kDefaultRxRssi, linkMetricsData);
+
+                    if (linkMetricsDataLen > 0)
+                    {
+                        ackIeDataLength += otMacFrameGenerateEnhAckProbingIe(ackIeData + ackIeDataLength,
+                                                                             linkMetricsData, linkMetricsDataLen);
+                    }
+                }
+            }
+#endif
+            SuccessOrExit(
+                ackFrame.GenerateEnhAck(rxFrame, (ackMode == kSendAckFramePending), ackIeData, ackIeDataLength));
+            SuccessOrExit(otMacFrameProcessTxSfd(&ackFrame, mNow, &ackNode->mRadio.mRadioContext));
+        }
+        else
+        {
+            ackFrame.GenerateImmAck(rxFrame, (ackMode == kSendAckFramePending));
+        }
 
         ackFrame.UpdateFcs();
         mPcap.WriteFrame(ackFrame, mNow);

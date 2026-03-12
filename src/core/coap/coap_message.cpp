@@ -33,6 +33,7 @@
 
 #include "coap_message.hpp"
 
+#include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -91,10 +92,6 @@ exit:
 
 bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeDelete); }
 
-bool HeaderInfo::IsConfirmablePostRequest(void) const { return IsConfirmable() && IsPostRequest(); }
-
-bool HeaderInfo::IsNonConfirmablePostRequest(void) const { return IsNonConfirmable() && IsPostRequest(); }
-
 //---------------------------------------------------------------------------------------------------------------------
 // `Message`
 
@@ -129,11 +126,6 @@ Error Message::Init(Type aType, Code aCode, Uri aUri)
 
 exit:
     return error;
-}
-
-Error Message::InitAsPost(const Ip6::Address &aDestination, Uri aUri)
-{
-    return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUri);
 }
 
 Error Message::InitAsResponse(Type aType, Code aCode, const Message &aRequest)
@@ -494,6 +486,8 @@ Error Message::ReadBlockOptionValues(uint16_t aBlockOptionNumber, BlockInfo &aIn
     }
 
     SuccessOrExit(error = iterator.Init(*this, aBlockOptionNumber));
+    VerifyOrExit(!iterator.IsDone(), error = kErrorNotFound);
+    VerifyOrExit(iterator.GetOption()->GetLength() <= sizeof(buf), error = kErrorParse);
     SuccessOrExit(error = iterator.ReadOptionValue(buf));
 
     switch (iterator.GetOption()->GetLength())
@@ -688,22 +682,6 @@ bool Message::HasSameTokenAs(const Message &aMessage) const
 
 exit:
     return hasSame;
-}
-
-Message *Message::Clone(void) const { return Clone(GetLength()); }
-
-Message *Message::Clone(uint16_t aLength) const { return Clone(aLength, GetReserved()); }
-
-Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
-{
-    Message *message = static_cast<Message *>(ot::Message::Clone(aLength, aReserveHeader));
-
-    VerifyOrExit(message != nullptr);
-
-    message->SetHeaderOffset(GetHeaderOffset());
-
-exit:
-    return message;
 }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -903,7 +881,8 @@ Error Option::Iterator::ReadExtendedOptionField(uint16_t &aValue)
 
         SuccessOrExit(error = Read(sizeof(uint16_t), &value16));
         value16 = BigEndian::HostSwap16(value16);
-        aValue  = value16 + Message::kOption2ByteExtensionOffset;
+        VerifyOrExit(CanAddSafely<uint16_t>(value16, Message::kOption2ByteExtensionOffset), error = kErrorParse);
+        aValue = value16 + Message::kOption2ByteExtensionOffset;
     }
     else
     {

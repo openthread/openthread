@@ -455,7 +455,7 @@ void DuaManager::PerformNextRegistration(void)
     }
 
     // Prepare DUA.req
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDuaRegistrationRequest);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriDuaRegistrationRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -572,16 +572,13 @@ template <> void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Msg &aMs
 {
     Error error;
 
-    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
-
-    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (aMsg.IsConfirmable() && Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }
 
     error = ProcessDuaResponse(aMsg.mMessage);
 
-exit:
     OT_UNUSED_VARIABLE(error);
     LogInfo("Received %s: %s", UriToString<kUriDuaRegistrationNotify>(), ErrorToString(error));
 }
@@ -700,7 +697,7 @@ void DuaManager::SendAddressNotification(Ip6::Address &aAddress, DuaStatus aStat
     Coap::Message *message = nullptr;
     Error          error;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDuaRegistrationNotify);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriDuaRegistrationNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aStatus));

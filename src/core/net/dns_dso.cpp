@@ -886,10 +886,12 @@ exit:
 
 Error Dso::Connection::ProcessKeepAliveMessage(const Dns::Header &aHeader, const Message &aMessage)
 {
-    Error        error  = kErrorAbort;
-    uint16_t     offset = aMessage.GetOffset();
+    Error        error = kErrorAbort;
+    OffsetRange  offsetRange;
     Tlv          tlv;
     KeepAliveTlv keepAliveTlv;
+
+    offsetRange.InitFromMessageOffsetToEnd(aMessage);
 
     if (aHeader.GetType() == Dns::Header::kTypeResponse)
     {
@@ -918,22 +920,23 @@ Error Dso::Connection::ProcessKeepAliveMessage(const Dns::Header &aHeader, const
 
     // Parse and validate the Keep Alive Message
 
-    SuccessOrExit(aMessage.Read(offset, keepAliveTlv));
-    offset += keepAliveTlv.GetSize();
+    SuccessOrExit(aMessage.Read(offsetRange, keepAliveTlv));
+    VerifyOrExit(offsetRange.Contains(keepAliveTlv.GetSize()));
+    offsetRange.AdvanceOffset(keepAliveTlv.GetSize());
 
     VerifyOrExit((keepAliveTlv.GetType() == KeepAliveTlv::kType) && keepAliveTlv.IsValid());
 
     // Keep Alive message MUST contain only one Keep Alive TLV.
 
-    while (offset < aMessage.GetLength())
+    while (!offsetRange.IsEmpty())
     {
-        SuccessOrExit(aMessage.Read(offset, tlv));
-        offset += tlv.GetSize();
+        SuccessOrExit(aMessage.Read(offsetRange, tlv));
+
+        VerifyOrExit(offsetRange.Contains(tlv.GetSize()));
+        offsetRange.AdvanceOffset(tlv.GetSize());
 
         VerifyOrExit((tlv.GetType() != KeepAliveTlv::kType) && (tlv.GetType() != RetryDelayTlv::kType));
     }
-
-    VerifyOrExit(offset == aMessage.GetLength());
 
     if (aHeader.GetType() == Dns::Header::kTypeQuery)
     {

@@ -131,6 +131,12 @@ DEFAULT_TESTS=(
     "1_1_7_1_6"
     "1_1_7_1_7"
     "1_1_7_1_8"
+    "1_1_8_1_1"
+    "1_1_8_1_2"
+    "1_1_8_1_6"
+    "1_1_8_2_1"
+    "1_1_8_2_2"
+    "1_1_8_3_1"
     "1_1_9_2_1"
     "1_1_9_2_2"
     "1_1_9_2_3"
@@ -150,6 +156,19 @@ DEFAULT_TESTS=(
     "1_1_9_2_17"
     "1_1_9_2_18"
     "1_1_9_2_19"
+    "1_2_LP_5_2_1"
+    "1_2_LP_5_3_1"
+    "1_2_LP_5_3_2"
+    "1_2_LP_5_3_3"
+    "1_2_LP_5_3_4"
+    "1_2_LP_5_3_5"
+    "1_2_LP_5_3_6"
+    "1_2_LP_5_3_7"
+    "1_2_LP_5_3_8"
+    "1_2_LP_7_1_1"
+    "1_2_LP_7_1_2"
+    "1_2_LP_7_2_1"
+    "1_2_LP_7_2_2"
 )
 
 # Use provided arguments or the default test list
@@ -175,7 +194,7 @@ run_test()
 
     local test_name="nexus_${test_base}"
     local json_file="test_${test_full}.json"
-    local pcap_file="test_${test_full}.pcap"
+    local pcap_file="test_${test_full}.pcapng"
     local verify_script="${REPO_ROOT}/tests/nexus/verify_${test_base}.py"
     local nexus_bin="${NEXUS_BIN_DIR}/${test_name}"
 

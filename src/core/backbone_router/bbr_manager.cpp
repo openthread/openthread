@@ -149,7 +149,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
     bool         hasCommissionerSessionIdTlv = false;
     bool         processTimeoutTlv           = false;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsConfirmable(), error = kErrorParse);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     // Required by Test Specification 5.10.22 DUA-TC-26, only for certification purpose
@@ -279,7 +279,7 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Msg &aMsg,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aStatus));
@@ -317,7 +317,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
 
     OT_ASSERT(aAddressNum >= Ip6AddressesTlv::kMinAddresses && aAddressNum <= Ip6AddressesTlv::kMaxAddresses);
 
-    message = backboneTmf.NewNonConfirmablePostMessage(kUriBackboneMlr);
+    message = backboneTmf.AllocateAndInitNonConfirmablePostMessage(kUriBackboneMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     addressesTlv.Init();
@@ -366,7 +366,7 @@ void Manager::HandleDuaRegistration(const Coap::Msg &aMsg)
 #endif
 
     VerifyOrExit(aMsg.mMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator(), error = kErrorDrop);
-    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsConfirmable(), error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -420,7 +420,7 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (duaRespCoapCode != Coap::kCodeEmpty)
         {
-            IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg, duaRespCoapCode));
+            IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg, duaRespCoapCode));
         }
         else
 #endif
@@ -435,7 +435,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Msg &aMsg, const Ip6::Addr
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aStatus));
@@ -508,7 +508,7 @@ Error Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
 
-    message = mBackboneTmfAgent.NewPriorityNonConfirmablePostMessage(kUriBackboneQuery);
+    message = mBackboneTmfAgent.AllocateAndInitPriorityNonConfirmablePostMessage(kUriBackboneQuery);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
@@ -542,7 +542,7 @@ template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Msg &aMsg)
     VerifyOrExit(aMsg.mMessageInfo.IsHostInterface(), error = kErrorDrop);
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest(), error = kErrorParse);
+    VerifyOrExit(aMsg.IsNonConfirmable(), error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, dua));
 
@@ -574,7 +574,6 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Msg &aMsg)
     VerifyOrExit(aMsg.mMessageInfo.IsHostInterface(), error = kErrorDrop);
 
     VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
-    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorParse);
 
     proactive = !aMsg.IsConfirmable();
 
@@ -599,7 +598,7 @@ template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Msg &aMsg)
         HandleExtendedBackboneAnswer(dua, meshLocalIid, timeSinceLastTransaction, srcRloc16);
     }
 
-    SuccessOrExit(error = mBackboneTmfAgent.SendEmptyAck(aMsg));
+    SuccessOrExit(error = mBackboneTmfAgent.SendAckResponse(aMsg));
 
 exit:
     LogInfo("HandleBackboneAnswer: %s", ErrorToString(error));
@@ -632,10 +631,8 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     Coap::Message   *message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsPost(aDstAddr, kUriBackboneAnswer));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = mBackboneTmfAgent.AllocateAndInitPriorityPostMessageTo(kUriBackboneAnswer, aDstAddr);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aDua));
 

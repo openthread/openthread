@@ -32,6 +32,7 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/tests/nexus
     ${PROJECT_SOURCE_DIR}/tests/nexus/platform
+    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
 )
 
 set(COMMON_COMPILE_OPTIONS
@@ -51,6 +52,7 @@ add_library(ot-nexus-platform
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp
+    ../../examples/platforms/utils/mac_frame.cpp
 )
 
 target_include_directories(ot-nexus-platform
@@ -116,7 +118,6 @@ endmacro()
 
 
 #----------------------------------------------------------------------------------------------------------------------
-
 # Cert tests
 ot_nexus_test(1_1_5_1_1 "cert;nexus")
 ot_nexus_test(1_1_5_1_2 "cert;nexus")
@@ -195,6 +196,12 @@ ot_nexus_test(1_1_7_1_5 "cert;nexus")
 ot_nexus_test(1_1_7_1_6 "cert;nexus")
 ot_nexus_test(1_1_7_1_7 "cert;nexus")
 ot_nexus_test(1_1_7_1_8 "cert;nexus")
+ot_nexus_test(1_1_8_1_1 "cert;nexus")
+ot_nexus_test(1_1_8_1_2 "cert;nexus")
+ot_nexus_test(1_1_8_1_6 "cert;nexus")
+ot_nexus_test(1_1_8_2_1 "cert;nexus")
+ot_nexus_test(1_1_8_2_2 "cert;nexus")
+ot_nexus_test(1_1_8_3_1 "cert;nexus")
 ot_nexus_test(1_1_9_2_1 "cert;nexus")
 ot_nexus_test(1_1_9_2_2 "cert;nexus")
 ot_nexus_test(1_1_9_2_3 "cert;nexus")
@@ -214,6 +221,19 @@ ot_nexus_test(1_1_9_2_16 "cert;nexus")
 ot_nexus_test(1_1_9_2_17 "cert;nexus")
 ot_nexus_test(1_1_9_2_18 "cert;nexus")
 ot_nexus_test(1_1_9_2_19 "cert;nexus")
+ot_nexus_test(1_2_LP_5_2_1 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_1 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_2 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_3 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_4 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_5 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_6 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_7 "cert;nexus")
+ot_nexus_test(1_2_LP_5_3_8 "cert;nexus")
+ot_nexus_test(1_2_LP_7_1_1 "cert;nexus")
+ot_nexus_test(1_2_LP_7_1_2 "cert;nexus")
+ot_nexus_test(1_2_LP_7_2_1 "cert;nexus")
+ot_nexus_test(1_2_LP_7_2_2 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
