@@ -63,6 +63,15 @@ public:
      */
     void WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs);
 
+    /**
+     * Writes a packet to the pcapng file.
+     *
+     * @param[in] aBuffer  The packet buffer to write.
+     * @param[in] aLength  The packet length.
+     * @param[in] aTimeUs  The timestamp in microseconds.
+     */
+    void WritePacket(const uint8_t *aBuffer, uint16_t aLength, uint64_t aTimeUs);
+
 private:
     static constexpr uint32_t kPcapngShbType            = 0x0a0d0d0a;
     static constexpr uint32_t kPcapngByteOrderMagic     = 0x1a2b3c4d;
@@ -72,6 +81,7 @@ private:
     static constexpr uint32_t kPcapngEpbType            = 0x00000006;
     static constexpr uint32_t kPcapngSnapLen            = 65535;
     static constexpr uint32_t kPcapngLinkTypeIeee802154 = 283; // DLT_IEEE802_15_4_TAP
+    static constexpr uint32_t kPcapngLinkTypeIPv6       = 101; // LINKTYPE_RAW
 
     static constexpr uint8_t kTapVersion = 0;
 
