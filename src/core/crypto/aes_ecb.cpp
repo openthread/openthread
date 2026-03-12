@@ -40,8 +40,13 @@ namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
+#if OPENTHREAD_CONFIG_PLATFORM_ALLOCS_CRYPTO_CONTEXTS
+    mContext.mContext     = nullptr;
+    mContext.mContextSize = 0;
+#else
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
+#endif
     SuccessOrAssert(otPlatCryptoAesInit(&mContext));
 }
 

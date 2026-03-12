@@ -136,7 +136,9 @@ public:
 
 private:
     otCryptoContext mContext;
+#if !OPENTHREAD_CONFIG_PLATFORM_ALLOCS_CRYPTO_CONTEXTS
     OT_DEFINE_ALIGNED_VAR(mContextStorage, kSha256ContextSize, uint64_t);
+#endif
 };
 
 /**
