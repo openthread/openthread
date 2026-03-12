@@ -258,10 +258,10 @@ otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAge
 /**
  * Maximum string length of base name used in `otBorderAgentSetMeshCoPServiceBaseName()`.
  *
- * The full DNS label is constructed by appending the Extended Address of the device (as 16-character hex digits) to
- * the given base name.
+ * The full DNS label is constructed by appending the last two bytes of the Extended Address of the device
+ * (as 4-character hex digits prefixed with " #") to the given base name.
  */
-#define OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH (OT_DNS_MAX_LABEL_SIZE - 17)
+#define OT_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME_MAX_LENGTH (OT_DNS_MAX_LABEL_SIZE - 7)
 
 /**
  * Sets the base name to construct the service instance name used when advertising the mDNS `_meshcop._udp` service by

@@ -424,9 +424,10 @@ const char *Manager::GetServiceName(void)
 
 void Manager::ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
 {
-    StringWriter writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
+    StringWriter           writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
+    const Mac::ExtAddress &extAddr = Get<Mac::Mac>().GetExtAddress();
 
-    writer.Append("%.*s%s", kBaseServiceNameMaxLen, aBaseName, Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+    writer.Append("%.*s #%02X%02X", kBaseServiceNameMaxLen, aBaseName, extAddr.m8[6], extAddr.m8[7]);
 }
 
 void Manager::RegisterService(void)
