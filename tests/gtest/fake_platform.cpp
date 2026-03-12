@@ -502,11 +502,14 @@ void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 void otPlatFree(void *aPtr) { free(aPtr); }
 
-bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t) { return OT_ERROR_FAILED; }
+otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_FAILED;
+}
 
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
 
 void otPlatDsoEnableListening(otInstance *, bool) {}
 

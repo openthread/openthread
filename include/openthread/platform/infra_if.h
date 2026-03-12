@@ -70,18 +70,20 @@ typedef struct otPlatInfraIfLinkLayerAddress
 /**
  * Tells whether an infra interface has the given IPv6 address assigned.
  *
+ * @param[in]  aInstance      The OpenThread instance.
  * @param[in]  aInfraIfIndex  The index of the infra interface.
  * @param[in]  aAddress       The IPv6 address.
  *
  * @returns  TRUE if the infra interface has given IPv6 address assigned, FALSE otherwise.
  */
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
+bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, const otIp6Address *aAddress);
 
 /**
  * Sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
  *
  * See RFC 4861: https://tools.ietf.org/html/rfc4861.
  *
+ * @param[in]  aInstance      The OpenThread instance.
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface this message is sent to.
  * @param[in]  aDestAddress   The destination address this message is sent to.
  * @param[in]  aBuffer        The ICMPv6 message buffer. The ICMPv6 checksum is left zero and the
@@ -94,7 +96,8 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
  * @retval OT_ERROR_NONE    Successfully sent the ICMPv6 message.
  * @retval OT_ERROR_FAILED  Failed to send the ICMPv6 message.
  */
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
+                                 uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength);
@@ -145,6 +148,7 @@ extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraI
  *
  * OpenThread will call this method periodically to monitor the presence or change of NAT64 prefix.
  *
+ * @param[in]  aInstance      The OpenThread instance.
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface to discover the NAT64 prefix.
  *
  * @retval  OT_ERROR_NONE             Successfully requested NAT64 prefix discovery.
@@ -155,7 +159,7 @@ extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraI
  *        discovery). The priority of the discovered prefix is lower than that of the prefix discovered via Router
  *        Advertisements PREF64 option (RFC 8781).
  */
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex);
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *aInstance, uint32_t aInfraIfIndex);
 
 /**
  * The infra interface driver calls this method to notify OpenThread that
