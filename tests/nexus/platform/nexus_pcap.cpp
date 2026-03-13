@@ -34,6 +34,18 @@
 namespace ot {
 namespace Nexus {
 
+OT_TOOL_PACKED_BEGIN
+struct Epb
+{
+    uint32_t mBlockType;
+    uint32_t mBlockTotalLength;
+    uint32_t mInterfaceId;
+    uint32_t mTimestampHigh;
+    uint32_t mTimestampLow;
+    uint32_t mCapturedLen;
+    uint32_t mOriginalLen;
+} OT_TOOL_PACKED_END;
+
 Pcap::Pcap(void)
     : mFile(nullptr)
 {
@@ -89,6 +101,14 @@ void Pcap::Open(const char *aFilename)
     idb.mBlockTotalLength2 = idb.mBlockTotalLength;
     VerifyOrExit(fwrite(&idb, sizeof(idb), 1, mFile) == 1, Close());
 
+    ClearAllBytes(idb);
+    idb.mBlockType         = LittleEndian::HostSwap(kPcapngIdbType);
+    idb.mBlockTotalLength  = LittleEndian::HostSwap(static_cast<uint32_t>(sizeof(idb)));
+    idb.mLinkType          = LittleEndian::HostSwap(static_cast<uint16_t>(kPcapngLinkTypeIPv6));
+    idb.mSnapLen           = LittleEndian::HostSwap(kPcapngSnapLen);
+    idb.mBlockTotalLength2 = idb.mBlockTotalLength;
+    VerifyOrExit(fwrite(&idb, sizeof(idb), 1, mFile) == 1, Close());
+
     VerifyOrExit(fflush(mFile) == 0, Close());
 
 exit:
@@ -108,17 +128,7 @@ exit:
 
 void Pcap::WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct Epb
-    {
-        uint32_t mBlockType;
-        uint32_t mBlockTotalLength;
-        uint32_t mInterfaceId;
-        uint32_t mTimestampHigh;
-        uint32_t mTimestampLow;
-        uint32_t mCapturedLen;
-        uint32_t mOriginalLen;
-    } OT_TOOL_PACKED_END epb;
+    Epb epb;
 
     OT_TOOL_PACKED_BEGIN
     struct TapHeader
@@ -147,7 +157,7 @@ void Pcap::WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs)
     ClearAllBytes(epb);
     epb.mBlockType        = LittleEndian::HostSwap(kPcapngEpbType);
     epb.mBlockTotalLength = LittleEndian::HostSwap(blockTotalLength);
-    epb.mInterfaceId      = 0;
+    epb.mInterfaceId      = LittleEndian::HostSwap(0u);
     epb.mTimestampHigh    = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs >> 32));
     epb.mTimestampLow     = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs & 0xffffffff));
     epb.mCapturedLen      = LittleEndian::HostSwap(packetLen);
@@ -181,6 +191,44 @@ void Pcap::WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs)
     if (paddedLen > packetLen)
     {
         VerifyOrExit(fwrite(&padding, paddedLen - packetLen, 1, mFile) == 1, Close());
+    }
+
+    VerifyOrExit(fwrite(&epb.mBlockTotalLength, sizeof(epb.mBlockTotalLength), 1, mFile) == 1, Close());
+
+    VerifyOrExit(fflush(mFile) == 0, Close());
+
+exit:
+    return;
+}
+
+void Pcap::WritePacket(const uint8_t *aBuffer, uint16_t aLength, uint64_t aTimeUs)
+{
+    Epb epb;
+
+    uint32_t paddedLen;
+    uint32_t blockTotalLength;
+    uint32_t padding = 0;
+
+    VerifyOrExit(mFile != nullptr);
+
+    paddedLen        = (aLength + 3) & ~3u;
+    blockTotalLength = sizeof(epb) + paddedLen + sizeof(uint32_t);
+
+    ClearAllBytes(epb);
+    epb.mBlockType        = LittleEndian::HostSwap(kPcapngEpbType);
+    epb.mBlockTotalLength = LittleEndian::HostSwap(blockTotalLength);
+    epb.mInterfaceId      = LittleEndian::HostSwap(1u); // Use Interface ID 1 for IPv6
+    epb.mTimestampHigh    = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs >> 32));
+    epb.mTimestampLow     = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs & 0xffffffff));
+    epb.mCapturedLen      = LittleEndian::HostSwap(static_cast<uint32_t>(aLength));
+    epb.mOriginalLen      = LittleEndian::HostSwap(static_cast<uint32_t>(aLength));
+    VerifyOrExit(fwrite(&epb, sizeof(epb), 1, mFile) == 1, Close());
+
+    VerifyOrExit(fwrite(aBuffer, aLength, 1, mFile) == 1, Close());
+
+    if (paddedLen > aLength)
+    {
+        VerifyOrExit(fwrite(&padding, paddedLen - aLength, 1, mFile) == 1, Close());
     }
 
     VerifyOrExit(fwrite(&epb.mBlockTotalLength, sizeof(epb.mBlockTotalLength), 1, mFile) == 1, Close());
