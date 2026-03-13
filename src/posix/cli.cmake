@@ -26,34 +26,47 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli
-    main.c
+add_library(openthread-posix-cli
     cli_readline.cpp
     cli_stdio.cpp
 )
 
-target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
+target_include_directories(openthread-posix-cli PRIVATE ${COMMON_INCLUDES})
 
 if (READLINE)
-target_compile_definitions(ot-cli PRIVATE
+target_compile_definitions(openthread-posix-cli PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
 endif()
+
+target_compile_options(openthread-posix-cli PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_link_libraries(openthread-posix-cli PRIVATE
+    openthread-cli-ftd
+    openthread-posix
+    ${READLINE_LINK_LIBRARIES}
+    ot-config-ftd
+    ot-config
+)
+
+add_executable(ot-cli
+    main.c
+)
+
+target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
 target_compile_options(ot-cli PRIVATE
     ${OT_CFLAGS}
 )
 
 target_link_libraries(ot-cli PRIVATE
-    openthread-cli-ftd
-    openthread-posix
+    openthread-posix-cli
     openthread-ftd
-    openthread-posix
-    openthread-cli-ftd
     openthread-hdlc
     openthread-radio-spinel
     openthread-spinel-rcp
     ${OT_MBEDTLS}
-    ${READLINE_LINK_LIBRARIES}
     ot-config-ftd
     ot-config
 )
