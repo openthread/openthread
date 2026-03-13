@@ -429,7 +429,7 @@ void otThreadGetNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey);
 /**
  * Get the `otNetworkKeyRef` for Thread Network Key.
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires the PSA crypto library to be enabled (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
@@ -463,7 +463,7 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires the PSA crypto library to be enabled (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKeyRef     Reference to the Thread Network Key.

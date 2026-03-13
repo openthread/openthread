@@ -512,7 +512,7 @@ private:
     Dns::Multicast::Core mMdnsCore;
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     Crypto::Storage::KeyRefManager mCryptoStorageKeyRefManager;
 #endif
 
@@ -826,7 +826,7 @@ template <> inline MessageFramer &Instance::Get(void) { return mMessageFramer; }
 
 template <> inline MeshForwarder &Instance::Get(void) { return mMeshForwarder; }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 template <> inline Crypto::Storage::KeyRefManager &Instance::Get(void) { return mCryptoStorageKeyRefManager; }
 #endif
 

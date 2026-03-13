@@ -695,7 +695,7 @@ Error TcatAgent::HandleDecommission(void)
 
     IgnoreReturnValue(Get<Instance>().ErasePersistentInfo());
 
-#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if !(OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     {
         NetworkKey networkKey;
         networkKey.Clear();
@@ -938,7 +938,7 @@ Error TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBu
     Crypto::HmacSha256      hmac;
     Error                   error = kErrorNone;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     Crypto::Storage::KeyRef keyRef;
     SuccessOrExit(error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
                                                      Crypto::Storage::kKeyAlgorithmHmacSha256,
@@ -954,7 +954,7 @@ Error TcatAgent::CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBu
     hmac.Update(rawKey.p, static_cast<uint16_t>(rawKey.len));
     hmac.Finish(aHash);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     Crypto::Storage::DestroyKey(keyRef);
 exit:
 #endif

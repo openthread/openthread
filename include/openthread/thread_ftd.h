@@ -637,7 +637,7 @@ void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc);
 /**
  * Get Key Reference to Thread PSKc stored
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires the PSA crypto library to be enabled (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
@@ -667,7 +667,7 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
 /**
  * Set the Key Reference to the Thread PSKc
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires the PSA crypto library to be enabled (`OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA`).
  *
  * Will only succeed when Thread protocols are disabled.  Upon success,
  * this will also invalidate the Active and Pending Operational Datasets in

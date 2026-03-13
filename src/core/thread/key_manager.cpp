@@ -178,7 +178,7 @@ KeyManager::KeyManager(Instance &aInstance)
 {
     otPlatCryptoInit();
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
     mPskcRef       = Crypto::Storage::kInvalidKeyRef;
 #else
@@ -191,7 +191,7 @@ KeyManager::KeyManager(Instance &aInstance)
 
 void KeyManager::Init(void)
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     NetworkKey networkKey;
 
     IgnoreError(networkKey.GenerateRandom());
@@ -209,7 +209,7 @@ void KeyManager::Stop(void) { mKeyRotationTimer.Stop(); }
 
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     if (Crypto::Storage::IsKeyRefValid(mPskcRef))
     {
         Pskc pskc;
@@ -262,7 +262,7 @@ void KeyManager::ResetFrameCounters(void)
 
 void KeyManager::SetNetworkKey(const NetworkKey &aNetworkKey)
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     if (Crypto::Storage::IsKeyRefValid(mNetworkKeyRef))
     {
         NetworkKey networkKey;
@@ -293,7 +293,7 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys) const
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
     Crypto::Key        cryptoKey;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     cryptoKey.SetAsKeyRef(mNetworkKeyRef);
 #else
     cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
@@ -315,7 +315,7 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
     Crypto::Key        cryptoKey;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     cryptoKey.SetAsKeyRef(mNetworkKeyRef);
 #else
     cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
@@ -572,7 +572,7 @@ void KeyManager::CheckForKeyRotation(void)
 
 void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     if (Crypto::Storage::HasKey(mNetworkKeyRef))
     {
         size_t keyLen;
@@ -591,7 +591,7 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
 
 void KeyManager::GetPskc(Pskc &aPskc) const
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     if (Crypto::Storage::HasKey(mPskcRef))
     {
         size_t keyLen;
@@ -608,7 +608,7 @@ void KeyManager::GetPskc(Pskc &aPskc) const
 #endif
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteExisting)
 {
@@ -700,6 +700,6 @@ void KeyManager::DestroyTemporaryKeys(void)
 
 void KeyManager::DestroyPersistentKeys(void) { Get<Crypto::Storage::KeyRefManager>().DestroyPersistentKeys(); }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 
 } // namespace ot

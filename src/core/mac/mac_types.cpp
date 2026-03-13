@@ -316,7 +316,7 @@ void LinkFrameCounters::SetAll(uint32_t aCounter)
 #endif
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 KeyMaterial &KeyMaterial::operator=(const KeyMaterial &aOther)
 {
     VerifyOrExit(GetKeyRef() != aOther.GetKeyRef());
@@ -330,7 +330,7 @@ exit:
 
 void KeyMaterial::Clear(void)
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     DestroyKey();
     SetKeyRef(kInvalidKeyRef);
 #else
@@ -340,7 +340,7 @@ void KeyMaterial::Clear(void)
 
 void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     {
         KeyRef keyRef = 0;
 
@@ -362,7 +362,7 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 
 void KeyMaterial::ExtractKey(Key &aKey) const
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     aKey.Clear();
 
     if (Crypto::Storage::IsKeyRefValid(GetKeyRef()))
@@ -378,14 +378,14 @@ void KeyMaterial::ExtractKey(Key &aKey) const
 
 void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
 {
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     aCryptoKey.SetAsKeyRef(GetKeyRef());
 #else
     aCryptoKey.Set(GetKey().GetBytes(), Key::kSize);
 #endif
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 void KeyMaterial::DestroyKey(void)
 {
     Crypto::Storage::DestroyKey(GetKeyRef());
@@ -396,7 +396,7 @@ void KeyMaterial::DestroyKey(void)
 bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 {
     return
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
         (GetKeyRef() == aOther.GetKeyRef());
 #else
         (GetKey() == aOther.GetKey());

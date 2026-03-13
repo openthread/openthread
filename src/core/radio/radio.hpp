@@ -918,7 +918,7 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
 {
     otRadioKeyType aKeyType;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     aKeyType = OT_KEY_TYPE_KEY_REF;
 #else
     aKeyType = OT_KEY_TYPE_LITERAL_KEY;

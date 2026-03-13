@@ -269,7 +269,7 @@ void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc)
     AsCoreType(aInstance).Get<KeyManager>().GetPskc(AsCoreType(aPskc));
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 otPskcRef otThreadGetPskcRef(otInstance *aInstance) { return AsCoreType(aInstance).Get<KeyManager>().GetPskcRef(); }
 #endif
 
@@ -287,7 +287,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 otError otThreadSetPskcRef(otInstance *aInstance, otPskcRef aKeyRef)
 {
     Error     error    = kErrorNone;

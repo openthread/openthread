@@ -98,7 +98,7 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     , mMdnsCore(*this)
 #endif
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     , mCryptoStorageKeyRefManager(*this)
 #endif
     , mIp6(*this)
@@ -315,11 +315,11 @@ Instance::Instance(void)
     , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
 {
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
     mCryptoStorageKeyRefManager.SetKeyRefExtraOffset(Crypto::Storage::KeyRefManager::kKeyRefExtraOffset * GetIdx(this));
 #else
-#error "MULTIPLE_INSTANCE (without static allocation) is used with PLATFORM_KEY_REFERENCES_ENABLE " \
+#error "MULTIPLE_INSTANCE (without static allocation) is used with PSA crypto library " \
        "The `KeyRef` values will be shared across different `Instance` objects"
 #endif
 #endif
@@ -465,7 +465,7 @@ void Instance::Finalize(void)
     Get<Mle::Mle>().Stop();
     Get<ThreadNetif>().Down();
     Get<Mac::Mac>().SetEnabled(false);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     Get<KeyManager>().DestroyTemporaryKeys();
 #endif
 
@@ -493,7 +493,7 @@ exit:
 void Instance::FactoryReset(void)
 {
     Get<Settings>().Wipe();
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     Get<KeyManager>().DestroyTemporaryKeys();
     Get<KeyManager>().DestroyPersistentKeys();
 #endif
@@ -506,7 +506,7 @@ Error Instance::ErasePersistentInfo(void)
 
     VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
     Get<Settings>().Wipe();
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     Get<KeyManager>().DestroyTemporaryKeys();
     Get<KeyManager>().DestroyPersistentKeys();
 #endif
