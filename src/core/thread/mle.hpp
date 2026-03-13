@@ -2403,6 +2403,7 @@ private:
     Error    SendAddressSolicit(RouterUpgradeReason aReason);
     void     ProcessAddressSolicit(AddrSolicitInfo &aInfo);
     void     SendAddressRelease(void);
+    void     SendAddressRelease(uint8_t aRouterId);
     void     SendMulticastAdvertisement(void);
     void     SendAdvertisement(const Ip6::Address &aDestination);
     void     SendLinkRequest(Router *aRouter);
