@@ -516,6 +516,28 @@ exit:
     return;
 }
 
+void Mle::ClearCaches(void)
+{
+    mLastSavedRole      = kRoleDisabled;
+    mRole               = kRoleDisabled;
+    mPreviousParentRloc = 0;
+    mHasRestored        = false;
+    SetRloc16(0);
+    mParent.Clear();
+
+    Get<Mac::Mac>().SetShortAddress(0);
+    Get<KeyManager>().SetCurrentKeySequence(0, KeyManager::kForceUpdate | KeyManager::kGuardTimerUnchanged);
+    Get<KeyManager>().SetMleFrameCounter(0);
+    Get<KeyManager>().SetAllMacFrameCounters(0, /* aSetIfLarger */ false);
+
+    mDeviceMode.Set(DeviceMode::kModeRxOnWhenIdle);
+#if OPENTHREAD_FTD
+    mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
+    SetRouterId(0);
+    SetPreviousPartitionId(0);
+#endif
+}
+
 Error Mle::BecomeDetached(void)
 {
     Error error = kErrorNone;
