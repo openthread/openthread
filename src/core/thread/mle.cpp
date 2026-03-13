@@ -4236,7 +4236,7 @@ Error Mle::PrevRoleRestorer::Start(void)
 
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
         SetState(kRestoringRouterOrLeaderRole);
-        mAttempts = kRouterLinkRequestAttempts;
+        mAttempts = kRestoreLinkRequestAttempts;
         mTimer.Start(Get<Mle>().GenerateRandomDelay(kMaxStartDelay));
         error = kErrorNone;
 #endif
