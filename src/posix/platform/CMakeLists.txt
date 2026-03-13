@@ -28,21 +28,50 @@
 
 set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
 
+set(OT_READLINE_VALUES
+    "readline"
+    "edit"
+)
+
+set(OT_READLINE "" CACHE STRING "set readline library name")
+set_property(CACHE OT_READLINE PROPERTY STRINGS ${OT_READLINE_VALUES})
+
+if(OT_READLINE STREQUAL "")
+    foreach(X IN LISTS OT_READLINE_VALUES)
+        find_library(READLINE ${X})
+        if (READLINE)
+            set(OT_READLINE ${X} CACHE STRING "set readline library name" FORCE)
+            break()
+        endif()
+    endforeach()
+elseif(OT_READLINE)
+    find_library(READLINE ${OT_READLINE})
+
+    if (NOT READLINE)
+        message(FATAL_ERROR "Failed to find ${OT_READLINE}")
+    endif()
+endif()
+
+if (READLINE)
+    message(STATUS "Readline: ${OT_READLINE}")
+
+    find_library(NCURSES ncurses)
+    if (NOT NCURSES)
+        message(FATAL_ERROR "Failed to find ncurses")
+    endif()
+
+    list(APPEND READLINE_LINK_LIBRARIES "${READLINE}" "${NCURSES}")
+    set(READLINE_LINK_LIBRARIES ${READLINE_LINK_LIBRARIES} PARENT_SCOPE)
+    set(READLINE ${READLINE} PARENT_SCOPE)
+    set(OT_READLINE ${OT_READLINE} PARENT_SCOPE)
+endif()
+
 add_library(ot-posix-config INTERFACE)
 
-option(OT_DAEMON "Enable daemon mode" OFF)
-if(OT_DAEMON)
-    target_compile_definitions(ot-posix-config
-        INTERFACE "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1"
-    )
-
-    # We have to add this definition to `ot-config` because openthread core
-    # libraries will set config file to "openthrad-core-posix-config.h" which
-    # depends on `OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE` to correctly enable
-    # PLATFORM_NETIF and PLATFORM_UDP features. Otherwise, openthread core and
-    # posix libraries will use different feature definitions.
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1")
-    set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+if(OT_APP_CLI)
+    target_compile_definitions(ot-posix-config INTERFACE "OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE=1")
+else()
+    target_compile_definitions(ot-posix-config INTERFACE "OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE=0")
 endif()
 
 if(OT_MULTIPAN_RCP)
@@ -173,6 +202,7 @@ target_link_libraries(openthread-posix
         ot-config-ftd
         ot-config
         ot-posix-config
+        ${READLINE_LINK_LIBRARIES}
         $<$<NOT:$<BOOL:${OT_ANDROID_NDK}>>:util>
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
 )
@@ -184,6 +214,7 @@ target_compile_definitions(openthread-posix
         OPENTHREAD_FTD=1
         OPENTHREAD_MTD=0
         OPENTHREAD_RADIO=0
+        $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
 )
 
 target_compile_options(openthread-posix PRIVATE

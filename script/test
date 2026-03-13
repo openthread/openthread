@@ -149,7 +149,7 @@ build_simulation()
 
         # Note: Setting this option to ON for all OT_NODE_TYPEs will cause the posix/expects CI check to fail.
         #       This is because the simulation RCP will have the SPINEL_CAP_RCP_RESET_TO_BOOTLOADER capability,
-        #       causing the ot-cli POSIX app to send the reset to simulation RCP successfully instead of printing
+        #       causing the ot-daemon POSIX app to send the reset to simulation RCP successfully instead of printing
         #       the expected error.
         options+=("-DOT_PLATFORM_BOOTLOADER_MODE=ON")
     fi
@@ -181,6 +181,8 @@ build_posix()
         "-DOT_PLATFORM_BOOTLOADER_MODE=ON"
         "-DOT_PLATFORM_LOG_CRASH_DUMP=ON"
         "-DOT_THREAD_VERSION=${version}"
+        "-DOT_PLATFORM_NETIF=OFF"
+        "-DOT_PLATFORM_UDP=OFF"
     )
 
     if [[ ${version} != "1.1" ]]; then
@@ -435,7 +437,6 @@ ot_exec_expect_script()
     for script in "$@"; do
         echo -e "\n${OT_COLOR_PASS}EXEC${OT_COLOR_NONE} ${script}"
         sudo killall ot-rcp || true
-        sudo killall ot-cli || true
         sudo killall ot-cli-ftd || true
         sudo killall ot-cli-mtd || true
         sudo rm -rf tmp
@@ -649,12 +650,12 @@ envsetup()
 
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
-        export OT_CLI_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
+        export OT_DAEMON_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-daemon"
 
         if [[ ${THREAD_VERSION} != "1.1" ]]; then
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
-            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-cli"
-            export OT_CLI_PATH_BBR="${OT_BUILDDIR}/openthread-posix-1.4-bbr/src/posix/ot-cli"
+            export OT_DAEMON_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-daemon"
+            export OT_DAEMON_PATH_BBR="${OT_BUILDDIR}/openthread-posix-1.4-bbr/src/posix/ot-daemon"
         fi
     fi
 

@@ -36,53 +36,10 @@ set(COMMON_INCLUDES
 
 ot_option(OT_PLATFORM_POSIX_CONFIG_FILE OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE "posix config file")
 
-set(OT_READLINE_VALUES
-    "readline"
-    "edit"
-)
+include(daemon.cmake)
 
-set(OT_READLINE "" CACHE STRING "set readline library name")
-set_property(CACHE OT_READLINE PROPERTY STRINGS ${OT_READLINE_VALUES})
-
-if(OT_READLINE STREQUAL "")
-    foreach(X IN LISTS OT_READLINE_VALUES)
-        find_library(READLINE ${X})
-        if (READLINE)
-            set(OT_READLINE ${X})
-            break()
-        endif()
-    endforeach()
-elseif(OT_READLINE)
-    find_library(READLINE ${OT_READLINE})
-
-    if (NOT READLINE)
-        message(FATAL_ERROR "Failed to find ${OT_READLINE}")
-    endif()
-endif()
-
-if (READLINE)
-    message(STATUS "Readline: ${OT_READLINE}")
-
-    find_library(NCURSES ncurses)
-    if (NOT NCURSES)
-        message(FATAL_ERROR "Failed to find ncurses")
-    endif()
-
-    list(APPEND READLINE_LINK_LIBRARIES "${READLINE}" "${NCURSES}")
-endif()
-
-if(OT_DAEMON)
-    include(daemon.cmake)
-
-    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-        set(CPACK_PACKAGE_NAME "openthread-daemon")
-    endif()
-elseif(OT_APP_CLI)
-    include(cli.cmake)
-
-    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-        set(CPACK_PACKAGE_NAME "openthread-standalone")
-    endif()
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CPACK_PACKAGE_NAME "openthread-daemon")
 endif()
 
 set(OT_POSIX_FACTORY_CONFIG "" CACHE STRING "OpenThread factory config file")

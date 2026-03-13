@@ -26,13 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "posix/platform/daemon.hpp"
+#include "daemon.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #include <cutils/sockets.h>
 #endif
+#include <ctype.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -41,13 +43,20 @@
 #include <unistd.h>
 
 #include <openthread/cli.h>
+#include <openthread/instance.h>
 
-#include "cli/cli_config.h"
+#if defined(HAVE_LIBEDIT)
+#include <editline/readline.h>
+#elif defined(HAVE_LIBREADLINE)
+#include <readline/history.h>
+#include <readline/readline.h>
+#endif
+
+#include "platform-posix.h"
+#include "utils.hpp"
 #include "common/code_utils.hpp"
-#include "posix/platform/platform-posix.h"
-#include "posix/platform/utils.hpp"
 
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
 
 #define OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME ".lock"
 static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME) < sizeof(sockaddr_un::sun_path),
@@ -58,9 +67,121 @@ namespace Posix {
 
 namespace {
 
+char *TrimLine(char *aLine)
+{
+    char *end;
+
+    while (isspace(static_cast<unsigned char>(*aLine)))
+    {
+        aLine++;
+    }
+
+    end = aLine + strlen(aLine);
+
+    while (end > aLine && isspace(static_cast<unsigned char>(end[-1])))
+    {
+        end--;
+    }
+
+    *end = '\0';
+
+    return aLine;
+}
+
 typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
 
 } // namespace
+
+otError Daemon::SetOutputFd(int aFd)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!otCliIsCommandPending(), error = OT_ERROR_BUSY);
+
+    mOutputFd = aFd;
+    if (aFd != -1)
+    {
+        mExternalOutputCallback = nullptr;
+    }
+
+exit:
+    return error;
+}
+
+void Daemon::Reject(const char *aFormat, ...)
+{
+    va_list ap;
+
+    va_start(ap, aFormat);
+    mExternalOutputCallback(mExternalOutputCallbackContext, aFormat, ap);
+    va_end(ap);
+    mExternalOutputCallbackContext = nullptr;
+    mExternalOutputCallback        = nullptr;
+}
+
+void Daemon::ProcessLine(char *aLine, int aOutputFd)
+{
+    static constexpr char kBusyMessage[] = "Error: CLI is busy, please try again later.\r\n> ";
+
+    aLine = TrimLine(aLine);
+    if (SetOutputFd(aOutputFd) == OT_ERROR_NONE)
+    {
+        otCliInputLine(aLine);
+    }
+    else if (mExternalOutputCallback != nullptr)
+    {
+        Reject(kBusyMessage);
+    }
+    else if (aOutputFd == STDOUT_FILENO)
+    {
+        printf(kBusyMessage);
+        fflush(stdout);
+    }
+    else if (aOutputFd != -1)
+    {
+        UnixSocketOutput(kBusyMessage);
+    }
+}
+
+void Daemon::ProcessCommand(const char *aLine, void *aContext, otCliOutputCallback aCallback)
+{
+    char line[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
+
+    mExternalOutputCallback        = aCallback;
+    mExternalOutputCallbackContext = aContext;
+
+    if (aLine != nullptr && aCallback != nullptr)
+    {
+        strncpy(line, aLine, sizeof(line) - 1);
+        line[sizeof(line) - 1] = '\0';
+        ProcessLine(const_cast<char *>(aLine), -1);
+    }
+}
+
+int Daemon::OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
+{
+    Daemon *daemon = static_cast<Daemon *>(aContext);
+    int     rval   = 0;
+
+    if (daemon->mExternalOutputCallback != nullptr)
+    {
+        rval = daemon->mExternalOutputCallback(daemon->mExternalOutputCallbackContext, aFormat, aArguments);
+        if (!otCliIsCommandPending())
+        {
+            daemon->mExternalOutputCallbackContext = nullptr;
+            daemon->mExternalOutputCallback        = nullptr;
+        }
+    }
+    else if (daemon->mOutputFd == STDOUT_FILENO)
+    {
+        rval = vdprintf(STDOUT_FILENO, aFormat, aArguments);
+    }
+    else if (daemon->mOutputFd != -1)
+    {
+        rval = daemon->UnixSocketOutputV(aFormat, aArguments);
+    }
+    return rval;
+}
 
 // using macro to avoid the warning about format-nonliteral
 #define GetFilename(aFilename, aPattern)                                                                       \
@@ -73,19 +194,19 @@ typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
 
 const char Daemon::kLogModuleName[] = "Daemon";
 
-int Daemon::OutputFormat(const char *aFormat, ...)
+int Daemon::UnixSocketOutput(const char *aFormat, ...)
 {
     int     ret;
     va_list ap;
 
     va_start(ap, aFormat);
-    ret = OutputFormatV(aFormat, ap);
+    ret = UnixSocketOutputV(aFormat, ap);
     va_end(ap);
 
     return ret;
 }
 
-int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
+int Daemon::UnixSocketOutputV(const char *aFormat, va_list aArguments)
 {
     static constexpr char truncatedMsg[] = "(truncated ...)";
     char                  buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
@@ -189,7 +310,7 @@ void Daemon::createListenSocketOrDie(void)
     }
 }
 #else
-void Daemon::createListenSocketOrDie(void)
+void Daemon::UnixSocketCreate(void)
 {
     struct sockaddr_un sockname;
     int                ret;
@@ -266,13 +387,28 @@ void Daemon::createListenSocketOrDie(void)
 }
 #endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 
-void Daemon::SetUp(void)
+void Daemon::SetUp(uint8_t aMode)
 {
     int ret;
 
+    mDaemonMode = aMode;
+
+    otCliInit(gInstance, OutputCallback, this);
+
+    if (mDaemonMode & OT_POSIX_DAEMON_MODE_CONSOLE)
+    {
+#if defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE)
+        mReadline.Init();
+#else
+        mStdio.Init();
+#endif
+    }
+
+    VerifyOrExit(mDaemonMode & OT_POSIX_DAEMON_MODE_UNIX_SOCKET);
+
     // This allows implementing pseudo reset.
     VerifyOrExit(mListenSocket == -1);
-    createListenSocketOrDie();
+    UnixSocketCreate();
 
     //
     // only accept 1 connection.
@@ -284,18 +420,21 @@ void Daemon::SetUp(void)
     }
 
 exit:
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
-    otSysCliInitUsingDaemon(gInstance);
-#endif
-
     Mainloop::Manager::Get().Add(*this);
-
-    return;
 }
 
 void Daemon::TearDown(void)
 {
     Mainloop::Manager::Get().Remove(*this);
+
+    if (mDaemonMode & OT_POSIX_DAEMON_MODE_CONSOLE)
+    {
+#if defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE)
+        mReadline.Deinit();
+#else
+        mStdio.Deinit();
+#endif
+    }
 
     if (mSessionSocket != -1)
     {
@@ -331,11 +470,26 @@ void Daemon::TearDown(void)
 
 void Daemon::Update(Mainloop::Context &aContext)
 {
+    // Do not process new input if it's busy.
+    VerifyOrExit(!otCliIsCommandPending());
+
     Mainloop::AddToReadFdSet(mListenSocket, aContext);
     Mainloop::AddToErrorFdSet(mListenSocket, aContext);
 
     Mainloop::AddToReadFdSet(mSessionSocket, aContext);
     Mainloop::AddToErrorFdSet(mSessionSocket, aContext);
+
+    if (mDaemonMode & OT_POSIX_DAEMON_MODE_CONSOLE)
+    {
+#if defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE)
+        mReadline.Update(aContext);
+#else
+        mStdio.Update(aContext);
+#endif
+    }
+
+exit:
+    return;
 }
 
 void Daemon::Process(const Mainloop::Context &aContext)
@@ -370,11 +524,7 @@ void Daemon::Process(const Mainloop::Context &aContext)
         if (rval > 0)
         {
             buffer[rval] = '\0';
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
-            otCliInputLine(reinterpret_cast<char *>(buffer));
-#else
-            OutputFormat("Error: CLI is disabled!\n");
-#endif
+            ProcessLine(reinterpret_cast<char *>(buffer), mSessionSocket);
         }
         else
         {
@@ -388,8 +538,101 @@ void Daemon::Process(const Mainloop::Context &aContext)
     }
 
 exit:
-    return;
+    if (mDaemonMode & OT_POSIX_DAEMON_MODE_CONSOLE)
+    {
+#if defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE)
+        mReadline.Process(aContext);
+#else
+        mStdio.Process(aContext);
+#endif
+    }
 }
+
+#if defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE)
+void Daemon::Readline::Init(void)
+{
+    rl_instream           = stdin;
+    rl_outstream          = stdout;
+    rl_inhibit_completion = true;
+
+    rl_set_screen_size(0, OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH);
+
+    rl_callback_handler_install("> ", InputCallback);
+    rl_already_prompted = true;
+}
+
+void Daemon::Readline::Deinit(void) { rl_callback_handler_remove(); }
+
+void Daemon::Readline::Update(Mainloop::Context &aContext)
+{
+    Mainloop::AddToReadFdSet(STDIN_FILENO, aContext);
+    Mainloop::AddToErrorFdSet(STDIN_FILENO, aContext);
+}
+
+void Daemon::Readline::Process(const Mainloop::Context &aContext)
+{
+    if (Mainloop::HasFdErrored(STDIN_FILENO, aContext))
+    {
+        exit(OT_EXIT_FAILURE);
+    }
+
+    if (Mainloop::IsFdReadable(STDIN_FILENO, aContext))
+    {
+        rl_callback_read_char();
+    }
+}
+
+void Daemon::Readline::InputCallback(char *aLine)
+{
+    if (aLine != nullptr)
+    {
+        if (!isspace(aLine[0]))
+        {
+            add_history(aLine);
+        }
+
+        Daemon::Get().ProcessLine(aLine, STDOUT_FILENO);
+
+        free(aLine);
+    }
+    else
+    {
+        exit(OT_EXIT_SUCCESS);
+    }
+}
+#else
+void Daemon::Stdio::Init(void) {}
+
+void Daemon::Stdio::Deinit(void) {}
+
+void Daemon::Stdio::Update(Mainloop::Context &aContext)
+{
+    Mainloop::AddToReadFdSet(STDIN_FILENO, aContext);
+    Mainloop::AddToErrorFdSet(STDIN_FILENO, aContext);
+}
+
+void Daemon::Stdio::Process(const Mainloop::Context &aContext)
+{
+    if (Mainloop::HasFdErrored(STDIN_FILENO, aContext))
+    {
+        exit(OT_EXIT_FAILURE);
+    }
+
+    if (Mainloop::IsFdReadable(STDIN_FILENO, aContext))
+    {
+        char buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
+
+        if (fgets(buffer, sizeof(buffer), stdin) != nullptr)
+        {
+            Daemon::Get().ProcessLine(buffer, STDOUT_FILENO);
+        }
+        else
+        {
+            exit(OT_EXIT_SUCCESS);
+        }
+    }
+}
+#endif
 
 Daemon &Daemon::Get(void)
 {
@@ -398,6 +641,12 @@ Daemon &Daemon::Get(void)
     return sInstance;
 }
 
+void otSysCliProcessCommand(void *aContext, otCliOutputCallback aCallback, const char *aLine)
+{
+    Daemon::Get().ProcessCommand(aLine, aContext, aCallback);
+}
+
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+
+#endif // OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE

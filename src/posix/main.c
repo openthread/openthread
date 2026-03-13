@@ -58,10 +58,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/platform/radio.h>
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-#include <openthread/cli.h>
-#include "cli/cli_config.h"
-#endif
+
 #include <common/code_utils.hpp>
 #include <lib/platform/exit_code.h>
 #include <lib/platform/reset_util.h>
@@ -69,57 +66,13 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/misc.h>
 
-/**
- * Initializes NCP app.
- *
- * @param[in]  aInstance    A pointer to the OpenThread instance.
- */
-void otAppNcpInit(otInstance *aInstance);
-
-/**
- * Deinitializes NCP app.
- */
-void otAppNcpUpdate(otSysMainloopContext *aContext);
-
-/**
- * Updates the file descriptor sets with file descriptors used by console.
- *
- * @param[in,out]   aMainloop   A pointer to the mainloop context.
- */
-void otAppNcpProcess(const otSysMainloopContext *aContext);
-
-/**
- * Initializes CLI app.
- *
- * @param[in]  aInstance    A pointer to the OpenThread instance.
- */
-void otAppCliInit(otInstance *aInstance);
-
-/**
- * Deinitializes CLI app.
- */
-void otAppCliDeinit(void);
-
-/**
- * Updates the file descriptor sets with file descriptors used by console.
- *
- * @param[in,out]   aMainloop   A pointer to the mainloop context.
- */
-void otAppCliUpdate(otSysMainloopContext *aMainloop);
-
-/**
- * Performs console driver processing.
- *
- * @param[in]    aMainloop      A pointer to the mainloop context.
- */
-void otAppCliProcess(const otSysMainloopContext *aMainloop);
-
 typedef struct PosixConfig
 {
     otPlatformConfig mPlatformConfig;    ///< Platform configuration.
     otLogLevel       mLogLevel;          ///< Debug level of logging.
     bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
     bool             mIsVerbose;         ///< Whether to print log to stderr.
+    uint8_t          mDaemonMode;        ///< The POSIX daemon mode.
 } PosixConfig;
 
 /**
@@ -132,6 +85,7 @@ enum
     OT_POSIX_OPT_DRY_RUN                 = 'n',
     OT_POSIX_OPT_HELP                    = 'h',
     OT_POSIX_OPT_INTERFACE_NAME          = 'I',
+    OT_POSIX_OPT_INTERACTIVE             = 'i',
     OT_POSIX_OPT_PERSISTENT_INTERFACE    = 'p',
     OT_POSIX_OPT_TIME_SPEED              = 's',
     OT_POSIX_OPT_VERBOSE                 = 'v',
@@ -153,6 +107,7 @@ static const struct option kOptions[] = {
     {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
     {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
     {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
+    {"interactive", optional_argument, NULL, OT_POSIX_OPT_INTERACTIVE},
     {"persistent-interface", no_argument, NULL, OT_POSIX_OPT_PERSISTENT_INTERFACE},
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
@@ -177,6 +132,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
             "    -I  --interface-name name     Thread network interface name.\n"
+            "    -i  --interactive[=cx]        Enable interactive CLI. 'c' for console, 'x' for unix socket.\n"
+            "                                  Defaults to 'c' if value is missing, or 'x' if option is missing.\n"
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --radio-version           Print radio firmware version.\n"
             "    -p  --persistent-interface    Persistent the created thread network interface\n"
@@ -202,6 +159,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
     aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
     aConfig->mPlatformConfig.mDataPath            = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    aConfig->mDaemonMode                          = OT_POSIX_DAEMON_MODE_UNIX_SOCKET;
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     aConfig->mPlatformConfig.mTunDevice = NULL;
 #endif
@@ -214,7 +172,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:nps:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:inps:v", kOptions, &index);
 
         if (option == -1)
         {
@@ -231,6 +189,31 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case OT_POSIX_OPT_INTERFACE_NAME:
             aConfig->mPlatformConfig.mInterfaceName = optarg;
+            break;
+        case OT_POSIX_OPT_INTERACTIVE:
+            if (optarg != NULL)
+            {
+                aConfig->mDaemonMode = 0;
+                for (int i = 0; optarg[i] != '\0'; i++)
+                {
+                    switch (optarg[i])
+                    {
+                    case 'c':
+                        aConfig->mDaemonMode |= OT_POSIX_DAEMON_MODE_CONSOLE;
+                        break;
+                    case 'x':
+                        aConfig->mDaemonMode |= OT_POSIX_DAEMON_MODE_UNIX_SOCKET;
+                        break;
+                    default:
+                        fprintf(stderr, "Invalid interactive mode: %c\n", optarg[i]);
+                        exit(OT_EXIT_INVALID_ARGUMENTS);
+                    }
+                }
+            }
+            else
+            {
+                aConfig->mDaemonMode = OT_POSIX_DAEMON_MODE_CONSOLE;
+            }
             break;
         case OT_POSIX_OPT_PERSISTENT_INTERFACE:
             aConfig->mPlatformConfig.mPersistentInterface = true;
@@ -302,6 +285,8 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
+
+    aConfig->mPlatformConfig.mDaemonMode = aConfig->mDaemonMode;
 }
 
 static otInstance *InitInstance(PosixConfig *aConfig)
@@ -353,6 +338,7 @@ void otPlatReset(otInstance *aInstance)
     assert(false);
 }
 
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
 static otError ProcessNetif(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aContext);
@@ -364,23 +350,10 @@ static otError ProcessNetif(void *aContext, uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-static otError ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    exit(EXIT_SUCCESS);
-}
-#endif
-
 static const otCliCommand kCommands[] = {
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    {"exit", ProcessExit},
-#endif
     {"netif", ProcessNetif},
 };
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -401,11 +374,7 @@ int main(int argc, char *argv[])
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
     instance = InitInstance(&config);
 
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    otAppCliInit(instance);
-#endif
-
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE || OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
     IgnoreError(otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance));
 #endif
 
@@ -423,18 +392,11 @@ int main(int argc, char *argv[])
         mainloop.mTimeout.tv_sec  = 10;
         mainloop.mTimeout.tv_usec = 0;
 
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-        otAppCliUpdate(&mainloop);
-#endif
-
         otSysMainloopUpdate(instance, &mainloop);
 
         if (otSysMainloopPoll(&mainloop) >= 0)
         {
             otSysMainloopProcess(instance, &mainloop);
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-            otAppCliProcess(&mainloop);
-#endif
         }
         else if (errno != EINTR)
         {
@@ -442,10 +404,6 @@ int main(int argc, char *argv[])
             ExitNow(rval = OT_EXIT_FAILURE);
         }
     }
-
-#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    otAppCliDeinit();
-#endif
 
 exit:
     otSysDeinit();

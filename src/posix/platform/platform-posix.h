@@ -54,7 +54,6 @@
 
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/coprocessor_type.h"
-#include "lib/url/url.hpp"
 
 /**
  * This is the socket name used by daemon mode.

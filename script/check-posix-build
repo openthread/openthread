@@ -31,8 +31,8 @@ set -euxo pipefail
 
 main()
 {
-    "$(dirname "$0")"/check-posix-build-cmake
-    "$(dirname "$0")"/check-posix-build-cmake -DOT_DAEMON=ON
+    "$(dirname "$0")"/check-posix-build-cmake -DOT_APP_CLI=OFF
+    "$(dirname "$0")"/check-posix-build-cmake -DOT_APP_CLI=ON
 }
 
 main "$@"

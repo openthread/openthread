@@ -40,6 +40,7 @@
 #include "common/code_utils.hpp"
 #include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel_driver.hpp"
+#include "lib/url/url.hpp"
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 #ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
