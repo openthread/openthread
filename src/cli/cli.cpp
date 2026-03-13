@@ -163,7 +163,8 @@ void Interpreter::OutputResult(otError aError)
     {
         if (aError != OT_ERROR_NONE)
         {
-            OutputLine("Error %u: %s", aError, otThreadErrorToString(aError));
+            // prepend `*` to differentiate from the normal end of command.
+            OutputLine("* Error %u: %s", aError, otThreadErrorToString(aError));
         }
 
         ExitNow();
@@ -6915,6 +6916,8 @@ template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
         OutputLine("$ %s", commandString);
         ProcessLine(commandString);
     }
+
+    OutputLine("Done");
 
     mInternalDebugCommand = false;
 
