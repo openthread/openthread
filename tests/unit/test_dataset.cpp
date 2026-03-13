@@ -259,6 +259,39 @@ void TestDataset(void)
 
     VerifyOrQuit(!dataset2.IsSubsetOf(dataset));
     VerifyOrQuit(!dataset.IsSubsetOf(dataset2));
+
+    // Validate `Equals()`
+
+    SuccessOrQuit(dataset.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+    SuccessOrQuit(dataset2.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+
+    VerifyOrQuit(dataset.Equals(dataset2));
+    VerifyOrQuit(dataset2.Equals(dataset));
+
+    // Order of TLVs should not matter for `Equals()`
+
+    dataset.Clear();
+    SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+    SuccessOrQuit(dataset.Write<ChannelTlv>(11));
+
+    dataset2.Clear();
+    SuccessOrQuit(dataset2.Write<ChannelTlv>(11));
+    SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+
+    VerifyOrQuit(dataset.Equals(dataset2));
+    VerifyOrQuit(dataset2.Equals(dataset));
+
+    // Different TLVs
+
+    dataset.Clear();
+    SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+
+    dataset2.Clear();
+    SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+    SuccessOrQuit(dataset2.Write<ChannelTlv>(11));
+
+    VerifyOrQuit(!dataset.Equals(dataset2));
+    VerifyOrQuit(!dataset2.Equals(dataset));
 }
 
 } // namespace MeshCoP

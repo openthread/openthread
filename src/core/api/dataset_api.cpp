@@ -168,6 +168,27 @@ exit:
     return error;
 }
 
+bool otDatasetTlvsCompare(const otOperationalDatasetTlvs *aDatasetTlvsA, const otOperationalDatasetTlvs *aDatasetTlvsB)
+{
+    bool             equals = false;
+    MeshCoP::Dataset datasetA;
+    MeshCoP::Dataset datasetB;
+
+    AssertPointerIsNotNull(aDatasetTlvsA);
+    AssertPointerIsNotNull(aDatasetTlvsB);
+
+    VerifyOrExit(datasetA.SetFrom(*aDatasetTlvsA) == kErrorNone);
+    VerifyOrExit(datasetB.SetFrom(*aDatasetTlvsB) == kErrorNone);
+
+    VerifyOrExit(datasetA.ValidateTlvs() == kErrorNone);
+    VerifyOrExit(datasetB.ValidateTlvs() == kErrorNone);
+
+    equals = datasetA.Equals(datasetB);
+
+exit:
+    return equals;
+}
+
 void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs)
 {
     MeshCoP::Dataset dataset;
