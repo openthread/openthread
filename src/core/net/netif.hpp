@@ -326,6 +326,37 @@ public:
      */
     explicit Netif(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+
+    /**
+     * Initializes the network interface with external address pools.
+     *
+     * It provides the memory buffers to be used for the external unicast and multicast address pools. The provided
+     * pool memory buffers MUST persist and remain valid as long as the OpenThread instance is initialized.
+     *
+     * @param[in] aUnicastAddrPool        A pointer to an array of `UnicastAddress` entries.
+     * @param[in] aUnicastAddrPoolSize    The number of entries in @p aUnicastAddrPool.
+     * @param[in] aMulticastAddrPool      A pointer to an array of `MulticastAddress` entries.
+     * @param[in] aMulticastAddrPoolSize  The number of entries in @p aMulticastAddrPool.
+     *
+     * @retval kErrorNone     Successfully initialized the network interface.
+     * @retval kErrorAlready  The network interface is already initialized.
+     */
+    Error Init(UnicastAddress   *aUnicastAddrPool,
+               uint16_t          aUnicastAddrPoolSize,
+               MulticastAddress *aMulticastAddrPool,
+               uint16_t          aMulticastAddrPoolSize);
+
+    /**
+     * Indicates whether or not the network interface is initialized.
+     *
+     * @retval TRUE   If the network interface is initialized.
+     * @retval FALSE  If the network interface is not initialized.
+     */
+    bool IsInitialized(void) const { return mInitialized; }
+
+#endif // OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+
     /**
      * Registers a callback to notify internal IPv6 address changes.
      *
@@ -582,13 +613,18 @@ private:
                                         const MulticastAddress *aStart,
                                         const MulticastAddress *aEnd);
 
-    LinkedList<UnicastAddress>   mUnicastAddresses;
-    LinkedList<MulticastAddress> mMulticastAddresses;
-
+    LinkedList<UnicastAddress>     mUnicastAddresses;
+    LinkedList<MulticastAddress>   mMulticastAddresses;
     Callback<otIp6AddressCallback> mAddressCallback;
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    ConfigPool<UnicastAddress>   mExtUnicastAddressPool;
+    ConfigPool<MulticastAddress> mExtMulticastAddressPool;
+    bool                         mInitialized;
+#else
     Pool<UnicastAddress, kMaxExtUnicastAddrs>     mExtUnicastAddressPool;
     Pool<MulticastAddress, kMaxExtMulticastAddrs> mExtMulticastAddressPool;
+#endif
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
     static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;

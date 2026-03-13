@@ -228,6 +228,11 @@ private:
 #if OPENTHREAD_FTD
     void OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
 #endif
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+    otError ProcessIfconfigInit(Arg aArgs[]);
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     static void HandleLocateResult(void               *aContext,
                                    otError             aError,
