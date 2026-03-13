@@ -341,6 +341,11 @@ start:
 #endif
     }
 
+#if OPENTHREAD_CONFIG_IPFIX_ENABLE
+    Get<Ipfix::IpfixFlowCapture>().MeterLayer2FlowTraffic(aMacAddrs, aMessage, OT_IPFIX_OBSERVATION_POINT_WPAN_TO_RCP);
+
+#endif
+
     aMessage.SetOffset(origMsgOffset);
 
     return nextOffset;
