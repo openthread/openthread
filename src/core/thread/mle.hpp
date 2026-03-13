@@ -1857,6 +1857,9 @@ private:
         static constexpr uint16_t kChildUpdateMinTimeout              = 1000; // in ms
         static constexpr uint16_t kChildUpdateStartTimeout            = 4000; // in ms
         static constexpr uint16_t kChildUpdateRetxJitter              = 25;   // in ms
+        static constexpr uint8_t  kRestoreLinkRequestAttempts         = 4;
+        static constexpr uint32_t kLeaderRetxDelayMin = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
+        static constexpr uint32_t kLeaderRetxDelayMax = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
 
         enum State : uint8_t
         {
@@ -1869,7 +1872,6 @@ private:
         void SendChildUpdate(void);
         void CheckIfMessageIsFromParent(RxInfo &aRxInfo);
 #if OPENTHREAD_FTD
-        void DetermineMaxLinkRequestAttempts(void);
         void SendMulticastLinkRequest(void);
 #endif
 
