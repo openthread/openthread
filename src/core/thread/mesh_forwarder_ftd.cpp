@@ -84,7 +84,7 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
                     if (!child.IsRxOnWhenIdle() && (destinedForAll || child.HasIp6Address(destination)) &&
                         !child.HasIp6Address(ip6Header.GetSource()))
                     {
-                        mIndirectSender.AddMessageForSleepyChild(message, child);
+                        mIndirectSender.AddMessageForSleepyNeighbor(message, child);
                     }
                 }
             }
@@ -96,7 +96,7 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
             if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !message.IsDirectTransmission() &&
                 Get<ChildTable>().Contains(*neighbor))
             {
-                mIndirectSender.AddMessageForSleepyChild(message, *static_cast<Child *>(neighbor));
+                mIndirectSender.AddMessageForSleepyNeighbor(message, *static_cast<CslNeighbor *>(neighbor));
             }
             else
             {
@@ -111,7 +111,7 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
     {
         Child *child = Get<ChildSupervisor>().GetDestination(message);
         OT_ASSERT((child != nullptr) && !child->IsRxOnWhenIdle());
-        mIndirectSender.AddMessageForSleepyChild(message, *child);
+        mIndirectSender.AddMessageForSleepyNeighbor(message, *child);
         break;
     }
 
@@ -286,7 +286,7 @@ void MeshForwarder::RemoveMessagesForChild(Child &aChild, MessageChecker &aMessa
             continue;
         }
 
-        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) != kErrorNone)
+        if (mIndirectSender.RemoveMessageFromSleepyNeighbor(message, aChild) != kErrorNone)
         {
             const Neighbor *neighbor = nullptr;
 
@@ -321,7 +321,7 @@ void MeshForwarder::FinalizeMessageIndirectTxs(Message &aMessage)
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
-        IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
+        IgnoreError(mIndirectSender.RemoveMessageFromSleepyNeighbor(aMessage, child));
         VerifyOrExit(!aMessage.GetIndirectTxChildMask().IsEmpty());
     }
 
@@ -420,7 +420,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
 
             if (!child->IsRxOnWhenIdle())
             {
-                mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
+                mIndirectSender.AddMessageForSleepyNeighbor(aMessage, *child);
                 aMessage.ClearDirectTransmission();
             }
         }
