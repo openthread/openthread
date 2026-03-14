@@ -170,6 +170,7 @@ DEFAULT_TESTS=(
     "1_2_LP_7_2_1"
     "1_2_LP_7_2_2"
     "1_2_MATN_TC_1"
+    "1_2_MATN_TC_2"
 )
 
 # Use provided arguments or the default test list
