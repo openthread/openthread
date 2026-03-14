@@ -50,29 +50,38 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
 {
 }
 
+void EnergyScanServer::Stop(void)
+{
+    mReportMessage.Free();
+    mTimer.Stop();
+}
+
 template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
 {
+    Error                   error;
     OwnedPtr<Coap::Message> newMessage;
     uint8_t                 count;
     uint16_t                period;
     uint16_t                scanDuration;
     uint32_t                mask;
 
-    SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
+    VerifyOrExit(!IsRunning(), error = kErrorBusy);
+
+    SuccessOrExit(error = Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
     count = Clamp(count, kMinCount, kMaxCount);
 
-    SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMsg.mMessage, period));
-    SuccessOrExit(Tlv::Find<MeshCoP::ScanDurationTlv>(aMsg.mMessage, scanDuration));
+    SuccessOrExit(error = Tlv::Find<MeshCoP::PeriodTlv>(aMsg.mMessage, period));
+    SuccessOrExit(error = Tlv::Find<MeshCoP::ScanDurationTlv>(aMsg.mMessage, scanDuration));
 
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
-    VerifyOrExit(mask != 0);
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+    VerifyOrExit(mask != 0, error = kErrorInvalidArgs);
 
     newMessage.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnergyReport));
-    VerifyOrExit(newMessage != nullptr);
+    VerifyOrExit(newMessage != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*newMessage, mask));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*newMessage, mask));
 
-    SuccessOrExit(Tlv::StartTlv(*newMessage, MeshCoP::Tlv::kEnergyList, mEnergyListTlvBookmark));
+    SuccessOrExit(error = Tlv::StartTlv(*newMessage, MeshCoP::Tlv::kEnergyList, mEnergyListTlvBookmark));
 
     mChannelMask        = mask;
     mChannelMaskCurrent = mChannelMask;
@@ -86,13 +95,8 @@ template <> void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Msg &aMsg)
 
     LogInfo("Received %s", UriToString<kUriEnergyScan>());
 
-    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
-    {
-        SuccessOrExit(Get<Tmf::Agent>().SendAckResponse(aMsg));
-    }
-
 exit:
-    return;
+    IgnoreError(Get<Tmf::Agent>().SendAckResponseIfUnicastRequest(aMsg, error));
 }
 
 void EnergyScanServer::HandleTimer(void)
@@ -104,7 +108,10 @@ void EnergyScanServer::HandleTimer(void)
         // grab the lowest channel to scan
         uint32_t channelMask = mChannelMaskCurrent & ~(mChannelMaskCurrent - 1);
 
-        IgnoreError(Get<Mac::Mac>().EnergyScan(channelMask, mScanDuration, HandleScanResult, this));
+        if (Get<Mac::Mac>().EnergyScan(channelMask, mScanDuration, HandleScanResult, this) != kErrorNone)
+        {
+            Stop();
+        }
     }
     else
     {
@@ -128,8 +135,7 @@ void EnergyScanServer::HandleScanResult(Mac::EnergyScanResult *aResult)
     {
         if (mReportMessage->Append<int8_t>(aResult->mMaxRssi) != kErrorNone)
         {
-            mReportMessage.Free();
-            ExitNow();
+            Stop();
         }
     }
     else
@@ -173,8 +179,7 @@ void EnergyScanServer::HandleNotifierEvents(Events aEvents)
     if (aEvents.Contains(kEventThreadNetdataChanged) && (mReportMessage != nullptr) &&
         Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc) != kErrorNone)
     {
-        mReportMessage.Free();
-        mTimer.Stop();
+        Stop();
     }
 }
 
