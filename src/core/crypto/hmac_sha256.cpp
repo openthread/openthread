@@ -41,8 +41,13 @@ namespace Crypto {
 
 HmacSha256::HmacSha256(void)
 {
+#if OPENTHREAD_CONFIG_PLATFORM_ALLOCS_CRYPTO_CONTEXTS
+    mContext.mContext     = nullptr;
+    mContext.mContextSize = 0;
+#else
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
+#endif
 
     SuccessOrAssert(otPlatCryptoHmacSha256Init(&mContext));
 }

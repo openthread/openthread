@@ -1207,27 +1207,20 @@ Error SecureTransport::Extension::GetPeerCertificateBase64(unsigned char *aPeerC
                                                            size_t        *aCertLength,
                                                            size_t         aCertBufferSize)
 {
-    Error          error   = kErrorNone;
-    SecureSession *session = mSecureTransport.mSessions.GetHead();
+    Error                   error = kErrorNone;
+    SecureSession          *session;
+    const mbedtls_x509_crt *peerCert;
 
+    session = mSecureTransport.mSessions.GetHead();
     VerifyOrExit(session != nullptr, error = kErrorInvalidState);
     VerifyOrExit(session->IsConnected(), error = kErrorInvalidState);
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
-                                       session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p,
-                                       session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len) ==
+    peerCert = mbedtls_ssl_get_peer_cert(&session->mSsl);
+    VerifyOrExit(peerCert != nullptr, error = kErrorInvalidState);
+
+    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength, peerCert->raw.p, peerCert->raw.len) ==
                      0,
                  error = kErrorNoBufs);
-#else
-    VerifyOrExit(
-        mbedtls_base64_encode(
-            aPeerCert, aCertBufferSize, aCertLength,
-            session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-            session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(
-                len)) == 0,
-        error = kErrorNoBufs);
-#endif
 
 exit:
     return error;
@@ -1237,30 +1230,21 @@ exit:
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 Error SecureTransport::Extension::GetPeerCertificateDer(uint8_t *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
-    Error          error   = kErrorNone;
-    SecureSession *session = mSecureTransport.mSessions.GetHead();
+    Error                   error = kErrorNone;
+    SecureSession          *session;
+    const mbedtls_x509_crt *peerCert;
 
+    session = mSecureTransport.mSessions.GetHead();
+    VerifyOrExit(session != nullptr, error = kErrorInvalidState);
     VerifyOrExit(session->IsConnected(), error = kErrorInvalidState);
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len < aCertBufferSize,
-                 error = kErrorNoBufs);
+    peerCert = mbedtls_ssl_get_peer_cert(&session->mSsl);
+    VerifyOrExit(peerCert != nullptr, error = kErrorInvalidState);
 
-    *aCertLength = session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len;
-    memcpy(aPeerCert, session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p, *aCertLength);
+    VerifyOrExit(peerCert->raw.len <= aCertBufferSize, error = kErrorNoBufs);
 
-#else
-    VerifyOrExit(
-        session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len) <
-            aCertBufferSize,
-        error = kErrorNoBufs);
-
-    *aCertLength =
-        session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len);
-    memcpy(aPeerCert,
-           session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-           *aCertLength);
-#endif
+    *aCertLength = peerCert->raw.len;
+    memcpy(aPeerCert, peerCert->raw.p, *aCertLength);
 
 exit:
     return error;
