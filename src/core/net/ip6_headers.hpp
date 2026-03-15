@@ -38,6 +38,9 @@
 
 #include <stddef.h>
 
+#include <openthread/icmp6.h>
+
+#include "common/as_core_type.hpp"
 #include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
@@ -541,6 +544,98 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * Implements IPv6 MPL header generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class MplOption : public Option
+{
+public:
+    static constexpr uint8_t kType    = 0x6d;                 ///< MPL option type - 01 1 01101
+    static constexpr uint8_t kMinSize = (2 + sizeof(Option)); ///< Minimum size (num of bytes) of `MplOption`
+
+    /**
+     * MPL Seed Id Lengths.
+     */
+    enum SeedIdLength : uint8_t
+    {
+        kSeedIdLength0  = 0 << 6, ///< 0-byte MPL Seed Id Length.
+        kSeedIdLength2  = 1 << 6, ///< 2-byte MPL Seed Id Length.
+        kSeedIdLength8  = 2 << 6, ///< 8-byte MPL Seed Id Length.
+        kSeedIdLength16 = 3 << 6, ///< 16-byte MPL Seed Id Length.
+    };
+
+    /**
+     * Initializes the MPL Option.
+     *
+     * The @p aSeedIdLength MUST be either `kSeedIdLength0` or `kSeedIdLength2`. Other values are not supported.
+     *
+     * @param[in] aSeedIdLength   The MPL Seed Id Length.
+     */
+    void Init(SeedIdLength aSeedIdLength);
+
+    /**
+     * Returns the MPL Seed Id Length value.
+     *
+     * @returns The MPL Seed Id Length value.
+     */
+    SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
+
+    /**
+     * Indicates whether or not the MPL M flag is set.
+     *
+     * @retval TRUE   If the MPL M flag is set.
+     * @retval FALSE  If the MPL M flag is not set.
+     */
+    bool IsMaxFlagSet(void) const { return (mControl & kMaxFlag) != 0; }
+
+    /**
+     * Clears the MPL M flag.
+     */
+    void ClearMaxFlag(void) { mControl &= ~kMaxFlag; }
+
+    /**
+     * Sets the MPL M flag.
+     */
+    void SetMaxFlag(void) { mControl |= kMaxFlag; }
+
+    /**
+     * Returns the MPL Sequence value.
+     *
+     * @returns The MPL Sequence value.
+     */
+    uint8_t GetSequence(void) const { return mSequence; }
+
+    /**
+     * Sets the MPL Sequence value.
+     *
+     * @param[in]  aSequence  The MPL Sequence value.
+     */
+    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
+
+    /**
+     * Returns the MPL Seed Id value.
+     *
+     * @returns The MPL Seed Id value.
+     */
+    uint16_t GetSeedId(void) const { return BigEndian::HostSwap16(mSeedId); }
+
+    /**
+     * Sets the MPL Seed Id value.
+     *
+     * @param[in]  aSeedId  The MPL Seed Id value.
+     */
+    void SetSeedId(uint16_t aSeedId) { mSeedId = BigEndian::HostSwap16(aSeedId); }
+
+private:
+    static constexpr uint8_t kSeedIdLengthMask = 3 << 6;
+    static constexpr uint8_t kMaxFlag          = 1 << 5;
+
+    uint8_t  mControl;
+    uint8_t  mSequence;
+    uint16_t mSeedId;
+} OT_TOOL_PACKED_END;
+
+/**
  * Implements IPv6 Fragment Header generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
@@ -660,10 +755,296 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * Implements UDP header generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class UdpHeader : public Clearable<UdpHeader>
+{
+public:
+    static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
+    static constexpr uint16_t kDestPortFieldOffset   = 2; ///< Byte offset of Destination Port field in UDP header.
+    static constexpr uint16_t kLengthFieldOffset     = 4; ///< Byte offset of Length field in UDP header.
+    static constexpr uint16_t kChecksumFieldOffset   = 6; ///< Byte offset of Checksum field in UDP header.
+
+    /**
+     * Returns the UDP Source Port.
+     *
+     * @returns The UDP Source Port.
+     */
+    uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSourcePort); }
+
+    /**
+     * Sets the UDP Source Port.
+     *
+     * @param[in]  aPort  The UDP Source Port.
+     */
+    void SetSourcePort(uint16_t aPort) { mSourcePort = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Returns the UDP Destination Port.
+     *
+     * @returns The UDP Destination Port.
+     */
+    uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestinationPort); }
+
+    /**
+     * Sets the UDP Destination Port.
+     *
+     * @param[in]  aPort  The UDP Destination Port.
+     */
+    void SetDestinationPort(uint16_t aPort) { mDestinationPort = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Returns the UDP Length.
+     *
+     * @returns The UDP Length.
+     */
+    uint16_t GetLength(void) const { return BigEndian::HostSwap16(mLength); }
+
+    /**
+     * Sets the UDP Length.
+     *
+     * @param[in]  aLength  The UDP Length.
+     */
+    void SetLength(uint16_t aLength) { mLength = BigEndian::HostSwap16(aLength); }
+
+    /**
+     * Returns the UDP Checksum.
+     *
+     * @returns The UDP Checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+
+    /**
+     * Sets the UDP Checksum.
+     *
+     * @param[in]  aChecksum  The UDP Checksum.
+     */
+    void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
+
+private:
+    uint16_t mSourcePort;
+    uint16_t mDestinationPort;
+    uint16_t mLength;
+    uint16_t mChecksum;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements TCP header parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class TcpHeader : public Clearable<TcpHeader>
+{
+public:
+    static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
+
+    /**
+     * Returns the TCP Source Port.
+     *
+     * @returns The TCP Source Port.
+     */
+    uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSource); }
+
+    /**
+     * Returns the TCP Destination Port.
+     *
+     * @returns The TCP Destination Port.
+     */
+    uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestination); }
+
+    /**
+     * Sets the TCP Source Port.
+     *
+     * @param[in]  aPort  The TCP Source Port.
+     */
+    void SetSourcePort(uint16_t aPort) { mSource = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Sets the TCP Destination Port.
+     *
+     * @param[in]  aPort  The TCP Destination Port.
+     */
+    void SetDestinationPort(uint16_t aPort) { mDestination = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Returns the TCP Sequence Number.
+     *
+     * @returns The TCP Sequence Number.
+     */
+    uint32_t GetSequenceNumber(void) const { return BigEndian::HostSwap32(mSequenceNumber); }
+
+    /**
+     * Returns the TCP Acknowledgment Sequence Number.
+     *
+     * @returns The TCP Acknowledgment Sequence Number.
+     */
+    uint32_t GetAcknowledgmentNumber(void) const { return BigEndian::HostSwap32(mAckNumber); }
+
+    /**
+     * Returns the TCP Flags.
+     *
+     * @returns The TCP Flags.
+     */
+    uint16_t GetFlags(void) const { return BigEndian::HostSwap16(mFlags); }
+
+    /**
+     * Returns the TCP Window.
+     *
+     * @returns The TCP Window.
+     */
+    uint16_t GetWindow(void) const { return BigEndian::HostSwap16(mWindow); }
+
+    /**
+     * Returns the TCP Checksum.
+     *
+     * @returns The TCP Checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+
+    /**
+     * Returns the TCP Urgent Pointer.
+     *
+     * @returns The TCP Urgent Pointer.
+     */
+    uint16_t GetUrgentPointer(void) const { return BigEndian::HostSwap16(mUrgentPointer); }
+
+private:
+    uint16_t mSource;
+    uint16_t mDestination;
+    uint32_t mSequenceNumber;
+    uint32_t mAckNumber;
+    uint16_t mFlags;
+    uint16_t mWindow;
+    uint16_t mChecksum;
+    uint16_t mUrgentPointer;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements ICMPv6 header generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class Icmp6Header : public otIcmp6Header, public Clearable<Icmp6Header>
+{
+public:
+    /**
+     * ICMPv6 Message Types
+     */
+    enum Type : uint8_t
+    {
+        kTypeDstUnreach       = OT_ICMP6_TYPE_DST_UNREACH,       ///< Destination Unreachable
+        kTypePacketToBig      = OT_ICMP6_TYPE_PACKET_TO_BIG,     ///< Packet To Big
+        kTypeTimeExceeded     = OT_ICMP6_TYPE_TIME_EXCEEDED,     ///< Time Exceeded
+        kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
+        kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
+        kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
+        kTypeRouterSolicit    = OT_ICMP6_TYPE_ROUTER_SOLICIT,    ///< Router Solicitation
+        kTypeRouterAdvert     = OT_ICMP6_TYPE_ROUTER_ADVERT,     ///< Router Advertisement
+        kTypeNeighborSolicit  = OT_ICMP6_TYPE_NEIGHBOR_SOLICIT,  ///< Neighbor Solicitation
+        kTypeNeighborAdvert   = OT_ICMP6_TYPE_NEIGHBOR_ADVERT,   ///< Neighbor Advertisement
+    };
+
+    /**
+     * ICMPv6 Message Codes
+     */
+    enum Code : uint8_t
+    {
+        kCodeDstUnreachNoRoute    = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE,   ///< Dest Unreachable - No Route
+        kCodeDstUnreachProhibited = OT_ICMP6_CODE_DST_UNREACH_PROHIBITED, ///< Dest Unreachable - Admin Prohibited
+        kCodeFragmReasTimeEx      = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,     ///< Time Exceeded - Frag Reassembly
+    };
+
+    static constexpr uint8_t kTypeFieldOffset     = 0; ///< The byte offset of Type field in ICMP6 header.
+    static constexpr uint8_t kCodeFieldOffset     = 1; ///< The byte offset of Code field in ICMP6 header.
+    static constexpr uint8_t kChecksumFieldOffset = 2; ///< The byte offset of Checksum field in ICMP6 header.
+    static constexpr uint8_t kDataFieldOffset     = 4; ///< The byte offset of Data field in ICMP6 header.
+
+    /**
+     * Indicates whether the ICMPv6 message is an error message.
+     *
+     * @retval TRUE if the ICMPv6 message is an error message.
+     * @retval FALSE if the ICMPv6 message is an informational message.
+     */
+    bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
+
+    /**
+     * Returns the ICMPv6 message type.
+     *
+     * @returns The ICMPv6 message type.
+     */
+    Type GetType(void) const { return static_cast<Type>(mType); }
+
+    /**
+     * Sets the ICMPv6 message type.
+     *
+     * @param[in]  aType  The ICMPv6 message type.
+     */
+    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+
+    /**
+     * Returns the ICMPv6 message code.
+     *
+     * @returns The ICMPv6 message code.
+     */
+    Code GetCode(void) const { return static_cast<Code>(mCode); }
+
+    /**
+     * Sets the ICMPv6 message code.
+     *
+     * @param[in]  aCode  The ICMPv6 message code.
+     */
+    void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
+
+    /**
+     * Returns the ICMPv6 message checksum.
+     *
+     * @returns The ICMPv6 message checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+
+    /**
+     * Sets the ICMPv6 message checksum.
+     *
+     * @param[in]  aChecksum  The ICMPv6 message checksum.
+     */
+    void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
+
+    /**
+     * Returns the ICMPv6 message ID for Echo Requests and Replies.
+     *
+     * @returns The ICMPv6 message ID.
+     */
+    uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
+
+    /**
+     * Sets the ICMPv6 message ID for Echo Requests and Replies.
+     *
+     * @param[in]  aId  The ICMPv6 message ID.
+     */
+    void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
+
+    /**
+     * Returns the ICMPv6 message sequence for Echo Requests and Replies.
+     *
+     * @returns The ICMPv6 message sequence.
+     */
+    uint16_t GetSequence(void) const { return BigEndian::HostSwap16(mData.m16[1]); }
+
+    /**
+     * Sets the ICMPv6 message sequence for Echo Requests and Replies.
+     *
+     * @param[in]  aSequence  The ICMPv6 message sequence.
+     */
+    void SetSequence(uint16_t aSequence) { mData.m16[1] = BigEndian::HostSwap16(aSequence); }
+} OT_TOOL_PACKED_END;
+
+/**
  * @}
  */
 
 } // namespace Ip6
+
+DefineCoreType(otIcmp6Header, Ip6::Icmp6Header);
+
 } // namespace ot
 
 #endif // OT_CORE_NET_IP6_HEADERS_HPP_

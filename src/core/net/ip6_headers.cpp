@@ -128,5 +128,27 @@ exit:
     return error;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// MplOption
+
+void MplOption::Init(SeedIdLength aSeedIdLength)
+{
+    SetType(kType);
+
+    switch (aSeedIdLength)
+    {
+    case kSeedIdLength0:
+        SetLength(sizeof(*this) - sizeof(Option) - sizeof(mSeedId));
+        break;
+    case kSeedIdLength2:
+        SetLength(sizeof(*this) - sizeof(Option));
+        break;
+    default:
+        OT_ASSERT(false);
+    }
+
+    mControl = aSeedIdLength;
+}
+
 } // namespace Ip6
 } // namespace ot
