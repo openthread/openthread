@@ -26,10 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/platform/alarm-milli.h>
-
-#include "nexus_node.hpp"
 #include "nexus_settings.hpp"
+#include "nexus_node.hpp"
 
 namespace ot {
 namespace Nexus {
