@@ -40,6 +40,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
@@ -288,7 +289,10 @@ protected:
 /**
  * Implements the CoAP client and server.
  */
-class CoapBase : public InstanceLocator, private NonCopyable
+class CoapBase
+    : public InstanceLocator,
+      public MessageAllocator<CoapBase, ReservedHeaderSize::kCoapMessage, Message::kTypeIp6, ot::Coap::Message>,
+      private NonCopyable
 {
 public:
     /**
@@ -344,29 +348,6 @@ public:
      * @param[in]  aContext   A pointer to arbitrary context information. May be `nullptr` if not used.
      */
     void SetResponseFallback(ResponseFallback aHandler, void *aContext) { mResponseFallback.Set(aHandler, aContext); }
-
-    /**
-     * Allocates a new message with a CoAP header.
-     *
-     * @param[in]  aSettings  The message settings.
-     *
-     * @returns A pointer to the message or `nullptr` if failed to allocate message.
-     */
-    Message *NewMessage(const Message::Settings &aSettings);
-
-    /**
-     * Allocates a new message with a CoAP header with default settings.
-     *
-     * @returns A pointer to the message or `nullptr` if failed to allocate message.
-     */
-    Message *NewMessage(void);
-
-    /**
-     * Allocates a new message with a CoAP header that has Network Control priority level.
-     *
-     * @returns A pointer to the message or `nullptr` if failed to allocate message.
-     */
-    Message *NewPriorityMessage(void);
 
     /**
      * Allocates and initializes a new CoAP Confirmable Post message with Network Control priority level.

@@ -76,7 +76,7 @@ Translator::Translator(Instance &aInstance)
 
 Message *Translator::NewIp4Message(const Message::Settings &aSettings)
 {
-    Message *message = Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header), aSettings);
+    Message *message = Get<Ip6::Ip6>().NewMessage(aSettings);
 
     if (message != nullptr)
     {

@@ -145,27 +145,9 @@ void CoapBase::RemoveResource(Resource &aResource)
     aResource.SetNext(nullptr);
 }
 
-Message *CoapBase::NewMessage(const Message::Settings &aSettings)
-{
-    Message *message = nullptr;
-
-    VerifyOrExit((message = AsCoapMessagePtr(Get<Ip6::Udp>().NewMessage(0, aSettings))) != nullptr);
-    message->SetOffset(0);
-
-exit:
-    return message;
-}
-
-Message *CoapBase::NewMessage(void) { return NewMessage(Message::Settings::GetDefault()); }
-
-Message *CoapBase::NewPriorityMessage(void)
-{
-    return NewMessage(Message::Settings(kWithLinkSecurity, Message::kPriorityNet));
-}
-
 Message *CoapBase::AllocateAndInitPriorityConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUri);
+    return InitMessage(NewNetPriorityMessage(), kTypeConfirmable, aUri);
 }
 
 Message *CoapBase::AllocateAndInitConfirmablePostMessage(Uri aUri)
@@ -175,7 +157,7 @@ Message *CoapBase::AllocateAndInitConfirmablePostMessage(Uri aUri)
 
 Message *CoapBase::AllocateAndInitPriorityNonConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewPriorityMessage(), kTypeNonConfirmable, aUri);
+    return InitMessage(NewNetPriorityMessage(), kTypeNonConfirmable, aUri);
 }
 
 Message *CoapBase::AllocateAndInitNonConfirmablePostMessage(Uri aUri)
@@ -190,12 +172,13 @@ Message *CoapBase::AllocateAndInitPostMessageTo(Uri aUri, const Ip6::Address &aD
 
 Message *CoapBase::AllocateAndInitPriorityPostMessageTo(Uri aUri, const Ip6::Address &aDestination)
 {
-    return InitMessage(NewPriorityMessage(), aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, aUri);
+    return InitMessage(NewNetPriorityMessage(), aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable,
+                       aUri);
 }
 
 Message *CoapBase::AllocateAndInitPriorityResponseFor(const Message &aRequest)
 {
-    return InitResponse(NewPriorityMessage(), aRequest);
+    return InitResponse(NewNetPriorityMessage(), aRequest);
 }
 
 Message *CoapBase::AllocateAndInitResponseFor(const Message &aRequest) { return InitResponse(NewMessage(), aRequest); }

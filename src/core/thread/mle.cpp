@@ -2623,7 +2623,7 @@ void Mle::InformPreviousParent(void)
     Message         *message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Ip6::Ip6>().NewMessage(0)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Ip6::Ip6>().NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->SetLength(0));
 
     messageInfo.SetSockAddr(GetMeshLocalEid());
@@ -3455,7 +3455,7 @@ Mle::TxMessage *Mle::NewMleMessage(Command aCommand)
     Message::Settings settings(kNoLinkSecurity, Message::kPriorityNet);
     uint8_t           securitySuite;
 
-    message = static_cast<TxMessage *>(mSocket.NewMessage(0, settings));
+    message = static_cast<TxMessage *>(mSocket.NewMessage(settings));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     securitySuite = k154Security;

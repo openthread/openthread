@@ -66,16 +66,6 @@ Ip6::Ip6(Instance &aInstance)
 #endif
 }
 
-Message *Ip6::NewMessage(void) { return NewMessage(0); }
-
-Message *Ip6::NewMessage(uint16_t aReserved) { return NewMessage(aReserved, Message::Settings::GetDefault()); }
-
-Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
-{
-    return Get<MessagePool>().Allocate(
-        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(MplOption) + aReserved, aSettings);
-}
-
 Message *Ip6::NewMessageFromData(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
 {
     Message          *message  = nullptr;

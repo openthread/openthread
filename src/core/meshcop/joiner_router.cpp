@@ -168,7 +168,7 @@ template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Msg &aMsg)
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kJoinerDtlsEncapsulation, offsetRange));
 
-    VerifyOrExit((message = mSocket.NewMessage(0, settings)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(settings)) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 

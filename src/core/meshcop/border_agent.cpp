@@ -769,7 +769,7 @@ void Manager::CoapDtlsSession::HandleLeaderResponseToFwdTmf(const ForwardContext
 
     SuccessOrExit(error = aResult);
 
-    forwardMessage.Reset(NewPriorityMessage());
+    forwardMessage.Reset(NewNetPriorityMessage());
     VerifyOrExit(forwardMessage != nullptr, error = kErrorNoBufs);
 
     if (aResponse->GetCode() == Coap::kCodeChanged)
@@ -926,7 +926,7 @@ void Manager::CoapDtlsSession::SendErrorMessage(Error aError, const Coap::Token 
     OwnedPtr<Coap::Message> message;
     Coap::Message::Code     code;
 
-    message.Reset(NewPriorityMessage());
+    message.Reset(NewNetPriorityMessage());
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     code = (aError == kErrorParse) ? Coap::kCodeBadRequest : Coap::kCodeInternalError;

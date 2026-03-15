@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -63,7 +64,9 @@ class Headers;
 /**
  * Implements ICMPv6.
  */
-class Icmp : public InstanceLocator, private NonCopyable
+class Icmp : public InstanceLocator,
+             public MessageAllocator<Icmp, ReservedHeaderSize::kIcmp6Message>,
+             private NonCopyable
 {
 public:
     typedef Icmp6Header Header; ///< ICMPv6 header
@@ -102,13 +105,6 @@ public:
      * @param[in]  aInstance A reference to the OpenThread instance.
      */
     explicit Icmp(Instance &aInstance);
-
-    /**
-     * Returns a new ICMP message with sufficient header space reserved.
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(void);
 
     /**
      * Registers ICMPv6 handler.

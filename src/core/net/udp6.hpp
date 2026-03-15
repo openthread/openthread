@@ -44,6 +44,7 @@
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -79,7 +80,7 @@ enum NetifIdentifier : uint8_t
 /**
  * Implements core UDP message handling.
  */
-class Udp : public InstanceLocator, private NonCopyable
+class Udp : public InstanceLocator, public MessageAllocator<Udp, ReservedHeaderSize::kUdpMessage>, private NonCopyable
 {
 public:
     typedef UdpHeader    Header;         ///< UDP header.
@@ -175,7 +176,9 @@ public:
     /**
      * Implements a UDP/IPv6 socket.
      */
-    class Socket : public InstanceLocator, public SocketHandle
+    class Socket : public InstanceLocator,
+                   public SocketHandle,
+                   public MessageAllocator<Socket, ReservedHeaderSize::kUdpMessage>
     {
         friend class Udp;
 
@@ -188,32 +191,6 @@ public:
          * @param[in]  aContext  A pointer to arbitrary context information.
          */
         Socket(Instance &aInstance, ReceiveHandler aHandler, void *aContext);
-
-        /**
-         * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-         *
-         * @returns A pointer to the message or `nullptr` if no buffers are available.
-         */
-        Message *NewMessage(void);
-
-        /**
-         * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-         *
-         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-         *
-         * @returns A pointer to the message or `nullptr` if no buffers are available.
-         */
-        Message *NewMessage(uint16_t aReserved);
-
-        /**
-         * Returns a new UDP message with sufficient header space reserved.
-         *
-         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-         * @param[in]  aSettings  The message settings (default is used if not provided).
-         *
-         * @returns A pointer to the message or `nullptr` if no buffers are available.
-         */
-        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
         /**
          * Opens the UDP socket.
@@ -491,32 +468,6 @@ public:
      * @returns A new ephemeral port.
      */
     uint16_t GetEphemeralPort(void);
-
-    /**
-     * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(void);
-
-    /**
-     * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * Returns a new UDP message with sufficient header space reserved.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     * @param[in]  aSettings  The message settings.
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
     /**
      * Sends an IPv6 datagram.
