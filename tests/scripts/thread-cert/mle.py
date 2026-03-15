@@ -111,6 +111,30 @@ class LinkMetricsSubTlvType(IntEnum):
     ENHANCED_ACK_LINK_METRICS_CONFIGURATION = 7
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _read_u8(data):
+    return ord(data.read(1))
+
+
+def _read_u16_be(data):
+    return struct.unpack(">H", data.read(2))[0]
+
+
+def _read_u32_be(data):
+    return struct.unpack(">I", data.read(4))[0]
+
+
+def _at_end(data):
+    return data.tell() >= len(data.getvalue())
+
+
+# ---------------------------------------------------------------------------
+# SourceAddress
+# ---------------------------------------------------------------------------
+
 class SourceAddress(object):
 
     def __init__(self, address):
@@ -122,7 +146,6 @@ class SourceAddress(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.address == other.address
 
     def __repr__(self):
@@ -132,9 +155,13 @@ class SourceAddress(object):
 class SourceAddressFactory:
 
     def parse(self, data, message_info):
-        address = struct.unpack(">H", data.read(2))[0]
+        address = _read_u16_be(data)
         return SourceAddress(address)
 
+
+# ---------------------------------------------------------------------------
+# Mode
+# ---------------------------------------------------------------------------
 
 class Mode(object):
 
@@ -162,7 +189,6 @@ class Mode(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return (self.receiver == other.receiver and self.secure == other.secure and
                 self.device_type == other.device_type and self.network_data == other.network_data)
 
@@ -174,13 +200,17 @@ class Mode(object):
 class ModeFactory:
 
     def parse(self, data, message_info):
-        mode = ord(data.read(1))
+        mode = _read_u8(data)
         receiver = (mode >> 3) & 0x01
         secure = (mode >> 2) & 0x01
         device_type = (mode >> 1) & 0x01
         network_data = (mode >> 0) & 0x01
         return Mode(receiver, secure, device_type, network_data)
 
+
+# ---------------------------------------------------------------------------
+# Timeout
+# ---------------------------------------------------------------------------
 
 class Timeout(object):
 
@@ -193,7 +223,6 @@ class Timeout(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.timeout == other.timeout
 
     def __repr__(self):
@@ -203,9 +232,13 @@ class Timeout(object):
 class TimeoutFactory:
 
     def parse(self, data, message_info):
-        timeout = struct.unpack(">I", data.read(4))[0]
+        timeout = _read_u32_be(data)
         return Timeout(timeout)
 
+
+# ---------------------------------------------------------------------------
+# Challenge
+# ---------------------------------------------------------------------------
 
 class Challenge(object):
 
@@ -218,7 +251,6 @@ class Challenge(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.challenge == other.challenge
 
     def __repr__(self):
@@ -232,6 +264,10 @@ class ChallengeFactory:
         return Challenge(challenge)
 
 
+# ---------------------------------------------------------------------------
+# Response
+# ---------------------------------------------------------------------------
+
 class Response(object):
 
     def __init__(self, response):
@@ -243,7 +279,6 @@ class Response(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.response == other.response
 
     def __repr__(self):
@@ -257,6 +292,10 @@ class ResponseFactory:
         return Response(response)
 
 
+# ---------------------------------------------------------------------------
+# LinkLayerFrameCounter
+# ---------------------------------------------------------------------------
+
 class LinkLayerFrameCounter(object):
 
     def __init__(self, frame_counter):
@@ -268,7 +307,6 @@ class LinkLayerFrameCounter(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.frame_counter == other.frame_counter
 
     def __repr__(self):
@@ -278,9 +316,13 @@ class LinkLayerFrameCounter(object):
 class LinkLayerFrameCounterFactory:
 
     def parse(self, data, message_info):
-        frame_counter = struct.unpack(">I", data.read(4))[0]
+        frame_counter = _read_u32_be(data)
         return LinkLayerFrameCounter(frame_counter)
 
+
+# ---------------------------------------------------------------------------
+# MleFrameCounter
+# ---------------------------------------------------------------------------
 
 class MleFrameCounter(object):
 
@@ -293,7 +335,6 @@ class MleFrameCounter(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.frame_counter == other.frame_counter
 
     def __repr__(self):
@@ -303,9 +344,13 @@ class MleFrameCounter(object):
 class MleFrameCounterFactory:
 
     def parse(self, data, message_info):
-        frame_counter = struct.unpack(">I", data.read(4))[0]
+        frame_counter = _read_u32_be(data)
         return MleFrameCounter(frame_counter)
 
+
+# ---------------------------------------------------------------------------
+# LinkQualityAndRouteData / Route64
+# ---------------------------------------------------------------------------
 
 class LinkQualityAndRouteData(object):
 
@@ -328,7 +373,6 @@ class LinkQualityAndRouteData(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return (self.output == other.output and self.input == other.input and self.route == other.route)
 
     def __repr__(self):
@@ -338,7 +382,7 @@ class LinkQualityAndRouteData(object):
 class LinkQualityAndRouteDataFactory:
 
     def parse(self, data, message_info):
-        lqrd = ord(data.read(1))
+        lqrd = _read_u8(data)
         output = (lqrd >> 6) & 0x3
         _input = (lqrd >> 4) & 0x3
         route = lqrd & 0x0F
@@ -366,7 +410,6 @@ class Route64(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return (self.id_sequence == other.id_sequence and self.router_id_mask == other.router_id_mask and
                 self.link_quality_and_route_data == other.link_quality_and_route_data)
 
@@ -382,16 +425,19 @@ class Route64Factory:
         self._lqrd_factory = link_quality_and_route_data_factory
 
     def parse(self, data, message_info):
-        id_sequence = ord(data.read(1))
+        id_sequence = _read_u8(data)
         router_id_mask = struct.unpack(">Q", data.read(8))[0]
 
         link_quality_and_route_data = []
-
-        while data.tell() < len(data.getvalue()):
+        while not _at_end(data):
             link_quality_and_route_data.append(self._lqrd_factory.parse(data, message_info))
 
         return Route64(id_sequence, router_id_mask, link_quality_and_route_data)
 
+
+# ---------------------------------------------------------------------------
+# Address16
+# ---------------------------------------------------------------------------
 
 class Address16(object):
 
@@ -404,7 +450,6 @@ class Address16(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.address == other.address
 
     def __repr__(self):
@@ -414,20 +459,17 @@ class Address16(object):
 class Address16Factory:
 
     def parse(self, data, message_info):
-        address = struct.unpack(">H", data.read(2))[0]
+        address = _read_u16_be(data)
         return Address16(address)
 
 
+# ---------------------------------------------------------------------------
+# LeaderData
+# ---------------------------------------------------------------------------
+
 class LeaderData(object):
 
-    def __init__(
-        self,
-        partition_id,
-        weighting,
-        data_version,
-        stable_data_version,
-        leader_router_id,
-    ):
+    def __init__(self, partition_id, weighting, data_version, stable_data_version, leader_router_id):
         self._partition_id = partition_id
         self._weighting = weighting
         self._data_version = data_version
@@ -456,37 +498,32 @@ class LeaderData(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return (self.partition_id == other.partition_id and self.weighting == other.weighting and
-                self.data_version == other.data_version and self.stable_data_version == other.stable_data_version and
+                self.data_version == other.data_version and
+                self.stable_data_version == other.stable_data_version and
                 self.leader_router_id == other.leader_router_id)
 
     def __repr__(self):
-        return 'LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={},leader_router_id={}'.format(
-            self.partition_id,
-            self.weighting,
-            self.data_version,
-            self.stable_data_version,
-            self.leader_router_id,
-        )
+        return ('LeaderData(partition_id={}, weighting={}, data_version={}, '
+                'stable_data_version={}, leader_router_id={})').format(
+            self.partition_id, self.weighting, self.data_version,
+            self.stable_data_version, self.leader_router_id)
 
 
 class LeaderDataFactory:
 
     def parse(self, data, message_info):
-        partition_id = struct.unpack(">I", data.read(4))[0]
-        weighting = ord(data.read(1))
-        data_version = ord(data.read(1))
-        stable_data_version = ord(data.read(1))
-        leader_router_id = ord(data.read(1))
-        return LeaderData(
-            partition_id,
-            weighting,
-            data_version,
-            stable_data_version,
-            leader_router_id,
-        )
+        partition_id = _read_u32_be(data)
+        weighting = _read_u8(data)
+        data_version = _read_u8(data)
+        stable_data_version = _read_u8(data)
+        leader_router_id = _read_u8(data)
+        return LeaderData(partition_id, weighting, data_version, stable_data_version, leader_router_id)
 
+
+# ---------------------------------------------------------------------------
+# NetworkData
+# ---------------------------------------------------------------------------
 
 class NetworkData(object):
 
@@ -499,7 +536,6 @@ class NetworkData(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.tlvs == other.tlvs
 
     def __repr__(self):
@@ -517,6 +553,10 @@ class NetworkDataFactory:
         return NetworkData(tlvs)
 
 
+# ---------------------------------------------------------------------------
+# TlvRequest
+# ---------------------------------------------------------------------------
+
 class TlvRequest(object):
 
     def __init__(self, tlvs):
@@ -528,7 +568,6 @@ class TlvRequest(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.tlvs == other.tlvs
 
     def __repr__(self):
@@ -542,6 +581,10 @@ class TlvRequestFactory:
         tlvs = [b for b in bytearray(data.read())]
         return TlvRequest(tlvs)
 
+
+# ---------------------------------------------------------------------------
+# ScanMask
+# ---------------------------------------------------------------------------
 
 class ScanMask(object):
 
@@ -559,7 +602,6 @@ class ScanMask(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return (self.router == other.router and self.end_device == other.end_device)
 
     def __repr__(self):
@@ -569,26 +611,21 @@ class ScanMask(object):
 class ScanMaskFactory:
 
     def parse(self, data, message_info):
-        scan_mask = ord(data.read(1))
+        scan_mask = _read_u8(data)
         router = (scan_mask >> 7) & 0x01
         end_device = (scan_mask >> 6) & 0x01
         return ScanMask(router, end_device)
 
 
+# ---------------------------------------------------------------------------
+# Connectivity
+# ---------------------------------------------------------------------------
+
 class Connectivity(object):
 
-    def __init__(
-        self,
-        pp_byte,
-        link_quality_3,
-        link_quality_2,
-        link_quality_1,
-        leader_cost,
-        id_sequence,
-        active_routers,
-        sed_buffer_size=None,
-        sed_datagram_count=None,
-    ):
+    def __init__(self, pp_byte, link_quality_3, link_quality_2, link_quality_1,
+                 leader_cost, id_sequence, active_routers,
+                 sed_buffer_size=None, sed_datagram_count=None):
         self._pp_byte = pp_byte
         self._link_quality_3 = link_quality_3
         self._link_quality_2 = link_quality_2
@@ -641,67 +678,52 @@ class Connectivity(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
-        return (self.pp == other.pp and self.link_quality_3 == other.link_quality_3 and
-                self.link_quality_2 == other.link_quality_2 and self.link_quality_1 == other.link_quality_1 and
-                self.leader_cost == other.leader_cost and self.id_sequence == other.id_sequence and
-                self.active_routers == other.active_routers and self.sed_buffer_size == other.sed_buffer_size and
+        return (self.pp == other.pp and
+                self.link_quality_3 == other.link_quality_3 and
+                self.link_quality_2 == other.link_quality_2 and
+                self.link_quality_1 == other.link_quality_1 and
+                self.leader_cost == other.leader_cost and
+                self.id_sequence == other.id_sequence and
+                self.active_routers == other.active_routers and
+                self.sed_buffer_size == other.sed_buffer_size and
                 self.sed_datagram_count == other.sed_datagram_count)
 
     def __repr__(self):
-        return r"Connectivity(pp={}, \
-                 link_quality_3={}, \
-                 link_quality_2={}, \
-                 link_quality_1={}, \
-                 leader_cost={}, \
-                 id_sequence={}, \
-                 active_routers={}, \
-                 sed_buffer_size={}, \
-                 sed_datagram_count={})".format(
-            self.pp,
-            self.link_quality_3,
-            self.link_quality_2,
-            self.link_quality_1,
-            self.leader_cost,
-            self.id_sequence,
-            self.active_routers,
-            self.sed_buffer_size,
-            self.sed_datagram_count,
-        )
+        return ("Connectivity(pp={}, link_quality_3={}, link_quality_2={}, link_quality_1={}, "
+                "leader_cost={}, id_sequence={}, active_routers={}, "
+                "sed_buffer_size={}, sed_datagram_count={})").format(
+            self.pp, self.link_quality_3, self.link_quality_2, self.link_quality_1,
+            self.leader_cost, self.id_sequence, self.active_routers,
+            self.sed_buffer_size, self.sed_datagram_count)
 
 
 class ConnectivityFactory:
 
     def parse(self, data, message_info):
-        pp_byte = ord(data.read(1))
-        link_quality_3 = ord(data.read(1))
-        link_quality_2 = ord(data.read(1))
-        link_quality_1 = ord(data.read(1))
-        leader_cost = ord(data.read(1))
-        id_sequence = ord(data.read(1))
-        active_routers = ord(data.read(1))
+        pp_byte = _read_u8(data)
+        link_quality_3 = _read_u8(data)
+        link_quality_2 = _read_u8(data)
+        link_quality_1 = _read_u8(data)
+        leader_cost = _read_u8(data)
+        id_sequence = _read_u8(data)
+        active_routers = _read_u8(data)
 
         sed_data = io.BytesIO(data.read(3))
-
-        if len(sed_data.getvalue()) > 0:
-            sed_buffer_size = struct.unpack(">H", sed_data.read(2))[0]
-            sed_datagram_count = ord(sed_data.read(1))
+        if len(sed_data.getvalue()) >= 3:
+            sed_buffer_size = _read_u16_be(sed_data)
+            sed_datagram_count = _read_u8(sed_data)
         else:
             sed_buffer_size = None
             sed_datagram_count = None
 
-        return Connectivity(
-            pp_byte,
-            link_quality_3,
-            link_quality_2,
-            link_quality_1,
-            leader_cost,
-            id_sequence,
-            active_routers,
-            sed_buffer_size,
-            sed_datagram_count,
-        )
+        return Connectivity(pp_byte, link_quality_3, link_quality_2, link_quality_1,
+                            leader_cost, id_sequence, active_routers,
+                            sed_buffer_size, sed_datagram_count)
 
+
+# ---------------------------------------------------------------------------
+# LinkMargin
+# ---------------------------------------------------------------------------
 
 class LinkMargin(object):
 
@@ -714,7 +736,6 @@ class LinkMargin(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.link_margin == other.link_margin
 
     def __repr__(self):
@@ -724,9 +745,13 @@ class LinkMargin(object):
 class LinkMarginFactory:
 
     def parse(self, data, message_info):
-        link_margin = ord(data.read(1))
+        link_margin = _read_u8(data)
         return LinkMargin(link_margin)
 
+
+# ---------------------------------------------------------------------------
+# Status
+# ---------------------------------------------------------------------------
 
 class Status(object):
 
@@ -739,7 +764,6 @@ class Status(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.status == other.status
 
     def __repr__(self):
@@ -749,9 +773,13 @@ class Status(object):
 class StatusFactory:
 
     def parse(self, data, message_info):
-        status = ord(data.read(1))
+        status = _read_u8(data)
         return Status(status)
 
+
+# ---------------------------------------------------------------------------
+# Version
+# ---------------------------------------------------------------------------
 
 class Version(object):
 
@@ -764,7 +792,6 @@ class Version(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.version == other.version
 
     def __repr__(self):
@@ -774,9 +801,13 @@ class Version(object):
 class VersionFactory:
 
     def parse(self, data, message_info):
-        version = struct.unpack(">H", data.read(2))[0]
+        version = _read_u16_be(data)
         return Version(version)
 
+
+# ---------------------------------------------------------------------------
+# AddressRegistration
+# ---------------------------------------------------------------------------
 
 class AddressFull(object):
 
@@ -789,17 +820,16 @@ class AddressFull(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.ipv6_address == other.ipv6_address
 
     def __repr__(self):
-        return "AddressFull(ipv6_address={}')".format(hexlify(self.ipv6_address))
+        return "AddressFull(ipv6_address={})".format(hexlify(self.ipv6_address))
 
 
 class AddressFullFactory:
 
     def parse(self, data, message_info):
-        data.read(1)  # first byte is ignored
+        data.read(1)  # control byte; full-address flag already checked by parent
         ipv6_address = data.read(16)
         return AddressFull(ipv6_address)
 
@@ -820,17 +850,16 @@ class AddressCompressed(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.cid == other.cid and self.iid == other.iid
 
     def __repr__(self):
-        return "AddressCompressed(cid={}, iid={}')".format(self.cid, hexlify(self.iid))
+        return "AddressCompressed(cid={}, iid={})".format(self.cid, hexlify(self.iid))
 
 
 class AddressCompressedFactory:
 
     def parse(self, data, message_info):
-        cid = ord(data.read(1)) & 0x0F
+        cid = _read_u8(data) & 0x0F
         iid = bytearray(data.read(8))
         return AddressCompressed(cid, iid)
 
@@ -846,7 +875,6 @@ class AddressRegistration(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.addresses == other.addresses
 
     def __repr__(self):
@@ -862,18 +890,19 @@ class AddressRegistrationFactory:
 
     def parse(self, data, message_info):
         addresses = []
-
-        while data.tell() < len(data.getvalue()):
-            compressed = (ord(data.read(1)) >> 7) & 0x01
+        while not _at_end(data):
+            compressed = (_read_u8(data) >> 7) & 0x01
             data.seek(-1, io.SEEK_CUR)
-
             if compressed:
                 addresses.append(self._addr_compressed_factory.parse(data, message_info))
             else:
                 addresses.append(self._addr_full_factory.parse(data, message_info))
-
         return AddressRegistration(addresses)
 
+
+# ---------------------------------------------------------------------------
+# Channel
+# ---------------------------------------------------------------------------
 
 class Channel(object):
 
@@ -891,7 +920,6 @@ class Channel(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return (self.channel_page == other.channel_page and self.channel == other.channel)
 
     def __repr__(self):
@@ -901,10 +929,14 @@ class Channel(object):
 class ChannelFactory:
 
     def parse(self, data, message_info):
-        channel_page = ord(data.read(1))
-        channel = struct.unpack(">H", data.read(2))[0]
+        channel_page = _read_u8(data)
+        channel = _read_u16_be(data)
         return Channel(channel_page, channel)
 
+
+# ---------------------------------------------------------------------------
+# PanId
+# ---------------------------------------------------------------------------
 
 class PanId:
 
@@ -917,18 +949,30 @@ class PanId:
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
         return self.pan_id == other.pan_id
 
     def __repr__(self):
-        return "PanId(pan_id={})".format(self.pan_id)
+        return "PanId(pan_id={})".format(hex(self.pan_id))
 
 
 class PanIdFactory:
 
     def parse(self, data, message_info):
-        pan_id = struct.unpack(">H", data.read(2))[0]
+        pan_id = _read_u16_be(data)
         return PanId(pan_id)
+
+
+# ---------------------------------------------------------------------------
+# ActiveTimestamp / PendingTimestamp  (shared parse logic)
+# ---------------------------------------------------------------------------
+
+def _parse_timestamp(data):
+    seconds = bytearray([0x00, 0x00]) + bytearray(data.read(6))
+    ticks_raw = _read_u16_be(data)
+    timestamp_seconds = struct.unpack(">Q", bytes(seconds))[0]
+    timestamp_ticks = ticks_raw >> 1
+    u = ticks_raw & 0x01
+    return timestamp_seconds, timestamp_ticks, u
 
 
 class ActiveTimestamp(object):
@@ -952,8 +996,8 @@ class ActiveTimestamp(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
-        return (self.timestamp_seconds == other.timestamp_seconds and self.timestamp_ticks == other.timestamp_ticks and
+        return (self.timestamp_seconds == other.timestamp_seconds and
+                self.timestamp_ticks == other.timestamp_ticks and
                 self.u == other.u)
 
     def __repr__(self):
@@ -964,13 +1008,7 @@ class ActiveTimestamp(object):
 class ActiveTimestampFactory:
 
     def parse(self, data, message_info):
-        seconds = bytearray([0x00, 0x00]) + bytearray(data.read(6))
-        ticks = struct.unpack(">H", data.read(2))[0]
-
-        timestamp_seconds = struct.unpack(">Q", bytes(seconds))[0]
-        timestamp_ticks = ticks >> 1
-        u = ticks & 0x01
-        return ActiveTimestamp(timestamp_seconds, timestamp_ticks, u)
+        return ActiveTimestamp(*_parse_timestamp(data))
 
 
 class PendingTimestamp(object):
@@ -994,8 +1032,8 @@ class PendingTimestamp(object):
 
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
-
-        return (self.timestamp_seconds == other.timestamp_seconds and self.timestamp_ticks == other.timestamp_ticks and
+        return (self.timestamp_seconds == other.timestamp_seconds and
+                self.timestamp_ticks == other.timestamp_ticks and
                 self.u == other.u)
 
     def __repr__(self):
@@ -1006,40 +1044,64 @@ class PendingTimestamp(object):
 class PendingTimestampFactory:
 
     def parse(self, data, message_info):
-        seconds = bytearray([0x00, 0x00]) + bytearray(data.read(6))
-        ticks = struct.unpack(">H", data.read(2))[0]
+        return PendingTimestamp(*_parse_timestamp(data))
 
-        timestamp_seconds = struct.unpack(">Q", bytes(seconds))[0]
-        timestamp_ticks = ticks >> 1
-        u = ticks & 0x01
-        return PendingTimestamp(timestamp_seconds, timestamp_ticks, u)
 
+# ---------------------------------------------------------------------------
+# ActiveOperationalDataset / PendingOperationalDataset
+# ---------------------------------------------------------------------------
 
 class ActiveOperationalDataset:
-    # TODO: Not implemented yet
 
-    def __init__(self):
-        print("ActiveOperationalDataset is not implemented yet.")
+    def __init__(self, raw_bytes):
+        self._raw_bytes = raw_bytes
+
+    @property
+    def raw_bytes(self):
+        return self._raw_bytes
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.raw_bytes == other.raw_bytes
+
+    def __repr__(self):
+        return "ActiveOperationalDataset(raw_bytes={})".format(hexlify(self._raw_bytes))
 
 
 class ActiveOperationalDatasetFactory:
 
     def parse(self, data, message_info):
-        return ActiveOperationalDataset()
+        raw_bytes = data.read()
+        return ActiveOperationalDataset(raw_bytes)
 
 
 class PendingOperationalDataset:
-    # TODO: Not implemented yet
 
-    def __init__(self):
-        print("PendingOperationalDataset is not implemented yet.")
+    def __init__(self, raw_bytes):
+        self._raw_bytes = raw_bytes
+
+    @property
+    def raw_bytes(self):
+        return self._raw_bytes
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.raw_bytes == other.raw_bytes
+
+    def __repr__(self):
+        return "PendingOperationalDataset(raw_bytes={})".format(hexlify(self._raw_bytes))
 
 
 class PendingOperationalDatasetFactory:
 
     def parse(self, data, message_info):
-        return PendingOperationalDataset()
+        raw_bytes = data.read()
+        return PendingOperationalDataset(raw_bytes)
 
+
+# ---------------------------------------------------------------------------
+# ThreadDiscovery
+# ---------------------------------------------------------------------------
 
 class ThreadDiscovery(object):
 
@@ -1051,6 +1113,7 @@ class ThreadDiscovery(object):
         return self._tlvs
 
     def __eq__(self, other):
+        common.expect_the_same_class(self, other)
         return self.tlvs == other.tlvs
 
     def __repr__(self):
@@ -1067,123 +1130,406 @@ class ThreadDiscoveryFactory:
         return ThreadDiscovery(tlvs)
 
 
-class CslChannel:
-    # TODO: Not implemented yet
+# ---------------------------------------------------------------------------
+# SupervisionInterval  (TLV type 27 — was missing entirely)
+# ---------------------------------------------------------------------------
 
-    def __init__(self):
-        print("CslChannel is not implemented yet.")
+class SupervisionInterval(object):
+    """Supervision interval TLV (type 27).
+
+    Carries the supervision check timeout (in seconds) used by SEDs.
+    """
+
+    def __init__(self, interval):
+        self._interval = interval
+
+    @property
+    def interval(self):
+        return self._interval
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.interval == other.interval
+
+    def __repr__(self):
+        return "SupervisionInterval(interval={})".format(self.interval)
+
+
+class SupervisionIntervalFactory:
+
+    def parse(self, data, message_info):
+        interval = _read_u16_be(data)
+        return SupervisionInterval(interval)
+
+
+# ---------------------------------------------------------------------------
+# CSL Channel  (TLV type 80)
+# ---------------------------------------------------------------------------
+
+class CslChannel:
+    """CSL Channel TLV (type 80).
+
+    Contains the channel page and channel number used for CSL operation.
+    """
+
+    def __init__(self, channel_page, channel):
+        self._channel_page = channel_page
+        self._channel = channel
+
+    @property
+    def channel_page(self):
+        return self._channel_page
+
+    @property
+    def channel(self):
+        return self._channel
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.channel_page == other.channel_page and self.channel == other.channel
+
+    def __repr__(self):
+        return "CslChannel(channel_page={}, channel={})".format(self.channel_page, self.channel)
 
 
 class CslChannelFactory:
-    # TODO: Not implemented yet
 
     def parse(self, data, message_info):
-        return CslChannel()
+        channel_page = _read_u8(data)
+        channel = _read_u16_be(data)
+        return CslChannel(channel_page, channel)
 
+
+# ---------------------------------------------------------------------------
+# CSL Synchronized Timeout  (TLV type 85)
+# ---------------------------------------------------------------------------
 
 class CslSynchronizedTimeout:
-    # TODO: Not implemented yet
+    """CSL Synchronized Timeout TLV (type 85).
 
-    def __init__(self):
-        print("CslSynchronizedTimeout is not implemented yet.")
+    Carries the timeout value (in seconds) for a CSL-synchronized child.
+    """
+
+    def __init__(self, timeout):
+        self._timeout = timeout
+
+    @property
+    def timeout(self):
+        return self._timeout
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.timeout == other.timeout
+
+    def __repr__(self):
+        return "CslSynchronizedTimeout(timeout={})".format(self.timeout)
 
 
 class CslSynchronizedTimeoutFactory:
 
     def parse(self, data, message_info):
-        return CslSynchronizedTimeout()
+        timeout = _read_u32_be(data)
+        return CslSynchronizedTimeout(timeout)
 
+
+# ---------------------------------------------------------------------------
+# CSL Clock Accuracy  (TLV type 86)
+# ---------------------------------------------------------------------------
 
 class CslClockAccuracy:
-    # TODO: Not implemented yet
+    """CSL Clock Accuracy TLV (type 86).
 
-    def __init__(self):
-        print("CslClockAccuracy is not implemented yet.")
+    clock_accuracy: worst-case clock accuracy in PPM.
+    uncertainty:    worst-case clock uncertainty in 10-microsecond units.
+    """
+
+    def __init__(self, clock_accuracy, uncertainty):
+        self._clock_accuracy = clock_accuracy
+        self._uncertainty = uncertainty
+
+    @property
+    def clock_accuracy(self):
+        return self._clock_accuracy
+
+    @property
+    def uncertainty(self):
+        return self._uncertainty
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return (self.clock_accuracy == other.clock_accuracy and
+                self.uncertainty == other.uncertainty)
+
+    def __repr__(self):
+        return "CslClockAccuracy(clock_accuracy={}, uncertainty={})".format(
+            self.clock_accuracy, self.uncertainty)
 
 
 class CslClockAccuracyFactory:
 
     def parse(self, data, message_info):
-        return CslClockAccuracy()
+        clock_accuracy = _read_u8(data)
+        uncertainty = _read_u8(data)
+        return CslClockAccuracy(clock_accuracy, uncertainty)
 
+
+# ---------------------------------------------------------------------------
+# Time Request  (TLV type 252)
+# ---------------------------------------------------------------------------
 
 class TimeRequest:
-    # TODO: Not implemented yet
+    """Time Request TLV (type 252).
 
-    def __init__(self):
-        print("TimeRequest is not implemented yet.")
+    time_of_sending:    UNIX time (64-bit, milliseconds) at which the message
+                        was sent, as measured by the sender.
+    local_uncertainty:  sender's clock uncertainty in milliseconds.
+    """
+
+    def __init__(self, time_of_sending, local_uncertainty):
+        self._time_of_sending = time_of_sending
+        self._local_uncertainty = local_uncertainty
+
+    @property
+    def time_of_sending(self):
+        return self._time_of_sending
+
+    @property
+    def local_uncertainty(self):
+        return self._local_uncertainty
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return (self.time_of_sending == other.time_of_sending and
+                self.local_uncertainty == other.local_uncertainty)
+
+    def __repr__(self):
+        return "TimeRequest(time_of_sending={}, local_uncertainty={})".format(
+            self.time_of_sending, self.local_uncertainty)
 
 
 class TimeRequestFactory:
 
     def parse(self, data, message_info):
-        return TimeRequest()
+        time_of_sending = struct.unpack(">Q", data.read(8))[0]
+        local_uncertainty = _read_u16_be(data)
+        return TimeRequest(time_of_sending, local_uncertainty)
 
+
+# ---------------------------------------------------------------------------
+# Time Parameter  (TLV type 253)
+# ---------------------------------------------------------------------------
 
 class TimeParameter:
-    # TODO: Not implemented yet
+    """Time Parameter TLV (type 253).
 
-    def __init__(self):
-        print("TimeParameter is not implemented yet.")
+    Carries the network time parameters distributed by the Time Leader.
+    time_accuracy: combined clock accuracy of the network in PPM.
+    """
+
+    def __init__(self, time_accuracy):
+        self._time_accuracy = time_accuracy
+
+    @property
+    def time_accuracy(self):
+        return self._time_accuracy
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.time_accuracy == other.time_accuracy
+
+    def __repr__(self):
+        return "TimeParameter(time_accuracy={})".format(self.time_accuracy)
 
 
 class TimeParameterFactory:
 
     def parse(self, data, message_info):
-        return TimeParameter()
+        time_accuracy = _read_u8(data)
+        return TimeParameter(time_accuracy)
 
+
+# ---------------------------------------------------------------------------
+# LinkMetricsQuery  (TLV type 87)
+# ---------------------------------------------------------------------------
 
 class LinkMetricsQuery:
-    # TODO: Not implemented yet
+    """Link Metrics Query TLV (type 87).
 
-    def __init__(self):
-        print("LinkMetricsQuery is not implemented yet.")
+    Wraps one or more Link Metrics sub-TLVs that describe the requested
+    metrics (query ID, query options, etc.).
+    """
+
+    def __init__(self, sub_tlvs):
+        self._sub_tlvs = sub_tlvs
+
+    @property
+    def sub_tlvs(self):
+        return self._sub_tlvs
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.sub_tlvs == other.sub_tlvs
+
+    def __repr__(self):
+        return "LinkMetricsQuery(sub_tlvs={})".format(self.sub_tlvs)
 
 
 class LinkMetricsQueryFactory:
 
     def parse(self, data, message_info):
-        return LinkMetricsQuery()
+        sub_tlvs = _parse_link_metrics_sub_tlvs(data, message_info)
+        return LinkMetricsQuery(sub_tlvs)
 
+
+# ---------------------------------------------------------------------------
+# LinkMetricsManagement  (TLV type 88)
+# ---------------------------------------------------------------------------
 
 class LinkMetricsManagement:
-    # TODO: Not implemented yet
+    """Link Metrics Management TLV (type 88).
 
-    def __init__(self):
-        print("LinkMetricsManagement is not implemented yet.")
+    Carries sub-TLVs for forward-probing registration or Enhanced-ACK
+    configuration.
+    """
+
+    def __init__(self, sub_tlvs):
+        self._sub_tlvs = sub_tlvs
+
+    @property
+    def sub_tlvs(self):
+        return self._sub_tlvs
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.sub_tlvs == other.sub_tlvs
+
+    def __repr__(self):
+        return "LinkMetricsManagement(sub_tlvs={})".format(self.sub_tlvs)
 
 
 class LinkMetricsManagementFactory:
 
     def parse(self, data, message_info):
-        return LinkMetricsManagement()
+        sub_tlvs = _parse_link_metrics_sub_tlvs(data, message_info)
+        return LinkMetricsManagement(sub_tlvs)
 
+
+# ---------------------------------------------------------------------------
+# LinkMetricsReport  (TLV type 89)
+# ---------------------------------------------------------------------------
 
 class LinkMetricsReport:
-    # TODO: Not implemented yet
+    """Link Metrics Report TLV (type 89).
 
-    def __init__(self):
-        print("LinkMetricsReport is not implemented yet.")
+    Contains one or more Link Metrics Report sub-TLVs with measured values.
+    """
+
+    def __init__(self, sub_tlvs):
+        self._sub_tlvs = sub_tlvs
+
+    @property
+    def sub_tlvs(self):
+        return self._sub_tlvs
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.sub_tlvs == other.sub_tlvs
+
+    def __repr__(self):
+        return "LinkMetricsReport(sub_tlvs={})".format(self.sub_tlvs)
 
 
 class LinkMetricsReportFactory:
 
     def parse(self, data, message_info):
-        return LinkMetricsReport()
+        sub_tlvs = _parse_link_metrics_sub_tlvs(data, message_info)
+        return LinkMetricsReport(sub_tlvs)
 
+
+# ---------------------------------------------------------------------------
+# LinkProbe  (TLV type 90)
+# ---------------------------------------------------------------------------
 
 class LinkProbe:
-    # TODO: Not implemented yet
+    """Link Probe TLV (type 90).
 
-    def __init__(self):
-        print("LinkProbe is not implemented yet.")
+    A padding TLV used to inflate packet size for link-metric probing.
+    The raw bytes are preserved but carry no semantic information.
+    """
+
+    def __init__(self, length):
+        self._length = length
+
+    @property
+    def length(self):
+        return self._length
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.length == other.length
+
+    def __repr__(self):
+        return "LinkProbe(length={})".format(self.length)
 
 
 class LinkProbeFactory:
 
     def parse(self, data, message_info):
-        return LinkProbe()
+        raw = data.read()
+        return LinkProbe(len(raw))
 
+
+# ---------------------------------------------------------------------------
+# Link Metrics sub-TLV helpers
+# ---------------------------------------------------------------------------
+
+class LinkMetricsSubTlv:
+    """Generic container for a parsed Link Metrics sub-TLV."""
+
+    def __init__(self, sub_type, value):
+        self._sub_type = sub_type
+        self._value = value
+
+    @property
+    def sub_type(self):
+        return self._sub_type
+
+    @property
+    def value(self):
+        return self._value
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+        return self.sub_type == other.sub_type and self.value == other.value
+
+    def __repr__(self):
+        return "LinkMetricsSubTlv(sub_type={}, value={})".format(self.sub_type, hexlify(self.value))
+
+
+def _parse_link_metrics_sub_tlvs(data, message_info):
+    """Parse a sequence of Link Metrics sub-TLVs from *data*.
+
+    Each sub-TLV has the standard 1-byte type / 1-byte length / value layout.
+    Unknown sub-TLV types are preserved as raw bytes so that callers can
+    inspect them without losing information.
+    """
+    sub_tlvs = []
+    while not _at_end(data):
+        sub_type = _read_u8(data)
+        length = _read_u8(data)
+        value = data.read(length)
+        try:
+            typed_sub_type = LinkMetricsSubTlvType(sub_type)
+        except ValueError:
+            logging.warning("Unknown Link Metrics sub-TLV type: {}".format(sub_type))
+            typed_sub_type = sub_type
+        sub_tlvs.append(LinkMetricsSubTlv(typed_sub_type, value))
+    return sub_tlvs
+
+
+# ---------------------------------------------------------------------------
+# MleCommand
+# ---------------------------------------------------------------------------
 
 class MleCommand(object):
 
@@ -1206,17 +1552,15 @@ class MleCommand(object):
 
 class MleCommandFactory:
 
-    _MARKER_EXTENDED_LENGTH = 0xff
+    _MARKER_EXTENDED_LENGTH = 0xFF
 
     def __init__(self, tlvs_factories):
         self._tlvs_factories = tlvs_factories
 
     def _get_length(self, data):
-        length = ord(data.read(1))
-
+        length = _read_u8(data)
         if length == self._MARKER_EXTENDED_LENGTH:
-            length = struct.unpack(">H", data.read(2))[0]
-
+            length = _read_u16_be(data)
         return length
 
     def _get_tlv_factory(self, _type):
@@ -1227,24 +1571,27 @@ class MleCommandFactory:
             return UnknownTlvFactory(_type)
 
     def _parse_tlv(self, data, message_info):
-        _type = TlvType(ord(data.read(1)))
+        try:
+            _type = TlvType(_read_u8(data))
+        except ValueError as exc:
+            raise RuntimeError("Unknown TLV type encountered: {}".format(exc)) from exc
         length = self._get_length(data)
         value = data.read(length)
-
         factory = self._get_tlv_factory(_type)
-
         return factory.parse(io.BytesIO(value), message_info)
 
     def parse(self, data, message_info):
-        cmd_type = CommandType(ord(data.read(1)))
+        cmd_type = CommandType(_read_u8(data))
         tlvs = []
-
-        while data.tell() < len(data.getvalue()):
+        while not _at_end(data):
             tlv = self._parse_tlv(data, message_info)
             tlvs.append(tlv)
-
         return MleCommand(cmd_type, tlvs)
 
+
+# ---------------------------------------------------------------------------
+# MleMessage
+# ---------------------------------------------------------------------------
 
 class MleMessage(object):
 
@@ -1275,11 +1622,20 @@ class MleMessageSecured(MleMessage):
         return self._mic
 
     def __repr__(self):
-        return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(self.aux_sec_hdr, self.command,
-                                                                                  hexlify(self.mic))
+        return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(
+            self.aux_sec_hdr, self.command, hexlify(self.mic))
 
 
 class MleMessageFactory:
+    """Parse raw MLE UDP payload bytes into MleMessage objects.
+
+    Security indicator byte:
+        0x00 — secured message (AuxSecHdr + encrypted payload + MIC)
+        0xFF — unsecured message (plain command bytes)
+    """
+
+    _SECURITY_INDICATOR_SECURED = 0x00
+    _SECURITY_INDICATOR_UNSECURED = 0xFF
 
     def __init__(self, aux_sec_hdr_factory, mle_command_factory, crypto_engines):
         self._aux_sec_hdr_factory = aux_sec_hdr_factory
@@ -1290,40 +1646,35 @@ class MleMessageFactory:
         aux_sec_hdr = self._aux_sec_hdr_factory.parse(data, message_info)
 
         enc_data_length = len(data.getvalue())
-
         raw = data.read(enc_data_length - data.tell())
 
-        error = None
+        last_error = None
         for crypto_engine in self._crypto_engines:
-            enc_data = bytearray(raw[0:-crypto_engine.mic_length])
+            enc_data = bytearray(raw[:-crypto_engine.mic_length])
             mic = bytearray(raw[-crypto_engine.mic_length:])
-
             try:
                 dec_data = crypto_engine.decrypt(enc_data, mic, message_info)
                 break
-            except ValueError as e:
-                error = e
+            except ValueError as exc:
+                last_error = exc
         else:
-            raise ValueError("Failed to parse MLE message") from error
+            raise ValueError("Failed to decrypt MLE message with any available key") from last_error
 
         command = self._mle_command_factory.parse(io.BytesIO(dec_data), message_info)
-
         return MleMessageSecured(aux_sec_hdr, command, mic)
 
     def _create_mle_message(self, data, message_info):
         command = self._mle_command_factory.parse(data, message_info)
-
         return MleMessage(command)
 
     def parse(self, data, message_info):
-        security_indicator = ord(data.read(1))
+        security_indicator = _read_u8(data)
 
-        if security_indicator == 0:
+        if security_indicator == self._SECURITY_INDICATOR_SECURED:
             return self._create_mle_secured_message(data, message_info)
 
-        elif security_indicator == 255:
+        if security_indicator == self._SECURITY_INDICATOR_UNSECURED:
             return self._create_mle_message(data, message_info)
 
-        else:
-            raise RuntimeError(
-                "Could not create MLE message. Unknown security indicator value: {}".format(security_indicator))
+        raise RuntimeError(
+            "Unknown MLE security indicator: 0x{:02X}".format(security_indicator))
