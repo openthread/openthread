@@ -59,6 +59,15 @@
 /** Use platform provided crypto library */
 #define OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM 2
 
+/**
+ * @def OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+ *
+ * Define to 1 to enable the platform to allocate crypto operation context.
+ */
+#ifndef OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+#define OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT 0
+#endif
+
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
 
 /**

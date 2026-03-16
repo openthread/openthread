@@ -123,6 +123,9 @@ typedef struct otCryptoKey
  * @struct otCryptoContext
  *
  * Stores the context object for platform APIs.
+ *
+ * If `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT` is enabled, the platform allocates and populates this.
+ * Otherwise OpenThread core allocates and populates this.
  */
 typedef struct otCryptoContext
 {
@@ -325,6 +328,9 @@ void otPlatCryptoFree(void *aPtr);
  * @retval OT_ERROR_FAILED        Failed to initialize HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
+ * @note If `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT` is enabled, @p aContext is populated by the platform.
+ *       Otherwise OpenThread core allocates and populates it.
+ *
  * @note The platform driver shall point the context to the correct object such as psa_mac_operation_t or
  *       mbedtls_md_context_t.
  */
@@ -389,6 +395,9 @@ otError otPlatCryptoHmacSha256Finish(otCryptoContext *aContext, uint8_t *aBuf, s
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  * @retval OT_ERROR_NO_BUFS       Cannot allocate the context.
  *
+ * @note If `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT` is enabled, @p aContext is populated by the platform.
+ *       Otherwise OpenThread core allocates and populates it.
+ *
  * @note The platform driver shall point the context to the correct object such as psa_key_id
  *       or mbedtls_aes_context_t.
  */
@@ -435,9 +444,12 @@ otError otPlatCryptoAesFree(otCryptoContext *aContext);
  *
  * @param[in]  aContext           Context for HKDF operation.
  *
- * @retval OT_ERROR_NONE          Successfully Initialised AES operation.
- * @retval OT_ERROR_FAILED        Failed to Initialise AES operation.
+ * @retval OT_ERROR_NONE          Successfully Initialised HKDF operation.
+ * @retval OT_ERROR_FAILED        Failed to Initialise HKDF operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
+ *
+ * @note If `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT` is enabled, @p aContext is populated by the platform.
+ *       Otherwise OpenThread core allocates and populates it.
  *
  * @note The platform driver shall point the context to the correct object such as psa_key_derivation_operation_t
  *       or HmacSha256::Hash
@@ -499,6 +511,8 @@ otError otPlatCryptoHkdfDeinit(otCryptoContext *aContext);
  * @retval OT_ERROR_FAILED        Failed to initialise SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
+ * @note If `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT` is enabled, @p aContext is populated by the platform.
+ *       Otherwise OpenThread core allocates and populates it.
  *
  * @note The platform driver shall point the context to the correct object such as psa_hash_operation_t
  *       or mbedtls_sha256_context.
