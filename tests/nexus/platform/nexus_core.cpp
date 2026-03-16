@@ -556,6 +556,11 @@ void Core::ProcessInfraIf(Node &aNode)
 
         for (Node &rxNode : mNodes)
         {
+            if (&rxNode == &aNode)
+            {
+                continue;
+            }
+
             if (targetNode != nullptr && &rxNode != targetNode)
             {
                 continue;
