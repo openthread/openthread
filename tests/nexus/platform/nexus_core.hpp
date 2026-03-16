@@ -69,7 +69,7 @@ public:
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
                                   uint16_t            aPayloadSize     = 0,
-                                  uint8_t             aHopLimit        = 64,
+                                  uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
                                   uint32_t            aResponseTimeout = 1000);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

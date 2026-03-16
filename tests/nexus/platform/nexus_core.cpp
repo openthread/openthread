@@ -174,9 +174,14 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
         InfraIf::LinkLayerAddress mac;
 
         node.mInfraIf.GetLinkLayerAddress(mac);
-        fprintf(file, "    \"%u\": \"%02x:%02x:%02x:%02x:%02x:%02x\"%s\n", node.GetInstance().GetId(), mac.mAddress[0],
-                mac.mAddress[1], mac.mAddress[2], mac.mAddress[3], mac.mAddress[4], mac.mAddress[5],
-                (&node == tail) ? "" : ",");
+        fprintf(file, "    \"%u\": \"", node.GetInstance().GetId());
+
+        for (uint8_t i = 0; i < mac.mLength; i++)
+        {
+            fprintf(file, "%02x%s", mac.mAddress[i], (i + 1 == mac.mLength) ? "" : ":");
+        }
+
+        fprintf(file, "\"%s\n", (&node == tail) ? "" : ",");
     }
     fprintf(file, "  },\n");
 

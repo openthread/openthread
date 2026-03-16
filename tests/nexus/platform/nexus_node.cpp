@@ -124,6 +124,7 @@ void Node::SendEchoRequest(const Ip6::Address &aDestination,
 
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetHopLimit(aHopLimit);
+    messageInfo.mAllowZeroHopLimit = true;
 
     if (aSrcAddress != nullptr)
     {
@@ -145,21 +146,24 @@ void Node::HandleIp6Receive(otMessage *aMessage, void *aContext)
 
 void Node::HandleReceive(otMessage *aMessage)
 {
-    uint16_t           length = otMessageGetLength(aMessage);
-    uint8_t            buffer[1500];
-    const Ip6::Header *header;
+    uint16_t     length = otMessageGetLength(aMessage);
+    uint8_t      buffer[1500];
+    Ip6::Header *header;
 
     VerifyOrExit(length <= sizeof(buffer));
     VerifyOrQuit(otMessageRead(aMessage, 0, buffer, length) == length);
 
     VerifyOrExit(length >= sizeof(Ip6::Header));
-    header = reinterpret_cast<const Ip6::Header *>(buffer);
+    header = reinterpret_cast<Ip6::Header *>(buffer);
 
     // Forward packets to InfraIf if they are intended for the backbone.
     // We avoid forwarding link-local and realm-local scope packets.
 
     VerifyOrExit(mInfraIf.IsInitialized());
     VerifyOrExit(header->GetHopLimit() > 1);
+
+    header->SetHopLimit(header->GetHopLimit() - 1);
+
     VerifyOrExit(header->GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
 
     Core::Get().SetActiveNode(this);

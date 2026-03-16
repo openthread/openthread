@@ -249,7 +249,8 @@ void InfraIf::SendIp6(const Ip6::Address &aSrcAddress,
 void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
                               const Ip6::Address &aDestAddress,
                               uint16_t            aIdentifier,
-                              uint16_t            aPayloadSize)
+                              uint16_t            aPayloadSize,
+                              uint8_t             aHopLimit)
 {
     Message          *message;
     Ip6::Header       ip6Header;
@@ -262,7 +263,7 @@ void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
     ip6Header.InitVersionTrafficClassFlow();
     ip6Header.SetPayloadLength(sizeof(Ip6::Icmp::Header) + aPayloadSize);
     ip6Header.SetNextHeader(Ip6::kProtoIcmp6);
-    ip6Header.SetHopLimit(64);
+    ip6Header.SetHopLimit(aHopLimit);
     ip6Header.SetSource(aSrcAddress);
     ip6Header.SetDestination(aDestAddress);
 
@@ -384,11 +385,15 @@ void InfraIf::Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMess
         // We also deliver generic IPv6 packets to the stack if they are NOT ICMPv6 ND packets.
         // (ND packets were already delivered via otPlatInfraIfRecvIcmp6Nd above).
         OwnedPtr<Message> messagePtr;
+        Ip6::Header       updatedHeader = aHeader;
 
-        messagePtr.Reset(node.Get<Ip6::Ip6>().NewMessage());
+        VerifyOrExit(updatedHeader.GetHopLimit() > 1);
+        updatedHeader.SetHopLimit(updatedHeader.GetHopLimit() - 1);
+
+        messagePtr.Reset(aMessage.Clone());
         VerifyOrQuit(messagePtr != nullptr);
 
-        SuccessOrQuit(messagePtr->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
+        messagePtr->Write(0, updatedHeader);
         messagePtr->SetOrigin(Message::kOriginHostUntrusted);
         messagePtr->SetLoopbackToHostAllowed(false);
 

@@ -345,7 +345,6 @@ public:
 #endif
 
 private:
-    static constexpr uint8_t kDefaultHopLimit   = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
     static constexpr uint8_t kReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
     static constexpr uint16_t kMinimalMtu = 1280;

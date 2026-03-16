@@ -652,7 +652,8 @@ void Test9_2_7(void)
      * - Pass Criteria: The DUT MUST respond with an ICMPv6 Echo Reply.
      */
 
-    nexus.SendAndVerifyEchoRequest(router, leader.Get<Mle::Mle>().GetMeshLocalEid(), 0, 0, kEchoTimeout);
+    nexus.SendAndVerifyEchoRequest(router, leader.Get<Mle::Mle>().GetMeshLocalEid(), 0, Ip6::kDefaultHopLimit,
+                                   kEchoTimeout);
 
     nexus.SaveTestInfo("test_1_1_9_2_7.json");
 }

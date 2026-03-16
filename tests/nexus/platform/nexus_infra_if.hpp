@@ -65,7 +65,8 @@ public:
     void SendEchoRequest(const Ip6::Address &aSrcAddress,
                          const Ip6::Address &aDestAddress,
                          uint16_t            aIdentifier,
-                         uint16_t            aPayloadSize);
+                         uint16_t            aPayloadSize,
+                         uint8_t             aHopLimit = Ip6::kDefaultHopLimit);
     void SendUdp(const Ip6::Address &aSrcAddress,
                  const Ip6::Address &aDestAddress,
                  uint16_t            aSourcePort,

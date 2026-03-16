@@ -67,11 +67,6 @@ static constexpr uint32_t kStabilizationTime = 10 * 1000;
 static constexpr uint32_t kRouterIdExpirationTimeInSec = 580;
 
 /**
- * Default hop limit for IPv6 packets.
- */
-static constexpr uint8_t kDefaultHopLimit = 64;
-
-/**
  * ICMPv6 Echo Request identifiers used in different steps.
  */
 static constexpr uint16_t kIcmpIdentifierStep6  = 0x1234;
@@ -212,7 +207,8 @@ void Test5_3_10(void)
      *     packet to Router_1.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, router1.FindMatchingAddress(kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, router1.FindMatchingAddress(kPrefix1), 0, Ip6::kDefaultHopLimit,
+                                   kEchoResponseTime);
 
     Log("Step 4: Border Router");
 
@@ -230,7 +226,7 @@ void Test5_3_10(void)
      *   - The IPv6 Destination address MUST be the RLOC of the destination.
      */
 
-    nexus.SendAndVerifyEchoRequest(br, med1.FindMatchingAddress(kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(br, med1.FindMatchingAddress(kPrefix1), 0, Ip6::kDefaultHopLimit, kEchoResponseTime);
 
     Log("Step 5: MED_1");
 
@@ -242,7 +238,8 @@ void Test5_3_10(void)
      *   - The DUT MUST forward the ICMPv6 Echo Reply to MED_1.
      */
 
-    nexus.SendAndVerifyEchoRequest(med1, router1.FindMatchingAddress(kPrefix1), 0, kDefaultHopLimit, kEchoResponseTime);
+    nexus.SendAndVerifyEchoRequest(med1, router1.FindMatchingAddress(kPrefix1), 0, Ip6::kDefaultHopLimit,
+                                   kEchoResponseTime);
 
     nexus.SaveTestInfo("test_1_1_5_3_10.json");
 

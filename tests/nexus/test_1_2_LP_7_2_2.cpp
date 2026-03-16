@@ -255,7 +255,8 @@ void Test1_2_LP_7_2_2(void)
     Node *nodes[] = {&sed1, &sed2, &sed3, &ssed1, &ssed2, &ssed3};
     for (Node *node : nodes)
     {
-        nexus.SendAndVerifyEchoRequest(*node, leader.Get<Mle::Mle>().GetLinkLocalAddress(), 0, 0, kEchoTimeout);
+        nexus.SendAndVerifyEchoRequest(*node, leader.Get<Mle::Mle>().GetLinkLocalAddress(), 0, Ip6::kDefaultHopLimit,
+                                       kEchoTimeout);
     }
 
     /**

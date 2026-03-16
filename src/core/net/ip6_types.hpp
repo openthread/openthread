@@ -63,6 +63,11 @@ static constexpr uint8_t kProtoNone     = OT_IP6_PROTO_NONE;     ///< No Next He
 static constexpr uint8_t kProtoDstOpts  = OT_IP6_PROTO_DST_OPTS; ///< Destination Options for IPv6
 
 /**
+ * The default hop limit value.
+ */
+static constexpr uint8_t kDefaultHopLimit = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
+
+/**
  * The max datagram length (in bytes) of an IPv6 message.
  */
 static constexpr uint16_t kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;

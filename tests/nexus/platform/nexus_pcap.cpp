@@ -27,6 +27,7 @@
  */
 
 #include "nexus_pcap.hpp"
+#include "nexus_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -226,8 +227,10 @@ void Pcap::WritePacket(const otPlatInfraIfLinkLayerAddress &aSrcAddr,
     VerifyOrExit(mFile != nullptr);
 
     ClearAllBytes(ethHeader);
-    memcpy(ethHeader.mDst, aDstAddr.mAddress, 6);
-    memcpy(ethHeader.mSrc, aSrcAddr.mAddress, 6);
+    VerifyOrQuit(aDstAddr.mLength >= sizeof(ethHeader.mDst), "Destination MAC address length is less than expected");
+    memcpy(ethHeader.mDst, aDstAddr.mAddress, sizeof(ethHeader.mDst));
+    VerifyOrQuit(aSrcAddr.mLength >= sizeof(ethHeader.mSrc), "Source MAC address length is less than expected");
+    memcpy(ethHeader.mSrc, aSrcAddr.mAddress, sizeof(ethHeader.mSrc));
     ethHeader.mType = BigEndian::HostSwap16(kEtherTypeIPv6);
 
     packetLen        = sizeof(ethHeader) + aLength;

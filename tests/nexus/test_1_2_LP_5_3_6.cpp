@@ -65,11 +65,6 @@ static constexpr uint32_t kStabilizationTime = 10 * 1000;
 static constexpr uint16_t kEchoPayloadSize = 10;
 
 /**
- * Default hop limit for IPv6 packets.
- */
-static constexpr uint8_t kDefaultHopLimit = 64;
-
-/**
  * ICMPv6 Echo Request identifier for initial connectivity check.
  */
 static constexpr uint16_t kEchoIdInitial = 1;
@@ -189,7 +184,8 @@ void Test1_2_LP_5_3_6(void)
      */
     Log("Step 4: SSED_1");
 
-    leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdInitial, kEchoPayloadSize, kDefaultHopLimit);
+    leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdInitial, kEchoPayloadSize,
+                           Ip6::kDefaultHopLimit);
     nexus.AdvanceTime(kStabilizationTime);
 
     /**
@@ -228,7 +224,8 @@ void Test1_2_LP_5_3_6(void)
      */
     Log("Step 7: Leader");
 
-    leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdAsMed, kEchoPayloadSize, kDefaultHopLimit);
+    leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdAsMed, kEchoPayloadSize,
+                           Ip6::kDefaultHopLimit);
     nexus.AdvanceTime(kStabilizationTime);
 
     /**
@@ -284,7 +281,8 @@ void Test1_2_LP_5_3_6(void)
      */
     Log("Step 12: SSED_1");
 
-    leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdAsSsed, kEchoPayloadSize, kDefaultHopLimit);
+    leader.SendEchoRequest(ssed1.Get<Mle::Mle>().GetMeshLocalEid(), kEchoIdAsSsed, kEchoPayloadSize,
+                           Ip6::kDefaultHopLimit);
     nexus.AdvanceTime(kStabilizationTime);
 
     nexus.SaveTestInfo("test_1_2_LP_5_3_6.json");
