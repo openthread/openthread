@@ -247,7 +247,6 @@ private:
         uint8_t                   mRetransmissionCount; // Number of retransmissions
     };
 
-    Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
     void     DequeueMessage(Message &aMessage);
     Error    SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
