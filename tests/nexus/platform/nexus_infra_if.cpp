@@ -43,9 +43,9 @@ InfraIf::InfraIf(void)
 
 void InfraIf::Init(Node &aNode)
 {
-    Ip6::Address                  address;
-    otPlatInfraIfLinkLayerAddress mac;
-    Ip6::InterfaceIdentifier      iid;
+    Ip6::Address             address;
+    LinkLayerAddress         mac;
+    Ip6::InterfaceIdentifier iid;
 
     mIfIndex = 1;
     mNode    = &aNode;
@@ -188,9 +188,9 @@ exit:
 
 void InfraIf::HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio)
 {
-    Ip6::Prefix                   prefix;
-    Ip6::Address                  address;
-    otPlatInfraIfLinkLayerAddress mac;
+    Ip6::Prefix      prefix;
+    Ip6::Address     address;
+    LinkLayerAddress mac;
 
     VerifyOrExit(aPio.IsAutoAddrConfigFlagSet());
 
@@ -437,7 +437,7 @@ void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
     mPendingTxQueue.Enqueue(*replyMessage);
 }
 
-void InfraIf::GetLinkLayerAddress(otPlatInfraIfLinkLayerAddress &aLinkLayerAddress) const
+void InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const
 {
     // Use a unique MAC address based on Node ID
     ClearAllBytes(aLinkLayerAddress);

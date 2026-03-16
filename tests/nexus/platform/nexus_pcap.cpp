@@ -104,7 +104,7 @@ void Pcap::Open(const char *aFilename)
     ClearAllBytes(idb);
     idb.mBlockType         = LittleEndian::HostSwap(kPcapngIdbType);
     idb.mBlockTotalLength  = LittleEndian::HostSwap(static_cast<uint32_t>(sizeof(idb)));
-    idb.mLinkType          = LittleEndian::HostSwap(static_cast<uint16_t>(kPcapngLinkTypeIPv6));
+    idb.mLinkType          = LittleEndian::HostSwap(static_cast<uint16_t>(kPcapngLinkTypeEthernet));
     idb.mSnapLen           = LittleEndian::HostSwap(kPcapngSnapLen);
     idb.mBlockTotalLength2 = idb.mBlockTotalLength;
     VerifyOrExit(fwrite(&idb, sizeof(idb), 1, mFile) == 1, Close());
@@ -201,34 +201,55 @@ exit:
     return;
 }
 
-void Pcap::WritePacket(const uint8_t *aBuffer, uint16_t aLength, uint64_t aTimeUs)
+void Pcap::WritePacket(const otPlatInfraIfLinkLayerAddress &aSrcAddr,
+                       const otPlatInfraIfLinkLayerAddress &aDstAddr,
+                       const uint8_t                       *aBuffer,
+                       uint16_t                             aLength,
+                       uint64_t                             aTimeUs)
 {
     Epb epb;
 
+    OT_TOOL_PACKED_BEGIN
+    struct EthernetHeader
+    {
+        uint8_t  mDst[6];
+        uint8_t  mSrc[6];
+        uint16_t mType;
+    } OT_TOOL_PACKED_END;
+    EthernetHeader ethHeader;
+
+    uint32_t packetLen;
     uint32_t paddedLen;
     uint32_t blockTotalLength;
     uint32_t padding = 0;
 
     VerifyOrExit(mFile != nullptr);
 
-    paddedLen        = (aLength + 3) & ~3u;
+    ClearAllBytes(ethHeader);
+    memcpy(ethHeader.mDst, aDstAddr.mAddress, 6);
+    memcpy(ethHeader.mSrc, aSrcAddr.mAddress, 6);
+    ethHeader.mType = BigEndian::HostSwap16(kEtherTypeIPv6);
+
+    packetLen        = sizeof(ethHeader) + aLength;
+    paddedLen        = (packetLen + 3) & ~3u;
     blockTotalLength = sizeof(epb) + paddedLen + sizeof(uint32_t);
 
     ClearAllBytes(epb);
     epb.mBlockType        = LittleEndian::HostSwap(kPcapngEpbType);
     epb.mBlockTotalLength = LittleEndian::HostSwap(blockTotalLength);
-    epb.mInterfaceId      = LittleEndian::HostSwap(1u); // Use Interface ID 1 for IPv6
+    epb.mInterfaceId      = LittleEndian::HostSwap(1u); // Use Interface ID 1 for Ethernet
     epb.mTimestampHigh    = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs >> 32));
     epb.mTimestampLow     = LittleEndian::HostSwap(static_cast<uint32_t>(aTimeUs & 0xffffffff));
-    epb.mCapturedLen      = LittleEndian::HostSwap(static_cast<uint32_t>(aLength));
-    epb.mOriginalLen      = LittleEndian::HostSwap(static_cast<uint32_t>(aLength));
+    epb.mCapturedLen      = LittleEndian::HostSwap(packetLen);
+    epb.mOriginalLen      = LittleEndian::HostSwap(packetLen);
     VerifyOrExit(fwrite(&epb, sizeof(epb), 1, mFile) == 1, Close());
 
+    VerifyOrExit(fwrite(&ethHeader, sizeof(ethHeader), 1, mFile) == 1, Close());
     VerifyOrExit(fwrite(aBuffer, aLength, 1, mFile) == 1, Close());
 
-    if (paddedLen > aLength)
+    if (paddedLen > packetLen)
     {
-        VerifyOrExit(fwrite(&padding, paddedLen - aLength, 1, mFile) == 1, Close());
+        VerifyOrExit(fwrite(&padding, paddedLen - packetLen, 1, mFile) == 1, Close());
     }
 
     VerifyOrExit(fwrite(&epb.mBlockTotalLength, sizeof(epb.mBlockTotalLength), 1, mFile) == 1, Close());

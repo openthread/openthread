@@ -32,6 +32,7 @@
 #include <cstdint>
 #include <cstdio>
 
+#include <openthread/platform/infra_if.h>
 #include <openthread/platform/radio.h>
 
 namespace ot {
@@ -66,11 +67,17 @@ public:
     /**
      * Writes a packet to the pcapng file.
      *
-     * @param[in] aBuffer  The packet buffer to write.
-     * @param[in] aLength  The packet length.
-     * @param[in] aTimeUs  The timestamp in microseconds.
+     * @param[in] aSrcAddr  The source link-layer address.
+     * @param[in] aDstAddr  The destination link-layer address.
+     * @param[in] aBuffer   The packet buffer to write.
+     * @param[in] aLength   The packet length.
+     * @param[in] aTimeUs   The timestamp in microseconds.
      */
-    void WritePacket(const uint8_t *aBuffer, uint16_t aLength, uint64_t aTimeUs);
+    void WritePacket(const otPlatInfraIfLinkLayerAddress &aSrcAddr,
+                     const otPlatInfraIfLinkLayerAddress &aDstAddr,
+                     const uint8_t                       *aBuffer,
+                     uint16_t                             aLength,
+                     uint64_t                             aTimeUs);
 
 private:
     static constexpr uint32_t kPcapngShbType            = 0x0a0d0d0a;
@@ -81,7 +88,9 @@ private:
     static constexpr uint32_t kPcapngEpbType            = 0x00000006;
     static constexpr uint32_t kPcapngSnapLen            = 65535;
     static constexpr uint32_t kPcapngLinkTypeIeee802154 = 283; // DLT_IEEE802_15_4_TAP
-    static constexpr uint32_t kPcapngLinkTypeIPv6       = 101; // LINKTYPE_RAW
+    static constexpr uint32_t kPcapngLinkTypeEthernet   = 1;   // LINKTYPE_ETHERNET
+
+    static constexpr uint16_t kEtherTypeIPv6 = 0x86dd;
 
     static constexpr uint8_t kTapVersion = 0;
 

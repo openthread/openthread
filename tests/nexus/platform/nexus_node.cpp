@@ -164,7 +164,16 @@ void Node::HandleReceive(otMessage *aMessage)
 
     Core::Get().SetActiveNode(this);
 
+    if (header->GetDestination().IsMulticast())
+    {
+        VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary());
+    }
+
     VerifyOrExit(Get<NetworkData::Leader>().IsOnMesh(header->GetSource()));
+
+    // Only forward if source is NOT Link-Local and NOT Mesh-Local.
+    VerifyOrExit(!header->GetSource().IsLinkLocalUnicastOrMulticast());
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(header->GetSource()));
 
     mInfraIf.SendIp6(header->GetSource(), header->GetDestination(), buffer, length);
 
@@ -197,6 +206,26 @@ const Ip6::Address &Node::FindMatchingAddress(const char *aPrefix)
     }
 
     VerifyOrQuit(matchedAddress != nullptr, "no matching address found");
+
+    return *matchedAddress;
+}
+
+const Ip6::Address &Node::FindGlobalAddress(void)
+{
+    const Ip6::Address *matchedAddress = nullptr;
+
+    for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+    {
+        const Ip6::Address &address = unicastAddress.GetAddress();
+
+        if (address.GetScope() == Ip6::Address::kGlobalScope && !Get<Mle::Mle>().IsMeshLocalAddress(address))
+        {
+            matchedAddress = &address;
+            break;
+        }
+    }
+
+    VerifyOrQuit(matchedAddress != nullptr, "no global address found");
 
     return *matchedAddress;
 }

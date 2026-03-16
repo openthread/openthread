@@ -168,6 +168,18 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     }
     fprintf(file, "  },\n");
 
+    fprintf(file, "  \"ethaddrs\": {\n");
+    for (Node &node : mNodes)
+    {
+        InfraIf::LinkLayerAddress mac;
+
+        node.mInfraIf.GetLinkLayerAddress(mac);
+        fprintf(file, "    \"%u\": \"%02x:%02x:%02x:%02x:%02x:%02x\"%s\n", node.GetInstance().GetId(), mac.mAddress[0],
+                mac.mAddress[1], mac.mAddress[2], mac.mAddress[3], mac.mAddress[4], mac.mAddress[5],
+                (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
     fprintf(file, "  \"rloc16s\": {\n");
     for (Node &node : mNodes)
     {
@@ -547,7 +559,40 @@ void Core::ProcessInfraIf(Node &aNode)
         VerifyOrQuit(message->GetLength() >= sizeof(Ip6::Header) && header.IsVersion6());
 
         SuccessOrQuit(msgData.SetFrom(*message, 0, message->GetLength()));
-        mPcap.WritePacket(msgData.GetBytes(), msgData.GetLength(), mNow);
+
+        {
+            InfraIf::LinkLayerAddress srcMac;
+            InfraIf::LinkLayerAddress dstMac;
+
+            aNode.mInfraIf.GetLinkLayerAddress(srcMac);
+
+            if (header.GetDestination().IsMulticast())
+            {
+                dstMac.mLength     = 6;
+                dstMac.mAddress[0] = 0x33;
+                dstMac.mAddress[1] = 0x33;
+                dstMac.mAddress[2] = header.GetDestination().mFields.m8[12];
+                dstMac.mAddress[3] = header.GetDestination().mFields.m8[13];
+                dstMac.mAddress[4] = header.GetDestination().mFields.m8[14];
+                dstMac.mAddress[5] = header.GetDestination().mFields.m8[15];
+            }
+            else
+            {
+                Node *dstNode = FindNodeByInfraIfAddress(header.GetDestination());
+
+                if (dstNode != nullptr)
+                {
+                    dstNode->mInfraIf.GetLinkLayerAddress(dstMac);
+                }
+                else
+                {
+                    dstMac.mLength = 6;
+                    memset(dstMac.mAddress, 0xff, 6);
+                }
+            }
+
+            mPcap.WritePacket(srcMac, dstMac, msgData.GetBytes(), msgData.GetLength(), mNow);
+        }
 
         if (!header.GetDestination().IsMulticast())
         {
