@@ -129,7 +129,7 @@ private:
     OwningList<Node>      mNodes;
     Pcap                  mPcap;
     Array<NetworkKey, 16> mNetworkKeys;
-    Array<TestVar, 16>    mTestVars;
+    Array<TestVar, 128>   mTestVars;
     uint16_t              mCurNodeId;
     bool                  mPendingAction;
     uint64_t              mNow;
