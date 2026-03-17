@@ -180,6 +180,7 @@ DEFAULT_TESTS=(
     "1_2_MATN_TC_12"
     "1_2_MATN_TC_15"
     "1_2_MATN_TC_16"
+    "1_2_MATN_TC_19"
 )
 
 # Use provided arguments or the default test list

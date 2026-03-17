@@ -269,6 +269,7 @@ def apply_patches():
     Layer.get_field = patched_get_field
 
     layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['mle.tlv.addr_reg_ipv6'] = layer_fields._list(layer_fields._ipv6_addr)
     layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series_flags'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_status_sub_tlv'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.query_id'] = layer_fields._auto

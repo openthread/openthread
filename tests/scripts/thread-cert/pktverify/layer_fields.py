@@ -722,6 +722,9 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
         field_uri = '.'.join([layer_name] + secs[1:])
         layer_depth = 1
 
+    if field_uri == 'mle.tlv.addr_reg':
+        field_uri = 'mle.tlv.addr_reg_ipv6'
+
     if is_layer_field(field_uri):
         candidate_layers = _get_candidate_layers(packet, layer_name)
         for layers in candidate_layers:

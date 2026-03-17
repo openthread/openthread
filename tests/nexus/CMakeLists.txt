@@ -245,6 +245,7 @@ ot_nexus_test(1_2_MATN_TC_10 "cert;nexus")
 ot_nexus_test(1_2_MATN_TC_12 "cert;nexus")
 ot_nexus_test(1_2_MATN_TC_15 "cert;nexus")
 ot_nexus_test(1_2_MATN_TC_16 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_19 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
