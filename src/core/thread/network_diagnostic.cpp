@@ -435,22 +435,8 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kChannelPages:
-    {
-        ChannelPagesTlv tlv;
-        uint8_t         length = 0;
-
-        tlv.Init();
-
-        for (uint8_t page : Radio::kSupportedChannelPages)
-        {
-            tlv.GetChannelPages()[length++] = page;
-        }
-
-        tlv.SetLength(length);
-        error = tlv.AppendTo(aMessage);
-
+        error = Tlv::Append<ChannelPagesTlv>(aMessage, Radio::kSupportedChannelPages, Radio::kNumChannelPages);
         break;
-    }
 
     case Tlv::kNonPreferredChannels:
     {
@@ -1172,6 +1158,14 @@ exit:
     return error;
 }
 
+void Client::ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo)
+{
+    OffsetRange offsetRange = aTlvInfo.GetValueOffsetRange();
+
+    offsetRange.ShrinkLength(GetArrayLength(aDiagData.m8));
+    aDiagData.mCount = static_cast<uint8_t>(aMessage.ReadBytes(offsetRange, aDiagData.m8));
+}
+
 void Client::ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
 {
     aMacCounters.mIfInUnknownProtos  = aMacCountersTlv.GetIfInUnknownProtos();
@@ -1272,8 +1266,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
                           "NetworkData array in `otNetworkDiagTlv` is too small");
 
             VerifyOrExit(tlvInfo.GetLength() <= NetworkData::NetworkData::kMaxSize, error = kErrorParse);
-            aDiagTlv.mData.mNetworkData.mCount = static_cast<uint8_t>(tlvInfo.GetLength());
-            aMessage.ReadBytes(tlvInfo.GetValueOffsetRange(), aDiagTlv.mData.mNetworkData.m8);
+            ReadDiagData(aDiagTlv.mData.mNetworkData, aMessage, tlvInfo);
             break;
 
         case Tlv::kIp6AddressList:
@@ -1344,10 +1337,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         }
 
         case Tlv::kChannelPages:
-            aDiagTlv.mData.mChannelPages.mCount =
-                static_cast<uint8_t>(Min(tlvInfo.GetLength(), GetArrayLength(aDiagTlv.mData.mChannelPages.m8)));
-            aMessage.ReadBytes(tlvInfo.GetValueOffset(), aDiagTlv.mData.mChannelPages.m8,
-                               aDiagTlv.mData.mChannelPages.mCount);
+            ReadDiagData(aDiagTlv.mData.mChannelPages, aMessage, tlvInfo);
             break;
 
         case Tlv::kMaxChildTimeout:

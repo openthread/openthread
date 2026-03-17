@@ -281,6 +281,7 @@ public:
     uint16_t GetLastQueryId(void) const { return mQueryId; }
 
 private:
+    typedef otNetworkDiagData        DiagData;
     typedef otNetworkDiagIp6AddrList Ip6AddrList;
     typedef otNetworkDiagMacCounters MacCounters;
 
@@ -302,6 +303,7 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
+    static void ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo);
     static void ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
     static void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, MacCounters &aMacCounters);
 

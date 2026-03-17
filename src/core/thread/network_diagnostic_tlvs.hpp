@@ -591,43 +591,9 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Channel Pages TLV generation and parsing.
+ * Defines Channel Pages TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class ChannelPagesTlv : public Tlv, public TlvInfo<Tlv::kChannelPages>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kChannelPages);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const
-    {
-        // At least one channel page must be included.
-        return GetLength() >= 1;
-    }
-
-    /**
-     * Returns a pointer to the list of Channel Pages.
-     *
-     * @returns A pointer to the list of Channel Pages.
-     */
-    uint8_t *GetChannelPages(void) { return mChannelPages; }
-
-private:
-    uint8_t mChannelPages[Radio::kNumChannelPages];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kChannelPages> ChannelPagesTlv;
 
 /**
  * Defines Type List TLV constants and types.
