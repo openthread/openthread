@@ -281,6 +281,7 @@ public:
 
 private:
     typedef otNetworkDiagData        DiagData;
+    typedef otNetworkDiagChildTable  ChildTable;
     typedef otNetworkDiagIp6AddrList Ip6AddrList;
 
     Error SendCommand(Uri                   aUri,
@@ -301,8 +302,9 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    static void ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo);
-    static void ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
+    static void  ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo);
+    static Error ParseChildTable(ChildTable &aChildTable, const Message &aMessage, OffsetRange aOffsetRange);
+    static void  ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *UriToString(Uri aUri);

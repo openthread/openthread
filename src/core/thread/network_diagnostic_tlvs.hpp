@@ -369,101 +369,69 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Child Table Entry generation and parsing.
+ * Implements Child Table TLV Entry generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTableEntry : public Clearable<ChildTableEntry>
+class ChildTableTlvEntry : public Clearable<ChildTableTlvEntry>
 {
 public:
+    typedef otNetworkDiagChildEntry ParseInfo; ///< Parse entry info
+
+#if OPENTHREAD_FTD
     /**
-     * Returns the Timeout value.
+     * Initializes the `ChildTableTlvEntry` from a given `Child` object.
      *
-     * @returns The Timeout value.
+     * @param[in] aChild  The `Child` to initialize from.
      */
-    uint8_t GetTimeout(void) const
-    {
-        return static_cast<uint8_t>(ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()));
-    }
+    void InitFrom(const Child &aChild);
+#endif
 
     /**
-     * Sets the Timeout value.
+     * Parses the TLV entry and populates the information in a given `ParseInfo` struct.
      *
-     * @param[in]  aTimeout  The Timeout value.
+     * @param[out] aParseInfo   The `ParseInfo` structure to populate.
      */
-    void SetTimeout(uint8_t aTimeout)
-    {
-        SetTimeoutChildId(UpdateBits<uint16_t, kTimeoutMask>(GetTimeoutChildId(), aTimeout));
-    }
+    void Parse(ParseInfo &aParseInfo) const;
 
     /**
-     * The Link Quality value.
+     * Determines the timeout value (in seconds) from a given exponent.
      *
-     * @returns The Link Quality value.
+     * The timeout is expressed as `2^(exponent - 4)` seconds.
+     *
+     * @param[in] aExponent  The exponent value.
+     *
+     * @returns The timeout value (in seconds).
      */
-    LinkQuality GetLinkQuality(void) const
-    {
-        return static_cast<LinkQuality>(ReadBits<uint16_t, kLqiMask>(GetTimeoutChildId()));
-    }
+    static uint32_t DetermineTimeoutFromExponent(uint8_t aExponent);
 
+#if OPENTHREAD_FTD
     /**
-     * Set the Link Quality value.
+     * Determines the exponent to use for a given timeout value (in seconds).
      *
-     * @param[in] aLinkQuality  The Link Quality value.
-     */
-    void SetLinkQuality(LinkQuality aLinkQuality)
-    {
-        SetTimeoutChildId(UpdateBits<uint16_t, kLqiMask>(GetTimeoutChildId(), aLinkQuality));
-    }
-
-    /**
-     * Returns the Child ID value.
+     * @param[in] aTimeout  The timeout value (in seconds).
      *
-     * @returns The Child ID value.
+     * @returns The corresponding exponent.
      */
-    uint16_t GetChildId(void) const { return ReadBits<uint16_t, kChildIdMask>(GetTimeoutChildId()); }
-
-    /**
-     * Sets the Child ID value.
-     *
-     * @param[in]  aChildId  The Child ID value.
-     */
-    void SetChildId(uint16_t aChildId)
-    {
-        SetTimeoutChildId(UpdateBits<uint16_t, kChildIdMask>(GetTimeoutChildId(), aChildId));
-    }
-
-    /**
-     * Returns the Device Mode
-     *
-     * @returns The Device Mode
-     */
-    Mle::DeviceMode GetMode(void) const { return Mle::DeviceMode(mMode); }
-
-    /**
-     * Sets the Device Mode.
-     *
-     * @param[in]  aMode  The Device Mode.
-     */
-    void SetMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
+    static uint8_t DetermineExponentFromTimeout(uint32_t aTimeout);
+#endif
 
 private:
     //             1                   0
     //   5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  | Timeout |LQI|     Child ID    |
+    //  |TmoutExp |ILQ|     Child ID    |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    static constexpr uint8_t  kTimeoutOffset = 11;
-    static constexpr uint8_t  kLqiOffset     = 9;
-    static constexpr uint8_t  kChildIdOffset = 0;
-    static constexpr uint16_t kTimeoutMask   = 0x1f << kTimeoutOffset;
-    static constexpr uint16_t kLqiMask       = 0x3 << kLqiOffset;
-    static constexpr uint16_t kChildIdMask   = 0x1ff << kChildIdOffset;
+    static constexpr uint8_t  kTimeoutOffset      = 11;
+    static constexpr uint8_t  kIlqOffset          = 9;
+    static constexpr uint8_t  kChildIdOffset      = 0;
+    static constexpr uint16_t kTimeoutMask        = 0x1f << kTimeoutOffset;
+    static constexpr uint16_t kIlqMask            = 0x3 << kIlqOffset;
+    static constexpr uint16_t kChildIdMask        = 0x1ff << kChildIdOffset;
+    static constexpr uint8_t  kTimeoutExponentMin = 4;
+    static constexpr uint8_t  kTimeoutExponentMax = 0x1f;
 
-    uint16_t GetTimeoutChildId(void) const { return BigEndian::HostSwap16(mTimeoutChildId); }
-    void     SetTimeoutChildId(uint16_t aTimeoutChildIf) { mTimeoutChildId = BigEndian::HostSwap16(aTimeoutChildIf); }
-
-    uint16_t mTimeoutChildId;
+    uint16_t mTimeoutIlqChildId;
     uint8_t  mMode;
 } OT_TOOL_PACKED_END;
 

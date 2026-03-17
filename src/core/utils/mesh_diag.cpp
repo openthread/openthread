@@ -556,20 +556,23 @@ exit:
 
 Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
 {
-    Error           error = kErrorNone;
-    ChildTableEntry entry;
+    Error                         error = kErrorNotFound;
+    ChildTableTlvEntry            entry;
+    ChildTableTlvEntry::ParseInfo info;
 
-    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+    VerifyOrExit(mMessage != nullptr);
 
-    VerifyOrExit(mMessage->Read(mOffsetRange, entry) == kErrorNone, error = kErrorNotFound);
-    mOffsetRange.AdvanceOffset(sizeof(ChildTableEntry));
+    SuccessOrExit(mMessage->Read(mOffsetRange, entry));
+    mOffsetRange.AdvanceOffset(sizeof(ChildTableTlvEntry));
 
-    aChildInfo.mRloc16 = mParentRloc16 + entry.GetChildId();
-    entry.GetMode().Get(aChildInfo.mMode);
-    aChildInfo.mLinkQuality = entry.GetLinkQuality();
+    entry.Parse(info);
 
+    aChildInfo.mRloc16         = mParentRloc16 + info.mChildId;
+    aChildInfo.mMode           = info.mMode;
+    aChildInfo.mLinkQuality    = info.mLinkQuality;
     aChildInfo.mIsThisDevice   = mMessage->Get<Mle::Mle>().HasRloc16(aChildInfo.mRloc16);
     aChildInfo.mIsBorderRouter = mMessage->Get<NetworkData::Leader>().ContainsBorderRouterWithRloc(aChildInfo.mRloc16);
+    error                      = kErrorNone;
 
 exit:
     return error;

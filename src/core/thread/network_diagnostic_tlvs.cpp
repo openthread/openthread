@@ -39,6 +39,69 @@ namespace ot {
 namespace NetworkDiagnostic {
 
 //---------------------------------------------------------------------------------------------------------------------
+// ChildTableTlvEntry
+
+#if OPENTHREAD_FTD
+
+void ChildTableTlvEntry::InitFrom(const Child &aChild)
+{
+    uint16_t encoded = 0;
+
+    //             1                   0
+    //   5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |TmoutExp |ILQ|     Child ID    |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    WriteBits<uint16_t, kTimeoutMask>(encoded, DetermineExponentFromTimeout(aChild.GetTimeout()));
+    WriteBits<uint16_t, kIlqMask>(encoded, aChild.GetLinkQualityIn());
+    WriteBits<uint16_t, kChildIdMask>(encoded, Mle::ChildIdFromRloc16(aChild.GetRloc16()));
+
+    mTimeoutIlqChildId = BigEndian::HostSwap16(encoded);
+    mMode              = aChild.GetDeviceMode().Get();
+}
+
+uint8_t ChildTableTlvEntry::DetermineExponentFromTimeout(uint32_t aTimeout)
+{
+    // The timeout is expressed as `2^(exponent - 4)` seconds. The
+    // parent fills the exponent field with the closest
+    // ceiling value based on the Child Timeout value.
+
+    uint8_t exponent;
+
+    for (exponent = kTimeoutExponentMin; exponent < kTimeoutExponentMax; exponent++)
+    {
+        if (DetermineTimeoutFromExponent(exponent) >= aTimeout)
+        {
+            break;
+        }
+    }
+
+    return exponent;
+}
+
+#endif // OPENTHREAD_FTD
+
+uint32_t ChildTableTlvEntry::DetermineTimeoutFromExponent(uint8_t aExponent)
+{
+    aExponent = Clamp(aExponent, kTimeoutExponentMin, kTimeoutExponentMax);
+
+    return static_cast<uint32_t>(1U) << (aExponent - kTimeoutExponentMin);
+}
+
+void ChildTableTlvEntry::Parse(ParseInfo &aParseInfo) const
+{
+    uint16_t encoded = BigEndian::HostSwap16(mTimeoutIlqChildId);
+
+    ClearAllBytes(aParseInfo);
+
+    aParseInfo.mTimeout     = ReadBits<uint16_t, kTimeoutMask>(encoded);
+    aParseInfo.mLinkQuality = static_cast<LinkQuality>(ReadBits<uint16_t, kIlqMask>(encoded));
+    aParseInfo.mChildId     = ReadBits<uint16_t, kChildIdMask>(encoded);
+    Mle::DeviceMode(mMode).Get(aParseInfo.mMode);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // EnhancedRouteTlvEntry
 
 void EnhancedRouteTlvEntry::InitFrom(const Router &aRouter)

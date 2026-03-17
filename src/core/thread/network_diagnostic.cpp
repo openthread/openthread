@@ -82,24 +82,14 @@ Error Server::AppendChildTable(Message &aMessage)
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        uint8_t         timeout = 0;
-        ChildTableEntry entry;
+        ChildTableTlvEntry entry;
 
         if (++count > kMaxChildEntries)
         {
             break;
         }
 
-        while (static_cast<uint32_t>(1 << timeout) < child.GetTimeout())
-        {
-            timeout++;
-        }
-
-        entry.Clear();
-        entry.SetTimeout(timeout + 4);
-        entry.SetLinkQuality(child.GetLinkQualityIn());
-        entry.SetChildId(Mle::ChildIdFromRloc16(child.GetRloc16()));
-        entry.SetMode(child.GetDeviceMode());
+        entry.InitFrom(child);
 
         SuccessOrExit(error = aMessage.Append(entry));
         SuccessOrExit(error = Tlv::AdjustTlv(aMessage, tlvBookmark));
@@ -1149,6 +1139,31 @@ void Client::ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tl
     aDiagData.mCount = static_cast<uint8_t>(aMessage.ReadBytes(offsetRange, aDiagData.m8));
 }
 
+Error Client::ParseChildTable(ChildTable &aChildTable, const Message &aMessage, OffsetRange aOffsetRange)
+{
+    Error error = kErrorNone;
+
+    // `ChildTable` has a fixed array of Child Table entries. If there
+    // are more entries in the message, we read and return as many as
+    // can fit in array and ignore the rest.
+
+    aChildTable.mCount = 0;
+
+    while (!aOffsetRange.IsEmpty() && (aChildTable.mCount < GetArrayLength(aChildTable.mTable)))
+    {
+        ChildTableTlvEntry entry;
+
+        SuccessOrExit(error = aMessage.Read(aOffsetRange, entry));
+        aOffsetRange.AdvanceOffset(sizeof(ChildTableTlvEntry));
+
+        entry.Parse(aChildTable.mTable[aChildTable.mCount]);
+        aChildTable.mCount++;
+    }
+
+exit:
+    return error;
+}
+
 void Client::ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange)
 {
     aIp6Addrs.mCount = 0;
@@ -1272,39 +1287,8 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             break;
 
         case Tlv::kChildTable:
-        {
-            uint16_t    childInfoLength = GetArrayLength(aDiagTlv.mData.mChildTable.mTable);
-            ChildInfo  *childInfo       = &aDiagTlv.mData.mChildTable.mTable[0];
-            uint8_t    &childCount      = aDiagTlv.mData.mChildTable.mCount;
-            OffsetRange offsetRange;
-
-            VerifyOrExit((tlvInfo.GetLength() % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
-
-            // `DiagTlv` has a fixed array Child Table entries. If there
-            // are more entries in the message, we read and return as
-            // many as can fit in array and ignore the rest.
-
-            childCount  = 0;
-            offsetRange = tlvInfo.GetValueOffsetRange();
-
-            while (!offsetRange.IsEmpty() && (childCount < childInfoLength))
-            {
-                ChildTableEntry entry;
-
-                SuccessOrExit(error = aMessage.Read(offsetRange, entry));
-
-                childInfo->mTimeout     = entry.GetTimeout();
-                childInfo->mLinkQuality = entry.GetLinkQuality();
-                childInfo->mChildId     = entry.GetChildId();
-                entry.GetMode().Get(childInfo->mMode);
-
-                childCount++;
-                childInfo++;
-                offsetRange.AdvanceOffset(sizeof(ChildTableEntry));
-            }
-
+            SuccessOrExit(error = ParseChildTable(aDiagTlv.mData.mChildTable, aMessage, tlvInfo.GetValueOffsetRange()));
             break;
-        }
 
         case Tlv::kChannelPages:
             ReadDiagData(aDiagTlv.mData.mChannelPages, aMessage, tlvInfo);
