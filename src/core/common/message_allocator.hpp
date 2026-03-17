@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/message.hpp"
+#include "common/type_traits.hpp"
 #include "net/ip6_headers.hpp"
 
 namespace ot {
@@ -125,6 +126,53 @@ public:
      * @returns A pointer to the message or `nullptr` if no buffers are available.
      */
     MessageType *NewNetPriorityMessage(void) { return NewMessage(Message::Settings(Message::kPriorityNet)); }
+
+    /**
+     * Creates a copy of a given message.
+     *
+     * The new message will be allocated with the `kReservedHeader` reserved header size.
+     *
+     * @param[in] aMessage  The message to copy.
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     */
+    MessageType *CloneMessage(const MessageType &aMessage)
+    {
+        return AsMessageType(aMessage.Clone(aMessage.GetLength(), kReservedHeader));
+    }
+
+    /**
+     * Creates a copy of a given message without a footer.
+     *
+     * The new message will be allocated with the `kReservedHeader` reserved header size.
+     *
+     * @param[in] aMessage       The message to copy.
+     * @param[in] aFooterLength  The size of the footer to omit from the cloned message.
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     */
+    MessageType *CloneMessageWithoutFooter(const MessageType &aMessage, uint16_t aFooterLength)
+    {
+        return AsMessageType(aMessage.Clone(aMessage.GetLength() - aFooterLength, kReservedHeader));
+    }
+
+    /**
+     * Creates a copy of a given message without a given footer type.
+     *
+     * The new message will be allocated with the `kReservedHeader` reserved header size.
+     *
+     * @tparam FooterType   The footer type to omit from the cloned message.
+     *
+     * @param[in] aMessage  The message to copy.
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     */
+    template <typename FooterType> MessageType *CloneMessageWithout(const MessageType &aMessage)
+    {
+        static_assert(!TypeTraits::IsPointer<FooterType>::kValue, "FooterType must not be a pointer");
+
+        return AsMessageType(aMessage.Clone(aMessage.GetLength() - sizeof(FooterType), kReservedHeader));
+    }
 
 protected:
     MessageAllocator(void) = default;

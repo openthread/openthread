@@ -1018,7 +1018,7 @@ Error CoapBase::CacheLastBlockResponse(Message *aResponse)
 
     FreeLastBlockResponse();
 
-    mLastResponse = AsCoapMessagePtr(aResponse->Clone());
+    mLastResponse = AsCoapMessagePtr(aResponse->Clone<kNoReservedHeader>());
     VerifyOrExit(mLastResponse != nullptr, error = kErrorNoBufs);
 
 exit:
@@ -1549,7 +1549,7 @@ Error CoapBase::PendingRequests::Add(const Msg           &aTxMsg,
 
     cloneLength = aTxMsg.IsConfirmable() ? aTxMsg.mMessage.GetLength() : aTxMsg.GetHeaderSize();
 
-    aRequest.mMessage = AsCoapMessagePtr(aTxMsg.mMessage.Clone(cloneLength));
+    aRequest.mMessage = AsCoapMessagePtr(aTxMsg.mMessage.Clone<kNoReservedHeader>(cloneLength));
     VerifyOrExit(aRequest.HasMessage(), error = kErrorNoBufs);
 
     SuccessOrExit(error = aRequest.AppendMetadataToMessage());
@@ -1688,7 +1688,7 @@ void CoapBase::PendingRequests::RetransmitRequest(const Request &aRequest)
     Message         *clone;
     Ip6::MessageInfo messageInfo;
 
-    clone = AsCoapMessagePtr(aRequest.mMessage->Clone(aRequest.mMessage->GetLength() - sizeof(Request::Metadata)));
+    clone = mCoapBase.CloneMessageWithout<Request::Metadata>(aRequest.GetMessage());
     VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
 
     aRequest.mMetadata.CopyInfoTo(messageInfo);
@@ -1802,7 +1802,7 @@ Error CoapBase::ResponseCache::SendCachedResponse(const Msg &aRxMsg, CoapBase &a
 
     VerifyOrExit(match != nullptr, error = kErrorNotFound);
 
-    response = AsCoapMessagePtr(match->Clone(match->GetLength() - sizeof(ResponseMetadata)));
+    response = aCoapBase.CloneMessageWithout<ResponseMetadata>(*match);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     error = aCoapBase.Transmit(*response, aRxMsg.mMessageInfo);
@@ -1848,7 +1848,7 @@ void CoapBase::ResponseCache::Add(const Msg &aTxMsg, uint32_t aExchangeLifetime)
 
     MaintainCacheSize();
 
-    responseClone = AsCoapMessagePtr(aTxMsg.mMessage.Clone());
+    responseClone = AsCoapMessagePtr(aTxMsg.mMessage.Clone<kNoReservedHeader>());
     VerifyOrExit(responseClone != nullptr);
 
     metadata.mExpireTime  = TimerMilli::GetNow() + aExchangeLifetime;

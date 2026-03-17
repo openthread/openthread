@@ -1584,8 +1584,8 @@ void Client::SaveQueryResponse(Query &aQuery, const Message &aResponseMessage)
     info.ReadFrom(aQuery);
     VerifyOrExit(info.mSavedResponse == nullptr);
 
-    // If `Clone()` fails we let retry or timeout handle the error.
-    info.mSavedResponse = aResponseMessage.Clone();
+    // If clone fails we let retry or timeout handle the error.
+    info.mSavedResponse = aResponseMessage.Clone<kNoReservedHeader>();
 
     UpdateQuery(aQuery, info);
 
@@ -1823,7 +1823,7 @@ Error Client::ReplaceWithSeparateSrvTxtQueries(Query &aQuery)
 
     RecordServerAsLimitedToSingleQuestion(info.mConfig.GetServerSockAddr().GetAddress());
 
-    secondQuery = aQuery.Clone();
+    secondQuery = mSocket.CloneMessage(aQuery);
     VerifyOrExit(secondQuery != nullptr);
 
     info.mQueryType         = kServiceQueryTxt;

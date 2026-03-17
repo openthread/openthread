@@ -361,14 +361,14 @@ bool HandleResource(void *aContext, Uri aUri, Coap::Msg &aMsg)
         SuccessOrQuit(Tlv::Find<MeshCoP::JoinerIidTlv>(aMsg.mMessage, joinerIid));
         Log("  Received `RelayRx` from joiner - port:%u iid:%s", joinerPort, joinerIid.ToString().AsCString());
 
-        msgClone = aMsg.mMessage.Clone();
+        msgClone = aMsg.mMessage.Clone<kNoReservedHeader>();
         VerifyOrQuit(msgClone != nullptr);
         recvContext->mRelayRxMsgs.Enqueue(*msgClone);
         break;
 
     case kUriProxyRx:
         Log("  Received `ProxyRx`");
-        msgClone = aMsg.mMessage.Clone();
+        msgClone = aMsg.mMessage.Clone<kNoReservedHeader>();
         VerifyOrQuit(msgClone != nullptr);
         recvContext->mProxyRxMsgs.Enqueue(*msgClone);
         break;

@@ -4945,8 +4945,9 @@ void Mle::Attacher::SendParentRequest(ParentRequestType aType)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     if (aType == kToSelectedRouter)
     {
-        TxMessage *messageToCurParent = static_cast<TxMessage *>(message->Clone());
+        TxMessage *messageToCurParent;
 
+        messageToCurParent = static_cast<TxMessage *>(Get<Mle>().mSocket.CloneMessage(*message));
         VerifyOrExit(messageToCurParent != nullptr, error = kErrorNoBufs);
 
         destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());

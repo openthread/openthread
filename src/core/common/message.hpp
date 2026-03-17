@@ -157,6 +157,15 @@ enum LinkSecurityMode : bool
 };
 
 /**
+ * Represents the clone mode indicating how the reserved header should be configured on the cloned message.
+ */
+enum CloneMode : uint8_t
+{
+    kNoReservedHeader,  ///< The clone message will have no reserved header.
+    kSameReservedHeader ///< The clone message will have the same reserved header size as the original `Message`.
+};
+
+/**
  * Represents a Message buffer.
  */
 class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
@@ -1100,34 +1109,11 @@ public:
     }
 
     /**
-     * Creates a copy of the message.
-     *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *Clone(void) const;
-
-    /**
-     * Creates a copy of the message.
-     *
-     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message
-     * are also copied from the original one.
-     *
-     * @param[in] aLength  Number of message bytes to copy.
-     *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
-     */
-    Message *Clone(uint16_t aLength) const;
-
-    /**
      * Creates a copy of the message using a given configuration.
      *
-     * It allocates the new message from the same message pool as the original one. The `Type`, `SubType`,
-     * `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are copied from the original one.
+     * The `Type`, `SubType`, `LinkSecurity`, `Offset`, `Priority`, `LoopbackToHostAllowed`, `Origin`, `Timestamp`,
+     * `MeshDest`, `PanId`, `Channel`, `RssAverager`, `LqiAverager`, and `TimeSync` fields on the cloned message are
+     * also copied from the original one.
      *
      * @param[in] aLength         Number of message bytes to copy.
      * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
@@ -1135,6 +1121,30 @@ public:
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
     Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
+
+    /**
+     * Creates a copy of the message.
+     *
+     * @tparam kMode Specifies the clone mode (whether to keep the same reserved header size or have none).
+     *
+     * See the non-templated `Clone()` method for details on which message fields are also copied.
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    template <CloneMode kMode> Message *Clone(void) const;
+
+    /**
+     * Creates a copy of the message.
+     *
+     * @tparam kMode Specifies the clone mode (whether to keep the same reserved header size or have none).
+     *
+     * See the non-templated `Clone()` method for details on which message fields are also copied.
+     *
+     * @param[in] aLength  Number of message bytes to copy.
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    template <CloneMode kMode> Message *Clone(uint16_t aLength) const;
 
     /**
      * Returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
@@ -1995,6 +2005,12 @@ private:
     uint16_t mNumAllocated;
     uint16_t mMaxAllocated;
 };
+
+// Declare specializations of `Message::Clone<CloneMode>()` (implemented in `message.cpp`).
+template <> Message *Message::Clone<kNoReservedHeader>(void) const;
+template <> Message *Message::Clone<kSameReservedHeader>(void) const;
+template <> Message *Message::Clone<kNoReservedHeader>(uint16_t aLength) const;
+template <> Message *Message::Clone<kSameReservedHeader>(uint16_t aLength) const;
 
 /**
  * @}

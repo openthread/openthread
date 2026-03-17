@@ -342,7 +342,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 #endif
 
     VerifyOrExit(DetermineMaxRetransmissions() > 0);
-    VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone<kSameReservedHeader>()) != nullptr, error = kErrorNoBufs);
 
     if (aMessage.IsOriginThreadNetif())
     {
@@ -413,7 +413,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
             nextTime.UpdateIfEarlier(metadata.mTransmissionTime);
 
-            messageCopy = message.Clone();
+            messageCopy = message.Clone<kSameReservedHeader>();
         }
         else
         {

@@ -184,7 +184,7 @@ Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Heade
     if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
         Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
     {
-        Message *messageCopy = aMessage.Clone();
+        Message *messageCopy = aMessage.Clone<kSameReservedHeader>();
 
         if (messageCopy != nullptr)
         {
@@ -855,7 +855,7 @@ Error Ip6::TakeOrCopyMessagePtr(OwnedPtr<Message> &aTargetPtr,
         break;
 
     case kCopyMessageToUse:
-        aTargetPtr.Reset(aMessagePtr->Clone());
+        aTargetPtr.Reset(aMessagePtr->Clone<kNoReservedHeader>());
         break;
     }
 

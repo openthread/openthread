@@ -128,7 +128,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
     Message *messageCopy = nullptr;
 
     // Create a message copy for further retransmissions.
-    VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone<kNoReservedHeader>()) != nullptr, error = kErrorNoBufs);
 
     // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
@@ -160,13 +160,11 @@ Error Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInf
 void Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error    error;
-    Message *messageCopy = nullptr;
+    Message *messageCopy;
 
-    // Create a message copy for lower layers.
-    VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(QueryMetadata))) != nullptr,
-                 error = kErrorNoBufs);
+    messageCopy = mSocket.CloneMessageWithout<QueryMetadata>(aMessage);
+    VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
 
-    // Send the copy.
     SuccessOrExit(error = SendMessage(*messageCopy, aMessageInfo));
 
 exit:

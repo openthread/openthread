@@ -335,7 +335,7 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
 
     if (aDestAddress.IsMulticast())
     {
-        Message *loopbackMessage = aPayload.Clone();
+        Message *loopbackMessage = aPayload.Clone<kNoReservedHeader>();
 
         VerifyOrQuit(loopbackMessage != nullptr);
         Receive(GetNode(), *loopbackMessage);
@@ -396,7 +396,7 @@ void InfraIf::Receive(Node &aSrcNode, Message &aMessage)
         if (headers.GetDestinationAddress().IsMulticast() || node.mInfraIf.HasAddress(headers.GetDestinationAddress()))
         {
             Mdns::AddressInfo senderAddress;
-            Message          *payload = aMessage.Clone();
+            Message          *payload = aMessage.Clone<kNoReservedHeader>();
 
             VerifyOrQuit(payload != nullptr);
             payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
@@ -432,7 +432,7 @@ void InfraIf::Receive(Node &aSrcNode, Message &aMessage)
         VerifyOrExit(updatedHeader.GetHopLimit() > 1);
         updatedHeader.SetHopLimit(updatedHeader.GetHopLimit() - 1);
 
-        messagePtr.Reset(aMessage.Clone());
+        messagePtr.Reset(aMessage.Clone<kNoReservedHeader>());
         VerifyOrQuit(messagePtr != nullptr);
 
         messagePtr->Write(0, updatedHeader);

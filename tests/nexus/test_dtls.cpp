@@ -333,7 +333,7 @@ void TestDtlsSingleSession(void)
         {
             OwnedPtr<Message> msg(PrepareMessage(node0));
 
-            SuccessOrQuit(dtls0.Send(*msg->Clone()));
+            SuccessOrQuit(dtls0.Send(*msg->Clone<kNoReservedHeader>()));
             nexus.AdvanceTime(100);
 
             VerifyOrQuit(sDtlsLastReceive[node1.GetId()].GetLength() == msg->GetLength());
@@ -347,7 +347,7 @@ void TestDtlsSingleSession(void)
         {
             OwnedPtr<Message> msg(PrepareMessage(node1));
 
-            SuccessOrQuit(dtls1.Send(*msg->Clone()));
+            SuccessOrQuit(dtls1.Send(*msg->Clone<kNoReservedHeader>()));
             nexus.AdvanceTime(100);
 
             VerifyOrQuit(sDtlsLastReceive[node0.GetId()].GetLength() == msg->GetLength());

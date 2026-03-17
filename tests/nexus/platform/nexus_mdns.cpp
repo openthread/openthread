@@ -140,7 +140,7 @@ void Mdns::Receive(Instance &aInstance, Message &aMessage, bool aIsUnicast, cons
         VerifyOrExit(aSenderAddress.mPort == kUdpPort);
     }
 
-    message = aMessage.Clone();
+    message = aMessage.Clone<kNoReservedHeader>();
     VerifyOrQuit(message != nullptr);
 
     otPlatMdnsHandleReceive(&aInstance, message, aIsUnicast, &aSenderAddress);

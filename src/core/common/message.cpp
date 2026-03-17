@@ -785,10 +785,6 @@ void Message::WriteBytesFromMessage(uint16_t       aWriteOffset,
     }
 }
 
-Message *Message::Clone(void) const { return Clone(GetLength()); }
-
-Message *Message::Clone(uint16_t aLength) const { return Clone(aLength, GetReserved()); }
-
 Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
 {
     Error            error = kErrorNone;
@@ -822,6 +818,17 @@ Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
 exit:
     FreeAndNullMessageOnError(clone, error);
     return clone;
+}
+
+template <> Message *Message::Clone<kNoReservedHeader>(void) const { return Clone(GetLength(), 0); }
+
+template <> Message *Message::Clone<kSameReservedHeader>(void) const { return Clone(GetLength(), GetReserved()); }
+
+template <> Message *Message::Clone<kNoReservedHeader>(uint16_t aLength) const { return Clone(aLength, 0); }
+
+template <> Message *Message::Clone<kSameReservedHeader>(uint16_t aLength) const
+{
+    return Clone(aLength, GetReserved());
 }
 
 Error Message::GetLinkInfo(ThreadLinkInfo &aLinkInfo) const
