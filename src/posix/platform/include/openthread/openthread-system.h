@@ -96,6 +96,8 @@ typedef struct otPlatformConfig
     CoprocessorType mCoprocessorType;                 ///< The co-processor type. This field is used to pass
                                                       ///< the type to the app layer.
     const char *mDataPath;                            ///< Data path.
+    const char *mSettingsFile;                        ///< Fixed settings file base name. When set, this
+                                                      ///< overrides the default EUI64-based file naming.
 } otPlatformConfig;
 
 /**

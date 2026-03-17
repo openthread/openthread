@@ -46,18 +46,39 @@
 #include "common/debug.hpp"
 #include "posix/platform/settings_file.hpp"
 
-void platformSettingsInit(const char *aDataPath) { ot::Posix::SettingsFile::SetSettingsPath(aDataPath); }
+void platformSettingsInit(const char *aDataPath, const char *aSettingsFileName)
+{
+    ot::Posix::SettingsFile::SetSettingsPath(aDataPath);
+    ot::Posix::SettingsFile::SetSettingsFileName(aSettingsFileName);
+}
 
 namespace ot {
 namespace Posix {
 
-char SettingsFile::sSettingsPath[] = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+char SettingsFile::sSettingsPath[]                         = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+char SettingsFile::sSettingsFileName[kMaxFileBaseNameSize] = "";
 
 const char *SettingsFile::GetSettingsPath(void) { return sSettingsPath; }
 void        SettingsFile::SetSettingsPath(const char *aSettingsPath)
 {
     snprintf(sSettingsPath, sizeof(sSettingsPath), "%s",
              aSettingsPath == nullptr ? OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH : aSettingsPath);
+}
+
+const char *SettingsFile::GetSettingsFileName(void)
+{
+    return sSettingsFileName[0] != '\0' ? sSettingsFileName : nullptr;
+}
+void SettingsFile::SetSettingsFileName(const char *aSettingsFileName)
+{
+    if (aSettingsFileName != nullptr)
+    {
+        snprintf(sSettingsFileName, sizeof(sSettingsFileName), "%s", aSettingsFileName);
+    }
+    else
+    {
+        sSettingsFileName[0] = '\0';
+    }
 }
 
 otError SettingsFile::Init(const char *aSettingsFileBaseName)

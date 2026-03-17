@@ -175,9 +175,10 @@ void platformRandomInit(void);
  *
  * @note This function is called before OpenThread instance is created.
  *
- * @param[in]  aDataPath   The data path to store setting files.
+ * @param[in]  aDataPath           The data path to store setting files.
+ * @param[in]  aSettingsFileName   The fixed settings file base name, or nullptr to use EUI-64 based naming.
  */
-void platformSettingsInit(const char *aDataPath);
+void platformSettingsInit(const char *aDataPath, const char *aSettingsFileName);
 
 /**
  * Initializes the logging service used by OpenThread.

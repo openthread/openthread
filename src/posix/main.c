@@ -141,6 +141,7 @@ enum
     OT_POSIX_OPT_DATA_PATH,
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+    OT_POSIX_OPT_SETTINGS_FILE,
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     OT_POSIX_OPT_TUN_DEVICE,
 #endif
@@ -156,6 +157,7 @@ static const struct option kOptions[] = {
     {"persistent-interface", no_argument, NULL, OT_POSIX_OPT_PERSISTENT_INTERFACE},
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
+    {"settings-file", required_argument, NULL, OT_POSIX_OPT_SETTINGS_FILE},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
@@ -170,6 +172,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
             "        --data-path               Path of directory to store data.\n"
+            "        --settings-file           Fixed settings file base name (overrides EUI64-based naming).\n"
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
             "        --tun-device              POSIX TUN Device.\n"
 #endif
@@ -262,6 +265,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case OT_POSIX_OPT_DATA_PATH:
             aConfig->mPlatformConfig.mDataPath = optarg;
+            break;
+        case OT_POSIX_OPT_SETTINGS_FILE:
+            aConfig->mPlatformConfig.mSettingsFile = optarg;
             break;
 #ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
