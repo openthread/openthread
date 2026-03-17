@@ -42,6 +42,7 @@ RouterTable::RouterTable(Instance &aInstance)
     , mChangedTask(aInstance)
     , mRouterIdSequenceLastUpdated(0)
     , mRouterIdSequence(Random::NonCrypto::GetUint8())
+    , mEvents(0)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMinRouterId(0)
     , mMaxRouterId(Mle::kMaxRouterId)
@@ -52,10 +53,12 @@ RouterTable::RouterTable(Instance &aInstance)
 
 void RouterTable::Clear(void)
 {
+    Events events = !mRouters.IsEmpty() ? kEventRouterRemoved : 0;
+
     ClearNeighbors();
     mRouterIdMap.Clear();
     mRouters.Clear();
-    SignalTableChanged();
+    SignalTableChanged(events);
 }
 
 bool RouterTable::IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const
@@ -71,7 +74,7 @@ void RouterTable::ClearNeighbors(void)
         if (router.IsStateValid())
         {
             Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, router);
-            SignalTableChanged();
+            SignalTableChanged(kEventNeighborRemoved);
         }
 
         router.SetState(Neighbor::kStateInvalid);
@@ -92,7 +95,8 @@ Router *RouterTable::AddRouter(uint8_t aRouterId)
     router->SetNextHopToInvalid();
 
     mRouterIdMap.SetIndex(aRouterId, mRouters.IndexOf(*router));
-    SignalTableChanged();
+
+    SignalTableChanged(IsSelfRouterId(aRouterId) ? kEventSelfRouterAdded : kEventRouterAdded);
 
 exit:
     return router;
@@ -102,6 +106,8 @@ void RouterTable::RemoveRouter(Router &aRouter)
 {
     // Remove an existing `aRouter` entry from `mRouters` and update the
     // `mRouterIdMap`.
+
+    bool isSelf = IsSelfRouterId(aRouter.GetRouterId());
 
     if (aRouter.IsStateValid())
     {
@@ -120,7 +126,23 @@ void RouterTable::RemoveRouter(Router &aRouter)
         mRouterIdMap.SetIndex(aRouter.GetRouterId(), mRouters.IndexOf((aRouter)));
     }
 
-    SignalTableChanged();
+    SignalTableChanged(isSelf ? kEventSelfRouterRemoved : kEventRouterRemoved);
+}
+
+bool RouterTable::IsSelfRouterId(uint8_t aRouterId) const
+{
+    bool isSelf = false;
+
+    if (Get<Mle::Mle>().IsRouterOrLeader())
+    {
+        isSelf = Get<Mle::Mle>().MatchesRouterId(aRouterId);
+    }
+    else if (Get<Mle::Mle>().IsDetached())
+    {
+        isSelf = Get<Mle::Mle>().GetLeaderId() == aRouterId;
+    }
+
+    return isSelf;
 }
 
 Router *RouterTable::Allocate(void)
@@ -225,7 +247,7 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
     {
         aRouter.SetLinkQualityOut(kLinkQuality0);
         aRouter.SetLastHeard(TimerMilli::GetNow());
-        SignalTableChanged();
+        SignalTableChanged(kEventLinkQualityOutChanged);
     }
 
     for (Router &router : mRouters)
@@ -233,7 +255,7 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
         if (router.GetNextHop() == aRouter.GetRouterId())
         {
             router.SetNextHopToInvalid();
-            SignalTableChanged();
+            SignalTableChanged(kEventNextHopOrCostChanged);
 
             if (GetLinkCost(router) >= Mle::kMaxRouteCost)
             {
@@ -594,7 +616,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
             if (neighbor->GetLinkQualityOut() != linkQuality)
             {
                 neighbor->SetLinkQualityOut(linkQuality);
-                SignalTableChanged();
+                SignalTableChanged(kEventLinkQualityOutChanged);
             }
 
             // If the `aRouteTlv` indicates that the neighboring
@@ -654,14 +676,14 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
             {
                 if (router->SetNextHopAndCost(aNeighborId, cost))
                 {
-                    SignalTableChanged();
+                    SignalTableChanged(kEventNextHopOrCostChanged);
                 }
             }
             else if (nextHop == neighbor)
             {
                 router->SetNextHopToInvalid();
                 router->SetLastHeard(TimerMilli::GetNow());
-                SignalTableChanged();
+                SignalTableChanged(kEventNextHopOrCostChanged);
             }
         }
         else
@@ -672,7 +694,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
             if (newCost < curCost)
             {
                 router->SetNextHopAndCost(aNeighborId, cost);
-                SignalTableChanged();
+                SignalTableChanged(kEventNextHopOrCostChanged);
             }
         }
     }
@@ -719,7 +741,7 @@ void RouterTable::UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t
 
         if (router->SetNextHopAndCost(nextHopId, cost))
         {
-            SignalTableChanged();
+            SignalTableChanged(kEventNextHopOrCostChanged);
         }
     }
 }
@@ -878,11 +900,16 @@ void RouterTable::RouterIdMap::HandleTimeTick(void)
     }
 }
 
-void RouterTable::SignalTableChanged(void) { mChangedTask.Post(); }
+void RouterTable::SignalTableChanged(Events aEvents)
+{
+    mEvents |= aEvents;
+    mChangedTask.Post();
+}
 
 void RouterTable::HandleTableChanged(void)
 {
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    LogEvents();
     LogRouteTable();
 #endif
 
@@ -891,9 +918,45 @@ void RouterTable::HandleTableChanged(void)
 #endif
 
     Get<Mle::Mle>().UpdateAdvertiseInterval();
+
+    mEvents = 0;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+void RouterTable::LogEvents(void) const
+{
+    static constexpr uint16_t kStringSize = 128;
+
+    static const char *const kEventStrings[] = {
+        "router+",      // kEventRouterAdded           (1 << 0)
+        "router-",      // kEventRouterRemoved         (1 << 1)
+        "self+",        // kEventSelfRouterAdded       (1 << 2)
+        "self-",        // kEventSelfRouterRemoved     (1 << 3)
+        "nexthop|cost", // kEventNextHopOrCostChanged  (1 << 4)
+        "lqo",          // kEventLinkQualityOutChanged (1 << 5)
+        "nbr+",         // kEventNeighborAdded         (1 << 6)
+        "nbr-",         // kEventNeighborRemoved       (1 << 7)
+    };
+
+    String<kStringSize> string;
+
+    VerifyOrExit(mEvents != 0);
+
+    for (uint8_t bit = 0; bit < GetArrayLength(kEventStrings); bit++)
+    {
+        if (GetBit(mEvents, bit))
+        {
+            string.Append(" %s", kEventStrings[bit]);
+        }
+    }
+
+    LogInfo("Route table changed [%s ]", string.AsCString());
+
+exit:
+    return;
+}
+
 void RouterTable::LogRouteTable(void) const
 {
     static constexpr uint16_t kStringSize = 128;
