@@ -38,6 +38,9 @@
 namespace ot {
 namespace NetworkDiagnostic {
 
+//---------------------------------------------------------------------------------------------------------------------
+// EnhancedRouteTlvEntry
+
 void EnhancedRouteTlvEntry::InitFrom(const Router &aRouter)
 {
     uint16_t data = 0;
@@ -68,6 +71,9 @@ void EnhancedRouteTlvEntry::Parse(ParseInfo &aParseInfo) const
 }
 
 #if OPENTHREAD_FTD
+
+//---------------------------------------------------------------------------------------------------------------------
+// ChildTlv
 
 void ChildTlv::InitFrom(const Child &aChild)
 {
@@ -103,6 +109,9 @@ void ChildTlv::InitFrom(const Child &aChild)
 #endif
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// RouterNeighborTlv
+
 void RouterNeighborTlv::InitFrom(const Router &aRouter)
 {
     Clear();
@@ -124,6 +133,9 @@ void RouterNeighborTlv::InitFrom(const Router &aRouter)
 
 #endif // OPENTHREAD_FTD
 
+//---------------------------------------------------------------------------------------------------------------------
+// AnswerTlv
+
 void AnswerTlv::Init(uint16_t aIndex, IsLastFlag aIsLastFlag)
 {
     SetType(kAnswer);
@@ -131,6 +143,44 @@ void AnswerTlv::Init(uint16_t aIndex, IsLastFlag aIsLastFlag)
 
     SetFlagsIndex((aIndex & kIndexMask) | (aIsLastFlag == kIsLast ? kIsLastFlag : 0));
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// MacCountersTlv
+
+void MacCountersTlv::Init(const Mac::Counters &aMacCounters)
+{
+    SetType(kMacCounters);
+    SetLength(sizeof(*this) - sizeof(Tlv));
+
+    mIfInUnknownProtos  = BigEndian::HostSwap32(aMacCounters.mRxOther);
+    mIfInErrors         = BigEndian::HostSwap32(aMacCounters.mRxErrNoFrame + aMacCounters.mRxErrUnknownNeighbor +
+                                                aMacCounters.mRxErrInvalidSrcAddr + aMacCounters.mRxErrSec +
+                                                aMacCounters.mRxErrFcs + aMacCounters.mRxErrOther);
+    mIfOutErrors        = BigEndian::HostSwap32(aMacCounters.mTxErrCca);
+    mIfInUcastPkts      = BigEndian::HostSwap32(aMacCounters.mRxUnicast);
+    mIfInBroadcastPkts  = BigEndian::HostSwap32(aMacCounters.mRxBroadcast);
+    mIfInDiscards       = BigEndian::HostSwap32(aMacCounters.mRxAddressFiltered + aMacCounters.mRxDestAddrFiltered +
+                                                aMacCounters.mRxDuplicated);
+    mIfOutUcastPkts     = BigEndian::HostSwap32(aMacCounters.mTxUnicast);
+    mIfOutBroadcastPkts = BigEndian::HostSwap32(aMacCounters.mTxBroadcast);
+    mIfOutDiscards      = BigEndian::HostSwap32(aMacCounters.mTxErrBusyChannel);
+}
+
+void MacCountersTlv::Read(MacCounters &aDiagMacCounters) const
+{
+    aDiagMacCounters.mIfInUnknownProtos  = BigEndian::HostSwap32(mIfInUnknownProtos);
+    aDiagMacCounters.mIfInErrors         = BigEndian::HostSwap32(mIfInErrors);
+    aDiagMacCounters.mIfOutErrors        = BigEndian::HostSwap32(mIfOutErrors);
+    aDiagMacCounters.mIfInUcastPkts      = BigEndian::HostSwap32(mIfInUcastPkts);
+    aDiagMacCounters.mIfInBroadcastPkts  = BigEndian::HostSwap32(mIfInBroadcastPkts);
+    aDiagMacCounters.mIfInDiscards       = BigEndian::HostSwap32(mIfInDiscards);
+    aDiagMacCounters.mIfOutUcastPkts     = BigEndian::HostSwap32(mIfOutUcastPkts);
+    aDiagMacCounters.mIfOutBroadcastPkts = BigEndian::HostSwap32(mIfOutBroadcastPkts);
+    aDiagMacCounters.mIfOutDiscards      = BigEndian::HostSwap32(mIfOutDiscards);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// MleCountersTlv
 
 void MleCountersTlv::Init(const Mle::Counters &aMleCounters)
 {

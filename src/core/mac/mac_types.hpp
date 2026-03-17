@@ -87,6 +87,11 @@ constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///<
 typedef otWakeupId WakeupId;
 
 /**
+ * Represents the MAC layer counters.
+ */
+typedef otMacCounters Counters;
+
+/**
  * Generates a random IEEE 802.15.4 PAN ID.
  *
  * @returns A randomly generated IEEE 802.15.4 PAN ID (excluding `kPanIdBroadcast`).
