@@ -347,6 +347,7 @@ _LAYER_FIELDS = {
     'mle.tlv.addr16': _auto,
     'mle.tlv.channel': _auto,
     'mle.tlv.addr_reg_iid': _list(_auto),
+    'mle.tlv.addr_reg_ipv6': _list(_ipv6_addr),
     'mle.tlv.link_enh_ack_flags': _auto,
     'mle.tlv.link_forward_series': _list(_auto),
     'mle.tlv.link_requested_type_id_flags': _list(_hex),
