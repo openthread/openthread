@@ -336,6 +336,21 @@ public:
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
+    /**
+     * Indicates whether the child is blocking the parent from downgrading its router role.
+     *
+     * @retval TRUE   The child is blocking the parent from downgrading.
+     * @retval FALSE  The child is not blocking the parent from downgrading.
+     */
+    bool IsBlockingParentDowngrade(void) const { return mBlockParentDowngrade; }
+
+    /**
+     * Sets whether the child is blocking the parent from downgrading its router role.
+     *
+     * @param[in] aBlock  TRUE to block parent downgrade, FALSE otherwise.
+     */
+    void SetBlockParentDowngrade(bool aBlock) { mBlockParentDowngrade = aBlock; }
+
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * Returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
@@ -376,6 +391,7 @@ private:
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif
 
+    bool    mBlockParentDowngrade;
     uint8_t mNetworkDataVersion;
 
     union

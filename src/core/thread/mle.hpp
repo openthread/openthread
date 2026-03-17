@@ -131,6 +131,7 @@ class Mle : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_FTD
     friend class ot::TimeTicker;
     friend class Tmf::Agent;
+    friend class ot::RouterTable;
 #endif
 
 public:
@@ -870,6 +871,7 @@ public:
      * @param[in]  aPartitionId  The preferred Leader Partition Id.
      */
     void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
+
 #endif
 
     /**
@@ -975,6 +977,24 @@ public:
      * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
      */
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
+
+    /**
+     * Indicates whether or not downgrading from router role to REED is blocked.
+     *
+     * If the transition to the router role was triggered by a Child ID Request, it indicates that the child has no
+     * other parent option. In this case the downgrade is blocked to prevent the parent router becoming REED to ensure
+     * this child remains connected. This flag is cleared in various situations:
+     *
+     * - When device detaches (e.g. partition change).
+     * - If a new router is added (new possible parent).
+     * - If all children blocking downgrade are disconnected.
+     *
+     * This method is intended for testing purposes only.
+     *
+     * @retval TRUE   The device is blocked from downgrading.
+     * @retval FALSE  The device is not blocked from downgrading.
+     */
+    bool IsDowngradeBlocked(void) const { return mBlockDowngrade; }
 
     /**
      * Returns the MLE_CHILD_ROUTER_LINKS value.
@@ -1119,13 +1139,6 @@ public:
      * Resets the MLE Advertisement Trickle timer interval.
      */
     void ResetAdvertiseInterval(void);
-
-    /**
-     * Updates the MLE Advertisement Trickle timer max interval (if timer is running).
-     *
-     * This is called when there is change in router table.
-     */
-    void UpdateAdvertiseInterval(void);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -2431,6 +2444,7 @@ private:
     bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
     void     HandleAdvertiseTrickleTimer(void);
     void     HandleTimeTick(void);
+    void     HandleRouterTableEvent(RouterTable::Events aEvents);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
@@ -2507,6 +2521,7 @@ private:
 #if OPENTHREAD_FTD
 
     bool mRouterEligible : 1;
+    bool mBlockDowngrade : 1;
     bool mAddressSolicitPending : 1;
     bool mAddressSolicitRejected : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

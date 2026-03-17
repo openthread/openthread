@@ -917,7 +917,7 @@ void RouterTable::HandleTableChanged(void)
     Get<HistoryTracker::Local>().RecordRouterTableChange();
 #endif
 
-    Get<Mle::Mle>().UpdateAdvertiseInterval();
+    Get<Mle::Mle>().HandleRouterTableEvent(mEvents);
 
     mEvents = 0;
 }

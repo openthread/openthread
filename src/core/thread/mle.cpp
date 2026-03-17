@@ -81,6 +81,7 @@ Mle::Mle(Instance &aInstance)
 #endif
 #if OPENTHREAD_FTD
     , mRouterEligible(true)
+    , mBlockDowngrade(false)
     , mAddressSolicitPending(false)
     , mAddressSolicitRejected(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -600,6 +601,7 @@ void Mle::SetStateDetached(void)
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
+    mBlockDowngrade = false;
     ClearAlternateRloc16();
     HandleDetachStart();
 #endif
@@ -1042,6 +1044,20 @@ void Mle::HandleNotifierEvents(Events aEvents)
     if (aEvents.Contains(kEventSecurityPolicyChanged))
     {
         HandleSecurityPolicyChanged();
+    }
+
+    if (mBlockDowngrade && aEvents.Contains(kEventThreadChildRemoved))
+    {
+        mBlockDowngrade = false;
+
+        for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+        {
+            if (child.IsBlockingParentDowngrade())
+            {
+                mBlockDowngrade = true;
+                break;
+            }
+        }
     }
 #endif
 

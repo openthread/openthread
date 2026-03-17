@@ -478,8 +478,15 @@ uint32_t Mle::DetermineAdvertiseIntervalMax(void) const
     return interval;
 }
 
-void Mle::UpdateAdvertiseInterval(void)
+void Mle::HandleRouterTableEvent(RouterTable::Events aEvents)
 {
+    // Callback from `RouterTable` when there is a change.
+
+    if (aEvents & RouterTable::kEventRouterAdded)
+    {
+        mBlockDowngrade = false;
+    }
+
     if (IsRouterOrLeader() && mAdvertiseTrickleTimer.IsRunning())
     {
         mAdvertiseTrickleTimer.SetIntervalMax(DetermineAdvertiseIntervalMax());
@@ -3420,6 +3427,20 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {
         IgnoreError(SendChildIdResponse(child));
+
+        // The transition to the router role was triggered by a Child
+        // ID Request. This indicates that the child has no other
+        // parent option. We set the flags to prevent the parent
+        // router from downgrading back to a REED to ensure this
+        // child remains connected.
+        //
+        // The `mBlockDowngrade` is cleared in various situations:
+        // - From `SetStateDetached()` (e.g. partition change).
+        // - If a new router is added (new possible parent).
+        // - If all children blocking downgrade are disconnected.
+
+        child.SetBlockParentDowngrade(true);
+        mBlockDowngrade = true;
     }
 
 exit:
@@ -3724,6 +3745,7 @@ bool Mle::ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const
 
     VerifyOrExit(IsRouter());
     VerifyOrExit(mRouterTable.IsAllocated(aNeighborId));
+    VerifyOrExit(!mBlockDowngrade);
 
     VerifyOrExit(!mRouterRoleTransition.IsPending());
 
