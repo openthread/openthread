@@ -156,7 +156,7 @@ void Tracker::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
     }
 
 exit:
-    LogOnError(error, "add new agent", aResult.mServiceInstance);
+    LogWarnOnError(error, "add new agent %s", aResult.mServiceInstance);
 }
 
 void Tracker::HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult)
@@ -241,22 +241,6 @@ bool Tracker::NameMatch(const Heap::String &aHeapString, const char *aName)
     return !aHeapString.IsNull() && StringMatch(aHeapString.AsCString(), aName, kStringCaseInsensitiveMatch);
 }
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-
-void Tracker::LogOnError(Error aError, const char *aText, const char *aName)
-{
-    if (aError != kErrorNone)
-    {
-        LogWarn("Error %s - Failed to %s - %s", ErrorToString(aError), aText, (aName != nullptr) ? aName : "");
-    }
-}
-
-#else
-
-void Tracker::LogOnError(Error, const char *, const char *) {}
-
-#endif
-
 const char *Tracker::StateToString(State aState)
 {
 #define StateMapList(_)                   \
@@ -316,7 +300,7 @@ Error Tracker::Host::SetNameAndStartAddrResolver(const char *aHostName)
     Get<Dnssd>().StartIp6AddressResolver(AddressResolver(mName.AsCString()));
 
 exit:
-    LogOnError(error, "set host name", aHostName);
+    LogWarnOnError(error, "set host name %s", aHostName);
     return error;
 }
 
@@ -348,7 +332,7 @@ void Tracker::Host::SetAddresses(const Dnssd::AddressResult &aResult)
     }
 
 exit:
-    LogOnError(error, "set host addresses", mName.AsCString());
+    LogWarnOnError(error, "set host addresses on %s", mName.AsCString());
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -460,7 +444,7 @@ void Tracker::Agent::SetTxtData(const uint8_t *aData, uint16_t aDataLength)
     SetUpdateTimeToNow();
 
 exit:
-    LogOnError(error, "set TXT data", mServiceName.AsCString());
+    LogWarnOnError(error, "set TXT data on %s", mServiceName.AsCString());
 }
 
 void Tracker::Agent::ClearTxtData(void)

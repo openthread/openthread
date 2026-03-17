@@ -51,6 +51,8 @@ Message *Icmp::NewMessage(void) { return Get<Ip6>().NewMessage(sizeof(Header)); 
 
 Error Icmp::RegisterHandler(Handler &aHandler) { return mHandlers.Add(aHandler); }
 
+Error Icmp::UnregisterHandler(Handler &aHandler) { return mHandlers.Remove(aHandler); }
+
 Error Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier)
 {
     Error       error = kErrorNone;

@@ -212,7 +212,7 @@ public:
     Error SendGetRequest(const Dataset::Components &aDatasetComponents,
                          const uint8_t             *aTlvTypes,
                          uint8_t                    aLength,
-                         const otIp6Address        *aAddress) const;
+                         const Ip6::Address        *aAddress) const;
 
     /**
      * Processes a MGMT_GET request message and prepares the response.

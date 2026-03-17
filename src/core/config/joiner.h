@@ -55,10 +55,19 @@
 /**
  * @def OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
  *
- * The maximum number of Joiner Router entries that can be queued by the Joiner.
+ * The maximum number of Joiner Router candidates that can be tracked by the Joiner/Seeker.
  */
 #ifndef OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
-#define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 2
+#define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 16
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK
+ *
+ * The maximum number of Joiner Router candidates to track per network (Extended PAN ID) by the Joiner/Seeker.
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK
+#define OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK 3
 #endif
 
 /**

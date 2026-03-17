@@ -225,7 +225,6 @@ private:
     static void HandleAddressResult(otInstance *aInstance, const otPlatDnssdAddressResult *aResult);
 
     static bool        NameMatch(const Heap::String &aHeapString, const char *aName);
-    static void        LogOnError(Error aError, const char *aText, const char *aName);
     static const char *StateToString(State aState);
 
     static const char kServiceType[];

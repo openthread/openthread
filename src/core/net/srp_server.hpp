@@ -178,9 +178,74 @@ public:
     };
 
     /**
+     * Base class for `Host` and `Service`, tracking lease, key-lease, and expiration times.
+     */
+    class LeaseTracker
+    {
+    public:
+        /**
+         * Returns the LEASE time.
+         *
+         * @returns  The LEASE time in seconds.
+         */
+        uint32_t GetLease(void) const { return mLease; }
+
+        /**
+         * Returns the KEY-LEASE time.
+         *
+         * @returns  The KEY-LEASE time in seconds.
+         */
+        uint32_t GetKeyLease(void) const { return mKeyLease; }
+
+        /**
+         * Returns the TTL.
+         *
+         * @returns The TTL.
+         */
+        uint32_t GetTtl(void) const { return mTtl; }
+
+        /**
+         * Returns the expire time.
+         *
+         * @returns  The expire time
+         */
+        TimeMilli GetExpireTime(void) const;
+
+        /**
+         * Returns the key expire time.
+         *
+         * @returns  The service key expire time.
+         */
+        TimeMilli GetKeyExpireTime(void) const;
+
+        /**
+         * Gets the LEASE and KEY-LEASE information.
+         *
+         * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance to populate
+         */
+        void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
+
+    protected:
+        LeaseTracker(void) = default;
+
+        void  Init(TimeMilli aUpdateTime);
+        void  SetTtl(uint32_t aTtl) { mTtl = aTtl; }
+        void  SetLease(uint32_t aLease) { mLease = aLease; }
+        void  SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
+        Error ProcessTtl(uint32_t aTtl);
+
+    private:
+        uint32_t  mLease;
+        uint32_t  mKeyLease;
+        uint32_t  mTtl;
+        TimeMilli mUpdateTime;
+    };
+
+    /**
      * Implements a server-side SRP service.
      */
     class Service : public otSrpServerService,
+                    public LeaseTracker,
                     public LinkedListEntry<Service>,
                     private Heap::Allocatable<Service>,
                     private NonCopyable
@@ -269,13 +334,6 @@ public:
         static Error ParseSubTypeServiceName(const char *aSubTypeServiceName, char *aLabel, uint8_t aLabelSize);
 
         /**
-         * Returns the TTL of the service instance.
-         *
-         * @returns The TTL of the service instance.
-         */
-        uint32_t GetTtl(void) const { return mTtl; }
-
-        /**
          * Returns the port of the service instance.
          *
          * @returns  The port of the service.
@@ -316,42 +374,6 @@ public:
          * @returns  A reference to the host instance.
          */
         const Host &GetHost(void) const { return *mHost; }
-
-        /**
-         * Returns the LEASE time of the service.
-         *
-         * @returns  The LEASE time in seconds.
-         */
-        uint32_t GetLease(void) const { return mLease; }
-
-        /**
-         * Returns the KEY-LEASE time of the key of the service.
-         *
-         * @returns  The KEY-LEASE time in seconds.
-         */
-        uint32_t GetKeyLease(void) const { return mKeyLease; }
-
-        /**
-         * Returns the expire time (in milliseconds) of the service.
-         *
-         * @returns  The service expire time in milliseconds.
-         */
-        TimeMilli GetExpireTime(void) const;
-
-        /**
-         * Returns the key expire time (in milliseconds) of the service.
-         *
-         * @returns  The service key expire time in milliseconds.
-         */
-        TimeMilli GetKeyExpireTime(void) const;
-
-        /**
-         * Gets the LEASE and KEY-LEASE information of a given service.
-         *
-         * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance. It contains the LEASE time, KEY-LEASE time,
-         *                          remaining LEASE time and the remaining KEY-LEASE time.
-         */
-        void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
 
         /**
          * Indicates whether this service matches a given service instance name.
@@ -406,10 +428,6 @@ public:
         uint16_t                  mPriority;
         uint16_t                  mWeight;
         uint16_t                  mPort;
-        uint32_t                  mTtl;      // In seconds
-        uint32_t                  mLease;    // In seconds
-        uint32_t                  mKeyLease; // In seconds
-        TimeMilli                 mUpdateTime;
         bool                      mIsDeleted : 1;
         bool                      mIsCommitted : 1;
         bool                      mParsedDeleteAllRrset : 1;
@@ -431,6 +449,7 @@ public:
      */
     class Host : public otSrpServerHost,
                  public InstanceLocator,
+                 public LeaseTracker,
                  public LinkedListEntry<Host>,
                  private Heap::Allocatable<Host>,
                  private NonCopyable
@@ -451,7 +470,7 @@ public:
          *
          * @returns  TRUE if the host is deleted, FALSE if the host is not deleted.
          */
-        bool IsDeleted(void) const { return (mLease == 0); }
+        bool IsDeleted(void) const { return (GetLease() == 0); }
 
         /**
          * Returns the full name of the host.
@@ -475,54 +494,11 @@ public:
         }
 
         /**
-         * Returns the TTL of the host.
-         *
-         * @returns The TTL of the host.
-         */
-        uint32_t GetTtl(void) const { return mTtl; }
-
-        /**
-         * Returns the LEASE time of the host.
-         *
-         * @returns  The LEASE time in seconds.
-         */
-        uint32_t GetLease(void) const { return mLease; }
-
-        /**
-         * Returns the KEY-LEASE time of the key of the host.
-         *
-         * @returns  The KEY-LEASE time in seconds.
-         */
-        uint32_t GetKeyLease(void) const { return mKeyLease; }
-
-        /**
-         * Gets the LEASE and KEY-LEASE information of a given host.
-         *
-         * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance. It contains the LEASE time, KEY-LEASE time,
-         *                          remaining LEASE time and the remaining KEY-LEASE time.
-         */
-        void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
-
-        /**
          * Returns the key associated with this host.
          *
          * @returns  The host key.
          */
         const Key &GetKey(void) const { return mKey; }
-
-        /**
-         * Returns the expire time (in milliseconds) of the host.
-         *
-         * @returns  The expire time in milliseconds.
-         */
-        TimeMilli GetExpireTime(void) const;
-
-        /**
-         * Returns the expire time (in milliseconds) of the key of the host.
-         *
-         * @returns  The expire time of the key in milliseconds.
-         */
-        TimeMilli GetKeyExpireTime(void) const;
 
         /**
          * Returns the `Service` linked list associated with the host.
@@ -554,12 +530,8 @@ public:
         ~Host(void);
 
         Error SetFullName(const char *aFullName);
-        void  SetTtl(uint32_t aTtl) { mTtl = aTtl; }
-        void  SetLease(uint32_t aLease) { mLease = aLease; }
-        void  SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
         void  SetUseShortLeaseOption(bool aUse) { mUseShortLeaseOption = aUse; }
         bool  ShouldUseShortLeaseOption(void) const { return mUseShortLeaseOption; }
-        Error ProcessTtl(uint32_t aTtl);
 
         Service       *AddNewService(const char *aInstanceName, const char *aInstanceLabel, TimeMilli aUpdateTime);
         void           AddService(Service &aService);
@@ -575,10 +547,6 @@ public:
         Heap::String              mFullName;
         Heap::Array<Ip6::Address> mAddresses;
         Key                       mKey;
-        uint32_t                  mTtl;      // The TTL in seconds.
-        uint32_t                  mLease;    // The LEASE time in seconds.
-        uint32_t                  mKeyLease; // The KEY-LEASE time in seconds.
-        TimeMilli                 mUpdateTime;
         LinkedList<Service>       mServices;
         bool                      mParsedKey : 1;
         bool                      mUseShortLeaseOption : 1; // Use short lease option (lease only 4 bytes).

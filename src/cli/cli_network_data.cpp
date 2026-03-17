@@ -935,7 +935,7 @@ template <> otError NetworkData::Process<Cmd("full")>(Arg aArgs[])
      */
     if (aArgs[0].IsEmpty())
     {
-        OutputLine(mFullCallbackWasCalled ? "yes" : "no");
+        OutputLine("%s", ToYesNo(mFullCallbackWasCalled));
     }
     /**
      * @cli netdata full reset

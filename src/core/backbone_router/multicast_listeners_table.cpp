@@ -130,6 +130,23 @@ void MulticastListenersTable::Expire(void)
     CheckInvariants();
 }
 
+bool MulticastListenersTable::Has(const Ip6::Address &aAddress) const
+{
+    bool has = false;
+
+    for (uint16_t i = 0; i < mNumValidListeners; i++)
+    {
+        if (mListeners[i].GetAddress() == aAddress)
+        {
+            has = true;
+            ExitNow();
+        }
+    }
+
+exit:
+    return has;
+}
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 void MulticastListenersTable::Log(Action              aAction,
                                   const Ip6::Address &aAddress,

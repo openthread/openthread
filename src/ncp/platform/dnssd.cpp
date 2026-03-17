@@ -124,13 +124,13 @@ void otPlatDnssdStopBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBr
 void otPlatDnssdStartSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aResolver);
+    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStartSrvResolver(aResolver);
 }
 
 void otPlatDnssdStopSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aResolver);
+    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStopSrvResolver(aResolver);
 }
 
 void otPlatDnssdStartTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver)

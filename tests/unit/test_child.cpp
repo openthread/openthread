@@ -46,9 +46,8 @@ enum
 
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])
 {
-    Ip6::Address::TypeFilter filters[] = {Ip6::Address::kTypeUnicast, Ip6::Address::kTypeMulticast};
-    bool                     addressObserved[kMaxChildIp6Addresses];
-    bool                     hasMeshLocal = false;
+    bool addressObserved[kMaxChildIp6Addresses];
+    bool hasMeshLocal = false;
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {

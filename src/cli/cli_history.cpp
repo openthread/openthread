@@ -183,7 +183,7 @@ template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
             OutputLine("%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s",
                        ageString, Stringify(info->mEvent, kSimpleEventStrings), addressString, info->mPrefixLength,
                        Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
-                       info->mPreferred ? "yes" : "no", info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
+                       ToYesNo(info->mPreferred), ToYesNo(info->mValid), ToYesNo(info->mRloc));
         }
     }
 
@@ -1195,7 +1195,7 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
 
     OutputLine("%s", ageString);
     OutputFormat(kIndentSize, "type:%s len:%u checksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
-                 aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
+                 aInfo.mPayloadLength, aInfo.mChecksum, ToYesNo(aInfo.mLinkSecurity),
                  MessagePriorityToString(aInfo.mPriority));
     if (aIsRx)
     {
@@ -1203,7 +1203,7 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
     }
     else
     {
-        OutputFormat("tx-success:%s", aInfo.mTxSuccess ? "yes" : "no");
+        OutputFormat("tx-success:%s", ToYesNo(aInfo.mTxSuccess));
     }
 
     OutputLine(" %s:0x%04x radio:%s", aIsRx ? "from" : "to", aInfo.mNeighborRloc16, RadioTypeToString(aInfo));
@@ -1223,7 +1223,7 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
     OutputFormat("| %20s | %-16.16s | %5u | 0x%04x | %3s | %4s | ", "", MessageTypeToString(aInfo),
-                 aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
+                 aInfo.mPayloadLength, aInfo.mChecksum, ToYesNo(aInfo.mLinkSecurity),
                  MessagePriorityToString(aInfo.mPriority));
 
     if (aIsRx)
@@ -1696,7 +1696,7 @@ template <> otError History::Process<Cmd("omrprefix")>(Arg aArgs[])
         otIp6PrefixToString(&info->mOmrPrefix, prefixString, sizeof(prefixString));
 
         OutputLine(isList ? "%s -> omr-prefix:%s prf:%s is-local:%s" : "| %20s | %-48s | %-6s | %-6s |", ageString,
-                   prefixString, PreferenceToString(info->mPreference), info->mIsLocal ? "yes" : "no");
+                   prefixString, PreferenceToString(info->mPreference), ToYesNo(info->mIsLocal));
     }
 
 exit:
@@ -1766,7 +1766,7 @@ template <> otError History::Process<Cmd("onlinkprefix")>(Arg aArgs[])
         otIp6PrefixToString(&info->mOnLinkPrefix, prefixString, sizeof(prefixString));
 
         OutputLine(isList ? "%s -> on-link-prefix:%s is-local:%s" : "| %20s | %-48s | %-6s |", ageString, prefixString,
-                   info->mIsLocal ? "yes" : "no");
+                   ToYesNo(info->mIsLocal));
     }
 
 exit:

@@ -165,9 +165,17 @@ Print information of all registered hosts.
 srp-api-test-1.default.service.arpa.
     deleted: false
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+    lease: 7200
+    key-lease: 1209600
+    remaining lease: 6345.459
+    remaining key-lease: 1208734.459
 srp-api-test-0.default.service.arpa.
     deleted: false
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+    lease: 3600
+    key-lease: 1209600
+    remaining lease: 2600.012
+    remaining key-lease: 1208600.012
 Done
 ```
 
@@ -241,6 +249,8 @@ srp-api-test-1._ipps._tcp.default.service.arpa.
     ttl: 7200
     lease: 7200
     key-lease: 1209600
+    remaining lease: 6345.459
+    remaining key-lease: 1208734.459
     TXT: [616263, xyz=585960]
     host: srp-api-test-1.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
@@ -253,6 +263,8 @@ srp-api-test-0._ipps._tcp.default.service.arpa.
     ttl: 3600
     lease: 3600
     key-lease: 1209600
+    remaining lease: 2600.012
+    remaining key-lease: 1208600.012
     TXT: [616263, xyz=585960]
     host: srp-api-test-0.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]

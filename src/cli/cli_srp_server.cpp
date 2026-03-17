@@ -378,32 +378,35 @@ template <> otError SrpServer::Process<Cmd("host")>(Arg aArgs[])
     host = nullptr;
     while ((host = otSrpServerGetNextHost(GetInstancePtr(), host)) != nullptr)
     {
-        const otIp6Address *addresses;
-        uint8_t             addressesNum;
-        bool                isDeleted = otSrpServerHostIsDeleted(host);
+        const otIp6Address  *addresses;
+        uint8_t              addressesNum;
+        bool                 isDeleted = otSrpServerHostIsDeleted(host);
+        otSrpServerLeaseInfo leaseInfo;
 
         OutputLine("%s", otSrpServerHostGetFullName(host));
         OutputLine(kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
-        if (isDeleted)
+
+        if (!isDeleted)
         {
-            continue;
-        }
+            OutputSpaces(kIndentSize);
+            OutputFormat("addresses: [");
 
-        OutputSpaces(kIndentSize);
-        OutputFormat("addresses: [");
+            addresses = otSrpServerHostGetAddresses(host, &addressesNum);
 
-        addresses = otSrpServerHostGetAddresses(host, &addressesNum);
-
-        for (uint8_t i = 0; i < addressesNum; ++i)
-        {
-            OutputIp6Address(addresses[i]);
-            if (i < addressesNum - 1)
+            for (uint8_t i = 0; i < addressesNum; ++i)
             {
-                OutputFormat(", ");
+                OutputIp6Address(addresses[i]);
+                if (i < addressesNum - 1)
+                {
+                    OutputFormat(", ");
+                }
             }
+
+            OutputLine("]");
         }
 
-        OutputLine("]");
+        otSrpServerHostGetLeaseInfo(host, &leaseInfo);
+        OutputLeaseInfo(leaseInfo, isDeleted);
     }
 
 exit:
@@ -430,6 +433,27 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
     OutputFormat("]");
 }
 
+void SrpServer::OutputLeaseInfo(const otSrpServerLeaseInfo &aLeaseInfo, bool aIsDeleted)
+{
+    if (!aIsDeleted)
+    {
+        OutputLine(kIndentSize, "lease: %lu", ToUlong(aLeaseInfo.mLease / 1000));
+    }
+
+    OutputLine(kIndentSize, "key-lease: %lu", ToUlong(aLeaseInfo.mKeyLease / 1000));
+
+    if (!aIsDeleted)
+    {
+        OutputFormat(kIndentSize, "remaining lease: ");
+        OutputMsecDurationInSec(aLeaseInfo.mRemainingLease);
+        OutputNewLine();
+    }
+
+    OutputFormat(kIndentSize, "remaining key-lease: ");
+    OutputMsecDurationInSec(aLeaseInfo.mRemainingKeyLease);
+    OutputNewLine();
+}
+
 /**
  * @cli srp server service
  * @code
@@ -443,6 +467,8 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
  *     ttl: 7200
  *     lease: 7200
  *     key-lease: 1209600
+ *     remaining lease: 6345.459
+ *     remaining key-lease: 1208734.459
  *     TXT: [616263, xyz=585960]
  *     host: srp-api-test-1.default.service.arpa.
  *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
@@ -455,6 +481,8 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
  *     ttl: 3600
  *     lease: 3600
  *     key-lease: 1209600
+ *     remaining lease: 2600.012
+ *     remaining key-lease: 1208600.012
  *     TXT: [616263, xyz=585960]
  *     host: srp-api-test-0.default.service.arpa.
  *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
@@ -493,12 +521,13 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
             OutputLine("%s", otSrpServerServiceGetInstanceName(service));
             OutputLine(kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
 
+            otSrpServerServiceGetLeaseInfo(service, &leaseInfo);
+
             if (isDeleted)
             {
+                OutputLeaseInfo(leaseInfo, isDeleted);
                 continue;
             }
-
-            otSrpServerServiceGetLeaseInfo(service, &leaseInfo);
 
             OutputFormat(kIndentSize, "subtypes: ");
 
@@ -523,8 +552,8 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
             OutputLine(kIndentSize, "priority: %u", otSrpServerServiceGetPriority(service));
             OutputLine(kIndentSize, "weight: %u", otSrpServerServiceGetWeight(service));
             OutputLine(kIndentSize, "ttl: %lu", ToUlong(otSrpServerServiceGetTtl(service)));
-            OutputLine(kIndentSize, "lease: %lu", ToUlong(leaseInfo.mLease / 1000));
-            OutputLine(kIndentSize, "key-lease: %lu", ToUlong(leaseInfo.mKeyLease / 1000));
+
+            OutputLeaseInfo(leaseInfo, isDeleted);
 
             txtData = otSrpServerServiceGetTxtData(service, &txtDataLength);
             OutputFormat(kIndentSize, "TXT: ");

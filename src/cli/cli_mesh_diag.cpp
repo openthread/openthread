@@ -460,8 +460,8 @@ void MeshDiag::HandleMeshDiagQueryChildTableResult(otError aError, const otMeshD
     OutputLine(kIndentSize, "timeout:%lu age:%lu supvn:%u q-msg:%u", ToUlong(aChildEntry->mTimeout),
                ToUlong(aChildEntry->mAge), aChildEntry->mSupervisionInterval, aChildEntry->mQueuedMessageCount);
 
-    OutputLine(kIndentSize, "rx-on:%s type:%s full-net:%s", aChildEntry->mRxOnWhenIdle ? "yes" : "no",
-               aChildEntry->mDeviceTypeFtd ? "ftd" : "mtd", aChildEntry->mFullNetData ? "yes" : "no");
+    OutputLine(kIndentSize, "rx-on:%s type:%s full-net:%s", ToYesNo(aChildEntry->mRxOnWhenIdle),
+               aChildEntry->mDeviceTypeFtd ? "ftd" : "mtd", ToYesNo(aChildEntry->mFullNetData));
 
     OutputLine(kIndentSize, "rss - ave:%d last:%d margin:%d", aChildEntry->mAverageRssi, aChildEntry->mLastRssi,
                aChildEntry->mLinkMargin);
@@ -476,9 +476,8 @@ void MeshDiag::HandleMeshDiagQueryChildTableResult(otError aError, const otMeshD
     otConvertDurationInSecondsToString(aChildEntry->mConnectionTime, string, sizeof(string));
     OutputLine(kIndentSize, "conn-time:%s", string);
 
-    OutputLine(kIndentSize, "csl - sync:%s period:%u timeout:%lu channel:%u",
-               aChildEntry->mCslSynchronized ? "yes" : "no", aChildEntry->mCslPeriod, ToUlong(aChildEntry->mCslTimeout),
-               aChildEntry->mCslChannel);
+    OutputLine(kIndentSize, "csl - sync:%s period:%u timeout:%lu channel:%u", ToYesNo(aChildEntry->mCslSynchronized),
+               aChildEntry->mCslPeriod, ToUlong(aChildEntry->mCslTimeout), aChildEntry->mCslChannel);
 
 exit:
     OutputResult(aError);

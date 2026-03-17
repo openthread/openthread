@@ -630,21 +630,9 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements IPv6 Address List TLV generation and parsing.
+ * Defines Type List TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class TypeListTlv : public Tlv, public TlvInfo<Tlv::kTypeList>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kTypeList);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kTypeList> TypeListTlv;
 
 #if OPENTHREAD_FTD
 

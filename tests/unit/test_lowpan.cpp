@@ -2087,6 +2087,83 @@ void TestLowpanFragmentHeader(void)
     VerifyOrQuit(frameData.GetBytes() == frame);
 }
 
+void TestLowpanDecompressRecursion(void)
+{
+    Instance       *instance    = testInitInstance();
+    Lowpan::Lowpan &lowpan      = instance->Get<Lowpan::Lowpan>();
+    MessagePool    &messagePool = instance->Get<MessagePool>();
+
+    Mac::Addresses macAddrs;
+    macAddrs.mSource.SetShort(0x1234);
+    macAddrs.mDestination.SetShort(0x5678);
+
+    printf("\n=== Test name: Lowpan Decompress Recursion ===\n\n");
+
+    // Case 1: Excessive recursion (41 levels) -> Should fail with kErrorParse
+    {
+        uint8_t  payload[256];
+        uint16_t length = 0;
+
+        for (int i = 0; i < 41; i++)
+        {
+            payload[length++] = 0x7e;
+            payload[length++] = 0x33;
+            payload[length++] = 0xee;
+        }
+        payload[length++] = 0x7a;
+        payload[length++] = 0x33;
+        payload[length++] = 0x11;
+
+        Message *message = messagePool.Allocate(Message::kTypeIp6);
+        VerifyOrQuit(message != nullptr, "Message::Allocate failed");
+
+        FrameData frameData;
+        frameData.Init(payload, length);
+
+        printf("Case 1: Excessive recursion (41 levels)...\n");
+        Error error = lowpan.Decompress(*message, macAddrs, frameData, 0);
+        printf("Decompression returned error: %s\n", ErrorToString(error));
+        VerifyOrQuit(error == kErrorParse, "Case 1 failed: should have returned kErrorParse");
+
+        message->Free();
+    }
+
+    // Case 2: Legitimate recursion (2 levels) -> Should succeed
+    {
+        uint8_t  payload[256];
+        uint16_t length = 0;
+
+        // Level 0
+        payload[length++] = 0x7e;
+        payload[length++] = 0x33;
+        payload[length++] = 0xee;
+        // Level 1
+        payload[length++] = 0x7e;
+        payload[length++] = 0x33;
+        payload[length++] = 0xee;
+        // Level 2 (Terminal)
+        payload[length++] = 0x7a;
+        payload[length++] = 0x33;
+        payload[length++] = 0x11;
+
+        Message *message = messagePool.Allocate(Message::kTypeIp6);
+        VerifyOrQuit(message != nullptr, "Message::Allocate failed");
+
+        FrameData frameData;
+        frameData.Init(payload, length);
+
+        printf("Case 2: Legitimate recursion (2 levels)...\n");
+        Error error = lowpan.Decompress(*message, macAddrs, frameData, 0);
+        printf("Decompression returned error: %s\n", ErrorToString(error));
+        VerifyOrQuit(error == kErrorNone, "Case 2 failed: should have returned kErrorNone");
+
+        message->Free();
+    }
+
+    testFreeInstance(instance);
+    printf("PASS\n\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -2094,6 +2171,7 @@ int main(void)
     ot::TestLowpanIphc();
     ot::TestLowpanMeshHeader();
     ot::TestLowpanFragmentHeader();
+    ot::TestLowpanDecompressRecursion();
 
     printf("All tests passed\n");
     return 0;

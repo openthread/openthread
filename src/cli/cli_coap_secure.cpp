@@ -336,7 +336,7 @@ otError CoapSecure::ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine("%s", IsChecker(GetInstancePtr()) ? "yes" : "no");
+    OutputLine("%s", ToYesNo(IsChecker(GetInstancePtr())));
 
 exit:
     return error;

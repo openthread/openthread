@@ -44,30 +44,12 @@ namespace Cli {
 
 template <> otError Dns::Process<Cmd("compression")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
     /**
      * @cli dns compression
      * @code
      * dns compression
      * Enabled
      * @endcode
-     * @cparam dns compression [@ca{enable|disable}]
-     * @par api_copy
-     * #otDnsIsNameCompressionEnabled
-     * @par
-     * By default DNS name compression is enabled. When disabled,
-     * DNS names are appended as full and never compressed. This
-     * is applicable to OpenThread's DNS and SRP client/server
-     * modules."
-     * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otDnsIsNameCompressionEnabled());
-    }
-    /**
-     * @cli dns compression (enable,disable)
      * @code
      * dns compression enable
      * Enabled
@@ -81,25 +63,20 @@ template <> otError Dns::Process<Cmd("compression")>(Arg aArgs[])
      * @endcode
      * @cparam dns compression [@ca{enable|disable}]
      * @par
-     * Set the "DNS name compression" mode.
+     * Gets or sets the "DNS name compression" mode.
      * @par
-     * By default DNS name compression is enabled. When disabled,
-     * DNS names are appended as full and never compressed. This
-     * is applicable to OpenThread's DNS and SRP client/server
-     * modules."
-     * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+     * This is intended for testing only and requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
+     * @par
+     * By default, DNS name compression is enabled. When disabled, DNS names are appended in full and are never
+     * compressed. This applies to OpenThread's DNS and SRP client/server modules.
+     * @par
+     * DNS name compression cannot be disabled if the OpenThread mDNS module is enabled. Enabling the mDNS module will
+     * automatically enable name compression if it was previously disabled. Attempting to disable compression while the
+     * mDNS module is active will return an error.
+     * @sa otDnsIsNameCompressionEnabled
      * @sa otDnsSetNameCompressionEnabled
      */
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-        otDnsSetNameCompressionEnabled(enable);
-    }
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otDnsIsNameCompressionEnabled, otDnsSetNameCompressionEnabled);
 }
 
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -139,8 +116,7 @@ template <> otError Dns::Process<Cmd("config")>(Arg aArgs[])
         OutputSockAddrLine(defaultConfig->mServerSockAddr);
         OutputLine("ResponseTimeout: %lu ms", ToUlong(defaultConfig->mResponseTimeout));
         OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
-        OutputLine("RecursionDesired: %s",
-                   (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
+        OutputLine("RecursionDesired: %s", ToYesNo(defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED));
         OutputLine("ServiceMode: %s", DnsConfigServiceModeToString(defaultConfig->mServiceMode));
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         OutputLine("Nat64Mode: %s", (defaultConfig->mNat64Mode == OT_DNS_NAT64_ALLOW) ? "allow" : "disallow");

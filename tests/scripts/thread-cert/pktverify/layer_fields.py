@@ -26,6 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import calendar
 import datetime
 import sys
 import time
@@ -71,9 +72,18 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     # there are integer seconds applied in the test cases
     try:
         time_str = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
-        time_in_sec = time.mktime(time_str.utctimetuple())
+        time_in_sec = calendar.timegm(time_str.utctimetuple())
         return int(time_in_sec)
     except (ValueError, TypeError):
+        pass
+
+    try:
+        # ISO format: '1970-01-01T00:00:20.000000000+0000'
+        # we only care about the seconds part
+        time_str = dv.split('.')[0]
+        dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
+        return int(dt.replace(tzinfo=datetime.timezone.utc).timestamp())
+    except (ValueError, TypeError, IndexError):
         pass
 
     try:
@@ -88,6 +98,15 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
         return 0
 
     raise ValueError((v, v.get_default_value(), v.raw_value))
+
+
+def _thread_timestamp(v: Union[LayerFieldsContainer, LayerField]) -> int:
+    """parse the layer field as a Thread timestamp (8 bytes)"""
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1
+    rv = v.raw_value
+    if rv and len(rv) == 16:
+        return int(rv, 16) >> 16
+    return _auto(v)
 
 
 def _payload(v: Union[LayerFieldsContainer, LayerField]) -> bytearray:
@@ -261,6 +280,8 @@ _LAYER_FIELDS = {
     'wpan.dst16': _auto,
     'wpan.src64': _ext_addr,
     'wpan.dst64': _ext_addr,
+    'wpan-tap.channel': _auto,
+    'wpan_tap.channel': _auto,
     'wpan.fcs': _raw_hex_rev,
     'wpan.fcs_ok': _auto,
     'wpan.frame_length': _dec,
@@ -297,8 +318,8 @@ _LAYER_FIELDS = {
     'mle.tlv.scan_mask.e': _auto,
     'mle.tlv.version': _auto,
     'mle.tlv.source_addr': _auto,
-    'mle.tlv.active_tstamp': _auto,
-    'mle.tlv.pending_tstamp': _auto,
+    'mle.tlv.active_tstamp': _thread_timestamp,
+    'mle.tlv.pending_tstamp': _thread_timestamp,
     'mle.tlv.leader_data.partition_id': _auto,
     'mle.tlv.leader_data.weighting': _auto,
     'mle.tlv.leader_data.data_version': _auto,
@@ -528,12 +549,20 @@ _LAYER_FIELDS = {
     'coap.tlv.ext_mac_addr': _ext_addr,
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
+    'coap.tlv.mac_addr': _ext_addr,
+    'coap.tlv.mode': _auto,
+    'coap.tlv.partition_id': _auto,
+    'coap.tlv.leader_router_id': _auto,
+    'coap.tlv.router_id_sequence': _auto,
+    'coap.tlv.router_id_mask': _str,
+    'coap.tlv.mac_counter': _list(_auto),
 
     # dtls
     'dtls.handshake.type': _list(_auto),
     'dtls.handshake.cookie': _auto,
     'dtls.record.content_type': _list(_auto),
     'dtls.alert_message.desc': _auto,
+    'dtls.alert_message.level': _auto,
 
     # thread beacon
     'thread_bcn.protocol': _auto,
@@ -600,8 +629,8 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.jr_locator': _auto,
-    'thread_meshcop.tlv.active_tstamp': _auto,
-    'thread_meshcop.tlv.pending_tstamp': _auto,
+    'thread_meshcop.tlv.active_tstamp': _thread_timestamp,
+    'thread_meshcop.tlv.pending_tstamp': _thread_timestamp,
     'thread_meshcop.tlv.delay_timer': _auto,
     'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 

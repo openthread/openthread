@@ -100,7 +100,7 @@ void Checksum::Calculate(const Ip6::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-2460).
 
@@ -126,7 +126,7 @@ void Checksum::Calculate(const Ip4::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-768/792/793).
     // Note: ICMP checksum won't count the pseudo header like TCP and UDP.

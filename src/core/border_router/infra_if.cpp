@@ -95,14 +95,14 @@ bool InfraIf::HasAddress(const Ip6::Address &aAddress) const
 {
     OT_ASSERT(mInitialized);
 
-    return otPlatInfraIfHasAddress(mIfIndex, &aAddress);
+    return otPlatInfraIfHasAddress(&GetInstance(), mIfIndex, &aAddress);
 }
 
 Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const
 {
     OT_ASSERT(mInitialized);
 
-    return otPlatInfraIfSendIcmp6Nd(mIfIndex, &aDestination, aPacket.GetBytes(), aPacket.GetLength());
+    return otPlatInfraIfSendIcmp6Nd(&GetInstance(), mIfIndex, &aDestination, aPacket.GetBytes(), aPacket.GetLength());
 }
 
 void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket)
@@ -133,10 +133,7 @@ void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, co
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogDebg("Dropped ICMPv6 message: %s", ErrorToString(error));
-    }
+    LogDebgOnError(error, "process ICMPv6 msg");
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -145,7 +142,7 @@ Error InfraIf::DiscoverNat64Prefix(void) const
 {
     OT_ASSERT(mInitialized);
 
-    return otPlatInfraIfDiscoverNat64Prefix(mIfIndex);
+    return otPlatInfraIfDiscoverNat64Prefix(&GetInstance(), mIfIndex);
 }
 
 void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix)
@@ -158,10 +155,7 @@ void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPre
     Get<RoutingManager>().HandlePlatformDiscoveredNat64PrefixDone(aPrefix);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogDebg("Failed to handle discovered NAT64 synthetic addresses: %s", ErrorToString(error));
-    }
+    LogDebgOnError(error, "handle discovered NAT64 synthetic addresses");
 }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -229,10 +223,7 @@ void InfraIf::HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex)
     Get<Dhcp6PdClient>().HandleReceived(aMessage);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogDebg("Dropped DHCPv6 message: %s", ErrorToString(error));
-    }
+    LogDebgOnError(error, "process DHCPv6 msg");
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
@@ -292,14 +283,14 @@ extern "C" void otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
 //---------------------------------------------------------------------------------------------------------------------
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
-OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+OT_TOOL_WEAK bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
 
-OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
 {
     return OT_ERROR_FAILED;
 }
 
-OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
+OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
 #endif
 
 extern "C" OT_TOOL_WEAK otError otPlatGetInfraIfLinkLayerAddress(otInstance *,

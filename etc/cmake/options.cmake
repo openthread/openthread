@@ -173,6 +173,7 @@ ot_option(OT_BACKBONE_ROUTER OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE "backbone 
 ot_option(OT_BACKBONE_ROUTER_DUA_NDPROXYING OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE "BBR DUA ND Proxy")
 ot_option(OT_BACKBONE_ROUTER_MULTICAST_ROUTING OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE "BBR MR")
 ot_option(OT_BLE_TCAT OPENTHREAD_CONFIG_BLE_TCAT_ENABLE "Ble based thread commissioning")
+ot_option(OT_BORDER_ADMITTER OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE "border agent admitter")
 ot_option(OT_BORDER_AGENT OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE "border agent")
 ot_option(OT_BORDER_AGENT_EPSKC OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE "border agent ephemeral PSKc")
 ot_option(OT_BORDER_AGENT_ID OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE "create and save border agent ID")
@@ -304,6 +305,10 @@ if(ot_index EQUAL -1)
 endif()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set(OT_CRYPTO_LIB_VALUES "MBEDTLS" "PSA" "PLATFORM")
+ot_multi_option(OT_CRYPTO_LIB OT_CRYPTO_LIB_VALUES OPENTHREAD_CONFIG_CRYPTO_LIB OPENTHREAD_CONFIG_CRYPTO_LIB_ "set Crypto backend library")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 set(OT_THREAD_VERSION_VALUES "1.1" "1.2" "1.3" "1.3.1" "1.4")
 set(OT_THREAD_VERSION "1.4" CACHE STRING "set Thread version")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "${OT_THREAD_VERSION_VALUES}")
@@ -360,7 +365,7 @@ ot_int_option(OT_RCP_TX_WAIT_TIME_SECS OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 if(NOT OT_EXTERNAL_MBEDTLS)
-    set(OT_MBEDTLS mbedtls)
+    set(OT_MBEDTLS mbedtls mbedcrypto)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1")
 else()
     set(OT_MBEDTLS ${OT_EXTERNAL_MBEDTLS})

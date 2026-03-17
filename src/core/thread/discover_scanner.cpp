@@ -58,13 +58,12 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 bool                    aJoiner,
                                 bool                    aEnableFiltering,
                                 const FilterIndexes    *aFilterIndexes,
-                                Handler                 aCallback,
+                                ScanResult::Handler     aHandler,
                                 void                   *aContext)
 {
     Error                             error   = kErrorNone;
     Mle::TxMessage                   *message = nullptr;
     Tlv::Bookmark                     tlvBookmark;
-    Ip6::Address                      destination;
     MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
 
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
@@ -89,7 +88,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         }
     }
 
-    mCallback.Set(aCallback, aContext);
+    mCallback.Set(aHandler, aContext);
     mShouldRestorePanId = false;
     mScanChannels       = Get<Mac::Mac>().GetSupportedChannelMask();
 
@@ -131,9 +130,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
     message->RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
 
-    destination.SetToLinkLocalAllRoutersMulticast();
-
-    SuccessOrExit(error = message->SendTo(destination));
+    SuccessOrExit(error = message->SendTo(Ip6::Address::GetLinkLocalAllRoutersMulticast()));
 
     if ((aPanId == Mac::kPanIdBroadcast) && (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast))
     {
@@ -156,7 +153,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
     }
 
-    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
+    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, Ip6::Address::GetLinkLocalAllRoutersMulticast());
 
 exit:
     FreeMessageOnError(message, error);
@@ -335,7 +332,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
     aRxInfo.mMessage.SetOffset(offsetRange.GetOffset());
     IgnoreError(aRxInfo.mMessage.SetLength(offsetRange.GetEndOffset()));
 
-    ClearAllBytes(result);
+    result.Clear();
     result.mDiscover = true;
     result.mPanId    = aRxInfo.mMessage.GetPanId();
     result.mChannel  = aRxInfo.mMessage.GetChannel();

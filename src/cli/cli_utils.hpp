@@ -198,6 +198,15 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * Converts a boolean to "yes" or "no" string.
+     *
+     * @param[in] aBool  A boolean value to convert.
+     *
+     * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
+     */
+    static const char *ToYesNo(bool aBool);
+
+    /**
      * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
      */
     struct Uint64StringBuffer
@@ -341,6 +350,15 @@ public:
      * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
+
+    /**
+     * Outputs a given duration interval in seconds including the msec remainder.
+     *
+     * The duration is outputted in seconds with msec remainder, e.g., 12.047.
+     *
+     * @param[in] aMsecDuration   A duration interval in msec.
+     */
+    void OutputMsecDurationInSec(uint32_t aMsecDuration);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 

@@ -515,9 +515,7 @@ private:
                        bool                aIsTxSuccess = true);
     void RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
     void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
-    void RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
-                            const Ip6::Netif::MulticastAddress &aMulticastAddress,
-                            Ip6::Netif::AddressOrigin           aAddressOrigin);
+    void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::MulticastAddress &aMulticastAddress);
     void HandleNotifierEvents(Events aEvents);
     void HandleTimer(void);
 #if OPENTHREAD_FTD

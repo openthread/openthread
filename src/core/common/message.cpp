@@ -281,10 +281,7 @@ Error Message::SetLength(uint16_t aLength)
     GetMetadata().mLength = aLength;
 
     // Correct the offset in case shorter length is set.
-    if (GetOffset() > aLength)
-    {
-        SetOffset(aLength);
-    }
+    SetOffset(GetOffset());
 
 exit:
     return error;
@@ -314,17 +311,20 @@ uint8_t Message::GetBufferCount(void) const
     return rval;
 }
 
-void Message::MoveOffset(int aDelta)
+void Message::MoveOffset(int16_t aDelta)
 {
-    OT_ASSERT(GetOffset() + aDelta <= GetLength());
-    GetMetadata().mOffset += static_cast<int16_t>(aDelta);
-    OT_ASSERT(GetMetadata().mOffset <= GetLength());
+    int32_t newOffset = static_cast<int32_t>(GetOffset()) + aDelta;
+
+    newOffset = Clamp<int32_t>(newOffset, 0, NumericLimits<uint16_t>::kMax);
+
+    SetOffset(static_cast<uint16_t>(newOffset));
 }
 
-void Message::SetOffset(uint16_t aOffset)
+void Message::SetOffset(uint16_t aOffset) { GetMetadata().mOffset = Min(aOffset, GetLength()); }
+
+uint16_t Message::DetermineLengthAfterOffset(void) const
 {
-    OT_ASSERT(aOffset <= GetLength());
-    GetMetadata().mOffset = aOffset;
+    return (GetOffset() <= GetLength()) ? GetLength() - GetOffset() : 0;
 }
 
 bool Message::IsMleCommand(Mle::Command aMleCommand) const
@@ -663,6 +663,17 @@ exit:
     return error;
 }
 
+Error Message::ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength)
+{
+    Error error;
+
+    SuccessOrExit(error = Read(GetOffset(), aBuf, aLength));
+    MoveOffset(aLength);
+
+exit:
+    return error;
+}
+
 bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher) const
 {
     uint16_t       bytesToCompare = aLength;
@@ -774,39 +785,43 @@ void Message::WriteBytesFromMessage(uint16_t       aWriteOffset,
     }
 }
 
-Message *Message::Clone(uint16_t aLength) const
-{
-    Error    error = kErrorNone;
-    Message *messageCopy;
-    Settings settings(IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity, GetPriority());
-    uint16_t offset;
+Message *Message::Clone(void) const { return Clone(GetLength()); }
 
-    aLength     = Min(GetLength(), aLength);
-    messageCopy = Get<MessagePool>().Allocate(GetType(), GetReserved(), settings);
-    VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
+Message *Message::Clone(uint16_t aLength) const { return Clone(aLength, GetReserved()); }
+
+Message *Message::Clone(uint16_t aLength, uint16_t aReserveHeader) const
+{
+    Error            error = kErrorNone;
+    Message         *clone;
+    LinkSecurityMode linkSecurityMode = IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity;
+
+    clone = Get<MessagePool>().Allocate(GetType(), aReserveHeader, Settings(linkSecurityMode, GetPriority()));
+    VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
+
+    aLength = Min(aLength, GetLength());
+
+    SuccessOrExit(error = clone->AppendBytesFromMessage(*this, 0, aLength));
 
     // Copy selected message information.
 
-    offset = Min(GetOffset(), aLength);
-    messageCopy->SetOffset(offset);
+    clone->SetOffset(Min(GetOffset(), aLength));
 
-    messageCopy->SetSubType(GetSubType());
-    messageCopy->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
-    messageCopy->SetOrigin(GetOrigin());
-    messageCopy->SetTimestamp(GetTimestamp());
-    messageCopy->SetMeshDest(GetMeshDest());
-    messageCopy->SetPanId(GetPanId());
-    messageCopy->SetChannel(GetChannel());
-    messageCopy->SetRssAverager(GetRssAverager());
-    messageCopy->SetLqiAverager(GetLqiAverager());
+    clone->SetSubType(GetSubType());
+    clone->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
+    clone->SetOrigin(GetOrigin());
+    clone->SetTimestamp(GetTimestamp());
+    clone->SetMeshDest(GetMeshDest());
+    clone->SetPanId(GetPanId());
+    clone->SetChannel(GetChannel());
+    clone->SetRssAverager(GetRssAverager());
+    clone->SetLqiAverager(GetLqiAverager());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    messageCopy->SetTimeSync(IsTimeSync());
+    clone->SetTimeSync(IsTimeSync());
 #endif
 
 exit:
-    FreeAndNullMessageOnError(messageCopy, error);
-    return messageCopy;
+    FreeAndNullMessageOnError(clone, error);
+    return clone;
 }
 
 Error Message::GetLinkInfo(ThreadLinkInfo &aLinkInfo) const

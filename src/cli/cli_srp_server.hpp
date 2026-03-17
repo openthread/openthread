@@ -83,6 +83,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     void OutputHostAddresses(const otSrpServerHost *aHost);
+    void OutputLeaseInfo(const otSrpServerLeaseInfo &aLeaseInfo, bool aIsDeleted);
 };
 
 } // namespace Cli

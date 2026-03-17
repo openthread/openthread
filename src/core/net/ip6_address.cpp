@@ -325,29 +325,9 @@ bool Address::IsLinkLocalMulticast(void) const { return IsMulticast() && (GetSco
 
 bool Address::IsLinkLocalUnicastOrMulticast(void) const { return IsLinkLocalUnicast() || IsLinkLocalMulticast(); }
 
-bool Address::IsLinkLocalAllNodesMulticast(void) const { return (*this == GetLinkLocalAllNodesMulticast()); }
-
-void Address::SetToLinkLocalAllNodesMulticast(void) { *this = GetLinkLocalAllNodesMulticast(); }
-
-bool Address::IsLinkLocalAllRoutersMulticast(void) const { return (*this == GetLinkLocalAllRoutersMulticast()); }
-
-void Address::SetToLinkLocalAllRoutersMulticast(void) { *this = GetLinkLocalAllRoutersMulticast(); }
-
 bool Address::IsRealmLocalMulticast(void) const { return IsMulticast() && (GetScope() == kRealmLocalScope); }
 
 bool Address::IsMulticastLargerThanRealmLocal(void) const { return IsMulticast() && (GetScope() > kRealmLocalScope); }
-
-bool Address::IsRealmLocalAllNodesMulticast(void) const { return (*this == GetRealmLocalAllNodesMulticast()); }
-
-void Address::SetToRealmLocalAllNodesMulticast(void) { *this = GetRealmLocalAllNodesMulticast(); }
-
-bool Address::IsRealmLocalAllRoutersMulticast(void) const { return (*this == GetRealmLocalAllRoutersMulticast()); }
-
-void Address::SetToRealmLocalAllRoutersMulticast(void) { *this = GetRealmLocalAllRoutersMulticast(); }
-
-bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRealmLocalAllMplForwarders()); }
-
-void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
 
 bool Address::IsIp4Mapped(void) const
 {
@@ -438,31 +418,6 @@ uint8_t Address::GetScope(void) const
 uint8_t Address::PrefixMatch(const Address &aOther) const
 {
     return static_cast<uint8_t>(CountMatchingBits(mFields.m8, aOther.mFields.m8, BitSizeOf(Address)));
-}
-
-bool Address::MatchesFilter(TypeFilter aFilter) const
-{
-    bool matches = true;
-
-    switch (aFilter)
-    {
-    case kTypeAny:
-        break;
-
-    case kTypeUnicast:
-        matches = !IsUnspecified() && !IsMulticast();
-        break;
-
-    case kTypeMulticast:
-        matches = IsMulticast();
-        break;
-
-    case kTypeMulticastLargerThanRealmLocal:
-        matches = IsMulticastLargerThanRealmLocal();
-        break;
-    }
-
-    return matches;
 }
 
 void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)

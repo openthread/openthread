@@ -70,6 +70,7 @@ struct otMessage
 
 namespace ot {
 
+class UnitTester;
 template <typename UintType> class CrcCalculator;
 
 namespace Crypto {
@@ -286,6 +287,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
+    friend class ot::UnitTester;
 
 public:
     /**
@@ -526,7 +528,7 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      */
-    void MoveOffset(int aDelta);
+    void MoveOffset(int16_t aDelta);
 
     /**
      * Sets the byte offset within the message.
@@ -534,6 +536,13 @@ public:
      * @param[in]  aOffset  The byte offset within the message.
      */
     void SetOffset(uint16_t aOffset);
+
+    /**
+     * Determines the length (number of bytes) in the message from the current message offset to the end of the message.
+     *
+     * @return Number of bytes in the message starting from the current message offset to the end of the message.
+     */
+    uint16_t DetermineLengthAfterOffset(void) const;
 
     /**
      * Returns the type of the message.
@@ -926,6 +935,34 @@ public:
     }
 
     /**
+     * Reads a given number of bytes from the message at the current message offset and advances the message offset.
+     *
+     * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
+     * @param[in]  aLength  Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message. Message offset is advanced.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength. Message offset is unchanged.
+     */
+    Error ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength);
+
+    /**
+     * Reads an object from the message at the current message offset and advances the message offset.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[out] aObject      A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message. Message offset is advanced.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object. Offset is unchanged.
+     */
+    template <typename ObjectType> Error ReadAtAndAdvanceOffset(ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return ReadAtAndAdvanceOffset(&aObject, sizeof(ObjectType));
+    }
+
+    /**
      * Compares the bytes in the message at a given offset with a given byte array.
      *
      * If there are fewer bytes available in the message than the requested @p aLength, the comparison is treated as
@@ -1065,26 +1102,39 @@ public:
     /**
      * Creates a copy of the message.
      *
-     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
-     * cloned message are also copied from the original one.
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
      *
-     * @param[in] aLength  Number of payload bytes to copy.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    Message *Clone(void) const;
+
+    /**
+     * Creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message
+     * are also copied from the original one.
+     *
+     * @param[in] aLength  Number of message bytes to copy.
      *
      * @returns A pointer to the message or nullptr if insufficient message buffers are available.
      */
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * Creates a copy of the message.
+     * Creates a copy of the message using a given configuration.
      *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * It allocates the new message from the same message pool as the original one. The `Type`, `SubType`,
+     * `LinkSecurity`, `Offset`, and `Priority` fields on the cloned message are copied from the original one.
+     *
+     * @param[in] aLength         Number of message bytes to copy.
+     * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(void) const { return Clone(GetLength()); }
+    Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
 
     /**
      * Returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6

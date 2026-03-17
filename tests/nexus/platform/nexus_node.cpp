@@ -27,7 +27,6 @@
  */
 
 #include "nexus_node.hpp"
-#include "nexus_utils.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -38,9 +37,13 @@ void Node::Reset(void)
     uint32_t  id       = GetId();
 
     mRadio.Reset();
-    mAlarm.Reset();
+    mAlarmMilli.Reset();
+    mAlarmMicro.Reset();
     mMdns.Reset();
+    mInfraIf.mPendingTxQueue.DequeueAndFreeAll();
     mPendingTasklet = false;
+
+    otIp6SetReceiveCallback(&GetInstance(), HandleIp6Receive, &GetInstance());
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrel.Reset();
 #endif
@@ -66,7 +69,7 @@ void Node::Form(void)
 void Node::Join(Node &aNode, JoinMode aJoinMode)
 {
     MeshCoP::Dataset dataset;
-    Mle::DeviceMode  mode(0);
+    uint8_t          mode = 0;
 
     switch (aJoinMode)
     {
@@ -75,18 +78,20 @@ void Node::Join(Node &aNode, JoinMode aJoinMode)
         OT_FALL_THROUGH;
 
     case kAsFtd:
-        mode.Set(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullThreadDevice |
-                 Mle::DeviceMode::kModeFullNetworkData);
+        mode = Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullThreadDevice |
+               Mle::DeviceMode::kModeFullNetworkData;
         break;
     case kAsMed:
-        mode.Set(Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData);
+        mode = Mle::DeviceMode::kModeRxOnWhenIdle | Mle::DeviceMode::kModeFullNetworkData;
+        break;
+    case kAsSedWithFullNetData:
+        mode = Mle::DeviceMode::kModeFullNetworkData;
         break;
     case kAsSed:
-        mode.Set(Mle::DeviceMode::kModeFullNetworkData);
         break;
     }
 
-    SuccessOrQuit(Get<Mle::Mle>().SetDeviceMode(mode));
+    SuccessOrQuit(Get<Mle::Mle>().SetDeviceMode(Mle::DeviceMode(mode)));
 
     SuccessOrQuit(aNode.Get<MeshCoP::ActiveDatasetManager>().Read(dataset));
     Get<MeshCoP::ActiveDatasetManager>().SaveLocal(dataset);
@@ -103,6 +108,70 @@ void Node::AllowList(Node &aNode)
 
 void Node::UnallowList(Node &aNode) { Get<Mac::Filter>().RemoveAddress(aNode.Get<Mac::Mac>().GetExtAddress()); }
 
+void Node::SendEchoRequest(const Ip6::Address &aDestination,
+                           uint16_t            aIdentifier,
+                           uint16_t            aPayloadSize,
+                           uint8_t             aHopLimit,
+                           const Ip6::Address *aSrcAddress)
+{
+    Message         *message;
+    Ip6::MessageInfo messageInfo;
+
+    message = Get<Ip6::Icmp>().NewMessage();
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(message->SetLength(aPayloadSize));
+
+    messageInfo.SetPeerAddr(aDestination);
+    messageInfo.SetHopLimit(aHopLimit);
+
+    if (aSrcAddress != nullptr)
+    {
+        messageInfo.SetSockAddr(*aSrcAddress);
+    }
+
+    Log("Sending Echo Request from Node %lu (%s) to %s (payload-size:%u)", ToUlong(GetId()), GetName(),
+        aDestination.ToString().AsCString(), aPayloadSize);
+
+    SuccessOrQuit(Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier));
+}
+
+void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append("%s_%u", aPrefix, aIndex); }
+
+void Node::HandleIp6Receive(otMessage *aMessage, void *aContext)
+{
+    static_cast<Node *>(aContext)->HandleReceive(aMessage);
+}
+
+void Node::HandleReceive(otMessage *aMessage)
+{
+    uint16_t           length = otMessageGetLength(aMessage);
+    uint8_t            buffer[1500];
+    const Ip6::Header *header;
+
+    VerifyOrExit(length <= sizeof(buffer));
+    VerifyOrQuit(otMessageRead(aMessage, 0, buffer, length) == length);
+
+    VerifyOrExit(length >= sizeof(Ip6::Header));
+    header = reinterpret_cast<const Ip6::Header *>(buffer);
+
+    // Forward packets to InfraIf if they are intended for the backbone.
+    // We avoid forwarding link-local and realm-local scope packets.
+
+    VerifyOrExit(mInfraIf.IsInitialized());
+    VerifyOrExit(header->GetHopLimit() > 1);
+    VerifyOrExit(header->GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
+
+    Core::Get().SetActiveNode(this);
+
+    VerifyOrExit(Get<NetworkData::Leader>().IsOnMesh(header->GetSource()));
+
+    mInfraIf.SendIp6(header->GetSource(), header->GetDestination(), buffer, length);
+
+exit:
+    otMessageFree(aMessage);
+}
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
 {
@@ -110,6 +179,27 @@ void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
     aSockAddr.SetPort(mTrel.mUdpPort);
 }
 #endif
+
+const Ip6::Address &Node::FindMatchingAddress(const char *aPrefix)
+{
+    Ip6::Prefix         prefix;
+    const Ip6::Address *matchedAddress = nullptr;
+
+    SuccessOrQuit(prefix.FromString(aPrefix));
+
+    for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+    {
+        if (unicastAddress.GetAddress().MatchesPrefix(prefix))
+        {
+            matchedAddress = &unicastAddress.GetAddress();
+            break;
+        }
+    }
+
+    VerifyOrQuit(matchedAddress != nullptr, "no matching address found");
+
+    return *matchedAddress;
+}
 
 } // namespace Nexus
 } // namespace ot

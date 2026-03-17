@@ -237,6 +237,16 @@ public:
     Error RegisterHandler(Handler &aHandler);
 
     /**
+     * Unregisters an ICMPv6 handler.
+     *
+     * @param[in] aHandler  The ICMPv6 handler.
+     *
+     * @retval kErrorNone      The handler was successfully removed from the list.
+     * @retval kErrorNotFound  Could not find the handler in the list.
+     */
+    Error UnregisterHandler(Handler &aHandler);
+
+    /**
      * Sends an ICMPv6 Echo Request message.
      *
      * @param[in]  aMessage      A reference to the Echo Request payload.

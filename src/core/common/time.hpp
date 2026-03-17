@@ -229,6 +229,18 @@ public:
     Time GetDistantPast(void) const { return Time(mValue - kDistantInterval); }
 
     /**
+     * Determines the remaining duration from a given current time to this `Time` instance.
+     *
+     * If this `Time` instance is in the past relative to @p aNow, this method returns zero. Otherwise, it returns the
+     * duration from @p aNow to this `Time` instance.
+     *
+     * @param[in] aNow  The current time.
+     *
+     * @returns The remaining duration from @p aNow to this `Time` instance, or zero if this `Time` is in the past.
+     */
+    uint32_t DetermineRemainingDurationFrom(Time aNow) const { return (aNow < *this) ? (*this - aNow) : 0; }
+
+    /**
      * Converts a given number of seconds to milliseconds.
      *
      * @param[in] aSeconds   The seconds value to convert to milliseconds.

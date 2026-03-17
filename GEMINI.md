@@ -69,6 +69,30 @@ To run the tests after building with the simulation preset:
 ctest --preset simulation
 ```
 
+### Nexus Tests
+
+Nexus is a test framework that allows simulating multiple OpenThread nodes within a single process, enabling faster and more scalable network simulations.
+
+**Build Nexus tests:**
+
+```bash
+top_builddir=nexus_test ./tests/nexus/build.sh
+```
+
+**Run all Nexus tests:**
+
+```bash
+top_builddir=nexus_test ./tests/nexus/run_nexus_tests.sh
+```
+
+**Run a specific Nexus test:**
+
+```bash
+top_builddir=nexus_test ./tests/nexus/run_nexus_tests.sh <test_name>
+```
+
+For more details, see [tests/nexus/README.md](tests/nexus/README.md).
+
 ## Development Conventions
 
 ### Code Style

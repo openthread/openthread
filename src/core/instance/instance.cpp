@@ -66,9 +66,6 @@ static uint64_t gMultiInstanceRaw[MULTI_INSTANCE_SIZE];
 OT_DEFINE_ALIGNED_VAR(sHeapRaw, sizeof(Utils::Heap), uint64_t);
 Utils::Heap *Instance::sHeap{nullptr};
 #endif
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-bool Instance::sDnsNameCompressionEnabled = true;
-#endif
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -174,6 +171,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgentTxtData(*this)
     , mBorderAgentManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    , mBorderAgentAdmitter(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     , mBorderAgentEphemeralKeyManager(*this)
@@ -295,6 +295,9 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     , mNat64Translator(*this)
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mDnsNameCompressionEnabled(true)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -424,6 +427,9 @@ void Instance::AfterInit(void)
     mIsInitialized = true;
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
+    Get<KeyManager>().Init();
+    Get<Mac::Mac>().Init();
+
     // Restore datasets and network information
 
     Get<Settings>().Init();
@@ -503,6 +509,26 @@ Error Instance::ErasePersistentInfo(void)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+Error Instance::SetDnsNameCompressionEnabled(bool aEnabled)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    if (Get<Dns::Multicast::Core>().IsEnabled())
+    {
+        VerifyOrExit(aEnabled, error = kErrorNotCapable);
+    }
+#endif
+
+    mDnsNameCompressionEnabled = aEnabled;
+    ExitNow();
+
+exit:
+    return error;
+}
+#endif
 
 void Instance::GetBufferInfo(BufferInfo &aInfo)
 {

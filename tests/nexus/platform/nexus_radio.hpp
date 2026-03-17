@@ -29,6 +29,7 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_RADIO_HPP_
 
+#include "mac_frame.h"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -38,10 +39,15 @@ struct Radio
 {
     static constexpr uint16_t kMaxFrameSize = OT_RADIO_FRAME_MAX_SIZE;
 
-    static constexpr uint16_t kMaxSrcMaatchShort = 80;
-    static constexpr uint16_t kMaxSrcMatchExt    = 10;
+    static constexpr uint16_t kMaxSrcMatchShort = 80;
+    static constexpr uint16_t kMaxSrcMatchExt   = 10;
 
-    static constexpr int8_t kRadioSensetivity = -100;
+    static constexpr int8_t kRadioSensitivity = -100;
+
+    static constexpr uint8_t kEnhAckProbingDataMaxLen = 2;
+    static constexpr uint8_t kLinkMetricsMax          = 255;
+    static constexpr uint8_t kLinkMetricsScale        = 130;
+    static constexpr int16_t kRssiOffset              = 130;
 
     using State = otRadioState;
 
@@ -63,22 +69,42 @@ struct Radio
         uint8_t mPsduBuffer[kMaxFrameSize];
     };
 
+    struct LinkMetricsInfo
+    {
+        bool Matches(Mac::ShortAddress aShortAddress) const { return mShortAddress == aShortAddress; }
+        bool Matches(const Mac::ExtAddress &aExtAddress) const { return mExtAddress == aExtAddress; }
+
+        Mac::ShortAddress mShortAddress;
+        Mac::ExtAddress   mExtAddress;
+        otLinkMetrics     mMetrics;
+    };
+
     Radio(void);
     void Reset(void);
     bool CanReceiveOnChannel(uint8_t aChannel) const;
     bool Matches(const Mac::Address &aAddress, Mac::PanId aPanId) const;
     bool HasFramePendingFor(const Mac::Address &aAddress) const;
 
+    Error   ConfigureEnhAckProbing(Mac::ShortAddress      aShortAddress,
+                                   const Mac::ExtAddress *aExtAddress,
+                                   otLinkMetrics          aMetrics);
+    uint8_t GenerateEnhAckProbingData(const Mac::Address &aAddress, uint8_t aLqi, int8_t aRssi, uint8_t *aData) const;
+
     State                                   mState;
     bool                                    mPromiscuous : 1;
     bool                                    mSrcMatchEnabled : 1;
+    bool                                    mMacFrameCounterReset : 1;
     uint8_t                                 mChannel;
     Mac::PanId                              mPanId;
     Mac::ShortAddress                       mShortAddress;
     Mac::ExtAddress                         mExtAddress;
     Frame                                   mTxFrame;
-    Array<uint16_t, kMaxSrcMaatchShort>     mSrcMatchShortEntries;
+    otRadioIeInfo                           mTxIeInfo;
+    otRadioContext                          mRadioContext;
+    Array<uint16_t, kMaxSrcMatchShort>      mSrcMatchShortEntries;
     Array<Mac::ExtAddress, kMaxSrcMatchExt> mSrcMatchExtEntries;
+
+    Array<LinkMetricsInfo, OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED> mLinkMetricsEntries;
 };
 
 } // namespace Nexus

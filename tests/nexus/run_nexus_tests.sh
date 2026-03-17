@@ -48,19 +48,130 @@ NEXUS_BIN_DIR="${BUILD_DIR}/tests/nexus"
 
 # Default test list if no arguments are provided
 DEFAULT_TESTS=(
-    "5_1_1"
-    "5_1_2"
-    "5_1_3"
-    "5_1_4"
-    "5_1_5"
-    "5_1_6"
-    "5_1_7"
-    "5_1_8"
-    "5_1_9"
-    "5_1_10"
-    "5_1_11"
-    "5_1_12"
-    "5_1_13"
+    "1_1_5_1_1"
+    "1_1_5_1_2"
+    "1_1_5_1_3"
+    "1_1_5_1_4"
+    "1_1_5_1_5"
+    "1_1_5_1_6"
+    "1_1_5_1_7"
+    "1_1_5_1_8"
+    "1_1_5_1_9"
+    "1_1_5_1_10"
+    "1_1_5_1_11"
+    "1_1_5_1_12"
+    "1_1_5_1_13"
+    "1_1_5_2_1"
+    "1_1_5_2_3"
+    "1_1_5_2_4"
+    "1_1_5_2_5"
+    "1_1_5_2_6"
+    "1_1_5_2_7"
+    "1_1_5_3_1"
+    "1_1_5_3_2"
+    "1_1_5_3_3"
+    "1_1_5_3_4"
+    "1_1_5_3_5"
+    "1_1_5_3_6"
+    "1_1_5_3_7"
+    "1_1_5_3_8"
+    "1_1_5_3_9"
+    "1_1_5_3_10"
+    "1_1_5_3_11"
+    "1_1_5_5_1"
+    "1_1_5_5_2"
+    "1_1_5_5_3"
+    "1_1_5_5_4_1"
+    "1_1_5_5_4_2"
+    "1_1_5_5_5"
+    "1_1_5_5_7"
+    "1_1_5_6_1"
+    "1_1_5_6_2"
+    "1_1_5_6_3"
+    "1_1_5_6_4"
+    "1_1_5_6_5"
+    "1_1_5_6_6"
+    "1_1_5_6_7"
+    "1_1_5_6_9"
+    "1_1_5_7_1"
+    "1_1_5_7_2"
+    "1_1_5_7_3"
+    "1_1_5_8_2"
+    "1_1_5_8_3"
+    "1_1_5_8_4"
+    "1_1_6_1_1_A"
+    "1_1_6_1_1_B"
+    "1_1_6_1_2_A"
+    "1_1_6_1_2_B"
+    "1_1_6_1_3_A"
+    "1_1_6_1_3_B"
+    "1_1_6_1_4"
+    "1_1_6_1_5"
+    "1_1_6_1_6"
+    "1_1_6_1_7"
+    "1_1_6_2_1_A"
+    "1_1_6_2_1_B"
+    "1_1_6_2_2"
+    "1_1_6_3_1_A"
+    "1_1_6_3_1_B"
+    "1_1_6_3_2"
+    "1_1_6_4_1_A"
+    "1_1_6_4_1_B"
+    "1_1_6_4_2"
+    "1_1_6_5_1"
+    "1_1_6_5_2"
+    "1_1_6_5_3"
+    "1_1_6_6_1"
+    "1_1_6_6_2"
+    "1_1_7_1_1"
+    "1_1_7_1_2"
+    "1_1_7_1_3"
+    "1_1_7_1_4"
+    "1_1_7_1_5"
+    "1_1_7_1_6"
+    "1_1_7_1_7"
+    "1_1_7_1_8"
+    "1_1_8_1_1"
+    "1_1_8_1_2"
+    "1_1_8_1_6"
+    "1_1_8_2_1"
+    "1_1_8_2_2"
+    "1_1_8_3_1"
+    "1_1_9_2_1"
+    "1_1_9_2_2"
+    "1_1_9_2_3"
+    "1_1_9_2_4"
+    "1_1_9_2_5"
+    "1_1_9_2_6"
+    "1_1_9_2_7"
+    "1_1_9_2_8"
+    "1_1_9_2_9"
+    "1_1_9_2_10"
+    "1_1_9_2_11"
+    "1_1_9_2_12"
+    "1_1_9_2_13"
+    "1_1_9_2_14"
+    "1_1_9_2_15"
+    "1_1_9_2_16"
+    "1_1_9_2_17"
+    "1_1_9_2_18"
+    "1_1_9_2_19"
+    "1_2_LP_5_2_1"
+    "1_2_LP_5_3_1"
+    "1_2_LP_5_3_2"
+    "1_2_LP_5_3_3"
+    "1_2_LP_5_3_4"
+    "1_2_LP_5_3_5"
+    "1_2_LP_5_3_6"
+    "1_2_LP_5_3_7"
+    "1_2_LP_5_3_8"
+    "1_2_LP_7_1_1"
+    "1_2_LP_7_1_2"
+    "1_2_LP_7_2_1"
+    "1_2_LP_7_2_2"
+    "1_2_MATN_TC_1"
+    "1_2_MATN_TC_2"
+    "1_2_MATN_TC_3"
 )
 
 # Use provided arguments or the default test list
@@ -74,19 +185,21 @@ failed_tests=()
 
 run_test()
 {
-    local test_base="$1"
+    local test_full="$1"
     # Strip 'nexus_' prefix if present
-    test_base="${test_base#nexus_}"
+    test_full="${test_full#nexus_}"
+
+    local test_base="${test_full%_[AB]}"
+    local topology=""
+    if [[ $test_full != "$test_base" ]]; then
+        topology="${test_full##*_}"
+    fi
 
     local test_name="nexus_${test_base}"
-    local json_file="test_${test_base}.json"
-    local pcap_file="test_${test_base}.pcap"
+    local json_file="test_${test_full}.json"
+    local pcap_file="test_${test_full}.pcapng"
     local verify_script="${REPO_ROOT}/tests/nexus/verify_${test_base}.py"
     local nexus_bin="${NEXUS_BIN_DIR}/${test_name}"
-
-    printf "========================================================================================\n"
-    printf "Running %s...\n" "$test_name"
-    printf "========================================================================================\n"
 
     if [[ ! -x $nexus_bin ]]; then
         printf "Error: %s not found or not executable in %s. Did you build the tests?\n" "$test_name" "$NEXUS_BIN_DIR" >&2
@@ -95,7 +208,10 @@ run_test()
 
     # Create a temporary directory for test artifacts
     local work_dir
-    work_dir=$(mktemp -d "${TEMP_DIR}/nexus_test_${test_base}.XXXXXX")
+    work_dir=$(mktemp -d "${TEMP_DIR}/nexus_test_${test_full}.XXXXXX")
+    local log_file="${work_dir}/test.log"
+
+    printf "Running %-40s... " "$test_full"
 
     # Run the Nexus C++ test and verification in a subshell to isolate the working directory
     (
@@ -103,8 +219,8 @@ run_test()
 
         # 1. Run the Nexus C++ test
         export OT_NEXUS_PCAP_FILE="$pcap_file"
-        if ! "$nexus_bin"; then
-            printf "C++ test %s FAILED\n" "$test_name" >&2
+        if ! "$nexus_bin" "$topology" "$json_file"; then
+            printf "C++ test %s FAILED\n" "$test_full" >&2
             exit 1
         fi
 
@@ -118,32 +234,43 @@ run_test()
             fi
 
             if ! python3 "$verify_script" "$json_file"; then
-                printf "Verification for %s FAILED\n" "$test_name" >&2
+                printf "Verification for %s FAILED\n" "$test_full" >&2
                 exit 1
             fi
-        else
-            printf "\n"
-            printf "No verification script found for %s (%s), skipping verification.\n" "$test_name" "$verify_script"
         fi
-    )
+    ) >"$log_file" 2>&1
 
     local exit_code="$?"
 
     if [[ $exit_code -eq 0 ]]; then
-        printf "\n"
-        printf "%s PASSED\n" "$test_name"
+        printf " PASSED\n"
         if [[ -d $work_dir && $work_dir == "${TEMP_DIR}/"* ]]; then
             rm -rf "$work_dir"
         fi
         return 0
     else
-        printf "\n"
-        printf "%s FAILED. Artifacts preserved in: %s\n" "$test_name" "$work_dir" >&2
+        printf " FAILED\n"
+        printf "========================================================================================\n"
+        cat "$log_file"
+        printf "========================================================================================\n"
+        printf "Artifacts preserved in: %s\n" "$work_dir"
         return 1
     fi
 }
 
+expanded_tests=()
 for t in "${TESTS_TO_RUN[@]}"; do
+    case "$t" in
+        1_1_6_1_1 | 1_1_6_1_2 | 1_1_6_1_3 | 1_1_6_1_6 | 1_1_6_2_1 | 1_1_6_2_2 | 1_1_6_3_1 | 1_1_6_3_2 | 1_1_6_4_1 | 1_1_6_4_2 | 1_1_6_5_1 | 1_1_6_5_2 | 1_1_6_5_3 | 1_1_6_6_1 | 1_1_6_6_2 | 1_1_9_2_1 | 1_1_9_2_3 | 1_1_9_2_4 | 1_1_9_2_19)
+            expanded_tests+=("${t}_A" "${t}_B")
+            ;;
+        *)
+            expanded_tests+=("$t")
+            ;;
+    esac
+done
+
+for t in "${expanded_tests[@]}"; do
     if ! run_test "$t"; then
         failed_tests+=("$t")
     fi

@@ -34,6 +34,8 @@
 
 #include "common/arg_macros.hpp"
 
+#include <openthread/link.h>
+
 /**
  * Verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
  * given error messages and exits the program.
@@ -73,5 +75,18 @@
 // Private macros to convert `aArg` to string
 #define _Stringize(aArg) _Stringize2(aArg)
 #define _Stringize2(aArg) #aArg
+
+namespace ot {
+namespace Nexus {
+
+/**
+ * CSL period constants in units of 10 symbols.
+ */
+static constexpr uint16_t kCslPeriod500ms  = 500 * 1000 / OT_US_PER_TEN_SYMBOLS;
+static constexpr uint16_t kCslPeriod3300ms = 3300 * 1000 / OT_US_PER_TEN_SYMBOLS;
+static constexpr uint16_t kCslPeriod400ms  = 400 * 1000 / OT_US_PER_TEN_SYMBOLS;
+
+} // namespace Nexus
+} // namespace ot
 
 #endif // OT_NEXUS_PLATFORM_NEXUS_UTILS_HPP_

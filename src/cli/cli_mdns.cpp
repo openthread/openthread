@@ -200,8 +200,8 @@ void Mdns::OutputState(otMdnsEntryState aState)
 
 void Mdns::OutputCacheInfo(const otMdnsCacheInfo &aInfo)
 {
-    OutputLine(kIndentSize, "active: %s", aInfo.mIsActive ? "yes" : "no");
-    OutputLine(kIndentSize, "cached-results: %s", aInfo.mHasCachedResults ? "yes" : "no");
+    OutputLine(kIndentSize, "active: %s", ToYesNo(aInfo.mIsActive));
+    OutputLine(kIndentSize, "cached-results: %s", ToYesNo(aInfo.mHasCachedResults));
 }
 
 template <> otError Mdns::Process<Cmd("register")>(Arg aArgs[])

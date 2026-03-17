@@ -43,7 +43,7 @@ namespace Coap {
 RegisterLogModule("CoapSecure");
 
 SecureSession::SecureSession(Instance &aInstance, Dtls::Transport &aDtlsTransport)
-    : CoapBase(aInstance, Transmit)
+    : CoapBase(aInstance, SecureSession::Transmit)
     , Dtls::Session(aDtlsTransport)
     , mTransmitTask(aInstance, HandleTransmitTask, this)
 {

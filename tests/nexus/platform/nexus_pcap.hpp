@@ -44,31 +44,44 @@ public:
     ~Pcap(void);
 
     /**
-     * Opens a pcap file.
+     * Opens a pcapng file.
      *
      * @param[in] aFilename  The filename to open.
      */
     void Open(const char *aFilename);
 
     /**
-     * Closes the pcap file.
+     * Closes the pcapng file.
      */
     void Close(void);
 
     /**
-     * Writes a frame to the pcap file.
+     * Writes a frame to the pcapng file.
      *
      * @param[in] aFrame   The frame to write.
      * @param[in] aTimeUs  The timestamp in microseconds.
      */
     void WriteFrame(const otRadioFrame &aFrame, uint64_t aTimeUs);
 
+    /**
+     * Writes a packet to the pcapng file.
+     *
+     * @param[in] aBuffer  The packet buffer to write.
+     * @param[in] aLength  The packet length.
+     * @param[in] aTimeUs  The timestamp in microseconds.
+     */
+    void WritePacket(const uint8_t *aBuffer, uint16_t aLength, uint64_t aTimeUs);
+
 private:
-    static constexpr uint32_t kPcapMagicNumber  = 0xa1b2c3d4;
-    static constexpr uint16_t kPcapVersionMajor = 2;
-    static constexpr uint16_t kPcapVersionMinor = 4;
-    static constexpr uint32_t kPcapSnapLen      = 65535;
-    static constexpr uint32_t kPcapDlt154Tap    = 283;
+    static constexpr uint32_t kPcapngShbType            = 0x0a0d0d0a;
+    static constexpr uint32_t kPcapngByteOrderMagic     = 0x1a2b3c4d;
+    static constexpr uint16_t kPcapngVersionMajor       = 1;
+    static constexpr uint16_t kPcapngVersionMinor       = 0;
+    static constexpr uint32_t kPcapngIdbType            = 0x00000001;
+    static constexpr uint32_t kPcapngEpbType            = 0x00000006;
+    static constexpr uint32_t kPcapngSnapLen            = 65535;
+    static constexpr uint32_t kPcapngLinkTypeIeee802154 = 283; // DLT_IEEE802_15_4_TAP
+    static constexpr uint32_t kPcapngLinkTypeIPv6       = 101; // LINKTYPE_RAW
 
     static constexpr uint8_t kTapVersion = 0;
 

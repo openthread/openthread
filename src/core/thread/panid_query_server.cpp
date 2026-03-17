@@ -43,41 +43,34 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
+    , mIsRunning(false)
     , mTimer(aInstance)
 {
 }
 
 template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
 {
+    Error    error;
     uint16_t panId;
     uint32_t mask;
 
-    VerifyOrExit(aMsg.IsPostRequest());
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+    VerifyOrExit(!mIsRunning, error = kErrorBusy);
 
-    SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+
+    SuccessOrExit(error = Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));
 
     mChannelMask  = mask;
     mCommissioner = aMsg.mMessageInfo.GetPeerAddr();
     mPanId        = panId;
+    mIsRunning    = true;
     mTimer.Start(kScanDelay);
 
-    if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
-    {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMsg));
-        LogInfo("Sent %s ack", UriToString<kUriPanIdQuery>());
-    }
-
 exit:
-    return;
+    IgnoreError(Get<Tmf::Agent>().SendAckResponseIfUnicastRequest(aMsg, error));
 }
 
-void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext)
-{
-    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aScanResult);
-}
-
-void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
+void PanIdQueryServer::HandleScanResult(const ScanResult *aScanResult)
 {
     if (aScanResult != nullptr)
     {
@@ -88,26 +81,24 @@ void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
     }
     else if (mChannelMask != 0)
     {
+        mIsRunning = false;
         SendConflict();
     }
 }
 
 void PanIdQueryServer::SendConflict(void)
 {
-    Error            error = kErrorNone;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message;
+    Error          error = kErrorNone;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriPanIdConflict);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriPanIdConflict);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*message, mChannelMask));
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, mPanId));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, mCommissioner));
 
     LogInfo("Sent %s", UriToString<kUriPanIdConflict>());
 
@@ -118,7 +109,11 @@ exit:
 
 void PanIdQueryServer::HandleTimer(void)
 {
-    IgnoreError(Get<Mac::Mac>().ActiveScan(mChannelMask, 0, HandleScanResult, this));
+    if (Get<Mac::Mac>().ActiveScan(mChannelMask, 0, HandleScanResult, this) != kErrorNone)
+    {
+        mIsRunning = false;
+    }
+
     mChannelMask = 0;
 }
 

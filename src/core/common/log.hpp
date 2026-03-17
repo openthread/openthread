@@ -107,8 +107,20 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  ...   Arguments for the format specification.
  */
 #define LogCrit(...) Logger::LogAtLevel<kLogLevelCrit>(kLogModuleName, __VA_ARGS__)
+
+/**
+ * Emits an error log message at critical log level if there is an error.
+ *
+ * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
+ *
+ * @param[in] aError       The error to check and log.
+ * @param[in] ...          Arguments for the format specification.
+ */
+#define LogCritOnError(aError, ...) Logger::LogOnError<kLogLevelCrit>(kLogModuleName, aError, __VA_ARGS__)
 #else
 #define LogCrit(...)
+#define LogCritOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
@@ -118,8 +130,21 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  ...   Arguments for the format specification.
  */
 #define LogWarn(...) Logger::LogAtLevel<kLogLevelWarn>(kLogModuleName, __VA_ARGS__)
+
+/**
+ * Emits an error log message at warning log level if there is an error.
+ *
+ * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
+ *
+ * @param[in] aError       The error to check and log.
+ * @param[in] ...          Arguments for the format specification.
+ */
+#define LogWarnOnError(aError, ...) Logger::LogOnError<kLogLevelWarn>(kLogModuleName, aError, __VA_ARGS__)
+
 #else
 #define LogWarn(...)
+#define LogWarnOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
@@ -129,8 +154,21 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  ...   Arguments for the format specification.
  */
 #define LogNote(...) Logger::LogAtLevel<kLogLevelNote>(kLogModuleName, __VA_ARGS__)
+
+/**
+ * Emits an error log message at note log level if there is an error.
+ *
+ * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
+ *
+ * @param[in] aError       The error to check and log.
+ * @param[in] ...          Arguments for the format specification.
+ */
+#define LogNoteOnError(aError, ...) Logger::LogOnError<kLogLevelNote>(kLogModuleName, aError, __VA_ARGS__)
+
 #else
 #define LogNote(...)
+#define LogNoteOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -140,8 +178,21 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  ...   Arguments for the format specification.
  */
 #define LogInfo(...) Logger::LogAtLevel<kLogLevelInfo>(kLogModuleName, __VA_ARGS__)
+
+/**
+ * Emits an error log message at info log level if there is an error.
+ *
+ * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
+ *
+ * @param[in] aError       The error to check and log.
+ * @param[in] ...          Arguments for the format specification.
+ */
+#define LogInfoOnError(aError, ...) Logger::LogOnError<kLogLevelInfo>(kLogModuleName, aError, __VA_ARGS__)
+
 #else
 #define LogInfo(...)
+#define LogInfoOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
@@ -151,23 +202,21 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
  * @param[in]  ...   Arguments for the format specification.
  */
 #define LogDebg(...) Logger::LogAtLevel<kLogLevelDebg>(kLogModuleName, __VA_ARGS__)
-#else
-#define LogDebg(...)
-#endif
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 /**
- * Emits an error log message at warning log level if there is an error.
+ * Emits an error log message at debug log level if there is an error.
  *
- * The emitted log will use the the following format "Failed to {aText}: {ErrorToString(aError)}", and will be emitted
- * only if there is an error, i.e., @p aError is not `kErrorNone`.
+ * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
  *
  * @param[in] aError       The error to check and log.
- * @param[in] aText        The text to include in the log.
+ * @param[in] ...          Arguments for the format specification.
  */
-#define LogWarnOnError(aError, aText) Logger::LogOnError(kLogModuleName, aError, aText)
+#define LogDebgOnError(aError, ...) Logger::LogOnError<kLogLevelDebg>(kLogModuleName, aError, __VA_ARGS__)
+
 #else
-#define LogWarnOnError(aError, aText)
+#define LogDebg(...)
+#define LogDebgOnError(aError, ...) OT_UNUSED_VARIABLE(aError)
 #endif
 
 #if OT_SHOULD_LOG
@@ -312,12 +361,12 @@ public:
     static void LogAtLevel(const char *aModuleName, const char *aFormat, ...)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
+    template <LogLevel kLogLevel>
+    static void LogOnError(const char *aModuleName, Error aError, const char *aFormat, ...)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
+
     static void LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, va_list aArgs)
         OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-    static void LogOnError(const char *aModuleName, Error aError, const char *aText);
-#endif
 
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP
     static constexpr uint8_t kStringLineLength = 80;
@@ -338,6 +387,10 @@ public:
     template <LogLevel kLogLevel>
     static void DumpAtLevel(const char *aModuleName, const char *aText, const void *aData, uint16_t aDataLength);
 #endif
+
+private:
+    static void Log(const char *aModuleName, LogLevel aLogLevel, Error aError, const char *aFormat, va_list aArgs)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(4, 0);
 };
 
 extern template void Logger::LogAtLevel<kLogLevelNone>(const char *aModuleName, const char *aFormat, ...);
@@ -346,6 +399,13 @@ extern template void Logger::LogAtLevel<kLogLevelWarn>(const char *aModuleName, 
 extern template void Logger::LogAtLevel<kLogLevelNote>(const char *aModuleName, const char *aFormat, ...);
 extern template void Logger::LogAtLevel<kLogLevelInfo>(const char *aModuleName, const char *aFormat, ...);
 extern template void Logger::LogAtLevel<kLogLevelDebg>(const char *aModuleName, const char *aFormat, ...);
+
+extern template void Logger::LogOnError<kLogLevelNone>(const char *aModuleName, Error aError, const char *aFormat, ...);
+extern template void Logger::LogOnError<kLogLevelCrit>(const char *aModuleName, Error aError, const char *aFormat, ...);
+extern template void Logger::LogOnError<kLogLevelWarn>(const char *aModuleName, Error aError, const char *aFormat, ...);
+extern template void Logger::LogOnError<kLogLevelNote>(const char *aModuleName, Error aError, const char *aFormat, ...);
+extern template void Logger::LogOnError<kLogLevelInfo>(const char *aModuleName, Error aError, const char *aFormat, ...);
+extern template void Logger::LogOnError<kLogLevelDebg>(const char *aModuleName, Error aError, const char *aFormat, ...);
 
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP
 extern template void Logger::DumpAtLevel<kLogLevelNone>(const char *aModuleName,

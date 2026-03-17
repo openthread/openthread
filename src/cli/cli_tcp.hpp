@@ -41,10 +41,14 @@
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
 
+#include <mbedtls/ssl.h>
+#include <mbedtls/version.h>
+#include <mbedtls/x509_crt.h>
+
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
-#include <mbedtls/ssl.h>
-#include <mbedtls/x509_crt.h>
+#endif
 
 #endif
 
@@ -155,11 +159,13 @@ private:
     otTcpEndpointAndCircularSendBuffer mEndpointAndCircularSendBuffer;
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    mbedtls_ssl_context     mSslContext;
-    mbedtls_ssl_config      mSslConfig;
-    mbedtls_x509_crt        mSrvCert;
-    mbedtls_pk_context      mPKey;
+    mbedtls_ssl_context mSslContext;
+    mbedtls_ssl_config  mSslConfig;
+    mbedtls_x509_crt    mSrvCert;
+    mbedtls_pk_context  mPKey;
+#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
     mbedtls_entropy_context mEntropy;
+#endif
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
     static constexpr const char *sBenchmarkData =

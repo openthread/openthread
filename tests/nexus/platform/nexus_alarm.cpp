@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include "nexus_alarm.hpp"
@@ -36,7 +37,7 @@ namespace ot {
 namespace Nexus {
 
 //---------------------------------------------------------------------------------------------------------------------
-// otPlatAlarmMilli APIs
+// otPlatAlarm Milli and Micro APIs
 
 extern "C" {
 
@@ -44,15 +45,29 @@ uint32_t otPlatAlarmMilliGetNow(void) { return Core::Get().GetNow().GetValue(); 
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    Alarm &alarm = AsNode(aInstance).mAlarm;
+    Alarm &alarm = AsNode(aInstance).mAlarmMilli;
 
     alarm.mScheduled = true;
     alarm.mAlarmTime.SetValue(aT0 + aDt);
 
-    Core::Get().UpdateNextAlarmTime(alarm);
+    Core::Get().UpdateNextAlarmMilli(alarm);
 }
 
-void otPlatAlarmMilliStop(otInstance *aInstance) { AsNode(aInstance).mAlarm.mScheduled = false; }
+void otPlatAlarmMilliStop(otInstance *aInstance) { AsNode(aInstance).mAlarmMilli.mScheduled = false; }
+
+uint32_t otPlatAlarmMicroGetNow(void) { return Core::Get().GetNowMicro().GetValue(); }
+
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    Alarm &alarm = AsNode(aInstance).mAlarmMicro;
+
+    alarm.mScheduled = true;
+    alarm.mAlarmTime.SetValue(aT0 + aDt);
+
+    Core::Get().UpdateNextAlarmMicro(alarm);
+}
+
+void otPlatAlarmMicroStop(otInstance *aInstance) { AsNode(aInstance).mAlarmMicro.mScheduled = false; }
 
 } // extern "C"
 

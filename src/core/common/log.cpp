@@ -81,6 +81,28 @@ template void Logger::LogAtLevel<kLogLevelNote>(const char *aModuleName, const c
 template void Logger::LogAtLevel<kLogLevelInfo>(const char *aModuleName, const char *aFormat, ...);
 template void Logger::LogAtLevel<kLogLevelDebg>(const char *aModuleName, const char *aFormat, ...);
 
+template <LogLevel kLogLevel> void Logger::LogOnError(const char *aModuleName, Error aError, const char *aFormat, ...)
+{
+    va_list args;
+
+    VerifyOrExit(aError != kErrorNone);
+
+    va_start(args, aFormat);
+    Log(aModuleName, kLogLevel, aError, aFormat, args);
+    va_end(args);
+
+exit:
+    return;
+}
+
+// Explicit instantiations
+template void Logger::LogOnError<kLogLevelNone>(const char *aModuleName, Error aError, const char *aFormat, ...);
+template void Logger::LogOnError<kLogLevelCrit>(const char *aModuleName, Error aError, const char *aFormat, ...);
+template void Logger::LogOnError<kLogLevelWarn>(const char *aModuleName, Error aError, const char *aFormat, ...);
+template void Logger::LogOnError<kLogLevelNote>(const char *aModuleName, Error aError, const char *aFormat, ...);
+template void Logger::LogOnError<kLogLevelInfo>(const char *aModuleName, Error aError, const char *aFormat, ...);
+template void Logger::LogOnError<kLogLevelDebg>(const char *aModuleName, Error aError, const char *aFormat, ...);
+
 void Logger::LogInModule(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, ...)
 {
     va_list args;
@@ -91,6 +113,11 @@ void Logger::LogInModule(const char *aModuleName, LogLevel aLogLevel, const char
 }
 
 void Logger::LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, va_list aArgs)
+{
+    Log(aModuleName, aLogLevel, kErrorNone, aFormat, aArgs);
+}
+
+void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, const char *aFormat, va_list aArgs)
 {
     static const char kModuleNamePadding[] = "--------------";
 
@@ -126,7 +153,17 @@ void Logger::LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char 
     logString.Append("%.*s%s: ", kMaxLogModuleNameLength, aModuleName,
                      &kModuleNamePadding[StringLength(aModuleName, kMaxLogModuleNameLength)]);
 
+    if (aError != kErrorNone)
+    {
+        logString.Append("Failed to ");
+    }
+
     logString.AppendVarArgs(aFormat, aArgs);
+
+    if (aError != kErrorNone)
+    {
+        logString.Append(" - %s", ErrorToString(aError));
+    }
 
     logString.Append("%s", OPENTHREAD_CONFIG_LOG_SUFFIX);
     otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "%s", logString.AsCString());
@@ -136,16 +173,6 @@ void Logger::LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char 
 exit:
     return;
 }
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void Logger::LogOnError(const char *aModuleName, Error aError, const char *aText)
-{
-    if (aError != kErrorNone)
-    {
-        LogAtLevel<kLogLevelWarn>(aModuleName, "Failed to %s: %s", aText, ErrorToString(aError));
-    }
-}
-#endif
 
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP
 

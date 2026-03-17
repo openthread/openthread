@@ -199,10 +199,10 @@ void Otns::EmitCoapStatus(const char             *aAction,
                           const Ip6::MessageInfo &aMessageInfo,
                           Error                  *aError) const
 {
-    Error            error;
-    char             uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    StatusString     string;
-    Coap::HeaderInfo header;
+    Error                              error;
+    Coap::Message::UriPathStringBuffer uriPath;
+    StatusString                       string;
+    Coap::HeaderInfo                   header;
 
     SuccessOrExit(error = aMessage.ParseHeaderInfo(header));
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));

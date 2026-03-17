@@ -53,6 +53,7 @@
 #include "common/owned_ptr.hpp"
 #include "common/tasklet.hpp"
 #include "common/uptime.hpp"
+#include "meshcop/border_agent_admitter.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/secure_transport.hpp"
@@ -109,6 +110,9 @@ class Manager : public InstanceLocator, private NonCopyable
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     friend class EphemeralKeyManager;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    friend class Admitter;
 #endif
     friend class ot::Notifier;
     friend class Tmf::Agent;
@@ -260,7 +264,6 @@ public:
 private:
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
-    static constexpr uint16_t kTxtDataMaxSize   = OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static constexpr uint16_t kDummyUdpPort          = 49152;
@@ -270,6 +273,9 @@ private:
     class CoapDtlsSession : public Coap::SecureSession, public Heap::Allocatable<CoapDtlsSession>
     {
         friend Heap::Allocatable<CoapDtlsSession>;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+        friend class Admitter;
+#endif
 
     public:
         Error    SendMessage(OwnedPtr<Coap::Message> aMessage);
@@ -279,6 +285,7 @@ private:
         bool     IsActiveCommissioner(void) const;
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
         uint16_t GetIndex(void) const { return mIndex; }
+        void     CopyInfoTo(SessionInfo &aInfo, UptimeMsec aUptimeNow) const;
 
     private:
         enum Action : uint8_t
@@ -303,6 +310,8 @@ private:
         CoapDtlsSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
 
         Error ForwardToCommissioner(OwnedPtr<Coap::Message> aForwardMessage, const Message &aMessage);
+        Error ForwardUdpRelay(const Message &aMessage);
+        Error ForwardUdpProxy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         void  HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg);
         void  HandleTmfRelayTx(Coap::Msg &aMsg);
         void  HandleTmfProxyTx(Coap::Msg &aMsg);
@@ -321,6 +330,23 @@ private:
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+        bool  IsEnroller(void) const { return mEnroller != nullptr; }
+        void  ResignEnroller(void);
+        void  HandleEnrollerTmf(Uri aUri, const Coap::Msg &aMsg);
+        Error ProcessEnrollerRegister(const Coap::Message &aMessage);
+        Error ProcessEnrollerKeepAlive(const Coap::Message &aMessage);
+        Error ProcessEnrollerJoinerAccept(const Coap::Message &aMessage);
+        Error ProcessEnrollerJoinerRelease(const Coap::Message &aMessage);
+        void  SendEnrollerResponse(Uri aUri, StateTlv::State aResponseState, const Coap::Message &aRequest);
+        void  SendEnrollerReportState(uint8_t aAdmitterState);
+        Error AppendAdmitterTlvs(Coap::Message &aMessage, uint8_t aAdmitterState);
+        void  ForwardUdpRelayToEnroller(const Coap::Message &aMessage);
+        void  ForwardUdpProxyToEnroller(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+        static Error ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData);
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
         void LogUri(Action aAction, const char *aUriString, const char *aTxt);
 
@@ -331,6 +357,9 @@ private:
         template <Uri kUri> void Log(Action, const char *) {}
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+        OwnedPtr<Admitter::Enroller> mEnroller;
+#endif
         LinkedList<ForwardContext> mForwardContexts;
         TimerMilliContext          mTimer;
         UptimeMsec                 mAllocationTime;
@@ -372,9 +401,14 @@ private:
     // Callback from `Dnssd`
     void HandleDnssdPlatformStateChange(void) { RegisterService(); }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    // Callback from `Admitter`
+    void HandlePrimeAdmitterStateChanged(void) { RegisterService(); }
+#endif
+
     const char *GetServiceName(void);
     bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
-    void        ConstrcutServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
+    void        ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
     void        RegisterService(void);
     void        UnregisterService(void);
 #endif
@@ -382,6 +416,10 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static const char kServiceType[];
     static const char kDefaultBaseServiceName[];
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    static const char        kAdmitterSubType[];
+    static const char *const kServiceSubTypes[];
+#endif
 #endif
 
     bool                       mEnabled;

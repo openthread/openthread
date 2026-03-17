@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
@@ -82,71 +83,9 @@ namespace Tmf {
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
-typedef Coap::Message Message; ///< A TMF message.
-typedef Coap::Msg     Msg;     ///< A TMF message along with its `Ip6::MessageInfo`.
-
-/**
- * Represents message information for a TMF message.
- *
- * This is sub-class of `Ip6::MessageInfo` intended for use when sending TMF messages.
- */
-class MessageInfo : public InstanceLocator, public Ip6::MessageInfo
-{
-public:
-    /**
-     * Initializes the `MessageInfo`.
-     *
-     * The peer port is set to `Tmf::kUdpPort` and all other properties are cleared (set to zero).
-     *
-     * @param[in] aInstance    The OpenThread instance.
-     */
-    explicit MessageInfo(Instance &aInstance)
-        : InstanceLocator(aInstance)
-    {
-        SetPeerPort(kUdpPort);
-    }
-
-    /**
-     * Sets the local socket port to TMF port.
-     */
-    void SetSockPortToTmf(void) { SetSockPort(kUdpPort); }
-
-    /**
-     * Sets the local socket address to mesh-local RLOC address.
-     */
-    void SetSockAddrToRloc(void);
-
-    /**
-     * Sets the local socket address to RLOC address and the peer socket address to leader ALOC.
-     */
-    void SetSockAddrToRlocPeerAddrToLeaderAloc(void);
-
-    /**
-     * Sets the local socket address to RLOC address and the peer socket address to leader RLOC.
-     */
-    void SetSockAddrToRlocPeerAddrToLeaderRloc(void);
-
-    /**
-     * Sets the local socket address to RLOC address and the peer socket address to realm-local all
-     * routers multicast address.
-     */
-    void SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void);
-
-    /**
-     * Sets the local socket address to RLOC address and the peer socket address to a router RLOC based on
-     * a given RLOC16.
-     *
-     * @param[in] aRloc16     The RLOC16 to use for peer address.
-     */
-    void SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16);
-
-    /**
-     * Sets the local socket address to RLOC address and the peer socket address to a given address.
-     *
-     * @param[in] aPeerAddress  The peer address.
-     */
-    void SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress);
-};
+typedef Coap::Message         Message;         ///< A TMF message.
+typedef Coap::Msg             Msg;             ///< A TMF message along with its `Ip6::MessageInfo`.
+typedef Coap::ResponseHandler ResponseHandler; ///< A TMF message response handler function pointer.
 
 /**
  * Implements functionality of the Thread TMF agent.
@@ -188,6 +127,103 @@ public:
     bool IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const;
 
     /**
+     * Sends a TMF message to a given destination address.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageTo(Message &aMessage, const Ip6::Address &aDest);
+
+    /**
+     * Sends a TMF message to a given destination address.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageTo(Message &aMessage, const Ip6::Address &aDest, ResponseHandler aHandler, void *aContext);
+
+    /**
+     * Sends a TMF message to a given destination address and allows multicast loop.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageAllowMulticastLoop(Message &aMessage, const Ip6::Address &aDest);
+
+    /**
+     * Sends a TMF message to a given destination address and allows multicast loop.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageAllowMulticastLoop(Message            &aMessage,
+                                        const Ip6::Address &aDest,
+                                        ResponseHandler     aHandler,
+                                        void               *aContext);
+
+    /**
+     * Sends a TMF message to a router RLOC based on a given RLOC16.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aRloc16       The RLOC16 to use for peer address.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToRloc(Message &aMessage, uint16_t aRloc16);
+
+    /**
+     * Sends a TMF message to a router RLOC based on a given RLOC16.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aRloc16       The RLOC16 to use for peer address.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToRloc(Message &aMessage, uint16_t aRloc16, ResponseHandler aHandler, void *aContext);
+
+    /**
+     * Sends a TMF message to the Leader ALOC.
+     *
+     * @param[in]  aMessage      The message to send.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToLeaderAloc(Message &aMessage);
+
+    /**
+     * Sends a TMF message to the Leader ALOC.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler, void *aContext);
+
+    /**
      * Converts a TMF message priority to IPv6 header DSCP value.
      *
      * @param[in] aPriority  The message priority to convert.
@@ -208,6 +244,12 @@ public:
 private:
     template <Uri kUri> void HandleTmf(Msg &aMsg);
 
+    void         PrepareMessageInfo(Ip6::MessageInfo &aMessageInfo) const;
+    Error        Send(Message            &aMessage,
+                      const Ip6::Address &aDest,
+                      bool                aAllowMulticastLoop,
+                      ResponseHandler     aHandler,
+                      void               *aContext);
     static bool  HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
     bool         HandleResource(const char *aUriPath, Msg &aMsg);
     static Error Filter(void *aContext, const Msg &aRxMsg);
@@ -229,13 +271,39 @@ public:
      */
     explicit SecureAgent(Instance &aInstance);
 
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Represents a resource handler callback function.
+     *
+     * @param[in] aContext      An arbitrary context (provided when callback is registered).
+     * @param[in] aUriPath      The URI.
+     * @param[in] aMsg          The received message.
+     *
+     * @retval TRUE   Indicates that the URI was known and the message was processed by the handler.
+     * @retval FALSE  Indicates that the URI was not known and the message was not processed by the handler.
+     */
+    typedef bool (*ResourceHandler)(void *aContext, Uri aUri, Msg &aMsg);
+
+    /**
+     * Registers a resource handler callback.
+     *
+     * @param[in] aHandler  The handler function pointer.
+     * @param[in] aContext  An arbitrary context (passed to the @p aHandler when it is invoked).
+     */
+    void RegisterResourceHandler(ResourceHandler aHandler, void *aContext) { mResourceHandler.Set(aHandler, aContext); }
+#endif
+
 private:
     static MeshCoP::SecureSession *HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
     Coap::SecureSession           *HandleDtlsAccept(void);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
     static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
     bool        HandleResource(const char *aUriPath, Msg &aMsg);
+#endif
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    Callback<ResourceHandler> mResourceHandler;
 #endif
 };
 

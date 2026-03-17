@@ -450,13 +450,12 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     Error  error = kErrorNone;
     Header udpHeader;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), udpHeader));
-
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoUdp));
 #endif
 
-    aMessage.MoveOffset(sizeof(udpHeader));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(udpHeader));
+
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
@@ -486,21 +485,7 @@ exit:
     return;
 }
 
-bool Udp::IsPortInUse(uint16_t aPort) const
-{
-    bool found = false;
-
-    for (const SocketHandle &socket : mSockets)
-    {
-        if (socket.GetSockName().GetPort() == aPort)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    return found;
-}
+bool Udp::IsPortInUse(uint16_t aPort) const { return mSockets.ContainsMatching(aPort); }
 
 } // namespace Ip6
 } // namespace ot

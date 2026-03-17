@@ -49,6 +49,9 @@ Publisher::Publisher(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mDnsSrpServiceEntry(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    , mBorderAdmitterEntry(aInstance)
+#endif
 #endif
     , mTimer(aInstance)
 {
@@ -220,6 +223,9 @@ void Publisher::HandleNotifierEvents(Events aEvents)
 {
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mDnsSrpServiceEntry.HandleNotifierEvents(aEvents);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    mBorderAdmitterEntry.HandleNotifierEvents(aEvents);
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -234,6 +240,9 @@ void Publisher::HandleTimer(void)
 {
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mDnsSrpServiceEntry.HandleTimer();
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    mBorderAdmitterEntry.HandleTimer();
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -279,6 +288,8 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
     // entries we aim to have in the Network Data to decide whether or
     // not to take any action (add or remove our entry).
 
+    TimeMilli now = TimerMilli::GetNow();
+
     LogInfo("%s in netdata - total:%d, preferred:%d, desired:%d", ToString().AsCString(), aNumEntries,
             aNumPreferredEntries, aDesiredNumEntries);
 
@@ -294,10 +305,10 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
         if (aNumEntries < aDesiredNumEntries)
         {
-            mUpdateTime = TimerMilli::GetNow() + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToAdd);
+            mUpdateTime = now + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToAdd);
             SetState(kAdding);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
-            LogUpdateTime();
+            LogUpdateTime(now);
         }
         break;
 
@@ -321,28 +332,47 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
         // aDesiredNumEntries`) we add an extra delay before removing
         // the entry. This gives higher chance for a non-preferred
         // entry from another device to be removed before our entry.
+        // If `aDesiredNumEntries` is explicitly set to zero (which
+        // indicates that all entries should be removed), no delay is
+        // added. This helps with SRP/DNS unicast entries, where if
+        // any service data unicast or anycast entry is seen, we set
+        // the desired number to zero to quickly remove any previously
+        // added server data unicast entry.
 
         if (aNumEntries > aDesiredNumEntries)
         {
-            mUpdateTime = TimerMilli::GetNow() + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToRemove);
+            mUpdateTime = now;
 
-            if (aNumPreferredEntries < aDesiredNumEntries)
+            if (aDesiredNumEntries > 0)
             {
-                mUpdateTime += kExtraDelayToRemovePreferred;
+                mUpdateTime += Random::NonCrypto::GetUint32InRange(1, kMaxDelayToRemove);
+
+                if (aNumPreferredEntries < aDesiredNumEntries)
+                {
+                    mUpdateTime += kExtraDelayToRemovePreferred;
+                }
             }
 
             SetState(kRemoving);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
-            LogUpdateTime();
+            LogUpdateTime(now);
         }
         break;
 
     case kRemoving:
-        // Our entry is being removed (wait time before remove). If we
-        // now see that there are enough or too few entries, we stop
+        // Our entry is being removed (wait time before remove). If
+        // `aDesiredNumEntries` is zero, we update `mUpdateTime` to
+        // `now` to quickly remove the entry. Otherwise, if we now
+        // see that there are enough or too few entries, we stop
         // removing our entry.
 
-        if (aNumEntries <= aDesiredNumEntries)
+        if ((aDesiredNumEntries == 0) && (mUpdateTime > now))
+        {
+            mUpdateTime = now;
+            Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
+            LogUpdateTime(now);
+        }
+        else if (aNumEntries <= aDesiredNumEntries)
         {
             SetState(kAdded);
         }
@@ -386,6 +416,12 @@ void Publisher::Entry::Add(void)
     {
         static_cast<DnsSrpServiceEntry *>(this)->Add();
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Publisher>().IsBorderAdmitterEntry(*this))
+    {
+        static_cast<BorderAdmitterEntry *>(this)->Add();
+    }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -403,6 +439,12 @@ void Publisher::Entry::Remove(State aNextState)
     {
         static_cast<DnsSrpServiceEntry *>(this)->Remove(aNextState);
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Publisher>().IsBorderAdmitterEntry(*this))
+    {
+        static_cast<BorderAdmitterEntry *>(this)->Remove(aNextState);
+    }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -423,6 +465,13 @@ Publisher::Entry::InfoString Publisher::Entry::ToString(bool aIncludeState) cons
         string.Append("DNS/SRP service");
         ExitNow();
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (Get<Publisher>().IsBorderAdmitterEntry(*this))
+    {
+        string.Append("Border Admitter service");
+        ExitNow();
+    }
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -455,10 +504,14 @@ exit:
     return string;
 }
 
-void Publisher::Entry::LogUpdateTime(void) const
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void Publisher::Entry::LogUpdateTime(TimeMilli aNow) const
 {
-    LogInfo("%s - update in %lu msec", ToString().AsCString(), ToUlong(mUpdateTime - TimerMilli::GetNow()));
+    LogInfo("%s - update in %lu msec", ToString().AsCString(), ToUlong(mUpdateTime - aNow));
 }
+#else
+void Publisher::Entry::LogUpdateTime(TimeMilli) const {}
+#endif
 
 const char *Publisher::Entry::StateToString(State aState)
 {
@@ -765,6 +818,107 @@ Publisher::DnsSrpServiceEntry::Info::Info(Type                aType,
         mAddress = *aAddress;
     }
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Publisher::BorderAddmitterEntry
+
+Publisher::BorderAdmitterEntry::BorderAdmitterEntry(Instance &aInstance) { Init(aInstance); }
+
+void Publisher::BorderAdmitterEntry::Publish(void)
+{
+    VerifyOrExit(GetState() == kNoEntry);
+    LogInfo("Publishing Border Admitter service");
+    SetState(kToAdd);
+    Process();
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::Unpublish(void)
+{
+    VerifyOrExit(GetState() != kNoEntry);
+    LogInfo("Unpublishing Border Admitter service");
+    Remove(/* aNextState */ kNoEntry);
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged))
+    {
+        Process();
+    }
+}
+
+void Publisher::BorderAdmitterEntry::Add(void)
+{
+    SuccessOrExit(Get<Service::Manager>().AddBorderAdmitterService());
+    Get<Notifier>().HandleServerDataUpdated();
+    SetState(kAdded);
+    Notify(kEventEntryAdded);
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::Remove(State aNextState)
+{
+    VerifyOrExit((GetState() == kAdded) || (GetState() == kRemoving));
+
+    SuccessOrExit(Get<Service::Manager>().RemoveBorderAdmitterService());
+    Get<Notifier>().HandleServerDataUpdated();
+    Notify(kEventEntryRemoved);
+
+exit:
+    SetState(aNextState);
+}
+
+void Publisher::BorderAdmitterEntry::Notify(Event aEvent) const
+{
+    Get<MeshCoP::BorderAgent::Admitter>().HandleNetDataPublisherEvent(aEvent);
+}
+
+void Publisher::BorderAdmitterEntry::Process(void)
+{
+    // This method checks the entries currently present in Network Data
+    // based on which it then decides whether or not take action
+    // (add/remove or keep monitoring).
+
+    uint8_t numEntries          = 0;
+    uint8_t numPreferredEntries = 0;
+
+    VerifyOrExit(Get<Mle::Mle>().IsAttached());
+    VerifyOrExit(GetState() != kNoEntry);
+
+    CountEntries(numEntries, numPreferredEntries);
+    UpdateState(numEntries, numPreferredEntries, kDesiredNum);
+
+exit:
+    return;
+}
+
+void Publisher::BorderAdmitterEntry::CountEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const
+{
+    Service::Iterator iterator(GetInstance());
+    uint16_t          rloc16;
+
+    while (iterator.GetNextBorderAdmitterInfo(rloc16) == kErrorNone)
+    {
+        aNumEntries++;
+
+        if (IsPreferred(rloc16))
+        {
+            aNumPreferredEntries++;
+        }
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 

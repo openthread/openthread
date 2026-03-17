@@ -113,6 +113,9 @@ public:
         kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,              ///< Energy List TLV
         kThreadDomainName        = OT_MESHCOP_TLV_THREAD_DOMAIN_NAME,       ///< Thread Domain Name TLV
         kWakeupChannel           = OT_MESHCOP_TLV_WAKEUP_CHANNEL,           ///< Wakeup Channel TLV
+        kAdmitterState           = OT_MESHCOP_TLV_ADMITTER_STATE,           ///< Admitter State TLV
+        kEnrollerId              = OT_MESHCOP_TLV_ENROLLER_ID,              ///< Enroller ID TLV
+        kEnrollerMode            = OT_MESHCOP_TLV_ENROLLER_MODE,            ///< Enroller Mode TLV
         kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,         ///< Discovery Request TLV
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
         kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
@@ -124,6 +127,7 @@ public:
     static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
 
     static constexpr uint8_t kMaxCommissionerIdLength   = 64; ///< Max length of Commissioner ID TLV.
+    static constexpr uint8_t kMaxEnrollerIdLength       = 64; ///< Max length of Enroller ID TLV.
     static constexpr uint8_t kMaxVendorNameLength       = 32; ///< Max length of Vendor Name TLV.
     static constexpr uint8_t kMaxVendorModelLength      = 32; ///< Max length of Vendor Model TLV.
     static constexpr uint8_t kMaxVendorSwVersionLength  = 16; ///< Max length of Vendor SW Version TLV.
@@ -720,48 +724,9 @@ private:
 } OT_TOOL_PACKED_BEGIN;
 
 /**
- * Implements Energy List TLV generation and parsing.
+ * Defines Energy List TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class EnergyListTlv : public Tlv, public TlvInfo<Tlv::kEnergyList>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kEnergyList);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return true; }
-
-    /**
-     * Returns a pointer to the start of energy measurement list.
-     *
-     * @returns A pointer to the start start of energy energy measurement list.
-     */
-    const uint8_t *GetEnergyList(void) const { return mEnergyList; }
-
-    /**
-     * Returns the length of energy measurement list.
-     *
-     * @returns The length of energy measurement list.
-     */
-    uint8_t GetEnergyListLength(void) const { return Min(kMaxListLength, GetLength()); }
-
-private:
-    static constexpr uint8_t kMaxListLength = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
-
-    uint8_t mEnergyList[kMaxListLength];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kEnergyList> EnergyListTlv;
 
 /**
  * Defines Provisioning TLV constants and types.
@@ -1153,6 +1118,30 @@ private:
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+
+/**
+ * Defines Enroller ID TLV constants and types.
+ */
+typedef StringTlvInfo<Tlv::kEnrollerId, Tlv::kMaxEnrollerIdLength> EnrollerIdTlv;
+
+/**
+ * Defines Admitter State TLV constants and types.
+ *
+ *State values are defined in `BorderAgent::Admitter`
+ */
+typedef UintTlvInfo<Tlv::kAdmitterState, uint8_t> AdmitterStateTlv;
+
+/**
+ * Implements Enroller Mode TLV generation and parsing.
+ */
+class EnrollerModeTlv : public UintTlvInfo<Tlv::kEnrollerMode, uint8_t>
+{
+public:
+    EnrollerModeTlv(void) = delete;
+
+    static constexpr uint8_t kForwardJoinerRelayRx = 1 << 7; ///< Forward RelayRx (from Joiners) to Enroller.
+    static constexpr uint8_t kForwardUdpProxyRx    = 1 << 6; ///< Forward UDP ProxyRx to Enroller.
+};
 
 } // namespace MeshCoP
 

@@ -202,15 +202,14 @@ exit:
     return;
 }
 
-Seeker::Verdict Joiner::EvaluateScanResult(void *aContext, const Seeker::ScanResult *aResult)
+Seeker::Verdict Joiner::EvaluateScanResult(void *aContext, const otSeekerScanResult *aResult)
 {
-    return static_cast<Joiner *>(aContext)->EvaluateScanResult(aResult);
+    return static_cast<Joiner *>(aContext)->EvaluateScanResult(AsCoreTypePtr(aResult));
 }
 
-Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
+Seeker::Verdict Joiner::EvaluateScanResult(const ScanResult *aResult)
 {
-    Seeker::Verdict     verdict = Seeker::kIgnore;
-    const SteeringData *steeringData;
+    Seeker::Verdict verdict = Seeker::kIgnore;
 
     if (aResult == nullptr)
     {
@@ -218,13 +217,11 @@ Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
         ExitNow();
     }
 
-    steeringData = AsCoreTypePtr(&aResult->mSteeringData);
-
     // We prefer networks with an exact match of Joiner ID or
     // Discerner in the Steering Data compared to ones that allow all
     // Joiners.
 
-    if (steeringData->PermitsAllJoiners())
+    if (aResult->GetSteeringData().PermitsAllJoiners())
     {
         verdict = Seeker::kAccept;
         ExitNow();
@@ -232,11 +229,11 @@ Seeker::Verdict Joiner::EvaluateScanResult(const Seeker::ScanResult *aResult)
 
     if (!mDiscerner.IsEmpty())
     {
-        VerifyOrExit(steeringData->Contains(mDiscerner));
+        VerifyOrExit(aResult->GetSteeringData().Contains(mDiscerner));
     }
     else
     {
-        VerifyOrExit(steeringData->Contains(mId));
+        VerifyOrExit(aResult->GetSteeringData().Contains(mId));
     }
 
     verdict = Seeker::kAcceptPreferred;
@@ -334,7 +331,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     Error                 error = kErrorNone;
     VendorStackVersionTlv vendorStackVersionTlv;
 
-    mFinalizeMessage = Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
+    mFinalizeMessage = Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriJoinerFinalize);
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -424,7 +421,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Msg &aMsg)
     Error         error;
     Dataset::Info datasetInfo;
 
-    VerifyOrExit(mState == kStateEntrust && aMsg.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(mState == kStateEntrust && aMsg.IsConfirmable(), error = kErrorDrop);
 
     LogInfo("Received %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.ntf");
@@ -455,7 +452,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Msg &aMsg)
     Coap::Message   *message;
     Ip6::MessageInfo responseInfo(aMsg.mMessageInfo);
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aMsg.mMessage);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);

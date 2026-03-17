@@ -54,6 +54,8 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/string.hpp"
@@ -89,6 +91,7 @@
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
+#include "meshcop/border_agent_admitter.hpp"
 #include "meshcop/border_agent_ephemeral_key.hpp"
 #include "meshcop/border_agent_tracker.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
@@ -368,23 +371,31 @@ public:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
-     * Enables/disables the "DNS name compressions" mode.
+     * Enables/disables the "DNS name compression" mode.
      *
-     * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed.
-     * This is applicable to OpenThread's DNS and SRP client/server modules.
+     * By default, DNS name compression is enabled. When disabled, DNS names are appended in full and are never
+     * compressed. This applies to OpenThread's DNS and SRP client/server modules.
+     *
+     * DNS name compression cannot be disabled if the OpenThread mDNS module is enabled. Enabling the mDNS module will
+     * automatically enable name compression if it was previously disabled. Attempting to disable compression while the
+     * mDNS module is active will return `kErrorNotCapable`.
      *
      * This is intended for testing only and available under a `REFERENCE_DEVICE` config.
      *
      * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
+     *
+     * @retval kErrorNone         The "DNS name compression" mode is updated.
+     * @retval kErrorNotCapable   The "DNS name compression" mode cannot be disabled since OpenThread mDNS module is
+     *                            enabled.
      */
-    static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
+    Error SetDnsNameCompressionEnabled(bool aEnabled);
 
     /**
      * Indicates whether the "DNS name compression" mode is enabled or not.
      *
-     * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
+     * @returns TRUE if the "DNS name compression" mode is enabled, FALSE otherwise.
      */
-    static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
+    bool IsDnsNameCompressionEnabled(void) { return mDnsNameCompressionEnabled; }
 #endif
 
     /**
@@ -445,10 +456,6 @@ private:
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static Utils::Heap *sHeap;
-#endif
-
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    static bool sDnsNameCompressionEnabled;
 #endif
 
     //-----------------------------------------------------------------------------------------------------------------
@@ -602,6 +609,10 @@ private:
     MeshCoP::BorderAgent::Manager mBorderAgentManager;
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    MeshCoP::BorderAgent::Admitter mBorderAgentAdmitter;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     MeshCoP::BorderAgent::EphemeralKeyManager mBorderAgentEphemeralKeyManager;
 #endif
@@ -751,6 +762,10 @@ private:
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     Nat64::Translator mNat64Translator;
+#endif
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mDnsNameCompressionEnabled;
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -949,12 +964,6 @@ template <> inline TimeSync &Instance::Get(void) { return mTimeSync; }
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 template <> inline MeshCoP::Commissioner &Instance::Get(void) { return mCommissioner; }
-
-template <> inline AnnounceBeginClient &Instance::Get(void) { return mCommissioner.GetAnnounceBeginClient(); }
-
-template <> inline EnergyScanClient &Instance::Get(void) { return mCommissioner.GetEnergyScanClient(); }
-
-template <> inline PanIdQueryClient &Instance::Get(void) { return mCommissioner.GetPanIdQueryClient(); }
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
@@ -1071,6 +1080,10 @@ template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatase
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent::Manager &Instance::Get(void) { return mBorderAgentManager; }
 template <> inline MeshCoP::BorderAgent::TxtData &Instance::Get(void) { return mBorderAgentTxtData; }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+template <> inline MeshCoP::BorderAgent::Admitter &Instance::Get(void) { return mBorderAgentAdmitter; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE

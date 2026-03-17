@@ -212,7 +212,7 @@ Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Heade
     tunnelHeader.SetHopLimit(kDefaultHopLimit);
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
     tunnelHeader.SetSource(Get<Mle::Mle>().GetMeshLocalRloc());
-    tunnelHeader.GetDestination().SetToRealmLocalAllMplForwarders();
+    tunnelHeader.SetDestination(Address::GetRealmLocalAllMplForwarders());
     tunnelHeader.SetNextHeader(kProtoIp6);
 
     SuccessOrExit(error = AddMplOption(aMessage, tunnelHeader));
@@ -565,7 +565,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 
     uint16_t maxPayloadFragment =
         FragmentHeader::MakeDivisibleByEight(kMinimalMtu - aMessage.GetOffset() - sizeof(fragmentHeader));
-    uint16_t payloadLeft = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t payloadLeft = aMessage.DetermineLengthAfterOffset();
 
     SuccessOrExit(error = aMessage.Read(0, header));
     header.SetNextHeader(kProtoFragment);
@@ -800,14 +800,12 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 
 Error Ip6::HandleFragment(Message &aMessage)
 {
-    Error          error = kErrorNone;
+    Error          error;
     FragmentHeader fragmentHeader;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), fragmentHeader));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(fragmentHeader));
 
     VerifyOrExit(fragmentHeader.GetOffset() == 0 && !fragmentHeader.IsMoreFlagSet(), error = kErrorDrop);
-
-    aMessage.MoveOffset(sizeof(fragmentHeader));
 
 exit:
     return error;
@@ -1101,18 +1099,33 @@ void Ip6::DetermineAction(const Message &aMessage,
     {
         // Destination is multicast
 
-        // Forward multicast message to thread unless we received it
-        // on Thread netif.
-
-        aForwardThread = !aMessage.IsOriginThreadNetif();
+        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
+        {
+            // Multicast messages with scope larger than realm-local
+            // use IP-in-IP encapsulation destined to the "All MPL
+            // Forwarders" multicast address. Both the encapsulated
+            // (outer) and embedded (inner) messages are processed.
+            //
+            // For the inner message, we set `aForwardThread` if the
+            // device has a sleepy child that is subscribed to the
+            // destination address. `MeshForwarder::SendMessage()` on
+            // an FTD will then check for this and schedules the
+            // indirect tx to such children. This is skipped on an MTD
+            // (`aForwardThread` remains `false`) since an MTD cannot
+            // have children.
 
 #if OPENTHREAD_FTD
-        if (aMessage.IsOriginThreadNetif() && aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
-        {
-            aForwardThread = true;
-        }
+            aForwardThread = Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination());
 #endif
+        }
+        else
+        {
+            // For all other multicast messages, we forward to the
+            // Thread network unless the message was received on the
+            // Thread netif.
+
+            aForwardThread = !aMessage.IsOriginThreadNetif();
+        }
 
         // Always forward multicast packets to host network stack
         aForwardHost = true;

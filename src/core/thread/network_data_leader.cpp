@@ -574,7 +574,7 @@ Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessa
     Coap::Message *response = nullptr;
     OffsetRange    offsetRange;
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
+    response = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     if (Tlv::FindTlvValueOffsetRange(aMessage, MeshCoP::Tlv::kGet, offsetRange) == kErrorNone)

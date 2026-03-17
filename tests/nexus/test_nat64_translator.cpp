@@ -406,6 +406,9 @@ Message *PrepareIcmp6Message(Node               &aNode,
         SuccessOrQuit(message->Append<uint8_t>(static_cast<uint8_t>(i & 0xff)));
     }
 
+    message->SetOffset(sizeof(Ip6::Header));
+    Checksum::UpdateMessageChecksum(*message, ip6Header.GetSource(), ip6Header.GetDestination(), Ip6::kProtoIcmp6);
+
     return message;
 }
 

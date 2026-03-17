@@ -54,7 +54,7 @@ exit:
 
 Error Data::SetFrom(const Message &aMessage)
 {
-    return SetFrom(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
+    return SetFrom(aMessage, aMessage.GetOffset(), aMessage.DetermineLengthAfterOffset());
 }
 
 Error Data::SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
@@ -80,6 +80,13 @@ void Data::TakeFrom(Data &&aData)
         mData.Init(aData.mData.GetBytes(), aData.GetLength());
         aData.mData.Init(nullptr, 0);
     }
+}
+
+void Data::TakeFrom(uint8_t *&aHeapAllocatedBuffer, uint16_t aLength)
+{
+    Free();
+    mData.Init(aHeapAllocatedBuffer, aLength);
+    aHeapAllocatedBuffer = nullptr;
 }
 
 bool Data::Matches(const uint8_t *aBuffer, uint16_t aLength) const

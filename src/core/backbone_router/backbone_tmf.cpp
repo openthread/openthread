@@ -74,6 +74,12 @@ bool BackboneTmfAgent::HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg)
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
 #define Case(kUri, Type)                   \
     case kUri:                             \
         Get<Type>().HandleTmf<kUri>(aMsg); \
@@ -93,6 +99,7 @@ bool BackboneTmfAgent::HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg)
 
 #undef Case
 
+exit:
     return didHandle;
 }
 

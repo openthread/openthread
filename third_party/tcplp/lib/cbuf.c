@@ -287,7 +287,6 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
     uint8_t* buf_data = chdr->buf;
     size_t free_space = cbuf_free_space(chdr);
     size_t start_index;
-    size_t end_index;
     size_t bytes_to_end;
     if (offset > free_space) {
         return 0;
@@ -295,8 +294,7 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
         numbytes = free_space - offset;
     }
     start_index = (cbuf_get_w_index(chdr) + offset) % chdr->size;
-    end_index = (start_index + numbytes) % chdr->size;
-    if (end_index >= start_index) {
+    if (numbytes <= chdr->size - start_index) {
         copy_from(buf_data, start_index, data, data_offset, numbytes);
         if (bitmap) {
             bmp_setrange(bitmap, start_index, numbytes);

@@ -258,20 +258,15 @@ Error SubMac::RadioSleep(void)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(ShouldHandleTransitionToSleep());
+    if (ShouldHandleTransitionToSleep())
+    {
+        SuccessOrExit(error = Get<Radio>().Sleep());
+    }
 
-    error = Get<Radio>().Sleep();
+    SetState(kStateSleep);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("RadioSleep() failed, error: %s", ErrorToString(error));
-    }
-    else
-    {
-        SetState(kStateSleep);
-    }
-
+    LogWarnOnError(error, "RadioSleep()");
     return error;
 }
 
@@ -290,15 +285,12 @@ Error SubMac::Receive(uint8_t aChannel)
         error = Get<Radio>().Receive(aChannel);
     }
 
-    if (error != kErrorNone)
-    {
-        LogWarn("RadioReceive() failed, error: %s", ErrorToString(error));
-        ExitNow();
-    }
+    SuccessOrExit(error);
 
     SetState(kStateReceive);
 
 exit:
+    LogWarnOnError(error, "RadioReceive()");
     return error;
 }
 

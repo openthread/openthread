@@ -1740,6 +1740,16 @@ void NcpBase::DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser)
     DnssdUpdateDiscovery(aBrowser, /* aStart */ false);
 }
 
+void NcpBase::DnssdStartSrvResolver(const otPlatDnssdSrvResolver *aResolver)
+{
+    DnssdUpdateDiscovery(aResolver, /* aStart */ true);
+}
+
+void NcpBase::DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver)
+{
+    DnssdUpdateDiscovery(aResolver, /* aStart */ false);
+}
+
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
@@ -1796,6 +1806,22 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_SRV_RESULT>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otPlatDnssdSrvResult   srvResult;
+    otPlatDnssdSrvCallback callback = nullptr;
+    const uint8_t         *context;
+    uint16_t               contextLen;
+
+    SuccessOrExit(error = DecodeDnssdSrvResult(mDecoder, srvResult, context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdSrvCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdSrvCallback *>(context);
+    callback(mInstance, &srvResult);
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

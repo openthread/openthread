@@ -4925,6 +4925,40 @@ enum
      */
     SPINEL_PROP_DNSSD_BROWSE_RESULT = SPINEL_PROP_DNSSD__BEGIN + 7,
 
+    /// DNS-SD Service Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request. A pointer to the callback to receive the result.
+     *
+     * NCP uses this property to resolve services.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 8,
+
+    /**
+     * DNS-SD SRV Resolution Result
+     *
+     * Format: `UUt(U)SSSLLD`: Set
+     *
+     * Reports the result of a DNS-SD service resolution on the infrastructure
+     * network.
+     *
+     * Content of the `otPlatDnssdSrvResult` struct:
+     *  `U`: The service instance name label.
+     *  `U`: The service type.
+     *  `U`: The host name (e.g., "myhost"). Can be NULL when `mTtl` is zero.
+     *  `S`: The service port number.
+     *  `S`: The service priority.
+     *  `S`: The service weight.
+     *  `L`: The service TTL in seconds. Zero TTL indicates SRV record is removed.
+     *  `L`: The infrastructure network interface index.
+     *  `D`: The context of the request. A pointer to the callback to receive the result.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,

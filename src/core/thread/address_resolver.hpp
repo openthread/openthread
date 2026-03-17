@@ -228,7 +228,7 @@ public:
      */
     void SendAddressError(const Ip6::Address             &aTarget,
                           const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                          const Ip6::Address             *aDestination);
+                          const Ip6::Address             &aDestination);
 
 private:
     static constexpr uint16_t kCacheEntries = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES;

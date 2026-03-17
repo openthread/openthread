@@ -611,18 +611,15 @@ exit:
 
 Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriAddressQuery);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityNonConfirmablePostMessage(kUriAddressQuery);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
 
-    messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, Ip6::Address::GetRealmLocalAllRoutersMulticast()));
 
     LogInfo("Sent %s for %s", UriToString<kUriAddressQuery>(), aEid.ToString().AsCString());
 
@@ -655,7 +652,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
     CacheEntry              *entry;
     CacheEntry              *prev;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
     SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(aMsg.mMessage, meshLocalIid));
@@ -678,19 +675,20 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
     entry = FindCacheEntry(target, list, prev);
     VerifyOrExit(entry != nullptr);
 
-    if (list == &mCachedList)
+    if ((list == &mCachedList) && entry->IsLastTransactionTimeValid())
     {
-        if (entry->IsLastTransactionTimeValid())
+        // Receiving multiple Address Notification for an EID from
+        // different mesh-local IIDs indicates address is in use
+        // by more than one device. Try to resolve the duplicate
+        // address by sending an Address Error message.
+
+        if (entry->GetMeshLocalIid() != meshLocalIid)
         {
-            // Receiving multiple Address Notification for an EID from
-            // different mesh-local IIDs indicates address is in use
-            // by more than one device. Try to resolve the duplicate
-            // address by sending an Address Error message.
-
-            VerifyOrExit(entry->GetMeshLocalIid() == meshLocalIid, SendAddressError(target, meshLocalIid, nullptr));
-
-            VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime());
+            SendAddressError(target, meshLocalIid, Ip6::Address::GetRealmLocalAllRoutersMulticast());
+            ExitNow();
         }
+
+        VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime());
     }
 
     entry->SetRloc16(rloc16);
@@ -704,7 +702,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Msg &aMsg)
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+    if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
     {
         LogInfo("Sent %s ack", UriToString<kUriAddressNotify>());
     }
@@ -717,42 +715,24 @@ exit:
 
 void AddressResolver::SendAddressError(const Ip6::Address             &aTarget,
                                        const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                       const Ip6::Address             *aDestination)
+                                       const Ip6::Address             &aDestination)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable,
-                                        Coap::kCodePost));
-    SuccessOrExit(error = message->AppendUriPathOptions(PathForUri(kUriAddressError)));
-    SuccessOrExit(error = message->AppendPayloadMarker());
+    message = Get<Tmf::Agent>().AllocateAndInitPostMessageTo(kUriAddressError, aDestination);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
     SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, aMeshLocalIid));
 
-    if (aDestination == nullptr)
-    {
-        messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
-    }
-    else
-    {
-        messageInfo.SetSockAddrToRlocPeerAddrTo(*aDestination);
-    }
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 
     LogInfo("Sent %s for target %s", UriToString<kUriAddressError>(), aTarget.ToString().AsCString());
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        FreeMessage(message);
-        LogInfo("Failed to send %s: %s", UriToString<kUriAddressError>(), ErrorToString(error));
-    }
+    FreeMessageOnError(message, error);
+    LogInfoOnError(error, "send %s", UriToString<kUriAddressError>());
 }
 
 #endif // OPENTHREAD_FTD
@@ -767,13 +747,11 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     Ip6::Address    destination;
 #endif
 
-    VerifyOrExit(aMsg.IsPostRequest(), error = kErrorDrop);
-
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
     if (aMsg.IsConfirmable() && !aMsg.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (Get<Tmf::Agent>().SendEmptyAck(aMsg) == kErrorNone)
+        if (Get<Tmf::Agent>().SendAckResponse(aMsg) == kErrorNone)
         {
             LogInfo("Sent %s ack", UriToString<kUriAddressError>());
         }
@@ -821,7 +799,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
             {
                 destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
 
-                SendAddressError(target, meshLocalIid, &destination);
+                SendAddressError(target, meshLocalIid, destination);
                 ExitNow();
             }
         }
@@ -829,11 +807,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
 #endif // OPENTHREAD_FTD
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s when processing %s", ErrorToString(error), UriToString<kUriAddressError>());
-    }
+    LogWarnOnError(error, "process %s", UriToString<kUriAddressError>());
 }
 
 #if OPENTHREAD_FTD
@@ -843,7 +817,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
     Ip6::Address target;
     uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMsg.IsNonConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsNonConfirmable());
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMsg.mMessage, target));
 
@@ -893,11 +867,10 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
                                                const uint32_t                 *aLastTransactionTime,
                                                const Ip6::Address             &aDestination)
 {
-    Error            error;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressNotify);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriAddressNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
@@ -909,9 +882,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address             &a
         SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, *aLastTransactionTime));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aDestination);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 
     LogInfo("Sent %s for target %s", UriToString<kUriAddressNotify>(), aTarget.ToString().AsCString());
 

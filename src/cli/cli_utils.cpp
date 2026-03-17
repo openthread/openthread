@@ -60,6 +60,8 @@ OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallb
 {
 }
 
+const char *Utils::ToYesNo(bool aBool) { return aBool ? "yes" : "no"; }
+
 void Utils::OutputFormat(const char *aFormat, ...)
 {
     va_list args;
@@ -157,6 +159,14 @@ void Utils::OutputUint64Line(uint64_t aUint64)
 }
 
 void Utils::OutputEnabledDisabledStatus(bool aEnabled) { OutputLine(aEnabled ? "Enabled" : "Disabled"); }
+
+void Utils::OutputMsecDurationInSec(uint32_t aMsecDuration)
+{
+    uint32_t durInSec  = aMsecDuration / 1000;
+    uint32_t remainder = aMsecDuration % 1000;
+
+    OutputFormat("%lu.%03u", ToUlong(durInSec), static_cast<uint16_t>(remainder));
+}
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 

@@ -86,7 +86,7 @@ template <> otError Br::Process<Cmd("infraif")>(Arg aArgs[])
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = otBorderRoutingGetInfraIfInfo(GetInstancePtr(), &ifIndex, &isRunning));
-    OutputLine("if-index:%lu, is-running:%s", ToUlong(ifIndex), isRunning ? "yes" : "no");
+    OutputLine("if-index:%lu, is-running:%s", ToUlong(ifIndex), ToYesNo(isRunning));
 
 exit:
     return error;
@@ -214,9 +214,9 @@ template <> otError Br::Process<Cmd("multiail")>(Arg aArgs[])
      */
     else if (aArgs[0] == "state")
     {
-        OutputLine("Enabled: %s", otBorderRoutingIsMultiAilDetectionEnabled(GetInstancePtr()) ? "yes" : "no");
-        OutputLine("Running: %s", otBorderRoutingIsMultiAilDetectionRunning(GetInstancePtr()) ? "yes" : "no");
-        OutputLine("Detected: %s", otBorderRoutingIsMultiAilDetected(GetInstancePtr()) ? "yes" : "no");
+        OutputLine("Enabled: %s", ToYesNo(otBorderRoutingIsMultiAilDetectionEnabled(GetInstancePtr())));
+        OutputLine("Running: %s", ToYesNo(otBorderRoutingIsMultiAilDetectionRunning(GetInstancePtr())));
+        OutputLine("Detected: %s", ToYesNo(otBorderRoutingIsMultiAilDetected(GetInstancePtr())));
     }
     /**
      * @cli br multiail (enable, disable)
@@ -767,7 +767,7 @@ template <> otError Br::Process<Cmd("prefixtable")>(Arg aArgs[])
         char string[OT_IP6_PREFIX_STRING_SIZE];
 
         otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
-        OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%lu, lifetime:%lu, ", string, entry.mIsOnLink ? "yes" : "no",
+        OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%lu, lifetime:%lu, ", string, ToYesNo(entry.mIsOnLink),
                      ToUlong(entry.mMsecSinceLastUpdate), ToUlong(entry.mValidLifetime));
 
         if (entry.mIsOnLink)
@@ -1010,7 +1010,7 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
         otConvertDurationInSecondsToString(aEntry.mAge, ageString, sizeof(ageString));
 
         OutputFormat(" ms-since-rx:%lu reachable:%s age:%s", ToUlong(aEntry.mMsecSinceLastUpdate),
-                     aEntry.mIsReachable ? "yes" : "no", ageString);
+                     ToYesNo(aEntry.mIsReachable), ageString);
 
         if (aEntry.mIsLocalDevice)
         {

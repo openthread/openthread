@@ -33,6 +33,7 @@
 
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
+#include "nexus_infra_if.hpp"
 #include "nexus_mdns.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
@@ -46,8 +47,10 @@ class Platform
 {
 public:
     Radio    mRadio;
-    Alarm    mAlarm;
+    Alarm    mAlarmMilli;
+    Alarm    mAlarmMicro;
     Mdns     mMdns;
+    InfraIf  mInfraIf;
     Settings mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Trel mTrel;
@@ -61,17 +64,24 @@ protected:
     }
 };
 
-class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListEntry<Node>, private Instance
+class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListEntry<Node>, public Instance
 {
     friend class Heap::Allocatable<Node>;
 
 public:
+    // Defines the device role and Network Data request behavior
+    // during joining:
+    //
+    // - `kAsFtd`, `kAsFed`, and `kAsMed` all request full netdata.
+    // - `kAsSed` requests only stable netdata (default for SED).
+    // - `kAsSedWithFullNetData` explicitly request full netdata.
     enum JoinMode : uint8_t
     {
         kAsFtd,
         kAsFed,
         kAsMed,
         kAsSed,
+        kAsSedWithFullNetData,
     };
 
     void Reset(void);
@@ -79,12 +89,24 @@ public:
     void Join(Node &aNode, JoinMode aJoinMode = kAsFtd);
     void AllowList(Node &aNode);
     void UnallowList(Node &aNode);
+    void SendEchoRequest(const Ip6::Address &aDestination,
+                         uint16_t            aIdentifier  = 0,
+                         uint16_t            aPayloadSize = 0,
+                         uint8_t             aHopLimit    = 64,
+                         const Ip6::Address *aSrcAddress  = nullptr);
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
 
-    void        SetName(const char *aName) { IgnoreError(StringCopy(mName, aName)); }
-    const char *GetName(void) const { return mName; }
+    // Finds and returns the address on device matching the given `aPrefix`.
+    // It requires a matching prefix to be found, otherwise it is treated as
+    // a test failure (emits error message and exits the program.)
+    const Ip6::Address &FindMatchingAddress(const char *aPrefix);
+
+    void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
+    void        SetName(const char *aPrefix, uint16_t aIndex);
+    const char *GetName(void) const { return mName.AsCString(); }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -104,7 +126,12 @@ public:
 
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
-    using Platform::mAlarm;
+    static void HandleIp6Receive(otMessage *aMessage, void *aContext);
+    void        HandleReceive(otMessage *aMessage);
+
+    using Platform::mAlarmMicro;
+    using Platform::mAlarmMilli;
+    using Platform::mInfraIf;
     using Platform::mMdns;
     using Platform::mPendingTasklet;
     using Platform::mRadio;
@@ -118,7 +145,7 @@ public:
 private:
     Node(void) {}
 
-    char mName[32];
+    String<32> mName;
 };
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }

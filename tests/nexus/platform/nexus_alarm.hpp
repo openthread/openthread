@@ -38,7 +38,6 @@ struct Alarm
 {
     Alarm(void) { Reset(); }
     void Reset(void) { mScheduled = false; }
-    bool ShouldTrigger(Time aNow) const { return mScheduled && (aNow >= mAlarmTime); }
 
     bool mScheduled;
     Time mAlarmTime;

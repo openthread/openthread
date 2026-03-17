@@ -34,6 +34,7 @@ set(COMMON_SOURCES
     api/backbone_router_api.cpp
     api/backbone_router_ftd_api.cpp
     api/ble_secure_api.cpp
+    api/border_agent_admitter_api.cpp
     api/border_agent_api.cpp
     api/border_agent_ephemeral_key_api.cpp
     api/border_agent_tracker_api.cpp
@@ -139,7 +140,8 @@ set(COMMON_SOURCES
     common/uptime.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
-    crypto/crypto_platform.cpp
+    crypto/crypto_platform_mbedtls.cpp
+    crypto/crypto_platform_psa.cpp
     crypto/hkdf_sha256.cpp
     crypto/hmac_sha256.cpp
     crypto/mbedtls.cpp
@@ -157,13 +159,14 @@ set(COMMON_SOURCES
     mac/mac_header_ie.cpp
     mac/mac_links.cpp
     mac/mac_types.cpp
+    mac/scan_result.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
     mac/sub_mac_wed.cpp
     mac/wakeup_tx_scheduler.cpp
-    meshcop/announce_begin_client.cpp
     meshcop/border_agent.cpp
+    meshcop/border_agent_admitter.cpp
     meshcop/border_agent_ephemeral_key.cpp
     meshcop/border_agent_tracker.cpp
     meshcop/border_agent_txt_data.cpp
@@ -172,7 +175,6 @@ set(COMMON_SOURCES
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp
-    meshcop/energy_scan_client.cpp
     meshcop/extended_panid.cpp
     meshcop/joiner.cpp
     meshcop/joiner_router.cpp
@@ -181,7 +183,6 @@ set(COMMON_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/network_identity.cpp
     meshcop/network_name.cpp
-    meshcop/panid_query_client.cpp
     meshcop/secure_transport.cpp
     meshcop/seeker.cpp
     meshcop/steering_data.cpp
@@ -319,7 +320,8 @@ set(RADIO_COMMON_SOURCES
     common/uptime.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
-    crypto/crypto_platform.cpp
+    crypto/crypto_platform_mbedtls.cpp
+    crypto/crypto_platform_psa.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
     instance/instance.cpp

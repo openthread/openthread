@@ -100,8 +100,8 @@ otError otDatasetSendMgmtActiveGet(otInstance                           *aInstan
                                    uint8_t                               aLength,
                                    const otIp6Address                   *aAddress)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(AsCoreType(aDatasetComponents),
-                                                                                     aTlvTypes, aLength, aAddress);
+    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(
+        AsCoreType(aDatasetComponents), aTlvTypes, aLength, AsCoreTypePtr(aAddress));
 }
 
 otError otDatasetSendMgmtActiveSet(otInstance                 *aInstance,
@@ -121,8 +121,8 @@ otError otDatasetSendMgmtPendingGet(otInstance                           *aInsta
                                     uint8_t                               aLength,
                                     const otIp6Address                   *aAddress)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SendGetRequest(AsCoreType(aDatasetComponents),
-                                                                                      aTlvTypes, aLength, aAddress);
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SendGetRequest(
+        AsCoreType(aDatasetComponents), aTlvTypes, aLength, AsCoreTypePtr(aAddress));
 }
 
 otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,

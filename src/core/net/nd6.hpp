@@ -280,6 +280,20 @@ public:
     uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
 
     /**
+     * Returns the prefix length (in bits).
+     *
+     * @returns The prefix length (in bits).
+     */
+    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
+
+    /**
+     * Sets the prefix length (in bits).
+     *
+     * @param[in] aPrefixLength  The prefix length (in bits).
+     */
+    void SetPrefixLength(uint8_t aPrefixLength) { mPrefixLength = aPrefixLength; }
+
+    /**
      * Sets the prefix.
      *
      * @param[in]  aPrefix  The prefix contained in this option.

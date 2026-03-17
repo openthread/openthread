@@ -50,25 +50,6 @@ Server::Server(Instance &aInstance)
 {
 }
 
-void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
-{
-    if (aDestination.IsMulticast())
-    {
-        aMessageInfo.SetMulticastLoop(true);
-    }
-
-    if (aDestination.IsLinkLocalUnicastOrMulticast())
-    {
-        aMessageInfo.SetSockAddr(Get<Mle::Mle>().GetLinkLocalAddress());
-    }
-    else
-    {
-        aMessageInfo.SetSockAddrToRloc();
-    }
-
-    aMessageInfo.SetPeerAddr(aDestination);
-}
-
 Error Server::AppendIp6AddressList(Message &aMessage)
 {
     Error         error;
@@ -315,28 +296,14 @@ exit:
 
 Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
-    Error         error;
-    OffsetRange   offsetRange;
-    TlvTypeBitSet processedTlvs;
+    Error               error;
+    TlvTypeListIterator iterator;
+    uint8_t             tlvType;
 
-    processedTlvs.Clear();
+    SuccessOrExit(error = iterator.InitForTypeListTlv(aRequest));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
-
-    while (!offsetRange.IsEmpty())
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        uint8_t tlvType;
-
-        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
-        offsetRange.AdvanceOffset(sizeof(tlvType));
-
-        if (processedTlvs.Has(tlvType))
-        {
-            continue;
-        }
-
-        processedTlvs.Add(tlvType);
-
         SuccessOrExit(error = AppendDiagTlv(tlvType, aResponse));
     }
 
@@ -347,25 +314,14 @@ exit:
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 Error Server::AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange)
 {
-    Error         error = kErrorNone;
-    TlvTypeBitSet processedTlvs;
+    Error               error = kErrorNone;
+    TlvTypeListIterator iterator;
+    uint8_t             tlvType;
 
-    processedTlvs.Clear();
+    iterator.Init(aRequest, aOffsetRange);
 
-    while (!aOffsetRange.IsEmpty())
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        uint8_t tlvType;
-
-        SuccessOrExit(error = aRequest.Read(aOffsetRange, tlvType));
-        aOffsetRange.AdvanceOffset(sizeof(uint8_t));
-
-        if (processedTlvs.Has(tlvType))
-        {
-            continue;
-        }
-
-        processedTlvs.Add(tlvType);
-
 #if OPENTHREAD_FTD
         switch (tlvType)
         {
@@ -574,15 +530,13 @@ exit:
 
 template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMsg.IsPostRequest());
-
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetQuery>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
     // DIAG_GET.qry may be sent as a confirmable request.
     if (aMsg.IsConfirmable())
     {
-        IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+        IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
     }
 
 #if OPENTHREAD_MTD
@@ -590,22 +544,18 @@ template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
 #elif OPENTHREAD_FTD
     PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 #endif
-
-exit:
-    return;
 }
 
 #if OPENTHREAD_MTD
 
 void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Error            error  = kErrorNone;
-    Coap::Message   *answer = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    AnswerTlv        answerTlv;
-    uint16_t         queryId;
+    Error          error  = kErrorNone;
+    Coap::Message *answer = nullptr;
+    AnswerTlv      answerTlv;
+    uint16_t       queryId;
 
-    answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    answer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(answer != nullptr, error = kErrorNoBufs);
 
     IgnoreError(answer->SetPriority(aRequest.GetPriority()));
@@ -620,9 +570,7 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
     answerTlv.Init(0, AnswerTlv::kIsLast);
     SuccessOrExit(answer->Append(answerTlv));
 
-    PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    error = Get<Tmf::Agent>().SendMessage(*answer, messageInfo);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*answer, aDestination);
 
 exit:
     FreeMessageOnError(answer, error);
@@ -640,7 +588,7 @@ Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 
     Error error = kErrorNone;
 
-    aAnswer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    aAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
     IgnoreError(aAnswer->SetPriority(aInfo.mPriority));
 
@@ -696,11 +644,12 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
 
 void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
 {
-    Coap::Message *answer;
-    Error          error;
-    AnswerInfo     info;
-    OffsetRange    offsetRange;
-    AnswerTlv      answerTlv;
+    Coap::Message      *answer;
+    Error               error;
+    AnswerInfo          info;
+    uint8_t             tlvType;
+    TlvTypeListIterator iterator;
+    AnswerTlv           answerTlv;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
     {
@@ -711,15 +660,10 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
 
     SuccessOrExit(error = AllocateAnswer(answer, info));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRequest, Tlv::kTypeList, offsetRange));
+    SuccessOrExit(error = iterator.InitForTypeListTlv(aRequest));
 
-    while (!offsetRange.IsEmpty())
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        uint8_t tlvType;
-
-        SuccessOrExit(error = aRequest.Read(offsetRange, tlvType));
-        offsetRange.AdvanceOffset(sizeof(tlvType));
-
         switch (tlvType)
         {
         case ChildTlv::kType:
@@ -778,18 +722,15 @@ void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestina
     // This method send the given next `aAnswer` associated with
     // a query to the  `aDestination`.
 
-    Error            error      = kErrorNone;
-    Coap::Message   *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error      = kErrorNone;
+    Coap::Message *nextAnswer = IsLastAnswer(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
 
     mAnswerQueue.Dequeue(aAnswer);
-
-    PrepareMessageInfoForDest(aDestination, messageInfo);
 
     // When sending the message, we pass `nextAnswer` as `aContext`
     // to be used when invoking callback `HandleAnswerResponse()`.
 
-    error = Get<Tmf::Agent>().SendMessage(aAnswer, messageInfo, HandleAnswerResponse, nextAnswer);
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(aAnswer, aDestination, HandleAnswerResponse, nextAnswer);
 
     if (error != kErrorNone)
     {
@@ -936,12 +877,12 @@ template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Msg &aMsg)
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMsg.IsConfirmable(), error = kErrorDrop);
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    response = Get<Tmf::Agent>().NewResponseMessage(aMsg.mMessage);
+    response = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     IgnoreError(response->SetPriority(aMsg.mMessage.GetPriority()));
@@ -954,26 +895,19 @@ exit:
 
 template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
 {
-    uint16_t offset = 0;
-    uint8_t  type;
-    Tlv      tlv;
+    TlvTypeListIterator iterator;
+    uint8_t             tlvType;
 
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticReset>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    SuccessOrExit(aMsg.mMessage.Read(aMsg.mMessage.GetOffset(), tlv));
+    SuccessOrExit(iterator.InitForTypeListTlv(aMsg.mMessage));
 
-    VerifyOrExit(tlv.GetType() == Tlv::kTypeList);
-
-    offset = aMsg.mMessage.GetOffset() + sizeof(Tlv);
-
-    for (uint8_t i = 0; i < tlv.GetLength(); i++)
+    while (iterator.ReadNextTlvType(tlvType) == kErrorNone)
     {
-        SuccessOrExit(aMsg.mMessage.Read(offset + i, type));
-
-        switch (type)
+        switch (tlvType)
         {
         case Tlv::kMacCounters:
             Get<Mac::Mac>().ResetCounters();
@@ -992,10 +926,55 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)
         }
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
 exit:
     return;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Server::TlvTypeListIterator
+
+void Server::TlvTypeListIterator::Init(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    mMessage     = &aMessage;
+    mOffsetRange = aOffsetRange;
+    mProcessedTlvs.Clear();
+}
+
+Error Server::TlvTypeListIterator::InitForTypeListTlv(const Message &aMessage)
+{
+    Error error;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kTypeList, mOffsetRange));
+    mMessage = &aMessage;
+    mProcessedTlvs.Clear();
+
+exit:
+    return error;
+}
+
+Error Server::TlvTypeListIterator::ReadNextTlvType(uint8_t &aTlvType)
+{
+    Error error;
+
+    while (!mOffsetRange.IsEmpty())
+    {
+        SuccessOrExit(error = mMessage->Read(mOffsetRange, aTlvType));
+        mOffsetRange.AdvanceOffset(sizeof(uint8_t));
+
+        if (!mProcessedTlvs.Has(aTlvType))
+        {
+            mProcessedTlvs.Add(aTlvType);
+            error = kErrorNone;
+            ExitNow();
+        }
+    }
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
@@ -1052,19 +1031,18 @@ Error Client::SendCommand(Uri                   aUri,
                           Coap::ResponseHandler aHandler,
                           void                 *aContext)
 {
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error;
+    Coap::Message *message = nullptr;
 
     switch (aUri)
     {
     case kUriDiagnosticGetQuery:
-        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(aUri);
+        message = Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(aUri);
         break;
 
     case kUriDiagnosticGetRequest:
     case kUriDiagnosticReset:
-        message = Get<Tmf::Agent>().NewConfirmablePostMessage(aUri);
+        message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(aUri);
         break;
 
     default:
@@ -1084,9 +1062,7 @@ Error Client::SendCommand(Uri                   aUri,
         SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*message, ++mQueryId));
     }
 
-    Get<Server>().PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*message, aDestination, aHandler, aContext));
 
     LogInfo("Sent %s to %s", UriToString(aUri), aDestination.ToString().AsCString());
 
@@ -1107,7 +1083,7 @@ exit:
 
 template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
 {
-    VerifyOrExit(aMsg.IsConfirmablePostRequest());
+    VerifyOrExit(aMsg.IsConfirmable());
 
     LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
@@ -1120,7 +1096,7 @@ template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
         mGetCallback.InvokeIfSet(kErrorNone, &aMsg.mMessage, &aMsg.mMessageInfo);
     }
 
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMsg));
+    IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
 
 exit:
     return;

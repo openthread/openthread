@@ -315,8 +315,7 @@ void PeerDiscoverer::HandleRegisterDone(Error aError)
     }
     else
     {
-        LogInfo("Failed to register DNS-SD service with name:%s, Error:%s", mServiceName.GetName(),
-                ErrorToString(aError));
+        LogInfoOnError(aError, "register DNS-SD service with name:%s", mServiceName.GetName());
         UnregisterService();
 
         // Generate a new name (appending a suffix index to the name)
@@ -751,23 +750,14 @@ Error PeerDiscoverer::TxtData::Decode(Info &aInfo)
 
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
-        // If the TXT data happens to have entries with key longer
-        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
-        // entry would be placed in `mValue`. We skip over such
-        // entries.
-        if (entry.mKey == nullptr)
-        {
-            continue;
-        }
-
-        if (StringMatch(entry.mKey, kExtAddressKey))
+        if (entry.MatchesKey(kExtAddressKey))
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(Mac::ExtAddress), error = kErrorParse);
             aInfo.mExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
-        else if (StringMatch(entry.mKey, kExtPanIdKey))
+        else if (entry.MatchesKey(kExtPanIdKey))
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(MeshCoP::ExtendedPanId), error = kErrorParse);

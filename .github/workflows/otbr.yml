@@ -50,6 +50,7 @@ jobs:
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
+      TEST_TIMEOUT: 1800
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.4
       INTER_OP: 1
@@ -138,12 +139,6 @@ jobs:
             description: "MATN"
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
-            cert_scripts: ./tests/scripts/thread-cert/border_router/LowPower/*.py
-            packet_verification: 1
-            nat64: 0
-            description: "LowPower"
-          - otbr_mdns: "mDNSResponder"
-            otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/internet/*.py
             packet_verification: 1
             nat64: 1
@@ -165,6 +160,7 @@ jobs:
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
+      TEST_TIMEOUT: 1800
       PACKET_VERIFICATION: ${{ matrix.packet_verification }}
       THREAD_VERSION: 1.4
       INTER_OP: 1

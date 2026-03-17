@@ -69,7 +69,9 @@ VendorInfo::VendorInfo(Instance &aInstance)
 
 Error VendorInfo::SetName(const char *aName)
 {
-    Error error;
+    Error error = kErrorNone;
+
+    VerifyOrExit(!StringMatch(mName, (aName == nullptr) ? "" : aName));
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(aName != nullptr && StringStartsWith(aName, kNamePrefix), error = kErrorInvalidArgs);
@@ -77,11 +79,29 @@ Error VendorInfo::SetName(const char *aName)
 
     SuccessOrExit(error = StringCopy(mName, aName, kStringCheckUtf8Encoding));
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<MeshCoP::BorderAgent::TxtData>().HandleVendorNameChange();
+#endif
+
 exit:
     return error;
 }
 
-Error VendorInfo::SetModel(const char *aModel) { return StringCopy(mModel, aModel, kStringCheckUtf8Encoding); }
+Error VendorInfo::SetModel(const char *aModel)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!StringMatch(mModel, (aModel == nullptr) ? "" : aModel));
+
+    SuccessOrExit(error = StringCopy(mModel, aModel, kStringCheckUtf8Encoding));
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<MeshCoP::BorderAgent::TxtData>().HandleVendorModelChange();
+#endif
+
+exit:
+    return error;
+}
 
 Error VendorInfo::SetSwVersion(const char *aSwVersion)
 {
