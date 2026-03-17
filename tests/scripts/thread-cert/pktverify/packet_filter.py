@@ -629,7 +629,7 @@ class PacketFilter(object):
 
     def filter_has_bbr_dataset(self):
         return self.filter("""
-                thread_nwd.tlv.server.has('16')
+                thread_nwd.tlv.server_16 is not null
                 and thread_nwd.tlv.service.s_data.seqno is not null
                 and thread_nwd.tlv.service.s_data.rrdelay is not null
                 and thread_nwd.tlv.service.s_data.mlrtimeout is not null

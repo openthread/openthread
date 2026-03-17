@@ -82,6 +82,7 @@ enum NetifIdentifier : uint8_t
 class Udp : public InstanceLocator, private NonCopyable
 {
 public:
+    typedef UdpHeader    Header;         ///< UDP header.
     typedef otUdpReceive ReceiveHandler; ///< Receive handler callback.
 
     /**
@@ -388,82 +389,6 @@ public:
             return mHandler(mContext, &aMessage, &aMessageInfo);
         }
     };
-
-    /**
-     * Implements UDP header generation and parsing.
-     */
-    OT_TOOL_PACKED_BEGIN
-    class Header : public Clearable<Header>
-    {
-    public:
-        static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
-        static constexpr uint16_t kDestPortFieldOffset   = 2; ///< Byte offset of Destination Port field in UDP header.
-        static constexpr uint16_t kLengthFieldOffset     = 4; ///< Byte offset of Length field in UDP header.
-        static constexpr uint16_t kChecksumFieldOffset   = 6; ///< Byte offset of Checksum field in UDP header.
-
-        /**
-         * Returns the UDP Source Port.
-         *
-         * @returns The UDP Source Port.
-         */
-        uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSourcePort); }
-
-        /**
-         * Sets the UDP Source Port.
-         *
-         * @param[in]  aPort  The UDP Source Port.
-         */
-        void SetSourcePort(uint16_t aPort) { mSourcePort = BigEndian::HostSwap16(aPort); }
-
-        /**
-         * Returns the UDP Destination Port.
-         *
-         * @returns The UDP Destination Port.
-         */
-        uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestinationPort); }
-
-        /**
-         * Sets the UDP Destination Port.
-         *
-         * @param[in]  aPort  The UDP Destination Port.
-         */
-        void SetDestinationPort(uint16_t aPort) { mDestinationPort = BigEndian::HostSwap16(aPort); }
-
-        /**
-         * Returns the UDP Length.
-         *
-         * @returns The UDP Length.
-         */
-        uint16_t GetLength(void) const { return BigEndian::HostSwap16(mLength); }
-
-        /**
-         * Sets the UDP Length.
-         *
-         * @param[in]  aLength  The UDP Length.
-         */
-        void SetLength(uint16_t aLength) { mLength = BigEndian::HostSwap16(aLength); }
-
-        /**
-         * Returns the UDP Checksum.
-         *
-         * @returns The UDP Checksum.
-         */
-        uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
-
-        /**
-         * Sets the UDP Checksum.
-         *
-         * @param[in]  aChecksum  The UDP Checksum.
-         */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
-
-    private:
-        uint16_t mSourcePort;
-        uint16_t mDestinationPort;
-        uint16_t mLength;
-        uint16_t mChecksum;
-
-    } OT_TOOL_PACKED_END;
 
     /**
      * Initializes the object.

@@ -51,8 +51,6 @@ from pktverify.addrs import Ipv6Addr
 from pktverify.bytes import Bytes
 
 # Constants
-NM_PROVISIONING_URL_TLV = 32
-
 CSL_PERIOD_500MS = 500000 // consts.US_PER_TEN_SYMBOLS
 CSL_PERIOD_3300MS = 3300000 // consts.US_PER_TEN_SYMBOLS
 CSL_PERIOD_400MS = 400000 // consts.US_PER_TEN_SYMBOLS
@@ -83,8 +81,15 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('tlv_request', v))
     elif t == consts.NM_CHANNEL_TLV and len(v) == 3 and not is_diag:  # DG_MAC_EXTENDED_ADDRESS_TLV is 8
         kvs.append(('channel', struct.unpack('>H', v[1:3])[0]))
-    elif t == consts.NM_ACTIVE_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
-        kvs.append(('active_timestamp', struct.unpack('>Q', v)[0] >> 16))
+    elif t == consts.NL_TIMEOUT_TLV and not is_diag:
+        if len(v) == 4:
+            kvs.append(('timeout', struct.unpack('>I', v)[0]))
+    elif t == consts.NL_ACTIVE_TIMESTAMP_TLV and not is_diag:
+        if len(v) == 8:
+            kvs.append(('active_timestamp', struct.unpack('>Q', v)[0] >> 16))
+        elif len(v) % 16 == 0:
+            for i in range(0, len(v), 16):
+                kvs.append(('ipv6_address', str(Ipv6Addr(v[i:i + 16]))))
     elif t == consts.NM_PENDING_TIMESTAMP_TLV and len(v) == 8 and not is_diag:
         kvs.append(('pending_timestamp', struct.unpack('>Q', v)[0] >> 16))
     elif t == consts.NM_DELAY_TIMER_TLV and len(v) == 4 and not is_diag:
@@ -146,7 +151,7 @@ def thread_coap_tlv_parse(t, v, layer=None):
         kvs.append(('joiner_router_locator', struct.unpack('>H', v)[0]))
     elif t == consts.NM_JOINER_ROUTER_KEK_TLV and len(v) == 16 and not is_diag:
         kvs.append(('joiner_router_kek', v))
-    elif t == NM_PROVISIONING_URL_TLV and not is_diag:
+    elif t == consts.NM_PROVISIONING_URL_TLV and not is_diag:
         kvs.append(('provisioning_url', v.decode('utf-8', errors='replace')))
     elif t == consts.NM_FUTURE_TLV:
         kvs.append(('future_tlv', v))
@@ -281,6 +286,8 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['mle.aux_sec.key_index'] = layer_fields._auto
     layer_fields._layer_containers.add('mle.aux_sec')
     layer_fields._LAYER_FIELDS['coap.tlv.ipv6_address'] = layer_fields._list(layer_fields._ipv6_addr)
+    layer_fields._LAYER_FIELDS['coap.tlv.timeout'] = layer_fields._auto
+    layer_fields._LAYER_FIELDS['coap.tlv.status'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.rloc16'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.mode'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['coap.tlv.leader_router_id'] = layer_fields._auto

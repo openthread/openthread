@@ -169,6 +169,14 @@ DEFAULT_TESTS=(
     "1_2_LP_7_1_2"
     "1_2_LP_7_2_1"
     "1_2_LP_7_2_2"
+    "1_2_MATN_TC_1"
+    "1_2_MATN_TC_2"
+    "1_2_MATN_TC_3"
+    "1_2_MATN_TC_4"
+    "1_2_MATN_TC_5"
+    "1_2_MATN_TC_7"
+    "1_2_MATN_TC_9"
+    "1_2_MATN_TC_10"
 )
 
 # Use provided arguments or the default test list

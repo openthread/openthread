@@ -33,6 +33,7 @@
 
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
+#include "nexus_infra_if.hpp"
 #include "nexus_mdns.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
@@ -49,6 +50,7 @@ public:
     Alarm    mAlarmMilli;
     Alarm    mAlarmMicro;
     Mdns     mMdns;
+    InfraIf  mInfraIf;
     Settings mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Trel mTrel;
@@ -62,7 +64,7 @@ protected:
     }
 };
 
-class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListEntry<Node>, private Instance
+class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListEntry<Node>, public Instance
 {
     friend class Heap::Allocatable<Node>;
 
@@ -88,9 +90,11 @@ public:
     void AllowList(Node &aNode);
     void UnallowList(Node &aNode);
     void SendEchoRequest(const Ip6::Address &aDestination,
-                         uint16_t            aIdentifier,
+                         uint16_t            aIdentifier  = 0,
                          uint16_t            aPayloadSize = 0,
-                         uint8_t             aHopLimit    = 64);
+                         uint8_t             aHopLimit    = 64,
+                         const Ip6::Address *aSrcAddress  = nullptr);
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
@@ -99,6 +103,16 @@ public:
     // It requires a matching prefix to be found, otherwise it is treated as
     // a test failure (emits error message and exits the program.)
     const Ip6::Address &FindMatchingAddress(const char *aPrefix);
+
+    /**
+     * Finds and returns a global scope address on the device.
+     *
+     * It requires a global scope address to be found, otherwise it is treated as a test failure (emits error message
+     * and exits the program).
+     *
+     * @returns A reference to the global scope address.
+     */
+    const Ip6::Address &FindGlobalAddress(void);
 
     void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
     void        SetName(const char *aPrefix, uint16_t aIndex);
@@ -122,8 +136,12 @@ public:
 
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
+    static void HandleIp6Receive(otMessage *aMessage, void *aContext);
+    void        HandleReceive(otMessage *aMessage);
+
     using Platform::mAlarmMicro;
     using Platform::mAlarmMilli;
+    using Platform::mInfraIf;
     using Platform::mMdns;
     using Platform::mPendingTasklet;
     using Platform::mRadio;

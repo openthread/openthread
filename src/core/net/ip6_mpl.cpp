@@ -48,25 +48,6 @@ Mpl::Mpl(Instance &aInstance)
     ClearAllBytes(mSeedSet);
 }
 
-void MplOption::Init(SeedIdLength aSeedIdLength)
-{
-    SetType(kType);
-
-    switch (aSeedIdLength)
-    {
-    case kSeedIdLength0:
-        SetLength(sizeof(*this) - sizeof(Option) - sizeof(mSeedId));
-        break;
-    case kSeedIdLength2:
-        SetLength(sizeof(*this) - sizeof(Option));
-        break;
-    default:
-        OT_ASSERT(false);
-    }
-
-    mControl = aSeedIdLength;
-}
-
 void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
 {
     if (aAddress == Get<Mle::Mle>().GetMeshLocalRloc())

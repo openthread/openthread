@@ -163,7 +163,8 @@ void Interpreter::OutputResult(otError aError)
     {
         if (aError != OT_ERROR_NONE)
         {
-            // prepend `*` to differentiate from the normal end of command.
+            // For internal debug commands, prepending `*` to prevent cli client from treating this as a fatal error and
+            // exit.
             OutputLine("* Error %u: %s", aError, otThreadErrorToString(aError));
         }
 
@@ -6916,8 +6917,6 @@ template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
         OutputLine("$ %s", commandString);
         ProcessLine(commandString);
     }
-
-    OutputLine("Done");
 
     mInternalDebugCommand = false;
 

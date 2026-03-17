@@ -90,7 +90,9 @@ Error Client::Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, v
     // Originate timestamp is used only as a unique token.
     header.SetTransmitTimestampSeconds(TimerMilli::GetNow().GetValue() / 1000 + kTimeAt1970);
 
-    VerifyOrExit((message = NewMessage(header)) != nullptr, error = kErrorNoBufs);
+    message = mSocket.NewMessage();
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = message->Append(header));
 
     messageInfo = AsCoreTypePtr(aQuery->mMessageInfo);
 
@@ -109,10 +111,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        if (message)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
 
         if (messageCopy)
         {
@@ -121,18 +120,6 @@ exit:
     }
 
     return error;
-}
-
-Message *Client::NewMessage(const Header &aHeader)
-{
-    Message *message = nullptr;
-
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr);
-    IgnoreError(message->Prepend(aHeader));
-    message->SetOffset(0);
-
-exit:
-    return message;
 }
 
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)

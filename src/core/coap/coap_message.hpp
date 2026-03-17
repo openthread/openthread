@@ -813,6 +813,24 @@ public:
      */
     const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
 
+    /**
+     * Maps an `Error` to a CoAP Code.
+     *
+     * @param[in] aError  The error to map.
+     *
+     * @returns The corresponding CoAP Code.
+     *
+     * The following mappings are used:
+     * - `kErrorNone`           -> `kCodeChanged`
+     * - `kErrorBusy`           -> `kCodeServiceUnavailable`
+     * - `kErrorParse`          -> `kCodeBadRequest`
+     * - `kErrorNotFound`       -> `kCodeBadRequest`
+     * - `kErrorInvalidArgs`    -> `kCodeBadRequest`
+     * - `kErrorNotImplemented` -> `kCodeNotImplemented`
+     * - Any other error        -> `kCodeInternalError`
+     */
+    static Code MapErrorToCoapCode(Error aError);
+
 private:
     /*
      *
