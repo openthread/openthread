@@ -324,6 +324,7 @@ void InfraIf::Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMess
     Node &node          = GetNode();
     bool  isIcmp6Nd     = false;
     bool  isEchoRequest = false;
+    bool  isEchoReply   = false;
 
     VerifyOrExit(!node.mInfraIf.HasAddress(aHeader.GetSource()));
     VerifyOrExit(!node.Get<NetworkData::Leader>().IsOnMesh(aHeader.GetSource()));
@@ -359,6 +360,9 @@ void InfraIf::Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMess
         case Ip6::Icmp::Header::kTypeEchoRequest:
             isEchoRequest = true;
             break;
+        case Ip6::Icmp::Header::kTypeEchoReply:
+            isEchoReply = true;
+            break;
         default:
             break;
         }
@@ -379,6 +383,10 @@ void InfraIf::Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMess
     else if (isEchoRequest)
     {
         HandleEchoRequest(aHeader, aMessage);
+    }
+    else if (isEchoReply)
+    {
+        HandleEchoReply(aHeader, aMessage);
     }
     else
     {
@@ -440,6 +448,14 @@ void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
     SuccessOrQuit(replyMessage->Prepend(replyHeader));
 
     mPendingTxQueue.Enqueue(*replyMessage);
+}
+
+void InfraIf::HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage)
+{
+    Ip6::Icmp::Header icmpHeader;
+
+    SuccessOrQuit(aMessage.Read(sizeof(Ip6::Header), icmpHeader));
+    mEchoReplyCallback.InvokeIfSet(aHeader.GetSource(), icmpHeader.GetId(), icmpHeader.GetSequence());
 }
 
 void InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const

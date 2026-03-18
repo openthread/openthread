@@ -75,6 +75,10 @@ public:
     void Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMessage);
     void GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const;
 
+    typedef void (*EchoReplyHandler)(void *aContext, const Ip6::Address &aSource, uint16_t aId, uint16_t aSequence);
+
+    void SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext) { mEchoReplyCallback.Set(aHandler, aContext); }
+
     Node       &GetNode(void);
     const Node &GetNode(void) const;
 
@@ -84,11 +88,13 @@ private:
     void ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio);
     void HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage);
+    void HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage);
 
-    Node                     *mNode;
-    uint32_t                  mNodeId;
-    uint32_t                  mIfIndex;
-    Heap::Array<Ip6::Address> mAddresses;
+    Node                      *mNode;
+    uint32_t                   mNodeId;
+    uint32_t                   mIfIndex;
+    Heap::Array<Ip6::Address>  mAddresses;
+    Callback<EchoReplyHandler> mEchoReplyCallback;
 };
 
 } // namespace Nexus
