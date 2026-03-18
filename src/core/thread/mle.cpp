@@ -5536,6 +5536,12 @@ Error Mle::Detacher::Detach(DetachCallback aCallback, void *aContext)
     switch (Get<Mle>().GetRole())
     {
     case kRoleLeader:
+#if OPENTHREAD_FTD
+        if (Get<Mle>().IsSingleton() && !Get<Mle>().mChildTable.HasChildren(Child::kInStateAnyExceptInvalid))
+        {
+            timeout = 0;
+        }
+#endif
         break;
 
     case kRoleRouter:
