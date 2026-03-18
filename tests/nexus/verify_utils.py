@@ -156,6 +156,40 @@ def thread_coap_tlv_parse(t, v, layer=None):
     elif t == consts.NM_FUTURE_TLV:
         kvs.append(('future_tlv', v))
 
+    # Network Data TLV (often in SVR_DATA.ntf)
+    elif t == consts.NL_THREAD_NETWORK_DATA_TLV:
+        # Value is Network Data
+        # We only care about Service TLV (Type 5) -> Server TLV (Type 6)
+        # In Network Data, TLV type is 5 bits + 1 bit Stable flag.
+        pos = 0
+        while pos + 2 <= len(v):
+            nwd_t = v[pos]
+            nwd_l = v[pos + 1]
+            nwd_v = v[pos + 2:pos + 2 + nwd_l]
+            if pos + 2 + nwd_l > len(v):
+                break
+            if (nwd_t >> 1) == consts.NWD_SERVICE_TLV:  # Service TLV
+                if len(nwd_v) >= 2:
+                    # nwd_v[0] is T bit (1) and Service ID (7 bits)
+                    s_data_len = nwd_v[1]
+                    if len(nwd_v) >= 2 + s_data_len:
+                        s_data = nwd_v[2:2 + s_data_len]
+                        if s_data_len >= 1 and s_data[0] == consts.THREAD_SERVICE_DATA_BBR:  # THREAD_SERVICE_DATA_BBR
+                            # Sub-TLVs start after S_data
+                            sub_pos = 2 + s_data_len
+                            while sub_pos + 2 <= len(nwd_v):
+                                sub_t = nwd_v[sub_pos]
+                                sub_l = nwd_v[sub_pos + 1]
+                                sub_v = nwd_v[sub_pos + 2:sub_pos + 2 + sub_l]
+                                if sub_pos + 2 + sub_l > len(nwd_v):
+                                    break
+                                if (sub_t >> 1) == consts.NWD_SERVER_TLV:  # Server TLV
+                                    # sub_v is [RLOC16(2), SeqNo(1), ReregDelay(2), MLRTimeout(4)]
+                                    if len(sub_v) >= 3:
+                                        kvs.append(('bbr_seqno', sub_v[2]))
+                                sub_pos += 2 + sub_l
+            pos += 2 + nwd_l
+
     # Other Thread TLVs
     elif t == consts.NL_TARGET_EID_TLV and len(v) == 16:
         kvs.append(('target_eid', str(Ipv6Addr(v))))
@@ -366,6 +400,7 @@ def apply_patches():
         return t, kvs, val_pos + len_
 
     coap.CoapLayer._parse_next_tlv = staticmethod(_parse_next_tlv_patched)
+    layer_fields._LAYER_FIELDS['coap.tlv.bbr_seqno'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.delay_timer'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_query_options'] = layer_fields._bytes
 

@@ -65,6 +65,8 @@ PBBR_ALOC = Ipv6Addr(DEFAULT_MESH_LOCAL_PREFIX + PBBR_ALOC_IID)
 # Minimum value of the MLR Timeout parameter in the BBR Dataset
 MLR_TIMEOUT_MIN = 300
 
+THREAD_SERVICE_DATA_BBR = 0x01
+
 # Max response delay
 MLE_MAX_RESPONSE_DELAY = 1
 
