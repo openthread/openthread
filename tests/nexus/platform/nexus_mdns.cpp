@@ -60,22 +60,14 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
 // Mdns
 
 Mdns::Mdns(void)
-    : mEnabled(false)
+    : mNode(nullptr)
+    , mEnabled(false)
 {
-    Ip6::Address             address;
-    Ip6::InterfaceIdentifier iid;
-
-    iid.GenerateRandom();
-    address.SetToLinkLocalAddress(iid);
-
-    SuccessOrQuit(mIfAddresses.PushBack(address));
 }
 
-void Mdns::Reset(void)
-{
-    mEnabled = false;
-    mPendingTxList.Free();
-}
+void Mdns::Init(Node &aNode) { mNode = &aNode; }
+
+void Mdns::Reset(void) { mEnabled = false; }
 
 Error Mdns::SetListeningEnabled(Instance &aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
@@ -96,7 +88,7 @@ exit:
 
 void Mdns::SendMulticast(Message &aMessage, uint32_t aInfraIfIndex)
 {
-    PendingTx *pendingTx;
+    Ip6::Address multicastAddress;
 
     if (aInfraIfIndex != kInfraIfIndex)
     {
@@ -104,13 +96,8 @@ void Mdns::SendMulticast(Message &aMessage, uint32_t aInfraIfIndex)
         ExitNow();
     }
 
-    pendingTx = PendingTx::Allocate();
-    VerifyOrQuit(pendingTx != nullptr);
-
-    pendingTx->mMessage.Reset(&aMessage);
-    pendingTx->mIsUnicast = false;
-
-    mPendingTxList.PushAfterTail(*pendingTx);
+    GetMulticastAddress(multicastAddress);
+    mNode->mInfraIf.SendUdp(mNode->mInfraIf.GetLinkLocalAddress(), multicastAddress, kUdpPort, kUdpPort, aMessage);
 
 exit:
     return;
@@ -118,22 +105,14 @@ exit:
 
 void Mdns::SendUnicast(Message &aMessage, const AddressInfo &aAddress)
 {
-    PendingTx *pendingTx;
-
     if (aAddress.mInfraIfIndex != kInfraIfIndex)
     {
         aMessage.Free();
         ExitNow();
     }
 
-    pendingTx = PendingTx::Allocate();
-    VerifyOrQuit(pendingTx != nullptr);
-
-    pendingTx->mMessage.Reset(&aMessage);
-    pendingTx->mIsUnicast = true;
-    pendingTx->mAddress   = aAddress;
-
-    mPendingTxList.PushAfterTail(*pendingTx);
+    mNode->mInfraIf.SendUdp(mNode->mInfraIf.GetLinkLocalAddress(), AsCoreType(&aAddress.mAddress), kUdpPort,
+                            aAddress.mPort, aMessage);
 
 exit:
     return;
@@ -143,29 +122,28 @@ void Mdns::SignalIfAddresses(Instance &aInstance)
 {
     otPlatMdnsHandleHostAddressRemoveAll(&aInstance, kInfraIfIndex);
 
-    for (const Ip6::Address &address : mIfAddresses)
+    for (const Ip6::Address &address : mNode->mInfraIf.GetAddresses())
     {
         otPlatMdnsHandleHostAddressEvent(&aInstance, &address, /* aAdded */ true, kInfraIfIndex);
     }
 }
 
-void Mdns::Receive(Instance &aInstance, const PendingTx &aPendingTx, const AddressInfo &aSenderAddress)
+void Mdns::Receive(Instance &aInstance, Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress)
 {
     Message *message;
 
     VerifyOrExit(mEnabled);
 
-    if (aPendingTx.mIsUnicast)
+    if (aIsUnicast)
     {
-        VerifyOrExit(aPendingTx.mAddress.mInfraIfIndex == kInfraIfIndex);
-        VerifyOrExit(aPendingTx.mAddress.mPort == kUdpPort);
-        VerifyOrExit(mIfAddresses.Contains(AsCoreType(&aPendingTx.mAddress.mAddress)));
+        VerifyOrExit(aSenderAddress.mInfraIfIndex == kInfraIfIndex);
+        VerifyOrExit(aSenderAddress.mPort == kUdpPort);
     }
 
-    message = aPendingTx.mMessage->Clone();
+    message = aMessage.Clone();
     VerifyOrQuit(message != nullptr);
 
-    otPlatMdnsHandleReceive(&aInstance, message, aPendingTx.mIsUnicast, &aSenderAddress);
+    otPlatMdnsHandleReceive(&aInstance, message, aIsUnicast, &aSenderAddress);
 
 exit:
     return;
@@ -174,10 +152,28 @@ exit:
 void Mdns::GetAddress(AddressInfo &aAddress) const
 {
     ClearAllBytes(aAddress);
-    aAddress.mAddress      = mIfAddresses[0];
+    aAddress.mAddress      = mNode->mInfraIf.GetLinkLocalAddress();
     aAddress.mPort         = kUdpPort;
     aAddress.mInfraIfIndex = kInfraIfIndex;
 }
+
+void Mdns::HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded)
+{
+    if (mEnabled)
+    {
+        otPlatMdnsHandleHostAddressEvent(&mNode->GetInstance(), &aAddress, aAdded, kInfraIfIndex);
+    }
+}
+
+void Mdns::HandleHostAddressRemoveAll(void)
+{
+    if (mEnabled)
+    {
+        otPlatMdnsHandleHostAddressRemoveAll(&mNode->GetInstance(), kInfraIfIndex);
+    }
+}
+
+void Mdns::GetMulticastAddress(Ip6::Address &aAddress) { SuccessOrQuit(aAddress.FromString("ff02::fb")); }
 
 } // namespace Nexus
 } // namespace ot

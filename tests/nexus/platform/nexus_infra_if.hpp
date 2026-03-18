@@ -40,7 +40,7 @@ class Node;
 class InfraIf
 {
 public:
-    typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress; ///< A link-layer address
+    typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress;
 
     InfraIf(void);
 
@@ -51,11 +51,13 @@ public:
     bool HasAddress(const Ip6::Address &aAddress) const;
     void AddAddress(const Ip6::Address &aAddress);
     void RemoveAddress(const Ip6::Address &aAddress);
+    void RemoveAllAddresses(void);
 
     const Ip6::Address *FindAddress(const char *aPrefix) const;
     const Ip6::Address &FindMatchingAddress(const char *aPrefix) const;
 
-    const Ip6::Address &GetLinkLocalAddress(void) const { return mAddresses[0]; }
+    const Ip6::Address              &GetLinkLocalAddress(void) const { return mAddresses[0]; }
+    const Heap::Array<Ip6::Address> &GetAddresses(void) const { return mAddresses; }
 
     void SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void SendIp6(const Ip6::Address &aSrcAddress,
@@ -72,7 +74,13 @@ public:
                  uint16_t            aSourcePort,
                  uint16_t            aDestPort,
                  uint16_t            aPayloadSize);
-    void Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMessage);
+    void SendUdp(const Ip6::Address &aSrcAddress,
+                 const Ip6::Address &aDestAddress,
+                 uint16_t            aSourcePort,
+                 uint16_t            aDestPort,
+                 Message            &aPayload);
+
+    void Receive(Node &aSrcNode, Message &aMessage);
     void GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const;
 
     typedef void (*EchoReplyHandler)(void *aContext, const Ip6::Address &aSource, uint16_t aId, uint16_t aSequence);

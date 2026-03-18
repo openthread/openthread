@@ -188,7 +188,7 @@ exit:
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
 {
-    aSockAddr.SetAddress(mMdns.mIfAddresses[0]);
+    aSockAddr.SetAddress(mInfraIf.GetLinkLocalAddress());
     aSockAddr.SetPort(mTrel.mUdpPort);
 }
 #endif

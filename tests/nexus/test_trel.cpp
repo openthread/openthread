@@ -290,9 +290,9 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node2.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node2.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetNext() == nullptr);
 
     // Check peer on `node2` to match `node1` info.
@@ -308,9 +308,9 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node1.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node1.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mInfraIf.GetLinkLocalAddress());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2`");
@@ -360,9 +360,9 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node2.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node2.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetNext() == nullptr);
 
     // Check peer on `node2` to match `node1` info.
@@ -378,9 +378,9 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node1.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node1.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mInfraIf.GetLinkLocalAddress());
 
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
@@ -406,7 +406,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(peer->GetDnssdState() == kDnssdRemoved);
     VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
 
     Log("Validate the `DetermineSecondsSinceLastInteraction()` is properly tracked");
 
@@ -579,27 +579,25 @@ void TestHostAddressChange(void)
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node2.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == service.mPort);
 
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mInfraIf.GetLinkLocalAddress());
 
     VerifyOrQuit(peer->GetNext() == nullptr);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Update the advertised local host addresses on `node2`");
 
-    node2.mMdns.mIfAddresses.Clear();
+    node2.mInfraIf.RemoveAllAddresses();
 
     SuccessOrQuit(guaAddr.FromString("2001:cafe::4567"));
-    SuccessOrQuit(node2.mMdns.mIfAddresses.PushBack(guaAddr));
+    node2.mInfraIf.AddAddress(guaAddr);
 
     SuccessOrQuit(ulaAddr.FromString("fd00:abba::1234"));
-    SuccessOrQuit(node2.mMdns.mIfAddresses.PushBack(ulaAddr));
+    node2.mInfraIf.AddAddress(ulaAddr);
 
     SuccessOrQuit(linkLocalAddr.FromString("fe80::bd2c:a124"));
-    SuccessOrQuit(node2.mMdns.mIfAddresses.PushBack(linkLocalAddr));
-
-    node2.mMdns.SignalIfAddresses(node2.GetInstance());
+    node2.mInfraIf.AddAddress(linkLocalAddr);
 
     nexus.AdvanceTime(3 * 1000);
 
@@ -625,10 +623,10 @@ void TestHostAddressChange(void)
 
     for (const Ip6::Address &hostAddress : peer->GetHostAddresses())
     {
-        VerifyOrQuit(node2.mMdns.mIfAddresses.Contains(hostAddress));
+        VerifyOrQuit(node2.mInfraIf.HasAddress(hostAddress));
     }
 
-    for (const Ip6::Address &ifAddress : node2.mMdns.mIfAddresses)
+    for (const Ip6::Address &ifAddress : node2.mInfraIf.GetAddresses())
     {
         VerifyOrQuit(peer->GetHostAddresses().Contains(ifAddress));
     }
@@ -749,9 +747,9 @@ void TestMultiServiceSameHost(void)
         VerifyOrQuit(StringEndsWith(peerEntry.GetHostName(),
                                     multiServiceNode.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
 
-        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mInfraIf.GetLinkLocalAddress());
         VerifyOrQuit(peerEntry.GetHostAddresses().GetLength() == 1);
-        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mInfraIf.GetLinkLocalAddress());
 
         for (const Dns::Multicast::Core::Service &service : services)
         {
@@ -791,9 +789,9 @@ void TestMultiServiceSameHost(void)
         VerifyOrQuit(StringEndsWith(peerEntry.GetHostName(),
                                     multiServiceNode.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
 
-        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mInfraIf.GetLinkLocalAddress());
         VerifyOrQuit(peerEntry.GetHostAddresses().GetLength() == 1);
-        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mInfraIf.GetLinkLocalAddress());
 
         for (uint16_t index = 0; index < 2; index++)
         {
@@ -810,9 +808,7 @@ void TestMultiServiceSameHost(void)
     Log("Update the local host addresses on `multiServiceNode`");
 
     SuccessOrQuit(address.FromString("fd00:abba::1234"));
-    SuccessOrQuit(multiServiceNode.mMdns.mIfAddresses.PushBack(address));
-
-    multiServiceNode.mMdns.SignalIfAddresses(multiServiceNode.GetInstance());
+    multiServiceNode.mInfraIf.AddAddress(address);
 
     nexus.AdvanceTime(5 * 1000);
 
@@ -836,10 +832,10 @@ void TestMultiServiceSameHost(void)
         VerifyOrQuit(StringEndsWith(peerEntry.GetHostName(),
                                     multiServiceNode.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
 
-        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mInfraIf.GetLinkLocalAddress());
         VerifyOrQuit(peerEntry.GetHostAddresses().GetLength() == 2);
-        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mMdns.mIfAddresses[0]);
-        VerifyOrQuit(peerEntry.GetHostAddresses()[1] == multiServiceNode.mMdns.mIfAddresses[1]);
+        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mInfraIf.GetLinkLocalAddress());
+        VerifyOrQuit(peerEntry.GetHostAddresses()[1] == multiServiceNode.mInfraIf.GetAddresses()[1]);
 
         for (uint16_t index = 0; index < 2; index++)
         {

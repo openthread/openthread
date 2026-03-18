@@ -282,6 +282,7 @@ Node &Core::CreateNode(void)
     node->GetInstance().SetId(mCurNodeId++);
 
     node->mInfraIf.Init(*node);
+    node->mMdns.Init(*node);
 
     mNodes.Push(*node);
 
@@ -362,7 +363,6 @@ void Core::Process(Node &aNode)
     otTaskletsProcess(&aNode.GetInstance());
 
     ProcessRadio(aNode);
-    ProcessMdns(aNode);
     ProcessInfraIf(aNode);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     ProcessTrel(aNode);
@@ -528,23 +528,6 @@ exit:
     return;
 }
 
-void Core::ProcessMdns(Node &aNode)
-{
-    Mdns::AddressInfo senderAddress;
-
-    aNode.mMdns.GetAddress(senderAddress);
-
-    for (Mdns::PendingTx &pendingTx : aNode.mMdns.mPendingTxList)
-    {
-        for (Node &rxNode : mNodes)
-        {
-            rxNode.mMdns.Receive(rxNode.GetInstance(), pendingTx, senderAddress);
-        }
-    }
-
-    aNode.mMdns.mPendingTxList.Free();
-}
-
 void Core::ProcessInfraIf(Node &aNode)
 {
     // Deliver pending packets on the infrastructure interface.
@@ -616,7 +599,7 @@ void Core::ProcessInfraIf(Node &aNode)
                 continue;
             }
 
-            rxNode.mInfraIf.Receive(aNode, header, *message);
+            rxNode.mInfraIf.Receive(aNode, *message);
         }
 
         message->Free();
