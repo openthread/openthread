@@ -92,18 +92,20 @@ public:
     void ClearNeighbors(void);
 
     /**
-     * Allocates a router with a random Router ID.
+     * Selects a random unallocated and valid Router ID.
      *
-     * @returns A pointer to the allocated router or `nullptr` if a Router ID is not available.
+     * This method only selects and returns a Router ID; it does not allocate the ID in the table.
+     *
+     * @returns A randomly selected unallocated Router ID, or `Mle::kInvalidRouterId` if none are available.
      */
-    Router *Allocate(void);
+    uint8_t SelectRandomUnallocatedRouterId(void) const;
 
     /**
      * Allocates a router with a specified Router ID.
      *
      * @param[in] aRouterId   The Router ID to try to allocate.
      *
-     * @returns A pointer to the allocated router or `nullptr` if the ID @p aRouterId could not be allocated.
+     * @returns A pointer to the allocated router, or `nullptr` if the ID @p aRouterId could not be allocated.
      */
     Router *Allocate(uint8_t aRouterId);
 
@@ -411,6 +413,16 @@ public:
      * @retval kErrorInvalidArgs   The given range is not valid.
      */
     Error SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId);
+
+    /**
+     * Indicates whether a given Router ID falls within the restricted range.
+     *
+     * @param[in] aRouterId  The Router ID to check.
+     *
+     * @retval TRUE   The @p aRouterId is within the restricted range.
+     * @retval FALSE  The @p aRouterId is not within the restricted range.
+     */
+    bool IsRouterIdInRestrictedRange(uint8_t aRouterId) const;
 #endif
 
     // The following methods are intended to support range-based `for`

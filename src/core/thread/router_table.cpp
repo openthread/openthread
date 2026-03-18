@@ -145,9 +145,8 @@ bool RouterTable::IsSelfRouterId(uint8_t aRouterId) const
     return isSelf;
 }
 
-Router *RouterTable::Allocate(void)
+uint8_t RouterTable::SelectRandomUnallocatedRouterId(void) const
 {
-    Router *router           = nullptr;
     uint8_t numAvailable     = 0;
     uint8_t selectedRouterId = Mle::kInvalidRouterId;
 
@@ -175,20 +174,21 @@ Router *RouterTable::Allocate(void)
         }
     }
 
-    VerifyOrExit(selectedRouterId != Mle::kInvalidRouterId);
-
-    router = Allocate(selectedRouterId);
-    OT_ASSERT(router != nullptr);
-
 exit:
-    return router;
+    return selectedRouterId;
 }
 
 Router *RouterTable::Allocate(uint8_t aRouterId)
 {
     Router *router = nullptr;
 
-    VerifyOrExit(aRouterId <= Mle::kMaxRouterId && mRouterIdMap.CanAllocate(aRouterId));
+    VerifyOrExit(Mle::IsRouterIdValid(aRouterId));
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(IsRouterIdInRestrictedRange(aRouterId));
+#endif
+
+    VerifyOrExit(mRouterIdMap.CanAllocate(aRouterId));
 
     router = AddRouter(aRouterId);
     VerifyOrExit(router != nullptr);
@@ -209,8 +209,6 @@ Error RouterTable::Release(uint8_t aRouterId)
 {
     Error   error = kErrorNone;
     Router *router;
-
-    OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader(), error = kErrorInvalidState);
 
@@ -853,6 +851,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 void RouterTable::GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const
 {
     aMinRouterId = mMinRouterId;
@@ -871,7 +870,13 @@ Error RouterTable::SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId)
 exit:
     return error;
 }
-#endif
+
+bool RouterTable::IsRouterIdInRestrictedRange(uint8_t aRouterId) const
+{
+    return IsValueInRange(aRouterId, mMinRouterId, mMaxRouterId);
+}
+
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 void RouterTable::RouterIdMap::GetAsRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const
 {

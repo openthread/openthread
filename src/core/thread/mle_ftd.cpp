@@ -260,18 +260,21 @@ exit:
 
 uint8_t Mle::SelectLeaderId(void) const
 {
-    uint8_t minId;
-    uint8_t maxId;
+    uint8_t leaderId = mPreviousRouterId;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    mRouterTable.GetRouterIdRange(minId, maxId);
-#else
-    minId = 0;
-    maxId = kMaxRouterId;
+    if (!mRouterTable.IsRouterIdInRestrictedRange(leaderId))
+    {
+        leaderId = kInvalidRouterId;
+    }
 #endif
 
-    return IsValueInRange(mPreviousRouterId, minId, maxId) ? mPreviousRouterId
-                                                           : Random::NonCrypto::GetUint8InRange(minId, maxId + 1);
+    if (!IsRouterIdValid(leaderId))
+    {
+        leaderId = mRouterTable.SelectRandomUnallocatedRouterId();
+    }
+
+    return leaderId;
 }
 
 uint32_t Mle::SelectPartitionId(void) const
@@ -3500,6 +3503,8 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     // Processes a previously parsed Address Solicit request and
     // determines whether to accept or reject the request.
 
+    uint8_t routerId = kInvalidRouterId;
+
     aInfo.mResponse = kAddrSolicitNoAddressAvailable;
     aInfo.mRouter   = nullptr;
 
@@ -3507,7 +3512,8 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
 
     if (aInfo.mRequestedRloc16 != kInvalidRloc16)
     {
-        LogInfo("AddrSolicit Requested ID: %u", RouterIdFromRloc16(aInfo.mRequestedRloc16));
+        routerId = RouterIdFromRloc16(aInfo.mRequestedRloc16);
+        LogInfo("AddrSolicit Requested ID: %u", routerId);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -3546,14 +3552,12 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
         ExitNow();
     }
 
-    if (aInfo.mRequestedRloc16 != kInvalidRloc16)
-    {
-        aInfo.mRouter = mRouterTable.Allocate(RouterIdFromRloc16(aInfo.mRequestedRloc16));
-    }
+    aInfo.mRouter = mRouterTable.Allocate(routerId);
 
     if (aInfo.mRouter == nullptr)
     {
-        aInfo.mRouter = mRouterTable.Allocate();
+        routerId      = mRouterTable.SelectRandomUnallocatedRouterId();
+        aInfo.mRouter = mRouterTable.Allocate(routerId);
         VerifyOrExit(aInfo.mRouter != nullptr);
     }
 
