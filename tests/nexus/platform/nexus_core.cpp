@@ -270,6 +270,27 @@ void Core::AddTestVar(const char *aName, const char *aValue)
     var->mValue.Clear().Append("%s", aValue);
 }
 
+void Core::AddOmrPrefixTestVar(const char *aName, Node &aNode)
+{
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    BorderRouter::RoutingManager &routingManager = aNode.Get<BorderRouter::RoutingManager>();
+    Ip6::Prefix                   omrPrefix;
+    BorderRouter::RoutePreference preference;
+    String<17>                    omrPrefixString;
+
+    if (routingManager.GetFavoredOmrPrefix(omrPrefix, preference) != kErrorNone)
+    {
+        SuccessOrQuit(routingManager.GetOmrPrefix(omrPrefix));
+    }
+
+    omrPrefixString.AppendHexBytes(omrPrefix.GetBytes(), 8);
+    AddTestVar(aName, omrPrefixString.AsCString());
+#else
+    OT_UNUSED_VARIABLE(aName);
+    OT_UNUSED_VARIABLE(aNode);
+#endif
+}
+
 Core::~Core(void) { sInUse = false; }
 
 Node &Core::CreateNode(void)

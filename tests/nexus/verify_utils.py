@@ -480,6 +480,18 @@ def run_main(verify_func):
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_CHANNEL': int(channel)})
 
+        # Add OMR prefix variables
+        omr_prefixes = data.get('omr_prefixes', {})
+        for node_id, omr_prefix in omr_prefixes.items():
+            if omr_prefix:
+                name = pv.test_info.get_node_name(int(node_id))
+                pv.add_vars(**{f'{name}_OMR_PREFIX': omr_prefix})
+
+        # If all valid OMR prefixes are the same, add a generic OMR_PREFIX variable
+        valid_omr_prefixes = [p for p in omr_prefixes.values() if p]
+        if len(valid_omr_prefixes) > 0 and all(p == valid_omr_prefixes[0] for p in valid_omr_prefixes):
+            pv.add_vars(OMR_PREFIX=valid_omr_prefixes[0])
+
         verify_func(pv)
         print("Verification PASSED")
     except Exception as e:

@@ -672,6 +672,24 @@ _LAYER_FIELDS = {
     # DNS
     'dns.resp.ttl': _auto,
     'dns.flags.response': _auto,
+    'dns.count.answers': _auto,
+    'dns.resp.name': _list(_str),
+    'dns.resp.type': _list(_auto),
+    'dns.txt': _list(_bytes),
+    'dns.srv.port': _list(_auto),
+    'dns.srv.target': _list(_str),
+    'dns.ptr.domain_name': _list(_str),
+
+    # MDNS
+    'mdns.resp.ttl': _auto,
+    'mdns.flags.response': _auto,
+    'mdns.count.answers': _auto,
+    'mdns.resp.name': _list(_str),
+    'mdns.resp.type': _list(_auto),
+    'mdns.txt': _list(_bytes),
+    'mdns.srv.port': _list(_auto),
+    'mdns.srv.target': _list(_str),
+    'mdns.ptr.domain_name': _list(_str),
 }
 
 _layer_containers = set()
@@ -733,6 +751,9 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
                 continue
             layer = layers[layer_depth]
             v = layer.get_field(field_uri)
+            if v is None and layer_name == 'mdns':
+                # Try dns prefix for mdns layer
+                v = layer.get_field('dns' + field_uri[4:])
             if v is not None:
                 try:
                     v = _LAYER_FIELDS[field_uri](v)

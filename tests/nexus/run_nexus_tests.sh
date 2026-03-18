@@ -98,6 +98,7 @@ DEFAULT_TESTS=(
     "1_1_5_7_3"
     "1_1_5_8_2"
     "1_1_5_8_3"
+    "1_2_BBR_TC_3"
     "1_1_5_8_4"
     "1_1_6_1_1_A"
     "1_1_6_1_1_B"
@@ -188,6 +189,7 @@ DEFAULT_TESTS=(
     "1_2_MATN_TC_26"
     "1_2_BBR_TC_1"
     "1_2_BBR_TC_2"
+    "1_2_BBR_TC_3"
 )
 
 # Use provided arguments or the default test list
