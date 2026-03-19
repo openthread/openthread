@@ -151,18 +151,34 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 
     VerifyOrExit(aMsg.IsConfirmable(), error = kErrorParse);
 
+    VerifyOrExit(isPrimary, status = kMlrBbrNotPrimary);
+
+    VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone,
+                 error = kErrorParse);
+    VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = kMlrGeneralFailure);
+    VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
+                 status = kMlrGeneralFailure);
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    // Required by Test Specification 5.10.22 DUA-TC-26, only for certification purpose
+    // Required by Test Specification 5.10.22 MATN-TC-26, only for certification purpose
     if (mMlrResponseIsSpecified)
     {
         mMlrResponseIsSpecified = false;
-        ExitNow(status = mMlrResponseStatus);
+        status                  = mMlrResponseStatus;
+
+        if (status != kMlrSuccess)
+        {
+            while (!offsetRange.IsEmpty())
+            {
+                IgnoreError(aMsg.mMessage.Read(offsetRange, address));
+                offsetRange.AdvanceOffset(sizeof(Ip6::Address));
+                addresses[failedAddressNum++] = address;
+            }
+        }
+
+        ExitNow();
     }
 #endif
-
-    VerifyOrExit(isPrimary, status = kMlrBbrNotPrimary);
-
-    // TODO: (MLR) send configured MLR response for Reference Device
 
     if (Tlv::Find<ThreadCommissionerSessionIdTlv>(aMsg.mMessage, commissionerSessionId) == kErrorNone)
     {
@@ -177,12 +193,6 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 
     processTimeoutTlv =
         hasCommissionerSessionIdTlv && (Tlv::Find<ThreadTimeoutTlv>(aMsg.mMessage, timeout) == kErrorNone);
-
-    VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone,
-                 error = kErrorParse);
-    VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = kMlrGeneralFailure);
-    VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
-                 status = kMlrGeneralFailure);
 
     if (!processTimeoutTlv)
     {

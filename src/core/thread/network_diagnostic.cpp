@@ -207,28 +207,6 @@ exit:
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #endif // OPENTHREAD_FTD
 
-Error Server::AppendMacCounters(Message &aMessage)
-{
-    MacCountersTlv       tlv;
-    const otMacCounters &counters = Get<Mac::Mac>().GetCounters();
-
-    ClearAllBytes(tlv);
-
-    tlv.Init();
-    tlv.SetIfInUnknownProtos(counters.mRxOther);
-    tlv.SetIfInErrors(counters.mRxErrNoFrame + counters.mRxErrUnknownNeighbor + counters.mRxErrInvalidSrcAddr +
-                      counters.mRxErrSec + counters.mRxErrFcs + counters.mRxErrOther);
-    tlv.SetIfOutErrors(counters.mTxErrCca);
-    tlv.SetIfInUcastPkts(counters.mRxUnicast);
-    tlv.SetIfInBroadcastPkts(counters.mRxBroadcast);
-    tlv.SetIfInDiscards(counters.mRxAddressFiltered + counters.mRxDestAddrFiltered + counters.mRxDuplicated);
-    tlv.SetIfOutUcastPkts(counters.mTxUnicast);
-    tlv.SetIfOutBroadcastPkts(counters.mTxBroadcast);
-    tlv.SetIfOutDiscards(counters.mTxErrBusyChannel);
-
-    return tlv.AppendTo(aMessage);
-}
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 Error Server::AppendBorderRouterIfAddrs(Message &aMessage)
@@ -402,8 +380,13 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kMacCounters:
-        error = AppendMacCounters(aMessage);
+    {
+        MacCountersTlv tlv;
+
+        tlv.Init(Get<Mac::Mac>().GetCounters());
+        error = tlv.AppendTo(aMessage);
         break;
+    }
 
     case Tlv::kMleCounters:
     {
@@ -1166,19 +1149,6 @@ void Client::ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tl
     aDiagData.mCount = static_cast<uint8_t>(aMessage.ReadBytes(offsetRange, aDiagData.m8));
 }
 
-void Client::ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
-{
-    aMacCounters.mIfInUnknownProtos  = aMacCountersTlv.GetIfInUnknownProtos();
-    aMacCounters.mIfInErrors         = aMacCountersTlv.GetIfInErrors();
-    aMacCounters.mIfOutErrors        = aMacCountersTlv.GetIfOutErrors();
-    aMacCounters.mIfInUcastPkts      = aMacCountersTlv.GetIfInUcastPkts();
-    aMacCounters.mIfInBroadcastPkts  = aMacCountersTlv.GetIfInBroadcastPkts();
-    aMacCounters.mIfInDiscards       = aMacCountersTlv.GetIfInDiscards();
-    aMacCounters.mIfOutUcastPkts     = aMacCountersTlv.GetIfOutUcastPkts();
-    aMacCounters.mIfOutBroadcastPkts = aMacCountersTlv.GetIfOutBroadcastPkts();
-    aMacCounters.mIfOutDiscards      = aMacCountersTlv.GetIfOutDiscards();
-}
-
 void Client::ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange)
 {
     aIp6Addrs.mCount = 0;
@@ -1279,7 +1249,7 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
             SuccessOrExit(error = aMessage.Read(offset, macCountersTlv));
             VerifyOrExit(macCountersTlv.IsValid(), error = kErrorParse);
-            ParseMacCounters(macCountersTlv, aDiagTlv.mData.mMacCounters);
+            macCountersTlv.Read(aDiagTlv.mData.mMacCounters);
             break;
         }
 

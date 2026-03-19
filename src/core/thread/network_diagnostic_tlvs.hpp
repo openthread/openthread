@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
+#include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/child.hpp"
@@ -322,6 +323,11 @@ typedef Mle::LeaderDataTlvValue LeaderDataTlvValue;
 typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
 
 /**
+ * Represents the Mac Counters.
+ */
+typedef otNetworkDiagMacCounters MacCounters;
+
+/**
  * Implements Mac Counters TLV generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
@@ -330,12 +336,10 @@ class MacCountersTlv : public Tlv, public TlvInfo<Tlv::kMacCounters>
 public:
     /**
      * Initializes the TLV.
+     *
+     * @param[in] aMacCounters    The MAC counters to initialize the TLV with.
      */
-    void Init(void)
-    {
-        SetType(kMacCounters);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+    void Init(const Mac::Counters &aMacCounters);
 
     /**
      * Indicates whether or not the TLV appears to be well-formed.
@@ -346,138 +350,11 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * Returns the IfInUnknownProtos counter.
+     * Reads the counters from TLV.
      *
-     * @returns The IfInUnknownProtos counter
+     * @param[out] aDiagMacCounters   A reference to `NetworkDiagnostic::MacCounters` to populate.
      */
-    uint32_t GetIfInUnknownProtos(void) const { return BigEndian::HostSwap32(mIfInUnknownProtos); }
-
-    /**
-     * Sets the IfInUnknownProtos counter.
-     *
-     * @param[in]  aIfInUnknownProtos The IfInUnknownProtos counter
-     */
-    void SetIfInUnknownProtos(const uint32_t aIfInUnknownProtos)
-    {
-        mIfInUnknownProtos = BigEndian::HostSwap32(aIfInUnknownProtos);
-    }
-
-    /**
-     * Returns the IfInErrors counter.
-     *
-     * @returns The IfInErrors counter
-     */
-    uint32_t GetIfInErrors(void) const { return BigEndian::HostSwap32(mIfInErrors); }
-
-    /**
-     * Sets the IfInErrors counter.
-     *
-     * @param[in]  aIfInErrors The IfInErrors counter
-     */
-    void SetIfInErrors(const uint32_t aIfInErrors) { mIfInErrors = BigEndian::HostSwap32(aIfInErrors); }
-
-    /**
-     * Returns the IfOutErrors counter.
-     *
-     * @returns The IfOutErrors counter
-     */
-    uint32_t GetIfOutErrors(void) const { return BigEndian::HostSwap32(mIfOutErrors); }
-
-    /**
-     * Sets the IfOutErrors counter.
-     *
-     * @param[in]  aIfOutErrors The IfOutErrors counter.
-     */
-    void SetIfOutErrors(const uint32_t aIfOutErrors) { mIfOutErrors = BigEndian::HostSwap32(aIfOutErrors); }
-
-    /**
-     * Returns the IfInUcastPkts counter.
-     *
-     * @returns The IfInUcastPkts counter
-     */
-    uint32_t GetIfInUcastPkts(void) const { return BigEndian::HostSwap32(mIfInUcastPkts); }
-
-    /**
-     * Sets the IfInUcastPkts counter.
-     *
-     * @param[in]  aIfInUcastPkts The IfInUcastPkts counter.
-     */
-    void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) { mIfInUcastPkts = BigEndian::HostSwap32(aIfInUcastPkts); }
-    /**
-     * Returns the IfInBroadcastPkts counter.
-     *
-     * @returns The IfInBroadcastPkts counter
-     */
-    uint32_t GetIfInBroadcastPkts(void) const { return BigEndian::HostSwap32(mIfInBroadcastPkts); }
-
-    /**
-     * Sets the IfInBroadcastPkts counter.
-     *
-     * @param[in]  aIfInBroadcastPkts The IfInBroadcastPkts counter.
-     */
-    void SetIfInBroadcastPkts(const uint32_t aIfInBroadcastPkts)
-    {
-        mIfInBroadcastPkts = BigEndian::HostSwap32(aIfInBroadcastPkts);
-    }
-
-    /**
-     * Returns the IfInDiscards counter.
-     *
-     * @returns The IfInDiscards counter
-     */
-    uint32_t GetIfInDiscards(void) const { return BigEndian::HostSwap32(mIfInDiscards); }
-
-    /**
-     * Sets the IfInDiscards counter.
-     *
-     * @param[in]  aIfInDiscards The IfInDiscards counter.
-     */
-    void SetIfInDiscards(const uint32_t aIfInDiscards) { mIfInDiscards = BigEndian::HostSwap32(aIfInDiscards); }
-
-    /**
-     * Returns the IfOutUcastPkts counter.
-     *
-     * @returns The IfOutUcastPkts counter
-     */
-    uint32_t GetIfOutUcastPkts(void) const { return BigEndian::HostSwap32(mIfOutUcastPkts); }
-
-    /**
-     * Sets the IfOutUcastPkts counter.
-     *
-     * @param[in]  aIfOutUcastPkts The IfOutUcastPkts counter.
-     */
-    void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) { mIfOutUcastPkts = BigEndian::HostSwap32(aIfOutUcastPkts); }
-
-    /**
-     * Returns the IfOutBroadcastPkts counter.
-     *
-     * @returns The IfOutBroadcastPkts counter
-     */
-    uint32_t GetIfOutBroadcastPkts(void) const { return BigEndian::HostSwap32(mIfOutBroadcastPkts); }
-
-    /**
-     * Sets the IfOutBroadcastPkts counter.
-     *
-     * @param[in]  aIfOutBroadcastPkts The IfOutBroadcastPkts counter.
-     */
-    void SetIfOutBroadcastPkts(const uint32_t aIfOutBroadcastPkts)
-    {
-        mIfOutBroadcastPkts = BigEndian::HostSwap32(aIfOutBroadcastPkts);
-    }
-
-    /**
-     * Returns the IfOutDiscards counter.
-     *
-     * @returns The IfOutDiscards counter
-     */
-    uint32_t GetIfOutDiscards(void) const { return BigEndian::HostSwap32(mIfOutDiscards); }
-
-    /**
-     * Sets the IfOutDiscards counter.
-     *
-     * @param[in]  aIfOutDiscards The IfOutDiscards counter.
-     */
-    void SetIfOutDiscards(const uint32_t aIfOutDiscards) { mIfOutDiscards = BigEndian::HostSwap32(aIfOutDiscards); }
+    void Read(MacCounters &aDiagMacCounters) const;
 
 private:
     uint32_t mIfInUnknownProtos;
