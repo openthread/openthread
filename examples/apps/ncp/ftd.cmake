@@ -48,12 +48,7 @@ target_link_libraries(ot-ncp-ftd PRIVATE
     ot-config
 )
 
-if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
-        target_link_libraries(ot-ncp-ftd PRIVATE -Wl,-map,ot-ncp-ftd.map)
-    else()
-        target_link_libraries(ot-ncp-ftd PRIVATE -Wl,-Map=ot-ncp-ftd.map)
-    endif()
-endif()
+ot_add_linker_map(ot-ncp-ftd ot-ncp-ftd.map)
 
-install(TARGETS ot-ncp-ftd DESTINATION bin)
+install(TARGETS ot-ncp-ftd
+    DESTINATION bin)

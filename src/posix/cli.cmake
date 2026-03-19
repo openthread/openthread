@@ -58,13 +58,7 @@ target_link_libraries(ot-cli PRIVATE
     ot-config
 )
 
-if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
-        target_link_libraries(ot-cli PRIVATE -Wl,-map,ot-cli.map)
-    else()
-        target_link_libraries(ot-cli PRIVATE -Wl,-Map=ot-cli.map)
-    endif()
-endif()
+ot_add_linker_map(ot-cli ot-cli.map)
 
 install(TARGETS ot-cli DESTINATION bin)
 

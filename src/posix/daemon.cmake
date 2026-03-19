@@ -50,13 +50,7 @@ target_link_libraries(ot-daemon PRIVATE
     ot-config
 )
 
-if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
-        target_link_libraries(ot-daemon PRIVATE -Wl,-map,ot-daemon.map)
-    else()
-        target_link_libraries(ot-daemon PRIVATE -Wl,-Map=ot-daemon.map)
-    endif()
-endif()
+ot_add_linker_map(ot-daemon ot-daemon.map)
 
 add_executable(ot-ctl
     client.cpp
@@ -77,13 +71,7 @@ target_link_libraries(ot-ctl PRIVATE
     ot-config
 )
 
-if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
-        target_link_libraries(ot-ctl PRIVATE -Wl,-map,ot-ctl.map)
-    else()
-        target_link_libraries(ot-ctl PRIVATE -Wl,-Map=ot-ctl.map)
-    endif()
-endif()
+ot_add_linker_map(ot-ctl ot-ctl.map)
 
 target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
 
