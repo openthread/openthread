@@ -33,12 +33,75 @@ namespace ot {
 namespace Nexus {
 
 //---------------------------------------------------------------------------------------------------------------------
+// Saved settings per node ID
+
+struct SavedSettings : public LinkedListEntry<SavedSettings>, public Heap::Allocatable<SavedSettings>
+{
+    uint32_t                    mId;
+    OwningList<Settings::Entry> mEntries;
+    SavedSettings              *mNext;
+
+    bool Matches(uint32_t aId) const { return mId == aId; }
+};
+
+static OwningList<SavedSettings> sSavedSettings;
+
+//---------------------------------------------------------------------------------------------------------------------
 // otPlatSettings APIs
 
 extern "C" {
 
-void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}
-void otPlatSettingsDeinit(otInstance *) {}
+void otPlatSettingsInit(otInstance *aInstance, const uint16_t *, uint16_t)
+{
+    Node          &node = AsNode(aInstance);
+    SavedSettings *saved;
+
+    saved = sSavedSettings.FindMatching(node.GetInstance().GetId());
+
+    if (saved != nullptr)
+    {
+        node.mSettings.mEntries.Free();
+
+        while (true)
+        {
+            OwnedPtr<Settings::Entry> entry = saved->mEntries.Pop();
+
+            if (entry.IsNull())
+            {
+                break;
+            }
+
+            node.mSettings.mEntries.Push(*entry.Release());
+        }
+
+        sSavedSettings.RemoveAndFreeAllMatching(node.GetInstance().GetId());
+    }
+}
+
+void otPlatSettingsDeinit(otInstance *aInstance)
+{
+    Node          &node = AsNode(aInstance);
+    SavedSettings *saved;
+
+    saved = SavedSettings::Allocate();
+    VerifyOrQuit(saved != nullptr);
+
+    saved->mId = node.GetInstance().GetId();
+
+    while (true)
+    {
+        OwnedPtr<Settings::Entry> entry = node.mSettings.mEntries.Pop();
+
+        if (entry.IsNull())
+        {
+            break;
+        }
+
+        saved->mEntries.Push(*entry.Release());
+    }
+
+    sSavedSettings.Push(*saved);
+}
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
@@ -60,7 +123,11 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     return AsNode(aInstance).mSettings.Delete(aKey, aIndex);
 }
 
-void otPlatSettingsWipe(otInstance *aInstance) { AsNode(aInstance).mSettings.Wipe(); }
+void otPlatSettingsWipe(otInstance *aInstance)
+{
+    AsNode(aInstance).mSettings.Wipe();
+    sSavedSettings.RemoveAndFreeAllMatching(AsNode(aInstance).GetInstance().GetId());
+}
 
 } // extern "C"
 

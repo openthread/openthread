@@ -48,6 +48,8 @@ void Node::Reset(void)
     mTrel.Reset();
 #endif
 
+    otPlatSettingsDeinit(&GetInstance());
+
     instance->~Instance();
 
     instance = new (instance) Instance();
