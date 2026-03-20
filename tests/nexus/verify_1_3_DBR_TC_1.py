@@ -49,22 +49,107 @@ BR_FLAG_S_TRUE = 1
 BR_FLAG_D_FALSE = 0
 BR_FLAG_DP_FALSE = 0
 
-# Step 4 RA constants
-ICMPV6_TYPE_ROUTER_ADVERTISEMENT = 134
-RA_FLAG_M_FALSE = 0
-RA_FLAG_O_FALSE = 0
-RA_ROUTER_LIFETIME_ZERO = 0
 
-ICMPV6_OPT_TYPE_PIO = 3
-ICMPV6_OPT_TYPE_RIO = 24
+def check_step3(p, omr_prefix, omr_prefix_len):
+    try:
+        prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
+        types = verify_utils.as_list(p.thread_nwd.tlv.type)
+        stables = verify_utils.as_list(p.thread_nwd.tlv.stable)
+    except AttributeError:
+        return False
 
-PIO_FLAG_A_TRUE = 1
+    # 1. Prefix TLV for OMR_1
+    try:
+        omr_idx = prefixes.index(omr_prefix)
+    except ValueError:
+        return False
 
-# EXT_PAN_ID mapping offsets and lengths
-EXT_PAN_ID_GLOBAL_ID_OFFSET = 1
-EXT_PAN_ID_GLOBAL_ID_LEN = 5
-EXT_PAN_ID_SUBNET_ID_OFFSET = 6
-EXT_PAN_ID_SUBNET_ID_LEN = 2
+    # Check OMR prefix properties: 64 bits long and starts with ULA_PREFIX_START_BYTE
+    if omr_prefix_len != 64 or omr_prefix[0] != ULA_PREFIX_START_BYTE:
+        return False
+
+    # Find the NWD_PREFIX_TLV entry index corresponding to omr_idx
+    prefix_indices = [i for i, t in enumerate(types) if t == consts.NWD_PREFIX_TLV]
+    if omr_idx >= len(prefix_indices):
+        return False
+
+    t_idx = prefix_indices[omr_idx]
+    if stables[t_idx] != 1:
+        return False
+
+    # Flags for OMR prefix
+    # Note: We expect P_default (r flag) to be 0 for now to match OpenThread behavior
+    try:
+        if not (verify_utils.as_list(p.thread_nwd.tlv.border_router.pref)[0] == BR_PREFERENCE_LOW and \
+                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.r)[0] == BR_FLAG_R_FALSE and \
+                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.o)[0] == BR_FLAG_O_TRUE and \
+                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.p)[0] == BR_FLAG_P_TRUE and \
+                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.s)[0] == BR_FLAG_S_TRUE and \
+                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.d)[0] == BR_FLAG_D_FALSE and \
+                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.dp)[0] == BR_FLAG_DP_FALSE):
+            return False
+    except AttributeError:
+        return False
+
+    # 2. Prefix TLV for fc00::/7 with Has Route sub-TLV
+    try:
+        ula_idx = prefixes.index(Ipv6Addr("fc00::"))
+    except ValueError:
+        return False
+
+    if not hasattr(p.thread_nwd.tlv, 'has_route'):
+        return False
+
+    return True
+
+
+def check_step4(p, pre_1_prefix, pre_1_prefix_len, omr_prefix, ext_pan_id):
+    if p.icmpv6.type != verify_utils.ICMPV6_TYPE_ROUTER_ADVERTISEMENT:
+        return False
+    if p.icmpv6.nd.ra.flag.m != verify_utils.RA_FLAG_M_FALSE or p.icmpv6.nd.ra.flag.o != verify_utils.RA_FLAG_O_FALSE:
+        return False
+    if p.icmpv6.nd.ra.router_lifetime != verify_utils.RA_ROUTER_LIFETIME_ZERO:
+        return False
+
+    # Check PIO (type ICMPV6_OPT_TYPE_PIO) and RIO (type ICMPV6_OPT_TYPE_RIO)
+    opts = verify_utils.as_list(p.icmpv6.opt.type)
+    if verify_utils.ICMPV6_OPT_TYPE_PIO not in opts or verify_utils.ICMPV6_OPT_TYPE_RIO not in opts:
+        return False
+
+    rio_prefixes, pio_prefixes = verify_utils.get_ra_prefixes(p)
+
+    if pre_1_prefix not in pio_prefixes:
+        return False
+
+    # Check PRE_1 properties: starts with ULA_PREFIX_START_BYTE, differs from OMR_1
+    if pre_1_prefix_len != 64 or pre_1_prefix[0] != ULA_PREFIX_START_BYTE:
+        return False
+    if pre_1_prefix == omr_prefix:
+        return False
+
+    # Check PIO A bit
+    if verify_utils.as_list(p.icmpv6.opt.pio_flag.a)[0] != verify_utils.PIO_FLAG_A_TRUE:
+        return False
+
+    # Check RIO contains OMR_1
+    if omr_prefix not in rio_prefixes:
+        return False
+
+    # Check EXT_PAN_ID mapping in PRE_1
+    ext_pan_id_bytes = bytes.fromhex(ext_pan_id)
+    # Global ID equals the 40 most significant bits of the Extended PAN ID
+    if pre_1_prefix[verify_utils.EXT_PAN_ID_GLOBAL_ID_OFFSET:verify_utils.EXT_PAN_ID_GLOBAL_ID_OFFSET +
+                   verify_utils.EXT_PAN_ID_GLOBAL_ID_LEN] != \
+            ext_pan_id_bytes[:verify_utils.EXT_PAN_ID_GLOBAL_ID_LEN]:
+        return False
+    # Subnet ID equals the 16 least significant bits of the Extended PAN ID
+    if pre_1_prefix[verify_utils.EXT_PAN_ID_SUBNET_ID_OFFSET:verify_utils.EXT_PAN_ID_SUBNET_ID_OFFSET +
+                   verify_utils.EXT_PAN_ID_SUBNET_ID_LEN] != \
+            ext_pan_id_bytes[verify_utils.EXT_PAN_ID_SUBNET_ID_OFFSET:verify_utils.EXT_PAN_ID_SUBNET_ID_OFFSET +
+                            verify_utils.EXT_PAN_ID_SUBNET_ID_LEN]:
+        return False
+
+    return True
 
 
 def verify(pv):
@@ -92,7 +177,6 @@ def verify(pv):
 
     BR_1 = pv.vars['BR_1']
     ED_1 = pv.vars['ED_1']
-    Eth_1 = pv.vars['Eth_1']
 
     OMR_PREFIX = Ipv6Addr(pv.vars['OMR_PREFIX'].split('/')[0])
     OMR_PREFIX_LEN = int(pv.vars['OMR_PREFIX'].split('/')[1])
@@ -103,9 +187,6 @@ def verify(pv):
     ETH_1_ULA = Ipv6Addr(pv.vars['ETH_1_ULA_ADDR'])
     ED_1_OMR = Ipv6Addr(pv.vars['ED_1_OMR_ADDR'])
     ED_1_MLEID = Ipv6Addr(pv.vars['ED_1_MLEID_ADDR'])
-
-    def as_list(x):
-        return x if isinstance(x, list) else [x]
 
     # Step 1
     #   Device: Eth 1, ED 1
@@ -144,61 +225,9 @@ def verify(pv):
     #     - OMR 1 MUST be 64 bits long and start with 0xFD.
     print("Step 3: BR 1 (DUT) registers itself as a Border Router.")
 
-    def check_step3(p):
-        try:
-            prefixes = as_list(p.thread_nwd.tlv.prefix)
-            types = as_list(p.thread_nwd.tlv.type)
-            stables = as_list(p.thread_nwd.tlv.stable)
-        except AttributeError:
-            return False
-
-        # 1. Prefix TLV for OMR_1
-        try:
-            omr_idx = prefixes.index(OMR_PREFIX)
-        except ValueError:
-            return False
-
-        # Check OMR prefix properties: 64 bits long and starts with ULA_PREFIX_START_BYTE
-        if OMR_PREFIX_LEN != 64 or OMR_PREFIX[0] != ULA_PREFIX_START_BYTE:
-            return False
-
-        # Find the NWD_PREFIX_TLV entry index corresponding to omr_idx
-        prefix_indices = [i for i, t in enumerate(types) if t == consts.NWD_PREFIX_TLV]
-        if omr_idx >= len(prefix_indices):
-            return False
-
-        t_idx = prefix_indices[omr_idx]
-        if stables[t_idx] != 1:
-            return False
-
-        # Flags for OMR prefix
-        # Note: We expect P_default (r flag) to be 0 for now to match OpenThread behavior
-        try:
-            if not (as_list(p.thread_nwd.tlv.border_router.pref)[0] == BR_PREFERENCE_LOW and \
-                    as_list(p.thread_nwd.tlv.border_router.flag.r)[0] == BR_FLAG_R_FALSE and \
-                    as_list(p.thread_nwd.tlv.border_router.flag.o)[0] == BR_FLAG_O_TRUE and \
-                    as_list(p.thread_nwd.tlv.border_router.flag.p)[0] == BR_FLAG_P_TRUE and \
-                    as_list(p.thread_nwd.tlv.border_router.flag.s)[0] == BR_FLAG_S_TRUE and \
-                    as_list(p.thread_nwd.tlv.border_router.flag.d)[0] == BR_FLAG_D_FALSE and \
-                    as_list(p.thread_nwd.tlv.border_router.flag.dp)[0] == BR_FLAG_DP_FALSE):
-                return False
-        except AttributeError:
-            return False
-
-        # 2. Prefix TLV for fc00::/7 with Has Route sub-TLV
-        try:
-            ula_idx = prefixes.index(Ipv6Addr("fc00::"))
-        except ValueError:
-            return False
-
-        if not hasattr(p.thread_nwd.tlv, 'has_route'):
-            return False
-
-        return True
-
     pkts.filter_wpan_src64(BR_1).\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
-        filter(check_step3).\
+        filter(lambda p: check_step3(p, OMR_PREFIX, OMR_PREFIX_LEN)).\
         must_next()
 
     # Step 4
@@ -221,59 +250,9 @@ def verify(pv):
     #       - Subnet ID equals the 16 least significant bits of the Extended PAN ID
     print("Step 4: BR 1 (DUT) multicasts ND RA on AIL.")
 
-    def check_step4(p):
-        if p.icmpv6.type != ICMPV6_TYPE_ROUTER_ADVERTISEMENT:
-            return False
-        if p.icmpv6.nd.ra.flag.m != RA_FLAG_M_FALSE or p.icmpv6.nd.ra.flag.o != RA_FLAG_O_FALSE:
-            return False
-        if p.icmpv6.nd.ra.router_lifetime != RA_ROUTER_LIFETIME_ZERO:
-            return False
-
-        # Check PIO (type ICMPV6_OPT_TYPE_PIO) and RIO (type ICMPV6_OPT_TYPE_RIO)
-        opts = as_list(p.icmpv6.opt.type)
-        if ICMPV6_OPT_TYPE_PIO not in opts or ICMPV6_OPT_TYPE_RIO not in opts:
-            return False
-
-        # Find PRE_1 in PIO
-        try:
-            pio_idx = as_list(p.icmpv6.opt.type).index(ICMPV6_OPT_TYPE_PIO)
-        except ValueError:
-            return False
-
-        pre1 = Ipv6Addr(p.icmpv6.opt.prefix[pio_idx])
-        if pre1 != PRE_1_PREFIX:
-            return False
-
-        # Check PRE_1 properties: starts with ULA_PREFIX_START_BYTE, differs from OMR_1
-        if PRE_1_PREFIX_LEN != 64 or pre1[0] != ULA_PREFIX_START_BYTE:
-            return False
-        if pre1 == OMR_PREFIX:
-            return False
-
-        # Check PIO A bit
-        if as_list(p.icmpv6.opt.pio_flag.a)[0] != PIO_FLAG_A_TRUE:
-            return False
-
-        # Check RIO contains OMR_1
-        if OMR_PREFIX not in [Ipv6Addr(prefix) for prefix in p.icmpv6.opt.prefix]:
-            return False
-
-        # Check EXT_PAN_ID mapping in PRE_1
-        ext_pan_id_bytes = bytes.fromhex(EXT_PAN_ID)
-        # Global ID equals the 40 most significant bits of the Extended PAN ID
-        if pre1[EXT_PAN_ID_GLOBAL_ID_OFFSET:EXT_PAN_ID_GLOBAL_ID_OFFSET + EXT_PAN_ID_GLOBAL_ID_LEN] != \
-                ext_pan_id_bytes[:EXT_PAN_ID_GLOBAL_ID_LEN]:
-            return False
-        # Subnet ID equals the 16 least significant bits of the Extended PAN ID
-        if pre1[EXT_PAN_ID_SUBNET_ID_OFFSET:EXT_PAN_ID_SUBNET_ID_OFFSET + EXT_PAN_ID_SUBNET_ID_LEN] != \
-                ext_pan_id_bytes[EXT_PAN_ID_SUBNET_ID_OFFSET:EXT_PAN_ID_SUBNET_ID_OFFSET + EXT_PAN_ID_SUBNET_ID_LEN]:
-            return False
-
-        return True
-
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(check_step4).\
+        filter(lambda p: check_step4(p, PRE_1_PREFIX, PRE_1_PREFIX_LEN, OMR_PREFIX, EXT_PAN_ID)).\
         must_next()
 
     # Step 5

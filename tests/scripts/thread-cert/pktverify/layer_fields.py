@@ -508,6 +508,7 @@ _LAYER_FIELDS = {
     'icmpv6.opt.prefix': _list(_ipv6_addr),
     'icmpv6.opt.pio_flag.a': _list(_auto),
     'icmpv6.opt.pio_flag.l': _list(_auto),
+    'icmpv6.opt.pio_preferred_lifetime': _list(_auto),
     'icmpv6.opt.length': _list(_auto),
     'icmpv6.opt.reserved': _str,
     'icmpv6.nd.ra.router_lifetime': _auto,

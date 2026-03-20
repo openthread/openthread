@@ -248,6 +248,49 @@ def thread_coap_tlv_parse(t, v, layer=None):
     return kvs
 
 
+# RA constants
+ICMPV6_TYPE_ROUTER_ADVERTISEMENT = 134
+RA_FLAG_M_FALSE = 0
+RA_FLAG_O_FALSE = 0
+RA_ROUTER_LIFETIME_ZERO = 0
+
+ICMPV6_OPT_TYPE_PIO = 3
+ICMPV6_OPT_TYPE_RIO = 24
+
+PIO_FLAG_A_TRUE = 1
+
+# EXT_PAN_ID mapping offsets and lengths
+EXT_PAN_ID_GLOBAL_ID_OFFSET = 1
+EXT_PAN_ID_GLOBAL_ID_LEN = 5
+EXT_PAN_ID_SUBNET_ID_OFFSET = 6
+EXT_PAN_ID_SUBNET_ID_LEN = 2
+
+
+def as_list(x):
+    return x if isinstance(x, list) else [x]
+
+
+def get_ra_prefixes(p):
+    rio_prefixes = []
+    pio_prefixes = []
+    try:
+        opts = as_list(p.icmpv6.opt.type)
+        all_prefixes = as_list(p.icmpv6.opt.prefix)
+    except (AttributeError, IndexError):
+        return rio_prefixes, pio_prefixes
+
+    prefix_idx = 0
+    for opt_type in opts:
+        if opt_type in (ICMPV6_OPT_TYPE_PIO, ICMPV6_OPT_TYPE_RIO):
+            if prefix_idx < len(all_prefixes):
+                if opt_type == ICMPV6_OPT_TYPE_RIO:
+                    rio_prefixes.append(Ipv6Addr(all_prefixes[prefix_idx]))
+                else:  # PIO
+                    pio_prefixes.append(Ipv6Addr(all_prefixes[prefix_idx]))
+                prefix_idx += 1
+    return rio_prefixes, pio_prefixes
+
+
 def is_leader_aloc_or_rloc(addr_str: str) -> bool:
     """Checks if an IPv6 address is a Leader ALOC or an RLOC."""
     addr = ipaddress.ip_address(addr_str)

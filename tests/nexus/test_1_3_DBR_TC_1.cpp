@@ -102,8 +102,6 @@ void Test_1_3_DBR_TC_1(void)
     ed1.SetName("ED_1");
     eth1.SetName("Eth_1");
 
-    ed1.mInfraIf.Deinit();
-
     nexus.AdvanceTime(0);
 
     Instance::SetLogLevel(kLogLevelNote);
