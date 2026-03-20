@@ -439,7 +439,7 @@ void InfraIf::Receive(Node &aSrcNode, Message &aMessage)
         messagePtr->SetOrigin(Message::kOriginHostUntrusted);
         messagePtr->SetLoopbackToHostAllowed(false);
 
-        SuccessOrQuit(node.Get<Ip6::Ip6>().SendRaw(messagePtr.PassOwnership()));
+        IgnoreError(node.Get<Ip6::Ip6>().SendRaw(messagePtr.PassOwnership()));
     }
 
 exit:

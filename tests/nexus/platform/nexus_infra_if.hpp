@@ -45,6 +45,11 @@ public:
     InfraIf(void);
 
     void Init(Node &aNode);
+    void Deinit(void)
+    {
+        mIfIndex = 0;
+        mAddresses.Clear();
+    }
 
     bool IsInitialized(void) const { return mIfIndex != 0; }
 

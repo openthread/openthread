@@ -346,6 +346,7 @@ _LAYER_FIELDS = {
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
     'mle.tlv.channel': _auto,
+    'mle.tlv.addr_reg': _list(_ipv6_addr),
     'mle.tlv.addr_reg_iid': _list(_auto),
     'mle.tlv.addr_reg_ipv6': _list(_ipv6_addr),
     'mle.tlv.link_enh_ack_flags': _auto,
@@ -505,6 +506,8 @@ _LAYER_FIELDS = {
     'icmpv6.opt.route_info.flag.route_preference': _auto,
     'icmpv6.opt.route_info.flag.reserved': _auto,
     'icmpv6.opt.prefix': _list(_ipv6_addr),
+    'icmpv6.opt.pio_flag.a': _list(_auto),
+    'icmpv6.opt.pio_flag.l': _list(_auto),
     'icmpv6.opt.length': _list(_auto),
     'icmpv6.opt.reserved': _str,
     'icmpv6.nd.ra.router_lifetime': _auto,
@@ -647,6 +650,8 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.service.s_data.mlrtimeout': _auto,
     'thread_nwd.tlv.server_16': _list(_auto),
     'thread_nwd.tlv.border_router_16': _list(_auto),
+    'thread_nwd.tlv.has_route.br_16': _list(_auto),
+    'thread_nwd.tlv.has_route.pref': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
     # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
     'thread_nwd.tlv.prefix': _list(_ipv6_addr),
@@ -733,6 +738,7 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
     :return: The specified layer field.
     """
     assert isinstance(packet, RawPacket)
+    orig_field_uri = field_uri
     secs = field_uri.split('.')
     layer_depth = 0
     layer_name = secs[0]
@@ -740,11 +746,17 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
         layer_name = layer_name[:-len('inner')]
         field_uri = '.'.join([layer_name] + secs[1:])
         layer_depth = 1
+        orig_field_uri = field_uri
 
-    if field_uri == 'mle.tlv.addr_reg':
+    # Field aliases for tshark
+    if field_uri in ('icmpv6.opt.pio_flag.a', 'icmpv6.opt.prefix.flag.a'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.flag.a', 'icmpv6.opt.pio_flag.a'
+    elif field_uri in ('icmpv6.opt.pio_flag.l', 'icmpv6.opt.prefix.flag.l'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.flag.l', 'icmpv6.opt.pio_flag.l'
+    elif field_uri == 'mle.tlv.addr_reg':
         field_uri = 'mle.tlv.addr_reg_ipv6'
 
-    if is_layer_field(field_uri):
+    if is_layer_field(field_uri) or field_uri in ('icmpv6.opt.prefix.flag.a', 'icmpv6.opt.prefix.flag.l'):
         candidate_layers = _get_candidate_layers(packet, layer_name)
         for layers in candidate_layers:
             if layer_depth >= len(layers):
@@ -756,11 +768,11 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
                 v = layer.get_field('dns' + field_uri[4:])
             if v is not None:
                 try:
-                    v = _LAYER_FIELDS[field_uri](v)
-                    print("[%s = %r] " % (field_uri, v), file=sys.stderr)
+                    v = _LAYER_FIELDS[orig_field_uri](v)
+                    print("[%s = %r] " % (orig_field_uri, v), file=sys.stderr)
                     return v
                 except Exception as ex:
-                    raise ValueError('can not parse field %s = %r' % (field_uri,
+                    raise ValueError('can not parse field %s = %r' % (orig_field_uri,
                                                                       (v.get_default_value(), v.raw_value))) from ex
 
         print("[%s = %s] " % (field_uri, "null"), file=sys.stderr)
