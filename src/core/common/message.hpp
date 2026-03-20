@@ -476,7 +476,7 @@ public:
      * @returns A reference to the `Instance`.
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return *GetMetadata().mInstance; }
+    Instance &GetInstance(void) const { return *UpdateActiveInstance(GetMetadata().mInstance); }
 #else
     Instance &GetInstance(void) const { return GetSingleInstance(); }
 #endif

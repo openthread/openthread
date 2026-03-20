@@ -166,7 +166,23 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
     }
 
     logString.Append("%s", OPENTHREAD_CONFIG_LOG_SUFFIX);
+
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    {
+        Instance *instance;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        instance = Instance::GetActiveInstance();
+        VerifyOrExit(instance != nullptr);
+#else
+        instance = &Instance::Get();
+#endif
+
+        otPlatLogOutput(instance, aLogLevel, logString.AsCString());
+    }
+#else
     otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "%s", logString.AsCString());
+#endif
 
     ExitNow();
 

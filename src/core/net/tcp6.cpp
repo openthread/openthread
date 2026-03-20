@@ -109,7 +109,10 @@ exit:
     return error;
 }
 
-Instance &Tcp::Endpoint::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcb().instance)); }
+Instance &Tcp::Endpoint::GetInstance(void) const
+{
+    return *UpdateActiveInstance(&AsNonConst(AsCoreType(GetTcb().instance)));
+}
 
 const SockAddr &Tcp::Endpoint::GetLocalAddress(void) const
 {
@@ -547,7 +550,10 @@ exit:
     return error;
 }
 
-Instance &Tcp::Listener::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcbListen().instance)); }
+Instance &Tcp::Listener::GetInstance(void) const
+{
+    return *UpdateActiveInstance(&AsNonConst(AsCoreType(GetTcbListen().instance)));
+}
 
 Error Tcp::Listener::Listen(const SockAddr &aSockName)
 {

@@ -51,6 +51,11 @@ OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+// The currently active instance
+Instance *gActiveInstance = nullptr;
+#endif
+
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 
 #define INSTANCE_SIZE_ALIGNED OT_ALIGNED_VAR_SIZE(sizeof(ot::Instance), uint64_t)
@@ -410,6 +415,10 @@ Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 exit:
     return instance;
 }
+
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+Instance *Instance::GetActiveInstance(void) { return gActiveInstance; }
+#endif
 
 #endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 

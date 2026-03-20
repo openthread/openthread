@@ -429,6 +429,17 @@ public:
      */
     template <typename Type> inline Type &Get(void);
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    /**
+     * Gets the currently active OpenThread instance.
+     *
+     * It is used to determine the active instance primarily for logging purposes.
+     *
+     * @returns A pointer to the active OpenThread instance, or `nullptr` if not known.
+     */
+    static Instance *GetActiveInstance(void);
+#endif
+
 #if OPENTHREAD_PLATFORM_NEXUS
     /**
      * Constructor to initialize an `Instance`
