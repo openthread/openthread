@@ -666,8 +666,8 @@ public:
     /**
      * Appends a TLV with a given type and value to a message.
      *
-     * If the TLV length is longer than maximum base TLV size defined by `kBaseTlvMaxLength` then
-     * appends extended TLV.
+     * The TLV is appended as either a regular or an extended TLV based on the given @p aLength. If the length
+     * is greater than `kBaseTlvMaxLength`, an extended TLV is used.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -684,6 +684,9 @@ public:
     /**
      * Appends a TLV with a given type and value to a message.
      *
+     * The TLV is appended as either a regular or an extended TLV based on the given @p aLength. If the length
+     * is greater than `kBaseTlvMaxLength`, an extended TLV is used.
+     *
      * On success this method grows the message by the size of the TLV.
      *
      * @tparam     TlvType       The TLV type to append.
@@ -695,7 +698,7 @@ public:
      * @retval kErrorNone     Successfully appended the TLV to the message.
      * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
      */
-    template <typename TlvType> static Error Append(Message &aMessage, const void *aValue, uint8_t aLength)
+    template <typename TlvType> static Error Append(Message &aMessage, const void *aValue, uint16_t aLength)
     {
         return AppendTlv(aMessage, TlvType::kType, aValue, aLength);
     }
