@@ -51,6 +51,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/owned_ptr.hpp"
+#include "common/string.hpp"
 #include "common/tasklet.hpp"
 #include "common/uptime.hpp"
 #include "meshcop/border_agent_admitter.hpp"
@@ -117,6 +118,9 @@ class Manager : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
     friend class Tmf::Agent;
     friend class TxtData;
+#if OT_SHOULD_LOG
+    friend class ot::Logger;
+#endif
 
     class CoapDtlsSession;
 
@@ -286,6 +290,9 @@ private:
         uint64_t GetAllocationTime(void) const { return mAllocationTime; }
         uint16_t GetIndex(void) const { return mIndex; }
         void     CopyInfoTo(SessionInfo &aInfo, UptimeMsec aUptimeNow) const;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+        void EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine);
+#endif
 
     private:
         enum Action : uint8_t
@@ -347,6 +354,13 @@ private:
         static Error ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+        void HandleTmfInspectorKeepAlive(Coap::Msg &aMsg);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+        void HandleTmfInspectorLogSubscribe(Coap::Msg &aMsg);
+#endif
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
         void LogUri(Action aAction, const char *aUriString, const char *aTxt);
 
@@ -364,6 +378,9 @@ private:
         TimerMilliContext          mTimer;
         UptimeMsec                 mAllocationTime;
         uint16_t                   mIndex;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+        LogLevel mLogSubscribeLevel;
+#endif
     };
 
     void UpdateState(void);
@@ -404,6 +421,11 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     // Callback from `Admitter`
     void HandlePrimeAdmitterStateChanged(void) { RegisterService(); }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    // Callback from `Logger`
+    void EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine);
 #endif
 
     const char *GetServiceName(void);

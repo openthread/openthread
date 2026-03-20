@@ -118,6 +118,8 @@ public:
         kEnrollerMode            = OT_MESHCOP_TLV_ENROLLER_MODE,            ///< Enroller Mode TLV
         kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,         ///< Discovery Request TLV
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
+        kLogLevel                = OT_MESHCOP_TLV_LOG_LEVEL,                ///< Log Level TLV
+        kLogLine                 = OT_MESHCOP_TLV_LOG_LINE,                 ///< Log Line TLV
         kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
     };
 
@@ -1142,6 +1144,16 @@ public:
     static constexpr uint8_t kForwardJoinerRelayRx = 1 << 7; ///< Forward RelayRx (from Joiners) to Enroller.
     static constexpr uint8_t kForwardUdpProxyRx    = 1 << 6; ///< Forward UDP ProxyRx to Enroller.
 };
+
+/**
+ * Defines Log Level TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kLogLevel, uint8_t> LogLevelTlv;
+
+/**
+ * Defines Log Line TLV constants and types.
+ */
+typedef TlvInfo<Tlv::kLogLine> LogLineTlv;
 
 } // namespace MeshCoP
 

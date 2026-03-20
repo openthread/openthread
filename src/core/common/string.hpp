@@ -447,6 +447,13 @@ public:
     bool IsTruncated(void) const { return mLength >= mSize; }
 
     /**
+     * Returns the buffer as a null-terminated C string
+     *
+     * @returns The null-terminated C string.
+     */
+    const char *GetBuffer(void) const { return mBuffer; }
+
+    /**
      * Gets the length of the wanted string.
      *
      * Similar to `strlen()` the length does not include the null character at the end of the string.

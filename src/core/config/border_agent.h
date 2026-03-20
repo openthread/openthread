@@ -135,6 +135,29 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+ *
+ * Define to 1 to enable the Border Agent Inspector feature.
+ *
+ * The Inspector feature provides diagnostic and management capabilities over the secure CoAP DTLS session.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+ *
+ * Define to 1 to enable the Border Agent Inspector Log Subscribe feature.
+ *
+ * This feature allows a client to subscribe to and receive device logs over the secure CoAP DTLS session.
+ * It requires `OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE` to be enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
  *
  * Define to 1 to enable the Border Agent Tracker feature.
