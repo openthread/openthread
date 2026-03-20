@@ -823,6 +823,7 @@ public:
      * The following mappings are used:
      * - `kErrorNone`           -> `kCodeChanged`
      * - `kErrorBusy`           -> `kCodeServiceUnavailable`
+     * - `kErrorNotCapable`     -> `kCodeServiceUnavailable`
      * - `kErrorParse`          -> `kCodeBadRequest`
      * - `kErrorNotFound`       -> `kCodeBadRequest`
      * - `kErrorInvalidArgs`    -> `kCodeBadRequest`

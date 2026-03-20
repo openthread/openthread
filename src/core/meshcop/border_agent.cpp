@@ -70,6 +70,9 @@ Manager::Manager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    , mIsEmittingLog(false)
+#endif
 {
     mCommissionerAloc.InitAsThreadOriginMeshLocal();
 
@@ -506,6 +509,24 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+void Manager::EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine)
+{
+    VerifyOrExit(!mIsEmittingLog);
+    mIsEmittingLog = true;
+
+    for (SecureSession &session : mDtlsTransport.GetSessions())
+    {
+        static_cast<CoapDtlsSession &>(session).EmitLogLine(aLogLevel, aLogLine);
+    }
+
+    mIsEmittingLog = false;
+
+exit:
+    return;
+}
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // Manager::SessionIterator
 
@@ -537,6 +558,9 @@ Manager::CoapDtlsSession::CoapDtlsSession(Instance &aInstance, Dtls::Transport &
     , mTimer(aInstance, HandleTimer, this)
     , mAllocationTime(aInstance.Get<UptimeTracker>().GetUptime())
     , mIndex(aInstance.Get<Manager>().GetNextSessionIndex())
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    , mLogSubscribeLevel(kLogLevelNone)
+#endif
 {
     SetResourceHandler(&HandleResource);
     SetConnectCallback(&HandleConnected, this);
@@ -615,6 +639,17 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     case kUriProxyTx:
         HandleTmfProxyTx(aMsg);
         break;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+    case kUriInspectorKeepAlive:
+        HandleTmfInspectorKeepAlive(aMsg);
+        break;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    case kUriInspectorLogSubscribe:
+        HandleTmfInspectorLogSubscribe(aMsg);
+        break;
+#endif
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     case kUriEnrollerRegister:
     case kUriEnrollerKeepAlive:
@@ -1123,6 +1158,80 @@ void Manager::CoapDtlsSession::CopyInfoTo(SessionInfo &aInfo, UptimeMsec aUptime
     aInfo.mIsCommissioner        = IsActiveCommissioner();
     aInfo.mLifetime              = aUptimeNow - GetAllocationTime();
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+
+void Manager::CoapDtlsSession::HandleTmfInspectorKeepAlive(Coap::Msg &aMsg)
+{
+    Log<kUriInspectorKeepAlive>(kReceive);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    VerifyOrExit(!Get<EphemeralKeyManager>().OwnsSession(*this));
+#endif
+
+    mTimer.Start(kKeepAliveTimeout);
+
+    if (aMsg.IsConfirmable())
+    {
+        SuccessOrExit(SendAckResponse(aMsg));
+    }
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+
+void Manager::CoapDtlsSession::HandleTmfInspectorLogSubscribe(Coap::Msg &aMsg)
+{
+    Error   error = kErrorNone;
+    uint8_t logLevel;
+
+    Log<kUriInspectorLogSubscribe>(kReceive);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    VerifyOrExit(!Get<EphemeralKeyManager>().OwnsSession(*this), error = kErrorNotCapable);
+#endif
+
+    mTimer.Start(kKeepAliveTimeout);
+
+    SuccessOrExit(error = Tlv::Find<LogLevelTlv>(aMsg.mMessage, logLevel));
+
+    logLevel           = Clamp<uint8_t>(logLevel, kLogLevelNone, kLogLevelDebg);
+    mLogSubscribeLevel = static_cast<LogLevel>(logLevel);
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    if (mLogSubscribeLevel > Get<Instance>().GetLogLevel())
+    {
+        IgnoreError(Get<Instance>().SetLogLevel(mLogSubscribeLevel));
+    }
+#endif
+
+exit:
+    if (aMsg.IsConfirmable())
+    {
+        IgnoreError(SendResponse(Coap::Message::MapErrorToCoapCode(error), aMsg));
+    }
+}
+
+void Manager::CoapDtlsSession::EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine)
+{
+    OwnedPtr<Coap::Message> message;
+
+    VerifyOrExit(aLogLevel <= mLogSubscribeLevel);
+
+    message.Reset(AllocateAndInitNonConfirmablePostMessage(kUriInspectorLogEmit));
+    VerifyOrExit(message != nullptr);
+
+    SuccessOrExit(Tlv::Append<LogLineTlv>(*message, aLogLine.GetBuffer(), aLogLine.GetLength()));
+    SuccessOrExit(SendMessage(message.PassOwnership()));
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 

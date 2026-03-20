@@ -309,6 +309,8 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_ENROLLER_MODE            = 92,  ///< meshcop Enroller Mode TLV
     OT_MESHCOP_TLV_DISCOVERYREQUEST         = 128, ///< meshcop Discovery Request TLV
     OT_MESHCOP_TLV_DISCOVERYRESPONSE        = 129, ///< meshcop Discovery Response TLV
+    OT_MESHCOP_TLV_LOG_LEVEL                = 200, ///< meshcop Log Level TLV
+    OT_MESHCOP_TLV_LOG_LINE                 = 201, ///< meshcop Log Line TLV
     OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV (experimental)
 } otMeshcopTlvType;
 

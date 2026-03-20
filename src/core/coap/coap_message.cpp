@@ -694,6 +694,7 @@ Code Message::MapErrorToCoapCode(Error aError)
         code = kCodeChanged;
         break;
     case kErrorBusy:
+    case kErrorNotCapable:
         code = kCodeServiceUnavailable;
         break;
     case kErrorParse:

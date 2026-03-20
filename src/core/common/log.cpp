@@ -204,6 +204,24 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
     otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "%s", logString.AsCString());
 #endif
 
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    {
+        Instance *instance;
+
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        instance = &Instance::Get();
+#elif OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+        instance = Instance::GetActiveInstance();
+        VerifyOrExit(instance != nullptr);
+#else
+        ExitNow();
+#endif
+        instance->Get<MeshCoP::BorderAgent::Manager>().EmitLogLine(aLogLevel, logString);
+    }
+#endif
+#endif
+
     ExitNow();
 
 exit:
