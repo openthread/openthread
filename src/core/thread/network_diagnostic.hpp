@@ -57,7 +57,10 @@ class MeshDiag;
 
 namespace MeshCoP {
 class TcatAgent;
+namespace BorderAgent {
+class Manager;
 }
+} // namespace MeshCoP
 
 namespace NetworkDiagnostic {
 
@@ -78,6 +81,7 @@ class Client;
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class MeshCoP::BorderAgent::Manager;
     friend class MeshCoP::TcatAgent;
     friend class Client;
 
@@ -148,7 +152,8 @@ private:
 #endif
 
 #if OPENTHREAD_MTD
-    void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
+    void           SendAnswer(const Ip6::Address &aDestination, const Coap::Message &aRequest);
+    Coap::Message *PrepareAnswer(const Coap::Message &aRequest);
 #elif OPENTHREAD_FTD
     bool  IsLastAnswer(const Coap::Message &aAnswer) const;
     void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
@@ -175,6 +180,8 @@ private:
     Error AppendBorderRouterIfAddrs(Message &aMessage);
     Error AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage);
 #endif
+
+    Coap::Message *PrepareResponse(Coap::Msg &aMsg);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 

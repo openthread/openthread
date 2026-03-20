@@ -507,7 +507,21 @@ template <> void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Msg &aMsg)
 
 #if OPENTHREAD_MTD
 
-void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aRequest)
+void Server::SendAnswer(const Ip6::Address &aDestination, const Coap::Message &aRequest)
+{
+    Coap::Message *answer;
+
+    answer = PrepareAnswer(aRequest);
+    VerifyOrExit(answer != nullptr);
+
+    SuccessOrExit(Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*answer, aDestination));
+    answer = nullptr;
+
+exit:
+    FreeMessage(answer);
+}
+
+Coap::Message *Server::PrepareAnswer(const Coap::Message &aRequest)
 {
     Error          error  = kErrorNone;
     Coap::Message *answer = nullptr;
@@ -529,10 +543,9 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
     answerTlvValue.Init(0, AnswerTlvValue::kIsLast);
     SuccessOrExit(error = Tlv::Append<AnswerTlv>(*answer, answerTlvValue));
 
-    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*answer, aDestination);
-
 exit:
-    FreeMessageOnError(answer, error);
+    FreeAndNullMessageOnError(answer, error);
+    return answer;
 }
 
 #endif // OPENTHREAD_MTD
@@ -783,23 +796,37 @@ exit:
 
 template <> void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Msg &aMsg)
 {
+    Coap::Message *response;
+
+    LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
+
+    response = PrepareResponse(aMsg);
+    VerifyOrExit(response != nullptr);
+
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
+    response = nullptr;
+
+exit:
+    FreeMessage(response);
+}
+
+Coap::Message *Server::PrepareResponse(Coap::Msg &aMsg)
+{
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
     VerifyOrExit(aMsg.IsConfirmable(), error = kErrorDrop);
 
-    LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
-            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
-
     response = Get<Tmf::Agent>().AllocateAndInitResponseFor(aMsg.mMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     IgnoreError(response->SetPriority(aMsg.mMessage.GetPriority()));
-    SuccessOrExit(error = AppendRequestedTlvs(aMsg.mMessage, *response));
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
+    error = AppendRequestedTlvs(aMsg.mMessage, *response);
 
 exit:
-    FreeMessageOnError(response, error);
+    FreeAndNullMessageOnError(response, error);
+    return response;
 }
 
 template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Msg &aMsg)

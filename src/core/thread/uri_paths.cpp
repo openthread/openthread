@@ -97,6 +97,7 @@ struct Entry
     _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
     _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
     _("h/qy", kUriHistoryQuery, "HistQuery")                      \
+    _("i/ka", kUriInspectorKeepAlive, "InspKeepAlive")            \
     _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \
     _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")        \
     _("n/mr", kUriMlr, "Mlr")
