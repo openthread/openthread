@@ -487,7 +487,7 @@ Error Message::ReadBlockOptionValues(uint16_t aBlockOptionNumber, BlockInfo &aIn
 
     SuccessOrExit(error = iterator.Init(*this, aBlockOptionNumber));
     VerifyOrExit(!iterator.IsDone(), error = kErrorNotFound);
-    VerifyOrExit(iterator.GetOption()->GetLength() <= sizeof(buf), error = kErrorParse);
+    VerifyOrExit(iterator.GetOption()->GetLength() <= 3, error = kErrorParse);
     SuccessOrExit(error = iterator.ReadOptionValue(buf));
 
     switch (iterator.GetOption()->GetLength())
