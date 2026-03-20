@@ -48,7 +48,7 @@ target_link_libraries(ot-rcp PRIVATE
 )
 
 if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    if(APPLE)
         target_link_libraries(ot-rcp PRIVATE -Wl,-map,ot-rcp.map)
     else()
         target_link_libraries(ot-rcp PRIVATE -Wl,-Map=ot-rcp.map)
