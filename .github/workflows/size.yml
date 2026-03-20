@@ -32,7 +32,7 @@ on:
   push:
     branches-ignore:
       - 'dependabot/**'
-  pull_request_target:
+  pull_request:
     branches:
       - 'main'
 
@@ -54,11 +54,8 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: Fetch Pull Request ref
-      if: ${{ github.event_name == 'pull_request_target' }}
-      run: |
-        git fetch --depth 2 origin pull/${{ github.event.pull_request.number }}/merge
-        echo "OT_SHA_NEW=$(git rev-parse FETCH_HEAD)" >> $GITHUB_ENV
+      with:
+        fetch-depth: 2
     - name: Run
       env:
         PR_BODY: "${{ github.event.pull_request.body }}"
@@ -78,7 +75,7 @@ jobs:
     - size-check
     permissions:
       pull-requests: write
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name != 'push'
     runs-on: ubuntu-24.04
     steps:
     - name: Download report
