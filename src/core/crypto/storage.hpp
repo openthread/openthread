@@ -127,7 +127,13 @@ public:
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
-    explicit KeyRefManager(Instance &aInstance);
+    explicit KeyRefManager(Instance &aInstance)
+        : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        , mExtraOffset(0)
+#endif
+    {
+    }
 
     /**
      * Determines the `KeyRef` to use for a given `Type`.
