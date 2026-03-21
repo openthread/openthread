@@ -108,6 +108,22 @@ def verify(pv):
                 entries[bytes(txt).decode()] = None
         return entries
 
+    def get_bbr_txt_entries_if_complete(p):
+        """Returns mDNS TXT entries if 'omr' and 'sb' records are present and have values, otherwise None."""
+        txt = get_txt_entries(p)
+        if txt and txt.get('omr') and txt.get('sb') is not None:
+            return txt
+        return None
+
+    def has_sb_bit(p, bit_pos):
+        """Checks for a bit in the 'sb' record of a complete ('omr' and 'sb' present) mDNS response."""
+        txt = get_bbr_txt_entries_if_complete(p)
+        if not txt:
+            return False
+        # 'sb' is a 4-byte value.
+        sb_val = struct.unpack('>I', txt['sb'])[0]
+        return (sb_val >> bit_pos) & 1 == 1
+
     def verify_mdns_response(p, expected_sb_bits, expected_omr_var):
         # Verify Service Instance Name
         names = []
@@ -263,6 +279,7 @@ def verify(pv):
         filter_eth_src(BR_1_ETH).\
         filter(is_mdns_response).\
         filter(lambda p: p.number > q_number).\
+        filter(get_bbr_txt_entries_if_complete).\
         must_next()
     verify_mdns_response(p1, {
         'ifstate': [1, 2],
@@ -320,7 +337,7 @@ def verify(pv):
         filter_eth_src(BR_2_ETH).\
         filter(is_mdns_response).\
         filter(lambda p: p.number > q_number).\
-        filter(lambda p: (struct.unpack('>I', get_txt_entries(p)['sb'])[0] >> 8) & 1 == 1).\
+        filter(lambda p: has_sb_bit(p, 8)).\
         must_next()
     verify_mdns_response(p2, {'ifstate': 2, 'active': 1, 'primary': 1}, expected_omr_var='OMR_PREFIX_STEP_10')
 
@@ -342,7 +359,7 @@ def verify(pv):
         filter_eth_src(BR_1_ETH).\
         filter(is_mdns_response).\
         filter(lambda p: p.number > q_number).\
-        filter(lambda p: (struct.unpack('>I', get_txt_entries(p)['sb'])[0] >> 7) & 1 == 1).\
+        filter(lambda p: has_sb_bit(p, 7)).\
         must_next()
     verify_mdns_response(p1, {'ifstate': 2, 'active': 1, 'primary': 0}, expected_omr_var='OMR_PREFIX_STEP_11')
 
@@ -351,7 +368,7 @@ def verify(pv):
         filter_eth_src(BR_2_ETH).\
         filter(is_mdns_response).\
         filter(lambda p: p.number > q_number).\
-        filter(lambda p: (struct.unpack('>I', get_txt_entries(p)['sb'])[0] >> 8) & 1 == 1).\
+        filter(lambda p: has_sb_bit(p, 8)).\
         must_next()
     verify_mdns_response(p2, {'ifstate': 2, 'active': 1, 'primary': 1}, expected_omr_var='OMR_PREFIX_STEP_10')
 
