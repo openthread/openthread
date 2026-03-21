@@ -50,6 +50,11 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kStabilizationTime = 10 * 1000;
 
 /**
+ * Time to advance for leader failover and BBR promotion, in milliseconds.
+ */
+static constexpr uint32_t kLeaderFailoverTime = 400 * 1000;
+
+/**
  * Partition weight for Router_1 to ensure it becomes leader.
  */
 static constexpr uint8_t kRouter1PartitionWeight = 74;
@@ -357,7 +362,7 @@ void Test_1_2_BBR_TC_2(void)
      */
     Log("Step 14: BR_1 (DUT) becomes Leader and Primary BBR");
 
-    nexus.AdvanceTime(kAttachToRouterTime);
+    nexus.AdvanceTime(kLeaderFailoverTime); // Time for leader failover and BBR promotion (milliseconds)
 
     VerifyOrQuit(br1.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(br1.Get<BackboneRouter::Local>().IsPrimary());
