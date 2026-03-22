@@ -110,7 +110,7 @@ void Test5_2_5(void)
     reed1.SetName("REED_1");
 
     nexus.AdvanceTime(0);
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /**
      * Use AllowList feature to restrict the topology.

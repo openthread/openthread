@@ -141,7 +141,7 @@ void Test1_2_LP_5_3_5(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 0: SSED_1-6");
 

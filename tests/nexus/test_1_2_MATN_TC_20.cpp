@@ -101,7 +101,7 @@ void TestMatnTc20(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 0: Topology formation - BR_1, BR_2. Topology formation - Router (DUT). The DUT is booted and added to "
         "the network. Topology formation - MED.");

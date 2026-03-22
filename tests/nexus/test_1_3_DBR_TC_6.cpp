@@ -121,7 +121,7 @@ void Test_1_3_DBR_TC_6(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 0: Device: Eth 1 Description (DBR-1.6): Harness configures Ethernet link with an on-link IPv6 GUA prefix "

@@ -84,7 +84,7 @@ void Test5_1_5(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");

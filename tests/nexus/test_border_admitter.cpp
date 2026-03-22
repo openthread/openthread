@@ -60,7 +60,7 @@ void TestBorderAdmitterPrimeSelection(void)
 
     nexus.AdvanceTime(0);
 
-    leader.GetInstance().SetLogLevel(kLogLevel);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevel));
 
     // Form the topology.
 

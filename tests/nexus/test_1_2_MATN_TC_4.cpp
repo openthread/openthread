@@ -126,7 +126,7 @@ void Test1_2_MATN_TC_4(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 0: Topology formation - BR_1 (DUT). Boot DUT. Configure the MLR timeout value of the DUT to be "
         "MLR_TIMEOUT_MIN seconds.");

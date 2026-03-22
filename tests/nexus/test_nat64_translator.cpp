@@ -65,7 +65,7 @@ void TestNat64StateChanges(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
 
-    node.Get<Instance>().SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     SuccessOrQuit(node.Get<Notifier>().RegisterCallback(HandleNotifierEvent, nullptr));
 
@@ -448,7 +448,7 @@ void TestNat64Mapping(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
 
-    node.Get<Instance>().SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Enable NAT64 translator");
@@ -705,7 +705,7 @@ void TestNat64CidrAddressReuse(const char *aCidr)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
 
-    node.Get<Instance>().SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Enable NAT64 translator");
@@ -872,7 +872,7 @@ void TestNat64Evict(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
 
-    node.Get<Instance>().SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Enable NAT64 translator");

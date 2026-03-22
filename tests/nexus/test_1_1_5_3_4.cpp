@@ -100,7 +100,7 @@ void Test5_3_4(void)
 
     Node *meds[] = {&med1, &med2, &med3, &med4};
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");

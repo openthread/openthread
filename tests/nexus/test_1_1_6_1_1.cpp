@@ -98,7 +98,7 @@ void RunTest6_1_1(Topology aTopology, const char *aJsonFile)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     if (aTopology == kTopologyA)
     {

@@ -175,14 +175,32 @@ void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aL
 /**
  * Handles OpenThread log level changes.
  *
- * This platform function is called whenever the OpenThread log level changes.
- * This platform function is optional since an empty weak implementation has been provided.
+ * This platform function is optional. An empty weak implementation is provided by OpenThread core.
+ *
+ * This platform function is called whenever the OpenThread log level changes:
+ * - In a single-instance configuration, this is called when the log level changes.
+ * - In a multi-instance configuration, this is called when the global log level changes.
  *
  * @note Only applicable when `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
  *
  * @param[in]  aLogLevel  The new OpenThread log level.
  */
 void otPlatLogHandleLevelChanged(otLogLevel aLogLevel);
+
+/**
+ * Handles OpenThread instance-specific log level changes.
+ *
+ * This platform function is optional. An empty weak implementation is provided by OpenThread core.
+ *
+ * This platform function is called whenever the instance-specific log level changes:
+ * - In a single-instance configuration, this is called along with `otPlatLogHandleLevelChanged()`.
+ * - In a multi-instance configuration, if `OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE` is used, this is called
+ *   when the instance-specific log level changes.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  aLogLevel  The new OpenThread log level for the instance.
+ */
+void otPlatLogHandleLogLevelChanged(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
  * @}

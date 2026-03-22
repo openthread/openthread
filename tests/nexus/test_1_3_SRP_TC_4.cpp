@@ -159,7 +159,7 @@ void Test_1_3_SRP_TC_4(const char *aJsonFileName)
     br1.Form();
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
 

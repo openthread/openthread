@@ -92,7 +92,7 @@ void Test5_1_8(void)
     router3.SetName("ROUTER_3");
     dut.SetName("ROUTER_4");
 
-    Instance::SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     nexus.AdvanceTime(0);
 

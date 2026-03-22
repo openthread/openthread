@@ -173,7 +173,7 @@ void Test1_2_LP_7_2_2(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     CallbackContext context;
 

@@ -149,7 +149,7 @@ void Test_1_3_DBR_TC_10(const char *aJsonFileName)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /**
      * Step 0

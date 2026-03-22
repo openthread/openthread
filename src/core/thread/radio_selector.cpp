@@ -361,7 +361,7 @@ void RadioSelector::Log(LogLevel        aLogLevel,
     String<kRadioPreferenceStringSize> preferenceString;
     bool                               isFirstEntry = true;
 
-    VerifyOrExit(Instance::GetLogLevel() >= aLogLevel);
+    VerifyOrExit(GetInstance().GetLogLevel() >= aLogLevel);
 
     for (Mac::RadioType radio : sRadioSelectionOrder)
     {

@@ -61,10 +61,7 @@ void TestMleBlockingDowngrade(void)
 
     nexus.AdvanceTime(0);
 
-    for (Node &node : nexus.GetNodes())
-    {
-        node.GetInstance().SetLogLevel(kLogLevelNone);
-    }
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNone));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Form initial topology");

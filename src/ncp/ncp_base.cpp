@@ -2589,7 +2589,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_WATCHDOG>(
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
-    return mEncoder.WriteUint8(ConvertLogLevel(otLoggingGetLevel()));
+    return mEncoder.WriteUint8(ConvertLogLevel(otGetLogLevel(mInstance)));
 }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -2633,7 +2633,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    IgnoreError(otLoggingSetLevel(logLevel));
+    IgnoreError(otSetLogLevel(mInstance, logLevel));
 
 exit:
     return error;

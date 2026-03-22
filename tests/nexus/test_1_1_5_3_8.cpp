@@ -123,7 +123,7 @@ void Test5_3_8(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /** Use AllowList feature to restrict the topology. */
     leader.AllowList(br);

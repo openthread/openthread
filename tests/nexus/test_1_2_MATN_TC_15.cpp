@@ -97,7 +97,7 @@ void TestMatnTc15(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 0: Topology formation – BR_1, BR_2, Router. Topology formation - TD (DUT). Boot the DUT. Configure the "

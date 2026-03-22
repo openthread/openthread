@@ -130,7 +130,7 @@ void Test5_6_9(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     med1.Get<Mle::Mle>().SetTimeout(kLargeTimeout);
     sed1.Get<Mle::Mle>().SetTimeout(kLargeTimeout);

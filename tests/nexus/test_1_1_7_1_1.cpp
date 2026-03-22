@@ -94,7 +94,7 @@ void Test7_1_1(const char *aJsonFile)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /**
      * Step 1: Leader (DUT)

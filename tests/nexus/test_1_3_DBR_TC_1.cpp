@@ -104,7 +104,7 @@ void Test_1_3_DBR_TC_1(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Device: Eth 1, ED 1 Description (DBR-1.1): Enable.");

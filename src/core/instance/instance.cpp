@@ -73,8 +73,8 @@ Utils::Heap *Instance::sHeap{nullptr};
 #endif
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-LogLevel Instance::sLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+LogLevel Instance::sGlobalLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
 #endif
 
 Instance::Instance(void)
@@ -316,6 +316,13 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     , mPowerCalibration(*this)
+#endif
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    , mLogLevel(static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    , mIsLogLevelSet(false)
+#else
+#endif
 #endif
     , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
@@ -578,17 +585,53 @@ void Instance::ResetBufferInfo(void) { Get<MessagePool>().ResetMaxUsedBufferCoun
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
-void Instance::SetLogLevel(LogLevel aLogLevel)
+Error Instance::SetLogLevel(LogLevel aLogLevel)
 {
-    if (aLogLevel != sLogLevel)
-    {
-        sLogLevel = aLogLevel;
-        otPlatLogHandleLevelChanged(sLogLevel);
-    }
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLogLevel <= kLogLevelDebg, error = kErrorInvalidArgs);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    ExitNow(error = kErrorNotCapable);
+#else
+    VerifyOrExit(mLogLevel != aLogLevel);
+    mLogLevel = aLogLevel;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    mIsLogLevelSet = true;
+#else
+    otPlatLogHandleLevelChanged(mLogLevel);
+#endif
+    otPlatLogHandleLogLevelChanged(this, mLogLevel);
+#endif
+
+exit:
+    return error;
 }
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+Error Instance::SetGlobalLogLevel(LogLevel aLogLevel)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLogLevel <= kLogLevelDebg, error = kErrorInvalidArgs);
+    VerifyOrExit(sGlobalLogLevel != aLogLevel);
+    sGlobalLogLevel = aLogLevel;
+    otPlatLogHandleLevelChanged(sGlobalLogLevel);
+
+exit:
+    return error;
+}
+#endif
 
 extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel) { OT_UNUSED_VARIABLE(aLogLevel); }
 
-#endif
+extern "C" OT_TOOL_WEAK void otPlatLogHandleLogLevelChanged(otInstance *aInstance, otLogLevel aLogLevel)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLogLevel);
+}
+
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 } // namespace ot

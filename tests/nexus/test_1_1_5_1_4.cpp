@@ -95,7 +95,7 @@ void Test5_1_4(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     /**
      * Step 1: Router_2

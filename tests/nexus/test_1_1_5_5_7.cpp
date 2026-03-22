@@ -95,7 +95,7 @@ void Test5_5_7(void)
     router2.SetName("ROUTER_2");
     router3.SetName("ROUTER_3");
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");

@@ -119,7 +119,7 @@ void Test5_3_10(void)
     med1.SetName("MED_1");
 
     nexus.AdvanceTime(0);
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 1: Border Router");
 

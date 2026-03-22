@@ -63,9 +63,10 @@ void TestTrelBasic(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     }
 
@@ -179,7 +180,7 @@ void TestTrelUserDisableReenable(void)
 
     nexus.AdvanceTime(0);
 
-    node.GetInstance().SetLogLevel(kLogLevelWarn);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
     SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -243,9 +244,10 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
@@ -441,9 +443,10 @@ void TestServiceNameConflict(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
@@ -525,9 +528,10 @@ void TestHostAddressChange(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
@@ -659,9 +663,10 @@ void TestMultiServiceSameHost(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
     for (Node &nodeEntry : nexus.GetNodes())
     {
-        nodeEntry.GetInstance().SetLogLevel(kLogLevelInfo);
         VerifyOrQuit(!nodeEntry.Get<Dns::Multicast::Core>().IsEnabled());
     }
 

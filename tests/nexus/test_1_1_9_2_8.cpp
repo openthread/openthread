@@ -147,7 +147,7 @@ void Test9_2_8(void)
     med1.SetName("MED_1");
     sed1.SetName("SED_1");
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");
