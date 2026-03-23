@@ -509,6 +509,7 @@ _LAYER_FIELDS = {
     'icmpv6.opt.pio_flag.a': _list(_auto),
     'icmpv6.opt.pio_flag.l': _list(_auto),
     'icmpv6.opt.pio_preferred_lifetime': _list(_auto),
+    'icmpv6.opt.pio_valid_lifetime': _list(_auto),
     'icmpv6.opt.length': _list(_auto),
     'icmpv6.opt.reserved': _str,
     'icmpv6.nd.ra.router_lifetime': _auto,
@@ -754,10 +755,16 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
         field_uri, orig_field_uri = 'icmpv6.opt.prefix.flag.a', 'icmpv6.opt.pio_flag.a'
     elif field_uri in ('icmpv6.opt.pio_flag.l', 'icmpv6.opt.prefix.flag.l'):
         field_uri, orig_field_uri = 'icmpv6.opt.prefix.flag.l', 'icmpv6.opt.pio_flag.l'
+    elif field_uri in ('icmpv6.opt.pio_preferred_lifetime', 'icmpv6.opt.prefix.preferred_lifetime'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.preferred_lifetime', 'icmpv6.opt.pio_preferred_lifetime'
+    elif field_uri in ('icmpv6.opt.pio_valid_lifetime', 'icmpv6.opt.prefix.valid_lifetime'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.valid_lifetime', 'icmpv6.opt.pio_valid_lifetime'
     elif field_uri == 'mle.tlv.addr_reg':
         field_uri = 'mle.tlv.addr_reg_ipv6'
 
-    if is_layer_field(field_uri) or field_uri in ('icmpv6.opt.prefix.flag.a', 'icmpv6.opt.prefix.flag.l'):
+    if is_layer_field(field_uri) or field_uri in ('icmpv6.opt.prefix.flag.a', 'icmpv6.opt.prefix.flag.l',
+                                                  'icmpv6.opt.prefix.preferred_lifetime',
+                                                  'icmpv6.opt.prefix.valid_lifetime'):
         candidate_layers = _get_candidate_layers(packet, layer_name)
         for layers in candidate_layers:
             if layer_depth >= len(layers):

@@ -44,17 +44,26 @@ def check_no_new_omr(p, omr_init):
     if not hasattr(p, 'thread_nwd'):
         return True
     try:
+        types = verify_utils.as_list(p.thread_nwd.tlv.type)
         prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
-    except AttributeError:
+    except (AttributeError, IndexError):
         return True
 
-    for prefix in prefixes:
-        if prefix is nullField:
-            continue
-        if prefix != omr_init and prefix[0] == 0xfd:
-            # OMR prefixes start with 0xfd in this test.
-            # Only OMR_INIT should be there.
-            return False
+    prefix_idx = 0
+    for t in types:
+        if t == consts.NWD_PREFIX_TLV:
+            current_prefix = prefixes[prefix_idx]
+            prefix_idx += 1
+            if current_prefix is nullField:
+                continue
+            if current_prefix != omr_init and current_prefix[0] == 0xfd:
+                # OMR prefixes start with 0xfd in this test.
+                # Only OMR_INIT should be there.
+                return False
+        elif t == consts.NWD_BORDER_ROUTER_TLV:
+            # Border Router sub-TLV belongs to the last seen Prefix TLV.
+            pass
+
     return True
 
 
@@ -82,19 +91,53 @@ def check_step4(p, omr_init):
     return True
 
 
+# Step 12 BR constants
+BR_PREFERENCE_LOW = 3
+BR_FLAG_R_FALSE = 0
+BR_FLAG_O_TRUE = 1
+BR_FLAG_P_TRUE = 1
+BR_FLAG_S_TRUE = 1
+BR_FLAG_D_FALSE = 0
+BR_FLAG_DP_FALSE = 0
+
+
 def check_step12(p, omr_1, omr_init):
-    if not hasattr(p, 'thread_nwd'):
-        return False
-    prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
-    if omr_1 not in prefixes:
-        return False
+    # 1. New OMR prefix OMR_1 in Thread Network Data, not equal to OMR_init
     if omr_1 == omr_init:
         return False
-    if Ipv6Addr("fc00::") not in prefixes:
+
+    if not verify_utils.check_nwd_prefix_flags(p,
+                                               omr_1,
+                                               stable=1,
+                                               pref=BR_PREFERENCE_LOW,
+                                               r=BR_FLAG_R_FALSE,
+                                               o=BR_FLAG_O_TRUE,
+                                               p=BR_FLAG_P_TRUE,
+                                               s=BR_FLAG_S_TRUE,
+                                               d=BR_FLAG_D_FALSE,
+                                               dp=BR_FLAG_DP_FALSE):
         return False
-    if not hasattr(p.thread_nwd.tlv, 'has_route'):
+
+    # 2. External route fc00::/7 in Network Data
+    try:
+        types = verify_utils.as_list(p.thread_nwd.tlv.type)
+        prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
+    except (AttributeError, IndexError):
         return False
-    return True
+
+    prefix_idx = 0
+    is_ula_target = False
+    for t in types:
+        if t == consts.NWD_PREFIX_TLV:
+            is_ula_target = (Ipv6Addr(prefixes[prefix_idx]) == Ipv6Addr("fc00::"))
+            prefix_idx += 1
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            is_ula_target = False
+        elif t == consts.NWD_HAS_ROUTER_TLV:
+            if is_ula_target:
+                return True
+
+    return False
 
 
 def check_step13(p, omr_1, ula_1, ext_pan_id):
@@ -115,8 +158,13 @@ def check_step13(p, omr_1, ula_1, ext_pan_id):
     if ula_1 not in pio_prefixes:
         return False
 
-    # Check PIO A bit
-    if verify_utils.as_list(p.icmpv6.opt.pio_flag.a)[0] != verify_utils.PIO_FLAG_A_TRUE:
+    # Check PIO A bit and Preferred/Valid Lifetimes
+    pio_index = pio_prefixes.index(ula_1)
+    if verify_utils.as_list(p.icmpv6.opt.pio_flag.a)[pio_index] != verify_utils.PIO_FLAG_A_TRUE:
+        return False
+    if verify_utils.as_list(p.icmpv6.opt.pio_preferred_lifetime)[pio_index] == 0:
+        return False
+    if verify_utils.as_list(p.icmpv6.opt.pio_valid_lifetime)[pio_index] == 0:
         return False
 
     # Check EXT_PAN_ID mapping in ULA_1

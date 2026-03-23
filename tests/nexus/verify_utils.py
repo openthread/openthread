@@ -291,6 +291,73 @@ def get_ra_prefixes(p):
     return rio_prefixes, pio_prefixes
 
 
+def check_nwd_prefix_flags(packet, target_prefix, stable=None, **expected_flags):
+    """
+    Robustly check flags for a specific OMR prefix in Network Data.
+    Handles cases with multiple prefixes and different sub-TLVs.
+    """
+    try:
+        types = as_list(packet.thread_nwd.tlv.type)
+        prefixes = as_list(packet.thread_nwd.tlv.prefix)
+        stables = as_list(packet.thread_nwd.tlv.stable)
+    except (AttributeError, IndexError):
+        return False
+
+    prefix_idx = 0
+    br_idx = 0
+    is_target = False
+
+    # We iterate through all TLVs to find the target prefix and its BR sub-TLV
+    for i, t in enumerate(types):
+        if t == consts.NWD_PREFIX_TLV:
+            current_prefix = prefixes[prefix_idx]
+            current_stable = stables[i]
+            prefix_idx += 1
+            is_target = (Ipv6Addr(current_prefix) == Ipv6Addr(target_prefix))
+            if is_target and stable is not None and current_stable != stable:
+                is_target = False
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            # These are also top-level TLVs, reset target prefix
+            is_target = False
+        elif t == consts.NWD_BORDER_ROUTER_TLV:
+            if is_target:
+                # This BR sub-TLV belongs to our target prefix!
+                try:
+                    # Map expected_flags keys to pktverify field names
+                    field_map = {
+                        'pref': packet.thread_nwd.tlv.border_router.pref,
+                        'r': packet.thread_nwd.tlv.border_router.flag.r,
+                        'o': packet.thread_nwd.tlv.border_router.flag.o,
+                        'p': packet.thread_nwd.tlv.border_router.flag.p,
+                        's': packet.thread_nwd.tlv.border_router.flag.s,
+                        'd': packet.thread_nwd.tlv.border_router.flag.d,
+                        'dp': packet.thread_nwd.tlv.border_router.flag.dp,
+                        'n': packet.thread_nwd.tlv.border_router.flag.n,
+                    }
+
+                    match = True
+                    for key, expected_val in expected_flags.items():
+                        if key in field_map:
+                            field_values = field_map[key]
+                            if field_values is not None:
+                                actual_val = as_list(field_values)[br_idx]
+                                if actual_val != expected_val:
+                                    match = False
+                                    break
+                            else:
+                                match = False
+                                break
+
+                    if match:
+                        return True  # Found it and all specified flags match!
+                except (AttributeError, IndexError):
+                    pass
+
+            br_idx += 1
+
+    return False
+
+
 def is_leader_aloc_or_rloc(addr_str: str) -> bool:
     """Checks if an IPv6 address is a Leader ALOC or an RLOC."""
     addr = ipaddress.ip_address(addr_str)

@@ -51,56 +51,43 @@ BR_FLAG_DP_FALSE = 0
 
 
 def check_step3(p, omr_prefix, omr_prefix_len):
-    try:
-        prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
-        types = verify_utils.as_list(p.thread_nwd.tlv.type)
-        stables = verify_utils.as_list(p.thread_nwd.tlv.stable)
-    except AttributeError:
-        return False
-
-    # 1. Prefix TLV for OMR_1
-    try:
-        omr_idx = prefixes.index(omr_prefix)
-    except ValueError:
-        return False
-
     # Check OMR prefix properties: 64 bits long and starts with ULA_PREFIX_START_BYTE
     if omr_prefix_len != 64 or omr_prefix[0] != ULA_PREFIX_START_BYTE:
         return False
 
-    # Find the NWD_PREFIX_TLV entry index corresponding to omr_idx
-    prefix_indices = [i for i, t in enumerate(types) if t == consts.NWD_PREFIX_TLV]
-    if omr_idx >= len(prefix_indices):
-        return False
-
-    t_idx = prefix_indices[omr_idx]
-    if stables[t_idx] != 1:
-        return False
-
-    # Flags for OMR prefix
-    # Note: We expect P_default (r flag) to be 0 for now to match OpenThread behavior
-    try:
-        if not (verify_utils.as_list(p.thread_nwd.tlv.border_router.pref)[0] == BR_PREFERENCE_LOW and \
-                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.r)[0] == BR_FLAG_R_FALSE and \
-                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.o)[0] == BR_FLAG_O_TRUE and \
-                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.p)[0] == BR_FLAG_P_TRUE and \
-                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.s)[0] == BR_FLAG_S_TRUE and \
-                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.d)[0] == BR_FLAG_D_FALSE and \
-                verify_utils.as_list(p.thread_nwd.tlv.border_router.flag.dp)[0] == BR_FLAG_DP_FALSE):
-            return False
-    except AttributeError:
+    # 1. Prefix TLV for OMR_1 with stable=1 and BR sub-TLV with specific flags
+    if not verify_utils.check_nwd_prefix_flags(p,
+                                               omr_prefix,
+                                               stable=1,
+                                               pref=BR_PREFERENCE_LOW,
+                                               r=BR_FLAG_R_FALSE,
+                                               o=BR_FLAG_O_TRUE,
+                                               p=BR_FLAG_P_TRUE,
+                                               s=BR_FLAG_S_TRUE,
+                                               d=BR_FLAG_D_FALSE,
+                                               dp=BR_FLAG_DP_FALSE):
         return False
 
     # 2. Prefix TLV for fc00::/7 with Has Route sub-TLV
     try:
-        ula_idx = prefixes.index(Ipv6Addr("fc00::"))
-    except ValueError:
+        types = verify_utils.as_list(p.thread_nwd.tlv.type)
+        prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
+    except (AttributeError, IndexError):
         return False
 
-    if not hasattr(p.thread_nwd.tlv, 'has_route'):
-        return False
+    prefix_idx = 0
+    is_ula_target = False
+    for t in types:
+        if t == consts.NWD_PREFIX_TLV:
+            is_ula_target = (Ipv6Addr(prefixes[prefix_idx]) == Ipv6Addr("fc00::"))
+            prefix_idx += 1
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            is_ula_target = False
+        elif t == consts.NWD_HAS_ROUTER_TLV:
+            if is_ula_target:
+                return True
 
-    return True
+    return False
 
 
 def check_step4(p, pre_1_prefix, pre_1_prefix_len, omr_prefix, ext_pan_id):
@@ -127,8 +114,13 @@ def check_step4(p, pre_1_prefix, pre_1_prefix_len, omr_prefix, ext_pan_id):
     if pre_1_prefix == omr_prefix:
         return False
 
-    # Check PIO A bit
-    if verify_utils.as_list(p.icmpv6.opt.pio_flag.a)[0] != verify_utils.PIO_FLAG_A_TRUE:
+    # Check PIO A bit and Preferred/Valid Lifetimes
+    pio_index = pio_prefixes.index(pre_1_prefix)
+    if verify_utils.as_list(p.icmpv6.opt.pio_flag.a)[pio_index] != verify_utils.PIO_FLAG_A_TRUE:
+        return False
+    if verify_utils.as_list(p.icmpv6.opt.pio_preferred_lifetime)[pio_index] == 0:
+        return False
+    if verify_utils.as_list(p.icmpv6.opt.pio_valid_lifetime)[pio_index] == 0:
         return False
 
     # Check RIO contains OMR_1
@@ -225,8 +217,7 @@ def verify(pv):
     #     - OMR 1 MUST be 64 bits long and start with 0xFD.
     print("Step 3: BR 1 (DUT) registers itself as a Border Router.")
 
-    pkts.filter_wpan_src64(BR_1).\
-        filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
+    pkts.filter(lambda p: hasattr(p, 'mle') and p.mle.cmd == consts.MLE_DATA_RESPONSE).\
         filter(lambda p: check_step3(p, OMR_PREFIX, OMR_PREFIX_LEN)).\
         must_next()
 
