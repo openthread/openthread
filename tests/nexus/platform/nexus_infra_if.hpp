@@ -29,7 +29,6 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_INFRA_IF_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_INFRA_IF_HPP_
 
-#include <openthread/platform/infra_if.h>
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -42,7 +41,7 @@ class InfraIf
 public:
     typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress;
 
-    InfraIf(void);
+    explicit InfraIf(Instance &aInstance);
 
     void Init(Node &aNode);
 
@@ -60,6 +59,11 @@ public:
     const Heap::Array<Ip6::Address> &GetAddresses(void) const { return mAddresses; }
 
     void SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
+    void SendRouterAdvertisement(const Ip6::Address &aDestination,
+                                 const Ip6::Prefix  *aPioPrefix,
+                                 const Ip6::Prefix  *aRioPrefix);
+    void StartRouterAdvertisement(const Ip6::Prefix &aPioPrefix, const Ip6::Prefix *aRioPrefix = nullptr);
+    void StopRouterAdvertisement(void);
     void SendIp6(const Ip6::Address &aSrcAddress,
                  const Ip6::Address &aDestAddress,
                  const uint8_t      *aBuffer,
@@ -94,15 +98,27 @@ public:
 
 private:
     void ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
+    void SendPeriodicRouterAdvertisement(void);
     void HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio);
+    void HandleRouterSolicitation(const Ip6::Address &aSrcAddress);
     void HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage);
     void HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage);
+
+    void HandleRaTimer(void);
 
     Node                      *mNode;
     uint32_t                   mNodeId;
     uint32_t                   mIfIndex;
     Heap::Array<Ip6::Address>  mAddresses;
     Callback<EchoReplyHandler> mEchoReplyCallback;
+
+    Ip6::Prefix mPioPrefix;
+    Ip6::Prefix mRioPrefix;
+    bool        mHasRioPrefix;
+
+    using RaTimer = TimerMilliIn<InfraIf, &InfraIf::HandleRaTimer>;
+
+    RaTimer mRaTimer;
 };
 
 } // namespace Nexus

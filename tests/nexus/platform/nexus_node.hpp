@@ -58,8 +58,9 @@ public:
     bool mPendingTasklet;
 
 protected:
-    Platform(void)
-        : mPendingTasklet(false)
+    explicit Platform(Instance &aInstance)
+        : mInfraIf(aInstance)
+        , mPendingTasklet(false)
     {
     }
 };
@@ -153,7 +154,10 @@ public:
     Node *mNext;
 
 private:
-    Node(void) {}
+    Node(void)
+        : Platform(static_cast<Instance &>(*this))
+    {
+    }
 
     String<32> mName;
 };
@@ -161,6 +165,9 @@ private:
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
 
 } // namespace Nexus
+
+template <> inline Nexus::InfraIf &Instance::Get(void) { return static_cast<Nexus::Node *>(this)->mInfraIf; }
+
 } // namespace ot
 
 #endif // OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_

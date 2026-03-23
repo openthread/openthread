@@ -34,10 +34,12 @@
 namespace ot {
 namespace Nexus {
 
-InfraIf::InfraIf(void)
+InfraIf::InfraIf(Instance &aInstance)
     : mNode(nullptr)
     , mNodeId(0)
     , mIfIndex(0)
+    , mHasRioPrefix(false)
+    , mRaTimer(aInstance)
 {
 }
 
@@ -152,11 +154,68 @@ void InfraIf::SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuff
     mPendingTxQueue.Enqueue(*message);
 }
 
+void InfraIf::SendRouterAdvertisement(const Ip6::Address &aDestination,
+                                      const Ip6::Prefix  *aPioPrefix,
+                                      const Ip6::Prefix  *aRioPrefix)
+{
+    Ip6::Nd::RouterAdvert::TxMessage ra;
+    Ip6::Nd::RouterAdvert::Header    header;
+    Ip6::Nd::Icmp6Packet             packet;
+
+    header.SetToDefault();
+    header.SetRouterLifetime(1800);
+    SuccessOrQuit(ra.Append(header));
+
+    if (aPioPrefix != nullptr)
+    {
+        SuccessOrQuit(ra.AppendPrefixInfoOption(*aPioPrefix, 1800, 1800,
+                                                Ip6::Nd::PrefixInfoOption::kOnLinkFlag |
+                                                    Ip6::Nd::PrefixInfoOption::kAutoConfigFlag));
+    }
+
+    if (aRioPrefix != nullptr)
+    {
+        SuccessOrQuit(ra.AppendRouteInfoOption(*aRioPrefix, 1800, NetworkData::kRoutePreferenceMedium));
+    }
+
+    ra.GetAsPacket(packet);
+
+    SendIcmp6Nd(aDestination, packet.GetBytes(), packet.GetLength());
+}
+
+void InfraIf::StartRouterAdvertisement(const Ip6::Prefix &aPioPrefix, const Ip6::Prefix *aRioPrefix)
+{
+    mPioPrefix = aPioPrefix;
+    if (aRioPrefix != nullptr)
+    {
+        mRioPrefix    = *aRioPrefix;
+        mHasRioPrefix = true;
+    }
+    else
+    {
+        mHasRioPrefix = false;
+    }
+
+    // Trigger initial RA immediately
+    SendPeriodicRouterAdvertisement();
+}
+
+void InfraIf::StopRouterAdvertisement(void) { mRaTimer.Stop(); }
+
+void InfraIf::HandleRaTimer(void) { SendPeriodicRouterAdvertisement(); }
+
+void InfraIf::SendPeriodicRouterAdvertisement(void)
+{
+    const uint32_t kRaInterval = 4000; // 4 seconds in milliseconds
+
+    SendRouterAdvertisement(Ip6::Address::GetLinkLocalAllNodesMulticast(), &mPioPrefix,
+                            mHasRioPrefix ? &mRioPrefix : nullptr);
+    mRaTimer.Start(kRaInterval);
+}
+
 void InfraIf::ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
     Ip6::Nd::Icmp6Packet packet;
-
-    OT_UNUSED_VARIABLE(aSrcAddress);
 
     packet.Init(aBuffer, aBufferLength);
 
@@ -181,6 +240,9 @@ void InfraIf::ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBu
     }
 
     case Ip6::Icmp::Header::kTypeRouterSolicit:
+        HandleRouterSolicitation(aSrcAddress);
+        break;
+
     case Ip6::Icmp::Header::kTypeNeighborAdvert:
     case Ip6::Icmp::Header::kTypeNeighborSolicit:
         // TODO: Handle other ND messages as needed for the simulation.
@@ -235,6 +297,16 @@ void InfraIf::HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio)
 
 exit:
     return;
+}
+
+void InfraIf::HandleRouterSolicitation(const Ip6::Address &aSrcAddress)
+{
+    if (mRaTimer.IsRunning())
+    {
+        const Ip6::Address &dest =
+            aSrcAddress.IsUnspecified() ? Ip6::Address::GetLinkLocalAllNodesMulticast() : aSrcAddress;
+        SendRouterAdvertisement(dest, &mPioPrefix, mHasRioPrefix ? &mRioPrefix : nullptr);
+    }
 }
 
 void InfraIf::SendIp6(const Ip6::Address &aSrcAddress,
