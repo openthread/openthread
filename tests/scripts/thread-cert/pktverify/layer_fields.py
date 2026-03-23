@@ -657,7 +657,7 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.sub_tlvs': _list(_str),
     # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
     'thread_nwd.tlv.prefix': _list(_ipv6_addr),
-    'thread_nwd.tlv.border_router.pref': _auto,
+    'thread_nwd.tlv.border_router.pref': _list(_auto),
     'thread_nwd.tlv.border_router.flag.s': _list(_auto),
     'thread_nwd.tlv.border_router.flag.r': _list(_auto),
     'thread_nwd.tlv.border_router.flag.p': _list(_auto),

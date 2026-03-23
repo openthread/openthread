@@ -194,6 +194,7 @@ DEFAULT_TESTS=(
     "1_3_DBR_TC_2"
     "1_3_DBR_TC_3"
     "1_3_DBR_TC_6"
+    "1_3_DBR_TC_7A"
 )
 
 # Use provided arguments or the default test list
