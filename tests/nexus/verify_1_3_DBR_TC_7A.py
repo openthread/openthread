@@ -56,7 +56,6 @@ ICMPV6_TYPE_ROUTER_SOLICITATION = 133
 
 def get_val(field_values, index):
     vals = verify_utils.as_list(field_values)
-    assert index < len(vals), f"Index {index} is out of bounds for field values with length {len(vals)}"
     return vals[index]
 
 

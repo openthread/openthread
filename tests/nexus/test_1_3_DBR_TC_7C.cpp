@@ -84,26 +84,36 @@ static constexpr uint8_t kHopLimit = 64;
  */
 static constexpr uint8_t kEth1GuaLastByte = 1;
 
-void Test_1_3_DBR_TC_7A(void)
+/**
+ * Ethernet 1 GUA prefix.
+ */
+static constexpr char kGua1Prefix[] = "2001:db8:1::/64";
+
+/**
+ * Border Router 2 Network Data prefix.
+ */
+static constexpr char kPre1Prefix[] = "fd12:3456:abcd:1234::/64";
+
+void Test_1_3_DBR_TC_7C(void)
 {
     /**
-     * 1.7(a). [1.3] [CERT] Reachability - Multiple BRs - Single Thread / Single IPv6 Infrastructure - Presence of
+     * 1.7(c). [1.3] [CERT] Reachability - Multiple BRs - Single Thread / Single IPv6 Infrastructure - Presence of
      *   non-OMR prefixes
      *
-     * 1.7a.1. Purpose
+     * 1.7c.1. Purpose
      * To test the following:
      * 1. Bi-directional reachability between single Thread Network and infrastructure devices
      * 2. DUT BR creates own OMR prefix when existing prefixes are not usable (e.g. no SLAAC, or deprecated)
      *
-     * 1.7a.2. Topology
+     * 1.7c.2. Topology
      * 1. Eth 1-Adjacent Infrastructure Link Reference Device
      * 2. BR 1 (DUT) - Border Router
      * 3. BR 2-Border Router Reference Device
      * 4. Rtr 1-Thread Router Reference Device and Leader
      *
-     * Spec Reference | V1.1 Section | V1.3.0 Section
-     * ---------------|--------------|---------------
-     * Reachability   | N/A          | 1.3
+     * Spec Reference   | V1.1 Section | V1.3.0 Section
+     * -----------------|--------------|---------------
+     * Reachability     | N/A          | 1.3
      */
 
     Core nexus;
@@ -123,20 +133,19 @@ void Test_1_3_DBR_TC_7A(void)
     Instance::SetLogLevel(kLogLevelNote);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 0: Device: Eth 1 Description (DBR-1.7a): Enable.");
+    Log("Step 0: Device: Eth 1 Description (DBR-1.7c): Enable.");
 
     /**
      * Step 0
      * - Device: Eth 1
-     * - Description (DBR-1.7a): Enable. Harness configures Ethernet link with an on-link IPv6 GUA prefix GUA_1. Eth_1
+     * - Description (DBR-1.7c): Enable. Harness configures Ethernet link with an on-link IPv6 GUA prefix GUA_1. Eth_1
      *   is configured to multicast ND RAs.
      * - Pass Criteria:
      *   - N/A
      */
 
     eth1.mInfraIf.Init(eth1);
-    static const char kGua1Prefix[] = "2001:db8:1::/64";
-    Ip6::Prefix       gua1Prefix;
+    Ip6::Prefix gua1Prefix;
     SuccessOrQuit(gua1Prefix.FromString(kGua1Prefix));
 
     Ip6::Address gua1Address;
@@ -147,12 +156,12 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AddTestVar("GUA_1", kGua1Prefix);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 0b: Device: Rtr 1 Description (DBR-1.7a): Enable. Becomes Leader.");
+    Log("Step 0b: Device: Rtr 1 Description (DBR-1.7c): Enable. Becomes Leader.");
 
     /**
      * Step 0b
      * - Device: Rtr 1
-     * - Description (DBR-1.7a): Enable. Becomes Leader.
+     * - Description (DBR-1.7c): Enable. Becomes Leader.
      * - Pass Criteria:
      *   - N/A
      */
@@ -162,41 +171,40 @@ void Test_1_3_DBR_TC_7A(void)
     VerifyOrQuit(rtr1.Get<Mle::Mle>().IsLeader());
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 1: Device: Eth 1, BR 2, Rtr 1 Description (DBR-1.7a): Enable; connects to Rtr_1.");
+    Log("Step 1: Device: Eth 1, BR 2, Rtr 1 Description (DBR-1.7c): Enable; connects to Rtr_1.");
 
     /**
      * Step 1
      * - Device: Eth 1, BR 2, Rtr 1
-     * - Description (DBR-1.7a): Enable; connects to Rtr_1. Harness configures BR_2 Network Data with prefix PRE_1 as
-     *   below. fd12:3456:abcd:1234::/64 (ULA prefix) P_slaac = false (SLAAC disabled for prefix) P_on_mesh = true
-     *   P_stable = true P_preferred = true P_dhcp = false P_default = true P_preference = 01 (high) P_dp = false.
-     *   Note: this looks like an OMR prefix, but due to P_slaac = 0 it is not usable by Thread Devices for
-     *   connectivity. Note 1: the automatic creation of an OMR prefix as a BR would normally do, is disabled by the
-     *   Harness for BR_2. Instead, the administratively configured PRE_1 is used only. Note 2: to disable the
-     *   automatic OMR prefix creation as stated above, one method is (if no better method is available) to disable the
-     *   BR_2 border routing using \"br disable\" OT CLI command to stop the automatic prefix creation. Then using
-     *   \"netdata publish prefix\" the device could configure different PRE_1 prefixes as needed per test run. Form
-     *   topology (if not already formed). Wait for BR_2 to: Register as border router in Thread Network Data with
-     *   prefix PRE_1. Send multicast ND RAs on AIL.
+     * - Description (DBR-1.7c): Enable; connects to Rtr_1. Harness configures BR_2 Network Data with prefix PRE_1 as
+     *   below. fd12:3456:abcd:1234::/64 (ULA prefix) P_slaac = true (SLAAC is enabled for prefix) P_on_mesh = false
+     *   (not an on-mesh prefix) P_stable = true P_preferred = true P_dhcp = false P_default = true P_preference = 00
+     *   (medium) P_dp = false. Note: this looks almost like an OMR prefix, but due to having P_on_mesh = false it is
+     *   not a valid OMR prefix and would not be usable by (new) Thread Devices for connectivity. Note 1: the
+     *   automatic creation of an OMR prefix as a BR would normally do, is disabled by the Harness for BR_2. Instead,
+     *   the administratively configured PRE_1 is used only. Note 2: to disable the automatic OMR prefix creation as
+     *   stated above, one method is (if no better method is available) to disable the BR_2 border routing using "br
+     *   disable" OT CLI command to stop the automatic prefix creation. Then using "netdata publish prefix" the
+     *   device could configure different PRE_1 prefixes as needed per test run. Form topology (if not already
+     *   formed). Wait for BR_2 to: Register as border router in Thread Network Data with prefix PRE_1. Send multicast
+     *   ND RAs on AIL.
      * - Pass Criteria:
      *   - N/A
      */
 
     br2.Join(rtr1);
     nexus.AdvanceTime(kJoinNetworkTime);
-    VerifyOrQuit(br2.Get<Mle::Mle>().IsRouter());
 
-    static const char kPre1Prefix[] = "fd12:3456:abcd:1234::/64";
     nexus.AddTestVar("PRE_1", kPre1Prefix);
 
     NetworkData::OnMeshPrefixConfig config;
     SuccessOrQuit(AsCoreType(&config.mPrefix).FromString(kPre1Prefix));
-    config.mPreference   = NetworkData::kRoutePreferenceHigh;
+    config.mPreference   = NetworkData::kRoutePreferenceMedium;
     config.mPreferred    = true;
-    config.mSlaac        = false;
+    config.mSlaac        = true;
     config.mDhcp         = false;
     config.mDefaultRoute = true;
-    config.mOnMesh       = true;
+    config.mOnMesh       = false;
     config.mStable       = true;
 
     SuccessOrQuit(br2.Get<NetworkData::Local>().AddOnMeshPrefix(config));
@@ -211,12 +219,12 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AdvanceTime(kBrActionTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 2: Device: BR 1 (DUT) Description (DBR-1.7a): Enable: switch on.");
+    Log("Step 2: Device: BR 1 (DUT) Description (DBR-1.7c): Enable: switch on.");
 
     /**
      * Step 2
      * - Device: BR 1 (DUT)
-     * - Description (DBR-1.7a): Enable: switch on.
+     * - Description (DBR-1.7c): Enable: switch on.
      * - Pass Criteria:
      *   - N/A
      */
@@ -229,24 +237,24 @@ void Test_1_3_DBR_TC_7A(void)
     SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 3: Device: BR 1 (DUT) Description (DBR-1.7a): Automatically registers itself as a border router.");
+    Log("Step 3: Device: BR 1 (DUT) Description (DBR-1.7c): Automatically registers itself as a border router.");
 
     /**
      * Step 3
      * - Device: BR 1 (DUT)
-     * - Description (DBR-1.7a): Automatically registers itself as a border router in the Thread Network Data and
+     * - Description (DBR-1.7c): Automatically registers itself as a border router in the Thread Network Data and
      *   provides OMR prefix.
      * - Pass Criteria:
      *   - The DUT MUST register a new OMR Prefix (OMR_1) in the Thread Network Data, in a Prefix TLV.
      *   - Flags in the Border Router sub-TLV MUST be:
-     *   - 1. P_preference = 11 (Low)
-     *   - 2. P_default=true
-     *   - 3. P_stable = true
-     *   - 4. P_on_mesh=true
-     *   - 5. P_preferred = true
-     *   - 6. P_slaac=true
-     *   - 7. P_dhcp=false
-     *   - 8. P_dp=false
+     *   - 17. P_preference = 11 (Low)
+     *   - 18. P_default = true
+     *   - 19. P_stable = true
+     *   - 20. P_on_mesh = true
+     *   - 21. P_preferred = true
+     *   - 22. P_slaac = true
+     *   - 23. P_dhcp = false
+     *   - 24. P_dp = false
      *   - OMR_1 MUST be 64 bits long and start with 0xFD.
      */
 
@@ -257,34 +265,35 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AddTestVar("OMR_1", omr1.ToString().AsCString());
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 4: Device: BR 1 (DUT) Description (DBR-1.7a): Automatically multicasts ND RAs on AIL.");
+    Log("Step 4: Device: BR 1 (DUT) Description (DBR-1.7c): Automatically multicasts ND RAs on AIL.");
 
     /**
      * Step 4
      * - Device: BR 1 (DUT)
-     * - Description (DBR-1.7a): Automatically multicasts ND RAs on Adjacent Infrastructure Link.
+     * - Description (DBR-1.7c): Automatically multicasts ND RAs on Adjacent Infrastructure Link.
      * - Pass Criteria:
      *   - The DUT MUST multicast ND RAs on the infrastructure link:
      *   - IPv6 destination MUST be ff02::1
      *   - MUST NOT contain a Prefix Information Option (PIO) with a ULA prefix.
      *   - MUST contain a Route Information Option (RIO) with OMR_1.
-     *   - MUST contain a Route Information Option (RIO) with PRE_1.
+     *   - MUST NOT contain a Route Information Option (RIO) with PRE_1. (Note: reason is that it is not an on-mesh
+     *     prefix.)
      */
 
     // Time already advanced.
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 5: Device: Eth 1 Description (DBR-1.7a): Harness instructs device to send Echo Request to Rtr 1.");
+    Log("Step 5: Device: Eth 1 Description (DBR-1.7c): Harness instructs device to send Echo Request to Rtr 1.");
 
     /**
      * Step 5
      * - Device: Eth 1
-     * - Description (DBR-1.7a): Harness instructs the device to send an ICMPv6 Echo Request to Rtr 1 via BR 1 or BR 2.
-     *   IPv6 Source: Eth 1 GUA IPv6 Destination: Rtr 1 OMR address
+     * - Description (DBR-1.7c): Harness instructs the device to send an ICMPv6 Echo Request to Rtr 1 via BR_1 or BR 2.
+     *   IPv6 Source: Eth 1 GUA IPv6 Destination: Rtr 1 OMR address.
      * - Pass Criteria:
-     *   - Eth 1 receives an ICMPv6 Echo Reply from Rtr_1.
-     *   - IPv6 Source: Rtr 1 OMR
-     *   - IPv6 Destination: Eth 1 GUA
+     *   - Eth 1 receives an ICMPv6 Echo Reply from Rtr 1.
+     *   - IPv6 Source: Rtr_1 OMR
+     *   - IPv6 Destination: Eth_1 GUA
      */
 
     const Ip6::Address &eth1Gua = eth1.mInfraIf.FindMatchingAddress(kGua1Prefix);
@@ -297,29 +306,29 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AdvanceTime(kPingResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 6: Device: Rtr 1 Description (DBR-1.7a): Harness instructs device to send Echo Request to Eth 1.");
+    Log("Step 6: Device: Rtr 1 Description (DBR-1.7c): Harness instructs device to send Echo Request to Eth 1.");
 
     /**
      * Step 6
      * - Device: Rtr 1
-     * - Description (DBR-1.7a): Harness instructs the device to send an ICMPv6 Echo Request to Eth_1. IPv6 Source: Rtr
-     *   1 OMR address. IPv6 Destination: Eth 1 GUA
+     * - Description (DBR-1.7c): Harness instructs the device to send an ICMPv6 Echo Request to Eth 1. IPv6 Source:
+     * Rtr_1 OMR address IPv6 Destination: Eth 1 GUA
      * - Pass Criteria:
-     *   - Rtr_1 receives an ICMPv6 Echo Reply from Eth_1.
-     *   - IPv6 Source: Eth_1 GUA
-     *   - IPv6 Destination: Rtr 1 OMR address
+     *   - Rtr 1 receives an ICMPv6 Echo Reply from Eth 1.
+     *   - IPv6 Source: Eth 1 GUA
+     *   - IPv6 Destination: Rtr_1 OMR address
      */
 
     rtr1.SendEchoRequest(eth1Gua, kEchoIdentifier, kEchoPayloadSize, kHopLimit, &rtr1Omr);
     nexus.AdvanceTime(kPingResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 7: Device: BR 2 Description (DBR-1.7a): Harness disables the device.");
+    Log("Step 7: Device: BR 2 Description (DBR-1.7c): Harness disables the device.");
 
     /**
      * Step 7
      * - Device: BR 2
-     * - Description (DBR-1.7a): Harness disables the device
+     * - Description (DBR-1.7c): Harness disables the device
      * - Pass Criteria:
      *   - N/A
      */
@@ -327,12 +336,12 @@ void Test_1_3_DBR_TC_7A(void)
     br2.Get<Mle::Mle>().Stop();
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 7a: Device: N/A Description (DBR-1.7a): Harness waits -20 seconds.");
+    Log("Step 7a: Device: N/A Description (DBR-1.7c): Harness waits -20 seconds.");
 
     /**
      * Step 7a
      * - Device: N/A
-     * - Description (DBR-1.7a): Harness waits -20 seconds
+     * - Description (DBR-1.7c): Harness waits -20 seconds
      * - Pass Criteria:
      *   - N/A
      */
@@ -340,13 +349,13 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AdvanceTime(kWaitTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 7b: Device: Eth 1 Description (DBR-1.7a): Harness instructs device to send an ND RS message.");
+    Log("Step 7b: Device: Eth 1 Description (DBR-1.7c): Harness instructs device to send an ND RS message.");
 
     /**
      * Step 7b
      * - Device: Eth 1
-     * - Description (DBR-1.7a): Harness instructs device to send an ND RS message to trigger the DUT to send a ND RA
-     *   for the next step. Note: in Linux, this is done with the command rdisc6v eth0. The output of the command is
+     * - Description (DBR-1.7c): Harness instructs the device to send an ND RS message to trigger the DUT to send a ND
+     *   RA for the next step. Note: in Linux, this is done with the command rdisc6v eth0. The output of the command is
      *   captured in the test log.
      * - Pass Criteria:
      *   - N/A
@@ -358,13 +367,13 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AdvanceTime(kPingResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 8: Device: BR 1 (DUT) Description (DBR-1.7a): Repeat Step 4.");
+    Log("Step 8: Device: BR 1 (DUT) Description (DBR-1.7c): Repeat Step 4.");
 
     /**
      * Step 8
      * - Device: BR 1 (DUT)
-     * - Description (DBR-1.7a): Repeat Step 4 Note: since the prefix PRE_1 is still present in the Leader's Network
-     *   Data for some time, BR 1 will continue to advertise the route for PRE_1 as indicated in Step 4 criteria.
+     * - Description (DBR-1.7c): Repeat Step 4. Note: since the prefix PRE_1 is still present in the Leader's Network
+     *   Data for some time, BR 1 will continue to advertise the route for PRE 1 as indicated in Step 4 criteria.
      * - Pass Criteria:
      *   - Repeat Step 4
      */
@@ -372,12 +381,12 @@ void Test_1_3_DBR_TC_7A(void)
     // Time already advanced.
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 9: Device: Eth 1 Description (DBR-1.7a): Repeat Step 5.");
+    Log("Step 9: Device: Eth_1 Description (DBR-1.7c): Repeat Step 5.");
 
     /**
      * Step 9
-     * - Device: Eth 1
-     * - Description (DBR-1.7a): Repeat Step 5
+     * - Device: Eth_1
+     * - Description (DBR-1.7c): Repeat Step 5
      * - Pass Criteria:
      *   - Repeat Step 5
      */
@@ -386,12 +395,12 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AdvanceTime(kPingResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
-    Log("Step 10: Device: Rtr 1 Description (DBR-1.7a): Repeat Step 6.");
+    Log("Step 10: Device: Rtr_1 Description (DBR-1.7c): Repeat Step 6.");
 
     /**
      * Step 10
-     * - Device: Rtr 1
-     * - Description (DBR-1.7a): Repeat Step 6
+     * - Device: Rtr_1
+     * - Description (DBR-1.7c): Repeat Step 6
      * - Pass Criteria:
      *   - Repeat Step 6
      */
@@ -399,7 +408,7 @@ void Test_1_3_DBR_TC_7A(void)
     rtr1.SendEchoRequest(eth1Gua, kEchoIdentifier, kEchoPayloadSize, kHopLimit, &rtr1Omr);
     nexus.AdvanceTime(kPingResponseTime);
 
-    nexus.SaveTestInfo("test_1_3_DBR_TC_7A.json");
+    nexus.SaveTestInfo("test_1_3_DBR_TC_7C.json");
 }
 
 } // namespace Nexus
@@ -407,7 +416,7 @@ void Test_1_3_DBR_TC_7A(void)
 
 int main(void)
 {
-    ot::Nexus::Test_1_3_DBR_TC_7A();
+    ot::Nexus::Test_1_3_DBR_TC_7C();
     printf("All tests passed\n");
     return 0;
 }

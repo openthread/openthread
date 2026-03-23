@@ -75,9 +75,9 @@ static constexpr uint16_t kEchoIdentifier = 0x1234;
 static constexpr uint16_t kEchoPayloadSize = 10;
 
 /**
- * IPv6 Prefix Length.
+ * IPv6 Hop Limit.
  */
-static constexpr uint8_t kPrefixLength = 64;
+static constexpr uint8_t kHopLimit = 64;
 
 /**
  * Last byte of Eth 1 GUA address.
@@ -310,7 +310,7 @@ void Test_1_3_DBR_TC_7B(void)
      *   - IPv6 Destination: Rtr_1 OMR address
      */
 
-    rtr1.SendEchoRequest(eth1Gua, kEchoIdentifier, kEchoPayloadSize, kPrefixLength, &rtr1Omr);
+    rtr1.SendEchoRequest(eth1Gua, kEchoIdentifier, kEchoPayloadSize, kHopLimit, &rtr1Omr);
     nexus.AdvanceTime(kPingResponseTime);
 
     Log("---------------------------------------------------------------------------------------");
@@ -396,7 +396,7 @@ void Test_1_3_DBR_TC_7B(void)
      *   - Repeat Step 6
      */
 
-    rtr1.SendEchoRequest(eth1Gua, kEchoIdentifier, kEchoPayloadSize, kPrefixLength, &rtr1Omr);
+    rtr1.SendEchoRequest(eth1Gua, kEchoIdentifier, kEchoPayloadSize, kHopLimit, &rtr1Omr);
     nexus.AdvanceTime(kPingResponseTime);
 
     nexus.SaveTestInfo("test_1_3_DBR_TC_7B.json");
