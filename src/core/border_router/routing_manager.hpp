@@ -640,6 +640,13 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
+        enum PrefixOrigin : uint8_t // of `mLocalPrefix`
+        {
+            kSelfGenerated,
+            kCustom,
+            kDhcp6Pd,
+        };
+
         void       SetFavoredPrefix(const OmrPrefix &aOmrPrefix);
         void       ClearFavoredPrefix(void) { SetFavoredPrefix(OmrPrefix()); }
         void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
@@ -651,12 +658,14 @@ private:
         InfoString FavoredToString(const FavoredOmrPrefix &aFavoredPrefix) const;
 
         static const char *OmrConfigToString(OmrConfig aConfig);
+        static const char *PrefixOriginToString(PrefixOrigin aOrigin);
 
         OmrConfig        mConfig;
         OmrPrefix        mLocalPrefix;
         OmrPrefix        mCustomPrefix;
         Ip6::Prefix      mGeneratedPrefix;
         FavoredOmrPrefix mFavoredPrefix;
+        PrefixOrigin     mLocalPrefixOrigin;
         bool             mIsLocalAddedInNetData;
         bool             mDefaultRoute;
     };

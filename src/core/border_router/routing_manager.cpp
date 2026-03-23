@@ -857,8 +857,13 @@ void RoutingManager::OmrPrefixManager::DetermineFavoredPrefixInNetData(FavoredOm
 
 void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
 {
-    // Determine the local prefix and remove any outdated previous
-    // local prefix which may have been added in the Network Data.
+    // Determine the local prefix, its origin and remove any outdated
+    // previous local prefix which may have been added in the Network
+    // Data.
+
+    const Ip6::Prefix *prefix = nullptr;
+    RoutePreference    preference;
+    PrefixOrigin       origin;
 
     switch (mConfig)
     {
@@ -866,45 +871,46 @@ void RoutingManager::OmrPrefixManager::UpdateLocalPrefix(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
         if (Get<RoutingManager>().mPdPrefixManager.HasPrefix() && !Get<RoutingManager>().mPdPrefixManager.HasConflict())
         {
-            if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
-            {
-                RemoveLocalFromNetData();
-                mLocalPrefix.SetPrefix(Get<RoutingManager>().mPdPrefixManager.GetPrefix(),
-                                       PdPrefixManager::kPdRoutePreference);
-                LogInfo("Setting local OMR prefix to PD prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
-            }
+            prefix     = &Get<RoutingManager>().mPdPrefixManager.GetPrefix();
+            preference = PdPrefixManager::kPdRoutePreference;
+            origin     = kDhcp6Pd;
+            break;
         }
-        else
 #endif
-
-            if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
-        {
-            RemoveLocalFromNetData();
-            mLocalPrefix.SetPrefix(mGeneratedPrefix, RoutePreference::kRoutePreferenceLow);
-            LogInfo("Setting local OMR prefix to generated prefix: %s",
-                    mLocalPrefix.GetPrefix().ToString().AsCString());
-        }
-
+        prefix     = &mGeneratedPrefix;
+        preference = RoutePreference::kRoutePreferenceLow;
+        origin     = kSelfGenerated;
         break;
 
     case kOmrConfigCustom:
-        if (mLocalPrefix != mCustomPrefix)
-        {
-            RemoveLocalFromNetData();
-            mLocalPrefix = mCustomPrefix;
-            LogInfo("Setting local OMR prefix to custom prefix: %s", mLocalPrefix.GetPrefix().ToString().AsCString());
-        }
-
+        prefix     = &mCustomPrefix.GetPrefix();
+        preference = mCustomPrefix.GetPreference();
+        origin     = kCustom;
         break;
 
     case kOmrConfigDisabled:
-        if (!mLocalPrefix.IsEmpty())
-        {
-            RemoveLocalFromNetData();
-            mLocalPrefix.Clear();
-        }
         break;
     }
+
+    if (prefix == nullptr)
+    {
+        VerifyOrExit(!mLocalPrefix.IsEmpty());
+        RemoveLocalFromNetData();
+        mLocalPrefix.Clear();
+        LogInfo("Cleared local OMR prefix");
+        ExitNow();
+    }
+
+    VerifyOrExit(!mLocalPrefix.Matches(*prefix, preference) || (origin != mLocalPrefixOrigin));
+
+    RemoveLocalFromNetData();
+    mLocalPrefix.SetPrefix(*prefix, preference);
+    mLocalPrefixOrigin = origin;
+
+    LogInfo("Set %s", LocalToString().AsCString());
+
+exit:
+    return;
 }
 
 void RoutingManager::OmrPrefixManager::Evaluate(void)
@@ -1040,8 +1046,11 @@ RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::L
 {
     InfoString string;
 
-    string.Append("local OMR prefix %s (def-route:%s)", mLocalPrefix.GetPrefix().ToString().AsCString(),
-                  ToYesNo(mDefaultRoute));
+    string.Append("local OMR prefix %s (prf:%s, def-route:%s, origin:%s)",
+                  mLocalPrefix.GetPrefix().ToString().AsCString(),
+                  RoutePreferenceToString(mLocalPrefix.GetPreference()), ToYesNo(mDefaultRoute),
+                  PrefixOriginToString(mLocalPrefixOrigin));
+
     return string;
 }
 
@@ -1085,6 +1094,18 @@ const char *RoutingManager::OmrPrefixManager::OmrConfigToString(OmrConfig aConfi
     DefineEnumStringArray(OmrConfigMapList);
 
     return kStrings[aConfig];
+}
+
+const char *RoutingManager::OmrPrefixManager::PrefixOriginToString(PrefixOrigin aOrigin)
+{
+#define PrefixOriginMapList(_)    \
+    _(kSelfGenerated, "self-gen") \
+    _(kCustom, "custom")          \
+    _(kDhcp6Pd, "dhcp6-pd")
+
+    DefineEnumStringArray(PrefixOriginMapList);
+
+    return kStrings[aOrigin];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
