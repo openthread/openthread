@@ -351,6 +351,7 @@ WIRESHARK_OVERRIDE_PREFS = {
 }
 
 WIRESHARK_DECODE_AS_ENTRIES = {
+    'udp.port==53': 'dns',
     'udp.port==61631': 'coap',
     # SRP server ports for dissecting SRP requests and responses
     'udp.port==53535': 'dns',
