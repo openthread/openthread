@@ -76,9 +76,6 @@ public:
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
 
-    void  SetActiveNode(Node *aNode) { mActiveNode = aNode; }
-    Node *GetActiveNode(void) { return mActiveNode; }
-
     void UpdateNextAlarmMilli(const Alarm &aAlarm);
     void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
@@ -134,7 +131,6 @@ private:
     bool                  mPendingAction;
     uint64_t              mNow;
     uint64_t              mNextAlarmTime;
-    Node                 *mActiveNode;
 };
 
 void Log(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);

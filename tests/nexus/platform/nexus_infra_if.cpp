@@ -410,19 +410,17 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
         Message *loopbackMessage = aPayload.Clone<kNoReservedHeader>();
 
         VerifyOrQuit(loopbackMessage != nullptr);
-        Receive(GetNode(), *loopbackMessage);
+        Receive(*loopbackMessage);
         loopbackMessage->Free();
     }
 
     mPendingTxQueue.Enqueue(aPayload);
 }
 
-void InfraIf::Receive(Node &aSrcNode, Message &aMessage)
+void InfraIf::Receive(Message &aMessage)
 {
     Node        &node = GetNode();
     Ip6::Headers headers;
-
-    Core::Get().SetActiveNode(&node);
 
     aMessage.SetOffset(0);
     SuccessOrExit(headers.ParseFrom(aMessage));
@@ -515,7 +513,7 @@ void InfraIf::Receive(Node &aSrcNode, Message &aMessage)
     }
 
 exit:
-    Core::Get().SetActiveNode(&aSrcNode);
+    return;
 }
 
 void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
