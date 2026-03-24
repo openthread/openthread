@@ -360,6 +360,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
+        mOmrPrefixManager.HandleNetDataChange();
         mOnLinkPrefixManager.HandleNetDataChange();
         ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
@@ -721,8 +722,11 @@ exit:
 RoutingManager::OmrPrefixManager::OmrPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mConfig(kOmrConfigAuto)
-    , mIsLocalAddedInNetData(false)
+    , mTimer(aInstance)
+    , mLocalInNetDataState(kNotAdded)
     , mDefaultRoute(false)
+    , mIsInitialized(false)
+    , mIsRunning(false)
 {
 }
 
@@ -733,21 +737,43 @@ void RoutingManager::OmrPrefixManager::Init(const Ip6::Prefix &aBrUlaPrefix)
     mGeneratedPrefix.SetLength(kOmrPrefixLength);
 
     LogInfo("Generated local OMR prefix: %s", mGeneratedPrefix.ToString().AsCString());
+
+    mIsInitialized = true;
 }
 
 void RoutingManager::OmrPrefixManager::Start(void)
 {
-    FavoredOmrPrefix favoredPrefix;
+    VerifyOrExit(mIsInitialized && !mIsRunning);
 
-    DetermineFavoredPrefixInNetData(favoredPrefix);
-    SetFavoredPrefix(favoredPrefix);
+    mIsRunning = true;
+    Evaluate();
+
+exit:
+    return;
 }
 
 void RoutingManager::OmrPrefixManager::Stop(void)
 {
+    VerifyOrExit(mIsRunning);
+
     RemoveLocalFromNetData();
     ClearFavoredPrefix();
+
+    mIsRunning = false;
+
+exit:
+    return;
 }
+
+void RoutingManager::OmrPrefixManager::HandleNetDataChange(void) { Evaluate(); }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+void RoutingManager::OmrPrefixManager::HandlePdPrefixManagerEvent(void)
+{
+    // Callback from `PdPrefixManager`.
+    Evaluate();
+}
+#endif
 
 bool RoutingManager::OmrPrefixManager::IsInitialEvaluationDone(void) const
 {
@@ -756,7 +782,7 @@ bool RoutingManager::OmrPrefixManager::IsInitialEvaluationDone(void) const
     // we have discovered a favored OMR  prefix (added by us or another BR)
     // or if `OmrConfig` is set to disable OMR prefix management.
 
-    return !mFavoredPrefix.IsEmpty() || (mConfig == kOmrConfigDisabled);
+    return mIsRunning && (!mFavoredPrefix.IsEmpty() || (mConfig == kOmrConfigDisabled));
 }
 
 RoutingManager::OmrConfig RoutingManager::OmrPrefixManager::GetConfig(Ip6::Prefix     *aPrefix,
@@ -805,7 +831,7 @@ Error RoutingManager::OmrPrefixManager::SetConfig(OmrConfig          aConfig,
     mConfig       = aConfig;
     mCustomPrefix = customPrefix;
 
-    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+    Evaluate();
 
 exit:
     return error;
@@ -917,13 +943,14 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 {
     FavoredOmrPrefix favoredPrefix;
 
-    OT_ASSERT(Get<RoutingManager>().IsRunning());
+    VerifyOrExit(mIsRunning);
 
     DetermineFavoredPrefixInNetData(favoredPrefix);
 
     UpdateLocalPrefix();
 
-    // Decide if we need to add or remove our local OMR prefix.
+    // Determine whether to add or remove our local OMR prefix in the
+    // Network Data.
 
     if (mLocalPrefix.IsEmpty())
     {
@@ -931,23 +958,72 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
         ExitNow();
     }
 
-    if (favoredPrefix.IsEmpty() || favoredPrefix.GetPreference() < mLocalPrefix.GetPreference())
+    if (favoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
     {
-        SuccessOrExit(AddLocalToNetData());
-        SetFavoredPrefix(mLocalPrefix);
+        // If `favoredPrefix` matches our local prefix, add it to the
+        // Network Data (if not already added). This also handles the
+        // case where a restarting BR, which was previously publishing
+        // the OMR prefix, sees its own local prefix in the restored
+        // Network Data. In such cases, we want to re-add it quickly.
+
+        AddLocalToNetData();
         ExitNow();
     }
 
-    SetFavoredPrefix(favoredPrefix);
+    if (favoredPrefix.IsEmpty())
+    {
+        if (mLocalPrefixOrigin != kSelfGenerated)
+        {
+            AddLocalToNetData();
+            ExitNow();
+        }
 
-    if (favoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
-    {
-        IgnoreError(AddLocalToNetData());
+        // Apply a random delay before adding a self-generated ULA OMR
+        // prefix. This allows other BRs time to publish their prefixes,
+        // or provides time for the `PdPrefixManager` to be delegated a
+        // prefix.
+
+        switch (mLocalInNetDataState)
+        {
+        case kNotAdded:
+        {
+            uint32_t delay = Random::NonCrypto::GetUint32InRange(kMinDelayToAdd, kMaxDelayToAdd);
+
+            mLocalInNetDataState = kToAdd;
+            mTimer.Start(delay);
+
+            LogInfo("Will add %s in %lu msec to NetData", LocalToString().AsCString(), ToUlong(delay));
+            break;
+        }
+
+        case kAdded:
+        case kToAdd:
+            break;
+        }
+
+        ExitNow();
     }
-    else if (mIsLocalAddedInNetData)
+
+    if (favoredPrefix.GetPreference() < mLocalPrefix.GetPreference())
     {
-        RemoveLocalFromNetData();
+        AddLocalToNetData();
+        ExitNow();
     }
+
+    // Since there is a `favoredPrefix` different from our local prefix,
+    // we remove our local prefix if it is added or scheduled to be added.
+
+    SetFavoredPrefix(favoredPrefix);
+    RemoveLocalFromNetData();
+
+exit:
+    return;
+}
+
+void RoutingManager::OmrPrefixManager::HandleTimer(void)
+{
+    VerifyOrExit(mLocalInNetDataState == kToAdd);
+    AddLocalToNetData();
 
 exit:
     return;
@@ -968,19 +1044,42 @@ bool RoutingManager::OmrPrefixManager::ShouldAdvertiseLocalAsRio(void) const
     // may still be present in Network Data for a short interval due
     // to delays in registering changes with the leader.
 
-    return mIsLocalAddedInNetData && Get<NetworkData::Leader>().ContainsOmrPrefix(mLocalPrefix.GetPrefix());
+    bool shouldAdv = false;
+
+    switch (mLocalInNetDataState)
+    {
+    case kAdded:
+    case kToAdd:
+        shouldAdv = Get<NetworkData::Leader>().ContainsOmrPrefix(mLocalPrefix.GetPrefix());
+        break;
+    case kNotAdded:
+        break;
+    }
+
+    return shouldAdv;
 }
 
-Error RoutingManager::OmrPrefixManager::AddLocalToNetData(void)
+void RoutingManager::OmrPrefixManager::AddLocalToNetData(void)
 {
-    Error error = kErrorNone;
+    VerifyOrExit(mLocalInNetDataState != kAdded);
 
-    VerifyOrExit(!mIsLocalAddedInNetData);
-    SuccessOrExit(error = AddOrUpdateLocalInNetData());
-    mIsLocalAddedInNetData = true;
+    if (AddOrUpdateLocalInNetData() != kErrorNone)
+    {
+        uint32_t delay = Random::NonCrypto::AddJitter(kRetryDelay, kRetryJitter);
+
+        LogInfo("Will retry adding %s in %lu msec to NetData", LocalToString().AsCString(), ToUlong(delay));
+        mLocalInNetDataState = kToAdd;
+        mTimer.Start(delay);
+        ExitNow();
+    }
+
+    mLocalInNetDataState = kAdded;
+    mTimer.Stop();
+
+    SetFavoredPrefix(mLocalPrefix);
 
 exit:
-    return error;
+    return;
 }
 
 Error RoutingManager::OmrPrefixManager::AddOrUpdateLocalInNetData(void)
@@ -1003,30 +1102,33 @@ Error RoutingManager::OmrPrefixManager::AddOrUpdateLocalInNetData(void)
     SuccessOrExit(error = Get<NetworkData::Local>().AddOnMeshPrefix(config));
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
-    LogInfo("%s %s in Thread Network Data", !mIsLocalAddedInNetData ? "Added" : "Updated", LocalToString().AsCString());
+    LogInfo("%s %s in NetData", !IsLocalAddedInNetData() ? "Added" : "Updated", LocalToString().AsCString());
 
 exit:
-    LogWarnOnError(error, "%s %s in Thread Network Data", !mIsLocalAddedInNetData ? "add" : "update",
-                   LocalToString().AsCString());
+    LogWarnOnError(error, "%s %s in NetData", !IsLocalAddedInNetData() ? "add" : "update", LocalToString().AsCString());
     return error;
 }
 
 void RoutingManager::OmrPrefixManager::RemoveLocalFromNetData(void)
 {
-    Error error = kErrorNone;
+    switch (mLocalInNetDataState)
+    {
+    case kAdded:
+        IgnoreError(Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalPrefix.GetPrefix()));
+        Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        LogInfo("Removed %s from NetData", LocalToString().AsCString());
+        mLocalInNetDataState = kNotAdded;
+        break;
 
-    VerifyOrExit(mIsLocalAddedInNetData);
+    case kToAdd:
+        LogInfo("Canceled adding %s to NetData", LocalToString().AsCString());
+        mTimer.Stop();
+        mLocalInNetDataState = kNotAdded;
+        break;
 
-    error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalPrefix.GetPrefix());
-
-    LogWarnOnError(error, "remove %s from Thread Network Data", LocalToString().AsCString());
-
-    mIsLocalAddedInNetData = false;
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Removed %s from Thread Network Data", LocalToString().AsCString());
-
-exit:
-    return;
+    case kNotAdded:
+        break;
+    }
 }
 
 void RoutingManager::OmrPrefixManager::UpdateDefaultRouteFlag(bool aDefaultRoute)
@@ -1035,7 +1137,7 @@ void RoutingManager::OmrPrefixManager::UpdateDefaultRouteFlag(bool aDefaultRoute
 
     mDefaultRoute = aDefaultRoute;
 
-    VerifyOrExit(mIsLocalAddedInNetData);
+    VerifyOrExit(IsLocalAddedInNetData());
     IgnoreError(AddOrUpdateLocalInNetData());
 
 exit:
@@ -2517,15 +2619,14 @@ void RoutingManager::TxRaInfo::CalculateHash(const RouterAdvert::RxMessage &aRaM
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kDhcp6PdStateDisabled)
+    , mEvents(0)
     , mOnLinkPrefixConflict(false)
     , mRoutePrefixConflict(false)
     , mNumPlatformPioProcessed(0)
     , mNumPlatformRaReceived(0)
     , mLastPlatformRaTime(0)
     , mTimer(aInstance)
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    , mRecordHistoryTask(aInstance)
-#endif
+    , mEventTask(aInstance)
 {
 }
 
@@ -2614,11 +2715,7 @@ void RoutingManager::PdPrefixManager::SetState(State aState)
         break;
     }
 
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    mRecordHistoryTask.Post();
-#endif
-
-    mStateCallback.InvokeIfSet(MapEnum(mState));
+    SignalEvent(kEventStateChanged);
 
 exit:
     return;
@@ -2665,11 +2762,7 @@ void RoutingManager::PdPrefixManager::WithdrawPrefix(void)
 
     mTimer.Stop();
 
-    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    mRecordHistoryTask.Post();
-#endif
+    SignalEvent(kEventPdPrefixChanged);
 
 exit:
     return;
@@ -2758,11 +2851,7 @@ void RoutingManager::PdPrefixManager::ApplyFavoredPrefix(const PdPrefix &aFavore
         LogInfo("DHCPv6 PD prefix set to %s", mPrefix.GetPrefix().ToString().AsCString());
         CheckConflict(kPdPrefixChanged);
 
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
-
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        mRecordHistoryTask.Post();
-#endif
+        SignalEvent(kEventPdPrefixChanged);
     }
 
     if (HasPrefix())
@@ -2835,7 +2924,7 @@ void RoutingManager::PdPrefixManager::CheckConflict(ConflictCheckEvent aEvent)
 
     if (hadConflict != HasConflict())
     {
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+        SignalEvent(kEventConflictStateChanged);
     }
 
 exit:
@@ -2894,14 +2983,32 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-
-void RoutingManager::PdPrefixManager::HandleRecordHistoryTask(void)
+void RoutingManager::PdPrefixManager::SignalEvent(Event aEvent)
 {
-    Get<HistoryTracker::Local>().RecordDhcp6Pd(mState, mPrefix.GetPrefix());
+    mEvents |= aEvent;
+    mEventTask.Post();
 }
 
+void RoutingManager::PdPrefixManager::HandleEventTask(void)
+{
+    Events events = mEvents;
+
+    mEvents = 0;
+
+    Get<RoutingManager>().mOmrPrefixManager.HandlePdPrefixManagerEvent();
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    if (events & (kEventStateChanged | kEventPdPrefixChanged))
+    {
+        Get<HistoryTracker::Local>().RecordDhcp6Pd(mState, mPrefix.GetPrefix());
+    }
 #endif
+
+    if (events & kEventStateChanged)
+    {
+        mStateCallback.InvokeIfSet(MapEnum(mState));
+    }
+}
 
 bool RoutingManager::PdPrefixManager::PdPrefix::IsValidPdPrefix(void) const
 {

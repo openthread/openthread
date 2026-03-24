@@ -5186,7 +5186,7 @@ void TestDhcp6PdConflict(void)
     // Now Advertise the PD prefix as on-link from a router first.
 
     Log("Router A advertises PD prefix as on-link before delegating the prefix");
-    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 200, 200)});
+    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 350, 350)});
 
     // Check that local OMR is used.
 
@@ -5208,7 +5208,7 @@ void TestDhcp6PdConflict(void)
     sExpectedRios.Clear();
     sExpectedRios.Add(localOmr);
 
-    AdvanceTime(100 * 1000);
+    AdvanceTime(200 * 1000);
     VerifyOrQuit(sExpectedRios.SawAll());
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
@@ -5266,7 +5266,7 @@ void TestDhcp6PdConflict(void)
     sExpectedRios.Clear();
     sExpectedRios.Add(localOmr);
 
-    AdvanceTime(30 * 1000);
+    AdvanceTime(200 * 1000);
     VerifyOrQuit(sExpectedRios.SawAll());
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
