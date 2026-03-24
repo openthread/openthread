@@ -1,0 +1,136 @@
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+# This workflow runs in the base repository context (trusted) and posts
+# size reports as PR comments. It triggers after the Size workflow
+# completes, ensuring untrusted PR code never has access to write tokens.
+#
+# Security model:
+#   - Size workflow (pull_request): builds PR code, uploads artifact (read-only)
+#   - This workflow (workflow_run): downloads artifact, posts comment (write token)
+#   - Untrusted code never runs with write permissions
+
+name: Size Report
+
+on:
+  workflow_run:
+    workflows: ["Size"]
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+
+jobs:
+  size-report:
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Download report artifact
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        name: report_pr
+        path: /tmp/ot-size-report
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Validate report format
+      run: |
+        REPORT="/tmp/ot-size-report/report_pr"
+        if [ ! -f "$REPORT" ]; then
+          echo "Report artifact not found"
+          exit 1
+        fi
+        # Validate the report starts with the expected magic header
+        if ! head -1 "$REPORT" | grep -q '<!-- Size Report of \*\*OpenThread\*\* -->'; then
+          echo "Report does not match expected format — refusing to post"
+          exit 1
+        fi
+        # Limit report size to prevent abuse
+        SIZE=$(wc -c < "$REPORT")
+        if [ "$SIZE" -gt 50000 ]; then
+          echo "Report too large (${SIZE} bytes) — refusing to post"
+          exit 1
+        fi
+
+    - name: Get PR number
+      id: pr-number
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      with:
+        script: |
+          // Find the PR associated with this workflow run
+          const pulls = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            head: `${context.payload.workflow_run.head_repository.owner.login}:${context.payload.workflow_run.head_branch}`,
+          });
+          if (pulls.data.length === 0) {
+            core.setFailed('No matching PR found');
+            return;
+          }
+          core.setOutput('number', pulls.data[0].number);
+
+    - name: Post Report
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      with:
+        script: |
+          const fs = require('fs')
+
+          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8');
+          const prNumber = parseInt('${{ steps.pr-number.outputs.number }}');
+
+          if (!prNumber) {
+            core.setFailed('Invalid PR number');
+            return;
+          }
+
+          const params = {
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report,
+          }
+
+          const response = await github.rest.issues.listComments({
+            issue_number: prNumber,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+
+          const kMagicHeader = '<!-- Size Report of **OpenThread** -->'
+          const comment = response.data.find(comment => comment.body.startsWith(kMagicHeader))
+
+          if (comment) {
+            params.comment_id = comment.id;
+            await github.rest.issues.updateComment(params)
+          } else {
+            await github.rest.issues.createComment(params)
+          }
