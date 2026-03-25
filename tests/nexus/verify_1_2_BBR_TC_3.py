@@ -73,7 +73,8 @@ def verify(pv):
     # In Nexus, Ethernet MAC addresses are 02:00:00:00:00:<node_id>
     BR_1_ETH = '02:00:00:00:00:00'
     BR_2_ETH = '02:00:00:00:00:01'
-    HOST_ETH = '02:00:00:00:00:02'
+    HOST_1_ETH = '02:00:00:00:00:02'
+    HOST_2_ETH = '02:00:00:00:00:03'
 
     def is_mdns_response(p):
         return p.udp.srcport == MDNS_UDP_PORT
@@ -235,7 +236,7 @@ def verify(pv):
 
     # Step 1: Host sends an mDNS query (per P2).
     print("Step 1: Host sends an mDNS query.")
-    pkts.filter_eth_src(HOST_ETH).\
+    pkts.filter_eth_src(HOST_1_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
         filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
         must_next()
@@ -266,7 +267,7 @@ def verify(pv):
     # Step 5: Harness instructs the device to send an mDNS query.
     print("Step 5: Host sends an mDNS query.")
     # Skip all packets until the next query which should be around Step 5
-    pkts.filter_eth_src(HOST_ETH).\
+    pkts.filter_eth_src(HOST_1_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
         filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
         filter(lambda p: p.number > max(p1.number, p2.number)).\
@@ -302,7 +303,7 @@ def verify(pv):
 
     # Step 9: Harness instructs the device to send an mDNS query.
     print("Step 9: Host sends an mDNS query.")
-    pkts.filter_eth_src(HOST_ETH).\
+    pkts.filter_eth_src(HOST_2_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
         filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
         filter(lambda p: p.number > max(p1.number, p2.number)).\
@@ -339,6 +340,7 @@ def verify(pv):
         filter(lambda p: p.number > q_number).\
         filter(lambda p: has_sb_bit(p, 8)).\
         must_next()
+
     verify_mdns_response(p2, {'ifstate': 2, 'active': 1, 'primary': 1}, expected_omr_var='OMR_PREFIX_STEP_10')
 
     # Step 11: The device must be powered up; BR_1 joins BR_2.
@@ -346,7 +348,7 @@ def verify(pv):
 
     # Step 12: Harness instructs the device to send an mDNS query.
     print("Step 12: Host sends an mDNS query.")
-    pkts.filter_eth_src(HOST_ETH).\
+    pkts.filter_eth_src(HOST_1_ETH).\
         filter_ipv6_dst(MDNS_IPV6_ADDR).\
         filter(lambda p: p.udp.dstport == MDNS_UDP_PORT).\
         filter(lambda p: p.number > p2.number).\

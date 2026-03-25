@@ -74,7 +74,9 @@ void TestBbrTc3(void)
      * 5.11.3.1 Topology
      * - BR_1: BR device initially operating as the Primary BBR and Leader.
      * - BR_2: BR device initially operating as a Secondary BBR.
-     * - Host: Test bed BR device operating as a non-Thread IPv6 host. It is used to send out the mDNS queries.
+     * - Host_1 and Host_2 : Test bed devices operating as a non-Thread IPv6 hosts. They are used to send out the
+     *                       mDNS queries. Two hosts are used to be able to track their queries more easily during pkt
+     *                       verification.
      *
      * 5.11.3.2 Purpose & Description
      * The purpose of this test case is to verify that a BBR Function (both Primary and Secondary) can be discovered
@@ -88,13 +90,15 @@ void TestBbrTc3(void)
      */
 
     Core  nexus;
-    Node &br1  = nexus.CreateNode();
-    Node &br2  = nexus.CreateNode();
-    Node &host = nexus.CreateNode();
+    Node &br1   = nexus.CreateNode();
+    Node &br2   = nexus.CreateNode();
+    Node &host1 = nexus.CreateNode();
+    Node &host2 = nexus.CreateNode();
 
     br1.SetName("BR_1");
     br2.SetName("BR_2");
-    host.SetName("HOST");
+    host1.SetName("HOST_1");
+    host2.SetName("HOST_2");
 
     br1.Form();
 
@@ -154,10 +158,15 @@ void TestBbrTc3(void)
     nexus.AdvanceTime(kAttachToRouterTime);
     VerifyOrQuit(br2.Get<Mle::Mle>().IsRouter());
 
-    host.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
-    SuccessOrQuit(host.Get<BorderRouter::RoutingManager>().SetEnabled(false));
-    host.Get<Dns::Multicast::Core>().SetAutoEnableMode(false);
-    SuccessOrQuit(host.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+    host1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
+    SuccessOrQuit(host1.Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    host1.Get<Dns::Multicast::Core>().SetAutoEnableMode(false);
+    SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
+    host2.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
+    SuccessOrQuit(host2.Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    host2.Get<Dns::Multicast::Core>().SetAutoEnableMode(false);
+    SuccessOrQuit(host2.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     nexus.AdvanceTime(kBbrSelectionTime);
     nexus.AdvanceTime(kStabilizationTime);
@@ -170,7 +179,7 @@ void TestBbrTc3(void)
 
     /**
      * Step 1
-     * - Device: Host
+     * - Device: Host_1
      * - Description: Harness instructs the device to send an mDNS query (per P2).
      * - Pass Criteria:
      *   - N/A
@@ -178,16 +187,16 @@ void TestBbrTc3(void)
     {
         Dns::Multicast::Core::Browser browser;
 
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
-        VerifyOrQuit(host.Get<Dns::Multicast::Core>().IsEnabled());
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+        VerifyOrQuit(host1.Get<Dns::Multicast::Core>().IsEnabled());
 
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
         browser.mCallback     = HandleMdnsBrowse;
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StartBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StopBrowser(browser));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_0", br1);
@@ -298,7 +307,7 @@ void TestBbrTc3(void)
 
     /**
      * Step 5
-     * - Device: Host
+     * - Device: Host_1
      * - Description: Harness instructs the device to send an mDNS query.
      * - Pass Criteria:
      *   - N/A
@@ -306,15 +315,15 @@ void TestBbrTc3(void)
     {
         Dns::Multicast::Core::Browser browser;
 
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
         browser.mCallback     = HandleMdnsBrowse;
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StartBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StopBrowser(browser));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_4", br1);
@@ -371,7 +380,7 @@ void TestBbrTc3(void)
 
     /**
      * Step 9
-     * - Device: Host
+     * - Device: Host_2
      * - Description: Harness instructs the device to send an mDNS query.
      * - Pass Criteria:
      *   - N/A
@@ -379,15 +388,15 @@ void TestBbrTc3(void)
     {
         Dns::Multicast::Core::Browser browser;
 
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+        SuccessOrQuit(host2.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
         browser.mCallback     = HandleMdnsBrowse;
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StartBrowser(browser));
+        SuccessOrQuit(host2.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host2.Get<Dns::Multicast::Core>().StopBrowser(browser));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_10", br2);
@@ -467,7 +476,7 @@ void TestBbrTc3(void)
 
     /**
      * Step 12
-     * - Device: Host
+     * - Device: Host_1
      * - Description: Harness instructs the device to send an mDNS query.
      * - Pass Criteria:
      *   - N/A
@@ -475,15 +484,15 @@ void TestBbrTc3(void)
     {
         Dns::Multicast::Core::Browser browser;
 
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
         browser.mCallback     = HandleMdnsBrowse;
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StartBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StartBrowser(browser));
         nexus.AdvanceTime(kStabilizationTime);
-        SuccessOrQuit(host.Get<Dns::Multicast::Core>().StopBrowser(browser));
+        SuccessOrQuit(host1.Get<Dns::Multicast::Core>().StopBrowser(browser));
     }
 
     nexus.AddOmrPrefixTestVar("OMR_PREFIX_STEP_11", br1);
