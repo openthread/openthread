@@ -461,6 +461,34 @@ def is_leader_aloc_or_rloc(addr_str: str) -> bool:
     return is_aloc or is_rloc
 
 
+def is_dns_compression_used(p) -> bool:
+    """
+    Check if any DNS name in the packet is compressed.
+    """
+    dns = getattr(p, 'dns', None)
+    if not dns:
+        dns = getattr(p, 'mdns', None)
+    if not dns:
+        return False
+
+    try:
+        raw_layer = dns._layer
+        for field_name, field in raw_layer._all_fields.items():
+            # Check fields that might contain DNS names
+            if '.name' in field_name or '.target' in field_name or '.domain_name' in field_name:
+                fields = field.fields if hasattr(field, 'fields') else [field]
+                for f in fields:
+                    rv = f.raw_value
+                    if rv:
+                        for i in range(0, len(rv), 2):
+                            if int(rv[i:i + 2], 16) & 0xc0 == 0xc0:
+                                return True
+    except Exception:
+        pass
+
+    return False
+
+
 def apply_patches():
     CoapTlvParser.parse = staticmethod(thread_coap_tlv_parse)
 
