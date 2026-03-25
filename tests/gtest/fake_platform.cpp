@@ -496,6 +496,8 @@ void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError) {}
 
 void otPlatDiagAlarmCallback(otInstance *) {}
 
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel, const char *) {}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
