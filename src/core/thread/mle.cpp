@@ -4503,8 +4503,6 @@ void Mle::Attacher::Attach(AttachMode aMode)
         mAttachCounter = 0;
     }
 
-    mChildIdRequestsRemaining = kMaxChildIdRequests;
-
     mParentCandidate.Clear();
     SetState(kStateStart);
     mMode = aMode;
@@ -4725,7 +4723,7 @@ void Mle::Attacher::HandleTimer(void)
     {
         SetState(kStateChildIdRequest);
         mChildIdRequestsRemaining--;
-        delay = kChildIdResponseTimeout;
+        delay = Random::NonCrypto::AddJitter(kChildIdResponseTimeout, kChildIdResponseJitter);
         ExitNow();
     }
 
@@ -4743,6 +4741,7 @@ void Mle::Attacher::HandleTimer(void)
         mParentCandidate.SetState(Neighbor::kStateInvalid);
         mReceivedResponseFromParent = false;
         mParentRequestCounter       = 0;
+        mChildIdRequestsRemaining   = kMaxChildIdRequests;
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
 
         OT_FALL_THROUGH;

@@ -1251,6 +1251,7 @@ private:
     static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
     static constexpr uint32_t kParentRequestDuplicateTimeout = 700;  // Min time to detect duplicate Parent Req rx
     static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
+    static constexpr uint32_t kChildIdResponseJitter         = kChildIdResponseTimeout * 1 / 10; // Jitter 10%
     static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
     static constexpr uint32_t kAnnounceProcessTimeout        = 250;  // Delay after Announce rx before processing
     static constexpr uint32_t kAnnounceTimeout               = 1400; // Total timeout for sending Announce messages
@@ -1964,12 +1965,12 @@ private:
         AddressRegistrationMode mAddressRegistrationMode;
         uint8_t                 mParentRequestCounter;
         uint8_t                 mAnnounceChannel;
+        uint8_t                 mChildIdRequestsRemaining;
         uint16_t                mAttachCounter;
         uint16_t                mAnnounceDelay;
         TxChallenge             mParentRequestChallenge;
         ParentCandidate         mParentCandidate;
         AttachTimer             mTimer;
-        uint8_t                 mChildIdRequestsRemaining;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
