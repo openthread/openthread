@@ -4415,10 +4415,10 @@ Mle::Attacher::Attacher(Instance &aInstance)
     , mAddressRegistrationMode(kAppendAllAddresses)
     , mParentRequestCounter(0)
     , mAnnounceChannel(0)
+    , mChildIdRequestsRemaining(kMaxChildIdRequests)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mTimer(aInstance)
-    , mChildIdRequestsRemaining(kMaxChildIdRequests)
 {
     mParentCandidate.Init(aInstance);
     mParentCandidate.Clear();
