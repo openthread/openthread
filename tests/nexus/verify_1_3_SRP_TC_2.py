@@ -189,6 +189,29 @@ def verify(pv):
         assert MDNS_INSTANCE_2 not in verify_utils.as_list(
             p.mdns.resp.name), f"Packet {p.index} contains MDNS_INSTANCE_2 in resp.name"
 
+    def verify_mdns_ptr_response(pkts, instance_name):
+        return pkts.\
+            filter(lambda p: p.udp.dstport == 5353). \
+            filter(lambda p: p.mdns.flags.response == 1). \
+            filter(lambda p: instance_name in verify_utils.as_list(p.mdns.ptr.domain_name)). \
+            must_next()
+
+    def verify_mdns_srv_response(pkts, instance_name, port):
+        return pkts.\
+            filter(lambda p: p.udp.dstport == 5353). \
+            filter(lambda p: p.mdns.flags.response == 1). \
+            filter(lambda p: instance_name in verify_utils.as_list(p.mdns.resp.name)). \
+            filter(lambda p: port in verify_utils.as_list(p.mdns.srv.port)). \
+            must_next()
+
+    def verify_mdns_aaaa_response(pkts, host_name, omr_addr):
+        return pkts.\
+            filter(lambda p: p.udp.dstport == 5353). \
+            filter(lambda p: p.mdns.flags.response == 1). \
+            filter(lambda p: host_name in verify_utils.as_list(p.mdns.resp.name)). \
+            filter(lambda p: omr_addr in verify_utils.as_list(p.mdns.aaaa)). \
+            must_next()
+
     # Step 8 era
     index_step8 = pkts.index
 
@@ -222,11 +245,7 @@ def verify(pv):
     print("Step 9: BR 1 (DUT) sends mDNS response with initial registered service.")
     with pkts.save_index():
         pkts.index = index_step8
-        res = pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_1 in verify_utils.as_list(p.mdns.ptr.domain_name)). \
-          must_next()
+        res = verify_mdns_ptr_response(pkts, MDNS_INSTANCE_1)
         verify_no_ed2_info(res)
 
     # Step 9b
@@ -239,12 +258,7 @@ def verify(pv):
     print("Step 9b: Eth 1 sends mDNS query QTYPE SRV.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_1 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: SRP_PORT_33333 in verify_utils.as_list(p.mdns.srv.port)). \
-          must_next()
+        verify_mdns_srv_response(pkts, MDNS_INSTANCE_1, SRP_PORT_33333)
 
     # Step 9c
     # - Device: Eth 1
@@ -256,12 +270,7 @@ def verify(pv):
     print("Step 9c: Eth 1 sends mDNS query QTYPE AAAA.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_HOST_1 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: ED_1_OMR in verify_utils.as_list(p.mdns.aaaa)). \
-          must_next()
+        verify_mdns_aaaa_response(pkts, MDNS_HOST_1, ED_1_OMR)
 
     # Step 10
     # - Device: ED 2
@@ -312,31 +321,17 @@ def verify(pv):
     print("Step 13: BR 1 (DUT) repeats mDNS response verification.")
     with pkts.save_index():
         pkts.index = index_step8
-        res = pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_1 in verify_utils.as_list(p.mdns.ptr.domain_name)). \
-          must_next()
+        res = verify_mdns_ptr_response(pkts, MDNS_INSTANCE_1)
         assert ED_1_OMR in verify_utils.as_list(res.mdns.aaaa)
         verify_no_ed2_info(res)
 
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_1 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: SRP_PORT_33333 in verify_utils.as_list(p.mdns.srv.port)). \
-          must_next()
+        verify_mdns_srv_response(pkts, MDNS_INSTANCE_1, SRP_PORT_33333)
 
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_HOST_1 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: ED_1_OMR in verify_utils.as_list(p.mdns.aaaa)). \
-          must_next()
+        verify_mdns_aaaa_response(pkts, MDNS_HOST_1, ED_1_OMR)
 
     # Step 14
     # - Device: ED 2
@@ -401,18 +396,10 @@ def verify(pv):
     print("Step 17: BR 1 (DUT) sends mDNS response with both registered services.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_1 in verify_utils.as_list(p.mdns.ptr.domain_name)). \
-          must_next()
+        verify_mdns_ptr_response(pkts, MDNS_INSTANCE_1)
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_2 in verify_utils.as_list(p.mdns.ptr.domain_name)). \
-          must_next()
+        verify_mdns_ptr_response(pkts, MDNS_INSTANCE_2)
 
     # Step 17b
     # - Device: Eth 1
@@ -424,12 +411,7 @@ def verify(pv):
     print("Step 17b: Eth 1 sends mDNS query QTYPE SRV instance 1.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_1 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: SRP_PORT_33333 in verify_utils.as_list(p.mdns.srv.port)). \
-          must_next()
+        verify_mdns_srv_response(pkts, MDNS_INSTANCE_1, SRP_PORT_33333)
 
     # Step 17c
     # - Device: Eth_1
@@ -441,12 +423,7 @@ def verify(pv):
     print("Step 17c: Eth 1 sends mDNS query QTYPE SRV instance 2.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_INSTANCE_2 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: SRP_PORT_44444 in verify_utils.as_list(p.mdns.srv.port)). \
-          must_next()
+        verify_mdns_srv_response(pkts, MDNS_INSTANCE_2, SRP_PORT_44444)
 
     # Step 17d
     # - Device: Eth 1
@@ -458,12 +435,7 @@ def verify(pv):
     print("Step 17d: Eth 1 sends mDNS query QTYPE AAAA host 1.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_HOST_1 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: ED_1_OMR in verify_utils.as_list(p.mdns.aaaa)). \
-          must_next()
+        verify_mdns_aaaa_response(pkts, MDNS_HOST_1, ED_1_OMR)
 
     # Step 17e
     # - Device: Eth_1
@@ -475,12 +447,7 @@ def verify(pv):
     print("Step 17e: Eth 1 sends mDNS query QTYPE AAAA host 2.")
     with pkts.save_index():
         pkts.index = index_step8
-        pkts.\
-          filter(lambda p: p.udp.dstport == 5353). \
-          filter(lambda p: p.mdns.flags.response == 1). \
-          filter(lambda p: MDNS_HOST_2 in verify_utils.as_list(p.mdns.resp.name)). \
-          filter(lambda p: ED_2_OMR in verify_utils.as_list(p.mdns.aaaa)). \
-          must_next()
+        verify_mdns_aaaa_response(pkts, MDNS_HOST_2, ED_2_OMR)
 
 
 if __name__ == '__main__':

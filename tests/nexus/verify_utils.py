@@ -605,6 +605,9 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['coap.tlv.bbr_seqno'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.delay_timer'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_query_options'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['dns.opt.data'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._layer_containers.add('dns.opt')
+    layer_fields._LAYER_FIELDS['mdns.nsec'] = layer_fields._list(layer_fields._bytes)
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'
