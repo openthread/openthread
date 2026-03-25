@@ -291,6 +291,42 @@ def get_ra_prefixes(p):
     return rio_prefixes, pio_prefixes
 
 
+def check_ra_has_rio(packet, prefix, prf=None):
+    """
+    Check if an ICMPv6 RA contains a Route Information Option (RIO) with the given prefix.
+    """
+    if packet.icmpv6.type != ICMPV6_TYPE_ROUTER_ADVERTISEMENT:
+        return False
+
+    target_addr = Ipv6Addr(prefix)
+
+    try:
+        all_prefixes = as_list(packet.icmpv6.opt.prefix)
+        all_types = as_list(packet.icmpv6.opt.type)
+        all_prfs = as_list(packet.icmpv6.opt.route_info.flag.route_preference)
+    except (AttributeError, IndexError):
+        return False
+
+    ri_idx = 0
+    prefix_idx = 0
+    for opt_type in all_types:
+        if opt_type == ICMPV6_OPT_TYPE_RIO:
+            if prefix_idx < len(all_prefixes) and Ipv6Addr(all_prefixes[prefix_idx]) == target_addr:
+                if prf is not None:
+                    if not isinstance(prf, (list, tuple)):
+                        prf = [prf]
+                    if ri_idx < len(all_prfs) and int(all_prfs[ri_idx]) in prf:
+                        return True
+                else:
+                    return True
+            ri_idx += 1
+            prefix_idx += 1
+        elif opt_type == ICMPV6_OPT_TYPE_PIO:
+            prefix_idx += 1
+
+    return False
+
+
 def check_nwd_prefix_flags(packet, target_prefix, stable=None, **expected_flags):
     """
     Robustly check flags for a specific OMR prefix in Network Data.
@@ -310,12 +346,17 @@ def check_nwd_prefix_flags(packet, target_prefix, stable=None, **expected_flags)
     # We iterate through all TLVs to find the target prefix and its BR sub-TLV
     for i, t in enumerate(types):
         if t == consts.NWD_PREFIX_TLV:
-            current_prefix = prefixes[prefix_idx]
-            current_stable = stables[i]
+            is_target = False
+            if prefix_idx < len(prefixes) and prefixes[prefix_idx]:
+                current_prefix = prefixes[prefix_idx]
+                is_target = (Ipv6Addr(current_prefix) == Ipv6Addr(target_prefix))
+                if is_target and stable is not None:
+                    try:
+                        if stables[i] != stable:
+                            is_target = False
+                    except IndexError:
+                        is_target = False
             prefix_idx += 1
-            is_target = (Ipv6Addr(current_prefix) == Ipv6Addr(target_prefix))
-            if is_target and stable is not None and current_stable != stable:
-                is_target = False
         elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
             # These are also top-level TLVs, reset target prefix
             is_target = False
@@ -354,6 +395,57 @@ def check_nwd_prefix_flags(packet, target_prefix, stable=None, **expected_flags)
                     pass
 
             br_idx += 1
+
+    return False
+
+
+def check_nwd_has_prefix(packet, prefix):
+    """Checks if Network Data contains the given prefix in a Prefix TLV."""
+    try:
+        if not hasattr(packet, 'thread_nwd') or not hasattr(packet.thread_nwd.tlv, 'prefix'):
+            return False
+        prefixes = as_list(packet.thread_nwd.tlv.prefix)
+        target_addr = Ipv6Addr(prefix)
+        return any(p and Ipv6Addr(p) == target_addr for p in prefixes)
+    except (AttributeError, IndexError):
+        return False
+
+
+def check_nwd_has_route(packet, target_prefix, pref=None):
+    """
+    Robustly check if Network Data has an External Route with the given prefix.
+    """
+    try:
+        types = as_list(packet.thread_nwd.tlv.type)
+        prefixes = as_list(packet.thread_nwd.tlv.prefix)
+    except (AttributeError, IndexError):
+        return False
+
+    prefix_idx = 0
+    hr_idx = 0
+    is_target = False
+
+    for i, t in enumerate(types):
+        if t == consts.NWD_PREFIX_TLV:
+            is_target = False
+            if prefix_idx < len(prefixes) and prefixes[prefix_idx]:
+                is_target = (Ipv6Addr(prefixes[prefix_idx]) == Ipv6Addr(target_prefix))
+            prefix_idx += 1
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            is_target = False
+        elif t == consts.NWD_HAS_ROUTER_TLV:
+            if is_target:
+                if pref is not None:
+                    try:
+                        all_prefs = as_list(packet.thread_nwd.tlv.has_route.pref)
+                        allowed_prefs = pref if isinstance(pref, (list, tuple)) else [pref]
+                        if hr_idx < len(all_prefs) and int(all_prefs[hr_idx]) in allowed_prefs:
+                            return True
+                    except (AttributeError, IndexError, ValueError):
+                        pass
+                else:
+                    return True
+            hr_idx += 1
 
     return False
 

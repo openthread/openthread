@@ -37,7 +37,6 @@ sys.path.append(CUR_DIR)
 import verify_utils
 from pktverify.addrs import Ipv6Addr
 from pktverify import consts
-from pktverify.null_field import nullField
 
 # Protocol Constants
 ULA_PREFIX_START_BYTE = 0xfd
@@ -50,63 +49,6 @@ BR_FLAG_P_FALSE = 0
 BR_FLAG_S_TRUE = 1
 BR_FLAG_D_FALSE = 0
 BR_FLAG_DP_FALSE = 0
-
-
-def check_nwd_has_route(packet, prefix):
-    """Checks if Network Data has an External Route with the given prefix."""
-    try:
-        if not hasattr(packet, 'thread_nwd'):
-            return False
-        types = verify_utils.as_list(packet.thread_nwd.tlv.type)
-        prefixes = verify_utils.as_list(packet.thread_nwd.tlv.prefix)
-    except (AttributeError, IndexError):
-        return False
-
-    prefix_idx = 0
-    is_target = False
-
-    for t in types:
-        if t == consts.NWD_PREFIX_TLV:
-            if prefix_idx < len(prefixes):
-                current_prefix = prefixes[prefix_idx]
-                prefix_idx += 1
-                if current_prefix:
-                    is_target = (Ipv6Addr(current_prefix) == Ipv6Addr(prefix))
-                else:
-                    is_target = False
-        elif t == consts.NWD_HAS_ROUTER_TLV:
-            if is_target:
-                return True
-        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
-            is_target = False
-
-    return False
-
-
-def check_ra_rio(packet, prefix, not_prefixes=None):
-    """Checks if an ICMPv6 RA contains a Route Information Option (RIO) with the given prefix."""
-    rio_prefixes, _ = verify_utils.get_ra_prefixes(packet)
-    target_addr = Ipv6Addr(prefix)
-    found = any(Ipv6Addr(p) == target_addr for p in rio_prefixes)
-    if not found:
-        return False
-    if not_prefixes:
-        for np in not_prefixes:
-            if any(Ipv6Addr(p) == Ipv6Addr(np) for p in rio_prefixes):
-                return False
-    return True
-
-
-def check_nwd_contains_prefix(packet, prefix):
-    """Simple check if Network Data contains the given prefix in a Prefix TLV."""
-    try:
-        if not hasattr(packet, 'thread_nwd') or not hasattr(packet.thread_nwd.tlv, 'prefix'):
-            return False
-        prefixes = verify_utils.as_list(packet.thread_nwd.tlv.prefix)
-        target_addr = Ipv6Addr(prefix)
-        return any(p and Ipv6Addr(p) == target_addr for p in prefixes)
-    except (AttributeError, IndexError):
-        return False
 
 
 def verify(pv):
@@ -175,7 +117,7 @@ def verify(pv):
     print("Step 3: BR_1 (DUT) registers route to GUA_1.")
     pkts.filter_wpan_src64(BR_1).\
         filter(lambda p: hasattr(p, 'mle') and p.mle.cmd == consts.MLE_DATA_RESPONSE).\
-        filter(lambda p: check_nwd_has_route(p, "::")).\
+        filter(lambda p: verify_utils.check_nwd_has_route(p, "::")).\
         must_next()
 
     # Step 4
@@ -191,7 +133,7 @@ def verify(pv):
     print("Step 4: BR_1 (DUT) announces OMR_1 on AIL.")
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(lambda p: check_ra_rio(p, OMR_1_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_1_PREFIX)).\
         filter(lambda p: not any(Ipv6Addr(pref)[0] == ULA_PREFIX_START_BYTE
                                  for pref in verify_utils.get_ra_prefixes(p)[1])).\
         must_next()
@@ -254,7 +196,7 @@ def verify(pv):
                                                             s=BR_FLAG_S_TRUE,
                                                             d=BR_FLAG_D_FALSE,
                                                             dp=BR_FLAG_DP_FALSE)).\
-        filter(lambda p: check_nwd_has_route(p, "::")).\
+        filter(lambda p: verify_utils.check_nwd_has_route(p, "::")).\
         must_next()
 
     # Step 7
@@ -271,7 +213,8 @@ def verify(pv):
     print("Step 7: BR_1 (DUT) multicasts ND RA with OMR_2, no OMR_1.")
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(lambda p: check_ra_rio(p, OMR_2_PREFIX, not_prefixes=[OMR_1_PREFIX])).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_2_PREFIX)).\
+        filter(lambda p: not verify_utils.check_ra_has_rio(p, OMR_1_PREFIX)).\
         must_next()
 
     # Step 8
@@ -329,7 +272,7 @@ def verify(pv):
     # Search from beginning of pcap as it might appear early due to propagation.
     _pkt_step10 = pkts.copy().filter(lambda p: (hasattr(p, 'thread_nwd') and\
                                                 verify_utils.check_nwd_prefix_flags(p, OMR_3_PREFIX)) or\
-                                               check_ra_rio(p, OMR_3_PREFIX)).\
+                                               verify_utils.check_ra_has_rio(p, OMR_3_PREFIX)).\
         must_next()
 
     # Step 11
@@ -347,7 +290,8 @@ def verify(pv):
     print("Step 11: BR_1 (DUT) withdraws OMR_2 from Network Data.")
     # Step 11 must happen after Step 10.
     pkts.index = (_pkt_step10.number, _pkt_step10.number)
-    pkts.filter(lambda p: hasattr(p, 'thread_nwd') and not check_nwd_contains_prefix(p, OMR_2_PREFIX)).must_next()
+    pkts.filter(
+        lambda p: hasattr(p, 'thread_nwd') and not verify_utils.check_nwd_has_prefix(p, OMR_2_PREFIX)).must_next()
 
     # Step 12
     # - Device: BR_1 (DUT)
@@ -367,8 +311,8 @@ def verify(pv):
     print("Step 12: BR_1 (DUT) multicasts ND RA with OMR_2 and OMR_3.")
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(lambda p: check_ra_rio(p, OMR_2_PREFIX)).\
-        filter(lambda p: check_ra_rio(p, OMR_3_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_2_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_3_PREFIX)).\
         must_next()
 
     # Step 13
@@ -477,8 +421,8 @@ def verify(pv):
     print("Step 17: BR_1 (DUT) multicasts ND RA with OMR_2, no OMR_3.")
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(lambda p: check_ra_rio(p, OMR_2_PREFIX)).\
-        filter(lambda p: not check_ra_rio(p, OMR_3_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_2_PREFIX)).\
+        filter(lambda p: not verify_utils.check_ra_has_rio(p, OMR_3_PREFIX)).\
         must_next()
 
     # Step 18
@@ -489,7 +433,7 @@ def verify(pv):
     # - Pass Criteria:
     #   - N/A
     print("Step 18: BR_2 adds OMR_4.")
-    pkts.filter(lambda p: check_nwd_contains_prefix(p, OMR_4_PREFIX)).\
+    pkts.filter(lambda p: verify_utils.check_nwd_prefix_flags(p, OMR_4_PREFIX)).\
         must_next()
 
     # Step 19
@@ -511,8 +455,8 @@ def verify(pv):
     print("Step 19: BR_1 (DUT) continues OMR_2, adds OMR_4 on AIL.")
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(lambda p: check_ra_rio(p, OMR_2_PREFIX)).\
-        filter(lambda p: check_ra_rio(p, OMR_4_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_2_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_4_PREFIX)).\
         must_next()
 
     # Step 20
@@ -541,7 +485,7 @@ def verify(pv):
     #       - "Prf" bits MUST be 00 (medium) or 11 (low).
     #     - MUST NOT contain a Route Information Option (RIO) with OMR_1 or OMR_3.
     print("Step 21: BR_1 (DUT) withdraws OMR_2.")
-    pkts.filter(lambda p: not check_nwd_contains_prefix(p, OMR_2_PREFIX)).\
+    pkts.filter(lambda p: hasattr(p, 'thread_nwd') and not verify_utils.check_nwd_has_prefix(p, OMR_2_PREFIX)).\
         must_next()
 
     # Step 22
@@ -611,8 +555,8 @@ def verify(pv):
     print("Step 24: BR_1 (DUT) multicasts ND RA with OMR_2 and OMR_4.")
     pkts.filter_eth_src(pv.vars['BR_1_ETH']).\
         filter_ipv6_dst("ff02::1").\
-        filter(lambda p: check_ra_rio(p, OMR_2_PREFIX)).\
-        filter(lambda p: check_ra_rio(p, OMR_4_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_2_PREFIX)).\
+        filter(lambda p: verify_utils.check_ra_has_rio(p, OMR_4_PREFIX)).\
         must_next()
 
     # Step 25

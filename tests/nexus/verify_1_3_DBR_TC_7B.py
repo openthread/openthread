@@ -37,7 +37,6 @@ sys.path.append(CUR_DIR)
 import verify_utils
 from pktverify import consts
 from pktverify.addrs import Ipv6Addr
-from pktverify.null_field import nullField
 
 # Constants
 ULA_PREFIX_START_BYTE = 0xfd
@@ -54,102 +53,24 @@ BR_FLAG_DP_FALSE = 0
 ICMPV6_TYPE_ROUTER_SOLICITATION = 133
 
 
-def get_val(field_values, index):
-    vals = verify_utils.as_list(field_values)
-    assert index < len(vals), f"Index {index} is out of bounds for field values with length {len(vals)}"
-    return vals[index]
-
-
-def check_step3(p, target_prefix, target_prefix_len):
-    # Check OMR prefix properties: 64 bits long and starts with ULA_PREFIX_START_BYTE
-    if target_prefix_len != 64 or target_prefix[0] != ULA_PREFIX_START_BYTE:
-        return False
-
-    try:
-        types = verify_utils.as_list(p.thread_nwd.tlv.type)
-        prefixes = verify_utils.as_list(p.thread_nwd.tlv.prefix)
-        stables = verify_utils.as_list(p.thread_nwd.tlv.stable)
-    except (AttributeError, IndexError):
-        return False
-
-    prefix_idx = 0
-    br_idx = 0
-    is_target = False
-
-    for i, t in enumerate(types):
-        if t == consts.NWD_PREFIX_TLV:
-            current_prefix = prefixes[prefix_idx]
-            current_stable = stables[i]
-            prefix_idx += 1
-            if current_prefix is nullField:
-                is_target = False
-                continue
-            is_target = (Ipv6Addr(current_prefix) == Ipv6Addr(target_prefix))
-            if is_target and current_stable != 1:
-                is_target = False
-        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
-            is_target = False
-        elif t == consts.NWD_BORDER_ROUTER_TLV:
-            if is_target:
-                # This BR sub-TLV belongs to our target prefix!
-                try:
-                    actual_pref = get_val(p.thread_nwd.tlv.border_router.pref, br_idx)
-                    actual_r = get_val(p.thread_nwd.tlv.border_router.flag.r, br_idx)
-                    actual_o = get_val(p.thread_nwd.tlv.border_router.flag.o, br_idx)
-                    actual_p = get_val(p.thread_nwd.tlv.border_router.flag.p, br_idx)
-                    actual_s = get_val(p.thread_nwd.tlv.border_router.flag.s, br_idx)
-                    actual_d = get_val(p.thread_nwd.tlv.border_router.flag.d, br_idx)
-                    actual_dp = get_val(p.thread_nwd.tlv.border_router.flag.dp, br_idx)
-
-                    if actual_pref == BR_PREFERENCE_LOW and\
-                       actual_r == BR_FLAG_R_TRUE and\
-                       actual_o == BR_FLAG_O_TRUE and\
-                       actual_p == BR_FLAG_P_TRUE and\
-                       actual_s == BR_FLAG_S_TRUE and\
-                       actual_d == BR_FLAG_D_FALSE and\
-                       actual_dp == BR_FLAG_DP_FALSE:
-                        return True
-                except (AttributeError, IndexError):
-                    pass
-
-            br_idx += 1
-
-    return False
-
-
 def check_step4(p, omr_prefix, pre_1_prefix, expect_high_pref=True):
     if p.icmpv6.type != verify_utils.ICMPV6_TYPE_ROUTER_ADVERTISEMENT:
         return False
 
-    # Check PIO (type ICMPV6_OPT_TYPE_PIO) and RIO (type ICMPV6_OPT_TYPE_RIO)
-    opts = verify_utils.as_list(p.icmpv6.opt.type)
-    if verify_utils.ICMPV6_OPT_TYPE_RIO not in opts:
-        return False
+    _, pio_prefixes = verify_utils.get_ra_prefixes(p)
 
     # MUST NOT contain a PIO with a ULA prefix.
-    if verify_utils.ICMPV6_OPT_TYPE_PIO in opts:
-        _, pio_prefixes = verify_utils.get_ra_prefixes(p)
-        for prefix in pio_prefixes:
-            if prefix[0] == ULA_PREFIX_START_BYTE:
-                return False
-
-    rio_prefixes, _ = verify_utils.get_ra_prefixes(p)
-
-    # MUST contain a Route Information Option (RIO) with OMR_1.
-    if omr_prefix not in rio_prefixes:
-        return False
-
-    # Check preference of OMR_1 RIO
-    if expect_high_pref:
-        # P_preference = 01 (High) or 00 (Medium).
-        # In RA RIO, pref is 2 bits. 01 is High, 00 is Medium, 11 is Low.
-        rio_idx = rio_prefixes.index(omr_prefix)
-        actual_pref = get_val(p.icmpv6.opt.route_info.flag.route_preference, rio_idx)
-        if actual_pref not in (BR_PREFERENCE_HIGH, BR_PREFERENCE_MEDIUM):
+    for prefix in pio_prefixes:
+        if prefix[0] == ULA_PREFIX_START_BYTE:
             return False
 
     # MUST contain a Route Information Option (RIO) with PRE_1.
-    if pre_1_prefix not in rio_prefixes:
+    if not verify_utils.check_ra_has_rio(p, pre_1_prefix):
+        return False
+
+    # MUST contain a Route Information Option (RIO) with OMR_1 with correct preference.
+    prf_values = (BR_PREFERENCE_HIGH, BR_PREFERENCE_MEDIUM) if expect_high_pref else None
+    if not verify_utils.check_ra_has_rio(p, omr_prefix, prf=prf_values):
         return False
 
     return True
@@ -241,9 +162,21 @@ def verify(pv):
     #       - 16. P_dp = false
     #     - OMR_1 MUST be 64 bits long and start with 0xFD.
     print("Step 3: BR 1 (DUT) registers OMR_1 in Network Data.")
+    if OMR_1_LEN != 64 or OMR_1[0] != ULA_PREFIX_START_BYTE:
+        raise verify_utils.VerificationError(f"OMR_1 ({OMR_1}) must be 64 bits long and start with 0xFD")
+
     pkts.filter(lambda p: hasattr(p, 'mle') and\
                           p.mle.cmd in (consts.MLE_DATA_RESPONSE, consts.MLE_ADVERTISEMENT)).\
-        filter(lambda p: check_step3(p, OMR_1, OMR_1_LEN)).\
+        filter(lambda p: verify_utils.check_nwd_prefix_flags(p,
+                                                            OMR_1,
+                                                            stable=1,
+                                                            pref=BR_PREFERENCE_LOW,
+                                                            r=BR_FLAG_R_TRUE,
+                                                            o=BR_FLAG_O_TRUE,
+                                                            p=BR_FLAG_P_TRUE,
+                                                            s=BR_FLAG_S_TRUE,
+                                                            d=BR_FLAG_D_FALSE,
+                                                            dp=BR_FLAG_DP_FALSE)).\
         must_next()
 
     # Step 4
