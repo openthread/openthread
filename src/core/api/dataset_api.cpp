@@ -153,6 +153,21 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
     return (error == OT_ERROR_ALREADY) ? OT_ERROR_NONE : error;
 }
 
+bool otDatasetIsValid(const otOperationalDatasetTlvs *aDatasetTlvs, bool aActive)
+{
+    bool             isValid = false;
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+
+    SuccessOrExit(dataset.SetFrom(*aDatasetTlvs));
+    SuccessOrExit(dataset.ValidateTlvs());
+    isValid = dataset.ContainsAllRequiredTlvsFor(aActive ? MeshCoP::Dataset::kActive : MeshCoP::Dataset::kPending);
+
+exit:
+    return isValid;
+}
+
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset)
 {
     Error            error = kErrorNone;
