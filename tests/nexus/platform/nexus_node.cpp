@@ -166,8 +166,6 @@ void Node::HandleReceive(otMessage *aMessage)
 
     VerifyOrExit(header->GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
 
-    Core::Get().SetActiveNode(this);
-
     if (header->GetDestination().IsMulticast())
     {
         VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary());

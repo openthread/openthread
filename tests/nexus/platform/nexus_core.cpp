@@ -44,7 +44,6 @@ Core::Core(void)
     : mCurNodeId(0)
     , mPendingAction(false)
     , mNow(0)
-    , mActiveNode(nullptr)
 {
     const char *pcapFile;
 
@@ -379,8 +378,6 @@ void Core::AdvanceTime(uint32_t aDuration)
 
 void Core::Process(Node &aNode)
 {
-    SetActiveNode(&aNode);
-
     otTaskletsProcess(&aNode.GetInstance());
 
     ProcessRadio(aNode);
@@ -400,8 +397,6 @@ void Core::Process(Node &aNode)
         aNode.mAlarmMicro.mScheduled = false;
         otPlatAlarmMicroFired(&aNode.GetInstance());
     }
-
-    SetActiveNode(nullptr);
 }
 
 void Core::ProcessRadio(Node &aNode)
@@ -620,7 +615,7 @@ void Core::ProcessInfraIf(Node &aNode)
                 continue;
             }
 
-            rxNode.mInfraIf.Receive(aNode, *message);
+            rxNode.mInfraIf.Receive(*message);
         }
 
         message->Free();

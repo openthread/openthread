@@ -84,7 +84,7 @@ public:
                  uint16_t            aDestPort,
                  Message            &aPayload);
 
-    void Receive(Node &aSrcNode, Message &aMessage);
+    void Receive(Message &aMessage);
     void GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const;
 
     typedef void (*EchoReplyHandler)(void *aContext, const Ip6::Address &aSource, uint16_t aId, uint16_t aSequence);

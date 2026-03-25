@@ -121,17 +121,9 @@ public:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    template <typename Type> Type &Get(void)
-    {
-        Core::Get().SetActiveNode(this);
-        return Instance::Get<Type>();
-    }
+    template <typename Type> Type &Get(void) { return Instance::Get<Type>(); }
 
-    Instance &GetInstance(void)
-    {
-        Core::Get().SetActiveNode(this);
-        return *this;
-    }
+    Instance &GetInstance(void) { return *this; }
 
     uint32_t GetId(void) { return GetInstance().GetId(); }
 
