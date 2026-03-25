@@ -332,6 +332,7 @@ Client::Client(Instance &aInstance)
     , mShouldRemoveKeyLease(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
+    , mHostKeyRecordEnabled(true)
     , mUseShortLeaseOption(false)
 #endif
     , mCurMessageId(0)
@@ -1545,7 +1546,12 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = AppendKeyRecord(aInfo));
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mHostKeyRecordEnabled)
+#endif
+    {
+        SuccessOrExit(error = AppendKeyRecord(aInfo));
+    }
 
 exit:
     return error;
