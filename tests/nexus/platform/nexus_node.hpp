@@ -34,6 +34,7 @@
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
 #include "nexus_infra_if.hpp"
+#include "nexus_logging.hpp"
 #include "nexus_mdns.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
@@ -49,6 +50,7 @@ public:
     Radio    mRadio;
     Alarm    mAlarmMilli;
     Alarm    mAlarmMicro;
+    Logging  mLogging;
     Mdns     mMdns;
     InfraIf  mInfraIf;
     Settings mSettings;
@@ -135,6 +137,7 @@ public:
     using Platform::mAlarmMicro;
     using Platform::mAlarmMilli;
     using Platform::mInfraIf;
+    using Platform::mLogging;
     using Platform::mMdns;
     using Platform::mPendingTasklet;
     using Platform::mRadio;

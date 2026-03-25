@@ -30,7 +30,6 @@
 #include <stdlib.h>
 
 #include <openthread/platform/entropy.h>
-#include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 
 #include "nexus_core.hpp"
@@ -38,8 +37,6 @@
 
 namespace ot {
 namespace Nexus {
-
-static void LogTime(void);
 
 extern "C" {
 
@@ -51,23 +48,6 @@ void otTaskletsSignalPending(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     Core::Get().MarkPendingAction();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-// otPlatLog
-
-void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-
-    VerifyOrExit(aInstance != nullptr);
-
-    LogTime();
-    printf("%03u %s\n", AsNode(aInstance).GetId(), aLogLine);
-    fflush(stdout);
-
-exit:
-    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -133,30 +113,6 @@ otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PLAT_RESET_REAS
 void              otPlatWakeHost(void) {}
 
 } // extern "C"
-
-//---------------------------------------------------------------------------------------------------------------------
-// Log related function
-
-static void LogTime(void)
-{
-    uint32_t now = Core::Get().GetNow().GetValue();
-
-    printf("%02u:%02u:%02u.%03u ", now / 3600000, (now / 60000) % 60, (now / 1000) % 60, now % 1000);
-}
-
-void Log(const char *aFormat, ...)
-{
-    va_list args;
-
-    va_start(args, aFormat);
-
-    LogTime();
-    vprintf(aFormat, args);
-    printf("\n");
-    fflush(stdout);
-
-    va_end(args);
-}
 
 } // namespace Nexus
 } // namespace ot

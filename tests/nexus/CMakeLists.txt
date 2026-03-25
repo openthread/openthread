@@ -45,6 +45,7 @@ add_library(ot-nexus-platform
     platform/nexus_alarm.cpp
     platform/nexus_core.cpp
     platform/nexus_infra_if.cpp
+    platform/nexus_logging.cpp
     platform/nexus_mdns.cpp
     platform/nexus_misc.cpp
     platform/nexus_node.cpp
