@@ -200,18 +200,6 @@ template Error Tlv::Info::ReadUintValue<uint8_t>(const Message &aMessage, uint8_
 template Error Tlv::Info::ReadUintValue<uint16_t>(const Message &aMessage, uint16_t &aValue) const;
 template Error Tlv::Info::ReadUintValue<uint32_t>(const Message &aMessage, uint32_t &aValue) const;
 
-Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
-{
-    Error error;
-    Info  info;
-
-    SuccessOrExit(error = info.ParseFrom(aMessage, aOffset));
-    error = info.ReadValue(aMessage, aValue, aMinLength);
-
-exit:
-    return error;
-}
-
 Error Tlv::FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue)
 {
     Error error;

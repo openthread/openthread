@@ -440,21 +440,6 @@ public:
     };
 
     /**
-     * Reads a TLV's value in a message at a given offset expecting a minimum length for the value.
-     *
-     * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
-     *
-     * @param[in]   aMessage    The message to read from.
-     * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
-     * @param[out]  aValue      A buffer to output the TLV's value, must contain (at least) @p aMinLength bytes.
-     * @param[in]   aMinLength  The minimum expected length of TLV and number of bytes to copy into @p aValue buffer.
-     *
-     * @retval kErrorNone        Successfully read the TLV and copied @p aMinLength into @p aValue.
-     * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
-     */
-    static Error ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
-
-    /**
      * Searches for and reads a requested TLV out of a given message.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
