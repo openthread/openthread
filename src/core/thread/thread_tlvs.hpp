@@ -139,6 +139,7 @@ typedef UintTlvInfo<ThreadTlv::kStatus, uint8_t> ThreadStatusTlv;
 /**
  * Implements Router Mask TLV generation and parsing.
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
 {
 public:
@@ -198,7 +199,7 @@ public:
 private:
     uint8_t          mIdSequence;
     Mle::RouterIdSet mAssignedRouterIdMask;
-};
+} OT_TOOL_PACKED_END;
 
 /**
  * Implements Thread Network Data TLV generation and parsing.
