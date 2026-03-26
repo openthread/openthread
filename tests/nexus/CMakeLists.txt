@@ -272,6 +272,7 @@ ot_nexus_test(1_3_SRP_TC_5 "cert;nexus")
 ot_nexus_test(1_3_SRP_TC_6 "cert;nexus")
 ot_nexus_test(1_3_SRP_TC_8 "cert;nexus")
 ot_nexus_test(1_3_SRP_TC_11 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_12 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
