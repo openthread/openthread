@@ -230,7 +230,7 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
 
     // Negative iterator value gives the current index into mRouters array
 
-    for (index = -aIterator; index <= Mle::kMaxRouterId; index++)
+    for (index = static_cast<int16_t>(-aIterator); index <= Mle::kMaxRouterId; index++)
     {
         Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
 
@@ -239,12 +239,12 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
             aNeighInfo.SetFrom(*router);
             aNeighInfo.mIsChild = false;
             index++;
-            aIterator = -index;
+            aIterator = static_cast<otNeighborInfoIterator>(-index);
             ExitNow();
         }
     }
 
-    aIterator = -index;
+    aIterator = static_cast<otNeighborInfoIterator>(-index);
     error     = kErrorNotFound;
 
 exit:

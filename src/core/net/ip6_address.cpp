@@ -98,7 +98,7 @@ bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
 void Prefix::Tidy(void)
 {
     uint8_t byteLength      = GetBytesSize();
-    uint8_t lastByteBitMask = ~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1);
+    uint8_t lastByteBitMask = static_cast<uint8_t>(~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1));
 
     if (byteLength != 0)
     {
@@ -375,7 +375,7 @@ void Address::CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
         // ((0x80 >> 2) - 1) = (0b0010_0000 - 1) = 0b0001_1111
 
         aDst[numBytes] &= mask;
-        aDst[numBytes] |= (aSrc[numBytes] & ~mask);
+        aDst[numBytes] |= (aSrc[numBytes] & static_cast<uint8_t>(~mask));
     }
 }
 

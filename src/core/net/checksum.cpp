@@ -86,7 +86,7 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
 
     if (checksum != 0xffff)
     {
-        checksum = ~checksum;
+        checksum = static_cast<uint16_t>(~checksum);
     }
 
     checksum = BigEndian::HostSwap16(checksum);
@@ -241,7 +241,7 @@ void Checksum::UpdateIp4HeaderChecksum(Ip4::Header &aHeader)
 
     aHeader.SetChecksum(0);
     checksum.AddData(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
-    aHeader.SetChecksum(~checksum.GetValue());
+    aHeader.SetChecksum(static_cast<uint16_t>(~checksum.GetValue()));
 }
 
 } // namespace ot
