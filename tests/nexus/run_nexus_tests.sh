@@ -206,6 +206,7 @@ DEFAULT_TESTS=(
     "1_3_SRP_TC_5"
     "1_3_SRP_TC_6"
     "1_3_SRP_TC_8"
+    "1_3_SRP_TC_11"
 )
 
 # Use provided arguments or the default test list
