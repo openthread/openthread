@@ -125,16 +125,20 @@ def verify(pv):
     #   - • RLOC16 in Server TLV == The RLOC16 of BR_2
     #   - All fields in the BBR Dataset Service TLV MUST contain valid values.
     print("Step 4b: BR_2 (DUT) becomes Leader/PBBR")
-    pkts.filter_wpan_src64(vars['BR_2']).\
+    adv_pkts = pkts.copy()
+    adv_pkts.filter_wpan_src64(vars['BR_2']).\
         filter_mle_cmd(consts.MLE_ADVERTISEMENT).\
         filter(lambda p: p.mle.tlv.leader_data.router_id == vars['BR_2_RLOC16'] >> 10).\
         must_next()
 
-    pkts.filter_wpan_src64(vars['BR_2']).\
+    dr_pkts = pkts.copy()
+    dr_pkts.filter_wpan_src64(vars['BR_2']).\
         filter_mle_cmd(consts.MLE_DATA_RESPONSE).\
         filter_has_bbr_dataset().\
         filter(lambda p: vars['BR_2_RLOC16'] in p.thread_nwd.tlv.server_16).\
         must_next()
+
+    pkts.index = pv.max_index(adv_pkts.index, dr_pkts.index)
 
     # Step 5
     # - Device: Router
