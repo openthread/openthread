@@ -215,6 +215,7 @@ DEFAULT_TESTS=(
     "1_3_SRPC_TC_5"
     "1_3_SRPC_TC_7"
     "1_3_DIAG_TC_1"
+    "1_3_DIAG_TC_2"
 )
 
 # Use provided arguments or the default test list
