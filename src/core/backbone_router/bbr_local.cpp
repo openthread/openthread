@@ -246,15 +246,18 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mle::kInvalidRloc16)
     {
-        mRegistrationTimeout = 1;
-
-        if (!Get<Mle::Mle>().IsLeader())
+        if (Get<Mle::Mle>().IsLeader())
         {
-            mRegistrationTimeout +=
-                Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter) + 1);
+            mRegistrationTimeout = 0;
+            Get<TimeTicker>().UnregisterReceiver(TimeTicker::kBbrLocal);
+            IgnoreError(AddService(kDecideBasedOnState));
         }
-
-        Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
+        else
+        {
+            mRegistrationTimeout =
+                1 + Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter));
+            Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
+        }
     }
     else if (aConfig.mServer16 != Get<Mle::Mle>().GetRloc16())
     {

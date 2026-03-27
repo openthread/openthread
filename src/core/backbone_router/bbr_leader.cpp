@@ -127,7 +127,7 @@ const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
 
 void Leader::HandleNotifierEvents(Events aEvents)
 {
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged))
     {
         UpdateBackboneRouterPrimary();
         UpdateDomainPrefixConfig();
