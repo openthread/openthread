@@ -408,9 +408,13 @@ private:
 
     const char *GetServiceName(void);
     bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
-    void        ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
+    void        ConstructServiceName(void);
+    void        ConstructServiceName(uint16_t aRenameIndex, Dns::Name::LabelBuffer &aNameBuffer);
     void        RegisterService(void);
     void        UnregisterService(void);
+    void        HandleRegisterDone(Error aError);
+
+    static void HandleRegisterDone(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
@@ -435,7 +439,10 @@ private:
     bool mIdInitialized;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+    char                   mBaseServiceName[kBaseServiceNameMaxLen + 1];
     Dns::Name::LabelBuffer mServiceName;
+    uint16_t               mServiceRenameIndex;
 #endif
     Counters mCounters;
 };

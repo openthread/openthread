@@ -70,6 +70,9 @@ Manager::Manager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    , mServiceRenameIndex(0)
+#endif
 {
     mCommissionerAloc.InitAsThreadOriginMeshLocal();
 
@@ -80,6 +83,8 @@ Manager::Manager(Instance &aInstance)
 
     static_assert(sizeof(kDefaultBaseServiceName) - 1 <= kBaseServiceNameMaxLen,
                   "OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_BASE_NAME is too long");
+
+    SuccessOrAssert(StringCopy(mBaseServiceName, kDefaultBaseServiceName));
 #endif
 }
 
@@ -394,18 +399,15 @@ exit:
 
 Error Manager::SetServiceBaseName(const char *aBaseName)
 {
-    Error                  error = kErrorNone;
-    Dns::Name::LabelBuffer newName;
+    Error error = kErrorNone;
 
-    VerifyOrExit(StringLength(aBaseName, kBaseServiceNameMaxLen + 1) <= kBaseServiceNameMaxLen,
-                 error = kErrorInvalidArgs);
+    VerifyOrExit(!StringMatch(mBaseServiceName, aBaseName));
 
-    ConstructServiceName(aBaseName, newName);
-
-    VerifyOrExit(!StringMatch(newName, mServiceName));
+    SuccessOrExit(error = StringCopy(mBaseServiceName, aBaseName));
+    mServiceRenameIndex = 0;
 
     UnregisterService();
-    IgnoreError(StringCopy(mServiceName, newName));
+    ConstructServiceName();
     RegisterService();
 
 exit:
@@ -416,17 +418,28 @@ const char *Manager::GetServiceName(void)
 {
     if (IsServiceNameEmpty())
     {
-        ConstructServiceName(kDefaultBaseServiceName, mServiceName);
+        ConstructServiceName();
     }
 
     return mServiceName;
 }
 
-void Manager::ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer)
-{
-    StringWriter writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
+void Manager::ConstructServiceName(void) { ConstructServiceName(mServiceRenameIndex, mServiceName); }
 
-    writer.Append("%.*s%s", kBaseServiceNameMaxLen, aBaseName, Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
+void Manager::ConstructServiceName(uint16_t aRenameIndex, Dns::Name::LabelBuffer &aNameBuffer)
+{
+    static constexpr uint8_t kExtAddrSuffixLength = 2;
+
+    StringWriter           writer(aNameBuffer, sizeof(Dns::Name::LabelBuffer));
+    const Mac::ExtAddress &extAddr = Get<Mac::Mac>().GetExtAddress();
+
+    writer.Append("%.*s #", kBaseServiceNameMaxLen, mBaseServiceName);
+    writer.AppendHexBytesUppercase(GetArrayEnd(extAddr.m8) - kExtAddrSuffixLength, kExtAddrSuffixLength);
+
+    if (aRenameIndex != 0)
+    {
+        writer.Append(" (%u)", aRenameIndex % 1000);
+    }
 }
 
 void Manager::RegisterService(void)
@@ -454,7 +467,8 @@ void Manager::RegisterService(void)
     }
 #endif
 
-    Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+    LogInfo("Registering service %s %s", service.mServiceInstance, kServiceType);
+    Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, HandleRegisterDone);
 
 exit:
     return;
@@ -471,7 +485,32 @@ void Manager::UnregisterService(void)
     service.mServiceInstance = GetServiceName();
     service.mServiceType     = kServiceType;
 
+    LogInfo("Unregistering service %s %s", service.mServiceInstance, kServiceType);
+
     Get<Dnssd>().UnregisterService(service, /* aRequestId */ 0, /* aCallback */ nullptr);
+
+exit:
+    return;
+}
+
+void Manager::HandleRegisterDone(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError)
+{
+    OT_UNUSED_VARIABLE(aRequestId);
+    AsCoreType(aInstance).Get<Manager>().HandleRegisterDone(aError);
+}
+
+void Manager::HandleRegisterDone(Error aError)
+{
+    VerifyOrExit(aError == kErrorDuplicated);
+
+    LogInfoOnError(aError, "register service %s %s - retrying with a new name", GetServiceName(), kServiceType);
+
+    UnregisterService();
+
+    mServiceRenameIndex++;
+    ConstructServiceName();
+
+    RegisterService();
 
 exit:
     return;
