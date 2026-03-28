@@ -109,6 +109,8 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     Node &td1     = nexus.CreateNode();
     Node &eth1    = nexus.CreateNode();
 
+    Srp::Client::Service service;
+
     br1.SetName("BR_1");
     router1.SetName("Router_1");
     td1.SetName("TD_1");
@@ -174,7 +176,6 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     td1.Get<Srp::Client>().SetKeyLeaseInterval(kSrpKeyLease1d);
 
     {
-        Srp::Client::Service service;
         ClearAllBytes(service);
         service.mName         = kSrpServiceType;
         service.mInstanceName = kSrpInstanceName;
@@ -221,7 +222,6 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     td1.Get<Srp::Client>().SetKeyLeaseInterval(kSrpKeyLease1d);
 
     {
-        Srp::Client::Service service;
         ClearAllBytes(service);
         service.mName         = kSrpServiceType;
         service.mInstanceName = kSrpInstanceName;
