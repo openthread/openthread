@@ -802,10 +802,10 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Answer TLV generation and parsing.
+ * Represents an Answer TLV value.
  */
 OT_TOOL_PACKED_BEGIN
-class AnswerTlv : public Tlv, public TlvInfo<Tlv::kAnswer>
+class AnswerTlvValue
 {
 public:
     enum IsLastFlag : uint8_t
@@ -815,7 +815,7 @@ public:
     };
 
     /**
-     * Initializes the TLV.
+     * Initializes the TLV value.
      *
      * @param[in] aIndex       The index value.
      * @param[in] aIsLastFlag  Indicates the `IsLastFlag` value.
@@ -846,6 +846,11 @@ private:
 
     uint16_t mFlagsIndex;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Answer TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kAnswer, AnswerTlvValue> AnswerTlv;
 
 /**
  * Represents the MLE Counters.

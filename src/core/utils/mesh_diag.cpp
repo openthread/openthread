@@ -258,9 +258,9 @@ Error MeshDiag::ProcessMessage(Coap::Message &aMessage, const Ip6::MessageInfo &
     // check whether it is from the intended sender and matches
     // the expected query ID and answer index.
 
-    Error     error = kErrorFailed;
-    AnswerTlv answerTlv;
-    uint16_t  queryId;
+    Error          error = kErrorFailed;
+    AnswerTlvValue answerTlvValue;
+    uint16_t       queryId;
 
     VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().GetLocator() == aSenderRloc16);
@@ -268,9 +268,9 @@ Error MeshDiag::ProcessMessage(Coap::Message &aMessage, const Ip6::MessageInfo &
     SuccessOrExit(Tlv::Find<QueryIdTlv>(aMessage, queryId));
     VerifyOrExit(queryId == mExpectedQueryId);
 
-    SuccessOrExit(Tlv::FindTlv(aMessage, answerTlv));
+    SuccessOrExit(Tlv::Find<AnswerTlv>(aMessage, answerTlvValue));
 
-    if (answerTlv.GetIndex() != mExpectedAnswerIndex)
+    if (answerTlvValue.GetIndex() != mExpectedAnswerIndex)
     {
         Finalize(kErrorResponseTimeout);
         ExitNow();

@@ -511,7 +511,7 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
 {
     Error          error  = kErrorNone;
     Coap::Message *answer = nullptr;
-    AnswerTlv      answerTlv;
+    AnswerTlvValue answerTlvValue;
     uint16_t       queryId;
 
     answer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
@@ -526,8 +526,8 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
 
     SuccessOrExit(error = AppendRequestedTlvs(aRequest, *answer));
 
-    answerTlv.Init(0, AnswerTlv::kIsLast);
-    SuccessOrExit(answer->Append(answerTlv));
+    answerTlvValue.Init(0, AnswerTlvValue::kIsLast);
+    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*answer, answerTlvValue));
 
     error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(*answer, aDestination);
 
@@ -572,13 +572,13 @@ bool Server::IsLastAnswer(const Coap::Message &aAnswer) const
     // Indicates whether `aAnswer` is the last one associated with
     // the same query.
 
-    bool      isLast = true;
-    AnswerTlv answerTlv;
+    bool           isLast = true;
+    AnswerTlvValue answerTlvValue;
 
     // If there is no Answer TLV, we assume it is the last answer.
 
-    SuccessOrExit(Tlv::FindTlv(aAnswer, answerTlv));
-    isLast = answerTlv.IsLast();
+    SuccessOrExit(Tlv::Find<AnswerTlv>(aAnswer, answerTlvValue));
+    isLast = answerTlvValue.IsLast();
 
 exit:
     return isLast;
@@ -608,7 +608,7 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
     AnswerInfo          info;
     uint8_t             tlvType;
     TlvTypeListIterator iterator;
-    AnswerTlv           answerTlv;
+    AnswerTlvValue      answerTlvValue;
 
     if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
     {
@@ -642,8 +642,8 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
         SuccessOrExit(error = CheckAnswerLength(answer, info));
     }
 
-    answerTlv.Init(info.mAnswerIndex, AnswerTlv::kIsLast);
-    SuccessOrExit(error = answer->Append(answerTlv));
+    answerTlvValue.Init(info.mAnswerIndex, AnswerTlvValue::kIsLast);
+    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*answer, answerTlvValue));
 
     SendNextAnswer(*info.mFirstAnswer, aDestination);
 
@@ -662,13 +662,13 @@ Error Server::CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo)
     // message. In this case, it will also allocate a new answer
     // message.
 
-    Error     error = kErrorNone;
-    AnswerTlv answerTlv;
+    Error          error = kErrorNone;
+    AnswerTlvValue answerTlvValue;
 
     VerifyOrExit(aAnswer->GetLength() >= kAnswerMessageLengthThreshold);
 
-    answerTlv.Init(aInfo.mAnswerIndex++, AnswerTlv::kMoreToFollow);
-    SuccessOrExit(error = aAnswer->Append(answerTlv));
+    answerTlvValue.Init(aInfo.mAnswerIndex++, AnswerTlvValue::kMoreToFollow);
+    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*aAnswer, answerTlvValue));
 
     error = AllocateAnswer(aAnswer, aInfo);
 

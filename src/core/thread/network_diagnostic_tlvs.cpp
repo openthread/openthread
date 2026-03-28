@@ -197,13 +197,10 @@ void RouterNeighborTlv::InitFrom(const Router &aRouter)
 #endif // OPENTHREAD_FTD
 
 //---------------------------------------------------------------------------------------------------------------------
-// AnswerTlv
+// AnswerTlvValue
 
-void AnswerTlv::Init(uint16_t aIndex, IsLastFlag aIsLastFlag)
+void AnswerTlvValue::Init(uint16_t aIndex, IsLastFlag aIsLastFlag)
 {
-    SetType(kAnswer);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-
     SetFlagsIndex((aIndex & kIndexMask) | (aIsLastFlag == kIsLast ? kIsLastFlag : 0));
 }
 

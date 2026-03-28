@@ -42,6 +42,7 @@
 
 #include "common/encoding.hpp"
 #include "common/tlvs.hpp"
+#include "thread/network_diagnostic_tlvs.hpp"
 #include "utils/history_tracker.hpp"
 
 namespace ot {
@@ -72,44 +73,14 @@ public:
 typedef UintTlvInfo<Tlv::kQueryId, uint16_t> QueryIdTlv;
 
 /**
- * Implements Answer TLV generation and parsing.
+ * Represents an Answer TLV value.
  */
-OT_TOOL_PACKED_BEGIN
-class AnswerTlv : public Tlv, public TlvInfo<Tlv::kAnswer>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     * @param[in] aIndex   The index value.
-     * @param[in] aIsLast  The "IsLast" flag value.
-     */
-    void Init(uint16_t aIndex, bool aIsLast);
+typedef NetworkDiagnostic::AnswerTlvValue AnswerTlvValue;
 
-    /**
-     * Indicates whether or not the "IsLast" flag is set
-     *
-     * @retval TRUE   "IsLast" flag is set (this is the last answer for this query).
-     * @retval FALSE  "IsLast" flag is not set (more answer messages are expected for this query).
-     */
-    bool IsLast(void) const { return GetFlagsIndex() & kIsLastFlag; }
-
-    /**
-     * Gets the index.
-     *
-     * @returns The index.
-     */
-    uint16_t GetIndex(void) const { return GetFlagsIndex() & kIndexMask; }
-
-private:
-    static constexpr uint16_t kIsLastFlag = 1 << 15;
-    static constexpr uint16_t kIndexMask  = 0x7fff;
-
-    uint16_t GetFlagsIndex(void) const { return BigEndian::HostSwap16(mFlagsIndex); }
-    void     SetFlagsIndex(uint16_t aFlagsIndex) { mFlagsIndex = BigEndian::HostSwap16(aFlagsIndex); }
-
-    uint16_t mFlagsIndex;
-} OT_TOOL_PACKED_END;
+/**
+ * Defines Answer TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kAnswer, AnswerTlvValue> AnswerTlv;
 
 /**
  * Implements Request TLV generation and parsing.
