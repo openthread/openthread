@@ -40,7 +40,7 @@ class Node;
 
 struct Trel
 {
-    static constexpr uint16_t kUdpPortStart = 49152;
+    static constexpr uint16_t kUdpPortStart = 19152;
 
     typedef otPlatTrelCounters Counters;
 

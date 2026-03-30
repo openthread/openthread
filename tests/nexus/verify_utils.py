@@ -498,9 +498,6 @@ def apply_patches():
     consts.VALID_LAYER_NAMES.add('trel')
     consts.REAL_LAYER_NAMES.add('trel')
 
-    # Add TREL decoding entries for common Nexus ports
-    consts.WIRESHARK_DECODE_AS_ENTRIES['udp.port==12343'] = 'trel'
-
     # Patch _get_candidate_layers to map wpan_tap to wpan-tap
     old_get_candidate_layers = layer_fields._get_candidate_layers
 
@@ -705,6 +702,16 @@ def run_main(verify_func):
             all_thread_nodes_mcast_addr[4:12] = prefix[0:8]
             consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
 
+        # Add TREL UDP port variables before creating PacketVerifier (so PcapReader uses them)
+        # We only do this for TREL tests to avoid interference with other tests
+        # using similar UDP ports for regular Thread traffic.
+        testcase = data.get('testcase', '')
+        if 'TREL' in testcase:
+            for node_id, port in data.get('trel_udp_ports', {}).items():
+                port = int(port)
+                if port > 0:
+                    consts.WIRESHARK_DECODE_AS_ENTRIES[f'udp.port=={port}'] = 'trel'
+
         pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
         pv.add_common_vars()
 
@@ -713,13 +720,12 @@ def run_main(verify_func):
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_RLOC16': int(rloc16, 16)})
 
-        # Add TREL UDP port variables
+        # Add TREL UDP port variables to pv.vars
         for node_id, port in data.get('trel_udp_ports', {}).items():
             name = pv.test_info.get_node_name(int(node_id))
             port = int(port)
             if port > 0:
                 pv.add_vars(**{f'{name}_TREL_PORT': port})
-                consts.WIRESHARK_DECODE_AS_ENTRIES[f'udp.port=={port}'] = 'trel'
 
         # Add channel variables
         for node_id, channel in data.get('channels', {}).items():

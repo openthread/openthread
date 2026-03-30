@@ -714,6 +714,12 @@ _LAYER_FIELDS = {
     'mdns.srv.port': _list(_auto),
     'mdns.srv.target': _list(_str),
     'mdns.ptr.domain_name': _list(_str),
+
+    # TREL
+    'trel.source_addr': _ext_addr,
+    'trel.destination_addr': _ext_addr,
+    'trel.wpan.src16': _hex,
+    'trel.wpan.dst16': _hex,
 }
 
 _layer_containers = set()
