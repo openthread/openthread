@@ -238,6 +238,18 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     }
     fprintf(file, "  },\n");
 
+    fprintf(file, "  \"trel_udp_ports\": {\n");
+    for (Node &node : mNodes)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        fprintf(file, "    \"%u\": %u%s\n", node.GetInstance().GetId(), node.mTrel.mUdpPort,
+                (&node == tail) ? "" : ",");
+#else
+        fprintf(file, "    \"%u\": 0%s\n", node.GetInstance().GetId(), (&node == tail) ? "" : ",");
+#endif
+    }
+    fprintf(file, "  },\n");
+
     fprintf(file, "  \"ipaddrs\": {\n");
     for (Node &node : mNodes)
     {

@@ -495,6 +495,11 @@ def apply_patches():
     from pktverify import consts, layer_fields
     consts.VALID_LAYER_NAMES.add('wpan_tap')
     consts.VALID_LAYER_NAMES.add('wpan-tap')
+    consts.VALID_LAYER_NAMES.add('trel')
+    consts.REAL_LAYER_NAMES.add('trel')
+
+    # Add TREL decoding entries for common Nexus ports
+    consts.WIRESHARK_DECODE_AS_ENTRIES['udp.port==12343'] = 'trel'
 
     # Patch _get_candidate_layers to map wpan_tap to wpan-tap
     old_get_candidate_layers = layer_fields._get_candidate_layers
@@ -707,6 +712,14 @@ def run_main(verify_func):
         for node_id, rloc16 in data.get('rloc16s', {}).items():
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_RLOC16': int(rloc16, 16)})
+
+        # Add TREL UDP port variables
+        for node_id, port in data.get('trel_udp_ports', {}).items():
+            name = pv.test_info.get_node_name(int(node_id))
+            port = int(port)
+            if port > 0:
+                pv.add_vars(**{f'{name}_TREL_PORT': port})
+                consts.WIRESHARK_DECODE_AS_ENTRIES[f'udp.port=={port}'] = 'trel'
 
         # Add channel variables
         for node_id, channel in data.get('channels', {}).items():
