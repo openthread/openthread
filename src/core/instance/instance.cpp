@@ -320,6 +320,11 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     , mLogLevel(static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    , mOriginalLogLevel(kLogLevelNone)
+    , mOverrideLogLevel(kLogLevelNone)
+    , mIsLogLevelOverriden(false)
+#endif
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     , mIsLogLevelSet(false)
 #else
@@ -591,20 +596,66 @@ Error Instance::SetLogLevel(LogLevel aLogLevel)
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
     ExitNow(error = kErrorNotCapable);
 #else
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    if (mIsLogLevelOverriden)
+    {
+        mOriginalLogLevel = aLogLevel;
+        aLogLevel         = Max(aLogLevel, mOverrideLogLevel);
+    }
+#endif
     VerifyOrExit(mLogLevel != aLogLevel);
     mLogLevel = aLogLevel;
-
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    mIsLogLevelSet = true;
-#else
-    otPlatLogHandleLevelChanged(mLogLevel);
-#endif
-    otPlatLogHandleLogLevelChanged(this, mLogLevel);
+    SignalLogLevelChange();
 #endif
 
 exit:
     return error;
 }
+
+void Instance::SignalLogLevelChange(void)
+{
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    mIsLogLevelSet = true;
+#else
+    otPlatLogHandleLevelChanged(mLogLevel);
+#endif
+
+    otPlatLogHandleLogLevelChanged(this, mLogLevel);
+}
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+void Instance::OverrideLogLevel(LogLevel aLogLevel)
+{
+    LogLevel logLevel;
+
+    if (!mIsLogLevelOverriden)
+    {
+        mOriginalLogLevel    = GetLogLevel();
+        mIsLogLevelOverriden = true;
+    }
+
+    mOverrideLogLevel = aLogLevel;
+
+    logLevel = Max(mOverrideLogLevel, mOriginalLogLevel);
+
+    VerifyOrExit(mLogLevel != logLevel);
+    mLogLevel = logLevel;
+    SignalLogLevelChange();
+
+exit:
+    return;
+}
+
+void Instance::RestoreLogLevel(void)
+{
+    VerifyOrExit(mIsLogLevelOverriden);
+    mIsLogLevelOverriden = false;
+    IgnoreError(SetLogLevel(mOriginalLogLevel));
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 Error Instance::SetGlobalLogLevel(LogLevel aLogLevel)

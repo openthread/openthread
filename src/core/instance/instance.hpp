@@ -356,6 +356,31 @@ public:
      */
     Error SetLogLevel(LogLevel aLogLevel);
 
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    /**
+     * Overrides the current log level with a new one.
+     *
+     * The active log level will be the maximum of the original (user-set) log level and the override log level.
+     * If this is the first time an override is requested, the current log level is saved as the original log level.
+     *
+     * Subsequent calls to `SetLogLevel()` will update the original log level, and the active log level will be
+     * updated accordingly (again as the maximum of the new original and the override level).
+     *
+     * This method can be called multiple times to change the override log level.
+     *
+     * @param[in] aLogLevel  The override log level.
+     */
+    void OverrideLogLevel(LogLevel aLogLevel);
+
+    /**
+     * Restores the log level to its original (user-set) value.
+     *
+     * This clears the log level override state. If the log level is not currently overridden, calling this
+     * method has no effect.
+     */
+    void RestoreLogLevel(void);
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
      * Sets the global log level.
@@ -522,6 +547,9 @@ private:
 #if !OPENTHREAD_PLATFORM_NEXUS
     Instance(void);
     void AfterInit(void);
+#endif
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    void SignalLogLevelChange(void);
 #endif
 
     //-----------------------------------------------------------------------------------------------------------------
@@ -866,6 +894,11 @@ private:
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     LogLevel mLogLevel;
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    LogLevel mOriginalLogLevel;
+    LogLevel mOverrideLogLevel;
+    bool     mIsLogLevelOverriden;
+#endif
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     bool mIsLogLevelSet;
 #endif
