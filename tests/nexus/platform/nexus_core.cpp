@@ -330,6 +330,9 @@ Node &Core::CreateNode(void)
 
     node->mInfraIf.Init(*node);
     node->mMdns.Init(*node);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    node->mTrel.Init(*node);
+#endif
 
     mNodes.Push(*node);
 
@@ -409,9 +412,6 @@ void Core::Process(Node &aNode)
 
     ProcessRadio(aNode);
     ProcessInfraIf(aNode);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    ProcessTrel(aNode);
-#endif
 
     if (aNode.mAlarmMilli.mScheduled && (GetNow() >= aNode.mAlarmMilli.mAlarmTime))
     {
@@ -664,34 +664,6 @@ Node *Core::FindNodeByInfraIfAddress(const Ip6::Address &aAddress)
 
     return matchedNode;
 }
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-
-void Core::ProcessTrel(Node &aNode)
-{
-    Ip6::SockAddr senderSockAddr;
-    Ip6::SockAddr rxNodeSockAddr;
-
-    aNode.GetTrelSockAddr(senderSockAddr);
-
-    for (Trel::PendingTx &pendingTx : aNode.mTrel.mPendingTxList)
-    {
-        for (Node &rxNode : mNodes)
-        {
-            rxNode.GetTrelSockAddr(rxNodeSockAddr);
-
-            if (pendingTx.mDestSockAddr == rxNodeSockAddr)
-            {
-                rxNode.mTrel.Receive(rxNode.GetInstance(), pendingTx.mPayloadData, senderSockAddr);
-                break;
-            }
-        }
-    }
-
-    aNode.mTrel.mPendingTxList.Free();
-}
-
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 

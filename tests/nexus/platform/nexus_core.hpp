@@ -109,9 +109,6 @@ private:
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
     void ProcessInfraIf(Node &aNode);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ProcessTrel(Node &aNode);
-#endif
 
     Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
 

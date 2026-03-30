@@ -482,6 +482,26 @@ void InfraIf::Receive(Message &aMessage)
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    if (headers.IsUdp() && headers.GetDestinationPort() == node.mTrel.mUdpPort && node.mTrel.mEnabled)
+    {
+        if (headers.GetDestinationAddress().IsMulticast() || node.mInfraIf.HasAddress(headers.GetDestinationAddress()))
+        {
+            Ip6::SockAddr senderAddr;
+            Heap::Data    payload;
+            uint16_t      offset = sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header);
+
+            senderAddr.SetAddress(headers.GetSourceAddress());
+            senderAddr.SetPort(headers.GetSourcePort());
+
+            SuccessOrQuit(
+                payload.SetFrom(aMessage, offset, headers.GetUdpHeader().GetLength() - sizeof(Ip6::Udp::Header)));
+            node.mTrel.Receive(node.GetInstance(), payload, senderAddr);
+        }
+        ExitNow();
+    }
+#endif
+
     {
         // We also deliver generic IPv6 packets to the stack if they are NOT ICMPv6 ND packets.
         // (ND packets were already delivered via otPlatInfraIfRecvIcmp6Nd above).

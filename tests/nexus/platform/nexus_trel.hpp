@@ -36,6 +36,8 @@
 namespace ot {
 namespace Nexus {
 
+class Node;
+
 struct Trel
 {
     static constexpr uint16_t kUdpPortStart = 49152;
@@ -43,6 +45,7 @@ struct Trel
     typedef otPlatTrelCounters Counters;
 
     Trel(void);
+    void Init(Node &aNode);
     void Reset(void);
     void Enable(uint16_t &aUdpPort);
     void Disable(void);
@@ -50,19 +53,12 @@ struct Trel
     void ResetCounters(void) { ClearAllBytes(mCounters); }
     void Receive(Instance &aInstance, Heap::Data &aPayloadData, const Ip6::SockAddr &aSenderAddr);
 
-    struct PendingTx : public Heap::Allocatable<PendingTx>, public LinkedListEntry<PendingTx>
-    {
-        PendingTx    *mNext;
-        Heap::Data    mPayloadData;
-        Ip6::SockAddr mDestSockAddr;
-    };
-
     static uint16_t sLastUsedUdpPort;
 
-    bool                  mEnabled;
-    uint16_t              mUdpPort;
-    OwningList<PendingTx> mPendingTxList;
-    Counters              mCounters;
+    Node    *mNode;
+    bool     mEnabled;
+    uint16_t mUdpPort;
+    Counters mCounters;
 };
 
 } // namespace Nexus
