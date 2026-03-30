@@ -3207,43 +3207,50 @@ void ValidateAdmitterMdnsService(Node &aNode)
     Dns::Multicast::Core::Iterator  *iterator;
     Dns::Multicast::Core::Service    service;
     Dns::Multicast::Core::EntryState entryState;
+    bool                             found = false;
 
     iterator = aNode.Get<Dns::Multicast::Core>().AllocateIterator();
     VerifyOrQuit(iterator != nullptr);
 
-    SuccessOrQuit(aNode.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
-
-    Log("  HostName: %s", service.mHostName);
-    Log("  ServiceInstance: %s", service.mServiceInstance);
-    Log("  ServiceType: %s", service.mServiceType);
-
-    for (uint16_t i = 0; i < service.mSubTypeLabelsLength; i++)
+    while (aNode.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNone)
     {
-        Log("  SubType: %s", service.mSubTypeLabels[i]);
+        Log("- - - - - - - - - - - - - - - - -");
+        Log("  HostName: %s", service.mHostName);
+        Log("  ServiceInstance: %s", service.mServiceInstance);
+        Log("  ServiceType: %s", service.mServiceType);
+
+        if (StringMatch(service.mServiceType, "_meshcop._udp"))
+        {
+            for (uint16_t i = 0; i < service.mSubTypeLabelsLength; i++)
+            {
+                Log("  SubType: %s", service.mSubTypeLabels[i]);
+            }
+
+            Log("  Port: %u", service.mPort);
+            Log("  TTL: %lu", ToUlong(service.mTtl));
+
+            VerifyOrQuit(StringStartsWith(service.mServiceInstance, kDefaultServiceBaseName));
+            VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+            VerifyOrQuit(service.mPort == aNode.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
+            VerifyOrQuit(service.mTtl > 0);
+            VerifyOrQuit(service.mInfraIfIndex == 1);
+            VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+
+            if (aNode.Get<Admitter>().IsPrimeAdmitter())
+            {
+                VerifyOrQuit(service.mSubTypeLabelsLength == 1);
+                VerifyOrQuit(StringMatch(service.mSubTypeLabels[0], "_admitter"));
+            }
+            else
+            {
+                VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+            }
+
+            found = true;
+        }
     }
 
-    Log("  Port: %u", service.mPort);
-    Log("  TTL: %lu", ToUlong(service.mTtl));
-
-    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
-    VerifyOrQuit(StringStartsWith(service.mServiceInstance, kDefaultServiceBaseName));
-    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
-    VerifyOrQuit(service.mPort == aNode.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
-    VerifyOrQuit(service.mTtl > 0);
-    VerifyOrQuit(service.mInfraIfIndex == 1);
-    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
-
-    if (aNode.Get<Admitter>().IsPrimeAdmitter())
-    {
-        VerifyOrQuit(service.mSubTypeLabelsLength == 1);
-        VerifyOrQuit(StringMatch(service.mSubTypeLabels[0], "_admitter"));
-    }
-    else
-    {
-        VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    }
-
-    VerifyOrQuit(aNode.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+    VerifyOrQuit(found);
 
     aNode.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 }

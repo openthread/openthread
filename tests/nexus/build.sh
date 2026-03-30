@@ -50,7 +50,7 @@ case $1 in
         fifteenfour=OFF
         ;;
     *)
-        trel=OFF
+        trel=ON
         fifteenfour=ON
         ;;
 esac
