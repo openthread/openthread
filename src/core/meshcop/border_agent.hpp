@@ -291,7 +291,9 @@ private:
         uint16_t GetIndex(void) const { return mIndex; }
         void     CopyInfoTo(SessionInfo &aInfo, UptimeMsec aUptimeNow) const;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
-        void EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine);
+        void     EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine);
+        void     ClearLogSubscription(void) { mLogSubscribeLevel = kLogLevelNone; }
+        LogLevel GetSubscribeLogLevel(void) { return mLogSubscribeLevel; }
 #endif
 
     private:
@@ -426,6 +428,8 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
     // Callback from `Logger`
     void EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine);
+
+    void HandleLogLevelUpdateTask(void);
 #endif
 
     const char *GetServiceName(void);
@@ -444,6 +448,10 @@ private:
 #endif
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    using LogLevelUpdateTask = TaskletIn<Manager, &Manager::HandleLogLevelUpdateTask>;
+#endif
+
     bool                       mEnabled;
     bool                       mIsRunning;
     uint16_t                   mSessionIndex;
@@ -458,6 +466,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Dns::Name::LabelBuffer mServiceName;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    LogLevelUpdateTask mLogLevelUpdateTask;
 #endif
     Counters mCounters;
 };

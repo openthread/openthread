@@ -70,6 +70,9 @@ Manager::Manager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     , mIdInitialized(false)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    , mLogLevelUpdateTask(aInstance)
+#endif
 {
     mCommissionerAloc.InitAsThreadOriginMeshLocal();
 
@@ -211,6 +214,10 @@ void Manager::Stop(void)
     Get<Admitter>().EvaluateOperation();
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    mLogLevelUpdateTask.Post();
+#endif
+
 exit:
     return;
 }
@@ -269,6 +276,10 @@ void Manager::HandleRemoveSession(SecureSession &aSession)
 
     coapSession.Cleanup();
     coapSession.Free();
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+    mLogLevelUpdateTask.Post();
+#endif
 }
 
 void Manager::HandleSessionConnected(CoapDtlsSession &aSession)
@@ -303,6 +314,11 @@ void Manager::HandleSessionDisconnected(CoapDtlsSession &aSession, CoapDtlsSessi
         {
             mCounters.mPskcSecureSessionFailures++;
         }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+        aSession.ClearLogSubscription();
+        mLogLevelUpdateTask.Post();
+#endif
     }
 }
 
@@ -507,6 +523,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
+
 void Manager::EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine)
 {
     for (SecureSession &session : mDtlsTransport.GetSessions())
@@ -514,7 +531,29 @@ void Manager::EmitLogLine(LogLevel aLogLevel, const StringWriter &aLogLine)
         static_cast<CoapDtlsSession &>(session).EmitLogLine(aLogLevel, aLogLine);
     }
 }
+
+void Manager::HandleLogLevelUpdateTask(void)
+{
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    LogLevel logLevel = kLogLevelNone;
+
+    for (SecureSession &session : mDtlsTransport.GetSessions())
+    {
+        logLevel = Max(logLevel, static_cast<CoapDtlsSession &>(session).GetSubscribeLogLevel());
+    }
+
+    if (logLevel == kLogLevelNone)
+    {
+        GetInstance().RestoreLogLevel();
+    }
+    else
+    {
+        GetInstance().OverrideLogLevel(logLevel);
+    }
 #endif
+}
+
+#endif // BORDER_AGENT_INSPECTOR_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_LOG_SUBSCRIBE_ENABLE
 
 //----------------------------------------------------------------------------------------------------------------------
 // Manager::SessionIterator
@@ -1189,12 +1228,7 @@ void Manager::CoapDtlsSession::HandleTmfInspectorLogSubscribe(Coap::Msg &aMsg)
     logLevel           = Clamp<uint8_t>(logLevel, kLogLevelNone, kLogLevelDebg);
     mLogSubscribeLevel = static_cast<LogLevel>(logLevel);
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    if (mLogSubscribeLevel > Get<Instance>().GetLogLevel())
-    {
-        IgnoreError(Get<Instance>().SetLogLevel(mLogSubscribeLevel));
-    }
-#endif
+    Get<Manager>().mLogLevelUpdateTask.Post();
 
 exit:
     if (aMsg.IsConfirmable())
