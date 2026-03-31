@@ -289,6 +289,7 @@ ot_nexus_test(1_4_TREL_TC_2 "cert;nexus")
 ot_nexus_test(1_4_TREL_TC_3 "cert;nexus")
 ot_nexus_test(1_4_TREL_TC_4 "cert;nexus")
 ot_nexus_test(1_4_TREL_TC_5 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_6 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
