@@ -216,6 +216,7 @@ DEFAULT_TESTS=(
     "1_3_SRPC_TC_4"
     "1_3_SRPC_TC_5"
     "1_3_SRPC_TC_7"
+    "1_3_GEN_TC_1"
     "1_3_DIAG_TC_1"
     "1_3_DIAG_TC_2"
     "1_4_TREL_TC_1"
@@ -237,7 +238,7 @@ run_test()
     # Strip 'nexus_' prefix if present
     test_full="${test_full#nexus_}"
 
-    local test_base="${test_full%_[AB]}"
+    local test_base="${test_full%_[ABC]}"
     local topology=""
     if [[ $test_full != "$test_base" ]]; then
         topology="${test_full##*_}"
@@ -311,6 +312,9 @@ for t in "${TESTS_TO_RUN[@]}"; do
     case "$t" in
         1_1_6_1_1 | 1_1_6_1_2 | 1_1_6_1_3 | 1_1_6_1_6 | 1_1_6_2_1 | 1_1_6_2_2 | 1_1_6_3_1 | 1_1_6_3_2 | 1_1_6_4_1 | 1_1_6_4_2 | 1_1_6_5_1 | 1_1_6_5_2 | 1_1_6_5_3 | 1_1_6_6_1 | 1_1_6_6_2 | 1_1_9_2_1 | 1_1_9_2_3 | 1_1_9_2_4 | 1_1_9_2_19)
             expanded_tests+=("${t}_A" "${t}_B")
+            ;;
+        1_3_GEN_TC_1)
+            expanded_tests+=("${t}_A" "${t}_B" "${t}_C")
             ;;
         *)
             expanded_tests+=("$t")
