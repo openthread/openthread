@@ -296,7 +296,24 @@ public:
      * @retval TRUE    If the header appears to be well-formed.
      * @retval FALSE   If the header does not appear to be well-formed.
      */
-    bool IsValid(void) const { return IsVersion4(); }
+    bool IsValid(void) const
+    {
+        return IsVersion4() && (GetIhl() >= kMinIhl) && (GetHeaderLength() <= GetTotalLength());
+    }
+
+    /**
+     * Returns the IPv4 Internet Header Length (IHL) value.
+     *
+     * @returns The IPv4 IHL value.
+     */
+    uint8_t GetIhl(void) const { return mVersIhl & kIhlMask; }
+
+    /**
+     * Returns the IPv4 Header Length value.
+     *
+     * @returns The IPv4 Header Length value.
+     */
+    uint16_t GetHeaderLength(void) const { return static_cast<uint16_t>(GetIhl()) * 4; }
 
     /**
      * Initializes the Version to 4 and sets Traffic Class and Flow fields to zero.
@@ -516,6 +533,7 @@ private:
     static constexpr uint8_t  kVersion4           = 0x40;   // Use with `mVersIhl`
     static constexpr uint8_t  kVersionMask        = 0xf0;   // Use with `mVersIhl`
     static constexpr uint8_t  kIhlMask            = 0x0f;   // Use with `mVersIhl`
+    static constexpr uint8_t  kMinIhl             = 5;      ///< Minimum IPv4 Internet Header Length (in 32-bit words).
     static constexpr uint8_t  kDscpOffset         = 2;      // Use with `mDscpEcn`
     static constexpr uint16_t kDscpMask           = 0xfc;   // Use with `mDscpEcn`
     static constexpr uint8_t  kEcnOffset          = 0;      // Use with `mDscpEcn`
@@ -524,7 +542,13 @@ private:
     static constexpr uint16_t kFlagsDf            = 0x4000; // Use with `mFlagsFragmentOffset`
     static constexpr uint16_t kFlagsMf            = 0x2000; // Use with `mFlagsFragmentOffset`
     static constexpr uint16_t kFragmentOffsetMask = 0x1fff; // Use with `mFlagsFragmentOffset`
-    static constexpr uint32_t kVersIhlInit        = 0x45;   // Version 4, Header length = 5x8 bytes.
+    static constexpr uint32_t kVersIhlInit        = 0x45;   // Version 4, Header length = 5x4 bytes.
+    static constexpr uint8_t  kOptionEnd          = 0;      ///< End of Options List
+    static constexpr uint8_t  kOptionNop          = 1;      ///< No Operation
+    static constexpr uint8_t  kOptionLsrr         = 131;    ///< Loose Source and Record Route
+    static constexpr uint8_t  kOptionSsrr         = 137;    ///< Strict Source and Record Route
+
+    bool HasSourceRouteOption(const Message &aMessage) const;
 
     uint8_t  mVersIhl;
     uint8_t  mDscpEcn;

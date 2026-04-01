@@ -78,8 +78,9 @@ void TestIp4Header(void)
 
     header.Clear();
     header.InitVersionIhl();
+    header.SetTotalLength(header.GetHeaderLength());
     VerifyOrQuit(header.IsValid());
-    VerifyOrQuit(header.GetTotalLength() == 0);
+    VerifyOrQuit(header.GetTotalLength() == sizeof(Header));
     VerifyOrQuit(header.GetProtocol() == 0);
     VerifyOrQuit(header.GetTtl() == 0);
     VerifyOrQuit(header.GetSource().mFields.m32 == 0);

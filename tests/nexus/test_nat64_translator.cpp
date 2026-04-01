@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/net/ip4_types.hpp"
+#include "core/net/nat64_translator.hpp"
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
 
@@ -1101,6 +1103,215 @@ void TestNat64Evict(void)
     Log("End of TestNat64Evict()");
 }
 
+void TestNat64IhlBypass(void)
+{
+    Core         nexus;
+    Node        &node = nexus.CreateNode();
+    Ip6::Prefix  prefix;
+    Ip4::Cidr    cidr;
+    Ip6::Address ip6Addr;
+    Ip4::Address ip4Addr;
+    uint16_t     srcPort    = 5678;
+    uint16_t     dstPort    = 1234;
+    uint16_t     payloadLen = 10;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestNat64IhlBypass");
+
+    nexus.AdvanceTime(0);
+    node.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    SuccessOrQuit(prefix.FromString("fd00:7d03:7d03:7d03::/96"));
+    SuccessOrQuit(cidr.FromString("192.168.255.0/24"));
+    node.Get<Nat64::Translator>().SetNat64Prefix(prefix);
+    SuccessOrQuit(node.Get<Nat64::Translator>().SetIp4Cidr(cidr));
+    node.Get<Nat64::Translator>().SetEnabled(true);
+
+    // Create a mapping by sending a packet from IPv6 to IPv4
+    SuccessOrQuit(ip6Addr.FromString("fd00::1"));
+    SuccessOrQuit(ip4Addr.FromString("1.2.3.4"));
+
+    {
+        Log("Translate an IPv6 message to create mapping");
+        OwnedPtr<Message> message;
+        message.Reset(node.Get<MessagePool>().Allocate(Message::kTypeIp6));
+        VerifyOrQuit(message != nullptr);
+
+        Ip6::Header ip6Header;
+        ip6Header.Clear();
+        ip6Header.InitVersionTrafficClassFlow();
+        ip6Header.SetSource(ip6Addr);
+        ip6Header.GetDestination().SynthesizeFromIp4Address(prefix, ip4Addr);
+        ip6Header.SetNextHeader(Ip6::kProtoUdp);
+        ip6Header.SetPayloadLength(sizeof(Ip6::Udp::Header) + payloadLen);
+        SuccessOrQuit(message->Append(ip6Header));
+
+        Ip6::Udp::Header udpHeader;
+        udpHeader.Clear();
+        udpHeader.SetSourcePort(srcPort);
+        udpHeader.SetDestinationPort(dstPort);
+        udpHeader.SetLength(sizeof(Ip6::Udp::Header) + payloadLen);
+        SuccessOrQuit(message->Append(udpHeader));
+
+        for (uint16_t i = 0; i < payloadLen; i++)
+        {
+            SuccessOrQuit(message->Append<uint8_t>(0));
+        }
+
+        SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp6ToIp4(*message));
+    }
+
+    // Now test IPv4 to IPv6 translation with IHL=6 (options)
+    Log("Test 2 (IHL=6, options)");
+    {
+        OwnedPtr<Message> message;
+        message.Reset(node.Get<MessagePool>().Allocate(Message::kTypeIp4));
+        VerifyOrQuit(message != nullptr);
+
+        Ip4::Header ip4Header;
+        ip4Header.Clear();
+        // IHL=6 means header length is 6*4 = 24 bytes.
+        ip4Header.SetVersionIhl(0x46);
+        ip4Header.SetTotalLength(24 + sizeof(Ip4::Udp::Header) + payloadLen);
+        ip4Header.SetProtocol(Ip4::kProtoUdp);
+        ip4Header.SetTtl(64);
+        ip4Header.SetSource(ip4Addr);
+
+        // Find mapped IPv4 address
+        Nat64::Translator::AddressMappingIterator iterator;
+        Nat64::Translator::AddressMapping         mapping;
+        iterator.Init(node.GetInstance());
+        SuccessOrQuit(iterator.GetNext(mapping));
+        ip4Header.SetDestination(AsCoreType(&mapping.mIp4));
+
+        SuccessOrQuit(message->Append(ip4Header));
+
+        // Append 4 bytes of options (NOPs)
+        uint8_t options[] = {0x01, 0x01, 0x01, 0x00};
+        SuccessOrQuit(message->Append(options));
+
+        Ip4::Udp::Header udpHeader;
+        udpHeader.Clear();
+        udpHeader.SetSourcePort(srcPort);
+        udpHeader.SetDestinationPort(dstPort);
+        udpHeader.SetLength(sizeof(Ip4::Udp::Header) + payloadLen);
+        SuccessOrQuit(message->Append(udpHeader));
+
+        for (uint16_t i = 0; i < payloadLen; i++)
+        {
+            SuccessOrQuit(message->Append<uint8_t>(0));
+        }
+
+        SuccessOrQuit(node.Get<Nat64::Translator>().TranslateIp4ToIp6(*message));
+
+        // Check the translated IPv6 packet
+        Ip6::Headers ip6Headers;
+        SuccessOrQuit(ip6Headers.ParseFrom(*message));
+
+        Log("PayloadLength=%d, SrcPort=%d, DstPort=%d", ip6Headers.GetIp6Header().GetPayloadLength(),
+            ip6Headers.GetSourcePort(), ip6Headers.GetDestinationPort());
+
+        VerifyOrQuit(ip6Headers.GetSourcePort() == srcPort, "Source port corrupted!");
+        VerifyOrQuit(ip6Headers.GetDestinationPort() == dstPort, "Destination port corrupted!");
+    }
+
+    // Test 3: Source route options should be discarded
+    Log("Test 3 (IHL=7, LSRR option)");
+    {
+        OwnedPtr<Message> message;
+        message.Reset(node.Get<MessagePool>().Allocate(Message::kTypeIp4));
+        VerifyOrQuit(message != nullptr);
+
+        Ip4::Header ip4Header;
+        ip4Header.Clear();
+        // IHL=7 means header length is 7*4 = 28 bytes.
+        ip4Header.SetVersionIhl(0x47);
+        ip4Header.SetTotalLength(28 + sizeof(Ip4::Udp::Header) + payloadLen);
+        ip4Header.SetProtocol(Ip4::kProtoUdp);
+        ip4Header.SetTtl(64);
+        ip4Header.SetSource(ip4Addr);
+
+        // Find mapped IPv4 address
+        Nat64::Translator::AddressMappingIterator iterator;
+        Nat64::Translator::AddressMapping         mapping;
+        iterator.Init(node.GetInstance());
+        SuccessOrQuit(iterator.GetNext(mapping));
+        ip4Header.SetDestination(AsCoreType(&mapping.mIp4));
+
+        SuccessOrQuit(message->Append(ip4Header));
+
+        // Append LSRR option (Type 131, Length 8, Pointer 4, Address 1.1.1.1)
+        uint8_t options[] = {0x83, 0x08, 0x04, 0x01, 0x01, 0x01, 0x01, 0x00};
+        SuccessOrQuit(message->Append(options));
+
+        Ip4::Udp::Header udpHeader;
+        udpHeader.Clear();
+        udpHeader.SetSourcePort(srcPort);
+        udpHeader.SetDestinationPort(dstPort);
+        udpHeader.SetLength(sizeof(Ip4::Udp::Header) + payloadLen);
+        SuccessOrQuit(message->Append(udpHeader));
+
+        for (uint16_t i = 0; i < payloadLen; i++)
+        {
+            SuccessOrQuit(message->Append<uint8_t>(0));
+        }
+
+        // This should return kErrorDrop
+        VerifyOrQuit(node.Get<Nat64::Translator>().TranslateIp4ToIp6(*message) == kErrorDrop,
+                     "LSRR option not discarded!");
+    }
+
+    // Test 4: SSRR option should be discarded
+    Log("Test 4 (IHL=7, SSRR option)");
+    {
+        OwnedPtr<Message> message;
+        message.Reset(node.Get<MessagePool>().Allocate(Message::kTypeIp4));
+        VerifyOrQuit(message != nullptr);
+
+        Ip4::Header ip4Header;
+        ip4Header.Clear();
+        // IHL=7 means header length is 7*4 = 28 bytes.
+        ip4Header.SetVersionIhl(0x47);
+        ip4Header.SetTotalLength(28 + sizeof(Ip4::Udp::Header) + payloadLen);
+        ip4Header.SetProtocol(Ip4::kProtoUdp);
+        ip4Header.SetTtl(64);
+        ip4Header.SetSource(ip4Addr);
+
+        // Find mapped IPv4 address
+        Nat64::Translator::AddressMappingIterator iterator;
+        Nat64::Translator::AddressMapping         mapping;
+        iterator.Init(node.GetInstance());
+        SuccessOrQuit(iterator.GetNext(mapping));
+        ip4Header.SetDestination(AsCoreType(&mapping.mIp4));
+
+        SuccessOrQuit(message->Append(ip4Header));
+
+        // Append SSRR option (Type 137, Length 8, Pointer 4, Address 1.1.1.1)
+        uint8_t options[] = {0x89, 0x08, 0x04, 0x01, 0x01, 0x01, 0x01, 0x00};
+        SuccessOrQuit(message->Append(options));
+
+        Ip4::Udp::Header udpHeader;
+        udpHeader.Clear();
+        udpHeader.SetSourcePort(srcPort);
+        udpHeader.SetDestinationPort(dstPort);
+        udpHeader.SetLength(sizeof(Ip4::Udp::Header) + payloadLen);
+        SuccessOrQuit(message->Append(udpHeader));
+
+        for (uint16_t i = 0; i < payloadLen; i++)
+        {
+            SuccessOrQuit(message->Append<uint8_t>(0));
+        }
+
+        // This should return kErrorDrop
+        VerifyOrQuit(node.Get<Nat64::Translator>().TranslateIp4ToIp6(*message) == kErrorDrop,
+                     "SSRR option not discarded!");
+    }
+}
+
 } // namespace Nexus
 } // namespace ot
 
@@ -1113,6 +1324,7 @@ int main(void)
     ot::Nexus::TestNat64CidrAddressReuse("192.168.103.0/30");
     ot::Nexus::TestNat64CidrAddressReuse("192.168.104.0/27");
     ot::Nexus::TestNat64Evict();
+    ot::Nexus::TestNat64IhlBypass();
 
     printf("All tests passed\n");
     return 0;
