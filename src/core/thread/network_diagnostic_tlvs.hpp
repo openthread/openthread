@@ -451,7 +451,7 @@ typedef TlvInfo<Tlv::kTypeList> TypeListTlv;
  * Implements Child TLV generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTlv : public Tlv, public TlvInfo<Tlv::kChild>, public Clearable<ChildTlv>
+class ChildTlvValue : public Clearable<ChildTlvValue>
 {
 public:
     static constexpr uint8_t kFlagsRxOnWhenIdle = 1 << 7; ///< Device mode - Rx-on when idle.
@@ -611,6 +611,11 @@ private:
     uint32_t        mCslTimeout;          // CSL Timeout in seconds.
     uint8_t         mCslChannel;          // CSL channel.
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Child TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kChild, ChildTlvValue> ChildTlv;
 
 /**
  * Implements Child IPv6 Address List Value generation and parsing.

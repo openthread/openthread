@@ -144,14 +144,14 @@ exit:
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 Error Server::AppendChildTableAsChildTlvs(Message &aMessage)
 {
-    Error    error = kErrorNone;
-    ChildTlv childTlv;
+    Error         error = kErrorNone;
+    ChildTlvValue childTlvValue;
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        childTlv.InitFrom(child);
+        childTlvValue.InitFrom(child);
 
-        SuccessOrExit(error = childTlv.AppendTo(aMessage));
+        SuccessOrExit(error = Tlv::Append<ChildTlv>(aMessage, childTlvValue));
     }
 
     error = Tlv::AppendEmpty<ChildTlv>(aMessage);
@@ -736,14 +736,14 @@ exit:
 
 Error Server::AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 {
-    Error    error = kErrorNone;
-    ChildTlv childTlv;
+    Error         error = kErrorNone;
+    ChildTlvValue childTlvValue;
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        childTlv.InitFrom(child);
+        childTlvValue.InitFrom(child);
 
-        SuccessOrExit(error = childTlv.AppendTo(*aAnswer));
+        SuccessOrExit(error = Tlv::Append<ChildTlv>(*aAnswer, childTlvValue));
         SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
     }
 

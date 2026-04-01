@@ -136,14 +136,11 @@ void EnhancedRouteTlvEntry::Parse(ParseInfo &aParseInfo) const
 #if OPENTHREAD_FTD
 
 //---------------------------------------------------------------------------------------------------------------------
-// ChildTlv
+// ChildTlvValue
 
-void ChildTlv::InitFrom(const Child &aChild)
+void ChildTlvValue::InitFrom(const Child &aChild)
 {
     Clear();
-
-    SetType(kChild);
-    SetLength(sizeof(*this) - sizeof(Tlv));
 
     mFlags |= aChild.IsRxOnWhenIdle() ? kFlagsRxOnWhenIdle : 0;
     mFlags |= aChild.IsFullThreadDevice() ? kFlagsFtd : 0;

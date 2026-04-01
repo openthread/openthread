@@ -286,7 +286,7 @@ private:
         friend class MeshDiag;
 
     private:
-        void SetFrom(const NetworkDiagnostic::ChildTlv &aChildTlv);
+        void SetFrom(const NetworkDiagnostic::ChildTlvValue &aChildTlvValue);
     };
 
     class RouterNeighborEntry : public otMeshDiagRouterNeighborEntry
