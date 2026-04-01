@@ -104,12 +104,10 @@ void TestBbrTc3(void)
 
     {
         MeshCoP::Dataset::Info datasetInfo;
-        String<17>             xpanIdString;
 
         SuccessOrQuit(br1.Get<MeshCoP::ActiveDatasetManager>().Read(datasetInfo));
-        nexus.AddTestVar("NETWORK_NAME", datasetInfo.mNetworkName.m8);
-        xpanIdString.AppendHexBytes(datasetInfo.mExtendedPanId.m8, sizeof(datasetInfo.mExtendedPanId.m8));
-        nexus.AddTestVar("XPAN_ID", xpanIdString.AsCString());
+        nexus.AddTestVar("NETWORK_NAME", datasetInfo.Get<MeshCoP::Dataset::kNetworkName>().GetAsCString());
+        nexus.AddTestVar("XPAN_ID", datasetInfo.Get<MeshCoP::Dataset::kExtendedPanId>().ToString().AsCString());
     }
 
     nexus.AdvanceTime(0);
