@@ -581,12 +581,7 @@ void Test_1_3_SRP_TC_2(const char *aJsonFileName)
     nexus.AddTestVar("BR_1_MLEID_ADDR", br1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("ED_1_MLEID_ADDR", ed1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("ED_2_MLEID_ADDR", ed2.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
-
-    {
-        String<10> srpPortString;
-        srpPortString.Append("%u", br1.Get<Srp::Server>().GetPort());
-        nexus.AddTestVar("BR_1_SRP_PORT", srpPortString.AsCString());
-    }
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     Ip6::Prefix omrPrefix;
     SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().GetOmrPrefix(omrPrefix));

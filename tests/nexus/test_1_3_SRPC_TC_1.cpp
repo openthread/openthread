@@ -202,10 +202,7 @@ void Test_1_3_SRPC_TC_1(const char *aJsonFileName)
     br1.Get<Srp::Server>().SetEnabled(true);
     nexus.AdvanceTime(kStabilizationTime);
 
-    /** Add SRP port to test variables for Python script. */
-    String<6> portString;
-    portString.Append("%u", br1.Get<Srp::Server>().GetPort());
-    nexus.AddTestVar("BR_1_SRP_PORT", portString.AsCString());
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: ED 1 (DUT) Harness instructs DUT to add a service to the device.");
@@ -286,9 +283,7 @@ void Test_1_3_SRPC_TC_1(const char *aJsonFileName)
     br2.Get<Srp::Server>().SetEnabled(true);
     nexus.AdvanceTime(30 * 1000);
 
-    /** Add SRP port to test variables for Python script. */
-    portString.Clear().Append("%u", br2.Get<Srp::Server>().GetPort());
-    nexus.AddTestVar("BR_2_SRP_PORT", portString.AsCString());
+    nexus.AddTestVar("BR_2_SRP_PORT", br2.Get<Srp::Server>().GetPort());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 8: BR 1 Harness deactivates the device.");

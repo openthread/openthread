@@ -295,12 +295,22 @@ exit:
 
 void Core::AddNetworkKey(const NetworkKey &aKey) { SuccessOrQuit(mNetworkKeys.PushBack(aKey)); }
 
-void Core::AddTestVar(const char *aName, const char *aValue)
+Core::TestVar &Core::NewTestVar(const char *aName)
 {
     TestVar *var = mTestVars.PushBack();
+
     VerifyOrQuit(var != nullptr);
     var->mName.Clear().Append("%s", aName);
-    var->mValue.Clear().Append("%s", aValue);
+    var->mValue.Clear();
+
+    return *var;
+}
+
+void Core::AddTestVar(const char *aName, const char *aValue) { NewTestVar(aName).mValue.Append("%s", aValue); }
+
+void Core::AddTestVar(const char *aName, uint32_t aUintValue)
+{
+    NewTestVar(aName).mValue.Append("%lu", ToUlong(aUintValue));
 }
 
 void Core::AddOmrPrefixTestVar(const char *aName, Node &aNode)

@@ -66,6 +66,7 @@ public:
     void SaveTestInfo(const char *aFilename, Node *aLeaderNode = nullptr);
     void AddNetworkKey(const NetworkKey &aKey);
     void AddTestVar(const char *aName, const char *aValue);
+    void AddTestVar(const char *aName, uint32_t aValue);
     void AddOmrPrefixTestVar(const char *aName, Node &aNode);
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
@@ -105,6 +106,8 @@ private:
         String<32> mName;
         String<64> mValue;
     };
+
+    TestVar &NewTestVar(const char *aName);
 
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);

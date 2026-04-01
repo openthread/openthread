@@ -157,11 +157,7 @@ void TestMatnTc22(void)
     VerifyOrQuit(br1.Get<BackboneRouter::Local>().IsPrimary());
 
     nexus.AddTestVar("MA1", kMA1);
-    {
-        String<16> timeoutString;
-        timeoutString.Append("%lu", ToUlong(kMlrTimeoutMin));
-        nexus.AddTestVar("MLR_TIMEOUT_MIN", timeoutString.AsCString());
-    }
+    nexus.AddTestVar("MLR_TIMEOUT_MIN", kMlrTimeoutMin);
 
     SuccessOrQuit(dut1.Get<Ip6::Netif>().SubscribeExternalMulticast(ma1));
     SuccessOrQuit(dut2.Get<Ip6::Netif>().SubscribeExternalMulticast(ma1));

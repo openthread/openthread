@@ -195,11 +195,7 @@ void TestMatnTc5(void)
     // Add multicast variables to test info manually to ensure verify script sees them.
     nexus.AddTestVar("MA1", kMA1);
     nexus.AddTestVar("HOST_ULA", hostUla->ToString().AsCString());
-    {
-        String<16> timeoutString;
-        timeoutString.Append("%lu", ToUlong(kMlrTimeoutMin));
-        nexus.AddTestVar("MLR_TIMEOUT_MIN", timeoutString.AsCString());
-    }
+    nexus.AddTestVar("MLR_TIMEOUT_MIN", kMlrTimeoutMin);
 
     /**
      * Step 1

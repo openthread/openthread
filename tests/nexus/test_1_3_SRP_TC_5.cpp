@@ -378,12 +378,7 @@ void Test_1_3_SRP_TC_5(const char *aJsonFileName)
 
     nexus.AddTestVar("BR_1_MLEID_ADDR", br1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("ED_1_MLEID_ADDR", ed1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
-
-    {
-        String<10> srpPortString;
-        srpPortString.Append("%u", br1.Get<Srp::Server>().GetPort());
-        nexus.AddTestVar("BR_1_SRP_PORT", srpPortString.AsCString());
-    }
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     nexus.SaveTestInfo(aJsonFileName);
 }

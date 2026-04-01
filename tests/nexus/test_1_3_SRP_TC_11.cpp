@@ -167,11 +167,7 @@ void Test_1_3_SRP_TC_11(const char *aJsonFileName)
     Log("Step 3: BR 1 (DUT) Automatically adds SRP Server information in the Thread Network Data.");
     nexus.AdvanceTime(kSrpServerInfoUpdateTime);
 
-    {
-        String<10> srpPortString;
-        srpPortString.Append("%u", br1.Get<Srp::Server>().GetPort());
-        nexus.AddTestVar("BR_1_SRP_PORT_1", srpPortString.AsCString());
-    }
+    nexus.AddTestVar("BR_1_SRP_PORT_1", br1.Get<Srp::Server>().GetPort());
 
     /**
      * Step 4
@@ -361,9 +357,7 @@ void Test_1_3_SRP_TC_11(const char *aJsonFileName)
         nexus.AdvanceTime(kFormNetworkTime);
         nexus.AdvanceTime(kSrpServerInfoUpdateTime);
 
-        String<10> srpPortString;
-        srpPortString.Append("%u", br1.Get<Srp::Server>().GetPort());
-        nexus.AddTestVar("BR_1_SRP_PORT_2", srpPortString.AsCString());
+        nexus.AddTestVar("BR_1_SRP_PORT_2", br1.Get<Srp::Server>().GetPort());
     }
 
     /**

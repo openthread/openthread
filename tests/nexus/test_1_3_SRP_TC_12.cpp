@@ -292,25 +292,10 @@ void Test_1_3_SRP_TC_12(const char *aJsonFileName)
 
     Log("All steps completed.");
 
-    {
-        String<10> string;
-
-        string.Clear();
-        string.Append("%u", kBr2UnicastPort);
-        nexus.AddTestVar("BR_2_UNICAST_PORT", string.AsCString());
-
-        string.Clear();
-        string.Append("%u", kBr3UnicastPort);
-        nexus.AddTestVar("BR_3_UNICAST_PORT", string.AsCString());
-
-        string.Clear();
-        string.Append("%u", kBr1AnycastSeqNum);
-        nexus.AddTestVar("BR_1_ANYCAST_SEQ", string.AsCString());
-
-        string.Clear();
-        string.Append("%u", kBr2AnycastSeqNum);
-        nexus.AddTestVar("BR_2_ANYCAST_SEQ", string.AsCString());
-    }
+    nexus.AddTestVar("BR_2_UNICAST_PORT", kBr2UnicastPort);
+    nexus.AddTestVar("BR_3_UNICAST_PORT", kBr3UnicastPort);
+    nexus.AddTestVar("BR_1_ANYCAST_SEQ", kBr1AnycastSeqNum);
+    nexus.AddTestVar("BR_2_ANYCAST_SEQ", kBr2AnycastSeqNum);
 
     nexus.AddTestVar("BR_2_UNICAST_ADDR", kBr2UnicastAddr);
     nexus.AddTestVar("BR_3_UNICAST_ADDR", kBr3UnicastAddr);
