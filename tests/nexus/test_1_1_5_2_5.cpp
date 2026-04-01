@@ -99,12 +99,12 @@ void Test5_2_5(void)
     Node &reed1 = nexus.CreateNode();
 
     leader.SetName("LEADER");
+
     for (uint16_t i = 0; i < kRouterCount; i++)
     {
-        char name[16];
-        snprintf(name, sizeof(name), "ROUTER_%u", i + 1);
-        routers[i]->SetName(name);
+        routers[i]->SetName("ROUTER", i + 1);
     }
+
     br.SetName("BR");
     med1.SetName("MED_1");
     reed1.SetName("REED_1");
