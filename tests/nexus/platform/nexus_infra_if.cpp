@@ -54,15 +54,7 @@ void InfraIf::Init(Node &aNode)
     mNodeId  = aNode.GetId();
 
     GetLinkLayerAddress(mac);
-
-    iid.mFields.m8[0] = mac.mAddress[0] ^ 0x02;
-    iid.mFields.m8[1] = mac.mAddress[1];
-    iid.mFields.m8[2] = mac.mAddress[2];
-    iid.mFields.m8[3] = 0xff;
-    iid.mFields.m8[4] = 0xfe;
-    iid.mFields.m8[5] = mac.mAddress[3];
-    iid.mFields.m8[6] = mac.mAddress[4];
-    iid.mFields.m8[7] = mac.mAddress[5];
+    SuccessOrQuit(mac.ConvertToIid(iid));
 
     address.SetToLinkLocalAddress(iid);
 
@@ -270,15 +262,7 @@ void InfraIf::HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio)
 
     address = AsCoreType(&prefix.mPrefix);
     GetLinkLayerAddress(mac);
-
-    address.mFields.m8[8]  = mac.mAddress[0] ^ 0x02;
-    address.mFields.m8[9]  = mac.mAddress[1];
-    address.mFields.m8[10] = mac.mAddress[2];
-    address.mFields.m8[11] = 0xff;
-    address.mFields.m8[12] = 0xfe;
-    address.mFields.m8[13] = mac.mAddress[3];
-    address.mFields.m8[14] = mac.mAddress[4];
-    address.mFields.m8[15] = mac.mAddress[5];
+    SuccessOrQuit(mac.ConvertToIid(address.GetIid()));
 
     if (aPio.GetValidLifetime() == 0)
     {
@@ -586,7 +570,7 @@ void InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const
     ClearAllBytes(aLinkLayerAddress);
     aLinkLayerAddress.mLength     = 6;
     aLinkLayerAddress.mAddress[0] = 0x02;
-    aLinkLayerAddress.mAddress[5] = static_cast<uint8_t>(mNodeId);
+    BigEndian::WriteUint32(mNodeId, &aLinkLayerAddress.mAddress[2]);
 }
 
 Node &InfraIf::GetNode(void)
@@ -637,7 +621,7 @@ otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstanc
 {
     OT_UNUSED_VARIABLE(aInfraIfIndex);
 
-    AsNode(aInstance).mInfraIf.GetLinkLayerAddress(*aLinkLayerAddress);
+    AsNode(aInstance).mInfraIf.GetLinkLayerAddress(AsCoreType(aLinkLayerAddress));
 
     return OT_ERROR_NONE;
 }

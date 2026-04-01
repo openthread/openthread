@@ -32,8 +32,8 @@
 #include <cstdint>
 #include <cstdio>
 
-#include <openthread/platform/infra_if.h>
-#include <openthread/platform/radio.h>
+#include "nexus_infra_if.hpp"
+#include "nexus_radio.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -73,11 +73,11 @@ public:
      * @param[in] aLength   The packet length.
      * @param[in] aTimeUs   The timestamp in microseconds.
      */
-    void WritePacket(const otPlatInfraIfLinkLayerAddress &aSrcAddr,
-                     const otPlatInfraIfLinkLayerAddress &aDstAddr,
-                     const uint8_t                       *aBuffer,
-                     uint16_t                             aLength,
-                     uint64_t                             aTimeUs);
+    void WritePacket(const InfraIf::LinkLayerAddress &aSrcAddr,
+                     const InfraIf::LinkLayerAddress &aDstAddr,
+                     const uint8_t                   *aBuffer,
+                     uint16_t                         aLength,
+                     uint64_t                         aTimeUs);
 
 private:
     static constexpr uint32_t kPcapngShbType            = 0x0a0d0d0a;

@@ -40,6 +40,7 @@
 
 #include <openthread/platform/infra_if.h>
 
+#include "common/as_core_type.hpp"
 #include "common/data.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -87,9 +88,56 @@ class InfraIf : public InstanceLocator
 public:
     static constexpr uint16_t kInfoStringSize = 20; ///< Max chars for the info string (`ToString()`).
 
-    typedef String<kInfoStringSize>       InfoString;       ///< String type returned from `ToString()`.
-    typedef Data<kWithUint16Length>       Icmp6Packet;      ///< An IMCPv6 packet (data containing the IP payload)
-    typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress; ///< A link-layer address
+    typedef String<kInfoStringSize> InfoString;  ///< String type returned from `ToString()`.
+    typedef Data<kWithUint16Length> Icmp6Packet; ///< An IMCPv6 packet (data containing the IP payload)
+
+    /**
+     * Represents a link-layer address.
+     */
+    class LinkLayerAddress : public otPlatInfraIfLinkLayerAddress, public Clearable<LinkLayerAddress>
+    {
+    public:
+        static constexpr uint8_t kMaxLength = OT_PLAT_INFRA_IF_MAX_LINK_LAYER_ADDR_LENGTH; ///< Max length
+
+        static constexpr uint16_t kInfoStringSize = 50; ///< `InfoString` size
+
+        typedef String<kInfoStringSize> InfoString; //< String type returned from `ToString()`.
+
+        /**
+         * Gets the link-layer address's length (number of bytes).
+         *
+         * @return The link-layer address's length (in bytes).
+         */
+        uint8_t GetLength(void) const { return mLength; }
+
+        /**
+         * Gets the address bytes (as a pointer to a byte array).
+         *
+         * @returns A pointer to a byte array containing the link layer address
+         */
+        const uint8_t *GetBytes(void) const { return mAddress; };
+
+        /**
+         * Converts the link-layer address to an IPv6 Interface Identifier (IID).
+         *
+         * Currently supports link-layer addresses of length 5 (40-bit), 6 (48-bit), and 8 (64-bit) bytes.
+         *
+         * @param[out] aIid  A reference to an `InterfaceIdentifier` to output the converted IID.
+         *
+         * @retval kErrorNone        Successfully converted to an IID and updated @p aIid.
+         * @retval kErrorNotCapable  The link-layer address length is not supported for conversion.
+         */
+        Error ConvertToIid(Ip6::InterfaceIdentifier &aIid) const;
+
+        /**
+         * Converts the link-layer address to a human-readable string.
+         *
+         * The address is represented as a sequence of hex digits (lower case) separated by `:`, e.g., `01:ab:7c:d2:38`.
+         *
+         * @returns The string representation of the link-layer address.
+         */
+        InfoString ToString(void) const;
+    };
 
     /**
      * Initializes the `InfraIf`.
@@ -238,6 +286,9 @@ private:
 };
 
 } // namespace BorderRouter
+
+DefineCoreType(otPlatInfraIfLinkLayerAddress, BorderRouter::InfraIf::LinkLayerAddress);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

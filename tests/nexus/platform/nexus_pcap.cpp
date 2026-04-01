@@ -202,11 +202,11 @@ exit:
     return;
 }
 
-void Pcap::WritePacket(const otPlatInfraIfLinkLayerAddress &aSrcAddr,
-                       const otPlatInfraIfLinkLayerAddress &aDstAddr,
-                       const uint8_t                       *aBuffer,
-                       uint16_t                             aLength,
-                       uint64_t                             aTimeUs)
+void Pcap::WritePacket(const InfraIf::LinkLayerAddress &aSrcAddr,
+                       const InfraIf::LinkLayerAddress &aDstAddr,
+                       const uint8_t                   *aBuffer,
+                       uint16_t                         aLength,
+                       uint64_t                         aTimeUs)
 {
     Epb epb;
 
@@ -227,10 +227,11 @@ void Pcap::WritePacket(const otPlatInfraIfLinkLayerAddress &aSrcAddr,
     VerifyOrExit(mFile != nullptr);
 
     ClearAllBytes(ethHeader);
-    VerifyOrQuit(aDstAddr.mLength >= sizeof(ethHeader.mDst), "Destination MAC address length is less than expected");
-    memcpy(ethHeader.mDst, aDstAddr.mAddress, sizeof(ethHeader.mDst));
-    VerifyOrQuit(aSrcAddr.mLength >= sizeof(ethHeader.mSrc), "Source MAC address length is less than expected");
-    memcpy(ethHeader.mSrc, aSrcAddr.mAddress, sizeof(ethHeader.mSrc));
+    VerifyOrQuit(aDstAddr.GetLength() >= sizeof(ethHeader.mDst),
+                 "Destination MAC address length is less than expected");
+    memcpy(ethHeader.mDst, aDstAddr.GetBytes(), sizeof(ethHeader.mDst));
+    VerifyOrQuit(aSrcAddr.GetLength() >= sizeof(ethHeader.mSrc), "Source MAC address length is less than expected");
+    memcpy(ethHeader.mSrc, aSrcAddr.GetBytes(), sizeof(ethHeader.mSrc));
     ethHeader.mType = BigEndian::HostSwap16(kEtherTypeIPv6);
 
     packetLen        = sizeof(ethHeader) + aLength;

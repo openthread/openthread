@@ -252,18 +252,13 @@ void Test_1_3_DBR_TC_6(void)
     nexus.AdvanceTime(kPingResponseTime);
 
     {
-        char                      macStr[18];
         InfraIf::LinkLayerAddress addr;
 
         br1.mInfraIf.GetLinkLayerAddress(addr);
-        snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", addr.mAddress[0], addr.mAddress[1],
-                 addr.mAddress[2], addr.mAddress[3], addr.mAddress[4], addr.mAddress[5]);
-        nexus.AddTestVar("BR1_ETH", macStr);
+        nexus.AddTestVar("BR1_ETH", addr.ToString().AsCString());
 
         eth1.mInfraIf.GetLinkLayerAddress(addr);
-        snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", addr.mAddress[0], addr.mAddress[1],
-                 addr.mAddress[2], addr.mAddress[3], addr.mAddress[4], addr.mAddress[5]);
-        nexus.AddTestVar("ETH1_ETH", macStr);
+        nexus.AddTestVar("ETH1_ETH", addr.ToString().AsCString());
     }
 
     nexus.AddTestVar("BR1", br1.Get<Mac::Mac>().GetExtAddress().ToString().AsCString());
