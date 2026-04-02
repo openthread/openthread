@@ -227,6 +227,7 @@ DEFAULT_TESTS=(
     "1_4_TREL_TC_5"
     "1_4_TREL_TC_6"
     "1_4_DNS_TC_1"
+    "1_4_CS_TC_3"
 )
 
 # Use provided arguments or the default test list
