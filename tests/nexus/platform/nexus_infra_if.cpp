@@ -486,6 +486,11 @@ void InfraIf::Receive(Message &aMessage)
     }
 #endif
 
+    if (headers.IsUdp() && node.mUdp.HandleReceive(aMessage, headers))
+    {
+        ExitNow();
+    }
+
     {
         // We also deliver generic IPv6 packets to the stack if they are NOT ICMPv6 ND packets.
         // (ND packets were already delivered via otPlatInfraIfRecvIcmp6Nd above).

@@ -62,7 +62,7 @@ static constexpr uint16_t kServicePort       = 55556;
 void SendMultiQuestionQuery(Node &aNode, const Ip6::Address &aDest, const char *aName, uint16_t aType1, uint16_t aType2)
 {
     Ip6::Udp::Socket socket(aNode, nullptr, nullptr);
-    SuccessOrQuit(socket.Open(Ip6::kNetifUnspecified));
+    SuccessOrQuit(socket.Open(Ip6::kNetifThreadInternal));
 
     Message *message = socket.NewMessage();
     VerifyOrQuit(message != nullptr);
@@ -91,7 +91,7 @@ void SendMultiQuestionQuery(Node &aNode, const Ip6::Address &aDest, const char *
 void SendSingleQuestionQuery(Node &aNode, const Ip6::Address &aDest, const char *aName, uint16_t aType)
 {
     Ip6::Udp::Socket socket(aNode, nullptr, nullptr);
-    SuccessOrQuit(socket.Open(Ip6::kNetifUnspecified));
+    SuccessOrQuit(socket.Open(Ip6::kNetifThreadInternal));
 
     Message *message = socket.NewMessage();
     VerifyOrQuit(message != nullptr);

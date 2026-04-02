@@ -53,6 +53,7 @@ add_library(ot-nexus-platform
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp
+    platform/nexus_udp.cpp
     ../../examples/platforms/utils/mac_frame.cpp
 )
 

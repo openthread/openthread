@@ -81,6 +81,11 @@ public:
     void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
 
+    Node *FindNodeByAddress(const Ip6::Address &aAddress);
+    bool  IsThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
+
 private:
     static constexpr int8_t  kDefaultRxRssi = -20;
     static constexpr uint8_t kDefaultRxLqi  = 255;
@@ -112,8 +117,6 @@ private:
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
     void ProcessInfraIf(Node &aNode);
-
-    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
 
     static void HandleIcmpResponse(void                *aContext,
                                    otMessage           *aMessage,

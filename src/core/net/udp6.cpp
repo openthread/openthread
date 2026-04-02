@@ -223,6 +223,9 @@ Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler 
 
     aSocket.Clear();
     aSocket.SetNetifId(aNetifId);
+#if OPENTHREAD_PLATFORM_NEXUS && OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    aSocket.mHandle = &GetInstance();
+#endif
     aSocket.mHandler = aHandler;
     aSocket.mContext = aContext;
 
