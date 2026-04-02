@@ -680,14 +680,41 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 }
 
-Error SecureTransport::Open(Ip6::NetifIdentifier aNetifIdentifier)
+Error SecureTransport::Open(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 {
     Error error;
 
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
     SuccessOrExit(error = mSocket.Open(aNetifIdentifier));
-    mIsOpen                      = true;
+
+    error = mSocket.Bind(aPort);
+
+    if (error != kErrorNone)
+    {
+        IgnoreError(mSocket.Close());
+        ExitNow();
+    }
+
+    mIsOpen = true;
+    mTransportCallback.Clear();
+
+    mRemainingConnectionAttempts = mMaxConnectionAttempts;
+
+exit:
+    return error;
+}
+
+Error SecureTransport::Open(TransportCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mIsOpen, error = kErrorAlready);
+    VerifyOrExit(aCallback != nullptr, error = kErrorInvalidArgs);
+
+    mIsOpen = true;
+    mTransportCallback.Set(aCallback, aContext);
+
     mRemainingConnectionAttempts = mMaxConnectionAttempts;
 
 exit:
@@ -737,37 +764,6 @@ exit:
     return;
 }
 
-Error SecureTransport::Bind(uint16_t aPort)
-{
-    Error error;
-
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
-
-    error = mSocket.Bind(aPort);
-
-exit:
-    return error;
-}
-
-Error SecureTransport::Bind(TransportCallback aCallback, void *aContext)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
-
-    mTransportCallback.Set(aCallback, aContext);
-
-exit:
-    return error;
-}
-
 void SecureTransport::Close(void)
 {
     VerifyOrExit(mIsOpen);
@@ -789,10 +785,15 @@ void SecureTransport::Close(void)
 
     RemoveDisconnectedSessions();
 
+    if (UsesSocket())
+    {
+        IgnoreError(mSocket.Close());
+    }
+
+    mTransportCallback.Clear();
+
     mIsOpen    = false;
     mIsClosing = false;
-    mTransportCallback.Clear();
-    IgnoreError(mSocket.Close());
     mTimer.Stop();
 
 exit:
@@ -864,13 +865,13 @@ int SecureTransport::Transmit(const unsigned char    *aBuf,
 
     SuccessOrExit(error = message->AppendBytes(aBuf, static_cast<uint16_t>(aLength)));
 
-    if (mTransportCallback.IsSet())
+    if (UsesSocket())
     {
-        error = mTransportCallback.Invoke(*message, aMessageInfo);
+        error = mSocket.SendTo(*message, aMessageInfo);
     }
     else
     {
-        error = mSocket.SendTo(*message, aMessageInfo);
+        error = mTransportCallback.Invoke(*message, aMessageInfo);
     }
 
 exit:
@@ -1044,7 +1045,7 @@ void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLin
         break;
     }
 
-    LogAt(logLevel, "[%u] %s", mSocket.GetSockName().mPort, aStr);
+    LogAt(logLevel, "[%u] %s", UsesSocket() ? mSocket.GetSockName().mPort : 0, aStr);
 
     OT_UNUSED_VARIABLE(aStr);
     OT_UNUSED_VARIABLE(aFile);

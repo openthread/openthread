@@ -449,7 +449,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     enroller.Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext);
 
-    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -1135,7 +1135,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
 
     enroller.Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext);
 
-    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -1423,7 +1423,7 @@ void TestBorderAdmitterMultipleEnrollers(void)
         recvContext[i].Clear();
         enroller->Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext[i]);
 
-        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open());
+        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open(0));
         SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Connect(sockAddr));
 
         nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -1761,7 +1761,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
         recvContext[i].Clear();
         enroller->Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext[i]);
 
-        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open());
+        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open(0));
         SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Connect(sockAddr));
 
         nexus.AdvanceTime(Time::kOneSecondInMsec);
@@ -3259,7 +3259,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
         recvContext[i].Clear();
         enroller->Get<Tmf::SecureAgent>().RegisterResourceHandler(HandleResource, &recvContext[i]);
 
-        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open());
+        SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Open(0));
         SuccessOrQuit(enroller->Get<Tmf::SecureAgent>().Connect(sockAddr));
 
         nexus.AdvanceTime(Time::kOneSecondInMsec);

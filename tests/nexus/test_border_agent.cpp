@@ -113,7 +113,7 @@ void TestBorderAgent(void)
     node0.Get<KeyManager>().GetPskc(pskc);
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -145,7 +145,7 @@ void TestBorderAgent(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Establish a secure connection again");
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -245,11 +245,11 @@ void TestBorderAgent(void)
     Log("Establish two more secure sessions while the first session is still active");
 
     SuccessOrQuit(node2.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
-    SuccessOrQuit(node2.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node2.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node2.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     SuccessOrQuit(node3.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
-    SuccessOrQuit(node3.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node3.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node3.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -313,7 +313,7 @@ void TestBorderAgent(void)
 
     nexus.AdvanceTime(25 * Time::kOneSecondInMsec);
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -481,7 +481,7 @@ void TestBorderAgentEphemeralKey(void)
     SuccessOrQuit(
         node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(kEphemeralKey), kEphemeralKeySize));
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -521,7 +521,7 @@ void TestBorderAgentEphemeralKey(void)
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
     VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetUdpPort() == kUdpPort);
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(2 * Time::kOneSecondInMsec);
@@ -619,7 +619,7 @@ void TestBorderAgentEphemeralKey(void)
     SuccessOrQuit(
         node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(kEphemeralKey), kEphemeralKeySize));
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -670,7 +670,7 @@ void TestBorderAgentEphemeralKey(void)
 
     node0.Get<KeyManager>().GetPskc(pskc);
     SuccessOrQuit(node2.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
-    SuccessOrQuit(node2.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node2.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node2.Get<Tmf::SecureAgent>().Connect(baSockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -690,7 +690,7 @@ void TestBorderAgentEphemeralKey(void)
     SuccessOrQuit(
         node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(kEphemeralKey), kEphemeralKeySize));
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
 
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -902,7 +902,7 @@ void TestHistoryTrackerBorderAgentEpskcEvent(void)
 
     nexus.AdvanceTime(0);
 
-    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
     SuccessOrQuit(
         node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(kEphemeralKey), kEphemeralKeySize - 2));
 

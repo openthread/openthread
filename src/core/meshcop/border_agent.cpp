@@ -171,8 +171,7 @@ void Manager::Start(void)
     mDtlsTransport.SetAcceptCallback(Manager::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(Manager::HandleRemoveSession, this);
 
-    SuccessOrExit(error = mDtlsTransport.Open());
-    SuccessOrExit(error = mDtlsTransport.Bind(kUdpPort));
+    SuccessOrExit(error = mDtlsTransport.Open(kUdpPort));
 
     Get<KeyManager>().GetPskc(pskc);
     SuccessOrExit(error = mDtlsTransport.SetPsk(pskc.m8, Pskc::kSize));

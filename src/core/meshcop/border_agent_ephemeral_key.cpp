@@ -103,8 +103,7 @@ Error EphemeralKeyManager::Start(const char *aKeyString, uint32_t aTimeout, uint
     mDtlsTransport.SetAcceptCallback(EphemeralKeyManager::HandleAcceptSession, this);
     mDtlsTransport.SetRemoveSessionCallback(EphemeralKeyManager::HandleRemoveSession, this);
 
-    SuccessOrExit(error = mDtlsTransport.Open());
-    SuccessOrExit(error = mDtlsTransport.Bind(aUdpPort));
+    SuccessOrExit(error = mDtlsTransport.Open(aUdpPort));
 
     SuccessOrExit(
         error = mDtlsTransport.SetPsk(reinterpret_cast<const uint8_t *>(aKeyString), static_cast<uint8_t>(length)));
