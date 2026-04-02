@@ -55,10 +55,12 @@
 /**
  * @def OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
  *
- * Specifies the Border Agent UDP port, and use 0 for ephemeral port.
+ * Specifies the Border Agent UDP port.
+ *
+ * The default value is 49191 per the Thread specification. If set to zero, an ephemeral port is used.
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
-#define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 0
+#define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 49191
 #endif
 
 /**
