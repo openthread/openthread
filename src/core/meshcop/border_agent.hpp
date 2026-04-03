@@ -341,7 +341,7 @@ private:
         void  SendEnrollerResponse(Uri aUri, StateTlv::State aResponseState, const Coap::Message &aRequest);
         void  SendEnrollerReportState(uint8_t aAdmitterState);
         Error AppendAdmitterTlvs(Coap::Message &aMessage, uint8_t aAdmitterState);
-        void  ForwardUdpRelayToEnroller(const Coap::Message &aMessage);
+        void  ForwardUdpRelayToEnroller(const Coap::Message &aMessage, bool aCheckEnrollerMode);
         void  ForwardUdpProxyToEnroller(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
         static Error ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData);

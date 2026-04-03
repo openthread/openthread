@@ -236,14 +236,16 @@ void Admitter::ForwardJoinerRelayToEnrollers(const Coap::Msg &aMsg)
         if (joiner != nullptr)
         {
             joiner->UpdateExpirationTime();
-            iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage);
+            iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage,
+                                                                                     /* aCheckEnrollerMode */ false);
             ExitNow();
         }
     }
 
     for (EnrollerIterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
-        iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage);
+        iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage,
+                                                                                 /* aCheckEnrollerMode */ true);
     }
 
 exit:
@@ -1425,12 +1427,16 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::ForwardUdpRelayToEnroller(const Coap::Message &aMessage)
+void Manager::CoapDtlsSession::ForwardUdpRelayToEnroller(const Coap::Message &aMessage, bool aCheckEnrollerMode)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnroller());
-    VerifyOrExit(mEnroller->ShouldForwardJoinerRelay());
+
+    if (aCheckEnrollerMode)
+    {
+        VerifyOrExit(mEnroller->ShouldForwardJoinerRelay());
+    }
 
     SuccessOrExit(error = ForwardUdpRelay(aMessage));
     LogInfo("Forward %s to enroller - session %u", UriToString<kUriRelayRx>(), mIndex);

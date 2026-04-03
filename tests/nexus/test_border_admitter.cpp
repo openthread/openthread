@@ -1326,8 +1326,10 @@ template <uint8_t kNumEnrollers> bool DidFindAllEnrollers(const BitSet<kNumEnrol
 
 void LogEnroller(const Admitter::EnrollerInfo &aInfo)
 {
-    Log("   Enroller - id:%s steeringData:%s mode:0x%02x", aInfo.mId,
-        AsCoreType(&aInfo.mSteeringData).ToString().AsCString(), aInfo.mMode);
+    Log("   Enroller - id:%s steeringData:%s mode:0x%02x[%c%c]", aInfo.mId,
+        AsCoreType(&aInfo.mSteeringData).ToString().AsCString(), aInfo.mMode,
+        aInfo.mMode & MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx ? 'J' : '-',
+        aInfo.mMode & MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx ? 'U' : '-');
 }
 
 void LogJoiner(const Admitter::JoinerInfo &aInfo)
@@ -2039,6 +2041,219 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     }
 
     joiners[1]->Get<Joiner>().Stop();
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Send `EnrollerKeepAlive` message from `enrollers[0]` change its mode to disallow `kForwardJoinerRelayRx`");
+
+    modes[0] = MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
+
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
+    SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[0]));
+
+    responseContexts[0].Clear();
+    SuccessOrQuit(enrollers[0]->Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContexts[0]));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    VerifyOrQuit(responseContexts[0].mReceived);
+    VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that the `enrollers[0]` mode got changed on `admitter`");
+
+    foundEnrollers.Clear();
+    iter.Init(admitter.GetInstance());
+
+    while (iter.GetNextEnrollerInfo(enrollerInfo) == kErrorNone)
+    {
+        uint8_t matchedIndex;
+
+        LogEnroller(enrollerInfo);
+
+        matchedIndex = FindMatchingEnroller<kNumEnrollers>(enrollerInfo, kEnrollerIds, foundEnrollers);
+
+        VerifyOrQuit(AsCoreType(&enrollerInfo.mSteeringData) == steeringData);
+        VerifyOrQuit(enrollerInfo.mMode == modes[matchedIndex]);
+
+        if (matchedIndex == 0)
+        {
+            SuccessOrQuit(iter.GetNextJoinerInfo(joinerInfo));
+            VerifyOrQuit(AsCoreType(&joinerInfo.mIid) == joinerIids[0]);
+            LogJoiner(joinerInfo);
+        }
+
+        VerifyOrQuit(iter.GetNextJoinerInfo(joinerInfo) == kErrorNotFound);
+    }
+
+    VerifyOrQuit(DidFindAllEnrollers<kNumEnrollers>(foundEnrollers));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Start `joiners[0]` again and validate that its `RelayRx` is still only forwarded to `enrollers[0]`");
+
+    joiners[0]->Get<ThreadNetif>().Up();
+    SuccessOrQuit(joiners[0]->Get<Joiner>().Start(kPskd,
+                                                  /* aProvisioningUrl */ nullptr,
+                                                  /* aVendorName */ nullptr,
+                                                  /* aVendorModel */ nullptr,
+                                                  /* aVendorSwVersion */ nullptr,
+                                                  /* aVendorData */ nullptr,
+                                                  /* aCallback */ nullptr,
+                                                  /* aContext */ nullptr));
+
+    nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        Ip6::InterfaceIdentifier readIid;
+        uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
+
+        if (i != 0)
+        {
+            VerifyOrQuit(message == nullptr);
+            continue;
+        }
+
+        VerifyOrQuit(message != nullptr);
+
+        VerifyOrQuit(message->ReadType() == Coap::kTypeNonConfirmable);
+        VerifyOrQuit(message->ReadCode() == Coap::kCodePost);
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerIidTlv>(*message, readIid));
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
+
+        VerifyOrQuit(readIid == joinerIids[0]);
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
+    }
+
+    joiners[0]->Get<Joiner>().Stop();
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Start `joiners[1]` and validate that its `RelayRx` is not longer forwarded to `enrollers[0]`");
+
+    joiners[1]->Get<ThreadNetif>().Up();
+    SuccessOrQuit(joiners[1]->Get<Joiner>().Start(kPskd,
+                                                  /* aProvisioningUrl */ nullptr,
+                                                  /* aVendorName */ nullptr,
+                                                  /* aVendorModel */ nullptr,
+                                                  /* aVendorSwVersion */ nullptr,
+                                                  /* aVendorData */ nullptr,
+                                                  /* aCallback */ nullptr,
+                                                  /* aContext */ nullptr));
+
+    joinerIids[1].SetFromExtAddress(joiners[1]->Get<Joiner>().GetId());
+
+    nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        Ip6::InterfaceIdentifier readIid;
+        uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
+
+        if ((modes[i] & MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx) == 0)
+        {
+            VerifyOrQuit(message == nullptr);
+            continue;
+        }
+
+        VerifyOrQuit(message != nullptr);
+
+        VerifyOrQuit(message->ReadType() == Coap::kTypeNonConfirmable);
+        VerifyOrQuit(message->ReadCode() == Coap::kCodePost);
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerIidTlv>(*message, readIid));
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
+
+        VerifyOrQuit(readIid == joinerIids[1]);
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
+    }
+
+    joiners[1]->Get<Joiner>().Stop();
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Send `EnrollerKeepAlive` message from `enrollers[0]` to revert its mode back to allowing both Joiner and UDP");
+
+    modes[0] = MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx | MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
+
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
+    SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[0]));
+
+    responseContexts[0].Clear();
+    SuccessOrQuit(enrollers[0]->Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContexts[0]));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    VerifyOrQuit(responseContexts[0].mReceived);
+    VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that the `enrollers[0]` mode got changed on `admitter`");
+
+    foundEnrollers.Clear();
+    iter.Init(admitter.GetInstance());
+
+    while (iter.GetNextEnrollerInfo(enrollerInfo) == kErrorNone)
+    {
+        uint8_t matchedIndex;
+
+        LogEnroller(enrollerInfo);
+
+        matchedIndex = FindMatchingEnroller<kNumEnrollers>(enrollerInfo, kEnrollerIds, foundEnrollers);
+
+        VerifyOrQuit(AsCoreType(&enrollerInfo.mSteeringData) == steeringData);
+        VerifyOrQuit(enrollerInfo.mMode == modes[matchedIndex]);
+
+        if (matchedIndex == 0)
+        {
+            SuccessOrQuit(iter.GetNextJoinerInfo(joinerInfo));
+            VerifyOrQuit(AsCoreType(&joinerInfo.mIid) == joinerIids[0]);
+            LogJoiner(joinerInfo);
+        }
+
+        VerifyOrQuit(iter.GetNextJoinerInfo(joinerInfo) == kErrorNotFound);
+    }
+
+    VerifyOrQuit(DidFindAllEnrollers<kNumEnrollers>(foundEnrollers));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send `EnrollerKeepAlive` message from all `enrollers` to maintain the connection");
