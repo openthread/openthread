@@ -166,8 +166,6 @@ bool otBorderAdmitterIsPetitionRejected(otInstance *aInstance);
 /**
  * Gets the Joiner UDP port.
  *
- * A zero value indicates the Joiner UDP port is not specified/fixed by the Admitter (Joiner Routers can pick).
- *
  * @param[in] aInstance  The OpenThread instance.
  *
  * @returns The joiner UDP port number.
@@ -175,12 +173,14 @@ bool otBorderAdmitterIsPetitionRejected(otInstance *aInstance);
 uint16_t otBorderAdmitterGetJoinerUdpPort(otInstance *aInstance);
 
 /**
- * Sets the joiner UDP port.
+ * Sets the Joiner UDP port.
  *
- * A zero value indicates the Joiner UDP port is not specified/fixed by the Admitter (Joiner Routers can pick).
+ * If @p aUdpPort is zero, the Border Admitter will randomly select a port number from the range specified by
+ * configurations `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN` and
+ * `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX`.
  *
  * @param[in] aInstance  The OpenThread instance.
- * @param[in] aUdpPort   The joiner UDP port number.
+ * @param[in] aUdpPort   The Joiner UDP port number.
  */
 void otBorderAdmitterSetJoinerUdpPort(otInstance *aInstance, uint16_t aUdpPort);
 

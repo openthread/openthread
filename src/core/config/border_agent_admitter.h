@@ -68,13 +68,38 @@
  *
  * Specifies the default Joiner UDP port used by the Border Admitter.
  *
- * A value of zero indicates that the Joiner UDP port is not specified/fixed by the Admitter, allowing Joiner Routers
- * to pick.
+ * If set to zero, the Border Admitter will randomly select a port number from the range specified by
+ * `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN` and
+ * `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX`.
  *
  * Applicable when `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE` is enabled.
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_DEFAULT_JOINER_UDP_PORT
 #define OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_DEFAULT_JOINER_UDP_PORT 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN
+ *
+ * Specifies the minimum value for the range from which the Border Admitter randomly selects a Joiner UDP port.
+ * The range is inclusive of the minimum and maximum values.
+ *
+ * Applicable when `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN 53681
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX
+ *
+ * Specifies the maximum value for the range from which the Border Admitter randomly selects a Joiner UDP port.
+ * The range is inclusive of the minimum and maximum values.
+ *
+ * Applicable when `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE` is enabled.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX 53701
 #endif
 
 /**

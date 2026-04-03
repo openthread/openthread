@@ -183,19 +183,18 @@ public:
     /**
      * Gets the Joiner UDP port.
      *
-     * Zero value indicates the Joiner UDP port is not specified/fixed by the Admitter (Joiner Routers can pick).
-     *
      * @returns The joiner UDP port number.
      */
     uint16_t GetJoinerUdpPort(void) const { return mCommissionerPetitioner.GetJoinerUdpPort(); }
 
     /**
-     * Sets the joiner UDP port.
+     * Sets the Joiner UDP port.
      *
-     * Zero value indicates the Joiner UDP port is not specified/fixed by the Admitter (Joiner Routers can pick).
+     * If @p aUdpPort is zero, the Border Admitter will randomly select a port number from the range specified by
+     * `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN` and
+     * `OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX`.
      *
-     * @param[in] aInstance  The OpenThread instance.
-     * @param[in] aUdpPort   The UDP port number.
+     * @param[in] aUdpPort   The Joiner UDP port number.
      */
     void SetJoinerUdpPort(uint16_t aUdpPort) { mCommissionerPetitioner.SetJoinerUdpPort(aUdpPort); }
 
@@ -210,8 +209,12 @@ private:
     //-----------------------------------------------------------------------------------------------------------------
     // Constants and enumerations
 
-    static constexpr bool     kEnabledByDefault     = OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLED_BY_DEFAULT;
-    static constexpr uint16_t kDefaultJoinerUdpPort = OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_DEFAULT_JOINER_UDP_PORT;
+    static constexpr bool     kEnabledByDefault  = OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLED_BY_DEFAULT;
+    static constexpr uint16_t kDefaultJoinerPort = OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_DEFAULT_JOINER_UDP_PORT;
+    static constexpr uint16_t kRandJoinerPortMin = OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MIN;
+    static constexpr uint16_t kRandJoinerPortMax = OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_RANDOM_JOINER_UDP_PORT_MAX;
+
+    static_assert(kRandJoinerPortMin <= kRandJoinerPortMax, "RANDOM_JOINER_UDP_PORT_{MIN/MAX} configs are invalid");
 
     static constexpr uint32_t kEnrollerKeepAliveTimeout = 50 * Time::kOneSecondInMsec;
 
@@ -378,21 +381,22 @@ private:
         static constexpr uint32_t kDataSyncRetryDelay   = Time::kOneSecondInMsec;
         static constexpr uint16_t kDataSyncRetryJitter  = 100;
 
-        void  SetState(State aState);
-        void  SendPetitionIfNoOtherCommissioner(void);
-        void  SchedulePetitionRetry(void);
-        Error ProcessPetitionResponse(const Coap::Msg *aMsg, Error aResult);
-        void  AddAlocAndUdpReceiver(void);
-        void  RemoveAlocAndUdpReceiver(void);
-        void  ScheduleNextKeepAlive(void);
-        void  ScheduleKeepAliveRetry(void);
-        Error SendKeepAlive(StateTlv::State aState);
-        void  SendDataSet(void);
-        Error ProcessDataSetResponse(const Coap::Msg *aMsg, Error aResult);
-        void  ScheduleDataSyncRetry(void);
-        void  ScheduleImmediateDataSync(void);
-        Error SendToLeader(OwnedPtr<Coap::Message> aMessage, Coap::ResponseHandler aHandler);
-        bool  HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+        uint16_t SelectRandomJoinerUdpPort(void) const;
+        void     SetState(State aState);
+        void     SendPetitionIfNoOtherCommissioner(void);
+        void     SchedulePetitionRetry(void);
+        Error    ProcessPetitionResponse(const Coap::Msg *aMsg, Error aResult);
+        void     AddAlocAndUdpReceiver(void);
+        void     RemoveAlocAndUdpReceiver(void);
+        void     ScheduleNextKeepAlive(void);
+        void     ScheduleKeepAliveRetry(void);
+        Error    SendKeepAlive(StateTlv::State aState);
+        void     SendDataSet(void);
+        Error    ProcessDataSetResponse(const Coap::Msg *aMsg, Error aResult);
+        void     ScheduleDataSyncRetry(void);
+        void     ScheduleImmediateDataSync(void);
+        Error    SendToLeader(OwnedPtr<Coap::Message> aMessage, Coap::ResponseHandler aHandler);
+        bool     HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
         DeclareTmfResponseHandlerIn(CommissionerPetitioner, HandlePetitionResponse);
         DeclareTmfResponseHandlerIn(CommissionerPetitioner, HandleKeepAliveResponse);

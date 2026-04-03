@@ -455,7 +455,7 @@ const char *Admitter::Arbitrator::StateToString(State aState)
 Admitter::CommissionerPetitioner::CommissionerPetitioner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStopped)
-    , mJoinerUdpPort(kDefaultJoinerUdpPort)
+    , mJoinerUdpPort(kDefaultJoinerPort)
     , mSessionId(0)
     , mRetryTimer(aInstance)
     , mKeepAliveTimer(aInstance)
@@ -463,10 +463,20 @@ Admitter::CommissionerPetitioner::CommissionerPetitioner(Instance &aInstance)
 {
     mSteeringData.Clear();
     mAloc.InitAsThreadOriginMeshLocal();
+
+    if (mJoinerUdpPort == 0)
+    {
+        mJoinerUdpPort = SelectRandomJoinerUdpPort();
+    }
 }
 
 void Admitter::CommissionerPetitioner::SetJoinerUdpPort(uint16_t aUdpPort)
 {
+    if (aUdpPort == 0)
+    {
+        aUdpPort = SelectRandomJoinerUdpPort();
+    }
+
     VerifyOrExit(mJoinerUdpPort != aUdpPort);
 
     LogInfo("Petitioner JoinerUdpPort: %u -> %u", mJoinerUdpPort, aUdpPort);
@@ -479,6 +489,11 @@ void Admitter::CommissionerPetitioner::SetJoinerUdpPort(uint16_t aUdpPort)
 
 exit:
     return;
+}
+
+uint16_t Admitter::CommissionerPetitioner::SelectRandomJoinerUdpPort(void) const
+{
+    return ClampToUint16(Random::NonCrypto::GetUint32InRange(kRandJoinerPortMin, kRandJoinerPortMax + 1));
 }
 
 void Admitter::CommissionerPetitioner::Start(void)
@@ -812,11 +827,7 @@ void Admitter::CommissionerPetitioner::SendDataSet(void)
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
     SuccessOrExit(error = Tlv::Append<SteeringDataTlv>(*message, mSteeringData.GetData(), mSteeringData.GetLength()));
-
-    if (mJoinerUdpPort != 0)
-    {
-        SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, mJoinerUdpPort));
-    }
+    SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, mJoinerUdpPort));
 
     SuccessOrExit(error = SendToLeader(message.PassOwnership(), HandleDataSetResponse));
 
@@ -1405,21 +1416,14 @@ exit:
 
 Error Manager::CoapDtlsSession::AppendAdmitterTlvs(Coap::Message &aMessage, uint8_t aAdmitterState)
 {
-    Error    error;
-    uint16_t joinerUdpPort;
+    Error error;
 
     SuccessOrExit(error = Tlv::Append<AdmitterStateTlv>(aMessage, aAdmitterState));
 
     VerifyOrExit(aAdmitterState == Admitter::kStateActive);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(aMessage, Get<Admitter>().GetCommissionerSessionId()));
-
-    joinerUdpPort = Get<Admitter>().GetJoinerUdpPort();
-
-    if (joinerUdpPort != 0)
-    {
-        SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(aMessage, joinerUdpPort));
-    }
+    SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(aMessage, Get<Admitter>().GetJoinerUdpPort()));
 
 exit:
     return error;

@@ -92,6 +92,8 @@ void TestBorderAdmitterPrimeSelection(void)
 
     nexus.AdvanceTime(45 * Time::kOneSecondInMsec);
 
+    VerifyOrQuit(node1.Get<Admitter>().GetJoinerUdpPort() != 0);
+
     VerifyOrQuit(node1.Get<Admitter>().IsPrimeAdmitter());
     VerifyOrQuit(!node1.Get<Admitter>().IsActiveCommissioner());
 
@@ -268,6 +270,11 @@ struct AdmitterInfo
         error = Tlv::Find<MeshCoP::JoinerUdpPortTlv>(aResponse, mJoinerUdp);
         VerifyOrQuit(error == kErrorNone || error == kErrorNotFound);
         mHasJoinerUdp = (error == kErrorNone);
+
+        if (mHasJoinerUdp)
+        {
+            VerifyOrQuit(mJoinerUdp != 0);
+        }
     }
 
     bool     mHasAdmitterState;
@@ -406,6 +413,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     Manager::SessionInfo  *sessionInfo;
     uint16_t               rloc16;
     uint16_t               sessionId;
+    uint16_t               joinerUdpPort;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAdmitterEnrollerInteraction");
@@ -530,6 +538,9 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindSteeringData(leaderSteeringData));
     VerifyOrQuit(leaderSteeringData == steeringData);
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Ensure no changes before enroller timeout");
@@ -692,6 +703,9 @@ void TestBorderAdmitterEnrollerInteraction(void)
     SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindSteeringData(leaderSteeringData));
     VerifyOrQuit(leaderSteeringData == steeringData);
 
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate the enroller timeout");
 
@@ -776,6 +790,9 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindSteeringData(leaderSteeringData));
     VerifyOrQuit(leaderSteeringData == steeringData);
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
 
     nexus.AdvanceTime((kEnrollerTimeoutInSec / 2) * Time::kOneSecondInMsec);
 
@@ -888,6 +905,9 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindSteeringData(leaderSteeringData));
     VerifyOrQuit(leaderSteeringData == steeringData);
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that the `EnrollerRegister` extended the keep-alive timeout");
@@ -1070,6 +1090,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
     ReceiveContext         recvContext;
     uint16_t               rloc16;
     uint16_t               sessionId;
+    uint16_t               joinerUdpPort;
     uint16_t               numStateChanges;
 
     Log("------------------------------------------------------------------------------------------------------");
@@ -1229,6 +1250,9 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
     SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindSteeringData(leaderSteeringData));
     VerifyOrQuit(leaderSteeringData == steeringData);
 
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
+
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("From `otherCommr` forcefully evict the current active commissioner (`admitter`)");
 
@@ -1362,6 +1386,7 @@ void TestBorderAdmitterMultipleEnrollers(void)
     MeshCoP::SteeringData  combinedSteeringData;
     uint16_t               rloc16;
     uint16_t               sessionId;
+    uint16_t               joinerUdpPort;
     Mac::ExtAddress        joinerIid;
 
     Log("------------------------------------------------------------------------------------------------------");
@@ -1500,6 +1525,9 @@ void TestBorderAdmitterMultipleEnrollers(void)
     SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindSteeringData(leaderSteeringData));
     VerifyOrQuit(leaderSteeringData.GetLength() == 1);
     VerifyOrQuit(leaderSteeringData.PermitsAllJoiners());
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that `EnrollerReportState` is received with the updated Admitter state");
@@ -3257,6 +3285,141 @@ void ValidateAdmitterMdnsService(Node &aNode)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void TestBorderAdmitterJoinerUdpPortChange(void)
+{
+    static constexpr uint16_t kJoinerUdpPort = 12345;
+
+    Core                  nexus;
+    Node                 &admitter = nexus.CreateNode();
+    Node                 &enroller = nexus.CreateNode();
+    Ip6::SockAddr         sockAddr;
+    Pskc                  pskc;
+    Coap::Message        *message;
+    uint8_t               mode;
+    MeshCoP::SteeringData steeringData;
+    uint16_t              rloc16;
+    uint16_t              sessionId;
+    uint16_t              joinerUdpPort;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAdmitterJoinerUdpPortChange");
+
+    nexus.AdvanceTime(0);
+
+    // Form the topology:
+    // - `admitter` forms the network (as leader)
+    // - All enrollers stay disconnected.
+
+    admitter.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(admitter.Get<Mle::Mle>().IsLeader());
+
+    SuccessOrQuit(enroller.Get<Mac::Mac>().SetPanChannel(admitter.Get<Mac::Mac>().GetPanChannel()));
+    enroller.Get<Mac::Mac>().SetPanId(admitter.Get<Mac::Mac>().GetPanId());
+    enroller.Get<ThreadNetif>().Up();
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable Border Admitter on `admitter`");
+
+    admitter.Get<Admitter>().SetEnabled(true);
+    VerifyOrQuit(admitter.Get<Admitter>().IsEnabled());
+    VerifyOrQuit(!admitter.Get<Admitter>().IsPrimeAdmitter());
+
+    nexus.AdvanceTime(45 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(admitter.Get<Admitter>().IsPrimeAdmitter());
+    VerifyOrQuit(!admitter.Get<Admitter>().IsActiveCommissioner());
+
+    SuccessOrQuit(admitter.Get<Ip6::Filter>().AddUnsecurePort(admitter.Get<Manager>().GetUdpPort()));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Change Joiner UDP port on `admitter`");
+
+    joinerUdpPort = admitter.Get<Admitter>().GetJoinerUdpPort();
+    VerifyOrQuit(joinerUdpPort != 0);
+    Log("  JoinerUdpPort: %u", joinerUdpPort);
+
+    admitter.Get<Admitter>().SetJoinerUdpPort(kJoinerUdpPort);
+    VerifyOrQuit(admitter.Get<Admitter>().GetJoinerUdpPort() == kJoinerUdpPort);
+
+    admitter.Get<Admitter>().SetJoinerUdpPort(0);
+    joinerUdpPort = admitter.Get<Admitter>().GetJoinerUdpPort();
+    VerifyOrQuit(joinerUdpPort != 0);
+    Log("  JoinerUdpPort: %u", joinerUdpPort);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Establish a DTLS connection from `enroller` to `admitter`");
+
+    sockAddr.SetAddress(admitter.Get<Mle::Mle>().GetLinkLocalAddress());
+    sockAddr.SetPort(admitter.Get<Manager>().GetUdpPort());
+
+    admitter.Get<KeyManager>().GetPskc(pskc);
+
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
+
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Open());
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    VerifyOrQuit(enroller.Get<Tmf::SecureAgent>().IsConnected());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Prepare Steering Data");
+
+    mode = MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx | MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
+
+    steeringData.SetToPermitAllJoiners();
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Send an `EnrollerRegister` message from `enroller`");
+
+    message = enroller.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerRegister);
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, "enroller"));
+    SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
+    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+
+    SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that `admitter` becomes active commissioner");
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    VerifyOrQuit(admitter.Get<Admitter>().IsPrimeAdmitter());
+    VerifyOrQuit(admitter.Get<Admitter>().IsActiveCommissioner());
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindBorderAgentRloc(rloc16));
+    VerifyOrQuit(rloc16 == admitter.Get<Mle::Mle>().GetRloc16());
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindCommissioningSessionId(sessionId));
+    VerifyOrQuit(sessionId == admitter.Get<Admitter>().GetCommissionerSessionId());
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == admitter.Get<Admitter>().GetJoinerUdpPort());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Change Joiner UDP port on `admitter`");
+
+    admitter.Get<Admitter>().SetJoinerUdpPort(kJoinerUdpPort);
+    VerifyOrQuit(admitter.Get<Admitter>().GetJoinerUdpPort() == kJoinerUdpPort);
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that `admitter` updates the Network Data Commissioning Dataset with new Joiner UDP port");
+
+    SuccessOrQuit(admitter.Get<NetworkData::Leader>().FindJoinerUdpPort(joinerUdpPort));
+    VerifyOrQuit(joinerUdpPort == kJoinerUdpPort);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void TestBorderAdmitterDnssdService(void)
 {
     Core  nexus;
@@ -3365,6 +3528,7 @@ int main(void)
     ot::Nexus::TestBorderAdmitterMultipleEnrollers();
     ot::Nexus::TestBorderAdmitterJoinerEnrollerInteraction();
     ot::Nexus::TestBorderAdmitterForwardingUdpProxy();
+    ot::Nexus::TestBorderAdmitterJoinerUdpPortChange();
     ot::Nexus::TestBorderAdmitterDnssdService();
 
     printf("\nAll tests passed\n");
