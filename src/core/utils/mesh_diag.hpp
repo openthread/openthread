@@ -294,7 +294,7 @@ private:
         friend class MeshDiag;
 
     private:
-        void SetFrom(const NetworkDiagnostic::RouterNeighborTlv &aTlv);
+        void SetFrom(const NetworkDiagnostic::RouterNeighborTlvValue &aTlvValue);
     };
 
     Error SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);

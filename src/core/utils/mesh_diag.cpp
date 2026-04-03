@@ -327,21 +327,20 @@ exit:
 
 bool MeshDiag::ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    bool                didProcess = false;
-    RouterNeighborTlv   neighborTlv;
-    RouterNeighborEntry entry;
-    uint16_t            offset;
+    bool                   didProcess = false;
+    Tlv::Info              tlvInfo;
+    RouterNeighborTlvValue neighborTlvValue;
+    RouterNeighborEntry    entry;
 
     SuccessOrExit(ProcessMessage(aMessage, aMessageInfo, mQueryRouterNeighborTable.mRouterRloc16));
 
     while (true)
     {
-        SuccessOrExit(Tlv::FindTlv(aMessage, neighborTlv, offset));
-        VerifyOrExit(!neighborTlv.IsExtended());
+        SuccessOrExit(tlvInfo.FindIn(aMessage, RouterNeighborTlv::kType));
 
         didProcess = true;
 
-        if (neighborTlv.GetLength() == 0)
+        if (tlvInfo.GetLength() == 0)
         {
             // We reached end of the list.
             mState = kStateIdle;
@@ -350,16 +349,16 @@ bool MeshDiag::ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const I
             ExitNow();
         }
 
-        VerifyOrExit(neighborTlv.GetLength() >= sizeof(RouterNeighborTlv) - sizeof(Tlv));
+        SuccessOrExit(tlvInfo.Read<RouterNeighborTlv>(aMessage, neighborTlvValue));
 
-        entry.SetFrom(neighborTlv);
+        entry.SetFrom(neighborTlvValue);
         mQueryRouterNeighborTable.mCallback.InvokeIfSet(kErrorPending, &entry);
 
         // Make sure query operation is not canceled from the
         // callback.
         VerifyOrExit(mState == kStateQueryRouterNeighborTable);
 
-        aMessage.SetOffset(static_cast<uint16_t>(offset + neighborTlv.GetSize()));
+        aMessage.SetOffset(tlvInfo.GetTlvOffsetRange().GetEndOffset());
     }
 
 exit:
@@ -609,18 +608,18 @@ void MeshDiag::ChildEntry::SetFrom(const ChildTlv &aChildTlv)
 //---------------------------------------------------------------------------------------------------------------------
 // MeshDiag::RouterNeighborEntry
 
-void MeshDiag::RouterNeighborEntry::SetFrom(const RouterNeighborTlv &aTlv)
+void MeshDiag::RouterNeighborEntry::SetFrom(const RouterNeighborTlvValue &aTlvValue)
 {
-    mSupportsErrRate  = (aTlv.GetFlags() & RouterNeighborTlv::kFlagsTrackErrRate);
-    mRloc16           = aTlv.GetRloc16();
-    mExtAddress       = aTlv.GetExtAddress();
-    mVersion          = aTlv.GetVersion();
-    mConnectionTime   = aTlv.GetConnectionTime();
-    mLinkMargin       = aTlv.GetLinkMargin();
-    mAverageRssi      = aTlv.GetAverageRssi();
-    mLastRssi         = aTlv.GetLastRssi();
-    mFrameErrorRate   = aTlv.GetFrameErrorRate();
-    mMessageErrorRate = aTlv.GetMessageErrorRate();
+    mSupportsErrRate  = (aTlvValue.GetFlags() & RouterNeighborTlvValue::kFlagsTrackErrRate);
+    mRloc16           = aTlvValue.GetRloc16();
+    mExtAddress       = aTlvValue.GetExtAddress();
+    mVersion          = aTlvValue.GetVersion();
+    mConnectionTime   = aTlvValue.GetConnectionTime();
+    mLinkMargin       = aTlvValue.GetLinkMargin();
+    mAverageRssi      = aTlvValue.GetAverageRssi();
+    mLastRssi         = aTlvValue.GetLastRssi();
+    mFrameErrorRate   = aTlvValue.GetFrameErrorRate();
+    mMessageErrorRate = aTlvValue.GetMessageErrorRate();
 }
 
 } // namespace Utils

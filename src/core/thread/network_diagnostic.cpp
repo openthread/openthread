@@ -162,15 +162,15 @@ exit:
 
 Error Server::AppendRouterNeighborTlvs(Message &aMessage)
 {
-    Error             error = kErrorNone;
-    RouterNeighborTlv neighborTlv;
+    Error                  error = kErrorNone;
+    RouterNeighborTlvValue neighborTlvValue;
 
     for (Router &router : Get<RouterTable>())
     {
         if (router.IsStateValid())
         {
-            neighborTlv.InitFrom(router);
-            SuccessOrExit(error = neighborTlv.AppendTo(aMessage));
+            neighborTlvValue.InitFrom(router);
+            SuccessOrExit(error = Tlv::Append<RouterNeighborTlv>(aMessage, neighborTlvValue));
         }
     }
 
@@ -755,8 +755,8 @@ exit:
 
 Error Server::AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo)
 {
-    Error             error = kErrorNone;
-    RouterNeighborTlv neighborTlv;
+    Error                  error = kErrorNone;
+    RouterNeighborTlvValue neighborTlvValue;
 
     for (Router &router : Get<RouterTable>())
     {
@@ -765,9 +765,9 @@ Error Server::AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInf
             continue;
         }
 
-        neighborTlv.InitFrom(router);
+        neighborTlvValue.InitFrom(router);
 
-        SuccessOrExit(error = neighborTlv.AppendTo(*aAnswer));
+        SuccessOrExit(error = Tlv::Append<RouterNeighborTlv>(*aAnswer, neighborTlvValue));
         SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
     }
 
