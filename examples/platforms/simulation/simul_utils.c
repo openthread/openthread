@@ -50,6 +50,7 @@
 #define UTILS_SOCKET_LOCAL_HOST_ADDR "127.0.0.1"
 #define UTILS_SOCKET_GROUP_ADDR "224.0.0.116"
 #define UTILS_SOCKET_GROUP_ADDR6 "ff02::116"
+#define UTILS_SOCKET_GROUP_ADDR6_LO "ff01::116"
 
 const char *gLocalInterface = UTILS_SOCKET_LOCAL_HOST_ADDR;
 
@@ -76,7 +77,16 @@ static bool IsAddressLinkLocal(const struct in6_addr *aAddress)
     return ((aAddress->s6_addr[0] & 0xff) == 0xfe) && ((aAddress->s6_addr[1] & 0xc0) == 0x80);
 }
 
-static void InitRxSocket(utilsSocket *aSocket, const struct in_addr *aIp4Address, unsigned int aIfIndex)
+static bool IsAddressLoopback(const struct in6_addr *aAddress)
+{
+    static const uint8_t sLoopbackAddr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+    return memcmp(aAddress->s6_addr, sLoopbackAddr, sizeof(aAddress->s6_addr)) == 0;
+}
+
+static void InitRxSocket(utilsSocket           *aSocket,
+                         const struct in_addr  *aIp4Address,
+                         const struct in6_addr *aIp6Address,
+                         unsigned int           aIfIndex)
 {
     int fd;
     int one = 1;
@@ -118,7 +128,13 @@ static void InitRxSocket(utilsSocket *aSocket, const struct in_addr *aIp4Address
     else
     {
         struct ipv6_mreq     mreq;
-        struct sockaddr_in6 *sockaddr = &aSocket->mGroupAddr.mSockAddr6;
+        struct sockaddr_in6 *sockaddr  = &aSocket->mGroupAddr.mSockAddr6;
+        const char          *groupAddr = UTILS_SOCKET_GROUP_ADDR6;
+
+        if (aIp6Address != NULL && IsAddressLoopback(aIp6Address))
+        {
+            groupAddr = UTILS_SOCKET_GROUP_ADDR6_LO;
+        }
 
         rval = setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &aIfIndex, sizeof(aIfIndex));
         ExpectOrExitWithErrorMsg(rval != -1, "setsockopt(RxFd, IPV6_MULTICAST_IF)");
@@ -127,8 +143,7 @@ static void InitRxSocket(utilsSocket *aSocket, const struct in_addr *aIp4Address
         sockaddr->sin6_family   = AF_INET6;
         sockaddr->sin6_port     = htons(aSocket->mPortBase);
         sockaddr->sin6_scope_id = aIfIndex; // This specifies network interface for link local scope
-        ExpectOrExitWithErrorMsg(inet_pton(AF_INET6, UTILS_SOCKET_GROUP_ADDR6, &sockaddr->sin6_addr),
-                                 "inet_pton(AF_INET6)");
+        ExpectOrExitWithErrorMsg(inet_pton(AF_INET6, groupAddr, &sockaddr->sin6_addr), "inet_pton(AF_INET6)");
 
         memset(&mreq, 0, sizeof(mreq));
         mreq.ipv6mr_multiaddr = sockaddr->sin6_addr;
@@ -150,7 +165,7 @@ exit:
     }
 }
 
-void InitTxSocketIp6(utilsSocket *aSocket, const struct in6_addr *aAddress, unsigned int aIfIndex)
+static void InitTxSocketIp6(utilsSocket *aSocket, const struct in6_addr *aAddress, unsigned int aIfIndex)
 {
     int                 fd;
     int                 one = 1;
@@ -164,7 +179,7 @@ void InitTxSocketIp6(utilsSocket *aSocket, const struct in6_addr *aAddress, unsi
     sockaddr.sin6_family = AF_INET6;
     sockaddr.sin6_addr   = *aAddress;
     sockaddr.sin6_port   = htons(aSocket->mPort);
-    if (IsAddressLinkLocal(aAddress))
+    if (IsAddressLinkLocal(aAddress) || IsAddressLoopback(aAddress))
     {
         sockaddr.sin6_scope_id = aIfIndex;
     }
@@ -283,7 +298,7 @@ static bool TryInitSocketIfname(utilsSocket *aSocket, const char *aLocalInterfac
         DieNow(OT_EXIT_FAILURE);
     }
 
-    InitRxSocket(aSocket, (addr6 ? NULL : addr4), ifIndex);
+    InitRxSocket(aSocket, (addr6 ? NULL : addr4), addr6, ifIndex);
     aSocket->mInitialized = true;
     aSocket->mUseIp6      = (addr6 != NULL);
 
@@ -299,7 +314,7 @@ static bool TryInitSocketIp4(utilsSocket *aSocket, const char *aLocalInterface)
     ExpectOrExitWithErrorMsg(inet_pton(AF_INET, aLocalInterface, &addr4), "inet_pton(AF_INET)");
 
     InitTxSocketIp4(aSocket, &addr4);
-    InitRxSocket(aSocket, &addr4, 0);
+    InitRxSocket(aSocket, &addr4, NULL, 0);
     aSocket->mInitialized = true;
     aSocket->mUseIp6      = false;
 
@@ -344,7 +359,7 @@ static bool TryInitSocketIp6(utilsSocket *aSocket, const char *aLocalInterface)
         }
 
         InitTxSocketIp6(aSocket, &addr6, ifIndex);
-        InitRxSocket(aSocket, NULL, ifIndex);
+        InitRxSocket(aSocket, NULL, &addr6, ifIndex);
         aSocket->mInitialized = true;
         aSocket->mUseIp6      = true;
         break;
