@@ -1367,15 +1367,7 @@ void Manager::CoapDtlsSession::SendEnrollerResponse(Uri                  aUri,
 
     SuccessOrExit(Tlv::Append<StateTlv>(*response, static_cast<uint8_t>(aResponseState)));
 
-    switch (aUri)
-    {
-    case kUriEnrollerRegister:
-    case kUriEnrollerKeepAlive:
-        SuccessOrExit(AppendAdmitterTlvs(*response, Get<Admitter>().DetermineState()));
-        break;
-    default:
-        break;
-    }
+    SuccessOrExit(AppendAdmitterTlvs(*response, Get<Admitter>().DetermineState()));
 
     SuccessOrExit(SendMessage(response.PassOwnership()));
 
@@ -1383,7 +1375,7 @@ void Manager::CoapDtlsSession::SendEnrollerResponse(Uri                  aUri,
             StateTlv::StateToString(aResponseState), mIndex);
 
 exit:
-    return;
+    OT_UNUSED_VARIABLE(aUri);
 }
 
 void Manager::CoapDtlsSession::SendEnrollerReportState(uint8_t aAdmitterState)
