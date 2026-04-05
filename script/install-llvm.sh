@@ -42,26 +42,11 @@ fi
 LLVM_PACKAGE="LLVM-${LLVM_VERSION}-Linux-X64"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_PACKAGE}.tar.xz"
 INSTALL_DIR="/opt/llvm-${LLVM_VERSION}"
-TEMP_DIR=$(mktemp -d)
 
-cleanup()
-{
-    rm -rf "${TEMP_DIR}"
-}
+sudo mkdir -p "${INSTALL_DIR}"
 
-trap cleanup EXIT
-
-cd "${TEMP_DIR}"
-
-echo "Downloading LLVM from ${LLVM_URL}..."
-wget -O llvm.tar.xz "${LLVM_URL}"
-
-echo "Uncompressing to ${TEMP_DIR}..."
-tar xf llvm.tar.xz
-
-echo "Installing to ${INSTALL_DIR}..."
-sudo mkdir -p /opt
-sudo mv "${LLVM_PACKAGE}" "${INSTALL_DIR}"
+echo "Downloading LLVM from '${LLVM_URL}' into '${INSTALL_DIR}' ..."
+wget -O - "${LLVM_URL}" | sudo tar -C "${INSTALL_DIR}" --strip-components=1 -xJ
 
 echo "Creating symlinks in /usr/local/bin..."
 sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
