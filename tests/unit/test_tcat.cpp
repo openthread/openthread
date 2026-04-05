@@ -659,13 +659,17 @@ public:
         memcpy(&sDeviceAuth, &kDeviceCert2AuthField, sizeof(sDeviceAuth));
 
         // Mock TCAT Commissioner 1 connects to the agent - verify
+        // Device cert 2 has: Commissioning=kPskdFlag, Extraction=kAccessFlag|kPskdFlag,
+        // Decommissioning=kNetworkNameFlag, Application=kPskcFlag|kNetworkNameFlag.
+        // Without PSKd proof, only classes where ALL device flags are met should be authorized.
+        // Extraction requires kAccessFlag|kPskdFlag — without PSKd, only kAccessFlag is met → denied.
         // ====================================================================================
         memcpy(&sCommAuth, &kCommCert1AuthField, sizeof(sCommAuth));
         MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, false);
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
 
-        // PSKd proof
+        // PSKd proof — now Commissioning (kPskdFlag) and Extraction (kAccessFlag|kPskdFlag) are met
         agent->mPskdVerified = true;
         VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction));
         VerifyOrQuit(SetActiveDatasetAuthorized(agent, sFullDataset));
@@ -675,21 +679,19 @@ public:
         instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
         MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
         MockNetworkName(agent, true, &sCommNetworkName);
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassDecommissioning |
-                                                         kClassApplication));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassDecommissioning));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
 
         // PSKc proof
         agent->mPskcVerified = true;
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassDecommissioning |
-                                                         kClassApplication));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassDecommissioning | kClassApplication));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
 
         // If Network Name does not match
         NetworkName wrongNetworkName;
         SuccessOrQuit(wrongNetworkName.Set(kWrongName));
         MockNetworkName(agent, true, &wrongNetworkName);
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassApplication));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sPartialDataset));
 
@@ -699,8 +701,7 @@ public:
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
 
         agent->mPskcVerified = true;
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
-                                                         kClassApplication));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
 
         testFreeInstance(instance);

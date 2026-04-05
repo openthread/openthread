@@ -336,8 +336,8 @@ bool TcatAgent::IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissione
         commissionerRequirementMet |= (aCommissionerCommandClassFlags & kPskcFlag);
     }
 
-    authorized = (commissionerRequirementMet == aCommissionerCommandClassFlags) &&
-                 (deviceRequirementMet & aDeviceCommandClassFlags);
+    authorized = (commissionerRequirementMet == aCommissionerCommandClassFlags) && (aDeviceCommandClassFlags != 0) &&
+                 ((deviceRequirementMet & aDeviceCommandClassFlags) == aDeviceCommandClassFlags);
 
 exit:
     return authorized;
