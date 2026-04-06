@@ -135,7 +135,6 @@ public:
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
-    void        HandleReceive(otMessage *aMessage);
 
     using Platform::mAlarmMicro;
     using Platform::mAlarmMilli;
@@ -159,6 +158,8 @@ private:
         : Platform(static_cast<Instance &>(*this))
     {
     }
+
+    void HandleIp6Receive(OwnedPtr<Message> aMessagePtr);
 
     String<32> mName;
 };

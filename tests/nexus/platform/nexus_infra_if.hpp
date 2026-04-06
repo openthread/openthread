@@ -64,10 +64,7 @@ public:
                                  const Ip6::Prefix  *aRioPrefix);
     void StartRouterAdvertisement(const Ip6::Prefix &aPioPrefix, const Ip6::Prefix *aRioPrefix = nullptr);
     void StopRouterAdvertisement(void);
-    void SendIp6(const Ip6::Address &aSrcAddress,
-                 const Ip6::Address &aDestAddress,
-                 const uint8_t      *aBuffer,
-                 uint16_t            aBufferLength);
+    void SendIp6(const Ip6::Header &aHeader, OwnedPtr<Message> aMessagePtr);
     void SendEchoRequest(const Ip6::Address &aSrcAddress,
                          const Ip6::Address &aDestAddress,
                          uint16_t            aIdentifier,
