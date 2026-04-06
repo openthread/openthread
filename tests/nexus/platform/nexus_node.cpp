@@ -43,7 +43,6 @@ void Node::Reset(void)
     mInfraIf.mPendingTxQueue.DequeueAndFreeAll();
     mPendingTasklet = false;
 
-    otIp6SetReceiveCallback(&GetInstance(), HandleIp6Receive, &GetInstance());
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrel.Reset();
 #endif
@@ -53,6 +52,8 @@ void Node::Reset(void)
     instance = new (instance) Instance();
     instance->SetId(id);
     instance->AfterInit();
+
+    otIp6SetReceiveCallback(instance, Node::HandleIp6Receive, this);
 }
 
 void Node::Form(void)
