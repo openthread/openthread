@@ -1673,7 +1673,6 @@ void TestBorderAgentServiceRegistration(void)
     Dns::Multicast::Core::Iterator   *iterator;
     Dns::Multicast::Core::Service     service;
     Dns::Multicast::Core::EntryState  entryState;
-    bool                              found = false;
     bool                              foundService;
     bool                              foundEpskService;
     Dns::Multicast::Core::Browser     browser;
@@ -1715,6 +1714,8 @@ void TestBorderAgentServiceRegistration(void)
     iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
     VerifyOrQuit(iterator != nullptr);
 
+    foundService = false;
+
     while (node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNone)
     {
         Log("- - - - - - - - - - - - - - - - -");
@@ -1735,11 +1736,11 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(service.mInfraIfIndex == kInfraIfIndex);
             VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
             ValidateRegisteredServiceData(service, node0);
-            found = true;
+            foundService = true;
         }
     }
 
-    VerifyOrQuit(found);
+    VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 
@@ -1902,6 +1903,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
@@ -2062,6 +2064,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
@@ -2156,6 +2159,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
@@ -2210,6 +2214,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
@@ -2253,6 +2258,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
@@ -2295,6 +2301,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
@@ -2337,6 +2344,7 @@ void TestBorderAgentServiceRegistration(void)
             VerifyOrQuit(!StringMatch(service.mServiceType, "_meshcop-e._udp"));
         }
     }
+
     VerifyOrQuit(foundService);
 
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
