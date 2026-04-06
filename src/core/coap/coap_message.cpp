@@ -90,7 +90,7 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // `HeaderInfo`
 
-bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeDelete); }
+bool HeaderInfo::IsRequest(void) const { return IsValueInRange<uint8_t>(mCode, kCodeGet, kCodeFetch); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // `Message`
@@ -423,6 +423,37 @@ exit:
     return error;
 }
 
+Error Message::ReadFetchRequestOptions(bool &aHasOscoreOption, bool &aHasContentFmtOption) const
+{
+    Error            error = kErrorNone;
+    Option::Iterator iterator;
+
+    aHasOscoreOption     = false;
+    aHasContentFmtOption = false;
+
+    SuccessOrExit(error = iterator.Init(*this));
+
+    while (!iterator.IsDone())
+    {
+        switch (iterator.GetOption()->GetNumber())
+        {
+        case kOptionOscore:
+            aHasOscoreOption = true;
+            break;
+        case kOptionContentFormat:
+            aHasContentFmtOption = true;
+            break;
+        default:
+            break;
+        }
+
+        SuccessOrExit(error = iterator.Advance());
+    }
+
+exit:
+    return error;
+}
+
 Error Message::AppendUriQueryOptions(const char *aUriQuery)
 {
     Error       error = kErrorNone;
@@ -720,6 +751,7 @@ const char *Message::CodeToString(void) const
         {kCodePost, "Post"},
         {kCodePut, "Put"},
         {kCodeDelete, "Delete"},
+        {kCodeFetch, "Fetch"},
         {kCodeCreated, "Created"},
         {kCodeDeleted, "Deleted"},
         {kCodeValid, "Valid"},
