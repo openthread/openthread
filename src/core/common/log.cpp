@@ -133,7 +133,7 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
 #else
 #error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME requires LOG_INSTANCE_AWARE_API_ENABLE under multi-instance"
 #endif
-        ot::UptimeToString(instance->Get<ot::UptimeTracker>().GetUptime(), logString, /* aInlcudeMsec */ true);
+        ot::UptimeToString(instance->Get<ot::UptimeTracker>().GetUptime(), logString, kUptimeStringIncludeMsec);
         logString.Append(" ");
     }
 #endif
