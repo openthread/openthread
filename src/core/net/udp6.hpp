@@ -500,11 +500,11 @@ public:
     void HandlePayload(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * Returns the head of UDP Sockets list.
+     * Returns the UDP Sockets linked list.
      *
-     * @returns A pointer to the head of UDP Socket linked list.
+     * @returns The UDP Sockets linked list.
      */
-    SocketHandle *GetUdpSockets(void) { return mSockets.GetHead(); }
+    LinkedList<SocketHandle> &GetUdpSockets(void) { return mSockets; }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**

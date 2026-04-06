@@ -177,23 +177,22 @@ bool Udp::HandleReceive(const Message &aMessage, const Ip6::Headers &aHeaders)
         ExitNow();
     }
 
-    for (Ip6::Udp::SocketHandle *socket = GetNode().Get<Ip6::Udp>().GetUdpSockets(); socket != nullptr;
-         socket                         = socket->GetNext())
+    for (Ip6::Udp::SocketHandle &socket : GetNode().Get<Ip6::Udp>().GetUdpSockets())
     {
         Ip6::MessageInfo messageInfo;
 
-        if (!socket->ShouldUsePlatformUdp())
+        if (!socket.ShouldUsePlatformUdp())
         {
             continue;
         }
 
-        if (socket->GetSockName().GetPort() != aHeaders.GetDestinationPort())
+        if (socket.GetSockName().GetPort() != aHeaders.GetDestinationPort())
         {
             continue;
         }
 
-        if (socket->GetSockName().GetAddress().IsUnspecified() ||
-            socket->GetSockName().GetAddress() == aHeaders.GetDestinationAddress())
+        if (socket.GetSockName().GetAddress().IsUnspecified() ||
+            socket.GetSockName().GetAddress() == aHeaders.GetDestinationAddress())
         {
             // Found a matching socket.
         }
@@ -202,16 +201,16 @@ bool Udp::HandleReceive(const Message &aMessage, const Ip6::Headers &aHeaders)
             continue;
         }
 
-        if (socket->GetPeerName().GetPort() != 0)
+        if (socket.GetPeerName().GetPort() != 0)
         {
-            if (socket->GetPeerName().GetPort() != aHeaders.GetSourcePort() ||
-                socket->GetPeerName().GetAddress() != aHeaders.GetSourceAddress())
+            if (socket.GetPeerName().GetPort() != aHeaders.GetSourcePort() ||
+                socket.GetPeerName().GetAddress() != aHeaders.GetSourceAddress())
             {
                 continue;
             }
         }
 
-        if (socket->mHandler == nullptr)
+        if (socket.mHandler == nullptr)
         {
             continue;
         }
@@ -229,7 +228,7 @@ bool Udp::HandleReceive(const Message &aMessage, const Ip6::Headers &aHeaders)
             VerifyOrExit(payload != nullptr);
             payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
 
-            socket->mHandler(socket->mContext, payload, &messageInfo);
+            socket.mHandler(socket.mContext, payload, &messageInfo);
             payload->Free();
         }
 
