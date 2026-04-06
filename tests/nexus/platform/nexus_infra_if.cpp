@@ -38,6 +38,7 @@ InfraIf::InfraIf(Instance &aInstance)
     : mNode(nullptr)
     , mNodeId(0)
     , mIfIndex(0)
+    , mUdpHook(nullptr)
     , mHasRioPrefix(false)
     , mRaTimer(aInstance)
 {
@@ -120,6 +121,34 @@ const Ip6::Address &InfraIf::FindMatchingAddress(const char *aPrefix) const
     VerifyOrQuit(matchedAddress != nullptr, "no matching address found on infrastructure interface");
 
     return *matchedAddress;
+}
+
+const Ip6::Address &InfraIf::SelectSourceAddress(const Ip6::Address &aDestination) const
+{
+    const Ip6::Address *bestMatch = &GetLinkLocalAddress();
+
+    if (aDestination.IsLinkLocalUnicast())
+    {
+        // For link-local destinations, we always use the link-local address.
+        ExitNow();
+    }
+
+    for (const Ip6::Address &address : mAddresses)
+    {
+        if (address.IsMulticast())
+        {
+            continue;
+        }
+
+        if (address.GetScope() == aDestination.GetScope())
+        {
+            bestMatch = &address;
+            break;
+        }
+    }
+
+exit:
+    return *bestMatch;
 }
 
 void InfraIf::SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuffer, uint16_t aBufferLength)
@@ -344,20 +373,6 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
                       const Ip6::Address &aDestAddress,
                       uint16_t            aSourcePort,
                       uint16_t            aDestPort,
-                      uint16_t            aPayloadSize)
-{
-    Message *message = GetNode().Get<Ip6::Ip6>().NewMessage();
-
-    VerifyOrQuit(message != nullptr);
-
-    SuccessOrQuit(message->IncreaseLength(aPayloadSize));
-    SendUdp(aSrcAddress, aDestAddress, aSourcePort, aDestPort, *message);
-}
-
-void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
-                      const Ip6::Address &aDestAddress,
-                      uint16_t            aSourcePort,
-                      uint16_t            aDestPort,
                       Message            &aPayload)
 {
     Ip6::Header      ip6Header;
@@ -418,9 +433,8 @@ void InfraIf::Receive(Message &aMessage)
 
             SuccessOrQuit(payload.SetFrom(aMessage, offset, aMessage.GetLength() - offset));
 
-            otPlatInfraIfRecvIcmp6Nd(&node.GetInstance(), mIfIndex,
-                                     reinterpret_cast<const otIp6Address *>(&headers.GetSourceAddress()),
-                                     payload.GetBytes(), payload.GetLength());
+            otPlatInfraIfRecvIcmp6Nd(&node.GetInstance(), mIfIndex, &headers.GetSourceAddress(), payload.GetBytes(),
+                                     payload.GetLength());
             node.mInfraIf.ProcessIcmp6Nd(headers.GetSourceAddress(), payload.GetBytes(), payload.GetLength());
             ExitNow();
         }
@@ -479,9 +493,37 @@ void InfraIf::Receive(Message &aMessage)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    if (headers.IsUdp() && headers.GetDestinationPort() == UpstreamDns::kDnsPort)
+    {
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        if (node.mUpstreamDns.HandleUpstreamDnsResponse(headers.GetSourceAddress(), aMessage))
+        {
+            ExitNow();
+        }
+        aMessage.SetOffset(0);
+    }
+#endif
+
     if (headers.IsUdp() && node.mUdp.HandleReceive(aMessage, headers))
     {
         ExitNow();
+    }
+
+    if (headers.IsUdp() && mUdpHook != nullptr)
+    {
+        Ip6::MessageInfo messageInfo;
+        messageInfo.SetPeerAddr(headers.GetSourceAddress());
+        messageInfo.SetPeerPort(headers.GetSourcePort());
+        messageInfo.SetSockAddr(headers.GetDestinationAddress());
+        messageInfo.SetSockPort(headers.GetDestinationPort());
+
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        if (mUdpHook(node.GetInstance(), aMessage, messageInfo))
+        {
+            ExitNow();
+        }
+        aMessage.SetOffset(0);
     }
 
     {

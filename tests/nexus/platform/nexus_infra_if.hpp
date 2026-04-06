@@ -58,6 +58,8 @@ public:
     const Ip6::Address              &GetLinkLocalAddress(void) const { return mAddresses[0]; }
     const Heap::Array<Ip6::Address> &GetAddresses(void) const { return mAddresses; }
 
+    const Ip6::Address &SelectSourceAddress(const Ip6::Address &aDestination) const;
+
     void SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void SendRouterAdvertisement(const Ip6::Address &aDestination,
                                  const Ip6::Prefix  *aPioPrefix,
@@ -74,11 +76,6 @@ public:
                  const Ip6::Address &aDestAddress,
                  uint16_t            aSourcePort,
                  uint16_t            aDestPort,
-                 uint16_t            aPayloadSize);
-    void SendUdp(const Ip6::Address &aSrcAddress,
-                 const Ip6::Address &aDestAddress,
-                 uint16_t            aSourcePort,
-                 uint16_t            aDestPort,
                  Message            &aPayload);
 
     void Receive(Message &aMessage);
@@ -87,6 +84,9 @@ public:
     typedef void (*EchoReplyHandler)(void *aContext, const Ip6::Address &aSource, uint16_t aId, uint16_t aSequence);
 
     void SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext) { mEchoReplyCallback.Set(aHandler, aContext); }
+
+    typedef bool (*UdpHook)(Instance &aInstance, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void SetUdpHook(UdpHook aHook) { mUdpHook = aHook; }
 
     Node       &GetNode(void);
     const Node &GetNode(void) const;
@@ -108,6 +108,7 @@ private:
     uint32_t                   mIfIndex;
     Heap::Array<Ip6::Address>  mAddresses;
     Callback<EchoReplyHandler> mEchoReplyCallback;
+    UdpHook                    mUdpHook;
 
     Ip6::Prefix mPioPrefix;
     Ip6::Prefix mRioPrefix;

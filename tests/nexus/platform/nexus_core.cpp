@@ -189,6 +189,29 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     }
     fprintf(file, "  },\n");
 
+    fprintf(file, "  \"ipaddrs\": {\n");
+    for (Node &node : mNodes)
+    {
+        bool first = true;
+
+        fprintf(file, "    \"%u\": [\n", node.GetInstance().GetId());
+
+        for (const Ip6::Netif::UnicastAddress &addr : node.Get<Ip6::Netif>().GetUnicastAddresses())
+        {
+            fprintf(file, "%s      \"%s\"", first ? "" : ",\n", addr.GetAddress().ToString().AsCString());
+            first = false;
+        }
+
+        for (const Ip6::Address &infraAddr : node.mInfraIf.GetAddresses())
+        {
+            fprintf(file, "%s      \"%s\"", first ? "" : ",\n", infraAddr.ToString().AsCString());
+            first = false;
+        }
+
+        fprintf(file, "\n    ]%s\n", (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
     fprintf(file, "  \"ethaddrs\": {\n");
     for (Node &node : mNodes)
     {
@@ -241,25 +264,6 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
 #else
         fprintf(file, "    \"%u\": 0%s\n", node.GetInstance().GetId(), (&node == tail) ? "" : ",");
 #endif
-    }
-    fprintf(file, "  },\n");
-
-    fprintf(file, "  \"ipaddrs\": {\n");
-    for (Node &node : mNodes)
-    {
-        bool first = true;
-
-        fprintf(file, "    \"%u\": [\n", node.GetInstance().GetId());
-        for (const Ip6::Netif::UnicastAddress &addr : node.Get<ThreadNetif>().GetUnicastAddresses())
-        {
-            if (!first)
-            {
-                fprintf(file, ",\n");
-            }
-            fprintf(file, "      \"%s\"", addr.GetAddress().ToString().AsCString());
-            first = false;
-        }
-        fprintf(file, "\n    ]%s\n", (&node == tail) ? "" : ",");
     }
     fprintf(file, "  },\n");
 

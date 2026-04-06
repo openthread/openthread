@@ -33,6 +33,7 @@
 
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
+#include "nexus_dns.hpp"
 #include "nexus_infra_if.hpp"
 #include "nexus_logging.hpp"
 #include "nexus_mdns.hpp"
@@ -48,14 +49,15 @@ namespace Nexus {
 class Platform
 {
 public:
-    Radio    mRadio;
-    Alarm    mAlarmMilli;
-    Alarm    mAlarmMicro;
-    Logging  mLogging;
-    Mdns     mMdns;
-    InfraIf  mInfraIf;
-    Udp      mUdp;
-    Settings mSettings;
+    Radio       mRadio;
+    Alarm       mAlarmMilli;
+    Alarm       mAlarmMicro;
+    Logging     mLogging;
+    Mdns        mMdns;
+    UpstreamDns mUpstreamDns;
+    InfraIf     mInfraIf;
+    Udp         mUdp;
+    Settings    mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Trel mTrel;
 #endif
@@ -63,7 +65,8 @@ public:
 
 protected:
     explicit Platform(Instance &aInstance)
-        : mInfraIf(aInstance)
+        : mUpstreamDns(aInstance)
+        , mInfraIf(aInstance)
         , mUdp(aInstance)
         , mPendingTasklet(false)
     {
@@ -155,6 +158,7 @@ public:
     using Platform::mRadio;
     using Platform::mSettings;
     using Platform::mUdp;
+    using Platform::mUpstreamDns;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     using Platform::mTrel;
 #endif

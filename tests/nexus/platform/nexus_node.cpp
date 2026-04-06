@@ -40,6 +40,7 @@ void Node::Reset(void)
     mAlarmMilli.Reset();
     mAlarmMicro.Reset();
     mMdns.Reset();
+    mUpstreamDns.Reset();
     mInfraIf.mPendingTxQueue.DequeueAndFreeAll();
     mPendingTasklet = false;
 

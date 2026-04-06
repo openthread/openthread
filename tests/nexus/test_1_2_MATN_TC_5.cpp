@@ -265,7 +265,13 @@ void TestMatnTc5(void)
      *   - N/A
      */
     Log("Step 5: Host sends a UDP packet to the multicast address, MA1, port 5683.");
-    host.mInfraIf.SendUdp(*hostUla, ma1, kCoapPort, kCoapPort, kUdpPayloadSize);
+    {
+        Message *message = host.Get<Ip6::Ip6>().NewMessage();
+
+        VerifyOrQuit(message != nullptr);
+        SuccessOrQuit(message->SetLength(kUdpPayloadSize));
+        host.mInfraIf.SendUdp(*hostUla, ma1, kCoapPort, kCoapPort, *message);
+    }
     nexus.AdvanceTime(0);
 
     /**

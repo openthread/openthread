@@ -44,6 +44,7 @@ set(COMMON_COMPILE_OPTIONS
 add_library(ot-nexus-platform
     platform/nexus_alarm.cpp
     platform/nexus_core.cpp
+    platform/nexus_dns.cpp
     platform/nexus_infra_if.cpp
     platform/nexus_logging.cpp
     platform/nexus_mdns.cpp
@@ -293,6 +294,7 @@ ot_nexus_test(1_4_TREL_TC_4 "cert;nexus")
 ot_nexus_test(1_4_TREL_TC_5 "cert;nexus")
 ot_nexus_test(1_4_TREL_TC_6 "cert;nexus")
 ot_nexus_test(1_4_DNS_TC_1 "cert;nexus")
+ot_nexus_test(1_4_DNS_TC_3 "cert;nexus")
 ot_nexus_test(1_4_CS_TC_3 "cert;nexus")
 
 # Misc tests
