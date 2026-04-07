@@ -153,12 +153,15 @@ uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren);
 
 /**
- * Indicates whether or not the device is router-eligible.
+ * Indicates whether or not the device is allowed to take router or leader roles.
+ *
+ * A device is allowed to become a router if it is a Full Thread Device (FTD), is currently configured to be
+ * router-eligible (see `otThreadSetRouterEligible(true)`), and the active Security Policy permits routers.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval TRUE   If device is router-eligible.
- * @retval FALSE  If device is not router-eligible.
+ * @retval TRUE   If the router role is allowed.
+ * @retval FALSE  If the router role is not allowed.
  */
 bool otThreadIsRouterEligible(otInstance *aInstance);
 

@@ -81,6 +81,7 @@ Mle::Mle(Instance &aInstance)
 #endif
 #if OPENTHREAD_FTD
     , mRouterEligible(true)
+    , mRouterRoleAllowed(true)
     , mBlockDowngrade(false)
     , mAddressSolicitPending(false)
     , mAddressSolicitRejected(false)
@@ -453,6 +454,10 @@ void Mle::Restore(void)
     // non-volatile settings after boot.
     mHasRestored = true;
 
+#if OPENTHREAD_FTD
+    UpdateRouterRoleAllowed(kReasonMleInit);
+#endif
+
 exit:
     return;
 }
@@ -721,6 +726,8 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     {
         ClearAlternateRloc16();
     }
+
+    UpdateRouterRoleAllowed(kReasonDeviceModeChanged);
 #endif
 
     if (IsAttached())
@@ -1045,7 +1052,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
 #if OPENTHREAD_FTD
     if (aEvents.Contains(kEventSecurityPolicyChanged))
     {
-        HandleSecurityPolicyChanged();
+        UpdateRouterRoleAllowed(kReasonSecurityPolicyChanged);
     }
 
     if (mBlockDowngrade && aEvents.Contains(kEventThreadChildRemoved))
@@ -4292,7 +4299,7 @@ Error Mle::PrevRoleRestorer::Start(void)
     {
 #if OPENTHREAD_FTD
         VerifyOrExit((Get<Mle>().mLastSavedRole == kRoleRouter) || (Get<Mle>().mLastSavedRole == kRoleLeader));
-        VerifyOrExit(Get<Mle>().IsRouterEligible());
+        VerifyOrExit(Get<Mle>().IsRouterRoleAllowed());
 
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
         SetState(kRestoringRouterOrLeaderRole);
@@ -5965,7 +5972,7 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
         // back would be pointless.
 
 #if OPENTHREAD_FTD
-        if (Get<Mle>().IsFullThreadDevice() && Get<Mle>().IsRouterEligible())
+        if (Get<Mle>().IsFullThreadDevice() && Get<Mle>().IsRouterRoleAllowed())
         {
             action = kSendAnnouceBack;
         }

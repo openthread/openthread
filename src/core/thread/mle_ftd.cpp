@@ -76,9 +76,9 @@ void Mle::HandlePartitionChange(void)
     mRouterTable.Clear();
 }
 
-bool Mle::IsRouterEligible(void) const
+bool Mle::DetermineIfRouterRoleAllowed(void) const
 {
-    bool                  rval      = false;
+    bool                  allowed   = false;
     const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
 
     VerifyOrExit(mRouterEligible && IsFullThreadDevice());
@@ -86,6 +86,7 @@ bool Mle::IsRouterEligible(void) const
 #if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
     VerifyOrExit(secPolicy.mRoutersEnabled);
 #else
+
     if (secPolicy.mCommercialCommissioningEnabled)
     {
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -94,6 +95,7 @@ bool Mle::IsRouterEligible(void) const
         VerifyOrExit(secPolicy.mNonCcmRoutersEnabled);
 #endif
     }
+
     if (!secPolicy.mRoutersEnabled)
     {
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -105,12 +107,73 @@ bool Mle::IsRouterEligible(void) const
                      kThreadVersion);
 #endif
     }
-#endif
 
-    rval = true;
+#endif // #if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+
+    allowed = true;
 
 exit:
-    return rval;
+    return allowed;
+}
+
+void Mle::UpdateRouterRoleAllowed(UpdateRouterRoleAllowedReason aReason)
+{
+    bool allowed = DetermineIfRouterRoleAllowed();
+
+    VerifyOrExit(allowed != mRouterRoleAllowed);
+    mRouterRoleAllowed = allowed;
+
+    if (IsAttached())
+    {
+        Get<Mac::Mac>().SetBeaconEnabled(mRouterRoleAllowed);
+    }
+
+    // Take action based on the current role, the new `mRouterRoleAllowed`,
+    // and the reason for the change.
+
+    if (IsChild() && mRouterRoleAllowed && (aReason == kReasonConfigParameterChanged))
+    {
+        mRouterRoleTransition.StartTimeout();
+    }
+
+    if (IsRouterOrLeader())
+    {
+        // If currently acting as router or leader, but the config or
+        // security policy changes such that the router role is no
+        // longer allowed, we take action based on the reason. If the
+        // change is due to a security policy update, we start a jitter
+        // timeout to downgrade (per Section 5.9.9 in the Thread spec),
+        // adding an extra delay if acting as leader. If this is
+        // triggered due to parameter change (`SetRouterEligible(false)`
+        // was called by the user), we take immediate action and become
+        // detached.
+
+        VerifyOrExit(!mRouterRoleAllowed);
+
+        switch (aReason)
+        {
+        case kReasonMleInit:
+        case kReasonDeviceModeChanged:
+            break;
+
+        case kReasonConfigParameterChanged:
+            IgnoreError(BecomeDetached());
+            break;
+
+        case kReasonSecurityPolicyChanged:
+            VerifyOrExit(!mRouterRoleTransition.IsPending());
+            mRouterRoleTransition.StartTimeout();
+
+            if (IsLeader())
+            {
+                mRouterRoleTransition.IncreaseTimeout(kLeaderDowngradeExtraDelay);
+            }
+            break;
+        }
+    }
+
+exit:
+    return;
 }
 
 Error Mle::SetRouterEligible(bool aEligible)
@@ -125,56 +188,25 @@ Error Mle::SetRouterEligible(bool aEligible)
     VerifyOrExit(aEligible != mRouterEligible);
 
     mRouterEligible = aEligible;
-
-    switch (mRole)
-    {
-    case kRoleDisabled:
-    case kRoleDetached:
-        break;
-
-    case kRoleChild:
-        if (mRouterEligible)
-        {
-            mRouterRoleTransition.StartTimeout();
-        }
-
-        Get<Mac::Mac>().SetBeaconEnabled(mRouterEligible);
-        break;
-
-    case kRoleRouter:
-    case kRoleLeader:
-        if (!mRouterEligible)
-        {
-            IgnoreError(BecomeDetached());
-        }
-
-        break;
-    }
+    UpdateRouterRoleAllowed(kReasonConfigParameterChanged);
 
 exit:
     return error;
 }
 
-void Mle::HandleSecurityPolicyChanged(void)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void Mle::SetCcmEnabled(bool aEnabled)
 {
-    // If we are currently router or leader and no longer eligible to
-    // be a router (due to security policy change), we start jitter
-    // timeout to downgrade.
-
-    VerifyOrExit(IsRouterOrLeader() && !IsRouterEligible());
-
-    VerifyOrExit(!mRouterRoleTransition.IsPending());
-
-    mRouterRoleTransition.StartTimeout();
-
-    if (IsLeader())
-    {
-        mRouterRoleTransition.IncreaseTimeout(kLeaderDowngradeExtraDelay);
-    }
-
-exit:
-    return;
+    mCcmEnabled = aEnabled;
+    UpdateRouterRoleAllowed(kReasonConfigParameterChanged);
 }
+
+void Mle::SetThreadVersionCheckEnabled(bool aEnabled)
+{
+    mThreadVersionCheckEnabled = aEnabled;
+    UpdateRouterRoleAllowed(kReasonConfigParameterChanged);
+}
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 void Mle::SetDeviceProperties(const DeviceProperties &aDeviceProperties)
@@ -204,7 +236,7 @@ Error Mle::BecomeRouter(RouterUpgradeReason aReason)
         ExitNow();
     }
 
-    VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
+    VerifyOrExit(IsRouterRoleAllowed(), error = kErrorNotCapable);
 
     LogInfo("Attempt to become router, reason:%s", RouterUpgradeReasonToString(aReason));
 
@@ -230,7 +262,7 @@ Error Mle::BecomeLeader(LeaderWeightCheck aMode)
 #endif
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsLeader(), error = kErrorNone);
-    VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
+    VerifyOrExit(IsRouterRoleAllowed(), error = kErrorNotCapable);
 
     if ((aMode == kCheckLeaderWeight) && IsAttached())
     {
@@ -314,10 +346,7 @@ void Mle::HandleChildStart(void)
     StopLeader();
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMle);
 
-    if (mRouterEligible)
-    {
-        Get<Mac::Mac>().SetBeaconEnabled(true);
-    }
+    Get<Mac::Mac>().SetBeaconEnabled(IsRouterRoleAllowed());
 
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
 
@@ -451,12 +480,14 @@ void Mle::HandleAdvertiseTrickleTimer(TrickleTimer &aTimer) { aTimer.Get<Mle>().
 
 void Mle::HandleAdvertiseTrickleTimer(void)
 {
-    VerifyOrExit(IsRouterEligible(), mAdvertiseTrickleTimer.Stop());
-
-    SendMulticastAdvertisement();
-
-exit:
-    return;
+    if (!IsRouterRoleAllowed())
+    {
+        mAdvertiseTrickleTimer.Stop();
+    }
+    else
+    {
+        SendMulticastAdvertisement();
+    }
 }
 
 void Mle::StopAdvertiseTrickleTimer(void) { mAdvertiseTrickleTimer.Stop(); }
@@ -1131,7 +1162,7 @@ bool Mle::IsSingleton(void) const
 {
     bool isSingleton = true;
 
-    VerifyOrExit(IsAttached() && IsRouterEligible());
+    VerifyOrExit(IsAttached() && IsRouterRoleAllowed());
     isSingleton = (mRouterTable.GetActiveRouterCount() <= 1);
 
 exit:
@@ -1424,7 +1455,7 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeParentRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(IsRouterEligible());
+    VerifyOrExit(IsRouterRoleAllowed());
     VerifyOrExit(!IsDetached() && !IsAttaching());
 
     VerifyOrExit(!mDetacher.IsDetaching());
@@ -1593,9 +1624,9 @@ void Mle::HandleTimeTick(void)
             OT_FALL_THROUGH;
 
         case kRoleLeader:
-            if (!IsRouterEligible())
+            if (!IsRouterRoleAllowed())
             {
-                LogInfo("No longer router eligible");
+                LogInfo("Router role no longer allowed");
                 IgnoreError(BecomeDetached());
             }
 
@@ -1614,7 +1645,7 @@ void Mle::HandleTimeTick(void)
         break;
 
     case kRoleChild:
-        if (!IsRouterEligible())
+        if (!IsRouterRoleAllowed())
         {
             break;
         }
@@ -2088,7 +2119,7 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildIdRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
+    VerifyOrExit(IsRouterRoleAllowed(), error = kErrorInvalidState);
 
     VerifyOrExit(IsAttached(), error = kErrorInvalidState);
 
@@ -2736,7 +2767,7 @@ void Mle::HandleDiscoveryRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeDiscoveryRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
+    VerifyOrExit(IsRouterRoleAllowed(), error = kErrorInvalidState);
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kDiscovery, offsetRange));
 
@@ -3480,7 +3511,7 @@ bool Mle::WillBecomeRouterSoon(void) const
 
     bool willBecomeRouter = false;
 
-    VerifyOrExit(IsRouterEligible() && IsChild());
+    VerifyOrExit(IsRouterRoleAllowed() && IsChild());
     VerifyOrExit(!mAddressSolicitRejected);
 
     if (!mAddressSolicitPending)

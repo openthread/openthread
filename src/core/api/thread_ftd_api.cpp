@@ -63,7 +63,7 @@ otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddr
 
 bool otThreadIsRouterEligible(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().IsRouterEligible();
+    return AsCoreType(aInstance).Get<Mle::Mle>().IsRouterRoleAllowed();
 }
 
 otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)

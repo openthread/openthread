@@ -761,14 +761,6 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * Indicates whether or not the device is router-eligible.
-     *
-     * @retval true   If device is router-eligible.
-     * @retval false  If device is not router-eligible.
-     */
-    bool IsRouterEligible(void) const;
-
-    /**
      * Sets whether or not the device is router-eligible.
      *
      * If @p aEligible is false and the device is currently operating as a router, this call will cause the device to
@@ -780,6 +772,17 @@ public:
      * @retval kErrorNotCapable   The device is not capable of becoming a router.
      */
     Error SetRouterEligible(bool aEligible);
+
+    /**
+     * Indicates whether the router role is currently allowed.
+     *
+     * A device is allowed to become a router if it is a Full Thread Device (FTD), is currently configured to be
+     * router-eligible (see `SetRouterEligible(true)`), and the active Security Policy permits routers.
+     *
+     * @retval TRUE   If the router role is allowed.
+     * @retval FALSE  If the router role is not allowed.
+     */
+    bool IsRouterRoleAllowed(void) const { return mRouterRoleAllowed; }
 
     /**
      * Indicates whether a node is the only router on the network.
@@ -1176,14 +1179,14 @@ public:
      *
      * @param[in]  aEnabled  TRUE if the device was commissioned using CCM, FALSE otherwise.
      */
-    void SetCcmEnabled(bool aEnabled) { mCcmEnabled = aEnabled; }
+    void SetCcmEnabled(bool aEnabled);
 
     /**
      * Sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
      *
      * @param[in]  aEnabled  TRUE to enable Security Policy TLV version-threshold for routing, FALSE otherwise.
      */
-    void SetThreadVersionCheckEnabled(bool aEnabled) { mThreadVersionCheckEnabled = aEnabled; }
+    void SetThreadVersionCheckEnabled(bool aEnabled);
 
     /**
      * Gets the current Interval Max value used by Advertisement trickle timer.
@@ -1470,6 +1473,16 @@ private:
         kAddrSolicitNoAddressAvailable = 1,
         kAddrSolicitUnrecognizedReason = 6,
     };
+
+#if OPENTHREAD_FTD
+    enum UpdateRouterRoleAllowedReason : uint8_t // Used in `UpdateRouterRoleAllowed()`
+    {
+        kReasonMleInit,
+        kReasonDeviceModeChanged,
+        kReasonConfigParameterChanged,
+        kReasonSecurityPolicyChanged,
+    };
+#endif
 
     enum MessageAction : uint8_t
     {
@@ -2399,10 +2412,11 @@ private:
     void     ClearAlternateRloc16(void);
     uint8_t  SelectLeaderId(void) const;
     uint32_t SelectPartitionId(void) const;
+    bool     DetermineIfRouterRoleAllowed(void) const;
+    void     UpdateRouterRoleAllowed(UpdateRouterRoleAllowedReason aReason);
     void     DetermineConnectivity(Connectivity &aConnectivity) const;
     void     HandleDetachStart(void);
     void     HandleChildStart(void);
-    void     HandleSecurityPolicyChanged(void);
     void     HandleLinkRequest(RxInfo &aRxInfo);
     void     HandleLinkAccept(RxInfo &aRxInfo);
     void     HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
@@ -2528,6 +2542,7 @@ private:
 #if OPENTHREAD_FTD
 
     bool mRouterEligible : 1;
+    bool mRouterRoleAllowed : 1;
     bool mBlockDowngrade : 1;
     bool mAddressSolicitPending : 1;
     bool mAddressSolicitRejected : 1;

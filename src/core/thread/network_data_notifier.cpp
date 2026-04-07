@@ -279,7 +279,7 @@ bool Notifier::IsEligibleForRouterRoleUpgradeAsBorderRouter(void) const
     uint16_t rloc16     = Get<Mle::Mle>().GetRloc16();
     uint8_t  activeRouterCount;
 
-    VerifyOrExit(Get<Mle::Mle>().IsRouterEligible());
+    VerifyOrExit(Get<Mle::Mle>().IsRouterRoleAllowed());
 
     // RouterUpgradeThreshold can be explicitly set to zero in some of
     // cert tests to disallow device to become router.
