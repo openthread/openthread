@@ -232,5 +232,27 @@ const Ip6::Address &Node::FindGlobalAddress(void)
     return *matchedAddress;
 }
 
+bool Node::Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const
+{
+    bool matches = false;
+
+    switch (aNetif)
+    {
+    case kThreadNetifAddress:
+        matches = Get<ThreadNetif>().HasUnicastAddress(aAddress);
+        break;
+
+    case kInfraNetifAddress:
+        matches = mInfraIf.HasAddress(aAddress);
+        break;
+
+    case kAnyNetifAddress:
+        matches = Get<ThreadNetif>().HasUnicastAddress(aAddress) || mInfraIf.HasAddress(aAddress);
+        break;
+    }
+
+    return matches;
+}
+
 } // namespace Nexus
 } // namespace ot

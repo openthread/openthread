@@ -667,48 +667,22 @@ void Core::ProcessInfraIf(Node &aNode)
 
 Node *Core::FindNodeByAddress(const Ip6::Address &aAddress)
 {
-    Node *matchedNode = FindNodeByThreadAddress(aAddress);
-
-    if (matchedNode == nullptr)
-    {
-        matchedNode = FindNodeByInfraIfAddress(aAddress);
-    }
-
-    return matchedNode;
+    return mNodes.FindMatching(aAddress, Node::kAnyNetifAddress);
 }
 
-bool Core::IsThreadAddress(const Ip6::Address &aAddress) { return FindNodeByThreadAddress(aAddress) != nullptr; }
+bool Core::IsThreadAddress(const Ip6::Address &aAddress)
+{
+    return mNodes.ContainsMatching(aAddress, Node::kThreadNetifAddress);
+}
 
 Node *Core::FindNodeByThreadAddress(const Ip6::Address &aAddress)
 {
-    Node *matchedNode = nullptr;
-
-    for (Node &node : mNodes)
-    {
-        if (node.Get<ThreadNetif>().HasUnicastAddress(aAddress))
-        {
-            matchedNode = &node;
-            break;
-        }
-    }
-
-    return matchedNode;
+    return mNodes.FindMatching(aAddress, Node::kThreadNetifAddress);
 }
 
 Node *Core::FindNodeByInfraIfAddress(const Ip6::Address &aAddress)
 {
-    Node *matchedNode = nullptr;
-
-    for (Node &node : mNodes)
-    {
-        if (node.mInfraIf.HasAddress(aAddress))
-        {
-            matchedNode = &node;
-            break;
-        }
-    }
-
-    return matchedNode;
+    return mNodes.FindMatching(aAddress, Node::kInfraNetifAddress);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

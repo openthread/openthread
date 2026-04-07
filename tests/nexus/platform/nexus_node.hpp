@@ -120,13 +120,23 @@ public:
      */
     const Ip6::Address &FindGlobalAddress(void);
 
+    enum AddressNetif : uint8_t
+    {
+        kThreadNetifAddress,
+        kInfraNetifAddress,
+        kAnyNetifAddress,
+    };
+
+    bool Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const;
+
     void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
     void        SetName(const char *aPrefix, uint16_t aIndex);
     const char *GetName(void) const { return mName.AsCString(); }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    template <typename Type> Type &Get(void) { return Instance::Get<Type>(); }
+    template <typename Type> Type       &Get(void) { return Instance::Get<Type>(); }
+    template <typename Type> const Type &Get(void) const { return AsConst(AsNonConst(this)->Get<Type>()); }
 
     Instance &GetInstance(void) { return *this; }
 
