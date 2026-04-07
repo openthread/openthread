@@ -101,9 +101,7 @@ void Test_5_2_6(void)
     for (uint16_t i = 0; i < kInitialRouterCount - 2; i++)
     {
         routers[i] = &nexus.CreateNode();
-        char name[16];
-        snprintf(name, sizeof(name), "ROUTER_%u", i + 2);
-        routers[i]->SetName(name);
+        routers[i]->SetName("ROUTER", i + 2);
     }
 
     nexus.AdvanceTime(0);

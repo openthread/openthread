@@ -39,7 +39,7 @@ class Node;
 class InfraIf
 {
 public:
-    typedef otPlatInfraIfLinkLayerAddress LinkLayerAddress;
+    using LinkLayerAddress = BorderRouter::InfraIf::LinkLayerAddress;
 
     explicit InfraIf(Instance &aInstance);
 

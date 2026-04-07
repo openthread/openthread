@@ -324,11 +324,22 @@ for node in [r2, sed]:
 
 # sed  =>> site-local mcast addr (on r1, r2, sed) without `multicast-loop`. Expected to receive from [r1, r2].
 
+old_counters = sed.get_ip_counters()
 outputs = sed.cli('ping', mcast_addr)
-verify(len(outputs) >= 3)
+new_counters = sed.get_ip_counters()
+
+verify(len(outputs) == 3)
 for node in [r1, r2]:
     ml_addr = node.get_mleid_ip_addr()
     verify(any(ml_addr in line for line in outputs))
+
+# Validate that the `RxSuccess` counter increased by exactly two (for the
+# two ping replies). This confirms the parent did not forward the original
+# echo request back to the SED, even though the SED is also subscribed to
+# this address. The parent must not forward a multicast packet back to an
+# SED if the packet originated from that SED itself.
+
+verify(int(new_counters['RxSuccess']) == int(old_counters['RxSuccess']) + 2)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

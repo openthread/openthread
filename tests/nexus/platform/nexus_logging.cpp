@@ -45,7 +45,7 @@ static TimestampString GetTimestamp(TimeMilli aNow)
 {
     TimestampString string;
 
-    UptimeToString(aNow.GetValue(), string, /* aIncludeMsec */ true);
+    UptimeToString(aNow.GetValue(), string, kUptimeStringIncludeMsec);
     return string;
 }
 

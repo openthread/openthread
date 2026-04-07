@@ -74,17 +74,19 @@ void otPlatTrelResetCounters(otInstance *aInstance) { AsNode(aInstance).mTrel.Re
 uint16_t Trel::sLastUsedUdpPort = kUdpPortStart;
 
 Trel::Trel(void)
-    : mEnabled(false)
+    : mNode(nullptr)
+    , mEnabled(false)
     , mUdpPort(sLastUsedUdpPort++)
 {
     ClearAllBytes(mCounters);
 }
 
+void Trel::Init(Node &aNode) { mNode = &aNode; }
+
 void Trel::Reset(void)
 {
     mEnabled = false;
     ClearAllBytes(mCounters);
-    mPendingTxList.Free();
 }
 
 void Trel::Enable(uint16_t &aUdpPort)
@@ -93,21 +95,20 @@ void Trel::Enable(uint16_t &aUdpPort)
     aUdpPort = mUdpPort;
 }
 
-void Trel::Disable(void)
-{
-    mEnabled = false;
-    mPendingTxList.Free();
-}
+void Trel::Disable(void) { mEnabled = false; }
 
 void Trel::Send(const uint8_t *aUdpPayload, uint16_t aUdpPayloadLen, const Ip6::SockAddr &aDestSockAddr)
 {
-    PendingTx *pendingTx = PendingTx::Allocate();
+    Message *message;
 
-    VerifyOrQuit(pendingTx != nullptr);
-    SuccessOrQuit(pendingTx->mPayloadData.SetFrom(aUdpPayload, aUdpPayloadLen));
-    pendingTx->mDestSockAddr = aDestSockAddr;
+    VerifyOrQuit(mNode != nullptr);
 
-    mPendingTxList.PushAfterTail(*pendingTx);
+    message = mNode->Get<MessagePool>().Allocate(Message::kTypeIp6);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->AppendBytes(aUdpPayload, aUdpPayloadLen));
+
+    mNode->mInfraIf.SendUdp(mNode->mInfraIf.GetLinkLocalAddress(), aDestSockAddr.GetAddress(), mUdpPort,
+                            aDestSockAddr.GetPort(), *message);
 
     mCounters.mTxPackets++;
     mCounters.mTxBytes += aUdpPayloadLen;

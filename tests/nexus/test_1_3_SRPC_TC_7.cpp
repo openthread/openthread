@@ -109,6 +109,8 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     Node &td1     = nexus.CreateNode();
     Node &eth1    = nexus.CreateNode();
 
+    Srp::Client::Service service;
+
     br1.SetName("BR_1");
     router1.SetName("Router_1");
     td1.SetName("TD_1");
@@ -149,10 +151,7 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     nexus.AddTestVar("BR_1_MLEID_ADDR", br1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("TD_1_MLEID_ADDR", td1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("TD_1_OMR_ADDR", td1.FindGlobalAddress().ToString().AsCString());
-
-    String<6> portString;
-    portString.Append("%u", br1.Get<Srp::Server>().GetPort());
-    nexus.AddTestVar("BR_1_SRP_PORT", portString.AsCString());
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     Log("Step 2: Harness instructs the DUT to register the service");
 
@@ -174,7 +173,6 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     td1.Get<Srp::Client>().SetKeyLeaseInterval(kSrpKeyLease1d);
 
     {
-        Srp::Client::Service service;
         ClearAllBytes(service);
         service.mName         = kSrpServiceType;
         service.mInstanceName = kSrpInstanceName;
@@ -221,7 +219,6 @@ void Test_1_3_SRPC_TC_7(const char *aJsonFileName)
     td1.Get<Srp::Client>().SetKeyLeaseInterval(kSrpKeyLease1d);
 
     {
-        Srp::Client::Service service;
         ClearAllBytes(service);
         service.mName         = kSrpServiceType;
         service.mInstanceName = kSrpInstanceName;

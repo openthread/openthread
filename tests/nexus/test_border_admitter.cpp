@@ -1326,8 +1326,10 @@ template <uint8_t kNumEnrollers> bool DidFindAllEnrollers(const BitSet<kNumEnrol
 
 void LogEnroller(const Admitter::EnrollerInfo &aInfo)
 {
-    Log("   Enroller - id:%s steeringData:%s mode:0x%02x", aInfo.mId,
-        AsCoreType(&aInfo.mSteeringData).ToString().AsCString(), aInfo.mMode);
+    Log("   Enroller - id:%s steeringData:%s mode:0x%02x[%c%c]", aInfo.mId,
+        AsCoreType(&aInfo.mSteeringData).ToString().AsCString(), aInfo.mMode,
+        aInfo.mMode & MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx ? 'J' : '-',
+        aInfo.mMode & MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx ? 'U' : '-');
 }
 
 void LogJoiner(const Admitter::JoinerInfo &aInfo)
@@ -1918,7 +1920,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that the accepted `joiners[0]` is tracked by `enrollers[0]` entry on `admitter`");
@@ -2041,6 +2043,219 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
     joiners[1]->Get<Joiner>().Stop();
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Send `EnrollerKeepAlive` message from `enrollers[0]` change its mode to disallow `kForwardJoinerRelayRx`");
+
+    modes[0] = MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
+
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
+    SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[0]));
+
+    responseContexts[0].Clear();
+    SuccessOrQuit(enrollers[0]->Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContexts[0]));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    VerifyOrQuit(responseContexts[0].mReceived);
+    VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that the `enrollers[0]` mode got changed on `admitter`");
+
+    foundEnrollers.Clear();
+    iter.Init(admitter.GetInstance());
+
+    while (iter.GetNextEnrollerInfo(enrollerInfo) == kErrorNone)
+    {
+        uint8_t matchedIndex;
+
+        LogEnroller(enrollerInfo);
+
+        matchedIndex = FindMatchingEnroller<kNumEnrollers>(enrollerInfo, kEnrollerIds, foundEnrollers);
+
+        VerifyOrQuit(AsCoreType(&enrollerInfo.mSteeringData) == steeringData);
+        VerifyOrQuit(enrollerInfo.mMode == modes[matchedIndex]);
+
+        if (matchedIndex == 0)
+        {
+            SuccessOrQuit(iter.GetNextJoinerInfo(joinerInfo));
+            VerifyOrQuit(AsCoreType(&joinerInfo.mIid) == joinerIids[0]);
+            LogJoiner(joinerInfo);
+        }
+
+        VerifyOrQuit(iter.GetNextJoinerInfo(joinerInfo) == kErrorNotFound);
+    }
+
+    VerifyOrQuit(DidFindAllEnrollers<kNumEnrollers>(foundEnrollers));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Start `joiners[0]` again and validate that its `RelayRx` is still only forwarded to `enrollers[0]`");
+
+    joiners[0]->Get<ThreadNetif>().Up();
+    SuccessOrQuit(joiners[0]->Get<Joiner>().Start(kPskd,
+                                                  /* aProvisioningUrl */ nullptr,
+                                                  /* aVendorName */ nullptr,
+                                                  /* aVendorModel */ nullptr,
+                                                  /* aVendorSwVersion */ nullptr,
+                                                  /* aVendorData */ nullptr,
+                                                  /* aCallback */ nullptr,
+                                                  /* aContext */ nullptr));
+
+    nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        Ip6::InterfaceIdentifier readIid;
+        uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
+
+        if (i != 0)
+        {
+            VerifyOrQuit(message == nullptr);
+            continue;
+        }
+
+        VerifyOrQuit(message != nullptr);
+
+        VerifyOrQuit(message->ReadType() == Coap::kTypeNonConfirmable);
+        VerifyOrQuit(message->ReadCode() == Coap::kCodePost);
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerIidTlv>(*message, readIid));
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
+
+        VerifyOrQuit(readIid == joinerIids[0]);
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
+    }
+
+    joiners[0]->Get<Joiner>().Stop();
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Start `joiners[1]` and validate that its `RelayRx` is not longer forwarded to `enrollers[0]`");
+
+    joiners[1]->Get<ThreadNetif>().Up();
+    SuccessOrQuit(joiners[1]->Get<Joiner>().Start(kPskd,
+                                                  /* aProvisioningUrl */ nullptr,
+                                                  /* aVendorName */ nullptr,
+                                                  /* aVendorModel */ nullptr,
+                                                  /* aVendorSwVersion */ nullptr,
+                                                  /* aVendorData */ nullptr,
+                                                  /* aCallback */ nullptr,
+                                                  /* aContext */ nullptr));
+
+    joinerIids[1].SetFromExtAddress(joiners[1]->Get<Joiner>().GetId());
+
+    nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        Ip6::InterfaceIdentifier readIid;
+        uint16_t                 joinerRouterRloc;
+
+        message = AsCoapMessagePtr(recvContext[i].mRelayRxMsgs.GetHead());
+
+        if ((modes[i] & MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx) == 0)
+        {
+            VerifyOrQuit(message == nullptr);
+            continue;
+        }
+
+        VerifyOrQuit(message != nullptr);
+
+        VerifyOrQuit(message->ReadType() == Coap::kTypeNonConfirmable);
+        VerifyOrQuit(message->ReadCode() == Coap::kCodePost);
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerIidTlv>(*message, readIid));
+        SuccessOrQuit(Tlv::Find<MeshCoP::JoinerRouterLocatorTlv>(*message, joinerRouterRloc));
+
+        VerifyOrQuit(readIid == joinerIids[1]);
+        VerifyOrQuit(joinerRouterRloc == admitter.Get<Mle::Mle>().GetRloc16());
+    }
+
+    joiners[1]->Get<Joiner>().Stop();
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Send `EnrollerKeepAlive` message from `enrollers[0]` to revert its mode back to allowing both Joiner and UDP");
+
+    modes[0] = MeshCoP::EnrollerModeTlv::kForwardJoinerRelayRx | MeshCoP::EnrollerModeTlv::kForwardUdpProxyRx;
+
+    message =
+        enrollers[0]->Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriEnrollerKeepAlive);
+    VerifyOrQuit(message != nullptr);
+
+    SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
+    SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[0]));
+
+    responseContexts[0].Clear();
+    SuccessOrQuit(enrollers[0]->Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContexts[0]));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    VerifyOrQuit(responseContexts[0].mReceived);
+    VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Validate that the `enrollers[0]` mode got changed on `admitter`");
+
+    foundEnrollers.Clear();
+    iter.Init(admitter.GetInstance());
+
+    while (iter.GetNextEnrollerInfo(enrollerInfo) == kErrorNone)
+    {
+        uint8_t matchedIndex;
+
+        LogEnroller(enrollerInfo);
+
+        matchedIndex = FindMatchingEnroller<kNumEnrollers>(enrollerInfo, kEnrollerIds, foundEnrollers);
+
+        VerifyOrQuit(AsCoreType(&enrollerInfo.mSteeringData) == steeringData);
+        VerifyOrQuit(enrollerInfo.mMode == modes[matchedIndex]);
+
+        if (matchedIndex == 0)
+        {
+            SuccessOrQuit(iter.GetNextJoinerInfo(joinerInfo));
+            VerifyOrQuit(AsCoreType(&joinerInfo.mIid) == joinerIids[0]);
+            LogJoiner(joinerInfo);
+        }
+
+        VerifyOrQuit(iter.GetNextJoinerInfo(joinerInfo) == kErrorNotFound);
+    }
+
+    VerifyOrQuit(DidFindAllEnrollers<kNumEnrollers>(foundEnrollers));
+
+    nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+    for (uint8_t i = 0; i < kNumEnrollers; i++)
+    {
+        recvContext[i].Clear();
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send `EnrollerKeepAlive` message from all `enrollers` to maintain the connection");
 
     for (uint8_t i = 0; i < kNumEnrollers; i++)
@@ -2081,7 +2296,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that both accepted `joiners` are tracked by `enrollers[0]` on `admitter`");
@@ -2196,7 +2411,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[1].mReceived);
     VerifyOrQuit(responseContexts[1].mResponseState == MeshCoP::StateTlv::kReject);
-    VerifyOrQuit(!responseContexts[1].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[1].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate `joiners[1]` is still accepted by `enrollers[0]`");
@@ -2309,7 +2524,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that there is no change in the `enrollers` list and the tracked `joiners` on `admitter`");
@@ -2376,7 +2591,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that the released `joiners[0]` is removed on `admitter`");
@@ -2427,7 +2642,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerRelease` message releasing `joiners[1]` from `enrollers[0]`");
@@ -2445,7 +2660,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send two `EnrollerJoinerAccept` messages from `enrollers[2]` accepting both `joiners`");
@@ -2466,7 +2681,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         VerifyOrQuit(responseContexts[2].mReceived);
         VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kAccept);
-        VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+        VerifyOrQuit(responseContexts[2].mHasAdmitterState);
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2535,7 +2750,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[2].mReceived);
     VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[2].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that all previously accepted joiners by `enrollers[2]` on `admitter` are now removed");
@@ -2576,7 +2791,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[2].mReceived);
     VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kReject);
-    VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[2].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send two `EnrollerJoinerAccept` messages from `enrollers[2]` accepting both `joiners`");
@@ -2597,7 +2812,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         VerifyOrQuit(responseContexts[2].mReceived);
         VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kAccept);
-        VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+        VerifyOrQuit(responseContexts[2].mHasAdmitterState);
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3207,43 +3422,50 @@ void ValidateAdmitterMdnsService(Node &aNode)
     Dns::Multicast::Core::Iterator  *iterator;
     Dns::Multicast::Core::Service    service;
     Dns::Multicast::Core::EntryState entryState;
+    bool                             found = false;
 
     iterator = aNode.Get<Dns::Multicast::Core>().AllocateIterator();
     VerifyOrQuit(iterator != nullptr);
 
-    SuccessOrQuit(aNode.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState));
-
-    Log("  HostName: %s", service.mHostName);
-    Log("  ServiceInstance: %s", service.mServiceInstance);
-    Log("  ServiceType: %s", service.mServiceType);
-
-    for (uint16_t i = 0; i < service.mSubTypeLabelsLength; i++)
+    while (aNode.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNone)
     {
-        Log("  SubType: %s", service.mSubTypeLabels[i]);
+        Log("- - - - - - - - - - - - - - - - -");
+        Log("  HostName: %s", service.mHostName);
+        Log("  ServiceInstance: %s", service.mServiceInstance);
+        Log("  ServiceType: %s", service.mServiceType);
+
+        if (StringMatch(service.mServiceType, "_meshcop._udp"))
+        {
+            for (uint16_t i = 0; i < service.mSubTypeLabelsLength; i++)
+            {
+                Log("  SubType: %s", service.mSubTypeLabels[i]);
+            }
+
+            Log("  Port: %u", service.mPort);
+            Log("  TTL: %lu", ToUlong(service.mTtl));
+
+            VerifyOrQuit(StringStartsWith(service.mServiceInstance, kDefaultServiceBaseName));
+            VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
+            VerifyOrQuit(service.mPort == aNode.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
+            VerifyOrQuit(service.mTtl > 0);
+            VerifyOrQuit(service.mInfraIfIndex == 1);
+            VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
+
+            if (aNode.Get<Admitter>().IsPrimeAdmitter())
+            {
+                VerifyOrQuit(service.mSubTypeLabelsLength == 1);
+                VerifyOrQuit(StringMatch(service.mSubTypeLabels[0], "_admitter"));
+            }
+            else
+            {
+                VerifyOrQuit(service.mSubTypeLabelsLength == 0);
+            }
+
+            found = true;
+        }
     }
 
-    Log("  Port: %u", service.mPort);
-    Log("  TTL: %lu", ToUlong(service.mTtl));
-
-    VerifyOrQuit(StringMatch(service.mServiceType, "_meshcop._udp"));
-    VerifyOrQuit(StringStartsWith(service.mServiceInstance, kDefaultServiceBaseName));
-    VerifyOrQuit(StringStartsWith(service.mHostName, "ot"));
-    VerifyOrQuit(service.mPort == aNode.Get<MeshCoP::BorderAgent::Manager>().GetUdpPort());
-    VerifyOrQuit(service.mTtl > 0);
-    VerifyOrQuit(service.mInfraIfIndex == 1);
-    VerifyOrQuit(entryState == OT_MDNS_ENTRY_STATE_REGISTERED);
-
-    if (aNode.Get<Admitter>().IsPrimeAdmitter())
-    {
-        VerifyOrQuit(service.mSubTypeLabelsLength == 1);
-        VerifyOrQuit(StringMatch(service.mSubTypeLabels[0], "_admitter"));
-    }
-    else
-    {
-        VerifyOrQuit(service.mSubTypeLabelsLength == 0);
-    }
-
-    VerifyOrQuit(aNode.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNotFound);
+    VerifyOrQuit(found);
 
     aNode.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 }

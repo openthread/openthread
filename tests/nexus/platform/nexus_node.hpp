@@ -39,6 +39,7 @@
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
 #include "nexus_trel.hpp"
+#include "nexus_udp.hpp"
 #include "nexus_utils.hpp"
 
 namespace ot {
@@ -53,6 +54,7 @@ public:
     Logging  mLogging;
     Mdns     mMdns;
     InfraIf  mInfraIf;
+    Udp      mUdp;
     Settings mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Trel mTrel;
@@ -62,6 +64,7 @@ public:
 protected:
     explicit Platform(Instance &aInstance)
         : mInfraIf(aInstance)
+        , mUdp(aInstance)
         , mPendingTasklet(false)
     {
     }
@@ -142,6 +145,7 @@ public:
     using Platform::mPendingTasklet;
     using Platform::mRadio;
     using Platform::mSettings;
+    using Platform::mUdp;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     using Platform::mTrel;
 #endif

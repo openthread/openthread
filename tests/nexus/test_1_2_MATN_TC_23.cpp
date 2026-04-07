@@ -143,12 +143,7 @@ void TestMatnTc23(void)
     VerifyOrQuit(br2.Get<BackboneRouter::Local>().GetState() == BackboneRouter::Local::kStateSecondary);
 
     nexus.AddTestVar("MA1", kMulticastAddr1);
-    {
-        String<16> timeoutStr;
-
-        timeoutStr.Append("%u", kMlrTimeout);
-        nexus.AddTestVar("MLR_TIMEOUT", timeoutStr.AsCString());
-    }
+    nexus.AddTestVar("MLR_TIMEOUT", kMlrTimeout);
 
     /**
      * Step 1

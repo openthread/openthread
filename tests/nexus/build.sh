@@ -49,8 +49,12 @@ case $1 in
         trel=ON
         fifteenfour=OFF
         ;;
+    multi-radio)
+        trel=ON
+        fifteenfour=ON
+        ;;
     *)
-        trel=OFF
+        trel=ON
         fifteenfour=ON
         ;;
 esac

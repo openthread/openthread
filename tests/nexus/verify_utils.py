@@ -495,6 +495,8 @@ def apply_patches():
     from pktverify import consts, layer_fields
     consts.VALID_LAYER_NAMES.add('wpan_tap')
     consts.VALID_LAYER_NAMES.add('wpan-tap')
+    consts.VALID_LAYER_NAMES.add('trel')
+    consts.REAL_LAYER_NAMES.add('trel')
 
     # Patch _get_candidate_layers to map wpan_tap to wpan-tap
     old_get_candidate_layers = layer_fields._get_candidate_layers
@@ -634,7 +636,9 @@ def apply_patches():
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.delay_timer'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_query_options'] = layer_fields._bytes
     layer_fields._LAYER_FIELDS['dns.opt.data'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._LAYER_FIELDS['dns.count.queries'] = layer_fields._auto
     layer_fields._layer_containers.add('dns.opt')
+    layer_fields._layer_containers.add('dns.count')
     layer_fields._LAYER_FIELDS['mdns.nsec'] = layer_fields._list(layer_fields._bytes)
 
     def which_tshark_patch():
@@ -700,6 +704,16 @@ def run_main(verify_func):
             all_thread_nodes_mcast_addr[4:12] = prefix[0:8]
             consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
 
+        # Add TREL UDP port variables before creating PacketVerifier (so PcapReader uses them)
+        # We only do this for TREL tests to avoid interference with other tests
+        # using similar UDP ports for regular Thread traffic.
+        testcase = data.get('testcase', '')
+        if 'TREL' in testcase:
+            for node_id, port in data.get('trel_udp_ports', {}).items():
+                port = int(port)
+                if port > 0:
+                    consts.WIRESHARK_DECODE_AS_ENTRIES[f'udp.port=={port}'] = 'trel'
+
         pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
         pv.add_common_vars()
 
@@ -707,6 +721,13 @@ def run_main(verify_func):
         for node_id, rloc16 in data.get('rloc16s', {}).items():
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_RLOC16': int(rloc16, 16)})
+
+        # Add TREL UDP port variables to pv.vars
+        for node_id, port in data.get('trel_udp_ports', {}).items():
+            name = pv.test_info.get_node_name(int(node_id))
+            port = int(port)
+            if port > 0:
+                pv.add_vars(**{f'{name}_TREL_PORT': port})
 
         # Add channel variables
         for node_id, channel in data.get('channels', {}).items():

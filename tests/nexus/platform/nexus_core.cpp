@@ -195,14 +195,8 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
         InfraIf::LinkLayerAddress mac;
 
         node.mInfraIf.GetLinkLayerAddress(mac);
-        fprintf(file, "    \"%u\": \"", node.GetInstance().GetId());
-
-        for (uint8_t i = 0; i < mac.mLength; i++)
-        {
-            fprintf(file, "%02x%s", mac.mAddress[i], (i + 1 == mac.mLength) ? "" : ":");
-        }
-
-        fprintf(file, "\"%s\n", (&node == tail) ? "" : ",");
+        fprintf(file, "    \"%u\": \"%s\"%s\n", node.GetInstance().GetId(), mac.ToString().AsCString(),
+                (&node == tail) ? "" : ",");
     }
     fprintf(file, "  },\n");
 
@@ -235,6 +229,18 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     {
         fprintf(file, "    \"%u\": %u%s\n", node.GetInstance().GetId(), node.Get<Mac::Mac>().GetPanChannel(),
                 (&node == tail) ? "" : ",");
+    }
+    fprintf(file, "  },\n");
+
+    fprintf(file, "  \"trel_udp_ports\": {\n");
+    for (Node &node : mNodes)
+    {
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        fprintf(file, "    \"%u\": %u%s\n", node.GetInstance().GetId(), node.mTrel.mUdpPort,
+                (&node == tail) ? "" : ",");
+#else
+        fprintf(file, "    \"%u\": 0%s\n", node.GetInstance().GetId(), (&node == tail) ? "" : ",");
+#endif
     }
     fprintf(file, "  },\n");
 
@@ -283,12 +289,22 @@ exit:
 
 void Core::AddNetworkKey(const NetworkKey &aKey) { SuccessOrQuit(mNetworkKeys.PushBack(aKey)); }
 
-void Core::AddTestVar(const char *aName, const char *aValue)
+Core::TestVar &Core::NewTestVar(const char *aName)
 {
     TestVar *var = mTestVars.PushBack();
+
     VerifyOrQuit(var != nullptr);
     var->mName.Clear().Append("%s", aName);
-    var->mValue.Clear().Append("%s", aValue);
+    var->mValue.Clear();
+
+    return *var;
+}
+
+void Core::AddTestVar(const char *aName, const char *aValue) { NewTestVar(aName).mValue.Append("%s", aValue); }
+
+void Core::AddTestVar(const char *aName, uint32_t aUintValue)
+{
+    NewTestVar(aName).mValue.Append("%lu", ToUlong(aUintValue));
 }
 
 void Core::AddOmrPrefixTestVar(const char *aName, Node &aNode)
@@ -330,6 +346,9 @@ Node &Core::CreateNode(void)
 
     node->mInfraIf.Init(*node);
     node->mMdns.Init(*node);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    node->mTrel.Init(*node);
+#endif
 
     mNodes.Push(*node);
 
@@ -409,9 +428,6 @@ void Core::Process(Node &aNode)
 
     ProcessRadio(aNode);
     ProcessInfraIf(aNode);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    ProcessTrel(aNode);
-#endif
 
     if (aNode.mAlarmMilli.mScheduled && (GetNow() >= aNode.mAlarmMilli.mAlarmTime))
     {
@@ -649,6 +665,36 @@ void Core::ProcessInfraIf(Node &aNode)
     }
 }
 
+Node *Core::FindNodeByAddress(const Ip6::Address &aAddress)
+{
+    Node *matchedNode = FindNodeByThreadAddress(aAddress);
+
+    if (matchedNode == nullptr)
+    {
+        matchedNode = FindNodeByInfraIfAddress(aAddress);
+    }
+
+    return matchedNode;
+}
+
+bool Core::IsThreadAddress(const Ip6::Address &aAddress) { return FindNodeByThreadAddress(aAddress) != nullptr; }
+
+Node *Core::FindNodeByThreadAddress(const Ip6::Address &aAddress)
+{
+    Node *matchedNode = nullptr;
+
+    for (Node &node : mNodes)
+    {
+        if (node.Get<ThreadNetif>().HasUnicastAddress(aAddress))
+        {
+            matchedNode = &node;
+            break;
+        }
+    }
+
+    return matchedNode;
+}
+
 Node *Core::FindNodeByInfraIfAddress(const Ip6::Address &aAddress)
 {
     Node *matchedNode = nullptr;
@@ -664,34 +710,6 @@ Node *Core::FindNodeByInfraIfAddress(const Ip6::Address &aAddress)
 
     return matchedNode;
 }
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-
-void Core::ProcessTrel(Node &aNode)
-{
-    Ip6::SockAddr senderSockAddr;
-    Ip6::SockAddr rxNodeSockAddr;
-
-    aNode.GetTrelSockAddr(senderSockAddr);
-
-    for (Trel::PendingTx &pendingTx : aNode.mTrel.mPendingTxList)
-    {
-        for (Node &rxNode : mNodes)
-        {
-            rxNode.GetTrelSockAddr(rxNodeSockAddr);
-
-            if (pendingTx.mDestSockAddr == rxNodeSockAddr)
-            {
-                rxNode.mTrel.Receive(rxNode.GetInstance(), pendingTx.mPayloadData, senderSockAddr);
-                break;
-            }
-        }
-    }
-
-    aNode.mTrel.mPendingTxList.Free();
-}
-
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 

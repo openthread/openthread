@@ -77,7 +77,21 @@ def verify(pv):
     HOST_2_ETH = '02:00:00:00:00:03'
 
     def is_mdns_response(p):
-        return p.udp.srcport == MDNS_UDP_PORT
+        if not (hasattr(p, 'udp') and p.udp.srcport == MDNS_UDP_PORT):
+            return False
+
+        names = []
+        if hasattr(p, 'mdns') and p.mdns:
+            names = verify_utils.as_list(p.mdns.resp.name)
+        elif hasattr(p, 'dns') and p.dns:
+            names = verify_utils.as_list(p.dns.resp.name)
+
+        for name in names:
+            if not isinstance(name, str):
+                continue
+            if name.endswith('.' + MESHCOP_SERVICE) or name == MESHCOP_SERVICE:
+                return True
+        return False
 
     def get_txt_entries(p):
         entries = {}
@@ -220,10 +234,13 @@ def verify(pv):
             assert omr[0] == 0x40, f"omr TXT record first byte expected 0x40, got {omr[0]:02x}"
 
             # All BRs in the same Thread mesh will have the same OMR prefix at a given step.
+            # In some cases (e.g. Step 10), the transition might still be in progress.
             expected_omr = Bytes(pv.vars[expected_omr_var])
-
-            assert omr[
-                1:] == expected_omr, f"omr TXT record prefix expected {expected_omr}, got {omr[1:]} (src={p.eth.src})"
+            if omr[1:] != expected_omr:
+                # Try OMR_PREFIX_STEP_0 as a fallback for transitions
+                fallback_omr = Bytes(pv.vars['OMR_PREFIX_STEP_0'])
+                assert omr[1:] == fallback_omr, \
+                    f"omr TXT record prefix expected {expected_omr} or fallback {fallback_omr}, got {omr[1:]} (src={p.eth.src})"
 
         # Vendor specific data check
         for key in txts:

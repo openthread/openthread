@@ -66,6 +66,7 @@ public:
     void SaveTestInfo(const char *aFilename, Node *aLeaderNode = nullptr);
     void AddNetworkKey(const NetworkKey &aKey);
     void AddTestVar(const char *aName, const char *aValue);
+    void AddTestVar(const char *aName, uint32_t aValue);
     void AddOmrPrefixTestVar(const char *aName, Node &aNode);
     void SendAndVerifyEchoRequest(Node               &aSender,
                                   const Ip6::Address &aDestination,
@@ -79,6 +80,11 @@ public:
     void UpdateNextAlarmMilli(const Alarm &aAlarm);
     void UpdateNextAlarmMicro(const Alarm &aAlarm);
     void MarkPendingAction(void) { mPendingAction = true; }
+
+    Node *FindNodeByAddress(const Ip6::Address &aAddress);
+    bool  IsThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByThreadAddress(const Ip6::Address &aAddress);
+    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
 
 private:
     static constexpr int8_t  kDefaultRxRssi = -20;
@@ -106,14 +112,11 @@ private:
         String<64> mValue;
     };
 
+    TestVar &NewTestVar(const char *aName);
+
     void Process(Node &aNode);
     void ProcessRadio(Node &aNode);
     void ProcessInfraIf(Node &aNode);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ProcessTrel(Node &aNode);
-#endif
-
-    Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
 
     static void HandleIcmpResponse(void                *aContext,
                                    otMessage           *aMessage,

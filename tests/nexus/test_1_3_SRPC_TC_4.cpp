@@ -182,10 +182,7 @@ void Test_1_3_SRPC_TC_4(const char *aJsonFileName)
     nexus.AddTestVar("BR_1_MLEID_ADDR", br1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("TD_1_MLEID_ADDR", td1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
     nexus.AddTestVar("TD_1_OMR_ADDR", td1.FindGlobalAddress().ToString().AsCString());
-
-    String<6> portString;
-    portString.Append("%u", br1.Get<Srp::Server>().GetPort());
-    nexus.AddTestVar("BR_1_SRP_PORT", portString.AsCString());
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Device: TD 1 (DUT) Description (SRPC-3.4): Harness instructs device to register a new service");

@@ -249,7 +249,7 @@ Error Translator::TranslateIp4ToIp6(Message &aMessage)
     dstPortOrId = GetDestinationPortOrIcmp4Id(ip4Headers);
 #endif
 
-    aMessage.RemoveHeader(sizeof(Ip4::Header));
+    aMessage.RemoveHeader(ip4Headers.GetIp4Header().GetHeaderLength());
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();

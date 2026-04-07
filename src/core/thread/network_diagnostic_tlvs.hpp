@@ -451,7 +451,7 @@ typedef TlvInfo<Tlv::kTypeList> TypeListTlv;
  * Implements Child TLV generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTlv : public Tlv, public TlvInfo<Tlv::kChild>, public Clearable<ChildTlv>
+class ChildTlvValue : public Clearable<ChildTlvValue>
 {
 public:
     static constexpr uint8_t kFlagsRxOnWhenIdle = 1 << 7; ///< Device mode - Rx-on when idle.
@@ -613,6 +613,11 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * Defines Child TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kChild, ChildTlvValue> ChildTlv;
+
+/**
  * Implements Child IPv6 Address List Value generation and parsing.
  *
  * This TLV can use extended or normal format depending on the number of IPv6 addresses.
@@ -642,10 +647,10 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Router Neighbor TLV generation and parsing.
+ * Implements Router Neighbor TLV Value generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class RouterNeighborTlv : public Tlv, public TlvInfo<Tlv::kRouterNeighbor>, public Clearable<RouterNeighborTlv>
+class RouterNeighborTlvValue : public Clearable<RouterNeighborTlvValue>
 {
 public:
     static constexpr uint8_t kFlagsTrackErrRate = 1 << 7; ///< Supports tracking error rates.
@@ -745,6 +750,11 @@ private:
     uint16_t        mFrameErrorRate;   // Frame error rate (0x0000->0%, 0xffff->100%).
     uint16_t        mMessageErrorRate; // (IPv6) msg error rate (0x0000->0%, 0xffff->100%)
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Router Neighbor TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kRouterNeighbor, RouterNeighborTlvValue> RouterNeighborTlv;
 
 #endif // OPENTHREAD_FTD
 

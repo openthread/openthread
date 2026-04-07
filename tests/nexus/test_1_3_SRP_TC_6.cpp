@@ -370,11 +370,7 @@ void Test_1_3_SRP_TC_6(const char *aJsonFileName)
                          ed1.FindMatchingAddress(omrPrefix.ToString().AsCString()).ToString().AsCString());
     }
     nexus.AddTestVar("BR_1_MLEID_ADDR", br1.Get<Mle::Mle>().GetMeshLocalEid().ToString().AsCString());
-    {
-        String<10> portStr;
-        portStr.Append("%u", br1.Get<Srp::Server>().GetPort());
-        nexus.AddTestVar("BR_1_SRP_PORT", portStr.AsCString());
-    }
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     nexus.SaveTestInfo(aJsonFileName);
 }

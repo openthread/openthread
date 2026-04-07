@@ -50,11 +50,52 @@
 
 namespace ot {
 
+constexpr uint16_t kUptimeStringSize = OT_UPTIME_STRING_SIZE; ///< Recommended string size to represent uptime.
+
 typedef uint64_t UptimeMsec; ///< Uptime in milliseconds.
 
 typedef uint32_t UptimeSec; ///< Uptime in seconds.
 
-constexpr uint16_t kUptimeStringSize = OT_UPTIME_STRING_SIZE; ///< Recommended string size to represent uptime.
+typedef String<kUptimeStringSize> UptimeString; ///< A string representation of `UptimeMsec`
+
+/**
+ * Represents the flags used by `UptimeToString` to customize the string representation of uptime.
+ */
+enum UptimeStringFlag : uint8_t
+{
+    kUptimeStringIncludeMsec     = 1 << 0, ///< Include `.<mmm>` milliseconds in the string.
+    kUptimeStringSkipHoursIfZero = 1 << 1, ///< Skip the `<hh>:` part if hours (and days) are zero.
+};
+
+/**
+ * Represents a set of `UptimeStringFlag` values.
+ */
+typedef uint8_t UptimeStringFlags;
+
+/**
+ * Converts an uptime value (number of milliseconds) to a human-readable string.
+ *
+ * The string follows the format "<hh>:<mm>:<ss>" or "<dd>d.<hh>:<mm>:<ss>" (if uptime is longer than a day).
+ * @p aFlags can be used to include milliseconds and/or skip the `<hh>:` part if hours/days are zero.
+ *
+ * @param[in]     aUptime  The uptime to convert.
+ * @param[in,out] aWriter  A `StringWriter` to append the converted string to.
+ * @param[in]     aFlags   Flags to customize the string representation.
+ */
+void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, UptimeStringFlags aFlags);
+
+/**
+ * Converts an uptime value (number of milliseconds) to a human-readable string.
+ *
+ * The string follows the format "<hh>:<mm>:<ss>" or "<dd>d.<hh>:<mm>:<ss>" (if uptime is longer than a day).
+ * @p aFlags can be used to include milliseconds and/or skip the `<hh>:` part if hours/days are zero.
+ *
+ * @param[in]     aUptime  The uptime to convert.
+ * @param[in]     aFlags   Flags to customize the string representation.
+ *
+ * @returns An `UptimeString` containing the human-readable string.
+ */
+UptimeString UptimeToString(UptimeMsec aUptime, UptimeStringFlags aFlags);
 
 /**
  * Implements tracking of device uptime.
@@ -98,19 +139,6 @@ private:
     uint32_t    mOverflowCount;
     UptimeTimer mTimer;
 };
-
-/**
- * Converts an uptime value (number of milliseconds) to a human-readable string.
- *
- * The string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if uptime is
- * shorter than one day) or "<dd>d.<hh>:<mm>:<ss>.<mmmm>" (if longer than a day). @p aIncludeMsec can be used
- * to determine whether `.<mmm>` milliseconds is included or omitted in the resulting string.
- *
- * @param[in]     aUptime        The uptime to convert.
- * @param[in,out] aWriter        A `StringWriter` to append the converted string to.
- * @param[in]     aIncludeMsec   Whether to include `.<mmm>` milliseconds in the string.
- */
-void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, bool aIncludeMsec);
 
 } // namespace ot
 

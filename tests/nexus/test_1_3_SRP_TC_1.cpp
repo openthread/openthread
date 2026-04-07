@@ -543,11 +543,7 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
                          ed1.FindMatchingAddress(omrPrefix.ToString().AsCString()).ToString().AsCString());
     }
 
-    {
-        String<10> srpPortString;
-        srpPortString.Append("%u", br1.Get<Srp::Server>().GetPort());
-        nexus.AddTestVar("BR_1_SRP_PORT", srpPortString.AsCString());
-    }
+    nexus.AddTestVar("BR_1_SRP_PORT", br1.Get<Srp::Server>().GetPort());
 
     nexus.SaveTestInfo(aJsonFileName);
 }
