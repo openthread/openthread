@@ -251,6 +251,7 @@ void Test_1_3_SRP_TC_2(const char *aJsonFileName)
     Log("Step 8: Eth 1 performs mDNS query QType PTR.");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -372,6 +373,7 @@ void Test_1_3_SRP_TC_2(const char *aJsonFileName)
     Log("Step 12: Eth 1 repeats mDNS query QType PTR.");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -459,6 +461,7 @@ void Test_1_3_SRP_TC_2(const char *aJsonFileName)
     Log("Step 16: Eth 1 performs mDNS query QType PTR.");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;

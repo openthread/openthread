@@ -32,8 +32,6 @@
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
 
-#include "common/clearable.hpp"
-
 namespace ot {
 namespace Nexus {
 
@@ -453,6 +451,7 @@ void Test_1_3_SRP_TC_8(const char *aJsonFileName)
     Log("Step 24: Eth 1 sends mDNS query PTR for services");
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;

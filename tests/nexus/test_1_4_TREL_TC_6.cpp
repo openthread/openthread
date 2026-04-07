@@ -153,6 +153,7 @@ void Test_1_4_TREL_TC_6(void)
     SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mCallback     = HandleBrowseResult;
         browser.mServiceType  = "_trel._udp";

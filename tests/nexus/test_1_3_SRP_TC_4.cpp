@@ -369,7 +369,7 @@ void Test_1_3_SRP_TC_4(const char *aJsonFileName)
     {
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
-        browser.mServiceType  = "_thread-test._udp";
+        browser.mServiceType  = kSrpServiceType;
         browser.mInfraIfIndex = kInfraIfIndex;
         SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().StartBrowser(browser));
     }
@@ -408,6 +408,10 @@ void Test_1_3_SRP_TC_4(const char *aJsonFileName)
      *   - N/A
      */
     Log("Step 19: Eth 1 sends mDNS query QType PTR.");
+    ClearAllBytes(browser);
+    browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
+    browser.mServiceType  = kSrpServiceType;
+    browser.mInfraIfIndex = kInfraIfIndex;
     SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().StartBrowser(browser));
     nexus.AdvanceTime(kDnsQueryTime);
 

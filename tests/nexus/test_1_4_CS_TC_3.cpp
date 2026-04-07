@@ -201,6 +201,7 @@ static void DiscoverMeshcopEService(Node &aCommNode, Core &aNexus, Ip6::Address 
     sBrowseOutcomes.Clear();
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop-e._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
@@ -350,6 +351,7 @@ void Test1_4_CS_TC_3(void)
 
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
@@ -604,6 +606,7 @@ void Test1_4_CS_TC_3(void)
 
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop-e._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
@@ -893,6 +896,7 @@ void Test1_4_CS_TC_3(void)
 
     {
         Dns::Multicast::Core::Browser browser;
+
         ClearAllBytes(browser);
         browser.mServiceType  = "_meshcop-e._udp";
         browser.mInfraIfIndex = kInfraIfIndex;
