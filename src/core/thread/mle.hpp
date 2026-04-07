@@ -1475,8 +1475,8 @@ private:
     {
         kMessageSend,
         kMessageReceive,
-        kMessageDelay,
-        kMessageRemoveDelayed,
+        kMessageScheduleDelayedSend,
+        kMessageRemoveDelayedSend,
     };
 
     enum MessageType : uint8_t

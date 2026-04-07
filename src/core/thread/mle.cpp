@@ -2886,11 +2886,11 @@ void Mle::LogError(MessageAction aAction, MessageType aType, Error aError)
 
 const char *Mle::MessageActionToString(MessageAction aAction)
 {
-#define MessageActionMapList(_)   \
-    _(kMessageSend, "Send")       \
-    _(kMessageReceive, "Receive") \
-    _(kMessageDelay, "Delay")     \
-    _(kMessageRemoveDelayed, "Remove Delayed")
+#define MessageActionMapList(_)                      \
+    _(kMessageSend, "Send")                          \
+    _(kMessageReceive, "Receive")                    \
+    _(kMessageScheduleDelayedSend, "Schedule tx of") \
+    _(kMessageRemoveDelayedSend, "Remove scheduled tx of")
 
     DefineEnumStringArray(MessageActionMapList);
 
@@ -3285,7 +3285,8 @@ void Mle::DelayedSender::AddSchedule(MessageType         aMessageType,
     mSchedules.Enqueue(*schedule);
     schedule = nullptr;
 
-    Log(kMessageDelay, aMessageType, aDestination);
+    Log(kMessageScheduleDelayedSend, aMessageType, aDestination);
+    LogInfo("    Will send in %lu msec", ToUlong(aDelay));
 
 exit:
     FreeMessage(schedule);
@@ -3455,7 +3456,7 @@ void Mle::DelayedSender::LogRemove(const Schedule &aSchedule)
     Header header;
 
     header.ReadFrom(aSchedule);
-    Log(kMessageRemoveDelayed, header.mMessageType, header.mDestination);
+    Log(kMessageRemoveDelayedSend, header.mMessageType, header.mDestination);
 }
 #else
 void Mle::DelayedSender::LogRemove(const Schedule &) {}
