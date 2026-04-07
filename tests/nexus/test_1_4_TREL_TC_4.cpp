@@ -47,7 +47,7 @@ static constexpr uint32_t kFormNetworkTime = 13 * 1000;
 /**
  * Time to advance for a node to join as a child and upgrade to a router, in milliseconds.
  */
-static constexpr uint32_t kAttachToRouterTime = 120 * 1000;
+static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 
 /**
  * Time to advance for the network to reach steady state.
