@@ -36,14 +36,14 @@ namespace Nexus {
 
 class Node;
 
-class InfraIf
+class InfraIf : public InstanceLocator
 {
 public:
     using LinkLayerAddress = BorderRouter::InfraIf::LinkLayerAddress;
 
     explicit InfraIf(Instance &aInstance);
 
-    void Init(Node &aNode);
+    void AfterInit(void);
 
     bool IsInitialized(void) const { return mIfIndex != 0; }
 
@@ -88,9 +88,6 @@ public:
     typedef bool (*UdpHook)(Instance &aInstance, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SetUdpHook(UdpHook aHook) { mUdpHook = aHook; }
 
-    Node       &GetNode(void);
-    const Node &GetNode(void) const;
-
     MessageQueue mPendingTxQueue;
 
 private:
@@ -103,8 +100,6 @@ private:
 
     void HandleRaTimer(void);
 
-    Node                      *mNode;
-    uint32_t                   mNodeId;
     uint32_t                   mIfIndex;
     Heap::Array<Ip6::Address>  mAddresses;
     Callback<EchoReplyHandler> mEchoReplyCallback;

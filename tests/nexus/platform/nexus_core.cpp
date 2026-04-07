@@ -348,7 +348,8 @@ Node &Core::CreateNode(void)
         node->mLogging.Init(node->GetId());
     }
 
-    node->mInfraIf.Init(*node);
+    node->mInfraIf.AfterInit();
+
     node->mMdns.Init(*node);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     node->mTrel.Init(*node);
