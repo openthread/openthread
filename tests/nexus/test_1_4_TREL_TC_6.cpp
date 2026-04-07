@@ -120,7 +120,6 @@ void Test_1_4_TREL_TC_6(void)
      */
     Log("Step 1: Form the topology");
 
-    eth1.mInfraIf.Init(eth1);
     Ip6::Prefix guaPrefix;
     SuccessOrQuit(guaPrefix.FromString(kGuaPrefixStr));
     eth1.mInfraIf.StartRouterAdvertisement(guaPrefix);
@@ -128,7 +127,6 @@ void Test_1_4_TREL_TC_6(void)
     br.Form();
     nexus.AdvanceTime(kFormNetworkTime);
 
-    br.mInfraIf.Init(br);
     br.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
     br.Get<BorderRouter::RoutingManager>().Init();
     SuccessOrQuit(br.Get<BorderRouter::RoutingManager>().SetEnabled(true));
@@ -149,7 +147,6 @@ void Test_1_4_TREL_TC_6(void)
      */
     Log("Step 2: Eth_1 sends mDNS query PTR for _trel._udp.local");
 
-    eth1.mInfraIf.Init(eth1);
     SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     {
         Dns::Multicast::Core::Browser browser;

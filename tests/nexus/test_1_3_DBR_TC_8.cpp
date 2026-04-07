@@ -250,7 +250,6 @@ void Test_1_3_DBR_TC_8(void)
      */
     Log("Step 0: Eth_1 configured with GUA_1.");
 
-    eth1.mInfraIf.Init(eth1);
     Ip6::Address eth1Gua;
     SuccessOrQuit(eth1Gua.FromString(kEth1GuaAddrStr));
     eth1.mInfraIf.AddAddress(eth1Gua);

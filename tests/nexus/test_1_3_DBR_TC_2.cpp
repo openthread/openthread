@@ -124,8 +124,6 @@ void Test_1_3_DBR_TC_2(void)
      * - Pass Criteria: N/A
      */
 
-    eth1.mInfraIf.Init(eth1);
-
     br2.AllowList(br1);
 
     br2.Form();

@@ -204,9 +204,6 @@ void TestMatnTc21(void)
     SuccessOrQuit(br2.Get<BorderRouter::RoutingManager>().SetEnabled(true));
     br2.Get<BackboneRouter::Local>().SetEnabled(true);
 
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
-
     nexus.AdvanceTime(kStabilizationTime * 2);
 
     VerifyOrQuit(br1.Get<BackboneRouter::Local>().IsPrimary());

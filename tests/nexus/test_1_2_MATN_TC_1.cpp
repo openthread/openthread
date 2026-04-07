@@ -152,9 +152,6 @@ void TestMatnTc1(void)
 
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
 
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
-
     nexus.AdvanceTime(kStabilizationTime);
 
     // Add multicast variables to test info manually to ensure verify script sees them.

@@ -162,8 +162,6 @@ void Test_1_3_DBR_TC_10(const char *aJsonFileName)
      */
     Log("Step 0: Eth_1 configures Ethernet link with GUA_1 prefix and multicasts ND RA.");
 
-    eth1.mInfraIf.Init(eth1);
-
     {
         Ip6::Address eth1Gua;
         SuccessOrQuit(eth1Gua.FromString(kEth1Gua));
@@ -188,7 +186,6 @@ void Test_1_3_DBR_TC_10(const char *aJsonFileName)
      */
     Log("Step 1: BR_1 enables and configures OMR prefix and external route to GUA_1.");
 
-    br1.mInfraIf.Init(br1);
     br1.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
 
     br1.Get<BorderRouter::RoutingManager>().Init();

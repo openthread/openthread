@@ -181,9 +181,6 @@ void TestMatnTc10(void)
         SuccessOrQuit(br2.Get<BackboneRouter::Local>().SetConfig(config));
     }
 
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
-
     {
         Ip6::Address hostGua;
         SuccessOrQuit(hostGua.FromString(kHostGua));

@@ -134,7 +134,6 @@ void Test_1_3_DBR_TC_7B(void)
      *   - N/A
      */
 
-    eth1.mInfraIf.Init(eth1);
     static const char kGua1Prefix[] = "2001:db8:1::/64";
     Ip6::Prefix       gua1Prefix;
     SuccessOrQuit(gua1Prefix.FromString(kGua1Prefix));
@@ -203,7 +202,6 @@ void Test_1_3_DBR_TC_7B(void)
     br2.Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
     br2.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
-    br2.mInfraIf.Init(br2);
     Ip6::Prefix pre1Prefix;
     SuccessOrQuit(pre1Prefix.FromString(kPre1Prefix));
     br2.mInfraIf.StartRouterAdvertisement(pre1Prefix);
