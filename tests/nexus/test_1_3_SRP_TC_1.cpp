@@ -83,8 +83,6 @@ static constexpr uint16_t kSrpUpdatedPort       = 55556;
 
 void Test_1_3_SRP_TC_1(const char *aJsonFileName)
 {
-    Srp::Client::Service service;
-
     /**
      * 2.1. [1.3] [CERT] Register Single Service
      *
@@ -109,6 +107,9 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Node &br1  = nexus.CreateNode();
     Node &ed1  = nexus.CreateNode();
     Node &eth1 = nexus.CreateNode();
+
+    Srp::Client::Service service;
+    Ip6::Address         hostAddrs[2];
 
     br1.SetName("BR_1");
     ed1.SetName("ED_1");
@@ -188,17 +189,15 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
 
         SuccessOrQuit(ed1.Get<Srp::Client>().SetHostName(kSrpHostName));
 
-        uint8_t addrsCount = 0;
-
-        ed1.mSrpHostAddresses[addrsCount++] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
+        hostAddrs[0] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
 
         {
             Ip6::Prefix omrPrefix;
             SuccessOrQuit(br1.Get<BorderRouter::RoutingManager>().GetOmrPrefix(omrPrefix));
-            ed1.mSrpHostAddresses[addrsCount++] = ed1.FindMatchingAddress(omrPrefix.ToString().AsCString());
+            hostAddrs[1] = ed1.FindMatchingAddress(omrPrefix.ToString().AsCString());
         }
 
-        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(ed1.mSrpHostAddresses, addrsCount));
+        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(hostAddrs, 2));
 
         ClearAllBytes(service);
         service.mName         = kSrpServiceType;
@@ -373,8 +372,8 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
         ed1.Get<Srp::Client>().ClearHostAndServices();
         SuccessOrQuit(ed1.Get<Srp::Client>().SetHostName(kSrpHostName));
 
-        ed1.mSrpHostAddresses[0] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
-        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(ed1.mSrpHostAddresses, 1));
+        hostAddrs[0] = ed1.Get<Mle::Mle>().GetMeshLocalEid();
+        SuccessOrQuit(ed1.Get<Srp::Client>().SetHostAddresses(hostAddrs, 1));
 
         // Update existing service
         ClearAllBytes(service);

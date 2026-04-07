@@ -152,8 +152,6 @@ public:
 
     Node *mNext;
 
-    Ip6::Address mSrpHostAddresses[OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES];
-
 private:
     Node(void)
         : Platform(static_cast<Instance &>(*this))
