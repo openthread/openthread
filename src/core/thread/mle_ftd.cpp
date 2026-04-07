@@ -1533,8 +1533,6 @@ exit:
 
 void Mle::HandleTimeTick(void)
 {
-    bool roleTransitionTimeoutExpired = false;
-
     VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMle));
 
     if (mPreviousPartitionIdTimeout > 0)
@@ -1555,16 +1553,18 @@ void Mle::HandleTimeTick(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Role transitions
 
-    roleTransitionTimeoutExpired = mRouterRoleTransition.HandleTimeTick();
-
-    switch (mRole)
+    if (mRouterRoleTransition.HandleTimeTick())
     {
-    case kRoleDetached:
-        break;
+        // `mRouterRoleTransition.HandleTimeTick()` returns `true`
+        // if role transition timeout expires.
 
-    case kRoleChild:
-        if (roleTransitionTimeoutExpired)
+        switch (mRole)
         {
+        case kRoleDisabled:
+        case kRoleDetached:
+            break;
+
+        case kRoleChild:
             if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold && HasNeighborWithGoodLinkQuality())
             {
                 IgnoreError(BecomeRouter(kReasonTooFewRouters));
@@ -1581,7 +1581,42 @@ void Mle::HandleTimeTick(void)
                 mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, kReedAdvIntervalMin, kReedAdvIntervalMax);
             }
 
-            ExitNow();
+            break;
+
+        case kRoleRouter:
+            if (mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
+            {
+                LogNote("Downgrade to REED");
+                mAttacher.Attach(kDowngradeToReed);
+            }
+
+            OT_FALL_THROUGH;
+
+        case kRoleLeader:
+            if (!IsRouterEligible())
+            {
+                LogInfo("No longer router eligible");
+                IgnoreError(BecomeDetached());
+            }
+
+            break;
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Leader's age
+
+    switch (mRole)
+    {
+    case kRoleDisabled:
+    case kRoleDetached:
+    case kRoleLeader:
+        break;
+
+    case kRoleChild:
+        if (!IsRouterEligible())
+        {
+            break;
         }
 
         OT_FALL_THROUGH;
@@ -1595,25 +1630,7 @@ void Mle::HandleTimeTick(void)
             mAttacher.Attach(kSamePartition);
         }
 
-        if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
-        {
-            LogNote("Downgrade to REED");
-            mAttacher.Attach(kDowngradeToReed);
-        }
-
-        OT_FALL_THROUGH;
-
-    case kRoleLeader:
-        if (roleTransitionTimeoutExpired && !IsRouterEligible())
-        {
-            LogInfo("No longer router eligible");
-            IgnoreError(BecomeDetached());
-        }
-
         break;
-
-    case kRoleDisabled:
-        OT_ASSERT(false);
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
