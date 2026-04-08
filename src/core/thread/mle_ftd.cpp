@@ -2245,11 +2245,17 @@ void Mle::HandleChildUpdateRequestOnParent(RxInfo &aRxInfo)
         ExitNow();
     }
 
-    // Ignore "Child Update Request" from a child that is present in the
-    // child table but it is not yet in valid state. For example, a
-    // child which is being restored (due to parent reset) or is in the
-    // middle of the attach process (in `kStateParentRequest` or
-    // `kStateChildIdRequest`).
+    // If the child is in the restoring state (due to parent reset), we
+    // schedule a "Child Update" request to the child after a short random
+    // delay. We ignore "Child Update Request" if the child is not yet in
+    // a valid state (e.g., it is in the middle of the attach process).
+
+    if (child->IsStateRestoring() && child->IsRxOnWhenIdle())
+    {
+        mDelayedSender.ScheduleChildUpdateRequestToChild(*child,
+                                                         GenerateRandomDelay(kChildUpdateRestoreAfterRxMaxDelay));
+        ExitNow();
+    }
 
     VerifyOrExit(child->IsStateValid());
 
