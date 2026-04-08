@@ -740,6 +740,12 @@ void Interpreter::OutputBorderAgentTxtDataInfo(uint8_t aIndentSize, const otBord
         OutputLine(aIndentSize, "ModelName: %s", aInfo.mModelName);
     }
 
+    if (aInfo.mHasVendorOui)
+    {
+        OutputLine(aIndentSize, "VendorOui: %02X-%02X-%02X", aInfo.mVendorOui[0], aInfo.mVendorOui[1],
+                   aInfo.mVendorOui[2]);
+    }
+
     if (aInfo.mHasStateBitmap)
     {
         uint8_t indent = aIndentSize + kIndentSize;
