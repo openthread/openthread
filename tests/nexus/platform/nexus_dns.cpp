@@ -117,7 +117,7 @@ void UpstreamDns::StartUpstreamQuery(UpstreamQueryTransaction &aTxn, const Messa
 
     SuccessOrExit(error = aQuery.Read(0, dnsHeader));
 
-    message = node.Get<Ip6::Udp>().CloneMessage(aQuery);
+    message = aQuery.Clone<kSameReservedHeader>();
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     pendingQuery = PendingQuery::Allocate();
