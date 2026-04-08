@@ -1391,6 +1391,7 @@ private:
     static constexpr uint16_t kChildUpdateRestoreGapJitter        = 2;  // in msec
     static constexpr uint8_t  kChildUpdateRestoreMinRetryInterval = 2;  // in sec
     static constexpr uint8_t  kChildUpdateRestoreMaxRetryInterval = 64; // in sec
+    static constexpr uint32_t kChildUpdateRestoreAfterRxMaxDelay  = 10; // in msec
 
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
