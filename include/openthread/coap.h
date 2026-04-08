@@ -94,6 +94,7 @@ typedef enum otCoapCode
     OT_COAP_CODE_POST   = OT_COAP_CODE(0, 2), ///< Post
     OT_COAP_CODE_PUT    = OT_COAP_CODE(0, 3), ///< Put
     OT_COAP_CODE_DELETE = OT_COAP_CODE(0, 4), ///< Delete
+    OT_COAP_CODE_FETCH  = OT_COAP_CODE(0, 5), ///< Fetch (RFC 8132)
 
     OT_COAP_CODE_RESPONSE_MIN = OT_COAP_CODE(2, 0),  ///< 2.00
     OT_COAP_CODE_CREATED      = OT_COAP_CODE(2, 1),  ///< Created
@@ -135,6 +136,7 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_OBSERVE        = 6,  ///< Observe [RFC7641]
     OT_COAP_OPTION_URI_PORT       = 7,  ///< Uri-Port
     OT_COAP_OPTION_LOCATION_PATH  = 8,  ///< Location-Path
+    OT_COAP_OPTION_OSCORE         = 9,  ///< OSCORE (RFC 8613)
     OT_COAP_OPTION_URI_PATH       = 11, ///< Uri-Path
     OT_COAP_OPTION_CONTENT_FORMAT = 12, ///< Content-Format
     OT_COAP_OPTION_MAX_AGE        = 14, ///< Max-Age
