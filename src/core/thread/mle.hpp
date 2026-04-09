@@ -2323,11 +2323,12 @@ private:
     void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
     Error      HandleLeaderData(RxInfo &aRxInfo);
-    bool       HasUnregisteredAddress(void);
     uint32_t   GetAttachStartDelay(void) const;
     void       SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
     void       SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
     bool       IsNetworkDataNewer(const LeaderData &aLeaderData);
+    bool       HasUnregisteredAddress(void) const;
+    bool       ShouldRegisterUnicastAddrWithParent(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
     bool       ShouldRegisterMulticastAddrsWithParent(void) const;
     Error      ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
                                       Message                &aMessage,
