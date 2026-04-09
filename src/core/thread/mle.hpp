@@ -1557,6 +1557,7 @@ private:
     {
     public:
         Error AppendSourceAddressTlv(void);
+        Error AppendModeTlv(void);
         Error AppendModeTlv(DeviceMode aMode);
         Error AppendTimeoutTlv(uint32_t aTimeout);
         Error AppendChallengeTlv(const TxChallenge &aChallenge);
