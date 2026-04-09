@@ -359,7 +359,7 @@ Node &Core::CreateNode(void)
 
     node->GetInstance().AfterInit();
 
-    otIp6SetReceiveCallback(&node->GetInstance(), Node::HandleIp6Receive, node);
+    node->Get<Ip6::Ip6>().SetReceiveCallback(Node::HandleIp6Receive, node);
 
     return *node;
 }

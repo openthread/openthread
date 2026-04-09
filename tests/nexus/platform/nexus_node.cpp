@@ -54,7 +54,7 @@ void Node::Reset(void)
     instance->SetId(id);
     instance->AfterInit();
 
-    otIp6SetReceiveCallback(instance, Node::HandleIp6Receive, this);
+    instance->Get<Ip6::Ip6>().SetReceiveCallback(Node::HandleIp6Receive, this);
 }
 
 void Node::Form(void)
