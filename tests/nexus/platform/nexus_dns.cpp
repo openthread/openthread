@@ -110,6 +110,7 @@ void UpstreamDns::StartUpstreamQuery(UpstreamQueryTransaction &aTxn, const Messa
     ot::Dns::Header dnsHeader;
     PendingQuery   *pendingQuery;
     Message        *message = nullptr;
+
     // We use kDnsPort (53) as both source and destination port for upstream queries to simplify interception
     // and response matching in this simulation environment.
 

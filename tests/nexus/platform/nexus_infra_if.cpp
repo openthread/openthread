@@ -28,7 +28,8 @@
 
 #include "nexus_infra_if.hpp"
 
-#include "nexus_core.hpp"
+#include <openthread/platform/infra_if.h>
+
 #include "nexus_node.hpp"
 
 namespace ot {
@@ -39,6 +40,8 @@ InfraIf::InfraIf(Instance &aInstance)
     , mIfIndex(0)
     , mUdpHook(nullptr)
     , mHasRioPrefix(false)
+    , mDhcp6PdListening(false)
+    , mIsDnsServer(false)
     , mRaTimer(aInstance)
 {
 }
@@ -194,6 +197,13 @@ void InfraIf::SendRouterAdvertisement(const Ip6::Address &aDestination,
     if (aRioPrefix != nullptr)
     {
         SuccessOrQuit(ra.AppendRouteInfoOption(*aRioPrefix, 1800, NetworkData::kRoutePreferenceMedium));
+    }
+
+    // ETH_2 (Node 4) acts as DNS server
+    if (mIsDnsServer)
+    {
+        const Ip6::Address dnsServerAddr = GetLinkLocalAddress();
+        SuccessOrQuit(ra.AppendRecursiveDnsServerOption(&dnsServerAddr, 1, 1800));
     }
 
     ra.GetAsPacket(packet);
@@ -406,12 +416,29 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
     mPendingTxQueue.Enqueue(aPayload);
 }
 
+void InfraIf::SetDhcp6ListeningEnabled(bool aEnable) { mDhcp6PdListening = aEnable; }
+
+void InfraIf::SendDhcp6(Message &aMessage, const Ip6::Address &aDestAddress)
+{
+    SendUdp(SelectSourceAddress(aDestAddress), aDestAddress, Dhcp6::kDhcpClientPort, Dhcp6::kDhcpServerPort, aMessage);
+}
+
 void InfraIf::Receive(Message &aMessage)
 {
     Ip6::Headers headers;
 
     aMessage.SetOffset(0);
     SuccessOrExit(headers.ParseFrom(aMessage));
+
+    if (mDhcp6PdListening && headers.IsUdp() && headers.GetDestinationPort() == Dhcp6::kDhcpClientPort)
+    {
+        Message *payload = aMessage.Clone<kNoReservedHeader>();
+
+        VerifyOrQuit(payload != nullptr);
+        payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        otPlatInfraIfDhcp6PdClientHandleReceived(&GetInstance(), payload, mIfIndex);
+        ExitNow();
+    }
 
     if (headers.IsIcmp6() && (headers.GetDestinationAddress() == Ip6::Address::GetLinkLocalAllNodesMulticast() ||
                               headers.GetDestinationAddress() == Ip6::Address::GetLinkLocalAllRoutersMulticast() ||
@@ -646,6 +673,18 @@ otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstanc
     AsNode(aInstance).mInfraIf.GetLinkLayerAddress(AsCoreType(aLinkLayerAddress));
 
     return OT_ERROR_NONE;
+}
+
+void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    AsNode(aInstance).mInfraIf.SetDhcp6ListeningEnabled(aEnable);
+}
+
+void otPlatInfraIfDhcp6PdClientSend(otInstance *aInstance, otMessage *aMessage, otIp6Address *aDest, uint32_t aIfIndex)
+{
+    OT_UNUSED_VARIABLE(aIfIndex);
+    AsNode(aInstance).mInfraIf.SendDhcp6(AsCoreType(aMessage), AsCoreType(aDest));
 }
 
 } // extern "C"

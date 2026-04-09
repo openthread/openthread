@@ -85,6 +85,10 @@ public:
 
     void SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext) { mEchoReplyCallback.Set(aHandler, aContext); }
 
+    void SetDhcp6ListeningEnabled(bool aEnable);
+    void SetIsDnsServer(bool aEnable) { mIsDnsServer = aEnable; }
+    void SendDhcp6(Message &aMessage, const Ip6::Address &aDestAddress);
+
     typedef bool (*UdpHook)(Instance &aInstance, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SetUdpHook(UdpHook aHook) { mUdpHook = aHook; }
 
@@ -108,6 +112,8 @@ private:
     Ip6::Prefix mPioPrefix;
     Ip6::Prefix mRioPrefix;
     bool        mHasRioPrefix;
+    bool        mDhcp6PdListening;
+    bool        mIsDnsServer;
 
     using RaTimer = TimerMilliIn<InfraIf, &InfraIf::HandleRaTimer>;
 

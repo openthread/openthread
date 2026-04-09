@@ -648,7 +648,10 @@ void Core::ProcessInfraIf(Node &aNode)
 
         if (!header.GetDestination().IsMulticast())
         {
-            targetNode = FindNodeByInfraIfAddress(header.GetDestination());
+            if (!IsThreadAddress(header.GetDestination()))
+            {
+                targetNode = FindNodeByAddress(header.GetDestination());
+            }
         }
 
         for (Node &rxNode : mNodes)
