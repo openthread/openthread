@@ -1303,7 +1303,6 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
 {
     Error      error = kErrorNone;
     TxMessage *message;
-    bool       checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
 
@@ -1330,13 +1329,30 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
         case Tlv::kAddressRegistration:
             if (!IsFullThreadDevice())
             {
-                // We only register the mesh-local address in the "Child
-                // Update Response" message and if there are additional
-                // addresses to register we follow up with a "Child Update
-                // Request".
+                AddressRegistrationMode addrRegMode = kAppendAllAddresses;
 
-                SuccessOrExit(error = message->AppendAddressRegistrationTlv(kAppendMeshLocalOnly));
-                checkAddress = true;
+                if (!aInfo.mChallenge.IsEmpty())
+                {
+                    // If the parent is restoring its link, its request
+                    // will include a Challenge. In this case, we only
+                    // register the mesh-local address in the response
+                    // message (to ensure it does not get fragmented).
+                    // If there are additional addresses to register
+                    // and the child itself is attached (it is not
+                    // itself restoring its link to the parent), we
+                    // schedule a follow-up "Child Update Request" to
+                    // register the remaining addresses.
+
+                    addrRegMode = kAppendMeshLocalOnly;
+
+                    if (IsAttached() && HasUnregisteredAddress())
+                    {
+                        mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
+                        mDelayedSender.ScheduleChildUpdateRequestToParent(0);
+                    }
+                }
+
+                SuccessOrExit(error = message->AppendAddressRegistrationTlv(addrRegMode));
             }
 
             break;
@@ -1371,11 +1387,6 @@ Error Mle::SendChildUpdateResponse(const ChildUpdateResponseInfo &aInfo)
     SuccessOrExit(error = message->SendTo(aInfo.mDestination));
 
     Log(kMessageSend, kTypeChildUpdateResponseAsChild, aInfo.mDestination);
-
-    if (checkAddress && HasUnregisteredAddress())
-    {
-        IgnoreError(SendChildUpdateRequestToParent());
-    }
 
 exit:
     FreeMessageOnError(message, error);
