@@ -78,7 +78,8 @@ LogLevel Instance::sGlobalLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG
 #endif
 
 Instance::Instance(void)
-    : mTimerMilliScheduler(*this)
+    : mActiveInstanceTracker(*this)
+    , mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
@@ -337,6 +338,10 @@ Instance::Instance(void)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+Instance::~Instance(void) { gActiveInstance = this; }
+#endif
+
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 Utils::Heap &Instance::GetHeap(void)
 {
@@ -490,15 +495,7 @@ void Instance::Finalize(void)
 
     IgnoreError(Get<Mac::SubMac>().Disable());
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-    /**
-     * Object was created on buffer, so instead of deleting
-     * the object we call destructor explicitly.
-     */
     this->~Instance();
-
-#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 exit:
     return;

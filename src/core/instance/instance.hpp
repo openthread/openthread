@@ -484,7 +484,41 @@ public:
     void AfterInit(void);
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    /**
+     * Destructor
+     */
+    ~Instance(void);
+#endif
+
 private:
+    class ActiveInstanceTracker
+    {
+    public:
+        // This class is used to track and update the `gActiveInstance` pointer during the
+        // construction and destruction of an `Instance`.
+        //
+        // `mActiveInstanceTracker` is defined as the very first member variable in `Instance`.
+        // This ensures its constructor is called before any other member components are
+        // initialized, and its destructor is called after all other components are destroyed.
+        // This ensures `gActiveInstance` is correctly set during the entire lifecycle of
+        // the `Instance`, allowing member components to safely emit logs.
+        //
+        // The `Instance` destructor also explicitly sets `gActiveInstance` to the instance
+        // being destroyed at the beginning of its body. This ensures that during the
+        // entire destruction process, log messages are correctly associated with the
+        // instance being destroyed. Finally, when `mActiveInstanceTracker` itself is
+        // destroyed (at the end of the `Instance` destruction), `gActiveInstance` is
+        // set to `nullptr` to avoid any potential use of a dangling pointer.
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+        ActiveInstanceTracker(Instance &aInstance) { gActiveInstance = &aInstance; }
+        ~ActiveInstanceTracker(void) { gActiveInstance = nullptr; }
+#else
+        ActiveInstanceTracker(Instance &) {}
+#endif
+    };
+
 #if !OPENTHREAD_PLATFORM_NEXUS
     Instance(void);
     void AfterInit(void);
@@ -508,6 +542,8 @@ private:
     //
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
+
+    ActiveInstanceTracker mActiveInstanceTracker;
 
     Tasklet::Scheduler    mTaskletScheduler;
     TimerMilli::Scheduler mTimerMilliScheduler;
