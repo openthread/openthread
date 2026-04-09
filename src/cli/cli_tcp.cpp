@@ -48,7 +48,7 @@
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
 #include <mbedtls/debug.h>
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER <= 0x03060500)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER < 0x04000000)
 #include <mbedtls/ecjpake.h>
 #include "crypto/mbedtls.hpp"
 #endif
@@ -150,7 +150,7 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 
             mbedtls_ssl_init(&mSslContext);
             mbedtls_ssl_config_init(&mSslConfig);
-#if (MBEDTLS_VERSION_NUMBER <= 0x03060500)
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
             mbedtls_ssl_conf_rng(&mSslConfig, Crypto::MbedTls::CryptoSecurePrng, nullptr);
 #endif
             mbedtls_ssl_conf_authmode(&mSslConfig, MBEDTLS_SSL_VERIFY_NONE);
@@ -164,7 +164,7 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
             mbedtls_ssl_conf_max_version(&mSslConfig, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 #endif
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER <= 0x03060500)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000) && (MBEDTLS_VERSION_NUMBER < 0x04000000)
             int rv = mbedtls_pk_parse_key(&mPKey, reinterpret_cast<const unsigned char *>(sSrvKey), sSrvKeyLength,
                                           nullptr, 0, Crypto::MbedTls::CryptoSecurePrng, nullptr);
 #else
