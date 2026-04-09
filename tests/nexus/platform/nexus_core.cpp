@@ -331,8 +331,19 @@ void Core::AddOmrPrefixTestVar(const char *aName, Node &aNode)
     OT_UNUSED_VARIABLE(aNode);
 #endif
 }
+Core::~Core(void)
+{
+    while (!mNodes.IsEmpty())
+    {
+        Node *node = mNodes.GetHead();
 
-Core::~Core(void) { sInUse = false; }
+        UpdateActiveInstance(&node->GetInstance());
+        mNodes.Pop();
+    }
+
+    UpdateActiveInstance(nullptr);
+    sInUse = false;
+}
 
 Node &Core::CreateNode(void)
 {
