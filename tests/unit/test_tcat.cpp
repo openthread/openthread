@@ -345,15 +345,17 @@ private:
                                           const TcatAgent::CertificateAuthorizationField aDeviceAuth,
                                           bool                                           aIsCommissionedAtStart)
     {
-        aAgent->mState                          = TcatAgent::kStateConnected;
+        // This mock function mimics the steps in TcatAgent::Connected() without requiring the actual TLS
+        // session object.
+        aAgent->ClearCommissionerState();
         aAgent->mCommissionerAuthorizationField = aCommAuth;
         aAgent->mDeviceAuthorizationField       = aDeviceAuth;
-        aAgent->mPskcVerified                   = false;
-        aAgent->mPskdVerified                   = false;
-        aAgent->mCommissionerHasExtendedPanId   = false;
-        aAgent->mCommissionerHasNetworkName     = false;
-        aAgent->mCommissionerHasDomainName      = false;
         aAgent->mIsCommissioned                 = aIsCommissionedAtStart;
+
+        aAgent->mNextState =
+            (aAgent->mState == TcatAgent::kStateActiveTemporary) ? TcatAgent::kStateStandby : TcatAgent::kStateActive;
+        aAgent->mState = TcatAgent::kStateConnected;
+        aAgent->NotifyStateChange();
     }
 
     // Mock condition: commissioner has or has not the given Extended Pan ID in its certificate.
@@ -545,6 +547,7 @@ public:
         // Mock TCAT Commissioner 4 connects to the Device - verify it only has access to class General by default.
         // The Device is commissioned already at start of the TCAT Link.
         // =======================================================================================================
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
         memcpy(&sCommAuth, &kCommCert4AuthField, sizeof(sCommAuth));
         MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
         VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
@@ -740,22 +743,41 @@ public:
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sPartialDataset));
 
-        // Domain Name match
+        // Domain Name match - but Commissioning in general is still not authorized, due to missing Active Dataset.
+        // Hence the Network Name and XPAN ID checks cannot succeed in general. They will succeed now for the
+        // specific 'Set Active Dataset' command.
         MockDomainName(agent, true, &sCommDomainName);
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
         VerifyOrQuit(SetActiveDatasetAuthorized(agent, sFullDataset));
+
+        // the partial dataset cannot be written, because it lacks the required Network Name and XPAN ID combo.
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sPartialDataset));
 
         // PSKc proof
         agent->mPskcVerified = true;
-        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassExtraction |
-                                                         kClassDecommissioning | kClassApplication));
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral));
         VerifyOrQuit(SetActiveDatasetAuthorized(agent, sFullDataset));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sPartialDataset));
 
-        // Try write a full dataset with differing XPAN ID
+        // Try write a full dataset with differing XPAN ID - this fails
         sFullDataset.mExtendedPanId.m8[2]++;
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
+
+        // Test an equivalent case to above where the device does have a full dataset stored already, and the
+        // Commissioner connects. Now it has full access to all classes due to matching Network Name / XPAN ID combo.
+        sFullDataset = AsCoreType(&kFullDataset);
+        instance->Get<ActiveDatasetManager>().SaveLocal(sFullDataset);
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, true);
+        agent->mPskdVerified = true;
+        agent->mPskcVerified = true;
+        MockNetworkName(agent, true, &sCommNetworkName);
+        MockExtPanId(agent, true, &sCommExtPanId);
+        MockDomainName(agent, true, &sCommDomainName);
+
+        VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassCommissioning | kClassDecommissioning |
+                                                         kClassExtraction | kClassApplication));
+        VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
+        VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sPartialDataset));
 
         testFreeInstance(instance);
     }
