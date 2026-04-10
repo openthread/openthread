@@ -122,7 +122,7 @@ void Test9_2_12(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /** Use AllowList feature to specify links between nodes. */
     leader2.AllowList(med1);

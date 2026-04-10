@@ -122,9 +122,10 @@ SECURITY_POLICY = [672, 'onrc']
 LEADER_STARTUP_DELAY = 12
 ROUTER_STARTUP_DELAY = 10
 # See logic of RouterRoleRestorer
-# ((kMaxTxCount=6) - 1) * 1.1 * (kMulticastRetxDelay=5) + 2 + ROUTER_STARTUP_DELAY
-ROUTER_RESTORE_DELAY = 40
-LEADER_REBOOT_DELAY = 40
+# (MLE_MAX_RESTORING_TRANSMISSION_COUNT - 1) * 1.1 * (kMulticastRetxDelay=5s) + 2s + ROUTER_STARTUP_DELAY
+ROUTER_RESTORE_DELAY = 29
+# (MLE_MAX_RESTORING_TRANSMISSION_COUNT - 1) * 1.1 * (kLinkRequestTimeout=2s) + 2s + LEADER_STARTUP_DELAY
+LEADER_REBOOT_DELAY = 21
 ED_STARTUP_DELAY = 5
 BORDER_ROUTER_STARTUP_DELAY = 20
 MAX_NEIGHBOR_AGE = 100
@@ -153,11 +154,11 @@ PACKET_VERIFICATION_NONE = 0
 PACKET_VERIFICATION_DEFAULT = 1
 PACKET_VERIFICATION_TREL = 2
 
-# After leader reset it may retransmit link request 6 times with max 5.5s interval
-LEADER_RESET_DELAY = 41
-# After router reset it may retransmit link request 3 times with max 5.5s interval
-ROUTER_RESET_DELAY = 23
-MLE_MAX_CRITICAL_TRANSMISSION_COUNT = 6
+# After leader reset it may retransmit link request 4 times with max 2.2s interval
+LEADER_RESET_DELAY = 17
+# After router reset it may retransmit link request 4 times with max 5.5s interval
+ROUTER_RESET_DELAY = 30
+MLE_MAX_RESTORING_TRANSMISSION_COUNT = 4
 MLE_MAX_TRANSMISSION_COUNT = 3
 
 

@@ -124,7 +124,7 @@ void TestMatnTc1(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 0: Topology - BR_1 (DUT), Router");
 
@@ -151,9 +151,6 @@ void TestMatnTc1(void)
     nexus.AdvanceTime(kAttachToRouterTime);
 
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
-
-    host.mInfraIf.Init(host);
-    host.mInfraIf.AddAddress(host.mInfraIf.GetLinkLocalAddress());
 
     nexus.AdvanceTime(kStabilizationTime);
 

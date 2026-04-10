@@ -29,7 +29,6 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_INFRA_IF_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_INFRA_IF_HPP_
 
-#include <openthread/platform/infra_if.h>
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -37,50 +36,82 @@ namespace Nexus {
 
 class Node;
 
-class InfraIf
+class InfraIf : public InstanceLocator
 {
 public:
-    InfraIf(void);
+    using LinkLayerAddress = BorderRouter::InfraIf::LinkLayerAddress;
 
-    void Init(Node &aNode);
+    explicit InfraIf(Instance &aInstance);
+
+    void AfterInit(void);
 
     bool IsInitialized(void) const { return mIfIndex != 0; }
 
     bool HasAddress(const Ip6::Address &aAddress) const;
     void AddAddress(const Ip6::Address &aAddress);
     void RemoveAddress(const Ip6::Address &aAddress);
+    void RemoveAllAddresses(void);
 
     const Ip6::Address *FindAddress(const char *aPrefix) const;
     const Ip6::Address &FindMatchingAddress(const char *aPrefix) const;
 
-    const Ip6::Address &GetLinkLocalAddress(void) const { return mAddresses[0]; }
+    const Ip6::Address              &GetLinkLocalAddress(void) const { return mAddresses[0]; }
+    const Heap::Array<Ip6::Address> &GetAddresses(void) const { return mAddresses; }
+
+    const Ip6::Address &SelectSourceAddress(const Ip6::Address &aDestination) const;
 
     void SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
-    void SendIp6(const Ip6::Address &aSrcAddress,
-                 const Ip6::Address &aDestAddress,
-                 const uint8_t      *aBuffer,
-                 uint16_t            aBufferLength);
+    void SendRouterAdvertisement(const Ip6::Address &aDestination,
+                                 const Ip6::Prefix  *aPioPrefix,
+                                 const Ip6::Prefix  *aRioPrefix);
+    void StartRouterAdvertisement(const Ip6::Prefix &aPioPrefix, const Ip6::Prefix *aRioPrefix = nullptr);
+    void StopRouterAdvertisement(void);
+    void SendIp6(const Ip6::Header &aHeader, OwnedPtr<Message> aMessagePtr);
     void SendEchoRequest(const Ip6::Address &aSrcAddress,
                          const Ip6::Address &aDestAddress,
                          uint16_t            aIdentifier,
-                         uint16_t            aPayloadSize);
-    void Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMessage);
-    void GetLinkLayerAddress(otPlatInfraIfLinkLayerAddress &aLinkLayerAddress) const;
+                         uint16_t            aPayloadSize,
+                         uint8_t             aHopLimit = Ip6::kDefaultHopLimit);
+    void SendUdp(const Ip6::Address &aSrcAddress,
+                 const Ip6::Address &aDestAddress,
+                 uint16_t            aSourcePort,
+                 uint16_t            aDestPort,
+                 Message            &aPayload);
 
-    Node       &GetNode(void);
-    const Node &GetNode(void) const;
+    void Receive(Message &aMessage);
+    void GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const;
+
+    typedef void (*EchoReplyHandler)(void *aContext, const Ip6::Address &aSource, uint16_t aId, uint16_t aSequence);
+
+    void SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext) { mEchoReplyCallback.Set(aHandler, aContext); }
+
+    typedef bool (*UdpHook)(Instance &aInstance, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void SetUdpHook(UdpHook aHook) { mUdpHook = aHook; }
 
     MessageQueue mPendingTxQueue;
 
 private:
     void ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
+    void SendPeriodicRouterAdvertisement(void);
     void HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio);
+    void HandleRouterSolicitation(const Ip6::Address &aSrcAddress);
     void HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage);
+    void HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage);
 
-    Node                     *mNode;
-    uint32_t                  mNodeId;
-    uint32_t                  mIfIndex;
-    Heap::Array<Ip6::Address> mAddresses;
+    void HandleRaTimer(void);
+
+    uint32_t                   mIfIndex;
+    Heap::Array<Ip6::Address>  mAddresses;
+    Callback<EchoReplyHandler> mEchoReplyCallback;
+    UdpHook                    mUdpHook;
+
+    Ip6::Prefix mPioPrefix;
+    Ip6::Prefix mRioPrefix;
+    bool        mHasRioPrefix;
+
+    using RaTimer = TimerMilliIn<InfraIf, &InfraIf::HandleRaTimer>;
+
+    RaTimer mRaTimer;
 };
 
 } // namespace Nexus

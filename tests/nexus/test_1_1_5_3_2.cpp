@@ -86,7 +86,7 @@ void Test5_3_2(void)
     dut.SetName("DUT");
     sed1.SetName("SED_1");
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /**
      * Step 1: All

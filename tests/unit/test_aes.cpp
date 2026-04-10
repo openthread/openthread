@@ -218,7 +218,7 @@ void TestInPlaceAesCcmProcessing(void)
             SuccessOrQuit(message->Append<uint8_t>(i & 0xff));
         }
 
-        messageClone = message->Clone();
+        messageClone = message->Clone<kNoReservedHeader>();
         VerifyOrQuit(messageClone != nullptr);
         VerifyOrQuit(messageClone->GetLength() == msgLength);
 

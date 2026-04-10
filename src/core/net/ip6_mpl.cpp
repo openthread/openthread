@@ -48,25 +48,6 @@ Mpl::Mpl(Instance &aInstance)
     ClearAllBytes(mSeedSet);
 }
 
-void MplOption::Init(SeedIdLength aSeedIdLength)
-{
-    SetType(kType);
-
-    switch (aSeedIdLength)
-    {
-    case kSeedIdLength0:
-        SetLength(sizeof(*this) - sizeof(Option) - sizeof(mSeedId));
-        break;
-    case kSeedIdLength2:
-        SetLength(sizeof(*this) - sizeof(Option));
-        break;
-    default:
-        OT_ASSERT(false);
-    }
-
-    mControl = aSeedIdLength;
-}
-
 void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
 {
     if (aAddress == Get<Mle::Mle>().GetMeshLocalRloc())
@@ -361,7 +342,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 #endif
 
     VerifyOrExit(DetermineMaxRetransmissions() > 0);
-    VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone<kSameReservedHeader>()) != nullptr, error = kErrorNoBufs);
 
     if (aMessage.IsOriginThreadNetif())
     {
@@ -432,7 +413,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
             nextTime.UpdateIfEarlier(metadata.mTransmissionTime);
 
-            messageCopy = message.Clone();
+            messageCopy = message.Clone<kSameReservedHeader>();
         }
         else
         {

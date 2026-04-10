@@ -102,11 +102,7 @@ static void CreateNodes(Core &aNexus, Node *aNodes[], uint16_t aCount, const cha
     for (uint16_t i = 0; i < aCount; i++)
     {
         aNodes[i] = &aNexus.CreateNode();
-
-        String<16> name;
-
-        name.Append("%s_%u", aNamePrefix, i + 1);
-        aNodes[i]->SetName(name.AsCString());
+        aNodes[i]->SetName(aNamePrefix, i + 1);
     }
 }
 

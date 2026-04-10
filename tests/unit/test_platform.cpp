@@ -280,6 +280,8 @@ OT_TOOL_WEAK otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PL
 
 OT_TOOL_WEAK void otPlatWakeHost(void) {}
 
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel, const char *) {}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}

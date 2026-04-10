@@ -317,14 +317,30 @@ public:
      *
      * @returns The log level.
      */
-    static LogLevel GetLogLevel(void)
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    LogLevel GetLogLevel(void) const
     {
-        return sLogLevel;
-    }
-#else
-    {
+#if !OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
         return static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        return mLogLevel;
+#else
+        return (mIsLogLevelSet) ? mLogLevel : sGlobalLogLevel;
+#endif
+    }
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    /**
+     * Returns the global log level.
+     *
+     * @returns The global log level.
+     */
+    static LogLevel GetGlobalLogLevel(void)
+    {
+#if !OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+        return static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+#else
+        return sGlobalLogLevel;
+#endif
     }
 #endif
 
@@ -333,9 +349,25 @@ public:
      * Sets the log level.
      *
      * @param[in] aLogLevel  A log level.
+     *
+     * @retval kErrorNone         Successfully updated the log level.
+     * @retval kErrorInvalidArgs  The given log level is invalid.
+     * @retval kErrorNotCapable   Instance-aware logging is not enabled in a multi-instance configuration.
      */
-    static void SetLogLevel(LogLevel aLogLevel);
+    Error SetLogLevel(LogLevel aLogLevel);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    /**
+     * Sets the global log level.
+     *
+     * @param[in] aLogLevel  A log level.
+     *
+     * @retval kErrorNone         Successfully updated the log level.
+     * @retval kErrorInvalidArgs  The given log level is invalid.
+     */
+    static Error SetGlobalLogLevel(LogLevel aLogLevel);
 #endif
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
     /**
      * Finalizes the OpenThread instance.
@@ -429,6 +461,17 @@ public:
      */
     template <typename Type> inline Type &Get(void);
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    /**
+     * Gets the currently active OpenThread instance.
+     *
+     * It is used to determine the active instance primarily for logging purposes.
+     *
+     * @returns A pointer to the active OpenThread instance, or `nullptr` if not known.
+     */
+    static Instance *GetActiveInstance(void);
+#endif
+
 #if OPENTHREAD_PLATFORM_NEXUS
     /**
      * Constructor to initialize an `Instance`
@@ -450,8 +493,8 @@ private:
     //-----------------------------------------------------------------------------------------------------------------
     // `static` variables
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    static LogLevel sLogLevel;
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    static LogLevel sGlobalLogLevel;
 #endif
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
@@ -783,6 +826,13 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     Utils::PowerCalibration mPowerCalibration;
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    LogLevel mLogLevel;
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    bool mIsLogLevelSet;
+#endif
 #endif
 
     bool mIsInitialized;

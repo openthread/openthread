@@ -122,7 +122,7 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
     return aLength;
 }
 
-otMessage *otMessageClone(const otMessage *aMessage) { return AsCoreType(aMessage).Clone(); }
+otMessage *otMessageClone(const otMessage *aMessage) { return AsCoreType(aMessage).Clone<kNoReservedHeader>(); }
 
 void otMessageQueueInit(otMessageQueue *aQueue) { AsCoreType(aQueue).Clear(); }
 

@@ -617,6 +617,8 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
 
+    void HandleOmrPrefixManagerTimer(void) { mOmrPrefixManager.HandleTimer(); }
+
     class OmrPrefixManager : public InstanceLocator
     {
     public:
@@ -634,31 +636,63 @@ private:
         const Ip6::Prefix      &GetGeneratedPrefix(void) const { return mGeneratedPrefix; }
         const OmrPrefix        &GetLocalPrefix(void) const { return mLocalPrefix; }
         const FavoredOmrPrefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
+        void                    HandleTimer(void);
+        void                    HandleNetDataChange(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        void HandlePdPrefixManagerEvent(void);
+#endif
 
     private:
+        // All times are in msec
+        static constexpr uint32_t kMinDelayToAdd  = 250;
+        static constexpr uint32_t kMaxDelayToAdd  = kMinDelayToAdd + 3500;
+        static constexpr uint32_t kRetryDelay     = 1500;
+        static constexpr uint16_t kRetryJitter    = 150;
         static constexpr uint16_t kInfoStringSize = 85;
 
         typedef String<kInfoStringSize> InfoString;
+
+        enum PrefixOrigin : uint8_t // of `mLocalPrefix`
+        {
+            kSelfGenerated,
+            kCustom,
+            kDhcp6Pd,
+        };
+
+        enum LocalPrefixState : uint8_t // State of `mLocalPrefix` in Network Data
+        {
+            kNotAdded,
+            kToAdd,
+            kAdded,
+        };
 
         void       SetFavoredPrefix(const OmrPrefix &aOmrPrefix);
         void       ClearFavoredPrefix(void) { SetFavoredPrefix(OmrPrefix()); }
         void       DetermineFavoredPrefixInNetData(FavoredOmrPrefix &aFavoredPrefix);
         void       UpdateLocalPrefix(void);
-        Error      AddLocalToNetData(void);
+        bool       IsLocalAddedInNetData(void) const { return (mLocalInNetDataState == kAdded); }
+        void       AddLocalToNetData(void);
         Error      AddOrUpdateLocalInNetData(void);
         void       RemoveLocalFromNetData(void);
         InfoString LocalToString(void) const;
         InfoString FavoredToString(const FavoredOmrPrefix &aFavoredPrefix) const;
 
         static const char *OmrConfigToString(OmrConfig aConfig);
+        static const char *PrefixOriginToString(PrefixOrigin aOrigin);
+
+        using DelayTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleOmrPrefixManagerTimer>;
 
         OmrConfig        mConfig;
         OmrPrefix        mLocalPrefix;
         OmrPrefix        mCustomPrefix;
         Ip6::Prefix      mGeneratedPrefix;
         FavoredOmrPrefix mFavoredPrefix;
-        bool             mIsLocalAddedInNetData;
-        bool             mDefaultRoute;
+        DelayTimer       mTimer;
+        PrefixOrigin     mLocalPrefixOrigin;
+        LocalPrefixState mLocalInNetDataState;
+        bool             mDefaultRoute : 1;
+        bool             mIsInitialized : 1;
+        bool             mIsRunning : 1;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -940,9 +974,7 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
     void HandlePdPrefixManagerTimer(void) { mPdPrefixManager.HandleTimer(); }
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    void HandlePdPrefixManagerTask(void) { mPdPrefixManager.HandleRecordHistoryTask(); }
-#endif
+    void HandlePdPrefixManagerEventTask(void) { mPdPrefixManager.HandleEventTask(); }
 
     class PdPrefixManager : public InstanceLocator
     {
@@ -960,6 +992,15 @@ private:
             kPdPrefixChanged,
             kRxRaPrefixTableChanged,
         };
+
+        enum Event : uint8_t
+        {
+            kEventStateChanged         = 1 << 0,
+            kEventPdPrefixChanged      = 1 << 1,
+            kEventConflictStateChanged = 1 << 2,
+        };
+
+        typedef uint8_t Events;
 
         explicit PdPrefixManager(Instance &aInstance);
 
@@ -979,9 +1020,7 @@ private:
         void  HandleTimer(void) { WithdrawPrefix(); }
         void  SetStateCallback(Dhcp6PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
         void  Evaluate(void);
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        void HandleRecordHistoryTask(void);
-#endif
+        void  HandleEventTask(void);
 
     private:
         class PdPrefix : public OnLinkPrefix
@@ -995,6 +1034,7 @@ private:
 
         void UpdateState(void);
         void SetState(State aState);
+        void SignalEvent(Event aEvent);
         void EvaluateCandidatePrefix(PdPrefix &aPrefix, PdPrefix &aFavoredPrefix);
         void ApplyFavoredPrefix(const PdPrefix &aFavoredPrefix);
         void WithdrawPrefix(void);
@@ -1006,11 +1046,10 @@ private:
 
         using PrefixTimer   = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
         using StateCallback = Callback<Dhcp6PdCallback>;
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        using RecordHistoryTask = TaskletIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTask>;
-#endif
+        using EventTask     = TaskletIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerEventTask>;
 
         State         mState;
+        Events        mEvents;
         bool          mOnLinkPrefixConflict;
         bool          mRoutePrefixConflict;
         uint32_t      mNumPlatformPioProcessed;
@@ -1018,10 +1057,8 @@ private:
         TimeMilli     mLastPlatformRaTime;
         StateCallback mStateCallback;
         PrefixTimer   mTimer;
+        EventTask     mEventTask;
         PdPrefix      mPrefix;
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        RecordHistoryTask mRecordHistoryTask;
-#endif
     };
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE

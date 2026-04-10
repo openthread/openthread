@@ -55,6 +55,26 @@ class RouterTable : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * Represents the events emitted by `RouterTable` to signal changes.
+     */
+    enum Event : uint16_t
+    {
+        kEventRouterAdded           = 1 << 0, ///< A router entry is added to the table (router ID is allocated).
+        kEventRouterRemoved         = 1 << 1, ///< A router entry is removed from the table (router ID released).
+        kEventSelfRouterAdded       = 1 << 2, ///< Same as `kEventRouterAdded` but the new entry is this device.
+        kEventSelfRouterRemoved     = 1 << 3, ///< Same as `kEventRouterRemoved` but the removed entry is this device.
+        kEventNextHopOrCostChanged  = 1 << 4, ///< Next hop or cost changed for an existing router entry.
+        kEventLinkQualityOutChanged = 1 << 5, ///< Link Quality Out changed for an existing router entry.
+        kEventNeighborAdded         = 1 << 6, ///< A router neighbor is added (link established to a router).
+        kEventNeighborRemoved       = 1 << 7, ///< A router neighbor is removed (router is no longer a neighbor).
+    };
+
+    /**
+     * Represents a bit-field of `Event` values.
+     */
+    typedef uint16_t Events;
+
+    /**
      * Constructor.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
@@ -422,8 +442,10 @@ private:
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
 
-    void SignalTableChanged(void);
+    bool IsSelfRouterId(uint8_t aRouterId) const;
+    void SignalTableChanged(Events aEvents);
     void HandleTableChanged(void);
+    void LogEvents(void) const;
     void LogRouteTable(void) const;
 
     class RouterIdMap : public Clearable<RouterIdMap>
@@ -464,6 +486,7 @@ private:
     RouterIdMap                     mRouterIdMap;
     TimeMilli                       mRouterIdSequenceLastUpdated;
     uint8_t                         mRouterIdSequence;
+    Events                          mEvents;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t mMinRouterId;
     uint8_t mMaxRouterId;

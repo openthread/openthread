@@ -143,7 +143,7 @@ void Test1_2_LP_7_1_1(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 1: Topology formation: DUT, SED_1, SSED_1.");
 

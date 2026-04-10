@@ -112,7 +112,7 @@ void Test6_1_5(void)
 
     nexus.AdvanceTime(kStartTime);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Setup the topology without the DUT. Ensure all routers and leader are sending MLE advertisements.");

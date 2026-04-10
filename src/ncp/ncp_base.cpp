@@ -2589,7 +2589,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_WATCHDOG>(
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
-    return mEncoder.WriteUint8(ConvertLogLevel(otLoggingGetLevel()));
+    return mEncoder.WriteUint8(ConvertLogLevel(otGetLogLevel(mInstance)));
 }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -2633,7 +2633,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    IgnoreError(otLoggingSetLevel(logLevel));
+    IgnoreError(otSetLogLevel(mInstance, logLevel));
 
 exit:
     return error;
@@ -2847,6 +2847,22 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)
 
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+
+extern "C" void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    if (ncp != nullptr)
+    {
+        ncp->Log(aLogLevel, OT_LOG_REGION_CORE, aLogLine);
+    }
+}
+
+#else
+
 extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     va_list           args;
@@ -2865,5 +2881,7 @@ extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const ch
 
     va_end(args);
 }
+
+#endif // OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
 
 #endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)

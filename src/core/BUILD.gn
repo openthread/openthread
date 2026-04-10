@@ -462,6 +462,7 @@ openthread_core_files = [
   "common/logging.hpp",
   "common/message.cpp",
   "common/message.hpp",
+  "common/message_allocator.hpp",
   "common/msg_backed_array.hpp",
   "common/non_copyable.hpp",
   "common/notifier.cpp",

@@ -95,7 +95,7 @@ void Test5_2_1(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Router_1 (DUT)");

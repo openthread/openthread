@@ -96,7 +96,7 @@ void Test1_2_LP_5_3_4(void)
     router1.SetName("ROUTER_1");
     ssed1.SetName("SSED_1");
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 0: SSED_1");
 

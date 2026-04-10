@@ -242,11 +242,11 @@ void        DiscoverNat64Prefix(const Ip6::Prefix &aPrefix);
 extern "C" {
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+void otPlatLogOutput(otInstance *, otLogLevel, const char *aLogLine) { printf("   %s\n", aLogLine); }
+#else
+void otPlatLog(otLogLevel, otLogRegion, const char *aFormat, ...)
 {
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-
     va_list args;
 
     printf("   ");
@@ -255,6 +255,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_end(args);
     printf("\n");
 }
+#endif
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -5185,7 +5186,7 @@ void TestDhcp6PdConflict(void)
     // Now Advertise the PD prefix as on-link from a router first.
 
     Log("Router A advertises PD prefix as on-link before delegating the prefix");
-    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 200, 200)});
+    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 350, 350)});
 
     // Check that local OMR is used.
 
@@ -5207,7 +5208,7 @@ void TestDhcp6PdConflict(void)
     sExpectedRios.Clear();
     sExpectedRios.Add(localOmr);
 
-    AdvanceTime(100 * 1000);
+    AdvanceTime(200 * 1000);
     VerifyOrQuit(sExpectedRios.SawAll());
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
@@ -5265,7 +5266,7 @@ void TestDhcp6PdConflict(void)
     sExpectedRios.Clear();
     sExpectedRios.Add(localOmr);
 
-    AdvanceTime(30 * 1000);
+    AdvanceTime(200 * 1000);
     VerifyOrQuit(sExpectedRios.SawAll());
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);

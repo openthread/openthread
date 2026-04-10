@@ -86,7 +86,7 @@ void Test5_2_3(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(kMaxRouters);
     leader.Get<Mle::Mle>().SetRouterDowngradeThreshold(kMaxRouters);

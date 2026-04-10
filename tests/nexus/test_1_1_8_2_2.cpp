@@ -157,7 +157,7 @@ void Test8_2_2(const char *aJsonFileName)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
 #if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
     remove("test_1_1_8_2_2.keys");

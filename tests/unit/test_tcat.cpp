@@ -262,8 +262,8 @@ static Instance *TestInitInstanceTcat(void)
     // reset default data items used across tests
     sFullDataset    = AsCoreType(&kFullDataset);
     sPartialDataset = AsCoreType(&kPartialDataset);
-    sCommNetworkName.Set(kNetworkName);
-    sCommDomainName.Set(kDomainName);
+    IgnoreError(sCommNetworkName.Set(kNetworkName));
+    IgnoreError(sCommDomainName.Set(kDomainName));
     memcpy(&sCommExtPanId, &kExtPanId, sizeof(sCommExtPanId));
     memcpy(&sCommAuth, &kCommCert1AuthField, sizeof(sCommAuth));
     memcpy(&sDeviceAuth, &kDeviceCert1AuthField, sizeof(sDeviceAuth));
@@ -580,7 +580,7 @@ public:
 
         // New situation: network name present, but mismatch - Extraction revoked
         NetworkName wrongNetworkName;
-        wrongNetworkName.Set("WrongName");
+        SuccessOrQuit(wrongNetworkName.Set("WrongName"));
         MockNetworkName(agent, true, &wrongNetworkName);
         VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassDecommissioning | kClassApplication));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));
@@ -687,7 +687,7 @@ public:
 
         // If Network Name does not match
         NetworkName wrongNetworkName;
-        wrongNetworkName.Set(kWrongName);
+        SuccessOrQuit(wrongNetworkName.Set(kWrongName));
         MockNetworkName(agent, true, &wrongNetworkName);
         VerifyOrQuit(CommandClassesAuthorized(agent, kClassGeneral | kClassExtraction | kClassApplication));
         VerifyOrQuit(!SetActiveDatasetAuthorized(agent, sFullDataset));

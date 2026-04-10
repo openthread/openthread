@@ -131,6 +131,7 @@ class Mle : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_FTD
     friend class ot::TimeTicker;
     friend class Tmf::Agent;
+    friend class ot::RouterTable;
 #endif
 
 public:
@@ -870,6 +871,7 @@ public:
      * @param[in]  aPartitionId  The preferred Leader Partition Id.
      */
     void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
+
 #endif
 
     /**
@@ -975,6 +977,24 @@ public:
      * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
      */
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
+
+    /**
+     * Indicates whether or not downgrading from router role to REED is blocked.
+     *
+     * If the transition to the router role was triggered by a Child ID Request, it indicates that the child has no
+     * other parent option. In this case the downgrade is blocked to prevent the parent router becoming REED to ensure
+     * this child remains connected. This flag is cleared in various situations:
+     *
+     * - When device detaches (e.g. partition change).
+     * - If a new router is added (new possible parent).
+     * - If all children blocking downgrade are disconnected.
+     *
+     * This method is intended for testing purposes only.
+     *
+     * @retval TRUE   The device is blocked from downgrading.
+     * @retval FALSE  The device is not blocked from downgrading.
+     */
+    bool IsDowngradeBlocked(void) const { return mBlockDowngrade; }
 
     /**
      * Returns the MLE_CHILD_ROUTER_LINKS value.
@@ -1120,13 +1140,6 @@ public:
      */
     void ResetAdvertiseInterval(void);
 
-    /**
-     * Updates the MLE Advertisement Trickle timer max interval (if timer is running).
-     *
-     * This is called when there is change in router table.
-     */
-    void UpdateAdvertiseInterval(void);
-
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * Generates an MLE Time Synchronization message.
@@ -1251,6 +1264,7 @@ private:
     static constexpr uint32_t kParentRequestReedTimeout      = 1250; // Wait timer after tx of Parent Req to REEDs
     static constexpr uint32_t kParentRequestDuplicateTimeout = 700;  // Min time to detect duplicate Parent Req rx
     static constexpr uint32_t kChildIdResponseTimeout        = 1250; // Wait time to receive Child ID Response
+    static constexpr uint32_t kChildIdResponseJitter         = kChildIdResponseTimeout * 1 / 10; // Jitter 10%
     static constexpr uint32_t kAttachStartJitter             = 50;   // Max jitter time added to start of attach
     static constexpr uint32_t kAnnounceProcessTimeout        = 250;  // Delay after Announce rx before processing
     static constexpr uint32_t kAnnounceTimeout               = 1400; // Total timeout for sending Announce messages
@@ -1461,8 +1475,8 @@ private:
     {
         kMessageSend,
         kMessageReceive,
-        kMessageDelay,
-        kMessageRemoveDelayed,
+        kMessageScheduleDelayedSend,
+        kMessageRemoveDelayedSend,
     };
 
     enum MessageType : uint8_t
@@ -1857,6 +1871,9 @@ private:
         static constexpr uint16_t kChildUpdateMinTimeout              = 1000; // in ms
         static constexpr uint16_t kChildUpdateStartTimeout            = 4000; // in ms
         static constexpr uint16_t kChildUpdateRetxJitter              = 25;   // in ms
+        static constexpr uint8_t  kRestoreLinkRequestAttempts         = 4;
+        static constexpr uint32_t kLeaderRetxDelayMin = kLinkRequestTimeout * 9 / 10;  // 0.9 * base delay
+        static constexpr uint32_t kLeaderRetxDelayMax = kLinkRequestTimeout * 11 / 10; // 1.1 * base delay
 
         enum State : uint8_t
         {
@@ -1869,7 +1886,6 @@ private:
         void SendChildUpdate(void);
         void CheckIfMessageIsFromParent(RxInfo &aRxInfo);
 #if OPENTHREAD_FTD
-        void DetermineMaxLinkRequestAttempts(void);
         void SendMulticastLinkRequest(void);
 #endif
 
@@ -1926,6 +1942,8 @@ private:
             kReattachModePending, // Reattach using stored Pending Dataset
         };
 
+        static constexpr uint8_t kMaxChildIdRequests = 3;
+
         void     SetState(State aState);
         uint32_t GetStartDelay(void) const;
         bool     HasAcceptableParentCandidate(void) const;
@@ -1960,6 +1978,7 @@ private:
         AddressRegistrationMode mAddressRegistrationMode;
         uint8_t                 mParentRequestCounter;
         uint8_t                 mAnnounceChannel;
+        uint8_t                 mChildIdRequestsRemaining;
         uint16_t                mAttachCounter;
         uint16_t                mAnnounceDelay;
         TxChallenge             mParentRequestChallenge;
@@ -2431,6 +2450,7 @@ private:
     bool     NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
     void     HandleAdvertiseTrickleTimer(void);
     void     HandleTimeTick(void);
+    void     HandleRouterTableEvent(RouterTable::Events aEvents);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
@@ -2507,6 +2527,7 @@ private:
 #if OPENTHREAD_FTD
 
     bool mRouterEligible : 1;
+    bool mBlockDowngrade : 1;
     bool mAddressSolicitPending : 1;
     bool mAddressSolicitRejected : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

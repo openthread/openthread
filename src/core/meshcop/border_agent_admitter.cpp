@@ -236,14 +236,16 @@ void Admitter::ForwardJoinerRelayToEnrollers(const Coap::Msg &aMsg)
         if (joiner != nullptr)
         {
             joiner->UpdateExpirationTime();
-            iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage);
+            iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage,
+                                                                                     /* aCheckEnrollerMode */ false);
             ExitNow();
         }
     }
 
     for (EnrollerIterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
-        iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage);
+        iter.GetSessionAs<Manager::CoapDtlsSession>()->ForwardUdpRelayToEnroller(aMsg.mMessage,
+                                                                                 /* aCheckEnrollerMode */ true);
     }
 
 exit:
@@ -1367,15 +1369,7 @@ void Manager::CoapDtlsSession::SendEnrollerResponse(Uri                  aUri,
 
     SuccessOrExit(Tlv::Append<StateTlv>(*response, static_cast<uint8_t>(aResponseState)));
 
-    switch (aUri)
-    {
-    case kUriEnrollerRegister:
-    case kUriEnrollerKeepAlive:
-        SuccessOrExit(AppendAdmitterTlvs(*response, Get<Admitter>().DetermineState()));
-        break;
-    default:
-        break;
-    }
+    SuccessOrExit(AppendAdmitterTlvs(*response, Get<Admitter>().DetermineState()));
 
     SuccessOrExit(SendMessage(response.PassOwnership()));
 
@@ -1383,7 +1377,7 @@ void Manager::CoapDtlsSession::SendEnrollerResponse(Uri                  aUri,
             StateTlv::StateToString(aResponseState), mIndex);
 
 exit:
-    return;
+    OT_UNUSED_VARIABLE(aUri);
 }
 
 void Manager::CoapDtlsSession::SendEnrollerReportState(uint8_t aAdmitterState)
@@ -1425,12 +1419,16 @@ exit:
     return error;
 }
 
-void Manager::CoapDtlsSession::ForwardUdpRelayToEnroller(const Coap::Message &aMessage)
+void Manager::CoapDtlsSession::ForwardUdpRelayToEnroller(const Coap::Message &aMessage, bool aCheckEnrollerMode)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnroller());
-    VerifyOrExit(mEnroller->ShouldForwardJoinerRelay());
+
+    if (aCheckEnrollerMode)
+    {
+        VerifyOrExit(mEnroller->ShouldForwardJoinerRelay());
+    }
 
     SuccessOrExit(error = ForwardUdpRelay(aMessage));
     LogInfo("Forward %s to enroller - session %u", UriToString<kUriRelayRx>(), mIndex);

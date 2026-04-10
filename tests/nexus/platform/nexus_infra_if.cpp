@@ -34,33 +34,25 @@
 namespace ot {
 namespace Nexus {
 
-InfraIf::InfraIf(void)
-    : mNode(nullptr)
-    , mNodeId(0)
+InfraIf::InfraIf(Instance &aInstance)
+    : InstanceLocator(aInstance)
     , mIfIndex(0)
+    , mUdpHook(nullptr)
+    , mHasRioPrefix(false)
+    , mRaTimer(aInstance)
 {
 }
 
-void InfraIf::Init(Node &aNode)
+void InfraIf::AfterInit(void)
 {
-    Ip6::Address                  address;
-    otPlatInfraIfLinkLayerAddress mac;
-    Ip6::InterfaceIdentifier      iid;
+    Ip6::Address             address;
+    LinkLayerAddress         mac;
+    Ip6::InterfaceIdentifier iid;
 
     mIfIndex = 1;
-    mNode    = &aNode;
-    mNodeId  = aNode.GetId();
 
     GetLinkLayerAddress(mac);
-
-    iid.mFields.m8[0] = mac.mAddress[0] ^ 0x02;
-    iid.mFields.m8[1] = mac.mAddress[1];
-    iid.mFields.m8[2] = mac.mAddress[2];
-    iid.mFields.m8[3] = 0xff;
-    iid.mFields.m8[4] = 0xfe;
-    iid.mFields.m8[5] = mac.mAddress[3];
-    iid.mFields.m8[6] = mac.mAddress[4];
-    iid.mFields.m8[7] = mac.mAddress[5];
+    SuccessOrQuit(mac.ConvertToIid(iid));
 
     address.SetToLinkLocalAddress(iid);
 
@@ -74,6 +66,7 @@ void InfraIf::AddAddress(const Ip6::Address &aAddress)
     VerifyOrExit(!HasAddress(aAddress));
 
     SuccessOrQuit(mAddresses.PushBack(aAddress));
+    Get<Mdns>().HandleHostAddressEvent(aAddress, /* aAdded */ true);
 
 exit:
     return;
@@ -87,9 +80,16 @@ void InfraIf::RemoveAddress(const Ip6::Address &aAddress)
         {
             mAddresses[index] = *mAddresses.Back();
             mAddresses.PopBack();
+            Get<Mdns>().HandleHostAddressEvent(aAddress, /* aAdded */ false);
             break;
         }
     }
+}
+
+void InfraIf::RemoveAllAddresses(void)
+{
+    mAddresses.Clear();
+    Get<Mdns>().HandleHostAddressRemoveAll();
 }
 
 const Ip6::Address *InfraIf::FindAddress(const char *aPrefix) const
@@ -120,9 +120,37 @@ const Ip6::Address &InfraIf::FindMatchingAddress(const char *aPrefix) const
     return *matchedAddress;
 }
 
+const Ip6::Address &InfraIf::SelectSourceAddress(const Ip6::Address &aDestination) const
+{
+    const Ip6::Address *bestMatch = &GetLinkLocalAddress();
+
+    if (aDestination.IsLinkLocalUnicast())
+    {
+        // For link-local destinations, we always use the link-local address.
+        ExitNow();
+    }
+
+    for (const Ip6::Address &address : mAddresses)
+    {
+        if (address.IsMulticast())
+        {
+            continue;
+        }
+
+        if (address.GetScope() == aDestination.GetScope())
+        {
+            bestMatch = &address;
+            break;
+        }
+    }
+
+exit:
+    return *bestMatch;
+}
+
 void InfraIf::SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
-    Message    *message = GetNode().Get<MessagePool>().Allocate(Message::kTypeIp6);
+    Message    *message = Get<MessagePool>().Allocate(Message::kTypeIp6);
     Ip6::Header ip6Header;
 
     VerifyOrQuit(message != nullptr);
@@ -144,11 +172,68 @@ void InfraIf::SendIcmp6Nd(const Ip6::Address &aDestAddress, const uint8_t *aBuff
     mPendingTxQueue.Enqueue(*message);
 }
 
+void InfraIf::SendRouterAdvertisement(const Ip6::Address &aDestination,
+                                      const Ip6::Prefix  *aPioPrefix,
+                                      const Ip6::Prefix  *aRioPrefix)
+{
+    Ip6::Nd::RouterAdvert::TxMessage ra;
+    Ip6::Nd::RouterAdvert::Header    header;
+    Ip6::Nd::Icmp6Packet             packet;
+
+    header.SetToDefault();
+    header.SetRouterLifetime(1800);
+    SuccessOrQuit(ra.Append(header));
+
+    if (aPioPrefix != nullptr)
+    {
+        SuccessOrQuit(ra.AppendPrefixInfoOption(*aPioPrefix, 1800, 1800,
+                                                Ip6::Nd::PrefixInfoOption::kOnLinkFlag |
+                                                    Ip6::Nd::PrefixInfoOption::kAutoConfigFlag));
+    }
+
+    if (aRioPrefix != nullptr)
+    {
+        SuccessOrQuit(ra.AppendRouteInfoOption(*aRioPrefix, 1800, NetworkData::kRoutePreferenceMedium));
+    }
+
+    ra.GetAsPacket(packet);
+
+    SendIcmp6Nd(aDestination, packet.GetBytes(), packet.GetLength());
+}
+
+void InfraIf::StartRouterAdvertisement(const Ip6::Prefix &aPioPrefix, const Ip6::Prefix *aRioPrefix)
+{
+    mPioPrefix = aPioPrefix;
+    if (aRioPrefix != nullptr)
+    {
+        mRioPrefix    = *aRioPrefix;
+        mHasRioPrefix = true;
+    }
+    else
+    {
+        mHasRioPrefix = false;
+    }
+
+    // Trigger initial RA immediately
+    SendPeriodicRouterAdvertisement();
+}
+
+void InfraIf::StopRouterAdvertisement(void) { mRaTimer.Stop(); }
+
+void InfraIf::HandleRaTimer(void) { SendPeriodicRouterAdvertisement(); }
+
+void InfraIf::SendPeriodicRouterAdvertisement(void)
+{
+    const uint32_t kRaInterval = 4000; // 4 seconds in milliseconds
+
+    SendRouterAdvertisement(Ip6::Address::GetLinkLocalAllNodesMulticast(), &mPioPrefix,
+                            mHasRioPrefix ? &mRioPrefix : nullptr);
+    mRaTimer.Start(kRaInterval);
+}
+
 void InfraIf::ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
     Ip6::Nd::Icmp6Packet packet;
-
-    OT_UNUSED_VARIABLE(aSrcAddress);
 
     packet.Init(aBuffer, aBufferLength);
 
@@ -173,6 +258,9 @@ void InfraIf::ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBu
     }
 
     case Ip6::Icmp::Header::kTypeRouterSolicit:
+        HandleRouterSolicitation(aSrcAddress);
+        break;
+
     case Ip6::Icmp::Header::kTypeNeighborAdvert:
     case Ip6::Icmp::Header::kTypeNeighborSolicit:
         // TODO: Handle other ND messages as needed for the simulation.
@@ -188,9 +276,9 @@ exit:
 
 void InfraIf::HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio)
 {
-    Ip6::Prefix                   prefix;
-    Ip6::Address                  address;
-    otPlatInfraIfLinkLayerAddress mac;
+    Ip6::Prefix      prefix;
+    Ip6::Address     address;
+    LinkLayerAddress mac;
 
     VerifyOrExit(aPio.IsAutoAddrConfigFlagSet());
 
@@ -200,69 +288,65 @@ void InfraIf::HandlePrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio)
 
     address = AsCoreType(&prefix.mPrefix);
     GetLinkLayerAddress(mac);
-
-    address.mFields.m8[8]  = mac.mAddress[0] ^ 0x02;
-    address.mFields.m8[9]  = mac.mAddress[1];
-    address.mFields.m8[10] = mac.mAddress[2];
-    address.mFields.m8[11] = 0xff;
-    address.mFields.m8[12] = 0xfe;
-    address.mFields.m8[13] = mac.mAddress[3];
-    address.mFields.m8[14] = mac.mAddress[4];
-    address.mFields.m8[15] = mac.mAddress[5];
+    SuccessOrQuit(mac.ConvertToIid(address.GetIid()));
 
     if (aPio.GetValidLifetime() == 0)
     {
         if (HasAddress(address))
         {
             RemoveAddress(address);
-            Log("Node %lu (%s) removed address %s from RA (lifetime 0)", ToUlong(GetNode().GetId()),
-                GetNode().GetName(), address.ToString().AsCString());
+            Log("Node %lu (%s) removed address %s from RA (lifetime 0)", ToUlong(GetInstance().GetId()),
+                Get<Node>().GetName(), address.ToString().AsCString());
         }
         ExitNow();
     }
 
     AddAddress(address);
-    Log("Node %lu (%s) auto-configured address %s from RA", ToUlong(GetNode().GetId()), GetNode().GetName(),
+    Log("Node %lu (%s) auto-configured address %s from RA", ToUlong(GetInstance().GetId()), Get<Node>().GetName(),
         address.ToString().AsCString());
 
 exit:
     return;
 }
 
-void InfraIf::SendIp6(const Ip6::Address &aSrcAddress,
-                      const Ip6::Address &aDestAddress,
-                      const uint8_t      *aBuffer,
-                      uint16_t            aBufferLength)
+void InfraIf::HandleRouterSolicitation(const Ip6::Address &aSrcAddress)
 {
-    Message *message = GetNode().Get<MessagePool>().Allocate(Message::kTypeIp6);
+    if (mRaTimer.IsRunning())
+    {
+        const Ip6::Address &dest =
+            aSrcAddress.IsUnspecified() ? Ip6::Address::GetLinkLocalAllNodesMulticast() : aSrcAddress;
+        SendRouterAdvertisement(dest, &mPioPrefix, mHasRioPrefix ? &mRioPrefix : nullptr);
+    }
+}
 
-    VerifyOrQuit(message != nullptr);
+void InfraIf::SendIp6(const Ip6::Header &aHeader, OwnedPtr<Message> aMessagePtr)
+{
+    VerifyOrQuit(aMessagePtr != nullptr);
 
-    Log("InfraIf::SendIp6 from %s to %s (len:%u)", aSrcAddress.ToString().AsCString(),
-        aDestAddress.ToString().AsCString(), aBufferLength);
+    Log("InfraIf::SendIp6 from %s to %s (len:%u)", aHeader.GetSource().ToString().AsCString(),
+        aHeader.GetDestination().ToString().AsCString(), aMessagePtr->GetLength());
 
-    SuccessOrQuit(message->AppendBytes(aBuffer, aBufferLength));
-
-    mPendingTxQueue.Enqueue(*message);
+    mPendingTxQueue.Enqueue(*aMessagePtr.Release());
 }
 
 void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
                               const Ip6::Address &aDestAddress,
                               uint16_t            aIdentifier,
-                              uint16_t            aPayloadSize)
+                              uint16_t            aPayloadSize,
+                              uint8_t             aHopLimit)
 {
     Message          *message;
     Ip6::Header       ip6Header;
     Ip6::Icmp::Header icmpHeader;
 
-    message = GetNode().Get<MessagePool>().Allocate(Message::kTypeIp6);
+    message = Get<Ip6::Ip6>().NewMessage();
     VerifyOrQuit(message != nullptr);
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();
     ip6Header.SetPayloadLength(sizeof(Ip6::Icmp::Header) + aPayloadSize);
     ip6Header.SetNextHeader(Ip6::kProtoIcmp6);
-    ip6Header.SetHopLimit(64);
+    ip6Header.SetHopLimit(aHopLimit);
     ip6Header.SetSource(aSrcAddress);
     ip6Header.SetDestination(aDestAddress);
 
@@ -272,9 +356,8 @@ void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
     icmpHeader.SetId(aIdentifier);
     icmpHeader.SetSequence(0);
 
-    SuccessOrQuit(message->SetLength(aPayloadSize));
-    SuccessOrQuit(message->Prepend(icmpHeader));
-    message->SetOffset(0);
+    SuccessOrQuit(message->Append(icmpHeader));
+    SuccessOrQuit(message->IncreaseLength(aPayloadSize));
 
     Checksum::UpdateMessageChecksum(*message, aSrcAddress, aDestAddress, Ip6::kProtoIcmp6);
 
@@ -283,84 +366,190 @@ void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
     mPendingTxQueue.Enqueue(*message);
 }
 
-void InfraIf::Receive(Node &aSrcNode, const Ip6::Header &aHeader, Message &aMessage)
+void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
+                      const Ip6::Address &aDestAddress,
+                      uint16_t            aSourcePort,
+                      uint16_t            aDestPort,
+                      Message            &aPayload)
 {
-    Node &node          = GetNode();
-    bool  isIcmp6Nd     = false;
-    bool  isEchoRequest = false;
+    Ip6::Header      ip6Header;
+    Ip6::Udp::Header udpHeader;
 
-    VerifyOrExit(!node.mInfraIf.HasAddress(aHeader.GetSource()));
-    VerifyOrExit(!node.Get<NetworkData::Leader>().IsOnMesh(aHeader.GetSource()));
+    ip6Header.Clear();
+    ip6Header.InitVersionTrafficClassFlow();
+    ip6Header.SetPayloadLength(sizeof(Ip6::Udp::Header) + aPayload.GetLength());
+    ip6Header.SetNextHeader(Ip6::kProtoUdp);
+    ip6Header.SetHopLimit(64);
+    ip6Header.SetSource(aSrcAddress);
+    ip6Header.SetDestination(aDestAddress);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
+    udpHeader.SetSourcePort(aSourcePort);
+    udpHeader.SetDestinationPort(aDestPort);
+    udpHeader.SetLength(sizeof(Ip6::Udp::Header) + aPayload.GetLength());
+    udpHeader.SetChecksum(0);
+
+    SuccessOrQuit(aPayload.Prepend(udpHeader));
+    aPayload.SetOffset(0);
+    Checksum::UpdateMessageChecksum(aPayload, aSrcAddress, aDestAddress, Ip6::kProtoUdp);
+    SuccessOrQuit(aPayload.Prepend(ip6Header));
+    aPayload.SetOffset(0);
+
+    if (aDestAddress.IsMulticast())
     {
-        VerifyOrExit(node.Get<BackboneRouter::Local>().IsPrimary());
-        VerifyOrExit(node.Get<BackboneRouter::MulticastListenersTable>().Has(aHeader.GetDestination()));
+        Message *loopbackMessage = aPayload.Clone<kNoReservedHeader>();
+
+        VerifyOrQuit(loopbackMessage != nullptr);
+        Receive(*loopbackMessage);
+        loopbackMessage->Free();
     }
-#endif
 
-    Core::Get().SetActiveNode(&node);
+    mPendingTxQueue.Enqueue(aPayload);
+}
 
-    if (aHeader.GetNextHeader() == Ip6::kProtoIcmp6 &&
-        aMessage.GetLength() >= sizeof(Ip6::Header) + sizeof(Ip6::Icmp::Header) &&
-        (aHeader.GetDestination() == Ip6::Address::GetLinkLocalAllNodesMulticast() ||
-         aHeader.GetDestination() == Ip6::Address::GetLinkLocalAllRoutersMulticast() ||
-         node.mInfraIf.HasAddress(aHeader.GetDestination())))
+void InfraIf::Receive(Message &aMessage)
+{
+    Ip6::Headers headers;
+
+    aMessage.SetOffset(0);
+    SuccessOrExit(headers.ParseFrom(aMessage));
+
+    if (headers.IsIcmp6() && (headers.GetDestinationAddress() == Ip6::Address::GetLinkLocalAllNodesMulticast() ||
+                              headers.GetDestinationAddress() == Ip6::Address::GetLinkLocalAllRoutersMulticast() ||
+                              HasAddress(headers.GetDestinationAddress())))
     {
-        Ip6::Icmp::Header icmpHeader;
-
-        SuccessOrQuit(aMessage.Read(sizeof(Ip6::Header), icmpHeader));
-
-        switch (icmpHeader.GetType())
+        switch (headers.GetIcmpHeader().GetType())
         {
         case Ip6::Icmp::Header::kTypeRouterAdvert:
         case Ip6::Icmp::Header::kTypeRouterSolicit:
         case Ip6::Icmp::Header::kTypeNeighborAdvert:
         case Ip6::Icmp::Header::kTypeNeighborSolicit:
-            isIcmp6Nd = true;
-            break;
+        {
+            Heap::Data payload;
+            uint16_t   offset = sizeof(Ip6::Header);
+
+            SuccessOrQuit(payload.SetFrom(aMessage, offset, aMessage.GetLength() - offset));
+
+            otPlatInfraIfRecvIcmp6Nd(&GetInstance(), mIfIndex, &headers.GetSourceAddress(), payload.GetBytes(),
+                                     payload.GetLength());
+            Get<InfraIf>().ProcessIcmp6Nd(headers.GetSourceAddress(), payload.GetBytes(), payload.GetLength());
+            ExitNow();
+        }
+
         case Ip6::Icmp::Header::kTypeEchoRequest:
-            isEchoRequest = true;
-            break;
+            HandleEchoRequest(headers.GetIp6Header(), aMessage);
+            ExitNow();
+
+        case Ip6::Icmp::Header::kTypeEchoReply:
+            HandleEchoReply(headers.GetIp6Header(), aMessage);
+            ExitNow();
+
         default:
             break;
         }
     }
 
-    if (isIcmp6Nd)
+    if (headers.IsUdp() && headers.GetDestinationPort() == Mdns::kUdpPort)
     {
-        Heap::Data payload;
-        uint16_t   offset = sizeof(Ip6::Header);
+        if (headers.GetDestinationAddress().IsMulticast() || HasAddress(headers.GetDestinationAddress()))
+        {
+            Mdns::AddressInfo senderAddress;
+            Message          *payload = aMessage.Clone<kNoReservedHeader>();
 
-        SuccessOrQuit(payload.SetFrom(aMessage, offset, aMessage.GetLength() - offset));
+            VerifyOrQuit(payload != nullptr);
+            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
 
-        otPlatInfraIfRecvIcmp6Nd(&node.GetInstance(), mIfIndex,
-                                 reinterpret_cast<const otIp6Address *>(&aHeader.GetSource()), payload.GetBytes(),
-                                 payload.GetLength());
-        node.mInfraIf.ProcessIcmp6Nd(aHeader.GetSource(), payload.GetBytes(), payload.GetLength());
+            senderAddress.mAddress      = headers.GetSourceAddress();
+            senderAddress.mPort         = headers.GetSourcePort();
+            senderAddress.mInfraIfIndex = Mdns::kInfraIfIndex;
+
+            Get<Mdns>().Receive(GetInstance(), *payload, !headers.GetDestinationAddress().IsMulticast(), senderAddress);
+            payload->Free();
+        }
+        ExitNow();
     }
-    else if (isEchoRequest)
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    if (headers.IsUdp() && headers.GetDestinationPort() == Get<Trel>().mUdpPort && Get<Trel>().mEnabled)
     {
-        HandleEchoRequest(aHeader, aMessage);
+        if (headers.GetDestinationAddress().IsMulticast() || HasAddress(headers.GetDestinationAddress()))
+        {
+            Ip6::SockAddr senderAddr;
+            Heap::Data    payload;
+            uint16_t      offset = sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header);
+
+            senderAddr.SetAddress(headers.GetSourceAddress());
+            senderAddr.SetPort(headers.GetSourcePort());
+
+            SuccessOrQuit(
+                payload.SetFrom(aMessage, offset, headers.GetUdpHeader().GetLength() - sizeof(Ip6::Udp::Header)));
+            Get<Trel>().Receive(GetInstance(), payload, senderAddr);
+        }
+        ExitNow();
     }
-    else
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    if (headers.IsUdp() && headers.GetDestinationPort() == UpstreamDns::kDnsPort)
+    {
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        if (Get<UpstreamDns>().HandleUpstreamDnsResponse(headers.GetSourceAddress(), aMessage))
+        {
+            ExitNow();
+        }
+        aMessage.SetOffset(0);
+    }
+#endif
+
+    if (headers.IsUdp() && Get<Udp>().HandleReceive(aMessage, headers))
+    {
+        ExitNow();
+    }
+
+    if (headers.IsUdp() && mUdpHook != nullptr)
+    {
+        Ip6::MessageInfo messageInfo;
+        messageInfo.SetPeerAddr(headers.GetSourceAddress());
+        messageInfo.SetPeerPort(headers.GetSourcePort());
+        messageInfo.SetSockAddr(headers.GetDestinationAddress());
+        messageInfo.SetSockPort(headers.GetDestinationPort());
+
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        if (mUdpHook(GetInstance(), aMessage, messageInfo))
+        {
+            ExitNow();
+        }
+        aMessage.SetOffset(0);
+    }
+
     {
         // We also deliver generic IPv6 packets to the stack if they are NOT ICMPv6 ND packets.
         // (ND packets were already delivered via otPlatInfraIfRecvIcmp6Nd above).
         OwnedPtr<Message> messagePtr;
+        Ip6::Header       updatedHeader = headers.GetIp6Header();
 
-        messagePtr.Reset(node.Get<Ip6::Ip6>().NewMessage());
+        VerifyOrExit(!HasAddress(headers.GetSourceAddress()));
+        VerifyOrExit(!Get<NetworkData::Leader>().IsOnMesh(headers.GetSourceAddress()));
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+        if (headers.GetDestinationAddress().IsMulticastLargerThanRealmLocal())
+        {
+            VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary());
+            VerifyOrExit(Get<BackboneRouter::MulticastListenersTable>().Has(headers.GetDestinationAddress()));
+        }
+#endif
+
+        VerifyOrExit(updatedHeader.GetHopLimit() > 1);
+        updatedHeader.SetHopLimit(updatedHeader.GetHopLimit() - 1);
+
+        messagePtr.Reset(aMessage.Clone<kNoReservedHeader>());
         VerifyOrQuit(messagePtr != nullptr);
 
-        SuccessOrQuit(messagePtr->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
+        messagePtr->Write(0, updatedHeader);
         messagePtr->SetOrigin(Message::kOriginHostUntrusted);
         messagePtr->SetLoopbackToHostAllowed(false);
 
-        SuccessOrQuit(node.Get<Ip6::Ip6>().SendRaw(messagePtr.PassOwnership()));
+        IgnoreError(Get<Ip6::Ip6>().SendRaw(messagePtr.PassOwnership()));
     }
-
-    Core::Get().SetActiveNode(&aSrcNode);
 
 exit:
     return;
@@ -368,13 +557,12 @@ exit:
 
 void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
 {
-    Node             &node = GetNode();
     Message          *replyMessage;
     Ip6::Header       replyHeader;
     Ip6::Icmp::Header replyIcmp;
     uint16_t          payloadLen = aMessage.GetLength() - sizeof(Ip6::Header);
 
-    replyMessage = node.Get<MessagePool>().Allocate(Message::kTypeIp6);
+    replyMessage = Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(replyMessage != nullptr);
 
     SuccessOrQuit(replyMessage->SetLength(payloadLen));
@@ -402,25 +590,21 @@ void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
     mPendingTxQueue.Enqueue(*replyMessage);
 }
 
-void InfraIf::GetLinkLayerAddress(otPlatInfraIfLinkLayerAddress &aLinkLayerAddress) const
+void InfraIf::HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage)
+{
+    Ip6::Icmp::Header icmpHeader;
+
+    SuccessOrQuit(aMessage.Read(sizeof(Ip6::Header), icmpHeader));
+    mEchoReplyCallback.InvokeIfSet(aHeader.GetSource(), icmpHeader.GetId(), icmpHeader.GetSequence());
+}
+
+void InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress) const
 {
     // Use a unique MAC address based on Node ID
     ClearAllBytes(aLinkLayerAddress);
     aLinkLayerAddress.mLength     = 6;
     aLinkLayerAddress.mAddress[0] = 0x02;
-    aLinkLayerAddress.mAddress[5] = static_cast<uint8_t>(mNodeId);
-}
-
-Node &InfraIf::GetNode(void)
-{
-    OT_ASSERT(mNode != nullptr);
-    return *mNode;
-}
-
-const Node &InfraIf::GetNode(void) const
-{
-    OT_ASSERT(mNode != nullptr);
-    return *mNode;
+    BigEndian::WriteUint32(GetInstance().GetId(), &aLinkLayerAddress.mAddress[2]);
 }
 
 extern "C" {
@@ -459,7 +643,7 @@ otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstanc
 {
     OT_UNUSED_VARIABLE(aInfraIfIndex);
 
-    AsNode(aInstance).mInfraIf.GetLinkLayerAddress(*aLinkLayerAddress);
+    AsNode(aInstance).mInfraIf.GetLinkLayerAddress(AsCoreType(aLinkLayerAddress));
 
     return OT_ERROR_NONE;
 }

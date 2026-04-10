@@ -189,7 +189,7 @@ void Test9_2_16(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: Commissioner, Leader, Router_1");

@@ -65,6 +65,8 @@ PBBR_ALOC = Ipv6Addr(DEFAULT_MESH_LOCAL_PREFIX + PBBR_ALOC_IID)
 # Minimum value of the MLR Timeout parameter in the BBR Dataset
 MLR_TIMEOUT_MIN = 300
 
+THREAD_SERVICE_DATA_BBR = 0x01
+
 # Max response delay
 MLE_MAX_RESPONSE_DELAY = 1
 
@@ -322,7 +324,7 @@ REAL_LAYER_NAMES = {
     'dns',
     'igmp',
     'mdns',
-    'dns',
+    'trel',
 }
 
 FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop', 'ipv6inner'}
@@ -349,6 +351,7 @@ WIRESHARK_OVERRIDE_PREFS = {
 }
 
 WIRESHARK_DECODE_AS_ENTRIES = {
+    'udp.port==53': 'dns',
     'udp.port==61631': 'coap',
     # SRP server ports for dissecting SRP requests and responses
     'udp.port==53535': 'dns',
@@ -404,13 +407,23 @@ THREAD_VERSION_1_2 = 3
 THREAD_VERSION_1_3 = 4
 THREAD_VERSION_1_4 = 5
 
-# ICMPv6 Types
+# ICMPV6 Types
 ICMPV6_TYPE_DESTINATION_UNREACHABLE = 1
 ICMPV6_TYPE_PACKET_TO_BIG = 2
 ICMPV6_TYPE_TIME_EXCEEDED = 3
 ICMPV6_TYPE_PARAMETER_PROBLEM = 4
 ICMPV6_TYPE_ECHO_REQUEST = 128
 ICMPV6_TYPE_ECHO_REPLY = 129
+
+# DNS constants
+DNS_OPCODE_UPDATE = 5
+DNS_TYPE_A = 1
+DNS_TYPE_PTR = 12
+DNS_TYPE_TXT = 16
+DNS_TYPE_AAAA = 28
+DNS_TYPE_SRV = 33
+DNS_RCODE_NOERROR = 0
+DNS_RCODE_NXDOMAIN = 3
 
 ICMPV6_RA_OPT_TYPE_RIO = 24
 

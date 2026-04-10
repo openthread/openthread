@@ -139,6 +139,7 @@ typedef UintTlvInfo<ThreadTlv::kStatus, uint8_t> ThreadStatusTlv;
 /**
  * Implements Router Mask TLV generation and parsing.
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
 {
 public:
@@ -198,43 +199,12 @@ public:
 private:
     uint8_t          mIdSequence;
     Mle::RouterIdSet mAssignedRouterIdMask;
-};
+} OT_TOOL_PACKED_END;
 
 /**
- * Implements Thread Network Data TLV generation and parsing.
+ * Defines Thread Network Data TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadNetworkDataTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kThreadNetworkData>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kThreadNetworkData);
-        SetLength(0);
-    }
-
-    /**
-     * Overrides same method of the base class
-     *
-     * @retval TRUE  the TLV appears to be well-formed.
-     */
-    bool IsValid(void) const { return true; }
-
-    /**
-     * Returns a pointer to the Network Data TLVs.
-     *
-     * @returns A pointer to the Network Data TLVs.
-     */
-    uint8_t *GetTlvs(void) { return mTlvs; }
-
-private:
-    static constexpr uint8_t kMaxSize = 255;
-
-    uint8_t mTlvs[kMaxSize];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<ThreadTlv::kThreadNetworkData> ThreadNetworkDataTlv;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 

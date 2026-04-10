@@ -44,8 +44,13 @@ namespace Crypto {
 
 HkdfSha256::HkdfSha256(void)
 {
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+    mContext.mContext     = nullptr;
+    mContext.mContextSize = 0;
+#else
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
+#endif
     SuccessOrAssert(otPlatCryptoHkdfInit(&mContext));
 }
 

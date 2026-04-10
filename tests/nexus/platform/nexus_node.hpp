@@ -33,11 +33,14 @@
 
 #include "nexus_alarm.hpp"
 #include "nexus_core.hpp"
+#include "nexus_dns.hpp"
 #include "nexus_infra_if.hpp"
+#include "nexus_logging.hpp"
 #include "nexus_mdns.hpp"
 #include "nexus_radio.hpp"
 #include "nexus_settings.hpp"
 #include "nexus_trel.hpp"
+#include "nexus_udp.hpp"
 #include "nexus_utils.hpp"
 
 namespace ot {
@@ -46,20 +49,26 @@ namespace Nexus {
 class Platform
 {
 public:
-    Radio    mRadio;
-    Alarm    mAlarmMilli;
-    Alarm    mAlarmMicro;
-    Mdns     mMdns;
-    InfraIf  mInfraIf;
-    Settings mSettings;
+    Radio       mRadio;
+    Alarm       mAlarmMilli;
+    Alarm       mAlarmMicro;
+    Logging     mLogging;
+    Mdns        mMdns;
+    UpstreamDns mUpstreamDns;
+    InfraIf     mInfraIf;
+    Udp         mUdp;
+    Settings    mSettings;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Trel mTrel;
 #endif
     bool mPendingTasklet;
 
 protected:
-    Platform(void)
-        : mPendingTasklet(false)
+    explicit Platform(Instance &aInstance)
+        : mUpstreamDns(aInstance)
+        , mInfraIf(aInstance)
+        , mUdp(aInstance)
+        , mPendingTasklet(false)
     {
     }
 };
@@ -104,38 +113,52 @@ public:
     // a test failure (emits error message and exits the program.)
     const Ip6::Address &FindMatchingAddress(const char *aPrefix);
 
+    /**
+     * Finds and returns a global scope address on the device.
+     *
+     * It requires a global scope address to be found, otherwise it is treated as a test failure (emits error message
+     * and exits the program).
+     *
+     * @returns A reference to the global scope address.
+     */
+    const Ip6::Address &FindGlobalAddress(void);
+
+    enum AddressNetif : uint8_t
+    {
+        kThreadNetifAddress,
+        kInfraNetifAddress,
+        kAnyNetifAddress,
+    };
+
+    bool Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const;
+
     void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
     void        SetName(const char *aPrefix, uint16_t aIndex);
     const char *GetName(void) const { return mName.AsCString(); }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    template <typename Type> Type &Get(void)
-    {
-        Core::Get().SetActiveNode(this);
-        return Instance::Get<Type>();
-    }
+    template <typename Type> Type       &Get(void) { return Instance::Get<Type>(); }
+    template <typename Type> const Type &Get(void) const { return AsConst(AsNonConst(this)->Get<Type>()); }
 
-    Instance &GetInstance(void)
-    {
-        Core::Get().SetActiveNode(this);
-        return *this;
-    }
+    Instance &GetInstance(void) { return *this; }
 
     uint32_t GetId(void) { return GetInstance().GetId(); }
 
     static Node &From(otInstance *aInstance) { return static_cast<Node &>(*aInstance); }
 
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
-    void        HandleReceive(otMessage *aMessage);
 
     using Platform::mAlarmMicro;
     using Platform::mAlarmMilli;
     using Platform::mInfraIf;
+    using Platform::mLogging;
     using Platform::mMdns;
     using Platform::mPendingTasklet;
     using Platform::mRadio;
     using Platform::mSettings;
+    using Platform::mUdp;
+    using Platform::mUpstreamDns;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     using Platform::mTrel;
 #endif
@@ -143,7 +166,12 @@ public:
     Node *mNext;
 
 private:
-    Node(void) {}
+    Node(void)
+        : Platform(static_cast<Instance &>(*this))
+    {
+    }
+
+    void HandleIp6Receive(OwnedPtr<Message> aMessagePtr);
 
     String<32> mName;
 };
@@ -151,6 +179,14 @@ private:
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
 
 } // namespace Nexus
+
+template <> inline Nexus::Node        &Instance::Get(void) { return Nexus::AsNode(this); }
+template <> inline Nexus::InfraIf     &Instance::Get(void) { return static_cast<Nexus::Node *>(this)->mInfraIf; }
+template <> inline Nexus::Udp         &Instance::Get(void) { return static_cast<Nexus::Node *>(this)->mUdp; }
+template <> inline Nexus::Trel        &Instance::Get(void) { return static_cast<Nexus::Node *>(this)->mTrel; }
+template <> inline Nexus::Mdns        &Instance::Get(void) { return static_cast<Nexus::Node *>(this)->mMdns; }
+template <> inline Nexus::UpstreamDns &Instance::Get(void) { return static_cast<Nexus::Node *>(this)->mUpstreamDns; }
+
 } // namespace ot
 
 #endif // OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_

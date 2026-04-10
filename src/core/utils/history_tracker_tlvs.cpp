@@ -38,14 +38,6 @@
 namespace ot {
 namespace HistoryTracker {
 
-void AnswerTlv::Init(uint16_t aIndex, bool aIsLast)
-{
-    SetType(kAnswer);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-
-    SetFlagsIndex((aIndex & kIndexMask) | (aIsLast ? kIsLastFlag : 0));
-}
-
 void RequestTlv::Init(uint8_t aTlvType, uint16_t aNumEntries, uint32_t aMaxEntryAge)
 {
     SetType(kRequest);

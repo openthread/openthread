@@ -229,7 +229,11 @@ private:
     void UpdateCountersAndRecordEvent(DeactivationReason aReason);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     bool ShouldRegisterService(void) const;
-    void RegisterOrUnregisterService(void);
+    void ConstructServiceName(void);
+    void RegisterOrUnregisterService(bool aRegister);
+    void HandleRegisterDone(Error aError);
+
+    static void HandleRegisterDone(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError);
 #endif
 
     // Session or Transport callbacks
@@ -257,6 +261,10 @@ private:
     TimeoutTimer              mTimer;
     CallbackTask              mCallbackTask;
     Callback<CallbackHandler> mCallback;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Dns::Name::LabelBuffer mServiceName;
+    uint16_t               mServiceRenameIndex;
+#endif
 };
 
 } // namespace BorderAgent

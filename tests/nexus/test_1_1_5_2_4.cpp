@@ -107,7 +107,7 @@ void Test5_2_4(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /** Use AllowList feature to restrict the topology. */
     for (uint16_t i = 0; i < kNumRouters; i++)

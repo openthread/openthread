@@ -49,6 +49,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 99)
 
+if(APPLE)
+    set(CMAKE_AR "/usr/bin/ar")
+    set(CMAKE_RANLIB "/usr/bin/ranlib")
+endif()
+
 message(STATUS "OpenThread Source Directory: ${PROJECT_SOURCE_DIR}")
 
 target_include_directories(ot-config INTERFACE

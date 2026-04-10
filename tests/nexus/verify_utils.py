@@ -156,6 +156,40 @@ def thread_coap_tlv_parse(t, v, layer=None):
     elif t == consts.NM_FUTURE_TLV:
         kvs.append(('future_tlv', v))
 
+    # Network Data TLV (often in SVR_DATA.ntf)
+    elif t == consts.NL_THREAD_NETWORK_DATA_TLV:
+        # Value is Network Data
+        # We only care about Service TLV (Type 5) -> Server TLV (Type 6)
+        # In Network Data, TLV type is 5 bits + 1 bit Stable flag.
+        pos = 0
+        while pos + 2 <= len(v):
+            nwd_t = v[pos]
+            nwd_l = v[pos + 1]
+            nwd_v = v[pos + 2:pos + 2 + nwd_l]
+            if pos + 2 + nwd_l > len(v):
+                break
+            if (nwd_t >> 1) == consts.NWD_SERVICE_TLV:  # Service TLV
+                if len(nwd_v) >= 2:
+                    # nwd_v[0] is T bit (1) and Service ID (7 bits)
+                    s_data_len = nwd_v[1]
+                    if len(nwd_v) >= 2 + s_data_len:
+                        s_data = nwd_v[2:2 + s_data_len]
+                        if s_data_len >= 1 and s_data[0] == consts.THREAD_SERVICE_DATA_BBR:  # THREAD_SERVICE_DATA_BBR
+                            # Sub-TLVs start after S_data
+                            sub_pos = 2 + s_data_len
+                            while sub_pos + 2 <= len(nwd_v):
+                                sub_t = nwd_v[sub_pos]
+                                sub_l = nwd_v[sub_pos + 1]
+                                sub_v = nwd_v[sub_pos + 2:sub_pos + 2 + sub_l]
+                                if sub_pos + 2 + sub_l > len(nwd_v):
+                                    break
+                                if (sub_t >> 1) == consts.NWD_SERVER_TLV:  # Server TLV
+                                    # sub_v is [RLOC16(2), SeqNo(1), ReregDelay(2), MLRTimeout(4)]
+                                    if len(sub_v) >= 3:
+                                        kvs.append(('bbr_seqno', sub_v[2]))
+                                sub_pos += 2 + sub_l
+            pos += 2 + nwd_l
+
     # Other Thread TLVs
     elif t == consts.NL_TARGET_EID_TLV and len(v) == 16:
         kvs.append(('target_eid', str(Ipv6Addr(v))))
@@ -214,6 +248,208 @@ def thread_coap_tlv_parse(t, v, layer=None):
     return kvs
 
 
+# RA constants
+ICMPV6_TYPE_ROUTER_ADVERTISEMENT = 134
+RA_FLAG_M_FALSE = 0
+RA_FLAG_O_FALSE = 0
+RA_ROUTER_LIFETIME_ZERO = 0
+
+ICMPV6_OPT_TYPE_PIO = 3
+ICMPV6_OPT_TYPE_RIO = 24
+
+PIO_FLAG_A_TRUE = 1
+
+# EXT_PAN_ID mapping offsets and lengths
+EXT_PAN_ID_GLOBAL_ID_OFFSET = 1
+EXT_PAN_ID_GLOBAL_ID_LEN = 5
+EXT_PAN_ID_SUBNET_ID_OFFSET = 6
+EXT_PAN_ID_SUBNET_ID_LEN = 2
+
+
+def as_list(x):
+    return x if isinstance(x, list) else [x]
+
+
+def get_ra_prefixes(p):
+    rio_prefixes = []
+    pio_prefixes = []
+    try:
+        opts = as_list(p.icmpv6.opt.type)
+        all_prefixes = as_list(p.icmpv6.opt.prefix)
+    except (AttributeError, IndexError):
+        return rio_prefixes, pio_prefixes
+
+    prefix_idx = 0
+    for opt_type in opts:
+        if opt_type in (ICMPV6_OPT_TYPE_PIO, ICMPV6_OPT_TYPE_RIO):
+            if prefix_idx < len(all_prefixes):
+                if opt_type == ICMPV6_OPT_TYPE_RIO:
+                    rio_prefixes.append(Ipv6Addr(all_prefixes[prefix_idx]))
+                else:  # PIO
+                    pio_prefixes.append(Ipv6Addr(all_prefixes[prefix_idx]))
+                prefix_idx += 1
+    return rio_prefixes, pio_prefixes
+
+
+def check_ra_has_rio(packet, prefix, prf=None):
+    """
+    Check if an ICMPv6 RA contains a Route Information Option (RIO) with the given prefix.
+    """
+    if packet.icmpv6.type != ICMPV6_TYPE_ROUTER_ADVERTISEMENT:
+        return False
+
+    target_addr = Ipv6Addr(prefix)
+
+    try:
+        all_prefixes = as_list(packet.icmpv6.opt.prefix)
+        all_types = as_list(packet.icmpv6.opt.type)
+        all_prfs = as_list(packet.icmpv6.opt.route_info.flag.route_preference)
+    except (AttributeError, IndexError):
+        return False
+
+    ri_idx = 0
+    prefix_idx = 0
+    for opt_type in all_types:
+        if opt_type == ICMPV6_OPT_TYPE_RIO:
+            if prefix_idx < len(all_prefixes) and Ipv6Addr(all_prefixes[prefix_idx]) == target_addr:
+                if prf is not None:
+                    if not isinstance(prf, (list, tuple)):
+                        prf = [prf]
+                    if ri_idx < len(all_prfs) and int(all_prfs[ri_idx]) in prf:
+                        return True
+                else:
+                    return True
+            ri_idx += 1
+            prefix_idx += 1
+        elif opt_type == ICMPV6_OPT_TYPE_PIO:
+            prefix_idx += 1
+
+    return False
+
+
+def check_nwd_prefix_flags(packet, target_prefix, stable=None, **expected_flags):
+    """
+    Robustly check flags for a specific OMR prefix in Network Data.
+    Handles cases with multiple prefixes and different sub-TLVs.
+    """
+    try:
+        types = as_list(packet.thread_nwd.tlv.type)
+        prefixes = as_list(packet.thread_nwd.tlv.prefix)
+        stables = as_list(packet.thread_nwd.tlv.stable)
+    except (AttributeError, IndexError):
+        return False
+
+    prefix_idx = 0
+    br_idx = 0
+    is_target = False
+
+    # We iterate through all TLVs to find the target prefix and its BR sub-TLV
+    for i, t in enumerate(types):
+        if t == consts.NWD_PREFIX_TLV:
+            is_target = False
+            if prefix_idx < len(prefixes) and prefixes[prefix_idx]:
+                current_prefix = prefixes[prefix_idx]
+                is_target = (Ipv6Addr(current_prefix) == Ipv6Addr(target_prefix))
+                if is_target and stable is not None:
+                    try:
+                        if stables[i] != stable:
+                            is_target = False
+                    except IndexError:
+                        is_target = False
+            prefix_idx += 1
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            # These are also top-level TLVs, reset target prefix
+            is_target = False
+        elif t == consts.NWD_BORDER_ROUTER_TLV:
+            if is_target:
+                # This BR sub-TLV belongs to our target prefix!
+                try:
+                    # Map expected_flags keys to pktverify field names
+                    field_map = {
+                        'pref': packet.thread_nwd.tlv.border_router.pref,
+                        'r': packet.thread_nwd.tlv.border_router.flag.r,
+                        'o': packet.thread_nwd.tlv.border_router.flag.o,
+                        'p': packet.thread_nwd.tlv.border_router.flag.p,
+                        's': packet.thread_nwd.tlv.border_router.flag.s,
+                        'd': packet.thread_nwd.tlv.border_router.flag.d,
+                        'dp': packet.thread_nwd.tlv.border_router.flag.dp,
+                        'n': packet.thread_nwd.tlv.border_router.flag.n,
+                    }
+
+                    match = True
+                    for key, expected_val in expected_flags.items():
+                        if key in field_map:
+                            field_values = field_map[key]
+                            if field_values is not None:
+                                actual_val = as_list(field_values)[br_idx]
+                                if actual_val != expected_val:
+                                    match = False
+                                    break
+                            else:
+                                match = False
+                                break
+
+                    if match:
+                        return True  # Found it and all specified flags match!
+                except (AttributeError, IndexError):
+                    pass
+
+            br_idx += 1
+
+    return False
+
+
+def check_nwd_has_prefix(packet, prefix):
+    """Checks if Network Data contains the given prefix in a Prefix TLV."""
+    try:
+        if not hasattr(packet, 'thread_nwd') or not hasattr(packet.thread_nwd.tlv, 'prefix'):
+            return False
+        prefixes = as_list(packet.thread_nwd.tlv.prefix)
+        target_addr = Ipv6Addr(prefix)
+        return any(p and Ipv6Addr(p) == target_addr for p in prefixes)
+    except (AttributeError, IndexError):
+        return False
+
+
+def check_nwd_has_route(packet, target_prefix, pref=None):
+    """
+    Robustly check if Network Data has an External Route with the given prefix.
+    """
+    try:
+        types = as_list(packet.thread_nwd.tlv.type)
+        prefixes = as_list(packet.thread_nwd.tlv.prefix)
+    except (AttributeError, IndexError):
+        return False
+
+    prefix_idx = 0
+    hr_idx = 0
+    is_target = False
+
+    for i, t in enumerate(types):
+        if t == consts.NWD_PREFIX_TLV:
+            is_target = False
+            if prefix_idx < len(prefixes) and prefixes[prefix_idx]:
+                is_target = (Ipv6Addr(prefixes[prefix_idx]) == Ipv6Addr(target_prefix))
+            prefix_idx += 1
+        elif t in (consts.NWD_COMMISSIONING_DATA_TLV, consts.NWD_SERVICE_TLV):
+            is_target = False
+        elif t == consts.NWD_HAS_ROUTER_TLV:
+            if is_target:
+                if pref is not None:
+                    try:
+                        all_prefs = as_list(packet.thread_nwd.tlv.has_route.pref)
+                        allowed_prefs = pref if isinstance(pref, (list, tuple)) else [pref]
+                        if hr_idx < len(all_prefs) and int(all_prefs[hr_idx]) in allowed_prefs:
+                            return True
+                    except (AttributeError, IndexError, ValueError):
+                        pass
+                else:
+                    return True
+            hr_idx += 1
+
+    return False
+
+
 def is_leader_aloc_or_rloc(addr_str: str) -> bool:
     """Checks if an IPv6 address is a Leader ALOC or an RLOC."""
     addr = ipaddress.ip_address(addr_str)
@@ -225,12 +461,42 @@ def is_leader_aloc_or_rloc(addr_str: str) -> bool:
     return is_aloc or is_rloc
 
 
+def is_dns_compression_used(p) -> bool:
+    """
+    Check if any DNS name in the packet is compressed.
+    """
+    dns = getattr(p, 'dns', None)
+    if not dns:
+        dns = getattr(p, 'mdns', None)
+    if not dns:
+        return False
+
+    try:
+        raw_layer = dns._layer
+        for field_name, field in raw_layer._all_fields.items():
+            # Check fields that might contain DNS names
+            if '.name' in field_name or '.target' in field_name or '.domain_name' in field_name:
+                fields = field.fields if hasattr(field, 'fields') else [field]
+                for f in fields:
+                    rv = f.raw_value
+                    if rv:
+                        for i in range(0, len(rv), 2):
+                            if int(rv[i:i + 2], 16) & 0xc0 == 0xc0:
+                                return True
+    except Exception:
+        pass
+
+    return False
+
+
 def apply_patches():
     CoapTlvParser.parse = staticmethod(thread_coap_tlv_parse)
 
     from pktverify import consts, layer_fields
     consts.VALID_LAYER_NAMES.add('wpan_tap')
     consts.VALID_LAYER_NAMES.add('wpan-tap')
+    consts.VALID_LAYER_NAMES.add('trel')
+    consts.REAL_LAYER_NAMES.add('trel')
 
     # Patch _get_candidate_layers to map wpan_tap to wpan-tap
     old_get_candidate_layers = layer_fields._get_candidate_layers
@@ -269,6 +535,7 @@ def apply_patches():
     Layer.get_field = patched_get_field
 
     layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series'] = layer_fields._list(layer_fields._auto)
+    layer_fields._LAYER_FIELDS['mle.tlv.addr_reg_ipv6'] = layer_fields._list(layer_fields._ipv6_addr)
     layer_fields._LAYER_FIELDS['mle.tlv.link_forward_series_flags'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_status_sub_tlv'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.query_id'] = layer_fields._auto
@@ -365,8 +632,18 @@ def apply_patches():
         return t, kvs, val_pos + len_
 
     coap.CoapLayer._parse_next_tlv = staticmethod(_parse_next_tlv_patched)
+    layer_fields._LAYER_FIELDS['coap.tlv.bbr_seqno'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['thread_meshcop.tlv.delay_timer'] = layer_fields._auto
     layer_fields._LAYER_FIELDS['mle.tlv.link_query_options'] = layer_fields._bytes
+    layer_fields._LAYER_FIELDS['dns.opt.data'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._LAYER_FIELDS['dns.count.queries'] = layer_fields._auto
+    layer_fields._layer_containers.add('dns.opt')
+    layer_fields._layer_containers.add('dns.count')
+    layer_fields._LAYER_FIELDS['mdns.nsec'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._LAYER_FIELDS['dns.a'] = layer_fields._list(layer_fields._str)
+    layer_fields._LAYER_FIELDS['mdns.a'] = layer_fields._list(layer_fields._str)
+    layer_fields._LAYER_FIELDS['dns.data'] = layer_fields._list(layer_fields._bytes)
+    layer_fields._LAYER_FIELDS['mdns.data'] = layer_fields._list(layer_fields._bytes)
 
     def which_tshark_patch():
         default_path = '/tmp/thread-wireshark/tshark'
@@ -431,6 +708,16 @@ def run_main(verify_func):
             all_thread_nodes_mcast_addr[4:12] = prefix[0:8]
             consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS = Ipv6Addr(all_thread_nodes_mcast_addr)
 
+        # Add TREL UDP port variables before creating PacketVerifier (so PcapReader uses them)
+        # We only do this for TREL tests to avoid interference with other tests
+        # using similar UDP ports for regular Thread traffic.
+        testcase = data.get('testcase', '')
+        if 'TREL' in testcase:
+            for node_id, port in data.get('trel_udp_ports', {}).items():
+                port = int(port)
+                if port > 0:
+                    consts.WIRESHARK_DECODE_AS_ENTRIES[f'udp.port=={port}'] = 'trel'
+
         pv = PacketVerifier(json_file, wireshark_prefs=wireshark_prefs)
         pv.add_common_vars()
 
@@ -439,10 +726,29 @@ def run_main(verify_func):
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_RLOC16': int(rloc16, 16)})
 
+        # Add TREL UDP port variables to pv.vars
+        for node_id, port in data.get('trel_udp_ports', {}).items():
+            name = pv.test_info.get_node_name(int(node_id))
+            port = int(port)
+            if port > 0:
+                pv.add_vars(**{f'{name}_TREL_PORT': port})
+
         # Add channel variables
         for node_id, channel in data.get('channels', {}).items():
             name = pv.test_info.get_node_name(int(node_id))
             pv.add_vars(**{f'{name}_CHANNEL': int(channel)})
+
+        # Add OMR prefix variables
+        omr_prefixes = data.get('omr_prefixes', {})
+        for node_id, omr_prefix in omr_prefixes.items():
+            if omr_prefix:
+                name = pv.test_info.get_node_name(int(node_id))
+                pv.add_vars(**{f'{name}_OMR_PREFIX': omr_prefix})
+
+        # If all valid OMR prefixes are the same, add a generic OMR_PREFIX variable
+        valid_omr_prefixes = [p for p in omr_prefixes.values() if p]
+        if len(valid_omr_prefixes) > 0 and all(p == valid_omr_prefixes[0] for p in valid_omr_prefixes):
+            pv.add_vars(OMR_PREFIX=valid_omr_prefixes[0])
 
         verify_func(pv)
         print("Verification PASSED")

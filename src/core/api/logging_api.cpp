@@ -37,20 +37,43 @@
 
 using namespace ot;
 
-otLogLevel otLoggingGetLevel(void) { return static_cast<otLogLevel>(Instance::GetLogLevel()); }
+otLogLevel otGetLogLevel(otInstance *aInstance) { return MapEnum(AsCoreType(aInstance).GetLogLevel()); }
+
+otLogLevel otLoggingGetLevel(void)
+{
+    LogLevel level;
+
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    level = Instance::Get().GetLogLevel();
+#else
+    level = Instance::GetGlobalLogLevel();
+#endif
+
+    return MapEnum(level);
+}
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+
+otError otSetLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
+{
+    return AsCoreType(aInstance).SetLogLevel(MapEnum(aLogLevel));
+}
+
 otError otLoggingSetLevel(otLogLevel aLogLevel)
 {
-    Error error = kErrorNone;
+    Error    error;
+    LogLevel level = MapEnum(aLogLevel);
 
-    VerifyOrExit(aLogLevel <= kLogLevelDebg && aLogLevel >= kLogLevelNone, error = kErrorInvalidArgs);
-    Instance::SetLogLevel(static_cast<LogLevel>(aLogLevel));
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    error = Instance::Get().SetLogLevel(level);
+#else
+    error = Instance::SetGlobalLogLevel(level);
+#endif
 
-exit:
     return error;
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 static const char kPlatformModuleName[] = "Platform";
 

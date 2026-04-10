@@ -90,6 +90,25 @@ void platformLoggingDeinit(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+
+void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLogLevel);
+
+    if (sLogFile == NULL)
+    {
+        syslog(LOG_CRIT, "[%lu] %s", (unsigned long)gNodeId, aLogLine);
+    }
+    else
+    {
+        fprintf(sLogFile, "%s\r\n", aLogLine);
+    }
+}
+
+#else
+
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
@@ -118,9 +137,11 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_end(args);
 }
 
-#else
+#endif // OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+
+#else // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
 void platformLoggingInit(const char *aName) { OT_UNUSED_VARIABLE(aName); }
 void platformLoggingDeinit(void) {}
 
-#endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+#endif

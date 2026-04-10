@@ -78,6 +78,20 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+ *
+ * Define to 1 to enable the instance-aware platform logging API.
+ *
+ * When this configuration is enabled, OpenThread logging will track the OpenThread instance (`otInstance`) from which
+ * a log is generated. The core will use the `otPlatLogOutput()` platform API instead of `otPlatLog()`. The new
+ * platform API provides the `otInstance` pointer along with the log as a fully formatted string, which is particularly
+ * useful in multi-instance setups to distinguish logs from different OpenThread instances.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+#define OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level (used at compile time). If `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE` is set, this defines the most

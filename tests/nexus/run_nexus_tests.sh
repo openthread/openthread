@@ -98,6 +98,7 @@ DEFAULT_TESTS=(
     "1_1_5_7_3"
     "1_1_5_8_2"
     "1_1_5_8_3"
+    "1_2_BBR_TC_3"
     "1_1_5_8_4"
     "1_1_6_1_1_A"
     "1_1_6_1_1_B"
@@ -172,6 +173,63 @@ DEFAULT_TESTS=(
     "1_2_MATN_TC_1"
     "1_2_MATN_TC_2"
     "1_2_MATN_TC_3"
+    "1_2_MATN_TC_4"
+    "1_2_MATN_TC_5"
+    "1_2_MATN_TC_7"
+    "1_2_MATN_TC_9"
+    "1_2_MATN_TC_10"
+    "1_2_MATN_TC_12"
+    "1_2_MATN_TC_15"
+    "1_2_MATN_TC_16"
+    "1_2_MATN_TC_19"
+    "1_2_MATN_TC_20"
+    "1_2_MATN_TC_21"
+    "1_2_MATN_TC_22"
+    "1_2_MATN_TC_23"
+    "1_2_MATN_TC_26"
+    "1_2_BBR_TC_1"
+    "1_2_BBR_TC_2"
+    "1_2_BBR_TC_3"
+    "1_3_DBR_TC_1"
+    "1_3_DBR_TC_2"
+    "1_3_DBR_TC_3"
+    "1_3_DBR_TC_6"
+    "1_3_DBR_TC_7A"
+    "1_3_DBR_TC_7B"
+    "1_3_DBR_TC_7C"
+    "1_3_DBR_TC_8"
+    "1_3_DBR_TC_10"
+    "1_3_DPR_TC_1"
+    "1_3_DPR_TC_2"
+    "1_3_SRP_TC_1"
+    "1_3_SRP_TC_2"
+    "1_3_SRP_TC_3"
+    "1_3_SRP_TC_4"
+    "1_3_SRP_TC_5"
+    "1_3_SRP_TC_6"
+    "1_3_SRP_TC_8"
+    "1_3_SRP_TC_11"
+    "1_3_SRP_TC_12"
+    "1_3_SRP_TC_13"
+    "1_3_SRP_TC_15"
+    "1_3_SRPC_TC_1"
+    "1_3_SRPC_TC_4"
+    "1_3_SRPC_TC_5"
+    "1_3_SRPC_TC_7"
+    "1_3_GEN_TC_1"
+    "1_3_GEN_TC_2"
+    "1_3_DIAG_TC_1"
+    "1_3_DIAG_TC_2"
+    "1_4_TREL_TC_1"
+    "1_4_TREL_TC_2"
+    "1_4_TREL_TC_3"
+    "1_4_TREL_TC_4"
+    "1_4_TREL_TC_5"
+    "1_4_TREL_TC_6"
+    "1_4_DNS_TC_1"
+    "1_4_DNS_TC_3"
+    "1_4_DNS_TC_5"
+    "1_4_CS_TC_3"
 )
 
 # Use provided arguments or the default test list
@@ -189,7 +247,7 @@ run_test()
     # Strip 'nexus_' prefix if present
     test_full="${test_full#nexus_}"
 
-    local test_base="${test_full%_[AB]}"
+    local test_base="${test_full%_[ABC]}"
     local topology=""
     if [[ $test_full != "$test_base" ]]; then
         topology="${test_full##*_}"
@@ -263,6 +321,9 @@ for t in "${TESTS_TO_RUN[@]}"; do
     case "$t" in
         1_1_6_1_1 | 1_1_6_1_2 | 1_1_6_1_3 | 1_1_6_1_6 | 1_1_6_2_1 | 1_1_6_2_2 | 1_1_6_3_1 | 1_1_6_3_2 | 1_1_6_4_1 | 1_1_6_4_2 | 1_1_6_5_1 | 1_1_6_5_2 | 1_1_6_5_3 | 1_1_6_6_1 | 1_1_6_6_2 | 1_1_9_2_1 | 1_1_9_2_3 | 1_1_9_2_4 | 1_1_9_2_19)
             expanded_tests+=("${t}_A" "${t}_B")
+            ;;
+        1_3_GEN_TC_1)
+            expanded_tests+=("${t}_A" "${t}_B" "${t}_C")
             ;;
         *)
             expanded_tests+=("$t")

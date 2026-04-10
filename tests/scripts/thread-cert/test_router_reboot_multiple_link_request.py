@@ -49,7 +49,7 @@ MED6 = 8
 
 # Test Purpose and Description:
 # -----------------------------
-# The purpose of this test case is to show that when a router with > 5 children is rebooted, it sends MLE_MAX_CRITICAL_TRANSMISSION_COUNT MLE link request packets if no response is received.
+# The purpose of this test case is to show that when a router is rebooted, it sends MLE_MAX_RESTORING_TRANSMISSION_COUNT MLE link request packets if no response is received.
 #
 # Test Topology:
 # -------------
@@ -150,12 +150,12 @@ class Test_LeaderRebootMultipleLinkRequest(thread_cert.TestCase):
             filter_mle_advertisement('Router').\
             must_next()
 
-        # The router MUST send MLE_MAX_CRITICAL_TRANSMISSION_COUNT multicast Link Request
+        # The router MUST send MLE_MAX_RESTORING_TRANSMISSION_COUNT multicast Link Request
         # The following TLVs MUST be present in the Link Request:
         #     - Challenge TLV
         #     - Version TLV
         #     - TLV Request TLV: Address16 TLV, Route64 TLV
-        for i in range(0, config.MLE_MAX_CRITICAL_TRANSMISSION_COUNT):
+        for i in range(0, config.MLE_MAX_RESTORING_TRANSMISSION_COUNT):
             pkts.filter_wpan_src64(ROUTER).\
                 filter_LLARMA().\
                 filter_mle_cmd(MLE_LINK_REQUEST).\

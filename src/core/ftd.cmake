@@ -39,7 +39,7 @@ target_compile_options(openthread-ftd PRIVATE
     -Wundef
 )
 
-if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+if(APPLE)
     target_compile_options(openthread-ftd PRIVATE -Wimplicit-int-conversion)
 endif()
 

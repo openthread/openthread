@@ -2530,16 +2530,16 @@ void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 
     const HeaderIe *enhAckProbingIe =
         reinterpret_cast<const HeaderIe *>(aFrame.GetThreadIe(ThreadIe::kEnhAckProbingIe));
-    const uint8_t *data =
-        reinterpret_cast<const uint8_t *>(enhAckProbingIe) + sizeof(HeaderIe) + sizeof(VendorIeHeader);
-    uint8_t dataLen = 0;
+    uint8_t dataLen;
 
     VerifyOrExit(enhAckProbingIe != nullptr);
 
     dataLen = enhAckProbingIe->GetLength() - sizeof(VendorIeHeader);
     VerifyOrExit(dataLen <= kEnhAckProbingIeMaxLen);
 
-    Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
+    Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(reinterpret_cast<const uint8_t *>(enhAckProbingIe) +
+                                                          sizeof(HeaderIe) + sizeof(VendorIeHeader),
+                                                      dataLen, aNeighbor);
 exit:
     return;
 }

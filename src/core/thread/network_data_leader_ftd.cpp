@@ -221,8 +221,8 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
 
 template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
 {
-    ThreadNetworkDataTlv networkDataTlv;
-    uint16_t             rloc16;
+    uint16_t    rloc16;
+    OffsetRange offsetRange;
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
@@ -241,12 +241,16 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Msg &aMsg)
         ExitNow();
     }
 
-    if (Tlv::FindTlv(aMsg.mMessage, networkDataTlv) == kErrorNone)
+    if (Tlv::FindTlvValueOffsetRange(aMsg.mMessage, ThreadNetworkDataTlv::kType, offsetRange) == kErrorNone)
     {
-        VerifyOrExit(networkDataTlv.IsValid());
+        uint8_t bytes[kMaxSize];
+
+        VerifyOrExit(offsetRange.GetLength() <= kMaxSize);
+
+        aMsg.mMessage.ReadBytes(offsetRange, bytes);
 
         {
-            NetworkData networkData(GetInstance(), networkDataTlv.GetTlvs(), networkDataTlv.GetLength());
+            NetworkData networkData(GetInstance(), bytes, static_cast<uint8_t>(offsetRange.GetLength()));
 
             RegisterNetworkData(aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData);
         }

@@ -46,6 +46,7 @@ void TestTlv(void)
     Instance     *instance = testInitInstance();
     Message      *message;
     Tlv           tlv;
+    Tlv::Info     tlvInfo;
     ExtendedTlv   extTlv;
     Tlv::Bookmark bookmark;
     uint16_t      offset;
@@ -64,7 +65,7 @@ void TestTlv(void)
     VerifyOrQuit(message->GetLength() == 0);
 
     VerifyOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 1, offsetRange) == kErrorNotFound);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, 0, buffer, 1) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ParseFrom(*message, 0) == kErrorParse);
 
     // Add an empty TLV with type 1 and check that we can find it
 
@@ -77,8 +78,11 @@ void TestTlv(void)
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 1, offsetRange));
     VerifyOrQuit(offsetRange.GetOffset() == sizeof(Tlv));
     VerifyOrQuit(offsetRange.GetLength() == 0);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 0));
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1) == kErrorParse);
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetType() == 1);
+    VerifyOrQuit(tlvInfo.GetLength() == 0);
+    VerifyOrQuit(!tlvInfo.IsExtended());
+    VerifyOrQuit(tlvInfo.ReadValue(*message, buffer, 1) == kErrorParse);
 
     // Add an empty extended TLV (type 2), and check that we can find it.
 
@@ -91,8 +95,11 @@ void TestTlv(void)
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 2, offsetRange));
     VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(ExtendedTlv));
     VerifyOrQuit(offsetRange.GetLength() == 0);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 0));
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1) == kErrorParse);
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetType() == 2);
+    VerifyOrQuit(tlvInfo.GetLength() == 0);
+    VerifyOrQuit(tlvInfo.IsExtended());
+    VerifyOrQuit(tlvInfo.ReadValue(*message, buffer, 1) == kErrorParse);
 
     // Add a TLV with type 3 with one byte value and check if we can find it.
 
@@ -106,9 +113,13 @@ void TestTlv(void)
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 3, offsetRange));
     VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(Tlv));
     VerifyOrQuit(offsetRange.GetLength() == 1);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1));
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetType() == 3);
+    VerifyOrQuit(tlvInfo.GetLength() == 1);
+    VerifyOrQuit(!tlvInfo.IsExtended());
+    SuccessOrQuit(tlvInfo.ReadValue(*message, buffer, 1));
     VerifyOrQuit(buffer[0] == 0x0ff);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 2) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ReadValue(*message, buffer, 2) == kErrorParse);
 
     // Add an extended TLV with type 4 with two byte value and check if we can find it.
 
@@ -123,12 +134,16 @@ void TestTlv(void)
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 4, offsetRange));
     VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(ExtendedTlv));
     VerifyOrQuit(offsetRange.GetLength() == 2);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1));
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetType() == 4);
+    VerifyOrQuit(tlvInfo.GetLength() == 2);
+    VerifyOrQuit(tlvInfo.IsExtended());
+    SuccessOrQuit(tlvInfo.ReadValue(*message, buffer, 1));
     VerifyOrQuit(buffer[0] == 0x12);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 2));
+    SuccessOrQuit(tlvInfo.ReadValue(*message, buffer, 2));
     VerifyOrQuit(buffer[0] == 0x12);
     VerifyOrQuit(buffer[1] == 0x34);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 3) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ReadValue(*message, buffer, 3) == kErrorParse);
 
     // Add a TLV with missing value.
 
@@ -139,7 +154,7 @@ void TestTlv(void)
     SuccessOrQuit(message->Append(tlv));
 
     VerifyOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 5, offsetRange) != kErrorNone);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 0) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ParseFrom(*message, offset) == kErrorParse);
 
     // Add the missing value.
     SuccessOrQuit(message->Append<uint8_t>(0xaa));
@@ -147,9 +162,13 @@ void TestTlv(void)
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 5, offsetRange));
     VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(Tlv));
     VerifyOrQuit(offsetRange.GetLength() == 1);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1));
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetType() == 5);
+    VerifyOrQuit(tlvInfo.GetLength() == 1);
+    VerifyOrQuit(!tlvInfo.IsExtended());
+    SuccessOrQuit(tlvInfo.ReadValue(*message, buffer, 1));
     VerifyOrQuit(buffer[0] == 0xaa);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 2) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ReadValue(*message, buffer, 2) == kErrorParse);
 
     // Add an extended TLV with missing value.
 
@@ -161,17 +180,21 @@ void TestTlv(void)
     SuccessOrQuit(message->Append<uint8_t>(0xbb));
 
     VerifyOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 6, offsetRange) != kErrorNone);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ParseFrom(*message, offset) == kErrorParse);
 
     SuccessOrQuit(message->Append<uint8_t>(0xcc));
 
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 6, offsetRange) != kErrorNone);
     VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(ExtendedTlv));
     VerifyOrQuit(offsetRange.GetLength() == 2);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 2));
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetType() == 6);
+    VerifyOrQuit(tlvInfo.GetLength() == 2);
+    VerifyOrQuit(tlvInfo.IsExtended());
+    SuccessOrQuit(tlvInfo.ReadValue(*message, buffer, 2));
     VerifyOrQuit(buffer[0] == 0xbb);
     VerifyOrQuit(buffer[1] == 0xcc);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 3) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ReadValue(*message, buffer, 3) == kErrorParse);
 
     // Add an extended TLV with overflow length.
 
@@ -183,7 +206,7 @@ void TestTlv(void)
     SuccessOrQuit(message->Append<uint8_t>(0x11));
 
     VerifyOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 7, offsetRange) != kErrorNone);
-    VerifyOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 1) == kErrorParse);
+    VerifyOrQuit(tlvInfo.ParseFrom(*message, offset) == kErrorParse);
 
     //- - - - - - - - - - - - - - - - - - - - - -
     // Validate `StartTlv()`, `AdjustTlv()`, `EndTlv()`
@@ -202,7 +225,10 @@ void TestTlv(void)
     SuccessOrQuit(Tlv::FindTlvValueOffsetRange(*message, /* aType */ 1, offsetRange));
     VerifyOrQuit(offsetRange.GetOffset() == offset + sizeof(Tlv));
     VerifyOrQuit(offsetRange.GetLength() == 3);
-    SuccessOrQuit(Tlv::ReadTlvValue(*message, offset, buffer, 3));
+    SuccessOrQuit(tlvInfo.ParseFrom(*message, offset));
+    VerifyOrQuit(tlvInfo.GetLength() == 3);
+    VerifyOrQuit(!tlvInfo.IsExtended());
+    SuccessOrQuit(tlvInfo.ReadValue(*message, buffer, 3));
     VerifyOrQuit(buffer[0] == 0xab);
     VerifyOrQuit(buffer[1] == 0xcd);
     VerifyOrQuit(buffer[2] == 0xef);

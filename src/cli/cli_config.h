@@ -70,6 +70,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+ *
+ * Indicates whether or not the CLI `ifconfig init` command to be supported.
+ *
+ * This is applicable when `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is used.
+ *
+ * The `ifconfig init` is intended for testing purposes only.
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+#define OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_TCP_ENABLE
  *
  * Indicates whether TCP should be enabled in the CLI tool.
@@ -185,15 +198,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
 #define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
- *
- * Define to 1 to enable BLE secure support.
- */
-#ifndef OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
-#define OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE 0
 #endif
 
 #endif // OT_CLI_CLI_CONFIG_H_

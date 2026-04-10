@@ -56,6 +56,20 @@ public:
      */
     static void SetSettingsPath(const char *aSettingsPath);
 
+    /**
+     * Gets the fixed settings file base name.
+     *
+     * @returns  The fixed settings file base name, or nullptr if not set.
+     */
+    static const char *GetSettingsFileName(void);
+
+    /**
+     * Sets the fixed settings file base name.
+     *
+     * @param[in]   aSettingsFileName   The settings file base name, or nullptr to clear.
+     */
+    static void SetSettingsFileName(const char *aSettingsFileName);
+
     SettingsFile(void)
         : mSettingsFd(-1)
     {
@@ -139,6 +153,7 @@ private:
     void    SwapDiscard(int aFd);
 
     static char sSettingsPath[kMaxFileBasePathNameSize];
+    static char sSettingsFileName[kMaxFileBaseNameSize];
     char        mSettingsFileFullPathName[kMaxFileFullPathNameSize];
     int         mSettingsFd;
 };

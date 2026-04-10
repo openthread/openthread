@@ -184,7 +184,7 @@ void TestUdpMessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Udp::Header));
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage();
         Ip6::Udp::Header udpHeader;
         Ip6::MessageInfo messageInfo;
 
@@ -252,7 +252,7 @@ void TestIcmp6MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message          *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Icmp::Header));
+        Message          *message = instance->Get<Ip6::Ip6>().NewMessage();
         Ip6::Icmp::Header icmp6Header;
         Ip6::MessageInfo  messageInfo;
 
@@ -327,7 +327,7 @@ void TestTcp4MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Tcp::Header));
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage();
         Ip4::Tcp::Header tcpHeader;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
@@ -382,7 +382,7 @@ void TestUdp4MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Udp::Header));
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage();
         Ip4::Udp::Header udpHeader;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
@@ -427,7 +427,7 @@ void TestIcmp4MessageChecksum(void)
                                                "\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37";
     uint16_t      kChecksumForExampleMessage = 0x5594;
     Instance     *instance                   = static_cast<Instance *>(testInitInstance());
-    Message      *message                    = instance->Get<Ip6::Ip6>().NewMessage(sizeof(kExampleIcmpMessage));
+    Message      *message                    = instance->Get<Ip6::Ip6>().NewMessage();
 
     Ip4::Address source;
     Ip4::Address dest;

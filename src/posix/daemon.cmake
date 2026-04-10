@@ -51,7 +51,7 @@ target_link_libraries(ot-daemon PRIVATE
 )
 
 if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    if(APPLE)
         target_link_libraries(ot-daemon PRIVATE -Wl,-map,ot-daemon.map)
     else()
         target_link_libraries(ot-daemon PRIVATE -Wl,-Map=ot-daemon.map)
@@ -78,7 +78,7 @@ target_link_libraries(ot-ctl PRIVATE
 )
 
 if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    if(APPLE)
         target_link_libraries(ot-ctl PRIVATE -Wl,-map,ot-ctl.map)
     else()
         target_link_libraries(ot-ctl PRIVATE -Wl,-Map=ot-ctl.map)

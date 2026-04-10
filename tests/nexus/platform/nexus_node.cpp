@@ -40,10 +40,10 @@ void Node::Reset(void)
     mAlarmMilli.Reset();
     mAlarmMicro.Reset();
     mMdns.Reset();
+    mUpstreamDns.Reset();
     mInfraIf.mPendingTxQueue.DequeueAndFreeAll();
     mPendingTasklet = false;
 
-    otIp6SetReceiveCallback(&GetInstance(), HandleIp6Receive, &GetInstance());
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrel.Reset();
 #endif
@@ -53,6 +53,8 @@ void Node::Reset(void)
     instance = new (instance) Instance();
     instance->SetId(id);
     instance->AfterInit();
+
+    otIp6SetReceiveCallback(instance, Node::HandleIp6Receive, this);
 }
 
 void Node::Form(void)
@@ -124,6 +126,7 @@ void Node::SendEchoRequest(const Ip6::Address &aDestination,
 
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetHopLimit(aHopLimit);
+    messageInfo.mAllowZeroHopLimit = true;
 
     if (aSrcAddress != nullptr)
     {
@@ -140,42 +143,48 @@ void Node::SetName(const char *aPrefix, uint16_t aIndex) { mName.Clear().Append(
 
 void Node::HandleIp6Receive(otMessage *aMessage, void *aContext)
 {
-    static_cast<Node *>(aContext)->HandleReceive(aMessage);
+    OwnedPtr<Message> messagePtr(AsCoreTypePtr(aMessage));
+
+    static_cast<Node *>(aContext)->HandleIp6Receive(messagePtr.PassOwnership());
 }
 
-void Node::HandleReceive(otMessage *aMessage)
+void Node::HandleIp6Receive(OwnedPtr<Message> aMessagePtr)
 {
-    uint16_t           length = otMessageGetLength(aMessage);
-    uint8_t            buffer[1500];
-    const Ip6::Header *header;
+    Ip6::Header header;
 
-    VerifyOrExit(length <= sizeof(buffer));
-    VerifyOrQuit(otMessageRead(aMessage, 0, buffer, length) == length);
-
-    VerifyOrExit(length >= sizeof(Ip6::Header));
-    header = reinterpret_cast<const Ip6::Header *>(buffer);
+    VerifyOrExit(aMessagePtr != nullptr);
+    SuccessOrExit(header.ParseFrom(*aMessagePtr));
 
     // Forward packets to InfraIf if they are intended for the backbone.
     // We avoid forwarding link-local and realm-local scope packets.
 
     VerifyOrExit(mInfraIf.IsInitialized());
-    VerifyOrExit(header->GetHopLimit() > 1);
-    VerifyOrExit(header->GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
 
-    Core::Get().SetActiveNode(this);
+    VerifyOrExit(header.GetHopLimit() > 1);
+    header.SetHopLimit(header.GetHopLimit() - 1);
+    aMessagePtr->Write(0, header);
 
-    VerifyOrExit(Get<NetworkData::Leader>().IsOnMesh(header->GetSource()));
+    VerifyOrExit(header.GetDestination().GetScope() > Ip6::Address::kRealmLocalScope);
 
-    mInfraIf.SendIp6(header->GetSource(), header->GetDestination(), buffer, length);
+    if (header.GetDestination().IsMulticast())
+    {
+        VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary());
+    }
+
+    VerifyOrExit(!header.GetSource().IsLinkLocalUnicastOrMulticast());
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(header.GetSource()));
+    VerifyOrExit(Get<NetworkData::Leader>().IsOnMesh(header.GetSource()));
+
+    mInfraIf.SendIp6(header, aMessagePtr.PassOwnership());
 
 exit:
-    otMessageFree(aMessage);
+    return;
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void Node::GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const
 {
-    aSockAddr.SetAddress(mMdns.mIfAddresses[0]);
+    aSockAddr.SetAddress(mInfraIf.GetLinkLocalAddress());
     aSockAddr.SetPort(mTrel.mUdpPort);
 }
 #endif
@@ -199,6 +208,48 @@ const Ip6::Address &Node::FindMatchingAddress(const char *aPrefix)
     VerifyOrQuit(matchedAddress != nullptr, "no matching address found");
 
     return *matchedAddress;
+}
+
+const Ip6::Address &Node::FindGlobalAddress(void)
+{
+    const Ip6::Address *matchedAddress = nullptr;
+
+    for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+    {
+        const Ip6::Address &address = unicastAddress.GetAddress();
+
+        if (address.GetScope() == Ip6::Address::kGlobalScope && !Get<Mle::Mle>().IsMeshLocalAddress(address))
+        {
+            matchedAddress = &address;
+            break;
+        }
+    }
+
+    VerifyOrQuit(matchedAddress != nullptr, "no global address found");
+
+    return *matchedAddress;
+}
+
+bool Node::Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const
+{
+    bool matches = false;
+
+    switch (aNetif)
+    {
+    case kThreadNetifAddress:
+        matches = Get<ThreadNetif>().HasUnicastAddress(aAddress);
+        break;
+
+    case kInfraNetifAddress:
+        matches = mInfraIf.HasAddress(aAddress);
+        break;
+
+    case kAnyNetifAddress:
+        matches = Get<ThreadNetif>().HasUnicastAddress(aAddress) || mInfraIf.HasAddress(aAddress);
+        break;
+    }
+
+    return matches;
 }
 
 } // namespace Nexus

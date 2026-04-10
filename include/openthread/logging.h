@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
 
@@ -56,24 +57,69 @@ extern "C" {
  */
 
 /**
- * Returns the current log level.
+ * Returns the current log level for a given OpenThread instance.
  *
  * If dynamic log level feature `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE` is enabled, this function returns the
- * currently set dynamic log level. Otherwise, this function returns the build-time configured log level.
+ * currently set dynamic log level:
+ * - In a single-instance configuration, it returns the instance's log level.
+ * - In a multi-instance configuration, it returns the instance-specific log level if it has been explicitly set
+ *   (see `otSetLogLevel()`). Otherwise, it returns the global log level (see `otLoggingGetLevel()`).
+ *
+ * If the dynamic log level feature is not enabled, this function returns the build-time configured log level.
+ *
+ * @param[in] aInstance  The OpenThread instance.
  *
  * @returns The log level.
+ */
+otLogLevel otGetLogLevel(otInstance *aInstance);
+
+/**
+ * Sets the log level for a given OpenThread instance.
+ *
+ * @note This function requires `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
+ *
+ * In a single-instance configuration, this function sets the log level for the instance.
+ *
+ * In a multi-instance configuration (`OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE`), if
+ * `OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE` is not enabled, this function returns `OT_ERROR_NOT_CAPABLE`.
+ * When the log level is explicitly set on an instance, it overrides the global log level set using
+ * `otLoggingSetLevel()`.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ * @param[in] aLogLevel  The log level.
+ *
+ * @retval OT_ERROR_NONE          Successfully updated the log level.
+ * @retval OT_ERROR_INVALID_ARGS  Log level value is invalid.
+ * @retval OT_ERROR_NOT_CAPABLE   Instance-aware logging is not enabled in a multi-instance configuration.
+ */
+otError otSetLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
+
+/**
+ * Returns the current global log level.
+ *
+ * In a single-instance configuration, this function behaves the same as `otGetLogLevel()`.
+ * In a multi-instance configuration, it returns the global log level which is used for all instances.
+ *
+ * @returns The global log level.
  */
 otLogLevel otLoggingGetLevel(void);
 
 /**
- * Sets the log level.
+ * Sets the global log level.
  *
  * @note This function requires `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
  *
- * @param[in]  aLogLevel               The log level.
+ * In a single-instance configuration, this function behaves the same as `otSetLogLevel()` (which is the recommended
+ * function to use).
  *
- * @retval OT_ERROR_NONE            Successfully updated log level.
- * @retval OT_ERROR_INVALID_ARGS    Log level value is invalid.
+ * In a multi-instance configuration, it sets the global log level which is used by all instances. The log level can
+ * be explicitly set on a specific instance using `otSetLogLevel()`, which will then be used instead of the global
+ * value.
+ *
+ * @param[in]  aLogLevel  The log level.
+ *
+ * @retval OT_ERROR_NONE          Successfully updated the log level.
+ * @retval OT_ERROR_INVALID_ARGS  Log level value is invalid.
  */
 otError otLoggingSetLevel(otLogLevel aLogLevel);
 

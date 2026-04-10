@@ -116,7 +116,7 @@ void Test1_2_LP_5_3_7(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 0: SSED_1: Preconditions: Set CSL Synchronized Timeout = 10s. Set CSL Period = 500ms.");

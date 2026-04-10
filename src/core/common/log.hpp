@@ -40,6 +40,7 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/as_core_type.hpp"
 #include "common/error.hpp"
 
 namespace ot {
@@ -459,6 +460,8 @@ typedef otLogHexDumpInfo HexDumpInfo; ///< Represents the hex dump info.
  * @retval kErrorNotFound  Reached the end and no more line to generate.
  */
 Error GenerateNextHexDumpLine(HexDumpInfo &aInfo);
+
+DefineMapEnum(otLogLevel, LogLevel);
 
 } // namespace ot
 

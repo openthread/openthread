@@ -159,7 +159,7 @@ void Test8_1_2(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     // Remove any existing key log file.
     remove(kKeyLogFilename);

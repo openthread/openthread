@@ -300,6 +300,7 @@ private:
         static const char kExtAddress[];
         static const char kVendorName[];
         static const char kModelName[];
+        static const char kVendorOui[];
     };
 
     struct StateBitmap

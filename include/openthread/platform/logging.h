@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_PLATFORM_LOGGING_H_
 #define OPENTHREAD_PLATFORM_LOGGING_H_
 
+#include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -140,6 +141,9 @@ typedef enum otLogRegion
 /**
  * Outputs logs.
  *
+ * This platform API is used to output logs when the configuration `OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE`
+ * is disabled. When the configuration is enabled, `otPlatLogOutput()` is used instead.
+ *
  * Note that the support for log region is removed. The OT core will always emit all logs with `OT_LOG_REGION_CORE`
  * as @p aLogRegion.
  *
@@ -152,16 +156,51 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
 /**
+ * Outputs a log line.
+ *
+ * This platform API is an alternative to `otPlatLog()` and is used when the configuration
+ * `OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE` is enabled.
+ *
+ * Unlike `otPlatLog()`, this API also provides a pointer to the OpenThread instance  (`otInstance*`) from which the
+ * log is generated. This is particularly helpful in a multi-instance setup to distinguish logs from different
+ * instances. Additionally, it provides the log line as a fully formatted null-terminated string instead of
+ * a format string and variable arguments.
+ *
+ * @param[in]  aInstance   A pointer to the OpenThread instance.
+ * @param[in]  aLogLevel   The log level.
+ * @param[in]  aLogLine    A pointer to the null-terminated string containing the log line.
+ */
+void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine);
+
+/**
  * Handles OpenThread log level changes.
  *
- * This platform function is called whenever the OpenThread log level changes.
- * This platform function is optional since an empty weak implementation has been provided.
+ * This platform function is optional. An empty weak implementation is provided by OpenThread core.
+ *
+ * This platform function is called whenever the OpenThread log level changes:
+ * - In a single-instance configuration, this is called when the log level changes.
+ * - In a multi-instance configuration, this is called when the global log level changes.
  *
  * @note Only applicable when `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
  *
  * @param[in]  aLogLevel  The new OpenThread log level.
  */
 void otPlatLogHandleLevelChanged(otLogLevel aLogLevel);
+
+/**
+ * Handles OpenThread instance-specific log level changes.
+ *
+ * This platform function is optional. An empty weak implementation is provided by OpenThread core.
+ *
+ * This platform function is called whenever the instance-specific log level changes:
+ * - In a single-instance configuration, this is called along with `otPlatLogHandleLevelChanged()`.
+ * - In a multi-instance configuration, if `OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE` is used, this is called
+ *   when the instance-specific log level changes.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  aLogLevel  The new OpenThread log level for the instance.
+ */
+void otPlatLogHandleLogLevelChanged(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
  * @}

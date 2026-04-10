@@ -48,6 +48,13 @@ class Instance;
 extern uint64_t gInstanceRaw[];
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+extern Instance *gActiveInstance;
+inline Instance *UpdateActiveInstance(Instance *aInstance) { return gActiveInstance = aInstance; }
+#else
+inline Instance *UpdateActiveInstance(Instance *aInstance) { return aInstance; }
+#endif
+
 /**
  * @addtogroup core-locator
  *
@@ -90,7 +97,7 @@ public:
      *
      * @returns A reference to the `Type` object of the instance.
      */
-    template <typename Type> inline Type &Get(void) const; // Implemented in `locator_getters.hpp`.
+    template <typename Type> inline Type &Get(void) const; // Implemented in `instance.hpp`.
 
 protected:
     GetProvider(void) = default;
@@ -117,7 +124,7 @@ public:
      * @returns A reference to the parent otInstance.
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return *mInstance; }
+    Instance &GetInstance(void) const { return *UpdateActiveInstance(mInstance); }
 #else
     Instance &GetInstance(void) const { return GetSingleInstance(); }
 #endif

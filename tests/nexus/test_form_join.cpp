@@ -52,10 +52,7 @@ void TestFormJoin(void)
 
     nexus.AdvanceTime(0);
 
-    for (Node &node : nexus.GetNodes())
-    {
-        node.GetInstance().SetLogLevel(kLogLevelInfo);
-    }
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Form network");

@@ -47,6 +47,15 @@
 extern "C" {
 #endif
 
+/**
+ * @addtogroup plat-infra-if
+ *
+ * @brief
+ *   This module includes the platform abstraction for the adjacent infrastructure network interface.
+ *
+ * @{
+ */
+
 #define OT_PLAT_INFRA_IF_MAX_LINK_LAYER_ADDR_LENGTH 16 ///< Maximum InfraIf Link-layer address length.
 
 /**
@@ -57,15 +66,6 @@ typedef struct otPlatInfraIfLinkLayerAddress
     uint8_t mAddress[OT_PLAT_INFRA_IF_MAX_LINK_LAYER_ADDR_LENGTH]; ///< The link-layer address bytes.
     uint8_t mLength;                                               ///< The address length (number of bytes).
 } otPlatInfraIfLinkLayerAddress;
-
-/**
- * @addtogroup plat-infra-if
- *
- * @brief
- *   This module includes the platform abstraction for the adjacent infrastructure network interface.
- *
- * @{
- */
 
 /**
  * Tells whether an infra interface has the given IPv6 address assigned.

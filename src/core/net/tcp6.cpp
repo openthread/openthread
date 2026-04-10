@@ -109,7 +109,10 @@ exit:
     return error;
 }
 
-Instance &Tcp::Endpoint::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcb().instance)); }
+Instance &Tcp::Endpoint::GetInstance(void) const
+{
+    return *UpdateActiveInstance(&AsNonConst(AsCoreType(GetTcb().instance)));
+}
 
 const SockAddr &Tcp::Endpoint::GetLocalAddress(void) const
 {
@@ -547,7 +550,10 @@ exit:
     return error;
 }
 
-Instance &Tcp::Listener::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcbListen().instance)); }
+Instance &Tcp::Listener::GetInstance(void) const
+{
+    return *UpdateActiveInstance(&AsNonConst(AsCoreType(GetTcbListen().instance)));
+}
 
 Error Tcp::Listener::Listen(const SockAddr &aSockName)
 {
@@ -946,7 +952,7 @@ extern "C" {
 otMessage *tcplp_sys_new_message(otInstance *aInstance)
 {
     Instance &instance = AsCoreType(aInstance);
-    Message  *message  = instance.Get<ot::Ip6::Ip6>().NewMessage(0);
+    Message  *message  = instance.Get<ot::Ip6::Ip6>().NewMessage();
 
     if (message)
     {

@@ -107,7 +107,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     Node &node = nexus.CreateNode();
 
-    node.GetInstance().SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(node.GetInstance().SetLogLevel(kLogLevelInfo));
 
     otCliInit(&node.GetInstance(), CliOutput, nullptr);
 

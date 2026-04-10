@@ -126,7 +126,8 @@ Error Joiner::Start(const char      *aPskd,
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
     VerifyOrExit(!Get<Seeker>().IsRunning(), error = kErrorBusy);
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Open(Ip6::NetifIdentifier::kNetifThreadInternal));
+    SuccessOrExit(
+        error = Get<Tmf::SecureAgent>().Open(Get<Seeker>().GetUdpPort(), Ip6::NetifIdentifier::kNetifThreadInternal));
 
     if (mDiscerner.IsEmpty())
     {
@@ -137,7 +138,6 @@ Error Joiner::Start(const char      *aPskd,
     // (free allocated message, stop seeker, close agent, etc).
     shouldCleanup = true;
 
-    SuccessOrExit(error = Get<Tmf::SecureAgent>().Bind(Get<Seeker>().GetUdpPort()));
     Get<Tmf::SecureAgent>().SetConnectCallback(HandleSecureCoapClientConnect, this);
     Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 

@@ -90,7 +90,9 @@ Error Client::Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, v
     // Originate timestamp is used only as a unique token.
     header.SetTransmitTimestampSeconds(TimerMilli::GetNow().GetValue() / 1000 + kTimeAt1970);
 
-    VerifyOrExit((message = NewMessage(header)) != nullptr, error = kErrorNoBufs);
+    message = mSocket.NewMessage();
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = message->Append(header));
 
     messageInfo = AsCoreTypePtr(aQuery->mMessageInfo);
 
@@ -109,10 +111,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        if (message)
-        {
-            message->Free();
-        }
+        FreeMessage(message);
 
         if (messageCopy)
         {
@@ -123,25 +122,13 @@ exit:
     return error;
 }
 
-Message *Client::NewMessage(const Header &aHeader)
-{
-    Message *message = nullptr;
-
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != nullptr);
-    IgnoreError(message->Prepend(aHeader));
-    message->SetOffset(0);
-
-exit:
-    return message;
-}
-
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
     Error    error       = kErrorNone;
     Message *messageCopy = nullptr;
 
     // Create a message copy for further retransmissions.
-    VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone<kNoReservedHeader>()) != nullptr, error = kErrorNoBufs);
 
     // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
@@ -173,13 +160,11 @@ Error Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInf
 void Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error    error;
-    Message *messageCopy = nullptr;
+    Message *messageCopy;
 
-    // Create a message copy for lower layers.
-    VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(QueryMetadata))) != nullptr,
-                 error = kErrorNoBufs);
+    messageCopy = mSocket.CloneMessageWithout<QueryMetadata>(aMessage);
+    VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
 
-    // Send the copy.
     SuccessOrExit(error = SendMessage(*messageCopy, aMessageInfo));
 
 exit:

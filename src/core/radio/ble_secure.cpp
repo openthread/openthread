@@ -81,10 +81,9 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     VerifyOrExit(advertisementData != nullptr, error = kErrorFailed);
     SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
 
-    SuccessOrExit(error = mTls.Open());
+    SuccessOrExit(error = mTls.Open(HandleTransport, this));
     mTls.SetReceiveCallback(HandleTlsReceive, this);
     mTls.SetConnectCallback(HandleTlsConnectEvent, this);
-    SuccessOrExit(error = mTls.Bind(HandleTransport, this));
 
     // attempt to start BLE advertising only if everything else succeeded.
     mBleState             = kNotAdvertising;

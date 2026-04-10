@@ -44,6 +44,7 @@
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -79,9 +80,10 @@ enum NetifIdentifier : uint8_t
 /**
  * Implements core UDP message handling.
  */
-class Udp : public InstanceLocator, private NonCopyable
+class Udp : public InstanceLocator, public MessageAllocator<Udp, ReservedHeaderSize::kUdpMessage>, private NonCopyable
 {
 public:
+    typedef UdpHeader    Header;         ///< UDP header.
     typedef otUdpReceive ReceiveHandler; ///< Receive handler callback.
 
     /**
@@ -174,7 +176,9 @@ public:
     /**
      * Implements a UDP/IPv6 socket.
      */
-    class Socket : public InstanceLocator, public SocketHandle
+    class Socket : public InstanceLocator,
+                   public SocketHandle,
+                   public MessageAllocator<Socket, ReservedHeaderSize::kUdpMessage>
     {
         friend class Udp;
 
@@ -187,32 +191,6 @@ public:
          * @param[in]  aContext  A pointer to arbitrary context information.
          */
         Socket(Instance &aInstance, ReceiveHandler aHandler, void *aContext);
-
-        /**
-         * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-         *
-         * @returns A pointer to the message or `nullptr` if no buffers are available.
-         */
-        Message *NewMessage(void);
-
-        /**
-         * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-         *
-         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-         *
-         * @returns A pointer to the message or `nullptr` if no buffers are available.
-         */
-        Message *NewMessage(uint16_t aReserved);
-
-        /**
-         * Returns a new UDP message with sufficient header space reserved.
-         *
-         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-         * @param[in]  aSettings  The message settings (default is used if not provided).
-         *
-         * @returns A pointer to the message or `nullptr` if no buffers are available.
-         */
-        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
         /**
          * Opens the UDP socket.
@@ -390,82 +368,6 @@ public:
     };
 
     /**
-     * Implements UDP header generation and parsing.
-     */
-    OT_TOOL_PACKED_BEGIN
-    class Header : public Clearable<Header>
-    {
-    public:
-        static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
-        static constexpr uint16_t kDestPortFieldOffset   = 2; ///< Byte offset of Destination Port field in UDP header.
-        static constexpr uint16_t kLengthFieldOffset     = 4; ///< Byte offset of Length field in UDP header.
-        static constexpr uint16_t kChecksumFieldOffset   = 6; ///< Byte offset of Checksum field in UDP header.
-
-        /**
-         * Returns the UDP Source Port.
-         *
-         * @returns The UDP Source Port.
-         */
-        uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSourcePort); }
-
-        /**
-         * Sets the UDP Source Port.
-         *
-         * @param[in]  aPort  The UDP Source Port.
-         */
-        void SetSourcePort(uint16_t aPort) { mSourcePort = BigEndian::HostSwap16(aPort); }
-
-        /**
-         * Returns the UDP Destination Port.
-         *
-         * @returns The UDP Destination Port.
-         */
-        uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestinationPort); }
-
-        /**
-         * Sets the UDP Destination Port.
-         *
-         * @param[in]  aPort  The UDP Destination Port.
-         */
-        void SetDestinationPort(uint16_t aPort) { mDestinationPort = BigEndian::HostSwap16(aPort); }
-
-        /**
-         * Returns the UDP Length.
-         *
-         * @returns The UDP Length.
-         */
-        uint16_t GetLength(void) const { return BigEndian::HostSwap16(mLength); }
-
-        /**
-         * Sets the UDP Length.
-         *
-         * @param[in]  aLength  The UDP Length.
-         */
-        void SetLength(uint16_t aLength) { mLength = BigEndian::HostSwap16(aLength); }
-
-        /**
-         * Returns the UDP Checksum.
-         *
-         * @returns The UDP Checksum.
-         */
-        uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
-
-        /**
-         * Sets the UDP Checksum.
-         *
-         * @param[in]  aChecksum  The UDP Checksum.
-         */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
-
-    private:
-        uint16_t mSourcePort;
-        uint16_t mDestinationPort;
-        uint16_t mLength;
-        uint16_t mChecksum;
-
-    } OT_TOOL_PACKED_END;
-
-    /**
      * Initializes the object.
      *
      * @param[in]  aInstance  A reference to OpenThread instance.
@@ -568,32 +470,6 @@ public:
     uint16_t GetEphemeralPort(void);
 
     /**
-     * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(void);
-
-    /**
-     * Returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * Returns a new UDP message with sufficient header space reserved.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     * @param[in]  aSettings  The message settings.
-     *
-     * @returns A pointer to the message or `nullptr` if no buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
-
-    /**
      * Sends an IPv6 datagram.
      *
      * @param[in]  aMessage      A reference to the message.
@@ -624,11 +500,11 @@ public:
     void HandlePayload(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * Returns the head of UDP Sockets list.
+     * Returns the UDP Sockets linked list.
      *
-     * @returns A pointer to the head of UDP Socket linked list.
+     * @returns The UDP Sockets linked list.
      */
-    SocketHandle *GetUdpSockets(void) { return mSockets.GetHead(); }
+    LinkedList<SocketHandle> &GetUdpSockets(void) { return mSockets; }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**

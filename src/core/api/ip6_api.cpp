@@ -37,10 +37,26 @@
 
 using namespace ot;
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+otError otIp6Init(otInstance              *aInstance,
+                  otNetifAddress          *aUnicastAddrPool,
+                  uint16_t                 aUnicastAddrPoolSize,
+                  otNetifMulticastAddress *aMulticastAddrPool,
+                  uint16_t                 aMulticastAddrPoolSize)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().Init(AsCoreTypePtr(aUnicastAddrPool), aUnicastAddrPoolSize,
+                                                         AsCoreTypePtr(aMulticastAddrPool), aMulticastAddrPoolSize);
+}
+#endif
+
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
     Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    VerifyOrExit(instance.Get<ThreadNetif>().IsInitialized(), error = kErrorInvalidState);
+#endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
@@ -55,9 +71,9 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
         instance.Get<ThreadNetif>().Down();
     }
 
-#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    ExitNow();
+
 exit:
-#endif
     return error;
 }
 
@@ -132,7 +148,7 @@ exit:
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(0, Message::Settings::From(aSettings));
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(Message::Settings::From(aSettings));
 }
 
 otMessage *otIp6NewMessageFromBuffer(otInstance              *aInstance,

@@ -255,6 +255,11 @@ void OmrPrefix::SetPrefix(const Ip6::Prefix &aPrefix, RoutePreference aPreferenc
     mPreference = aPreference;
 }
 
+bool OmrPrefix::Matches(const Ip6::Prefix &aPrefix, RoutePreference aPreference) const
+{
+    return (mPreference == aPreference) && (mPrefix == aPrefix);
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // FavoredOmrPrefix
 

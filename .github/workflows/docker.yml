@@ -94,7 +94,7 @@ jobs:
       - name: Build and push by digest
         if: success()
         id: build
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           file: etc/docker/environment/Dockerfile
           platforms: ${{ matrix.platform }}
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload digest
         if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*

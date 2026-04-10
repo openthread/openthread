@@ -237,6 +237,71 @@ InfraIf::InfoString InfraIf::ToString(void) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// InfraIf::LinkLayerAddress
+
+Error InfraIf::LinkLayerAddress::ConvertToIid(Ip6::InterfaceIdentifier &aIid) const
+{
+    Error           error = kErrorNone;
+    Mac::ExtAddress extAddress;
+
+    switch (mLength)
+    {
+    case 5:
+        // EUI-40 - [AA BB] + [FF FF FE] + [CC DD EE]
+        extAddress.m8[0] = mAddress[0];
+        extAddress.m8[1] = mAddress[1];
+        extAddress.m8[2] = 0xff;
+        extAddress.m8[3] = 0xff;
+        extAddress.m8[4] = 0xfe;
+        extAddress.m8[5] = mAddress[2];
+        extAddress.m8[6] = mAddress[3];
+        extAddress.m8[7] = mAddress[4];
+        break;
+
+    case 6:
+        // EUI-48 - [AA BB CC] + [FF FE] + [DD EE FF]
+        extAddress.m8[0] = mAddress[0];
+        extAddress.m8[1] = mAddress[1];
+        extAddress.m8[2] = mAddress[2];
+        extAddress.m8[3] = 0xff;
+        extAddress.m8[4] = 0xfe;
+        extAddress.m8[5] = mAddress[3];
+        extAddress.m8[6] = mAddress[4];
+        extAddress.m8[7] = mAddress[5];
+        break;
+
+    case 8:
+        extAddress.Set(mAddress);
+        break;
+
+    default:
+        ExitNow(error = kErrorNotCapable);
+    }
+
+    aIid.SetFromExtAddress(extAddress);
+
+exit:
+    return error;
+}
+
+InfraIf::LinkLayerAddress::InfoString InfraIf::LinkLayerAddress::ToString(void) const
+{
+    InfoString string;
+
+    for (uint8_t i = 0; i < GetLength(); i++)
+    {
+        if (i > 0)
+        {
+            string.Append(":");
+        }
+
+        string.Append("%02x", mAddress[i]);
+    }
+
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
                                          uint32_t            aInfraIfIndex,

@@ -258,9 +258,9 @@ Error MeshDiag::ProcessMessage(Coap::Message &aMessage, const Ip6::MessageInfo &
     // check whether it is from the intended sender and matches
     // the expected query ID and answer index.
 
-    Error     error = kErrorFailed;
-    AnswerTlv answerTlv;
-    uint16_t  queryId;
+    Error          error = kErrorFailed;
+    AnswerTlvValue answerTlvValue;
+    uint16_t       queryId;
 
     VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().GetLocator() == aSenderRloc16);
@@ -268,9 +268,9 @@ Error MeshDiag::ProcessMessage(Coap::Message &aMessage, const Ip6::MessageInfo &
     SuccessOrExit(Tlv::Find<QueryIdTlv>(aMessage, queryId));
     VerifyOrExit(queryId == mExpectedQueryId);
 
-    SuccessOrExit(Tlv::FindTlv(aMessage, answerTlv));
+    SuccessOrExit(Tlv::Find<AnswerTlv>(aMessage, answerTlvValue));
 
-    if (answerTlv.GetIndex() != mExpectedAnswerIndex)
+    if (answerTlvValue.GetIndex() != mExpectedAnswerIndex)
     {
         Finalize(kErrorResponseTimeout);
         ExitNow();
@@ -285,21 +285,20 @@ exit:
 
 bool MeshDiag::ProcessChildTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    bool       didProcess = false;
-    ChildTlv   childTlv;
-    ChildEntry entry;
-    uint16_t   offset;
+    bool          didProcess = false;
+    Tlv::Info     tlvInfo;
+    ChildTlvValue childTlvValue;
+    ChildEntry    entry;
 
     SuccessOrExit(ProcessMessage(aMessage, aMessageInfo, mQueryChildTable.mRouterRloc16));
 
     while (true)
     {
-        SuccessOrExit(Tlv::FindTlv(aMessage, childTlv, offset));
-        VerifyOrExit(!childTlv.IsExtended());
+        SuccessOrExit(tlvInfo.FindIn(aMessage, ChildTlv::kType));
 
         didProcess = true;
 
-        if (childTlv.GetLength() == 0)
+        if (tlvInfo.GetLength() == 0)
         {
             // We reached end of the list.
             mState = kStateIdle;
@@ -308,17 +307,16 @@ bool MeshDiag::ProcessChildTableAnswer(Coap::Message &aMessage, const Ip6::Messa
             ExitNow();
         }
 
-        VerifyOrExit(childTlv.GetLength() >= sizeof(ChildTlv) - sizeof(Tlv));
-        IgnoreError(aMessage.Read(offset, childTlv));
+        SuccessOrExit(tlvInfo.Read<ChildTlv>(aMessage, childTlvValue));
 
-        entry.SetFrom(childTlv);
+        entry.SetFrom(childTlvValue);
         mQueryChildTable.mCallback.InvokeIfSet(kErrorPending, &entry);
 
         // Make sure query operation is not canceled from the
         // callback.
         VerifyOrExit(mState == kStateQueryChildTable);
 
-        aMessage.SetOffset(static_cast<uint16_t>(offset + childTlv.GetSize()));
+        aMessage.SetOffset(tlvInfo.GetTlvOffsetRange().GetEndOffset());
     }
 
 exit:
@@ -327,21 +325,20 @@ exit:
 
 bool MeshDiag::ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    bool                didProcess = false;
-    RouterNeighborTlv   neighborTlv;
-    RouterNeighborEntry entry;
-    uint16_t            offset;
+    bool                   didProcess = false;
+    Tlv::Info              tlvInfo;
+    RouterNeighborTlvValue neighborTlvValue;
+    RouterNeighborEntry    entry;
 
     SuccessOrExit(ProcessMessage(aMessage, aMessageInfo, mQueryRouterNeighborTable.mRouterRloc16));
 
     while (true)
     {
-        SuccessOrExit(Tlv::FindTlv(aMessage, neighborTlv, offset));
-        VerifyOrExit(!neighborTlv.IsExtended());
+        SuccessOrExit(tlvInfo.FindIn(aMessage, RouterNeighborTlv::kType));
 
         didProcess = true;
 
-        if (neighborTlv.GetLength() == 0)
+        if (tlvInfo.GetLength() == 0)
         {
             // We reached end of the list.
             mState = kStateIdle;
@@ -350,16 +347,16 @@ bool MeshDiag::ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const I
             ExitNow();
         }
 
-        VerifyOrExit(neighborTlv.GetLength() >= sizeof(RouterNeighborTlv) - sizeof(Tlv));
+        SuccessOrExit(tlvInfo.Read<RouterNeighborTlv>(aMessage, neighborTlvValue));
 
-        entry.SetFrom(neighborTlv);
+        entry.SetFrom(neighborTlvValue);
         mQueryRouterNeighborTable.mCallback.InvokeIfSet(kErrorPending, &entry);
 
         // Make sure query operation is not canceled from the
         // callback.
         VerifyOrExit(mState == kStateQueryRouterNeighborTable);
 
-        aMessage.SetOffset(static_cast<uint16_t>(offset + neighborTlv.GetSize()));
+        aMessage.SetOffset(tlvInfo.GetTlvOffsetRange().GetEndOffset());
     }
 
 exit:
@@ -556,20 +553,23 @@ exit:
 
 Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
 {
-    Error           error = kErrorNone;
-    ChildTableEntry entry;
+    Error                         error = kErrorNotFound;
+    ChildTableTlvEntry            entry;
+    ChildTableTlvEntry::ParseInfo info;
 
-    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+    VerifyOrExit(mMessage != nullptr);
 
-    VerifyOrExit(mMessage->Read(mOffsetRange, entry) == kErrorNone, error = kErrorNotFound);
-    mOffsetRange.AdvanceOffset(sizeof(ChildTableEntry));
+    SuccessOrExit(mMessage->Read(mOffsetRange, entry));
+    mOffsetRange.AdvanceOffset(sizeof(ChildTableTlvEntry));
 
-    aChildInfo.mRloc16 = mParentRloc16 + entry.GetChildId();
-    entry.GetMode().Get(aChildInfo.mMode);
-    aChildInfo.mLinkQuality = entry.GetLinkQuality();
+    entry.Parse(info);
 
+    aChildInfo.mRloc16         = mParentRloc16 + info.mChildId;
+    aChildInfo.mMode           = info.mMode;
+    aChildInfo.mLinkQuality    = info.mLinkQuality;
     aChildInfo.mIsThisDevice   = mMessage->Get<Mle::Mle>().HasRloc16(aChildInfo.mRloc16);
     aChildInfo.mIsBorderRouter = mMessage->Get<NetworkData::Leader>().ContainsBorderRouterWithRloc(aChildInfo.mRloc16);
+    error                      = kErrorNone;
 
 exit:
     return error;
@@ -578,46 +578,46 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // MeshDiag::ChildEntry
 
-void MeshDiag::ChildEntry::SetFrom(const ChildTlv &aChildTlv)
+void MeshDiag::ChildEntry::SetFrom(const ChildTlvValue &aChildTlvValue)
 {
-    mRxOnWhenIdle        = (aChildTlv.GetFlags() & ChildTlv::kFlagsRxOnWhenIdle);
-    mDeviceTypeFtd       = (aChildTlv.GetFlags() & ChildTlv::kFlagsFtd);
-    mFullNetData         = (aChildTlv.GetFlags() & ChildTlv::kFlagsFullNetdta);
-    mCslSynchronized     = (aChildTlv.GetFlags() & ChildTlv::kFlagsCslSync);
-    mSupportsErrRate     = (aChildTlv.GetFlags() & ChildTlv::kFlagsTrackErrRate);
-    mRloc16              = aChildTlv.GetRloc16();
-    mExtAddress          = aChildTlv.GetExtAddress();
-    mVersion             = aChildTlv.GetVersion();
-    mTimeout             = aChildTlv.GetTimeout();
-    mAge                 = aChildTlv.GetAge();
-    mConnectionTime      = aChildTlv.GetConnectionTime();
-    mSupervisionInterval = aChildTlv.GetSupervisionInterval();
-    mLinkMargin          = aChildTlv.GetLinkMargin();
-    mAverageRssi         = aChildTlv.GetAverageRssi();
-    mLastRssi            = aChildTlv.GetLastRssi();
-    mFrameErrorRate      = aChildTlv.GetFrameErrorRate();
-    mMessageErrorRate    = aChildTlv.GetMessageErrorRate();
-    mQueuedMessageCount  = aChildTlv.GetQueuedMessageCount();
-    mCslPeriod           = aChildTlv.GetCslPeriod();
-    mCslTimeout          = aChildTlv.GetCslTimeout();
-    mCslChannel          = aChildTlv.GetCslChannel();
+    mRxOnWhenIdle        = (aChildTlvValue.GetFlags() & ChildTlvValue::kFlagsRxOnWhenIdle);
+    mDeviceTypeFtd       = (aChildTlvValue.GetFlags() & ChildTlvValue::kFlagsFtd);
+    mFullNetData         = (aChildTlvValue.GetFlags() & ChildTlvValue::kFlagsFullNetdta);
+    mCslSynchronized     = (aChildTlvValue.GetFlags() & ChildTlvValue::kFlagsCslSync);
+    mSupportsErrRate     = (aChildTlvValue.GetFlags() & ChildTlvValue::kFlagsTrackErrRate);
+    mRloc16              = aChildTlvValue.GetRloc16();
+    mExtAddress          = aChildTlvValue.GetExtAddress();
+    mVersion             = aChildTlvValue.GetVersion();
+    mTimeout             = aChildTlvValue.GetTimeout();
+    mAge                 = aChildTlvValue.GetAge();
+    mConnectionTime      = aChildTlvValue.GetConnectionTime();
+    mSupervisionInterval = aChildTlvValue.GetSupervisionInterval();
+    mLinkMargin          = aChildTlvValue.GetLinkMargin();
+    mAverageRssi         = aChildTlvValue.GetAverageRssi();
+    mLastRssi            = aChildTlvValue.GetLastRssi();
+    mFrameErrorRate      = aChildTlvValue.GetFrameErrorRate();
+    mMessageErrorRate    = aChildTlvValue.GetMessageErrorRate();
+    mQueuedMessageCount  = aChildTlvValue.GetQueuedMessageCount();
+    mCslPeriod           = aChildTlvValue.GetCslPeriod();
+    mCslTimeout          = aChildTlvValue.GetCslTimeout();
+    mCslChannel          = aChildTlvValue.GetCslChannel();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 // MeshDiag::RouterNeighborEntry
 
-void MeshDiag::RouterNeighborEntry::SetFrom(const RouterNeighborTlv &aTlv)
+void MeshDiag::RouterNeighborEntry::SetFrom(const RouterNeighborTlvValue &aTlvValue)
 {
-    mSupportsErrRate  = (aTlv.GetFlags() & RouterNeighborTlv::kFlagsTrackErrRate);
-    mRloc16           = aTlv.GetRloc16();
-    mExtAddress       = aTlv.GetExtAddress();
-    mVersion          = aTlv.GetVersion();
-    mConnectionTime   = aTlv.GetConnectionTime();
-    mLinkMargin       = aTlv.GetLinkMargin();
-    mAverageRssi      = aTlv.GetAverageRssi();
-    mLastRssi         = aTlv.GetLastRssi();
-    mFrameErrorRate   = aTlv.GetFrameErrorRate();
-    mMessageErrorRate = aTlv.GetMessageErrorRate();
+    mSupportsErrRate  = (aTlvValue.GetFlags() & RouterNeighborTlvValue::kFlagsTrackErrRate);
+    mRloc16           = aTlvValue.GetRloc16();
+    mExtAddress       = aTlvValue.GetExtAddress();
+    mVersion          = aTlvValue.GetVersion();
+    mConnectionTime   = aTlvValue.GetConnectionTime();
+    mLinkMargin       = aTlvValue.GetLinkMargin();
+    mAverageRssi      = aTlvValue.GetAverageRssi();
+    mLastRssi         = aTlvValue.GetLastRssi();
+    mFrameErrorRate   = aTlvValue.GetFrameErrorRate();
+    mMessageErrorRate = aTlvValue.GetMessageErrorRate();
 }
 
 } // namespace Utils

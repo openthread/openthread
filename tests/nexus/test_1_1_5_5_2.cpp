@@ -105,7 +105,7 @@ void Test5_5_2(void)
     router1.SetName("ROUTER_1");
     med1.SetName("MED_1");
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /**
      * Step 1: All

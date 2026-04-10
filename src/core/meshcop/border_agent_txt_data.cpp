@@ -59,6 +59,7 @@ const char TxtData::Key::kOmrPrefix[]       = "omr";
 const char TxtData::Key::kExtAddress[]      = "xa";
 const char TxtData::Key::kVendorName[]      = "vn";
 const char TxtData::Key::kModelName[]       = "mn";
+const char TxtData::Key::kVendorOui[]       = "vo";
 
 TxtData::TxtData(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -477,6 +478,10 @@ void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
     {
         ReadStringValue(aEntry, mModelName);
         mHasModelName = true;
+    }
+    else if (aEntry.MatchesKey(Key::kVendorOui))
+    {
+        mHasVendorOui = ReadValue(aEntry, mVendorOui);
     }
 }
 

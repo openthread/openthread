@@ -76,7 +76,7 @@ Translator::Translator(Instance &aInstance)
 
 Message *Translator::NewIp4Message(const Message::Settings &aSettings)
 {
-    Message *message = Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header), aSettings);
+    Message *message = Get<Ip6::Ip6>().NewMessage(aSettings);
 
     if (message != nullptr)
     {
@@ -249,7 +249,7 @@ Error Translator::TranslateIp4ToIp6(Message &aMessage)
     dstPortOrId = GetDestinationPortOrIcmp4Id(ip4Headers);
 #endif
 
-    aMessage.RemoveHeader(sizeof(Ip4::Header));
+    aMessage.RemoveHeader(ip4Headers.GetIp4Header().GetHeaderLength());
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();

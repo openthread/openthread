@@ -44,7 +44,9 @@ set(COMMON_COMPILE_OPTIONS
 add_library(ot-nexus-platform
     platform/nexus_alarm.cpp
     platform/nexus_core.cpp
+    platform/nexus_dns.cpp
     platform/nexus_infra_if.cpp
+    platform/nexus_logging.cpp
     platform/nexus_mdns.cpp
     platform/nexus_misc.cpp
     platform/nexus_node.cpp
@@ -52,6 +54,7 @@ add_library(ot-nexus-platform
     platform/nexus_radio.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp
+    platform/nexus_udp.cpp
     ../../examples/platforms/utils/mac_frame.cpp
 )
 
@@ -237,6 +240,63 @@ ot_nexus_test(1_2_LP_7_2_2 "cert;nexus")
 ot_nexus_test(1_2_MATN_TC_1 "cert;nexus")
 ot_nexus_test(1_2_MATN_TC_2 "cert;nexus")
 ot_nexus_test(1_2_MATN_TC_3 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_4 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_5 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_7 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_9 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_10 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_12 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_15 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_16 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_19 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_20 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_21 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_22 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_23 "cert;nexus")
+ot_nexus_test(1_2_MATN_TC_26 "cert;nexus")
+ot_nexus_test(1_2_BBR_TC_1 "cert;nexus")
+ot_nexus_test(1_2_BBR_TC_2 "cert;nexus")
+ot_nexus_test(1_2_BBR_TC_3 "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_1 "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_2 "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_3 "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_6 "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_7A "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_7B "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_7C "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_8 "cert;nexus")
+ot_nexus_test(1_3_DBR_TC_10 "cert;nexus")
+ot_nexus_test(1_3_DPR_TC_1 "cert;nexus")
+ot_nexus_test(1_3_DPR_TC_2 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_1 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_2 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_3 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_4 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_5 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_6 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_8 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_11 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_12 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_13 "cert;nexus")
+ot_nexus_test(1_3_SRP_TC_15 "cert;nexus")
+ot_nexus_test(1_3_SRPC_TC_1 "cert;nexus")
+ot_nexus_test(1_3_SRPC_TC_4 "cert;nexus")
+ot_nexus_test(1_3_SRPC_TC_5 "cert;nexus")
+ot_nexus_test(1_3_SRPC_TC_7 "cert;nexus")
+ot_nexus_test(1_3_GEN_TC_1 "cert;nexus")
+ot_nexus_test(1_3_GEN_TC_2 "cert;nexus")
+ot_nexus_test(1_3_DIAG_TC_1 "cert;nexus")
+ot_nexus_test(1_3_DIAG_TC_2 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_1 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_2 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_3 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_4 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_5 "cert;nexus")
+ot_nexus_test(1_4_TREL_TC_6 "cert;nexus")
+ot_nexus_test(1_4_DNS_TC_1 "cert;nexus")
+ot_nexus_test(1_4_DNS_TC_3 "cert;nexus")
+ot_nexus_test(1_4_DNS_TC_5 "cert;nexus")
+ot_nexus_test(1_4_CS_TC_3 "cert;nexus")
 
 # Misc tests
 ot_nexus_test(border_admitter "core;nexus")
@@ -245,6 +305,7 @@ ot_nexus_test(border_agent_tracker "core;nexus")
 ot_nexus_test(discover_scan "core;nexus")
 ot_nexus_test(dtls "core;nexus")
 ot_nexus_test(form_join "core;nexus")
+ot_nexus_test(mle_blocking_downgrade "core;nexus")
 ot_nexus_test(nat64_translator "core;nexus")
 ot_nexus_test(srp_lease "core;nexus")
 

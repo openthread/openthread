@@ -56,10 +56,6 @@
 #error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME requires OPENTHREAD_CONFIG_UPTIME_ENABLE"
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-#error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME is not supported under OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE"
-#endif
-
 namespace ot {
 
 #if OT_SHOULD_LOG
@@ -126,14 +122,38 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
     static_assert(sizeof(kModuleNamePadding) == kMaxLogModuleNameLength + 1, "Padding string is not correct");
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
-    ot::UptimeToString(ot::Instance::Get().Get<ot::UptimeTracker>().GetUptime(), logString,
-                       /* aInlcudeMsec */ true);
-    logString.Append(" ");
+    {
+        Instance *instance;
+
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        instance = &ot::Instance::Get();
+#elif OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+        instance = Instance::GetActiveInstance();
+        VerifyOrExit(instance != nullptr);
+#else
+#error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME requires LOG_INSTANCE_AWARE_API_ENABLE under multi-instance"
+#endif
+        ot::UptimeToString(instance->Get<ot::UptimeTracker>().GetUptime(), logString, kUptimeStringIncludeMsec);
+        logString.Append(" ");
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    VerifyOrExit(Instance::GetLogLevel() >= aLogLevel);
+
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    VerifyOrExit(Instance::Get().GetLogLevel() >= aLogLevel);
+#elif !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    VerifyOrExit(Instance::GetGlobalLogLevel() >= aLogLevel);
+#else
+    {
+        Instance *instance = Instance::GetActiveInstance();
+
+        VerifyOrExit(instance != nullptr);
+        VerifyOrExit(instance->GetLogLevel() >= aLogLevel);
+    }
 #endif
+
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
     {
@@ -166,7 +186,23 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
     }
 
     logString.Append("%s", OPENTHREAD_CONFIG_LOG_SUFFIX);
+
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    {
+        Instance *instance;
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        instance = Instance::GetActiveInstance();
+        VerifyOrExit(instance != nullptr);
+#else
+        instance = &Instance::Get();
+#endif
+
+        otPlatLogOutput(instance, aLogLevel, logString.AsCString());
+    }
+#else
     otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "%s", logString.AsCString());
+#endif
 
     ExitNow();
 

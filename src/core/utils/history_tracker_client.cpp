@@ -133,9 +133,9 @@ exit:
 
 Error Client::ProcessAnswer(const Coap::Msg &aMsg)
 {
-    Error     error = kErrorFailed;
-    AnswerTlv answerTlv;
-    uint16_t  queryId;
+    Error          error = kErrorFailed;
+    AnswerTlvValue answerTlvValue;
+    uint16_t       queryId;
 
     VerifyOrExit(mActive);
     VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMsg.mMessageInfo.GetPeerAddr()));
@@ -144,9 +144,9 @@ Error Client::ProcessAnswer(const Coap::Msg &aMsg)
     SuccessOrExit(Tlv::Find<QueryIdTlv>(aMsg.mMessage, queryId));
     VerifyOrExit(queryId == mQueryId);
 
-    SuccessOrExit(Tlv::FindTlv(aMsg.mMessage, answerTlv));
+    SuccessOrExit(Tlv::Find<AnswerTlv>(aMsg.mMessage, answerTlvValue));
 
-    if (answerTlv.GetIndex() != mAnswerIndex)
+    if (answerTlvValue.GetIndex() != mAnswerIndex)
     {
         Finalize(kErrorResponseTimeout);
         ExitNow();

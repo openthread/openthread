@@ -341,7 +341,7 @@ private:
         void  SendEnrollerResponse(Uri aUri, StateTlv::State aResponseState, const Coap::Message &aRequest);
         void  SendEnrollerReportState(uint8_t aAdmitterState);
         Error AppendAdmitterTlvs(Coap::Message &aMessage, uint8_t aAdmitterState);
-        void  ForwardUdpRelayToEnroller(const Coap::Message &aMessage);
+        void  ForwardUdpRelayToEnroller(const Coap::Message &aMessage, bool aCheckEnrollerMode);
         void  ForwardUdpProxyToEnroller(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
         static Error ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData);
@@ -408,9 +408,13 @@ private:
 
     const char *GetServiceName(void);
     bool        IsServiceNameEmpty(void) const { return mServiceName[0] == kNullChar; }
-    void        ConstructServiceName(const char *aBaseName, Dns::Name::LabelBuffer &aNameBuffer);
+    void        ConstructServiceName(void);
+    void        ConstructServiceName(uint16_t aRenameIndex, Dns::Name::LabelBuffer &aNameBuffer);
     void        RegisterService(void);
     void        UnregisterService(void);
+    void        HandleRegisterDone(Error aError);
+
+    static void HandleRegisterDone(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
@@ -435,7 +439,10 @@ private:
     bool mIdInitialized;
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+    char                   mBaseServiceName[kBaseServiceNameMaxLen + 1];
     Dns::Name::LabelBuffer mServiceName;
+    uint16_t               mServiceRenameIndex;
 #endif
     Counters mCounters;
 };

@@ -78,7 +78,7 @@ void Test5_1_6(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 0: Verify topology is formed correctly");

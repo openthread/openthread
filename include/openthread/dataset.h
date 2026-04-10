@@ -568,6 +568,24 @@ otError otDatasetGeneratePskc(const char            *aPassPhrase,
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
 /**
+ * Indicates whether or not the given Operational Dataset TLVs is a valid Active or Pending Dataset.
+ *
+ * A valid Active Dataset MUST contain all the required TLVs (Active Timestamp, Channel, Channel Mask, Extended PAN ID,
+ * Mesh-Local Prefix, Network Key, Network Name, PAN ID, PSKc, and Security Policy).
+ *
+ * A valid Pending Dataset MUST contain all the required TLVs for an Active Dataset and additionally MUST contain
+ * Pending Timestamp and Delay Timer TLVs.
+ *
+ * This method also checks whether there are duplicated TLVs or the TLVs are not well-formed in the @p aDatasetTlvs.
+ *
+ * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
+ * @param[in]  aActive       TRUE for Active Dataset, FALSE for Pending Dataset.
+ *
+ * @returns TRUE if @p aDatasetTlvs is a valid Dataset, FALSE otherwise.
+ */
+bool otDatasetIsValid(const otOperationalDatasetTlvs *aDatasetTlvs, bool aActive);
+
+/**
  * Parses an Operational Dataset from a given `otOperationalDatasetTlvs`.
  *
  * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
@@ -577,6 +595,21 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
  * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`.
  */
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
+
+/**
+ * Compares two Operational Dataset TLVs to determine if they contain the same set of TLVs.
+ *
+ * This function performs a deep comparison. It parses both @p aDatasetTlvsA and @p aDatasetTlvsB and checks if
+ * they contain the exact same set of TLVs (same type and same value). The order of TLVs within the
+ * `otOperationalDatasetTlvs` does not matter.
+ *
+ * @param[in]  aDatasetTlvsA  A pointer to dataset TLVs A. Must not be NULL.
+ * @param[in]  aDatasetTlvsB  A pointer to dataset TLVs B. Must not be NULL.
+ *
+ * @returns TRUE if the two Operational Dataset TLVs match, FALSE otherwise (e.g., if any TLV differs,
+ *          is missing, or if the TLVs are not well-formed).
+ */
+bool otDatasetTlvsCompare(const otOperationalDatasetTlvs *aDatasetTlvsA, const otOperationalDatasetTlvs *aDatasetTlvsB);
 
 /**
  * Converts a given Operational Dataset to `otOperationalDatasetTlvs`.

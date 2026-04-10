@@ -154,7 +154,7 @@ void Test1_1_8_1_6(const char *aJsonFileName)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     // Remove any existing key log file.
     remove(kKeyLogFilename);

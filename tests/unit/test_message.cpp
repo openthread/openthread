@@ -379,7 +379,7 @@ public:
         message->SetOrigin(Message::kOriginHostUntrusted);
 
         // Test 1: Default cloning
-        clone = message->Clone();
+        clone = message->Clone<kSameReservedHeader>();
         VerifyOrQuit(clone != nullptr);
 
         VerifyOrQuit(clone->GetLength() == message->GetLength());
@@ -397,7 +397,7 @@ public:
         clone->Free();
 
         // Test 2: Cloning with shorter length
-        clone = message->Clone(kLength / 2);
+        clone = message->Clone<kSameReservedHeader>(kLength / 2);
         VerifyOrQuit(clone != nullptr);
 
         VerifyOrQuit(clone->GetLength() == kLength / 2);
@@ -411,12 +411,12 @@ public:
         // Test 3: Cloning with shorter length, offset change
         message->SetOffset(80);
 
-        clone = message->Clone(kLength / 2);
+        clone = message->Clone<kNoReservedHeader>(kLength / 2);
         VerifyOrQuit(clone != nullptr);
 
         VerifyOrQuit(clone->GetLength() == kLength / 2);
         VerifyOrQuit(clone->GetPriority() == message->GetPriority());
-        VerifyOrQuit(clone->GetReserved() == message->GetReserved());
+        VerifyOrQuit(clone->GetReserved() == 0);
         VerifyOrQuit(clone->GetOffset() == 50); // Offset should be updated
         VerifyOrQuit(clone->CompareBytes(0, buffer, kLength / 2));
 

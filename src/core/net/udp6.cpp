@@ -87,15 +87,6 @@ Udp::Socket::Socket(Instance &aInstance, ReceiveHandler aHandler, void *aContext
     mContext = aContext;
 }
 
-Message *Udp::Socket::NewMessage(void) { return NewMessage(0); }
-
-Message *Udp::Socket::NewMessage(uint16_t aReserved) { return NewMessage(aReserved, Message::Settings::GetDefault()); }
-
-Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
-{
-    return Get<Udp>().NewMessage(aReserved, aSettings);
-}
-
 Error Udp::Socket::Open(NetifIdentifier aNetifId) { return Get<Udp>().Open(*this, aNetifId, mHandler, mContext); }
 
 bool Udp::Socket::IsOpen(void) const { return Get<Udp>().IsOpen(*this); }
@@ -232,6 +223,9 @@ Error Udp::Open(SocketHandle &aSocket, NetifIdentifier aNetifId, ReceiveHandler 
 
     aSocket.Clear();
     aSocket.SetNetifId(aNetifId);
+#if OPENTHREAD_PLATFORM_NEXUS && OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    aSocket.mHandle = &GetInstance();
+#endif
     aSocket.mHandler = aHandler;
     aSocket.mContext = aContext;
 
@@ -403,15 +397,6 @@ uint16_t Udp::GetEphemeralPort(void)
     } while (IsPortReserved(mEphemeralPort));
 
     return mEphemeralPort;
-}
-
-Message *Udp::NewMessage(void) { return NewMessage(0); }
-
-Message *Udp::NewMessage(uint16_t aReserved) { return NewMessage(aReserved, Message::Settings::GetDefault()); }
-
-Message *Udp::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
-{
-    return Get<Ip6>().NewMessage(sizeof(Header) + aReserved, aSettings);
 }
 
 Error Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo)

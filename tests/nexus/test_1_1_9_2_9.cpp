@@ -209,7 +209,7 @@ void Test9_2_9(void)
     router2.Get<Mle::Mle>().SetNetworkIdTimeout(70);
     router1.Get<Mle::Mle>().SetNetworkIdTimeout(120);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");

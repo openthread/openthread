@@ -172,7 +172,7 @@ void Test1_2_LP_7_2_1(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     /**
      * Step 0: SED_1

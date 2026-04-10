@@ -152,7 +152,7 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (WaitResponse() == OT_ERROR_NONE))
     {
         VerifyOrExit(mIsCoprocessorReady, resetDone = false);
-        LogCrit("Software reset co-processor successfully");
+        LogInfo("Software reset co-processor successfully");
         ExitNow(resetDone = true);
     }
 

@@ -101,7 +101,7 @@ void RunTest9_2_3(Topology aTopology, const char *aJsonFile)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: All");

@@ -152,7 +152,7 @@ void Test9_2_13(void)
 
     nexus.AdvanceTime(0);
 
-    Instance::SetLogLevel(kLogLevelNote);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     Log("Step 1: Form topology and start a constant ICMPv6 Echo Request from Leader_2 to SED_2.");
 

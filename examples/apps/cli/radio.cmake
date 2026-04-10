@@ -60,7 +60,7 @@ target_link_libraries(ot-cli-radio PRIVATE
 )
 
 if(OT_LINKER_MAP)
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+    if(APPLE)
         target_link_libraries(ot-cli-radio PRIVATE -Wl,-map,ot-cli-radio.map)
     else()
         target_link_libraries(ot-cli-radio PRIVATE -Wl,-Map=ot-cli-radio.map)

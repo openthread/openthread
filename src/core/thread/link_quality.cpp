@@ -85,7 +85,7 @@ int8_t RssAverager::GetAverage(void) const
 
     VerifyOrExit(mCount != 0, average = Radio::kInvalidRssi);
 
-    average = -static_cast<int8_t>(mAverage >> kPrecisionBitShift);
+    average = static_cast<int8_t>(-static_cast<int8_t>(mAverage >> kPrecisionBitShift));
 
     // Check for possible round up (e.g., average of -71.5 --> -72)
 

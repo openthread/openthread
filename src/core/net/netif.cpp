@@ -89,8 +89,31 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    , mInitialized(false)
+#endif
 {
 }
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+
+Error Netif::Init(UnicastAddress   *aUnicastAddrPool,
+                  uint16_t          aUnicastAddrPoolSize,
+                  MulticastAddress *aMulticastAddrPool,
+                  uint16_t          aMulticastAddrPoolSize)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mInitialized, error = kErrorAlready);
+    mInitialized = true;
+    SuccessOrExit(error = mExtUnicastAddressPool.Init(aUnicastAddrPool, aUnicastAddrPoolSize));
+    SuccessOrExit(error = mExtMulticastAddressPool.Init(aMulticastAddrPool, aMulticastAddrPoolSize));
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
 
 bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {

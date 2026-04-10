@@ -582,6 +582,17 @@ public:
      */
     void SetPrefix(const Ip6::Prefix &aPrefix, RoutePreference aPreference);
 
+    /**
+     * Indicates whether the OMR prefix matches a given prefix and preference.
+     *
+     * @param[in] aPrefix      The prefix to compare with.
+     * @param[in] aPreference  The preference to compare with.
+     *
+     * @retval TRUE   The OMR prefix matches the given prefix and preference.
+     * @retval FALSE  The OMR prefix does not match the given prefix and preference.
+     */
+    bool Matches(const Ip6::Prefix &aPrefix, RoutePreference aPreference) const;
+
 protected:
     Ip6::Prefix     mPrefix;
     RoutePreference mPreference;

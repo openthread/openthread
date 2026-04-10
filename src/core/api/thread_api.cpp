@@ -533,7 +533,7 @@ void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint1
     StringWriter writer(aBuffer, aSize);
     UptimeMsec   uptime = static_cast<UptimeMsec>(aDuration) * Time::kOneSecondInMsec;
 
-    UptimeToString(uptime, writer, /* aIncludeMsec */ false);
+    UptimeToString(uptime, writer, /* aFlags */ 0);
 }
 #endif
 

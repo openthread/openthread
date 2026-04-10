@@ -145,27 +145,9 @@ void CoapBase::RemoveResource(Resource &aResource)
     aResource.SetNext(nullptr);
 }
 
-Message *CoapBase::NewMessage(const Message::Settings &aSettings)
-{
-    Message *message = nullptr;
-
-    VerifyOrExit((message = AsCoapMessagePtr(Get<Ip6::Udp>().NewMessage(0, aSettings))) != nullptr);
-    message->SetOffset(0);
-
-exit:
-    return message;
-}
-
-Message *CoapBase::NewMessage(void) { return NewMessage(Message::Settings::GetDefault()); }
-
-Message *CoapBase::NewPriorityMessage(void)
-{
-    return NewMessage(Message::Settings(kWithLinkSecurity, Message::kPriorityNet));
-}
-
 Message *CoapBase::AllocateAndInitPriorityConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUri);
+    return InitMessage(NewNetPriorityMessage(), kTypeConfirmable, aUri);
 }
 
 Message *CoapBase::AllocateAndInitConfirmablePostMessage(Uri aUri)
@@ -175,7 +157,7 @@ Message *CoapBase::AllocateAndInitConfirmablePostMessage(Uri aUri)
 
 Message *CoapBase::AllocateAndInitPriorityNonConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewPriorityMessage(), kTypeNonConfirmable, aUri);
+    return InitMessage(NewNetPriorityMessage(), kTypeNonConfirmable, aUri);
 }
 
 Message *CoapBase::AllocateAndInitNonConfirmablePostMessage(Uri aUri)
@@ -190,12 +172,13 @@ Message *CoapBase::AllocateAndInitPostMessageTo(Uri aUri, const Ip6::Address &aD
 
 Message *CoapBase::AllocateAndInitPriorityPostMessageTo(Uri aUri, const Ip6::Address &aDestination)
 {
-    return InitMessage(NewPriorityMessage(), aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, aUri);
+    return InitMessage(NewNetPriorityMessage(), aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable,
+                       aUri);
 }
 
 Message *CoapBase::AllocateAndInitPriorityResponseFor(const Message &aRequest)
 {
-    return InitResponse(NewPriorityMessage(), aRequest);
+    return InitResponse(NewNetPriorityMessage(), aRequest);
 }
 
 Message *CoapBase::AllocateAndInitResponseFor(const Message &aRequest) { return InitResponse(NewMessage(), aRequest); }
@@ -1035,7 +1018,7 @@ Error CoapBase::CacheLastBlockResponse(Message *aResponse)
 
     FreeLastBlockResponse();
 
-    mLastResponse = AsCoapMessagePtr(aResponse->Clone());
+    mLastResponse = AsCoapMessagePtr(aResponse->Clone<kNoReservedHeader>());
     VerifyOrExit(mLastResponse != nullptr, error = kErrorNoBufs);
 
 exit:
@@ -1566,7 +1549,7 @@ Error CoapBase::PendingRequests::Add(const Msg           &aTxMsg,
 
     cloneLength = aTxMsg.IsConfirmable() ? aTxMsg.mMessage.GetLength() : aTxMsg.GetHeaderSize();
 
-    aRequest.mMessage = AsCoapMessagePtr(aTxMsg.mMessage.Clone(cloneLength));
+    aRequest.mMessage = AsCoapMessagePtr(aTxMsg.mMessage.Clone<kNoReservedHeader>(cloneLength));
     VerifyOrExit(aRequest.HasMessage(), error = kErrorNoBufs);
 
     SuccessOrExit(error = aRequest.AppendMetadataToMessage());
@@ -1705,7 +1688,7 @@ void CoapBase::PendingRequests::RetransmitRequest(const Request &aRequest)
     Message         *clone;
     Ip6::MessageInfo messageInfo;
 
-    clone = AsCoapMessagePtr(aRequest.mMessage->Clone(aRequest.mMessage->GetLength() - sizeof(Request::Metadata)));
+    clone = mCoapBase.CloneMessageWithout<Request::Metadata>(aRequest.GetMessage());
     VerifyOrExit(clone != nullptr, error = kErrorNoBufs);
 
     aRequest.mMetadata.CopyInfoTo(messageInfo);
@@ -1819,7 +1802,7 @@ Error CoapBase::ResponseCache::SendCachedResponse(const Msg &aRxMsg, CoapBase &a
 
     VerifyOrExit(match != nullptr, error = kErrorNotFound);
 
-    response = AsCoapMessagePtr(match->Clone(match->GetLength() - sizeof(ResponseMetadata)));
+    response = aCoapBase.CloneMessageWithout<ResponseMetadata>(*match);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     error = aCoapBase.Transmit(*response, aRxMsg.mMessageInfo);
@@ -1865,7 +1848,7 @@ void CoapBase::ResponseCache::Add(const Msg &aTxMsg, uint32_t aExchangeLifetime)
 
     MaintainCacheSize();
 
-    responseClone = AsCoapMessagePtr(aTxMsg.mMessage.Clone());
+    responseClone = AsCoapMessagePtr(aTxMsg.mMessage.Clone<kNoReservedHeader>());
     VerifyOrExit(responseClone != nullptr);
 
     metadata.mExpireTime  = TimerMilli::GetNow() + aExchangeLifetime;

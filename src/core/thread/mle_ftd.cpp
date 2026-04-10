@@ -478,8 +478,15 @@ uint32_t Mle::DetermineAdvertiseIntervalMax(void) const
     return interval;
 }
 
-void Mle::UpdateAdvertiseInterval(void)
+void Mle::HandleRouterTableEvent(RouterTable::Events aEvents)
 {
+    // Callback from `RouterTable` when there is a change.
+
+    if (aEvents & RouterTable::kEventRouterAdded)
+    {
+        mBlockDowngrade = false;
+    }
+
     if (IsRouterOrLeader() && mAdvertiseTrickleTimer.IsRunning())
     {
         mAdvertiseTrickleTimer.SetIntervalMax(DetermineAdvertiseIntervalMax());
@@ -1526,8 +1533,6 @@ exit:
 
 void Mle::HandleTimeTick(void)
 {
-    bool roleTransitionTimeoutExpired = false;
-
     VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMle));
 
     if (mPreviousPartitionIdTimeout > 0)
@@ -1548,16 +1553,18 @@ void Mle::HandleTimeTick(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Role transitions
 
-    roleTransitionTimeoutExpired = mRouterRoleTransition.HandleTimeTick();
-
-    switch (mRole)
+    if (mRouterRoleTransition.HandleTimeTick())
     {
-    case kRoleDetached:
-        break;
+        // `mRouterRoleTransition.HandleTimeTick()` returns `true`
+        // if role transition timeout expires.
 
-    case kRoleChild:
-        if (roleTransitionTimeoutExpired)
+        switch (mRole)
         {
+        case kRoleDisabled:
+        case kRoleDetached:
+            break;
+
+        case kRoleChild:
             if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold && HasNeighborWithGoodLinkQuality())
             {
                 IgnoreError(BecomeRouter(kReasonTooFewRouters));
@@ -1574,7 +1581,42 @@ void Mle::HandleTimeTick(void)
                 mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, kReedAdvIntervalMin, kReedAdvIntervalMax);
             }
 
-            ExitNow();
+            break;
+
+        case kRoleRouter:
+            if (mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
+            {
+                LogNote("Downgrade to REED");
+                mAttacher.Attach(kDowngradeToReed);
+            }
+
+            OT_FALL_THROUGH;
+
+        case kRoleLeader:
+            if (!IsRouterEligible())
+            {
+                LogInfo("No longer router eligible");
+                IgnoreError(BecomeDetached());
+            }
+
+            break;
+        }
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Leader's age
+
+    switch (mRole)
+    {
+    case kRoleDisabled:
+    case kRoleDetached:
+    case kRoleLeader:
+        break;
+
+    case kRoleChild:
+        if (!IsRouterEligible())
+        {
+            break;
         }
 
         OT_FALL_THROUGH;
@@ -1588,25 +1630,7 @@ void Mle::HandleTimeTick(void)
             mAttacher.Attach(kSamePartition);
         }
 
-        if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
-        {
-            LogNote("Downgrade to REED");
-            mAttacher.Attach(kDowngradeToReed);
-        }
-
-        OT_FALL_THROUGH;
-
-    case kRoleLeader:
-        if (roleTransitionTimeoutExpired && !IsRouterEligible())
-        {
-            LogInfo("No longer router eligible");
-            IgnoreError(BecomeDetached());
-        }
-
         break;
-
-    case kRoleDisabled:
-        OT_ASSERT(false);
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3420,6 +3444,20 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {
         IgnoreError(SendChildIdResponse(child));
+
+        // The transition to the router role was triggered by a Child
+        // ID Request. This indicates that the child has no other
+        // parent option. We set the flags to prevent the parent
+        // router from downgrading back to a REED to ensure this
+        // child remains connected.
+        //
+        // The `mBlockDowngrade` is cleared in various situations:
+        // - From `SetStateDetached()` (e.g. partition change).
+        // - If a new router is added (new possible parent).
+        // - If all children blocking downgrade are disconnected.
+
+        child.SetBlockParentDowngrade(true);
+        mBlockDowngrade = true;
     }
 
 exit:
@@ -3724,6 +3762,7 @@ bool Mle::ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const
 
     VerifyOrExit(IsRouter());
     VerifyOrExit(mRouterTable.IsAllocated(aNeighborId));
+    VerifyOrExit(!mBlockDowngrade);
 
     VerifyOrExit(!mRouterRoleTransition.IsPending());
 

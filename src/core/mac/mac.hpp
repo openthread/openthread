@@ -492,7 +492,7 @@ public:
      *
      * @returns A reference to the MAC counter.
      */
-    otMacCounters &GetCounters(void) { return mCounters; }
+    Counters &GetCounters(void) { return mCounters; }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
     /**
@@ -931,7 +931,7 @@ private:
     Links              mLinks;
     OperationTask      mOperationTask;
     MacTimer           mTimer;
-    otMacCounters      mCounters;
+    Counters           mCounters;
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;

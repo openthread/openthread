@@ -99,7 +99,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     Node &node = nexus.CreateNode();
 
-    node.GetInstance().SetLogLevel(kLogLevelInfo);
+    SuccessOrQuit(node.GetInstance().SetLogLevel(kLogLevelInfo));
 
     node.GetInstance().Get<BorderRouter::InfraIf>().Init(/* aInfraIfIndex */ 1, /* aInfraIfIsRunning */ true);
     SuccessOrQuit(node.GetInstance().Get<BorderRouter::RoutingManager>().SetEnabled(true));

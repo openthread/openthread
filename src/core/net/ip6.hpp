@@ -48,6 +48,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
+#include "common/message_allocator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/time_ticker.hpp"
@@ -102,7 +103,7 @@ namespace Ip6 {
 /**
  * Implements the core IPv6 message processing.
  */
-class Ip6 : public InstanceLocator, private NonCopyable
+class Ip6 : public InstanceLocator, public MessageAllocator<Ip6, ReservedHeaderSize::kIp6Message>, private NonCopyable
 {
     friend class ot::Instance;
     friend class ot::TimeTicker;
@@ -117,34 +118,6 @@ public:
      * @param[in]  aInstance   A reference to the otInstance object.
      */
     explicit Ip6(Instance &aInstance);
-
-    /**
-     * Allocates a new message buffer from the buffer pool with default settings (link security
-     * enabled and `kPriorityMedium`).
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *NewMessage(void);
-
-    /**
-     * Allocates a new message buffer from the buffer pool with default settings (link security
-     * enabled and `kPriorityMedium`).
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * Allocates a new message buffer from the buffer pool.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
-     * @param[in]  aSettings  The message settings.
-     *
-     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
-     */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
     /**
      * Allocates a new message buffer from the buffer pool and writes the IPv6 datagram to the message.
@@ -345,7 +318,6 @@ public:
 #endif
 
 private:
-    static constexpr uint8_t kDefaultHopLimit   = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
     static constexpr uint8_t kReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
     static constexpr uint16_t kMinimalMtu = 1280;

@@ -180,7 +180,7 @@ void platformInitNcpMode(otPlatformConfig *aPlatformConfig)
 
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
-    platformSettingsInit(aPlatformConfig->mDataPath);
+    platformSettingsInit(aPlatformConfig->mDataPath, aPlatformConfig->mSettingsFile);
 
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
     platformBacktraceInit();
