@@ -371,6 +371,8 @@ private:
     void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
 #endif
 
+    static const uint8_t kForwardIcmpTypes[];
+
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
     bool mReceiveFilterEnabled;

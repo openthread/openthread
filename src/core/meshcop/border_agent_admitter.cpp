@@ -1200,18 +1200,8 @@ Error Manager::CoapDtlsSession::ReadSteeringDataTlv(const Message &aMessage, Ste
     // Ensure the read steering data has a valid length. A length of
     // one byte is only allowed to indicate `PermitsAllJoiners()`.
 
-    error = kErrorInvalidArgs;
-
-    for (uint8_t validLength : Admitter::kEnrollerValidSteeringDataLengths)
-    {
-        if (aSteeringData.GetLength() == validLength)
-        {
-            error = kErrorNone;
-            break;
-        }
-    }
-
-    SuccessOrExit(error);
+    VerifyOrExit(DoesArrayContain(Admitter::kEnrollerValidSteeringDataLengths, aSteeringData.GetLength()),
+                 error = kErrorInvalidArgs);
 
     if (aSteeringData.GetLength() == 1)
     {
