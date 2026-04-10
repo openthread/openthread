@@ -6,13 +6,19 @@ TCAT uses X.509 Certificate Extensions to provide permissions with certificates.
 
 ## Extensions
 
-Extensions were introduced in version 3 of the X.509 standard for certificates. They allow certificates to be customised to applications by supporting the addition of arbitrary fields in the certificate. Each extension, identified by its OID (Object Identifier), is marked as "Critical" or "Non-Critical", and includes the extension-specific data.
+Extensions were introduced in version 3 of the X.509 standard for certificates. They allow certificates to be customised to applications by supporting the addition of arbitrary fields in the certificate. Each extension, identified by its OID (Object Identifier), is marked as "Critical" or "Non-Critical", and includes the extension-specific data. See the Thread specification for more details on the defined values in the Thread-specific OID namespace `1.3.6.1.4.1.44970`.
+
+## Certificate Validity
+
+The TCAT Device certificates built into devices apply a validity policy of "forever valid", in this case encoded by using a year 2999. This mimics the validity policy for IDevID certificates that use the year 9999. The Commissioner certificates however are usually expected to be of a short lifetime, e.g. project-specific, and then would require interaction with the device vendor to renew. In this repo, 2 weeks validity is used as an example.
 
 ## Certificates generation (by script)
 
 The directory `auth-generate` contains example scripts and a Makefile to generate TCAT Commissioner certificates and TCAT Device certificates. The scripts can also handle multiple CAs, and provide the most detailed view on how to generate these certificates.
 
-To generate all certificates:
+NOTE: by default, the Makefile defines a CA called 'TcatCertCa' and expects this CA certificate and private key (for signing) to be present in the `auth-generate/ca` directory. Please replace this by the name of your own CA certificate and CA private key and add the corresponding files in the `ca` directory using the same naming scheme. The CA named 'ca' for which a private key is present in the directory, is just an example and not used for Thread certification. This example CA is not the same CA used for the TCAT Commissioner and Device identities in the `auth` and `auth-cert` directories! The 'TcatCertCa' is privately maintained by Thread Group and therefore a private key is not included for this CA.
+
+Then, to generate all certificates except for CA certificates:
 
 ```
 cd auth-generate
@@ -21,9 +27,7 @@ make
 
 This will create an `output` directory with subdirectories for each of the created identities. Each subdirectory can be used as a value for the BBTC Commissioner `--cert_path` argument, if needed.
 
-NOTE: the directory `auth-generate/ca` contains an example CA certificate and private key (for signing). Other CAs can be added in here. This CA is not the same CA used for the TCAT Commissioner and Device identities in the `auth` and `auth-cert` directories! The CA for the latter is privately maintained by Thread Group.
-
-## Certificates generation (manually)
+## Certificates generation (manually - not recommended)
 
 Thread TCAT uses Elliptic Curve Cryptography (ECC), so we use the `ecparam` `openssl` argument to generate the keys.
 
@@ -85,9 +89,9 @@ openssl x509 -in commissioner_cert.pem -text -noout
 openssl asn1parse -inform PEM -in commissioner_cert.pem
 ```
 
-## Configurations
+### Configurations
 
-file: `commissioner.cnf` (line `1.3.6.1.4.1.44970.3 = DER:21:01:01:01:01` specifies permissions (all)) See scripts in `auth-generate` directory for more details.
+In above examples, the file `commissioner.cnf` is used to specify details and X509 V3 extensions when generating the certificate. See below for an example of such file. Specifically, the line `1.3.6.1.4.1.44970.3 = DER:21:01:01:01:01` specifies TCAT permissions ("all allowed") for a TCAT Commissioner. See the scripts in `auth-generate` directory for more details and more realistic examples and see the Thread specification for more details on the defined values in the OID namespace `1.3.6.1.4.1.44970`.
 
 ```
 [ req ]
