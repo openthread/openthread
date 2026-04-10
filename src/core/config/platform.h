@@ -34,6 +34,7 @@
 #ifndef OT_CORE_CONFIG_PLATFORM_H_
 #define OT_CORE_CONFIG_PLATFORM_H_
 
+#include "config/crypto.h"
 #include "config/srp_server.h"
 
 /**
@@ -156,7 +157,8 @@
  * Define to 1 if you want to enable key ref usage support as defined by platform.
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE 0
+#define OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE \
+    (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
 #endif
 
 /**
