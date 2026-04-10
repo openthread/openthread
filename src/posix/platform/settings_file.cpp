@@ -405,6 +405,20 @@ void SettingsFile::SwapPersist(int aFd)
     VerifyOrDie(0 == fsync(aFd), OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == rename(swapFile, dataFile), OT_EXIT_ERROR_ERRNO);
 
+    // Best-effort: sync the parent directory so that the rename metadata
+    // reaches stable storage. Without this, a power loss between rename()
+    // and the next journal commit can lose the rename, leaving a partially-
+    // written swap file that causes a parse error on next Init().
+    {
+        int dirFd = open(GetSettingsPath(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+        if (dirFd >= 0)
+        {
+            fsync(dirFd);
+            close(dirFd);
+        }
+    }
+
     mSettingsFd = aFd;
 }
 
