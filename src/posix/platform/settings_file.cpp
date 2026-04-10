@@ -83,8 +83,9 @@ void SettingsFile::SetSettingsFileName(const char *aSettingsFileName)
 
 otError SettingsFile::Init(const char *aSettingsFileBaseName)
 {
-    otError     error     = OT_ERROR_NONE;
-    const char *directory = GetSettingsPath();
+    otError     error           = OT_ERROR_NONE;
+    const char *directory       = GetSettingsPath();
+    off_t       lastValidOffset = 0;
 
     OT_ASSERT(strlen(directory) < kMaxFileBasePathNameSize);
     OT_ASSERT((aSettingsFileBaseName != nullptr) && strlen(aSettingsFileBaseName) < kMaxFileBaseNameSize);
@@ -110,6 +111,8 @@ otError SettingsFile::Init(const char *aSettingsFileBaseName)
 
     for (off_t size = lseek(mSettingsFd, 0, SEEK_END), offset = lseek(mSettingsFd, 0, SEEK_SET); offset < size;)
     {
+        lastValidOffset = offset;
+
         uint16_t key;
         uint16_t length;
         ssize_t  rval;
@@ -127,7 +130,20 @@ otError SettingsFile::Init(const char *aSettingsFileBaseName)
 exit:
     if (error == OT_ERROR_PARSE)
     {
-        VerifyOrDie(ftruncate(mSettingsFd, 0) == 0, OT_EXIT_ERROR_ERRNO);
+        off_t fileSize = lseek(mSettingsFd, 0, SEEK_END);
+
+        if (lastValidOffset > 0)
+        {
+            otLogCritPlat("Settings file corrupt at offset %jd of %jd bytes, truncating to preserve %jd bytes of "
+                          "valid entries",
+                          (intmax_t)lastValidOffset, (intmax_t)fileSize, (intmax_t)lastValidOffset);
+        }
+        else
+        {
+            otLogCritPlat("Settings file corrupt from start (%jd bytes), truncating entire file", (intmax_t)fileSize);
+        }
+
+        VerifyOrDie(ftruncate(mSettingsFd, lastValidOffset) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
     return error;
