@@ -539,7 +539,14 @@ exit:
     return;
 }
 
-void Mle::SendMulticastAdvertisement(void) { SendAdvertisement(Ip6::Address::GetLinkLocalAllNodesMulticast()); }
+void Mle::SendMulticastAdvertisement(void)
+{
+    VerifyOrExit(IsRouterRoleAllowed());
+    SendAdvertisement(Ip6::Address::GetLinkLocalAllNodesMulticast());
+
+exit:
+    return;
+}
 
 void Mle::ScheduleUnicastAdvertisementTo(const Router &aRouter)
 {
