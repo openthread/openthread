@@ -65,6 +65,19 @@ Error SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
     return aSteeringData.Init(GetSteeringDataLength(), mSteeringData);
 }
 
+Error SteeringDataTlv::FindIn(const Message &aMessage, SteeringData &aSteeringData)
+{
+    Error       error;
+    OffsetRange offsetRange;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kSteeringData, offsetRange));
+    SuccessOrExit(error = aSteeringData.Init(ClampToUint8(offsetRange.GetLength())));
+    error = aMessage.Read(offsetRange, aSteeringData.GetData(), aSteeringData.GetLength());
+
+exit:
+    return error;
+}
+
 bool SecurityPolicyTlv::IsValid(void) const
 {
     return GetLength() >= sizeof(mRotationTime) && GetFlagsLength() >= kThread11FlagsLength;

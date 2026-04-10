@@ -813,7 +813,7 @@ void Admitter::CommissionerPetitioner::SendDataSet(void)
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, mSessionId));
-    SuccessOrExit(error = Tlv::Append<SteeringDataTlv>(*message, mSteeringData.GetData(), mSteeringData.GetLength()));
+    SuccessOrExit(error = SteeringDataTlv::AppendTo(*message, mSteeringData));
 
     if (mJoinerUdpPort != 0)
     {
@@ -1193,10 +1193,9 @@ exit:
 
 Error Manager::CoapDtlsSession::ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData)
 {
-    Error       error;
-    OffsetRange offsetRange;
+    Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kSteeringData, offsetRange));
+    SuccessOrExit(error = SteeringDataTlv::FindIn(aMessage, aSteeringData));
 
     // Ensure the read steering data has a valid length. A length of
     // one byte is only allowed to indicate `PermitsAllJoiners()`.
@@ -1205,7 +1204,7 @@ Error Manager::CoapDtlsSession::ReadSteeringDataTlv(const Message &aMessage, Ste
 
     for (uint8_t validLength : Admitter::kEnrollerValidSteeringDataLengths)
     {
-        if (offsetRange.GetLength() == validLength)
+        if (aSteeringData.GetLength() == validLength)
         {
             error = kErrorNone;
             break;
@@ -1213,9 +1212,6 @@ Error Manager::CoapDtlsSession::ReadSteeringDataTlv(const Message &aMessage, Ste
     }
 
     SuccessOrExit(error);
-
-    IgnoreError(aSteeringData.Init(static_cast<uint8_t>(offsetRange.GetLength())));
-    aMessage.ReadBytes(offsetRange, aSteeringData.GetData());
 
     if (aSteeringData.GetLength() == 1)
     {

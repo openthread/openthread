@@ -652,7 +652,7 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &a
     {
         const SteeringData &steeringData = aDataset.GetSteeringData();
 
-        SuccessOrExit(error = Tlv::Append<SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrExit(error = SteeringDataTlv::AppendTo(*message, steeringData));
     }
 
     if (aDataset.IsJoinerUdpPortSet())

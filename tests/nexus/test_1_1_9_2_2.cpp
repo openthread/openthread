@@ -69,7 +69,7 @@ static void AppendSteeringDataTlv(Coap::Message &aMessage)
     MeshCoP::SteeringData steeringData;
 
     steeringData.SetToPermitAllJoiners();
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(aMessage, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(aMessage, steeringData));
 }
 
 void Test9_2_2(void)

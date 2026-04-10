@@ -216,8 +216,7 @@ void Test9_2_6(void)
         {
             MeshCoP::SteeringData steeringData;
             steeringData.SetToPermitAllJoiners();
-            SuccessOrQuit(
-                Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+            SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
         }
 
         SuccessOrQuit(agent.SendMessageToLeaderAloc(*message));

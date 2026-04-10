@@ -318,7 +318,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
     ScanResult                         result;
     OffsetRange                        offsetRange;
     MeshCoP::DiscoveryResponseTlvValue respTlvValue;
-    MeshCoP::SteeringDataTlv           steeringDataTlv;
+    MeshCoP::SteeringData              steeringData;
 
     Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -363,19 +363,14 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
         ExitNow(error = kErrorParse);
     }
 
-    switch (Tlv::FindTlv(aRxInfo.mMessage, steeringDataTlv))
+    switch (MeshCoP::SteeringDataTlv::FindIn(aRxInfo.mMessage, steeringData))
     {
     case kErrorNone:
-        if (steeringDataTlv.IsValid())
+        AsCoreType(&result.mSteeringData) = steeringData;
+
+        if (mEnableFiltering)
         {
-            MeshCoP::SteeringData &steeringData = AsCoreType(&result.mSteeringData);
-
-            IgnoreError(steeringDataTlv.CopyTo(steeringData));
-
-            if (mEnableFiltering)
-            {
-                VerifyOrExit(steeringData.Contains(mFilterIndexes));
-            }
+            VerifyOrExit(steeringData.Contains(mFilterIndexes));
         }
 
         break;

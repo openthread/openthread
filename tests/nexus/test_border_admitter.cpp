@@ -475,7 +475,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -652,7 +652,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
     SuccessOrQuit(steeringData.UpdateBloomFilter(admitter.Get<Mac::Mac>().GetExtAddress()));
 
     SuccessOrQuit(Tlv::Append<MeshCoP::StateTlv>(*message, MeshCoP::StateTlv::kAccept));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -742,7 +742,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -816,7 +816,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -851,7 +851,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIdAlt));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -964,8 +964,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
         if (testIter != 2)
         {
-            SuccessOrQuit(
-                Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+            SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
         }
 
         responseContext.Clear();
@@ -1005,8 +1004,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
         responseContext.Clear();
         SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -1031,7 +1029,7 @@ void TestBorderAdmitterEnrollerInteraction(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     responseContext.Clear();
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message, HandleResponse, &responseContext));
@@ -1154,7 +1152,7 @@ void TestBorderAdmitterCommissionerConflictAndPetitionerRetry(void)
 
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerId));
     SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-    SuccessOrQuit(Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+    SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
     SuccessOrQuit(enroller.Get<Tmf::SecureAgent>().SendMessage(*message));
 
@@ -1465,8 +1463,7 @@ void TestBorderAdmitterMultipleEnrollers(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, mode));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData[i].GetData(), steeringData[i].GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData[i]));
 
         responseContexts[i].Clear();
         SuccessOrQuit(
@@ -1790,8 +1787,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[i]));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
         responseContexts[i].Clear();
         SuccessOrQuit(
@@ -3288,8 +3284,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerIdTlv>(*message, kEnrollerIds[i]));
         SuccessOrQuit(Tlv::Append<MeshCoP::EnrollerModeTlv>(*message, modes[i]));
-        SuccessOrQuit(
-            Tlv::Append<MeshCoP::SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
+        SuccessOrQuit(MeshCoP::SteeringDataTlv::AppendTo(*message, steeringData));
 
         responseContexts[i].Clear();
         SuccessOrQuit(
