@@ -51,6 +51,7 @@
 #include "test_util.h"
 
 ot::Instance *testInitInstance(void);
+ot::Instance *testResetInstance(ot::Instance *aInstance);
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 ot::Instance *testInitAdditionalInstance(uint8_t id);
 #endif
