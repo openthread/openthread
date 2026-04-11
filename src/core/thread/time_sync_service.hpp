@@ -38,6 +38,11 @@
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#error "TIME_SYNC feature is not supported under RADIO_LINK_TREL. " \
+       "TIME_SYNC is an experimental feature that only works on 15.4 radio."
+#endif
+
 #include <openthread/network_time.h>
 
 #include "common/as_core_type.hpp"
