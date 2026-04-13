@@ -272,7 +272,7 @@ exit:
  *
  * @return The result of division and rounding to the closest integer.
  */
-template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDividend, IntType aDivisor)
+template <typename IntType> inline constexpr IntType DivideAndRoundToClosest(IntType aDividend, IntType aDivisor)
 {
     return (aDividend + (aDivisor / 2)) / aDivisor;
 }
@@ -287,7 +287,7 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
  *
  * @return The result of division and rounding up.
  */
-template <typename IntType> inline IntType DivideAndRoundUp(IntType aDividend, IntType aDivisor)
+template <typename IntType> inline constexpr IntType DivideAndRoundUp(IntType aDividend, IntType aDivisor)
 {
     return (aDividend + (aDivisor - 1)) / aDivisor;
 }

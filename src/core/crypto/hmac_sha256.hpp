@@ -123,10 +123,7 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    otCryptoContext mContext;
-#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHmacSha256ContextSize, uint64_t);
-#endif
+    ContextWith<kHmacSha256ContextSize> mContext;
 };
 
 /**

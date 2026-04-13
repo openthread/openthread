@@ -42,6 +42,7 @@
 #include "common/code_utils.hpp"
 #include "crypto/context_size.hpp"
 #include "crypto/hmac_sha256.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -93,10 +94,7 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    otCryptoContext mContext;
-#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHkdfContextSize, uint64_t);
-#endif
+    ContextWith<kHkdfContextSize> mContext;
 };
 
 /**

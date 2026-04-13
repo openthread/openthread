@@ -85,10 +85,7 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-    otCryptoContext mContext;
-#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kAesContextSize, uint64_t);
-#endif
+    ContextWith<kAesContextSize> mContext;
 };
 
 /**
