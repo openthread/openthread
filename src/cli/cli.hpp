@@ -184,6 +184,17 @@ public:
      */
     otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    /**
+     * Configures whether or not the CLI interpreter outputs prompt string.
+     *
+     * It is enabled by default.
+     *
+     * @param[in] aEnabled  TRUE to enable outputting prompt, FALSE to disable.
+     */
+    void SetPromptConfig(bool aEnabled);
+#endif
+
 protected:
     static Interpreter *sInterpreter;
 
@@ -353,6 +364,9 @@ private:
     UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
     bool              mCommandIsPending;
     bool              mInternalDebugCommand;
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    bool mPromptEnabled;
+#endif
 
     TimerMilliContext mTimer;
 

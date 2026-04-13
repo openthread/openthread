@@ -79,6 +79,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , Utils(aInstance, *this)
     , mCommandIsPending(false)
     , mInternalDebugCommand(false)
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    , mPromptEnabled(true)
+#endif
     , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -414,6 +417,10 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
 
     return error;
 }
+
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+void Interpreter::SetPromptConfig(bool aEnabled) { mPromptEnabled = aEnabled; }
+#endif
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -8427,7 +8434,9 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
 void Interpreter::OutputPrompt(void)
 {
 #if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
-    static const char sPrompt[] = "> ";
+    static const char kPrompt[] = "> ";
+
+    VerifyOrExit(mPromptEnabled);
 
     // The `OutputFormat()` below is adding the prompt which is not
     // part of any command output, so we set the `EmittingCommandOutput`
@@ -8435,9 +8444,12 @@ void Interpreter::OutputPrompt(void)
     // log (under `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE`).
 
     SetEmittingCommandOutput(false);
-    OutputFormat("%s", sPrompt);
+    OutputFormat("%s", kPrompt);
     SetEmittingCommandOutput(true);
-#endif // OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+
+exit:
+    return;
+#endif
 }
 
 void Interpreter::HandleTimer(Timer &aTimer)
