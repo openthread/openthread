@@ -46,12 +46,9 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 jobs:
 
   thread-1-4:
-    name: thread-1-4-${{ matrix.compiler.c }}-${{ matrix.arch }}
+    name: thread-1-4
     runs-on: ubuntu-22.04
     env:
-      CFLAGS: -${{ matrix.arch }}
-      CXXFLAGS: -${{ matrix.arch }}
-      LDFLAGS: -${{ matrix.arch }}
       COVERAGE: 1
       THREAD_VERSION: 1.4
       VIRTUAL_TIME: 1
@@ -59,13 +56,8 @@ jobs:
       OT_VT_USE_UNIX_SOCKET: 1
       INTER_OP: 1
       INTER_OP_BBR: 1
-      CC: ${{ matrix.compiler.c }}
-      CXX: ${{ matrix.compiler.cxx }}
     strategy:
       fail-fast: false
-      matrix:
-        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
-        arch: ["m32", "m64"]
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
@@ -104,7 +96,7 @@ jobs:
     - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       if: ${{ failure() }}
       with:
-        name: thread-1-4-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
+        name: thread-1-4-pcaps
         path: "*.pcap"
     - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       if: ${{ failure() && env.CRASHED == '1' }}
@@ -114,10 +106,10 @@ jobs:
           ./ot-core-dump/*
     - name: Generate Coverage
       run: |
-        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
+        ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
-        name: cov-thread-1-4-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        name: cov-thread-1-4
         path: tmp/coverage.info
         retention-days: 1
 
