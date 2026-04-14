@@ -33,6 +33,7 @@
 
 #include "mac_frame.h"
 #include "nexus_node.hpp"
+#include "nexus_radio_model.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -506,8 +507,18 @@ void Core::ProcessRadio(Node &aNode)
             Radio::Frame rxFrame(aNode.mRadio.mTxFrame);
 
             rxFrame.mInfo.mRxInfo.mTimestamp = mNow;
-            rxFrame.mInfo.mRxInfo.mRssi      = kDefaultRxRssi;
-            rxFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
+
+            int16_t localRssi = RadioModel::CalculateRssi(aNode, rxNode);
+
+            // Completely intercept and drop packets that dip below target receiver sensitivity
+            if (RadioModel::ShouldDropPacket(localRssi))
+            {
+                continue;
+            }
+
+            rxFrame.mInfo.mRxInfo.mRssi = ClampToInt8(localRssi);
+
+            rxFrame.mInfo.mRxInfo.mLqi = kDefaultRxLqi;
 
             if (matchesDst && !dstAddr.IsNone() && !dstAddr.IsBroadcast() && ackRequested)
             {

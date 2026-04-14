@@ -136,6 +136,13 @@ public:
     void        SetName(const char *aPrefix, uint16_t aIndex);
     const char *GetName(void) const { return mName.AsCString(); }
 
+    void SetPosition(float aX, float aY)
+    {
+        mX = aX;
+        mY = aY;
+    }
+    float GetPositionX(void) const { return mX; }
+    float GetPositionY(void) const { return mY; }
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     template <typename Type> Type       &Get(void) { return Instance::Get<Type>(); }
@@ -168,12 +175,16 @@ public:
 private:
     Node(void)
         : Platform(static_cast<Instance &>(*this))
+        , mX(0.0f)
+        , mY(0.0f)
     {
     }
 
     void HandleIp6Receive(OwnedPtr<Message> aMessagePtr);
 
     String<32> mName;
+    float      mX;
+    float      mY;
 };
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }

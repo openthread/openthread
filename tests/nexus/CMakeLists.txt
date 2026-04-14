@@ -52,6 +52,7 @@ add_library(ot-nexus-platform
     platform/nexus_node.cpp
     platform/nexus_pcap.cpp
     platform/nexus_radio.cpp
+    platform/nexus_radio_model.cpp
     platform/nexus_settings.cpp
     platform/nexus_trel.cpp
     platform/nexus_udp.cpp
