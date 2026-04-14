@@ -59,6 +59,11 @@
  *
  * When this feature is enabled, the configs `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS` and
  * `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS` are no longer applicable or used.
+ *
+ * When using this feature, also consider setting `OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER`
+ * to `0xffff` (or at least as large as the total pool size passed to `otIp6Init()`). Otherwise,
+ * the MLE Address Registration TLV will still be capped at its compile-time default, silently
+ * dropping addresses beyond that limit even when the pools are larger.
  */
 #ifndef OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
 #define OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE 0
