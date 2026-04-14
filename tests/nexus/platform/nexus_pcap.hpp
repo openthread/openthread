@@ -102,7 +102,9 @@ private:
     static constexpr uint16_t kTapChannelLength = 3;
     static constexpr uint8_t  kTapChannelPage   = 0;
 
+#ifndef __EMSCRIPTEN__
     FILE *mFile;
+#endif
 };
 
 } // namespace Nexus

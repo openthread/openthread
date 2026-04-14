@@ -133,3 +133,33 @@ jobs:
     - name: Run GRPC Tests
       run: |
         cd build/nexus && ./tests/nexus/nexus_grpc
+
+  nexus-wasm-tests:
+    name: nexus-wasm-tests
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build
+
+    - name: Set up Emscripten
+      uses: mymindstorm/setup-emsdk@v14
+
+    - name: Build Nexus WASM
+      run: |
+        mkdir -p build/nexus
+        top_builddir=build/nexus ./tests/nexus/build.sh wasm
+
+    - name: Run WASM Smoke Test
+      run: |
+        node tests/nexus/test_wasm_bindings.mjs build/nexus/tests/nexus/nexus_live_demo.js

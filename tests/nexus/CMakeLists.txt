@@ -49,7 +49,7 @@ set(COMMON_COMPILE_OPTIONS
 
 option(OT_NEXUS_GRPC "Enable Nexus gRPC" OFF)
 
-if(OT_NEXUS_GRPC)
+if(OT_NEXUS_GRPC AND NOT EMSCRIPTEN)
     find_package(gRPC CONFIG REQUIRED)
     find_package(Protobuf REQUIRED)
 
@@ -116,7 +116,7 @@ add_library(ot-nexus-platform
 
 if(OT_NEXUS_GRPC)
     set_source_files_properties(${SIMULATION_PROTO_SRCS} PROPERTIES
-        COMPILE_FLAGS "-Wno-pedantic -Wno-error"
+        COMPILE_OPTIONS "-Wno-pedantic;-Wno-error"
     )
 endif()
 
@@ -130,6 +130,10 @@ target_compile_options(ot-nexus-platform
         ${COMMON_COMPILE_OPTIONS}
         ${OT_CFLAGS}
 )
+
+if(EMSCRIPTEN)
+    target_link_options(ot-nexus-platform PRIVATE "--bind")
+endif()
 
 if(OT_NEXUS_GRPC)
     target_compile_definitions(ot-nexus-platform
@@ -404,14 +408,34 @@ ot_nexus_test(full_network_reset "core;large_network;nexus")
 ot_nexus_test(large_network "core;large_network;nexus")
 
 # Live Demo Persistent Server
-if(OT_NEXUS_GRPC)
+if(EMSCRIPTEN)
+    set(NEXUS_WASM_LINK_OPTIONS
+        "--bind"
+        "-sEXPORT_ES6=1"
+        "-sMODULARIZE=1"
+        "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+        "-sSTACK_SIZE=4194304"
+        "-sALLOW_MEMORY_GROWTH=1"
+    )
+
+    add_executable(nexus_live_demo
+        platform/nexus_wasm.cpp
+    )
+    target_link_options(nexus_live_demo PRIVATE ${NEXUS_WASM_LINK_OPTIONS})
+    set_target_properties(nexus_live_demo PROPERTIES CXX_STANDARD 17)
+elseif(OT_NEXUS_GRPC)
     add_executable(nexus_live_demo
         platform/nexus_native.cpp
     )
+endif()
 
+if(TARGET nexus_live_demo)
     target_include_directories(nexus_live_demo PRIVATE ${COMMON_INCLUDES})
     target_link_libraries(nexus_live_demo PRIVATE ${COMMON_LIBS})
-
     target_compile_options(nexus_live_demo PRIVATE ${COMMON_COMPILE_OPTIONS} ${OT_CFLAGS})
-    target_compile_definitions(nexus_live_demo PRIVATE OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1)
+    if(EMSCRIPTEN)
+        add_test(NAME nexus_wasm_bindings COMMAND node ${CMAKE_CURRENT_SOURCE_DIR}/test_wasm_bindings.mjs ${CMAKE_CURRENT_BINARY_DIR}/nexus_live_demo.js)
+    elseif(OT_NEXUS_GRPC)
+        target_compile_definitions(nexus_live_demo PRIVATE OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1)
+    endif()
 endif()

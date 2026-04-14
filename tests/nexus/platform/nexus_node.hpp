@@ -160,6 +160,13 @@ public:
 
     uint32_t GetId(void) const { return GetInstance().GetId(); }
 
+    /**
+     * Returns the extended role string of the node.
+     *
+     * @returns The role string (e.g., "Leader", "Router", "REED", "FED", "MED", "SED", "Disabled").
+     */
+    const char *GetExtendedRoleString(void) const;
+
     static Node &From(otInstance *aInstance)
     {
         Instance *instance = static_cast<Instance *>(aInstance);

@@ -84,6 +84,29 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
     return string;
 }
 
+Error ExtAddress::FromString(const char *aString)
+{
+    Error   error = kErrorNone;
+    uint8_t high;
+    uint8_t low;
+
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
+
+    for (uint8_t &byte : m8)
+    {
+        SuccessOrExit(error = ParseHexDigit(*aString, high));
+        aString++;
+        SuccessOrExit(error = ParseHexDigit(*aString, low));
+        aString++;
+        byte = static_cast<uint8_t>((high << 4) | low);
+    }
+
+    VerifyOrExit(*aString == kNullChar, error = kErrorParse);
+
+exit:
+    return error;
+}
+
 void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder)
 {
     switch (aByteOrder)

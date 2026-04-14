@@ -390,6 +390,8 @@ void Core::SetNodeEnabled(uint32_t aNodeId, bool aEnabled)
 
 Node *Core::FindNodeById(uint32_t aNodeId) { return mNodes.FindMatching(aNodeId); }
 
+Node *Core::FindNodeByExtAddress(const Mac::ExtAddress &aExtAddress) { return mNodes.FindMatching(aExtAddress); }
+
 Node &Core::CreateNode(void)
 {
     Node *node;

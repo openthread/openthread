@@ -47,9 +47,15 @@ fi
 case $1 in
     trel)
         fifteenfour=OFF
+        wasm=OFF
+        ;;
+    wasm)
+        fifteenfour=ON
+        wasm=ON
         ;;
     *)
         fifteenfour=ON
+        wasm=OFF
         ;;
 esac
 
@@ -57,12 +63,25 @@ echo "==========================================================================
 echo "Building OpenThread Nexus test platform"
 echo "===================================================================================================="
 cd "${top_builddir}" || die "cd failed"
-cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON \
-    -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
-    -DOT_15_4=${fifteenfour} \
-    -DOT_NEXUS_GRPC="${OT_NEXUS_GRPC:-OFF}" \
-    -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h" \
-    "${top_srcdir}" || die
+
+CMAKE_ARGS=(
+    -GNinja
+    -DOT_PLATFORM=nexus
+    -DOT_COMPILE_WARNING_AS_ERROR=ON
+    -DOT_THREAD_VERSION=1.4
+    -DOT_APP_CLI=OFF
+    -DOT_APP_NCP=OFF
+    -DOT_APP_RCP=OFF
+    -DOT_15_4="${fifteenfour}"
+    -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h"
+)
+
+if [ "${wasm}" = "ON" ]; then
+    emcmake cmake "${CMAKE_ARGS[@]}" "${top_srcdir}" || die
+else
+    cmake "${CMAKE_ARGS[@]}" -DOT_NEXUS_GRPC="${OT_NEXUS_GRPC:-OFF}" "${top_srcdir}" || die
+fi
+
 ninja || die
 
 exit 0

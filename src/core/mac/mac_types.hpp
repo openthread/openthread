@@ -232,6 +232,20 @@ public:
      */
     InfoString ToString(void) const;
 
+    /**
+     * Parses an Extended Address from a string.
+     *
+     * The string must be a hex representation of the address (e.g., "0123456789abcdef").
+     * The parsing is case-insensitive.
+     *
+     * @param[in]  aString  A pointer to the string to parse.
+     *
+     * @retval kErrorNone          Successfully parsed the Extended Address.
+     * @retval kErrorInvalidArgs   @p aString is `nullptr`.
+     * @retval kErrorParse         @p aString is not a valid hex string representation of an Extended Address.
+     */
+    Error FromString(const char *aString);
+
 private:
     static constexpr uint8_t kGroupFlag = (1 << 0);
     static constexpr uint8_t kLocalFlag = (1 << 1);

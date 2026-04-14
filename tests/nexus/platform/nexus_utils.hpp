@@ -80,6 +80,11 @@ namespace ot {
 namespace Nexus {
 
 /**
+ * Invalid Node ID.
+ */
+static constexpr uint32_t kInvalidNodeId = 0xffffffff;
+
+/**
  * CSL period constants in units of 10 symbols.
  */
 static constexpr uint16_t kCslPeriod500ms  = 500 * 1000 / OT_US_PER_TEN_SYMBOLS;

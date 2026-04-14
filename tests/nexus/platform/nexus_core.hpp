@@ -63,6 +63,7 @@ public:
 
     Node &CreateNode(void);
     Node *FindNodeById(uint32_t aNodeId);
+    Node *FindNodeByExtAddress(const Mac::ExtAddress &aExtAddress);
 
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
