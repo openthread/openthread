@@ -980,6 +980,28 @@ void MessageQueue::DequeueAndFreeAll(void)
     }
 }
 
+void MessageQueue::EnqueueAllFrom(MessageQueue &aOtherQueue)
+{
+    VerifyOrExit(aOtherQueue.GetHead() != nullptr);
+
+    if (GetHead() == nullptr)
+    {
+        SetHead(aOtherQueue.GetHead());
+    }
+    else
+    {
+        GetTail()->Next()             = aOtherQueue.GetHead();
+        aOtherQueue.GetHead()->Prev() = GetTail();
+    }
+
+    SetTail(aOtherQueue.GetTail());
+
+    aOtherQueue.Clear();
+
+exit:
+    return;
+}
+
 Message::Iterator MessageQueue::begin(void) { return Message::Iterator(GetHead()); }
 
 Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIterator(GetHead()); }

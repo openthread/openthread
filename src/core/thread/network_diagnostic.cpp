@@ -539,34 +539,6 @@ exit:
 
 #if OPENTHREAD_FTD
 
-Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)
-{
-    // Allocate an `Answer` message, adds it in `mAnswerQueue`,
-    // update the `aInfo.mFirstAnswer` if it is the first allocated
-    // messages, and appends `QueryIdTlv` to the message (if needed).
-
-    Error error = kErrorNone;
-
-    aAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
-    VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
-    IgnoreError(aAnswer->SetPriority(aInfo.mPriority));
-
-    mAnswerQueue.Enqueue(*aAnswer);
-
-    if (aInfo.mFirstAnswer == nullptr)
-    {
-        aInfo.mFirstAnswer = aAnswer;
-    }
-
-    if (aInfo.mHasQueryId)
-    {
-        SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*aAnswer, aInfo.mQueryId));
-    }
-
-exit:
-    return error;
-}
-
 bool Server::IsLastAnswer(const Coap::Message &aAnswer) const
 {
     // Indicates whether `aAnswer` is the last one associated with
@@ -601,23 +573,29 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
     }
 }
 
-void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
+void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest)
 {
-    Coap::Message      *answer;
+    AnswerBuilder  answerBuilder(GetInstance());
+    Coap::Message *firstAnswer;
+
+    SuccessOrExit(PrepareAnswers(aRequest, answerBuilder));
+
+    firstAnswer = answerBuilder.GetAnswers().GetHead();
+    mAnswerQueue.EnqueueAllFrom(answerBuilder.GetAnswers());
+
+    SendNextAnswer(*firstAnswer, aDestination);
+
+exit:
+    return;
+}
+
+Error Server::PrepareAnswers(const Coap::Message &aRequest, AnswerBuilder &aAnswerBuilder)
+{
     Error               error;
-    AnswerInfo          info;
     uint8_t             tlvType;
     TlvTypeListIterator iterator;
-    AnswerTlvValue      answerTlvValue;
 
-    if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
-    {
-        info.mHasQueryId = true;
-    }
-
-    info.mPriority = aRequest.GetPriority();
-
-    SuccessOrExit(error = AllocateAnswer(answer, info));
+    SuccessOrExit(error = aAnswerBuilder.Start(aRequest));
 
     SuccessOrExit(error = iterator.InitForTypeListTlv(aRequest));
 
@@ -626,51 +604,23 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
         switch (tlvType)
         {
         case ChildTlv::kType:
-            SuccessOrExit(error = AppendChildTableAsChildTlvs(answer, info));
+            SuccessOrExit(error = AppendChildTableAsChildTlvs(aAnswerBuilder));
             break;
         case ChildIp6AddressListTlv::kType:
-            SuccessOrExit(error = AppendChildTableIp6AddressList(answer, info));
+            SuccessOrExit(error = AppendChildTableIp6AddressList(aAnswerBuilder));
             break;
         case RouterNeighborTlv::kType:
-            SuccessOrExit(error = AppendRouterNeighborTlvs(answer, info));
+            SuccessOrExit(error = AppendRouterNeighborTlvs(aAnswerBuilder));
             break;
         default:
-            SuccessOrExit(error = AppendDiagTlv(tlvType, *answer));
+            SuccessOrExit(error = AppendDiagTlv(tlvType, aAnswerBuilder.GetAnswer()));
             break;
         }
 
-        SuccessOrExit(error = CheckAnswerLength(answer, info));
+        SuccessOrExit(error = aAnswerBuilder.CheckAnswerLength());
     }
 
-    answerTlvValue.Init(info.mAnswerIndex, AnswerTlvValue::kIsLast);
-    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*answer, answerTlvValue));
-
-    SendNextAnswer(*info.mFirstAnswer, aDestination);
-
-exit:
-    if ((error != kErrorNone) && (info.mFirstAnswer != nullptr))
-    {
-        FreeAllRelatedAnswers(*info.mFirstAnswer);
-    }
-}
-
-Error Server::CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo)
-{
-    // This method checks the length of the `aAnswer` message and if it
-    // is above the threshold, it enqueues the message for transmission
-    // after appending an Answer TLV with the current index to the
-    // message. In this case, it will also allocate a new answer
-    // message.
-
-    Error          error = kErrorNone;
-    AnswerTlvValue answerTlvValue;
-
-    VerifyOrExit(aAnswer->GetLength() >= kAnswerMessageLengthThreshold);
-
-    answerTlvValue.Init(aInfo.mAnswerIndex++, AnswerTlvValue::kMoreToFollow);
-    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*aAnswer, answerTlvValue));
-
-    error = AllocateAnswer(aAnswer, aInfo);
+    SuccessOrExit(error = aAnswerBuilder.Finish());
 
 exit:
     return error;
@@ -734,7 +684,7 @@ exit:
     }
 }
 
-Error Server::AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo)
+Error Server::AppendChildTableAsChildTlvs(AnswerBuilder &aAnswerBuilder)
 {
     Error         error = kErrorNone;
     ChildTlvValue childTlvValue;
@@ -743,17 +693,17 @@ Error Server::AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &a
     {
         childTlvValue.InitFrom(child);
 
-        SuccessOrExit(error = Tlv::Append<ChildTlv>(*aAnswer, childTlvValue));
-        SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
+        SuccessOrExit(error = Tlv::Append<ChildTlv>(aAnswerBuilder.GetAnswer(), childTlvValue));
+        SuccessOrExit(error = aAnswerBuilder.CheckAnswerLength());
     }
 
-    error = Tlv::AppendEmpty<ChildTlv>(*aAnswer);
+    error = Tlv::AppendEmpty<ChildTlv>(aAnswerBuilder.GetAnswer());
 
 exit:
     return error;
 }
 
-Error Server::AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo)
+Error Server::AppendRouterNeighborTlvs(AnswerBuilder &aAnswerBuilder)
 {
     Error                  error = kErrorNone;
     RouterNeighborTlvValue neighborTlvValue;
@@ -767,27 +717,27 @@ Error Server::AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInf
 
         neighborTlvValue.InitFrom(router);
 
-        SuccessOrExit(error = Tlv::Append<RouterNeighborTlv>(*aAnswer, neighborTlvValue));
-        SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
+        SuccessOrExit(error = Tlv::Append<RouterNeighborTlv>(aAnswerBuilder.GetAnswer(), neighborTlvValue));
+        SuccessOrExit(error = aAnswerBuilder.CheckAnswerLength());
     }
 
-    error = Tlv::AppendEmpty<RouterNeighborTlv>(*aAnswer);
+    error = Tlv::AppendEmpty<RouterNeighborTlv>(aAnswerBuilder.GetAnswer());
 
 exit:
     return error;
 }
 
-Error Server::AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo)
+Error Server::AppendChildTableIp6AddressList(AnswerBuilder &aAnswerBuilder)
 {
     Error error = kErrorNone;
 
     for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        SuccessOrExit(error = AppendChildIp6AddressListTlv(*aAnswer, child));
-        SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
+        SuccessOrExit(error = AppendChildIp6AddressListTlv(aAnswerBuilder.GetAnswer(), child));
+        SuccessOrExit(error = aAnswerBuilder.CheckAnswerLength());
     }
 
-    error = Tlv::AppendEmpty<ChildIp6AddressListTlv>(*aAnswer);
+    error = Tlv::AppendEmpty<ChildIp6AddressListTlv>(aAnswerBuilder.GetAnswer());
 
 exit:
     return error;
