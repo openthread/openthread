@@ -29,6 +29,8 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdio.h>
 
 #include "nexus_alarm.hpp"
@@ -54,19 +56,25 @@ public:
 
     static Core &Get(void) { return *sCore; }
 
-    void      SetObserver(Observer *aObserver) { mObserver = aObserver; }
-    Observer *GetObserver(void) { return mObserver; }
+    void AddObserver(Observer &aObserver) { mObservers.Push(aObserver); }
+    void RemoveObserver(Observer &aObserver) { IgnoreError(mObservers.Remove(aObserver)); }
+    void NotifyHeartbeat(void);
+    void NotifyDumpState(void);
 
-    Node             &CreateNode(void);
+    Node &CreateNode(void);
+    Node *FindNodeById(uint32_t aNodeId);
+
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
     TimeMilli GetNow(void) { return TimeMilli(static_cast<uint32_t>(mNow / 1000u)); }
     TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
     uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
-    bool      IsUiConnected(void) const;
-    void      Reset(void);
-    void      SetNodeEnabled(uint32_t aNodeId, bool aEnabled);
+
+    bool IsUiConnected(void) const;
+
+    void Reset(void);
+    void SetNodeEnabled(uint32_t aNodeId, bool aEnabled);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test specific helper methods
@@ -147,7 +155,7 @@ private:
     uint64_t              mNow;
     uint64_t              mNextAlarmTime;
 
-    Observer *mObserver;
+    LinkedList<Observer> mObservers;
 };
 
 } // namespace Nexus

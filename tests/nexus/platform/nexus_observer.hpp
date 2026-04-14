@@ -36,6 +36,8 @@
 
 #include <stdint.h>
 
+#include "common/linked_list.hpp"
+
 namespace ot {
 namespace Nexus {
 
@@ -46,7 +48,7 @@ class Node;
  *
  * This class defines the interface for receiving simulation events from the Nexus core.
  */
-class Observer
+class Observer : public LinkedListEntry<Observer>
 {
 public:
     virtual ~Observer(void) = default;
@@ -83,12 +85,28 @@ public:
     virtual void OnClearEvents(void) = 0;
 
     /**
+     * This method is called to notify a heartbeat with current simulation time.
+     *
+     * @param[in] aTimestampUs  The current simulation time in microseconds.
+     */
+    virtual void OnHeartbeat(uint64_t aTimestampUs) = 0;
+
+    /**
+     * This method is called to dump the current simulation state.
+     */
+    virtual void DumpState(void) = 0;
+
+    /**
      * This method indicates whether or not the observer is connected.
      *
      * @retval TRUE   If the observer is connected.
      * @retval FALSE  If the observer is not connected.
      */
     virtual bool IsConnected(void) const = 0;
+
+private:
+    friend class LinkedListEntry<Observer>;
+    Observer *mNext;
 };
 
 } // namespace Nexus

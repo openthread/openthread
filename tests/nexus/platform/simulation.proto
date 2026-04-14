@@ -1,0 +1,219 @@
+/*
+ *  Copyright (c) 2026, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+syntax = "proto3";
+
+package nexus;
+
+/**
+ * Represents an event occurring within the simulation.
+ */
+message SimulationEvent {
+  uint64 timestamp_us = 1; // Simulation time in microseconds
+  oneof event {
+    NodeUpdate node_update = 2;       // Node state or position update
+    LinkUpdate link_update = 3;       // Link connectivity change
+    PacketCaptured packet_captured = 4; // Radio packet capture
+    Heartbeat heartbeat = 5;           // Periodic keep-alive and clock sync
+  }
+}
+
+/**
+ * Periodic event sent to maintain the gRPC stream and sync simulation time.
+ */
+message Heartbeat {}
+
+/**
+ * Detailed Thread device roles.
+ */
+enum NodeRole {
+  ROLE_UNKNOWN = 0;
+  ROLE_DISABLED = 1;
+  ROLE_DETACHED = 2;
+  ROLE_CHILD = 3;
+  ROLE_ROUTER = 4;
+  ROLE_LEADER = 5;
+  ROLE_REED = 6; // Router Eligible End Device
+  ROLE_FED = 7;  // Full End Device
+  ROLE_MED = 8;  // Minimal End Device
+  ROLE_SED = 9;  // Sleepy End Device
+}
+
+/**
+ * Information about a node's current state and position.
+ */
+message NodeUpdate {
+  uint32 node_id = 1;
+  NodeRole role = 2;
+  uint32 rloc16 = 3;
+  float x = 4;
+  float y = 5;
+}
+
+/**
+ * Information about a radio link between two nodes.
+ */
+message LinkUpdate {
+  uint32 source_node_id = 1;
+  uint32 destination_node_id = 2;
+  bool is_active = 3;
+  float link_quality = 4; // e.g., RSSI or link quality index
+}
+
+/**
+ * Captured radio packet data.
+ */
+message PacketCaptured {
+  uint32 source_node_id = 1;
+  uint32 destination_node_id = 2;
+  string protocol = 3;      // Human-readable protocol name (e.g., "IEEE 802.15.4 ACK")
+  string summary = 4;       // Short summary of packet content
+  bytes raw_payload = 5;    // Raw PSDU data
+  string decoded_info = 6;  // Reserved for future use
+}
+
+message ResetRequest {}
+message ResetResponse {}
+
+/**
+ * Request to change simulation speed.
+ */
+message SetSpeedRequest {
+  float speed_factor = 1; // 1.0 for real-time, 0.0 for paused
+}
+message SetSpeedResponse {}
+
+/**
+ * Request to enable or disable a node's radio.
+ */
+message SetNodeStateRequest {
+  uint32 node_id = 1;
+  bool enabled = 2;
+}
+message SetNodeStateResponse {}
+
+/**
+ * Request to move a node in the simulation space.
+ */
+message SetNodePositionRequest {
+  uint32 node_id = 1;
+  float x = 2;
+  float y = 3;
+}
+message SetNodePositionResponse {}
+
+/**
+ * Request to create a new node at a given position.
+ */
+message CreateNodeRequest {
+  float x = 1;
+  float y = 2;
+}
+
+message CreateNodeResponse {
+  uint32 node_id = 1;
+}
+
+/**
+ * Request to form a new Thread network on the specified node.
+ */
+message FormNetworkRequest {
+  uint32 node_id = 1;
+}
+
+message FormNetworkResponse {}
+
+/**
+ * Thread device types for joining.
+ */
+enum JoinMode {
+  JOIN_MODE_FTD = 0;
+  JOIN_MODE_MED = 1;
+  JOIN_MODE_SED = 2;
+  JOIN_MODE_FED = 3;
+}
+
+/**
+ * Request for a node to join an existing network.
+ */
+message JoinNetworkRequest {
+  uint32 node_id = 1;
+  uint32 target_node_id = 2;
+  JoinMode mode = 3; 
+}
+
+message JoinNetworkResponse {}
+
+/**
+ * Nexus simulation control and monitoring service.
+ */
+service NexusService {
+  /**
+   * Streams simulation events to the client.
+   */
+  rpc StreamEvents(StreamRequest) returns (stream SimulationEvent);
+
+  /**
+   * Resets the simulation to the initial state.
+   */
+  rpc Reset(ResetRequest) returns (ResetResponse);
+
+  /**
+   * Sets the simulation speed factor.
+   */
+  rpc SetSpeed(SetSpeedRequest) returns (SetSpeedResponse);
+
+  /**
+   * Enables or disables a node.
+   */
+  rpc SetNodeState(SetNodeStateRequest) returns (SetNodeStateResponse);
+
+  /**
+   * Moves a node to a new position.
+   */
+  rpc SetNodePosition(SetNodePositionRequest) returns (SetNodePositionResponse);
+
+  /**
+   * Adds a new node to the simulation.
+   */
+  rpc CreateNode(CreateNodeRequest) returns (CreateNodeResponse);
+
+  /**
+   * Forms a network on a node.
+   */
+  rpc FormNetwork(FormNetworkRequest) returns (FormNetworkResponse);
+
+  /**
+   * Joins a node to a network.
+   */
+  rpc JoinNetwork(JoinNetworkRequest) returns (JoinNetworkResponse);
+}
+
+message StreamRequest {
+  bool live = 1; // Reserved for future use
+}

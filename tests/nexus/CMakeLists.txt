@@ -26,6 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
@@ -33,15 +37,57 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/tests/nexus
     ${PROJECT_SOURCE_DIR}/tests/nexus/platform
     ${PROJECT_SOURCE_DIR}/examples/platforms/utils
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_FTD=1
     -DOPENTHREAD_MTD=0
     -DOPENTHREAD_RADIO=0
+    -DOPENTHREAD_CONFIG_USE_STD_NEW=1
 )
 
-add_library(ot-nexus-platform
+option(OT_NEXUS_GRPC "Enable Nexus gRPC" OFF)
+
+if(OT_NEXUS_GRPC)
+    find_package(gRPC CONFIG REQUIRED)
+    find_package(Protobuf REQUIRED)
+
+    # Find gRPC C++ plugin
+    find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+    if(NOT GRPC_CPP_PLUGIN)
+        message(FATAL_ERROR "grpc_cpp_plugin not found! Please install protobuf-compiler-grpc")
+    endif()
+
+    # Generate simulation.pb.cc/h and simulation.grpc.pb.cc/h
+    set(PROTO_FILE platform/simulation.proto)
+    get_filename_component(PROTO_ABS_FILE ${PROTO_FILE} ABSOLUTE)
+    get_filename_component(PROTO_PATH ${PROTO_ABS_FILE} PATH)
+
+    set(SIMULATION_PROTO_SRCS
+        ${CMAKE_CURRENT_BINARY_DIR}/simulation.pb.cc
+        ${CMAKE_CURRENT_BINARY_DIR}/simulation.grpc.pb.cc
+    )
+    set(SIMULATION_PROTO_HDRS
+        ${CMAKE_CURRENT_BINARY_DIR}/simulation.pb.h
+        ${CMAKE_CURRENT_BINARY_DIR}/simulation.grpc.pb.h
+    )
+
+    add_custom_command(
+        OUTPUT ${SIMULATION_PROTO_SRCS} ${SIMULATION_PROTO_HDRS}
+        COMMAND ${Protobuf_PROTOC_EXECUTABLE}
+        ARGS --cpp_out ${CMAKE_CURRENT_BINARY_DIR}
+             --grpc_out ${CMAKE_CURRENT_BINARY_DIR}
+             --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+             -I ${PROTO_PATH}
+             ${PROTO_ABS_FILE}
+        DEPENDS ${PROTO_ABS_FILE}
+        COMMENT "Generating simulation.pb.cc/h and simulation.grpc.pb.cc/h from ${PROTO_FILE}"
+        VERBATIM
+    )
+endif()
+
+set(NEXUS_PLATFORM_SOURCES
     platform/nexus_alarm.cpp
     platform/nexus_core.cpp
     platform/nexus_dns.cpp
@@ -54,10 +100,25 @@ add_library(ot-nexus-platform
     platform/nexus_radio.cpp
     platform/nexus_radio_model.cpp
     platform/nexus_settings.cpp
+    platform/nexus_sim.cpp
     platform/nexus_trel.cpp
     platform/nexus_udp.cpp
     ../../examples/platforms/utils/mac_frame.cpp
 )
+
+if(OT_NEXUS_GRPC)
+    list(APPEND NEXUS_PLATFORM_SOURCES ${SIMULATION_PROTO_SRCS} platform/nexus_grpc.cpp)
+endif()
+
+add_library(ot-nexus-platform
+    ${NEXUS_PLATFORM_SOURCES}
+)
+
+if(OT_NEXUS_GRPC)
+    set_source_files_properties(${SIMULATION_PROTO_SRCS} PROPERTIES
+        COMPILE_FLAGS "-Wno-pedantic -Wno-error"
+    )
+endif()
 
 target_include_directories(ot-nexus-platform
     PRIVATE
@@ -70,11 +131,26 @@ target_compile_options(ot-nexus-platform
         ${OT_CFLAGS}
 )
 
+if(OT_NEXUS_GRPC)
+    target_compile_definitions(ot-nexus-platform
+        PRIVATE
+            OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1
+    )
+endif()
+
 target_link_libraries(ot-nexus-platform
     PRIVATE
         ot-config
         ${OT_MBEDTLS}
 )
+
+if(OT_NEXUS_GRPC)
+    target_link_libraries(ot-nexus-platform
+        PUBLIC
+            protobuf::libprotobuf
+            gRPC::grpc++
+    )
+endif()
 
 set(COMMON_LIBS
     ot-nexus-platform
@@ -316,6 +392,25 @@ ot_nexus_test(srp_lease "core;nexus")
 # Trel
 ot_nexus_test(trel "trel;nexus")
 
+# Grpc
+if(OT_NEXUS_GRPC)
+    ot_nexus_test(grpc "core;nexus")
+    target_compile_definitions(nexus_grpc PRIVATE OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1)
+endif()
+
 # Large network
 ot_nexus_test(full_network_reset "core;large_network;nexus")
 ot_nexus_test(large_network "core;large_network;nexus")
+
+# Live Demo Persistent Server
+if(OT_NEXUS_GRPC)
+    add_executable(nexus_live_demo
+        platform/nexus_native.cpp
+    )
+
+    target_include_directories(nexus_live_demo PRIVATE ${COMMON_INCLUDES})
+    target_link_libraries(nexus_live_demo PRIVATE ${COMMON_LIBS})
+
+    target_compile_options(nexus_live_demo PRIVATE ${COMMON_COMPILE_OPTIONS} ${OT_CFLAGS})
+    target_compile_definitions(nexus_live_demo PRIVATE OPENTHREAD_NEXUS_CONFIG_GRPC_ENABLE=1)
+endif()
