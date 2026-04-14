@@ -46,15 +46,9 @@ fi
 
 case $1 in
     trel)
-        trel=ON
         fifteenfour=OFF
         ;;
-    multi-radio)
-        trel=ON
-        fifteenfour=ON
-        ;;
     *)
-        trel=ON
         fifteenfour=ON
         ;;
 esac
@@ -66,7 +60,7 @@ cd "${top_builddir}" || die "cd failed"
 cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON \
     -DOT_MULTIPLE_INSTANCE=ON \
     -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
-    -DOT_15_4=${fifteenfour} -DOT_TREL=${trel} \
+    -DOT_15_4=${fifteenfour} \
     -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h" \
     "${top_srcdir}" || die
 ninja || die
