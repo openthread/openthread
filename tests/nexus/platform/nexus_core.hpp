@@ -29,15 +29,17 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_CORE_HPP_
 
+#include <stdio.h>
+
+#include "nexus_alarm.hpp"
+#include "nexus_observer.hpp"
+#include "nexus_pcap.hpp"
+#include "nexus_radio.hpp"
+#include "nexus_utils.hpp"
 #include "common/array.hpp"
 #include "common/owning_list.hpp"
 #include "instance/instance.hpp"
 #include "thread/key_manager.hpp"
-
-#include "nexus_alarm.hpp"
-#include "nexus_pcap.hpp"
-#include "nexus_radio.hpp"
-#include "nexus_utils.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -52,6 +54,9 @@ public:
 
     static Core &Get(void) { return *sCore; }
 
+    void      SetObserver(Observer *aObserver) { mObserver = aObserver; }
+    Observer *GetObserver(void) { return mObserver; }
+
     Node             &CreateNode(void);
     LinkedList<Node> &GetNodes(void) { return mNodes; }
 
@@ -59,6 +64,9 @@ public:
     TimeMicro GetNowMicro(void) { return TimeMicro(static_cast<uint32_t>(mNow)); }
     uint64_t  GetNowMicro64(void) const { return mNow; }
     void      AdvanceTime(uint32_t aDuration);
+    bool      IsUiConnected(void) const;
+    void      Reset(void);
+    void      SetNodeEnabled(uint32_t aNodeId, bool aEnabled);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Test specific helper methods
@@ -85,6 +93,9 @@ public:
     bool  IsThreadAddress(const Ip6::Address &aAddress);
     Node *FindNodeByThreadAddress(const Ip6::Address &aAddress);
     Node *FindNodeByInfraIfAddress(const Ip6::Address &aAddress);
+
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aInfo);
+    static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
 
 private:
     static constexpr int8_t  kDefaultRxRssi = -20;
@@ -135,6 +146,8 @@ private:
     bool                  mSaveNodeLogs;
     uint64_t              mNow;
     uint64_t              mNextAlarmTime;
+
+    Observer *mObserver;
 };
 
 } // namespace Nexus

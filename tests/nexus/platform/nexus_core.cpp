@@ -34,6 +34,8 @@
 #include "mac_frame.h"
 #include "nexus_node.hpp"
 #include "nexus_radio_model.hpp"
+#include "thread/child_table.hpp"
+#include "thread/neighbor_table.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -46,6 +48,8 @@ Core::Core(void)
     , mPendingAction(false)
     , mSaveNodeLogs(false)
     , mNow(0)
+    , mObserver(nullptr)
+
 {
     const char *pcapFile;
     const char *saveLogs;
@@ -346,6 +350,27 @@ Core::~Core(void)
     sInUse = false;
 }
 
+void Core::SetNodeEnabled(uint32_t aNodeId, bool aEnabled)
+{
+    Node *node = GetNodes().FindMatching(aNodeId);
+
+    if (node != nullptr)
+    {
+        Log("Core::SetNodeEnabled: Node %u found. Setting Thread enabled=%d", aNodeId, aEnabled);
+
+        if (!aEnabled)
+        {
+            node->Get<ThreadNetif>().Down();
+            node->Get<Mle::Mle>().Stop();
+        }
+        else
+        {
+            node->Get<ThreadNetif>().Up();
+            SuccessOrQuit(node->Get<Mle::Mle>().Start());
+        }
+    }
+}
+
 Node &Core::CreateNode(void)
 {
     Node *node;
@@ -373,7 +398,172 @@ Node &Core::CreateNode(void)
 
     node->Get<Ip6::Ip6>().SetReceiveCallback(Node::HandleIp6Receive, node);
 
+    if (mObserver)
+    {
+        node->Get<NeighborTable>().RegisterCallback(&Core::HandleNeighborTableChanged);
+        SuccessOrQuit(node->Get<Notifier>().RegisterCallback(&Core::HandleStateChanged, node));
+        mObserver->OnNodeStateChanged(node);
+    }
+
     return *node;
+}
+
+void Core::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aInfo)
+{
+    NeighborTable::Event event = static_cast<NeighborTable::Event>(aEvent);
+
+    Core    &core     = Core::Get();
+    uint32_t srcId    = 0;
+    uint32_t dstId    = 0;
+    bool     foundSrc = false;
+    bool     foundDst = false;
+    bool     isActive;
+
+    const Mac::ExtAddress *extAddr = nullptr;
+
+    VerifyOrExit(core.mObserver);
+
+    Log("HandleNeighborTableChanged: Event %d", event);
+
+    {
+        Node &srcNode = Node::From(aInfo->mInstance);
+
+        srcId    = srcNode.GetId();
+        foundSrc = true;
+    }
+
+    switch (event)
+    {
+    case NeighborTable::kChildAdded:
+    case NeighborTable::kChildRemoved:
+        extAddr  = &AsCoreType(&aInfo->mInfo.mChild.mExtAddress);
+        isActive = (event == NeighborTable::kChildAdded);
+
+        if (event == NeighborTable::kChildRemoved)
+        {
+            Instance &instance = *static_cast<Instance *>(aInfo->mInstance);
+            Neighbor *neighbor =
+                instance.Get<NeighborTable>().FindNeighbor(*extAddr, Neighbor::kInStateAnyExceptInvalid);
+
+            if (neighbor != nullptr && !instance.Get<ChildTable>().Contains(*neighbor))
+            {
+                Log("Suppressing CHILD_REMOVED event because node is in router table");
+                ExitNow();
+            }
+        }
+        break;
+
+    case NeighborTable::kRouterAdded:
+    case NeighborTable::kRouterRemoved:
+        extAddr  = &AsCoreType(&aInfo->mInfo.mRouter.mExtAddress);
+        isActive = (event == NeighborTable::kRouterAdded);
+        break;
+
+    default:
+        break;
+    }
+
+    if (extAddr != nullptr)
+    {
+        Node *node = core.GetNodes().FindMatching(*extAddr);
+
+        if (node != nullptr)
+        {
+            dstId    = node->GetInstance().GetId();
+            foundDst = true;
+        }
+    }
+
+    if (foundSrc && foundDst)
+    {
+        core.mObserver->OnLinkUpdate(srcId, dstId, isActive);
+    }
+    else
+    {
+        Log("HandleNeighborTableChanged: Failed to find srcId or dstId. foundSrc: %d, foundDst: %d", foundSrc,
+            foundDst);
+    }
+
+exit:
+    return;
+}
+
+void Core::HandleStateChanged(otChangedFlags aFlags, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aFlags);
+
+    Observer *observer = Core::Get().GetObserver();
+    Node     *node     = static_cast<Node *>(aContext);
+
+    VerifyOrExit(observer != nullptr && node != nullptr);
+
+    observer->OnNodeStateChanged(node);
+
+    // Decoupled from flags to capture SED parent changes
+    switch (node->Get<Mle::Mle>().GetRole())
+    {
+    case Mle::kRoleChild:
+    {
+        Router::Info parentInfo;
+
+        if (node->Get<Mle::Mle>().GetParentInfo(parentInfo) == kErrorNone)
+        {
+            uint32_t srcId = node->GetInstance().GetId();
+            uint32_t dstId = 0xffff;
+            Node    *rxNode =
+                Core::Get().mNodes.FindMatching(static_cast<const Mac::ExtAddress &>(parentInfo.mExtAddress));
+
+            if (rxNode != nullptr)
+            {
+                dstId = rxNode->GetInstance().GetId();
+            }
+
+            if (dstId != 0xffff && dstId != node->GetLastParentId())
+            {
+                if (node->GetLastParentId() != 0xffff)
+                {
+                    observer->OnLinkUpdate(srcId, node->GetLastParentId(), false);
+                }
+                node->SetLastParentId(dstId);
+                observer->OnLinkUpdate(srcId, dstId, true);
+            }
+        }
+        break;
+    }
+    case Mle::kRoleDetached:
+    {
+        uint32_t srcId = node->GetInstance().GetId();
+
+        for (Node &rxNode : Core::Get().mNodes)
+        {
+            if (&rxNode == node)
+            {
+                continue;
+            }
+
+            if (node->Get<NeighborTable>().FindNeighbor(rxNode.Get<Mac::Mac>().GetExtAddress(),
+                                                        Neighbor::kInStateValid) != nullptr)
+            {
+                uint32_t dstId = rxNode.GetInstance().GetId();
+
+                observer->OnLinkUpdate(srcId, dstId, false);
+                observer->OnLinkUpdate(dstId, srcId, false);
+            }
+        }
+
+        if (node->GetLastParentId() != 0xffff)
+        {
+            observer->OnLinkUpdate(srcId, node->GetLastParentId(), false);
+            node->SetLastParentId(0xffff);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+exit:
+    return;
 }
 
 void Core::UpdateNextAlarmMilli(const Alarm &aAlarm)
@@ -411,6 +601,20 @@ void Core::UpdateNextAlarmMicro(const Alarm &aAlarm)
         }
 
         mNextAlarmTime = Min(mNextAlarmTime, alarmTime);
+    }
+}
+
+bool Core::IsUiConnected(void) const { return mObserver && mObserver->IsConnected(); }
+
+void Core::Reset(void)
+{
+    mNodes.Clear();
+    mCurNodeId     = 0;
+    mNow           = 0;
+    mNextAlarmTime = NumericLimits<uint64_t>::kMax;
+    if (mObserver)
+    {
+        mObserver->OnClearEvents();
     }
 }
 
@@ -486,6 +690,37 @@ void Core::ProcessRadio(Node &aNode)
     static_cast<Radio::Frame &>(aNode.mRadio.mTxFrame).UpdateFcs();
 
     mPcap.WriteFrame(aNode.mRadio.mTxFrame, mNow);
+
+    if (mObserver)
+    {
+        uint32_t dstNodeId = 0xffff; // Default to broadcast / unknown
+
+        if (!dstAddr.IsBroadcast())
+        {
+            for (Node &rxNode : mNodes)
+            {
+                if (&rxNode == &aNode)
+                {
+                    continue;
+                }
+
+                if (rxNode.mRadio.Matches(dstAddr, dstPanId))
+                {
+                    dstNodeId = rxNode.GetInstance().GetId();
+                    break;
+                }
+            }
+        }
+
+        if (!dstAddr.IsBroadcast() && dstNodeId == 0xffff)
+        {
+            Log("ProcessRadio: Failed to resolve dstNodeId for unicast from node %u to %s", aNode.GetInstance().GetId(),
+                dstAddr.ToString().AsCString());
+        }
+
+        mObserver->OnPacketEvent(aNode.GetInstance().GetId(), dstNodeId, aNode.mRadio.mTxFrame.GetPsdu(),
+                                 aNode.mRadio.mTxFrame.GetLength());
+    }
 
     otPlatRadioTxStarted(&aNode.GetInstance(), &aNode.mRadio.mTxFrame);
 

@@ -28,6 +28,8 @@
 
 #include "nexus_node.hpp"
 
+#include "nexus_utils.hpp"
+
 namespace ot {
 namespace Nexus {
 
@@ -132,9 +134,6 @@ void Node::SendEchoRequest(const Ip6::Address &aDestination,
     {
         messageInfo.SetSockAddr(*aSrcAddress);
     }
-
-    Log("Sending Echo Request from Node %lu (%s) to %s (payload-size:%u)", ToUlong(GetId()), GetName(),
-        aDestination.ToString().AsCString(), aPayloadSize);
 
     SuccessOrQuit(Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, aIdentifier));
 }
