@@ -43,8 +43,10 @@ namespace ot {
 
 #if OPENTHREAD_FTD
 
+#if !OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
 #error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
+#endif
 #endif
 
 /**
@@ -55,10 +57,15 @@ class Child : public CslNeighbor
 public:
     static constexpr uint8_t kMaxRequestTlvs = 6;
 
+#if !OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
     /**
      * Maximum number of registered IPv6 addresses per child (excluding the mesh-local EID).
+     *
+     * Not used when `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is set; per-child address
+     * capacity is then determined at runtime by the value passed to `otChildTableInit()`.
      */
     static constexpr uint16_t kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1;
+#endif
 
     /**
      * Represents the iterator for registered IPv6 address list of an MTD child.
@@ -88,6 +95,9 @@ public:
      * Represents an IPv6 address entry registered by an MTD child.
      */
     class Ip6AddrEntry : public Ip6::Address
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+                       , public LinkedListEntry<Ip6AddrEntry>
+#endif
     {
     public:
         /**
@@ -118,14 +128,34 @@ public:
          */
         void SetMlrState(MlrState aState, Child &aChild);
 #endif
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    private:
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+        uint8_t mMlrState;
+#endif
+        Ip6AddrEntry *mNext;
+
+        friend class Child;
+        friend class LinkedList<Ip6AddrEntry>;
+        friend class LinkedListEntry<Ip6AddrEntry>;
+#endif
     };
 
     /**
-     * Represents an array of IPv6 address entries registered by an MTD child.
+     * Represents the collection of IPv6 address entries registered by an MTD child.
      *
-     * This array does not include the mesh-local EID.
+     * When `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is enabled this is a
+     * `LinkedList<Ip6AddrEntry>` whose entries are individually heap-allocated on demand.
+     * Each child is independently capped at the value passed to `otChildTableInit()`.
+     *
+     * When disabled this is a compile-time-sized `Array<Ip6AddrEntry, kNumIp6Addresses>`.
      */
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    typedef LinkedList<Ip6AddrEntry> Ip6AddressArray;
+#else
     typedef Array<Ip6AddrEntry, kNumIp6Addresses> Ip6AddressArray;
+#endif
 
     /**
      * Initializes the `Child` object.
@@ -368,7 +398,21 @@ public:
      * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
      */
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    bool HasAnyMlrRegisteredAddress(void) const
+    {
+        for (const Ip6AddrEntry &entry : mIp6Addresses)
+        {
+            if (entry.mMlrState == static_cast<uint8_t>(kMlrStateRegistered))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+#else
     bool HasAnyMlrRegisteredAddress(void) const { return !mMlrRegisteredSet.IsEmpty(); }
+#endif
 
     /**
      * Returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
@@ -376,17 +420,36 @@ public:
      * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
      */
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    bool HasAnyMlrToRegisterAddress(void) const
+    {
+        for (const Ip6AddrEntry &entry : mIp6Addresses)
+        {
+            if (entry.mMlrState == static_cast<uint8_t>(kMlrStateToRegister))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+#else
     bool HasAnyMlrToRegisterAddress(void) const { return !mMlrToRegisterSet.IsEmpty(); }
+#endif
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
+#if !OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
     typedef BitSet<kNumIp6Addresses> ChildIp6AddressSet;
+#endif
 
     uint32_t mTimeout;
 
     Ip6::InterfaceIdentifier mMeshLocalIid;
     Ip6AddressArray          mIp6Addresses;
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    uint16_t mIp6AddrCount;
+#endif
+#if !OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressSet mMlrToRegisterSet;
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif

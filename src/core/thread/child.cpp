@@ -76,6 +76,20 @@ void Child::Info::SetFrom(const Child &aChild)
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+
+MlrState Child::Ip6AddrEntry::GetMlrState(const Child & /* aChild */) const
+{
+    return static_cast<MlrState>(mMlrState);
+}
+
+void Child::Ip6AddrEntry::SetMlrState(MlrState aState, Child & /* aChild */)
+{
+    mMlrState = static_cast<uint8_t>(aState);
+}
+
+#else // !OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+
 MlrState Child::Ip6AddrEntry::GetMlrState(const Child &aChild) const
 {
     MlrState                   state = kMlrStateRegistering;
@@ -110,6 +124,8 @@ void Child::Ip6AddrEntry::SetMlrState(MlrState aState, Child &aChild)
     aChild.mMlrRegisteredSet.Update(index, aState == kMlrStateRegistered);
 }
 
+#endif // OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -126,10 +142,23 @@ void Child::Clear(void)
 void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    // Free all heap-allocated entries in the per-child linked list.
+    while (!mIp6Addresses.IsEmpty())
+    {
+        Ip6AddrEntry *entry = mIp6Addresses.GetHead();
+        mIp6Addresses.Pop();
+        Get<ChildTable>().FreeIp6AddrEntry(*entry);
+    }
+
+    mIp6AddrCount = 0;
+#else
     mIp6Addresses.Clear();
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterSet.Clear();
     mMlrRegisteredSet.Clear();
+#endif
 #endif
 }
 
@@ -173,10 +202,26 @@ Error Child::GetNextIp6Address(AddressIterator &aIterator, Ip6::Address &aAddres
         }
     }
 
-    VerifyOrExit(aIterator - 1 < mIp6Addresses.GetLength(), error = kErrorNotFound);
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    {
+        const Ip6AddrEntry *entry = mIp6Addresses.GetHead();
+        AddressIterator     idx   = 1;
 
+        while (entry != nullptr && idx < aIterator)
+        {
+            entry = entry->GetNext();
+            idx++;
+        }
+
+        VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+        aAddress = *entry;
+        aIterator++;
+    }
+#else
+    VerifyOrExit(aIterator - 1 < mIp6Addresses.GetLength(), error = kErrorNotFound);
     aAddress = mIp6Addresses[static_cast<Ip6AddressArray::IndexType>(aIterator - 1)];
     aIterator++;
+#endif
 
 exit:
     return error;
@@ -195,8 +240,23 @@ Error Child::AddIp6Address(const Ip6::Address &aAddress)
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    VerifyOrExit(!mIp6Addresses.ContainsMatching(aAddress), error = kErrorAlready);
+    VerifyOrExit(mIp6AddrCount < Get<ChildTable>().GetIp6AddrCapacity(), error = kErrorNoBufs);
+    {
+        Ip6AddrEntry *entry = Get<ChildTable>().AllocIp6AddrEntry();
+        VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
+        static_cast<Ip6::Address &>(*entry) = aAddress;
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+        entry->mMlrState = static_cast<uint8_t>(kMlrStateRegistering);
+#endif
+        mIp6Addresses.Push(*entry);
+        mIp6AddrCount++;
+    }
+#else
     VerifyOrExit(!mIp6Addresses.ContainsMatching(aAddress), error = kErrorAlready);
     error = mIp6Addresses.PushBack(static_cast<const Ip6AddrEntry &>(aAddress));
+#endif
 
 exit:
     return error;
@@ -218,6 +278,14 @@ Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    entry = mIp6Addresses.FindMatching(aAddress);
+    VerifyOrExit(entry != nullptr);
+    SuccessOrAssert(mIp6Addresses.Remove(*entry));
+    Get<ChildTable>().FreeIp6AddrEntry(*entry);
+    mIp6AddrCount--;
+    error = kErrorNone;
+#else
     entry = mIp6Addresses.FindMatching(aAddress);
     VerifyOrExit(entry != nullptr);
 
@@ -240,6 +308,7 @@ Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
     mIp6Addresses.Remove(*entry);
     error = kErrorNone;
+#endif // OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
 
 exit:
     return error;

@@ -46,6 +46,9 @@
 #include "coap/coap_message.hpp"
 #include "common/array.hpp"
 #include "common/callback.hpp"
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+#include "common/heap_array.hpp"
+#endif
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -98,9 +101,13 @@ public:
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState, const BackboneRouter::Config &aConfig);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    typedef Heap::Array<Ip6::Address> MlrAddressArray; ///< Registered MLR addresses array (heap-allocated, runtime-sized).
+#else
     static constexpr uint16_t kMaxMlrAddresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1; ///< Max MLR addresses
 
     typedef Array<Ip6::Address, kMaxMlrAddresses> MlrAddressArray; ///< Registered MLR addresses array.
+#endif
 
     /**
      * Updates the Multicast Subscription Table according to the Child information.

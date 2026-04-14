@@ -912,6 +912,32 @@ void otThreadGetNextHopAndPathCost(otInstance *aInstance,
  * @}
  */
 
+/**
+ * Sets the maximum number of IPv6 address entries per child on an FTD.
+ *
+ * Requires `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` and `OPENTHREAD_FTD`.
+ *
+ * When `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is enabled on an FTD, the
+ * compile-time `OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD` is inert. Instead, IPv6 address
+ * entries are individually heap-allocated on demand as children register addresses. Each
+ * child is independently capped at `aAddrsPerChild` entries, ensuring no single child can
+ * exhaust address storage at the expense of others.
+ *
+ * Must be called before `otThreadSetEnabled()`. If it has not been called,
+ * `otThreadSetEnabled()` returns `OT_ERROR_INVALID_STATE`.
+ *
+ * This function can only be called once. Subsequent calls return `OT_ERROR_ALREADY`.
+ *
+ * @param[in] aInstance      A pointer to an OpenThread instance.
+ * @param[in] aAddrsPerChild Maximum number of IPv6 address entries per child.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the per-child address capacity.
+ * @retval OT_ERROR_ALREADY          The capacity has already been set.
+ * @retval OT_ERROR_INVALID_ARGS     @p aAddrsPerChild is 0.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Feature is not enabled (`OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is 0).
+ */
+otError otChildTableInit(otInstance *aInstance, uint16_t aAddrsPerChild);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

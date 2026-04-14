@@ -393,6 +393,15 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
 uint16_t otThreadGetVersion(void) { return kThreadVersion; }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+otError otChildTableInit(otInstance *aInstance, uint16_t aAddrsPerChild)
+{
+    return AsCoreType(aInstance).Get<ChildTable>().Init(aAddrsPerChild);
+}
+#else
+otError otChildTableInit(otInstance *, uint16_t) { return kErrorNotImplemented; }
+#endif
+
 bool otThreadIsSingleton(otInstance *aInstance)
 {
     bool isSingleton = false;

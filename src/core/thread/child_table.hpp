@@ -108,6 +108,62 @@ public:
      */
     void Clear(void);
 
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    /**
+     * Sets the maximum number of IPv6 address entries per child.
+     *
+     * Requires `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE`.
+     *
+     * Each child is independently capped at `aAddrsPerChild` heap-allocated entries,
+     * ensuring that no single child can exhaust address storage at the expense of others.
+     * This satisfies the Thread specification requirement that a parent MUST support at
+     * least four IPv6 addresses per MTD child.
+     *
+     * Must be called before `otThreadSetEnabled()`. If it has not been called,
+     * `otThreadSetEnabled()` returns `OT_ERROR_INVALID_STATE`.
+     *
+     * This function can only be called once. Subsequent calls return `OT_ERROR_ALREADY`.
+     *
+     * @param[in] aAddrsPerChild  Maximum IPv6 address entries per child.
+     *
+     * @retval kErrorNone         Successfully set the per-child address capacity.
+     * @retval kErrorAlready      The capacity has already been set.
+     * @retval kErrorInvalidArgs  @p aAddrsPerChild is 0.
+     */
+    Error Init(uint16_t aAddrsPerChild);
+
+    /**
+     * Indicates whether the per-child address capacity has been set via `Init()`.
+     *
+     * @retval TRUE   Initialized.
+     * @retval FALSE  Not yet initialized.
+     */
+    bool IsInitialized(void) const { return mIp6AddrCapacity != 0; }
+
+    /**
+     * Returns the per-child IPv6 address capacity set by `Init()`.
+     *
+     * @returns Maximum number of IPv6 address entries per child.
+     */
+    uint16_t GetIp6AddrCapacity(void) const { return mIp6AddrCapacity; }
+
+    /**
+     * Heap-allocates one `Ip6AddrEntry`.
+     *
+     * The caller is responsible for enforcing the per-child limit before calling this.
+     *
+     * @returns A pointer to an allocated entry, or `nullptr` if heap allocation fails.
+     */
+    Child::Ip6AddrEntry *AllocIp6AddrEntry(void);
+
+    /**
+     * Frees a heap-allocated `Ip6AddrEntry`.
+     *
+     * @param[in] aEntry  The entry to free.
+     */
+    void FreeIp6AddrEntry(Child::Ip6AddrEntry &aEntry);
+#endif
+
     /**
      * Returns the child table index for a given `Child` instance.
      *
@@ -340,6 +396,9 @@ private:
     uint16_t mNextChildId;
     uint16_t mMaxChildrenAllowed;
     Child    mChildren[kMaxChildren];
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    uint16_t mIp6AddrCapacity;
+#endif
 };
 
 } // namespace ot

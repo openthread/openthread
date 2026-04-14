@@ -77,6 +77,10 @@
  * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
+ *
+ * On an FTD, this controls the compile-time size of the per-child address storage in each `Child`
+ * entry. When `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is set, all sizing is determined
+ * at runtime via `otChildTableInit()` and this config is not used for FTD child table sizing.
  */
 #ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
 #define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 4

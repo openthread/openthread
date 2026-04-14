@@ -3392,6 +3392,11 @@ otError Interpreter::ProcessIfconfigInit(Arg aArgs[])
     unicastPool   = nullptr;
     multicastPool = nullptr;
 
+#if OPENTHREAD_FTD
+    // On an FTD, also set the per-child address capacity to match the unicast + multicast pool size.
+    IgnoreError(otChildTableInit(GetInstancePtr(), static_cast<uint16_t>(unicastPoolSize + multicastPoolSize)));
+#endif
+
 exit:
     otHeapFree(unicastPool);
     otHeapFree(multicastPool);

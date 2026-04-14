@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/heap.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -81,6 +82,9 @@ ChildTable::ChildTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mNextChildId(Mle::kMaxChildId)
     , mMaxChildrenAllowed(kMaxChildren)
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    , mIp6AddrCapacity(0)
+#endif
 {
     for (Child &child : mChildren)
     {
@@ -96,6 +100,28 @@ void ChildTable::Clear(void)
         child.Clear();
     }
 }
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+Error ChildTable::Init(uint16_t aAddrsPerChild)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aAddrsPerChild != 0, error = kErrorInvalidArgs);
+    VerifyOrExit(mIp6AddrCapacity == 0, error = kErrorAlready);
+
+    mIp6AddrCapacity = aAddrsPerChild;
+
+exit:
+    return error;
+}
+
+Child::Ip6AddrEntry *ChildTable::AllocIp6AddrEntry(void)
+{
+    return static_cast<Child::Ip6AddrEntry *>(Heap::CAlloc(1, sizeof(Child::Ip6AddrEntry)));
+}
+
+void ChildTable::FreeIp6AddrEntry(Child::Ip6AddrEntry &aEntry) { Heap::Free(&aEntry); }
+#endif
 
 Child *ChildTable::GetChildAtIndex(uint16_t aChildIndex)
 {

@@ -126,6 +126,43 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
+  toranj-cli-ip6-ext-addr-pool:
+    name: toranj-cli-ip6-ext-addr-pool
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: '3.12'
+        cache: pip
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        mkdir -p build/toranj-ip6-pool
+        cd build/toranj-ip6-pool
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON \
+            -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_15_4=ON -DOT_TREL=OFF \
+            -DOT_PROJECT_CONFIG=../../tests/toranj/openthread-core-toranj-config-ip6-pool-test.h \
+            ../..
+        ninja ot-cli-ftd
+    - name: Run
+      run: |
+        cd tests/toranj/cli
+        top_builddir=$(pwd)/../../../build/toranj-ip6-pool \
+            python3 test-ip6-ext-addr-pool-child-table.py
+
   toranj-unittest:
     name: toranj-unittest
     runs-on: ubuntu-24.04
