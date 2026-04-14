@@ -82,6 +82,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_COAP_FETCH_API_ENABLE
+ *
+ * Define to 1 to enable the CoAP Fetch API.
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_FETCH_API_ENABLE
+#define OPENTHREAD_CONFIG_COAP_FETCH_API_ENABLE 0
+#endif
+
+
+/**
  * @def OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH
  *
  * This setting configures the maximum length of one block during a CoAP Block-Wise Transfer.

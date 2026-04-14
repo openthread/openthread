@@ -721,6 +721,26 @@ void CoapBase::ProcessReceivedRequest(Msg &aRxMsg)
 
     SuccessOrExit(error = aRxMsg.mMessage.ReadUriPathOptions(uriPath));
 
+#if OPENTHREAD_CONFIG_COAP_FETCH_API_ENABLE
+    if (aRxMsg.GetCode() == kCodeFetch)
+    {
+        bool hasOscoreOption     = false;
+        bool hasContentFmtOption = false;
+
+        SuccessOrExit(error = aRxMsg.mMessage.ReadFetchRequestOptions(hasOscoreOption, hasContentFmtOption));
+
+        if (!hasOscoreOption && !hasContentFmtOption)
+        {
+            if (!aRxMsg.mMessageInfo.GetSockAddr().IsMulticast())
+            {
+                IgnoreReturnValue(SendResponse(kCodeUnsupportedFormat, aRxMsg));
+            }
+
+            ExitNow();
+        }
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     {
         bool didHandle = false;
