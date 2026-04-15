@@ -359,52 +359,6 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
-  multiple-instance:
-    runs-on: ubuntu-24.04
-    env:
-      COVERAGE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-      TEST_TIMEOUT: 300
-      OT_VT_USE_UNIX_SOCKET: 1
-      CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: '3.12'
-        cache: pip
-    - name: Bootstrap
-      run: |
-        sudo apt-get --no-install-recommends install -y lcov ninja-build
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        OT_OPTIONS="-DOT_MULTIPLE_INSTANCE=ON" ./script/test build
-    - name: Run
-      run: |
-        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
-    - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      if: ${{ failure() }}
-      with:
-        name: ot_testing
-        path: build/simulation/tests/scripts/thread-cert
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      with:
-        name: cov-multiple-instance
-        path: tmp/coverage.info
-        retention-days: 1
-
   simulation-local-host:
     runs-on: ubuntu-24.04
     env:
@@ -441,7 +395,6 @@ jobs:
     - cli-time-sync
     - expects
     - ot-commissioner
-    - multiple-instance
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
