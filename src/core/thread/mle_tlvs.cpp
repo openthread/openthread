@@ -196,5 +196,24 @@ void LeaderDataTlvValue::Get(LeaderData &aLeaderData) const
     aLeaderData.SetLeaderRouterId(mLeaderRouterId);
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// CslClockAccuracyTlvValue
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+CslClockAccuracyTlvValue::CslClockAccuracyTlvValue(uint8_t aClockAccuracy, uint8_t aUncertainty)
+    : mClockAccuracy(aClockAccuracy)
+    , mUncertainty(aUncertainty)
+{
+}
+
+void CslClockAccuracyTlvValue::Get(Mac::CslAccuracy &aAccuracy) const
+{
+    aAccuracy.SetClockAccuracy(mClockAccuracy);
+    aAccuracy.SetUncertainty(mUncertainty);
+}
+
+#endif
+
 } // namespace Mle
 } // namespace ot

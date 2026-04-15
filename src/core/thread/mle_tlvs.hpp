@@ -926,62 +926,43 @@ private:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
 /**
- * Implements CSL Clock Accuracy TLV generation and parsing.
+ * Represents CSL Clock Accuracy TLV value.
  */
 OT_TOOL_PACKED_BEGIN
-class CslClockAccuracyTlv : public Tlv, public TlvInfo<Tlv::kCslClockAccuracy>
+class CslClockAccuracyTlvValue
 {
 public:
     /**
-     * Initializes the TLV.
+     * Default constructor.
      */
-    void Init(void)
-    {
-        SetType(kCslClockAccuracy);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+    CslClockAccuracyTlvValue(void) = default;
 
     /**
-     * Indicates whether or not the TLV appears to be well-formed.
+     * Initializes the TLV value with given clock accuracy and uncertainty.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[in] aClockAccuracy  The clock accuracy in ppm.
+     * @param[in] aUncertainty    The clock uncertainty in units of 10 us.
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    CslClockAccuracyTlvValue(uint8_t aClockAccuracy, uint8_t aUncertainty);
 
     /**
-     * Returns the CSL Clock Accuracy value.
+     * Gets the CSL clock accuracy and uncertainty values.
      *
-     * @returns The CSL Clock Accuracy value.
+     * @param[out] aAccuracy  A reference to a `Mac::CslAccuracy` to return the values.
      */
-    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
-
-    /**
-     * Sets the CSL Clock Accuracy value.
-     *
-     * @param[in]  aCslClockAccuracy  The CSL Clock Accuracy value.
-     */
-    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
-
-    /**
-     * Returns the Clock Uncertainty value.
-     *
-     * @returns The Clock Uncertainty value.
-     */
-    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
-
-    /**
-     * Sets the CSL Uncertainty value.
-     *
-     * @param[in]  aCslUncertainty  The CSL Uncertainty value.
-     */
-    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
+    void Get(Mac::CslAccuracy &aAccuracy) const;
 
 private:
-    uint8_t mCslClockAccuracy;
-    uint8_t mCslUncertainty;
+    uint8_t mClockAccuracy;
+    uint8_t mUncertainty;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines CSL Clock Accuracy TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kCslClockAccuracy, CslClockAccuracyTlvValue> CslClockAccuracyTlv;
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**

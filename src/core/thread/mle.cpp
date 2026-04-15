@@ -3852,13 +3852,8 @@ Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
-    CslClockAccuracyTlv cslClockAccuracyTlv;
-
-    cslClockAccuracyTlv.Init();
-    cslClockAccuracyTlv.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
-    cslClockAccuracyTlv.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
-
-    return Append(cslClockAccuracyTlv);
+    return Tlv::Append<CslClockAccuracyTlv>(
+        *this, CslClockAccuracyTlvValue(Get<Radio>().GetCslAccuracy(), Get<Radio>().GetCslUncertainty()));
 }
 #endif
 
@@ -4237,13 +4232,11 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 Error Mle::RxMessage::ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const
 {
-    Error               error;
-    CslClockAccuracyTlv clockAccuracyTlv;
+    Error                    error;
+    CslClockAccuracyTlvValue tlvValue;
 
-    SuccessOrExit(error = Tlv::FindTlv(*this, clockAccuracyTlv));
-    VerifyOrExit(clockAccuracyTlv.IsValid(), error = kErrorParse);
-    aCslAccuracy.SetClockAccuracy(clockAccuracyTlv.GetCslClockAccuracy());
-    aCslAccuracy.SetUncertainty(clockAccuracyTlv.GetCslUncertainty());
+    SuccessOrExit(error = Tlv::Find<CslClockAccuracyTlv>(*this, tlvValue));
+    tlvValue.Get(aCslAccuracy);
 
 exit:
     return error;
