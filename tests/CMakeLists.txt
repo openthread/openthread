@@ -45,3 +45,5 @@ endif()
 if(OT_PLATFORM STREQUAL "nexus")
     add_subdirectory(nexus)
 endif()
+
+add_subdirectory(spinel-only)

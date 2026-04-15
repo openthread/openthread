@@ -271,11 +271,32 @@ build_multi_radio_links()
     ./script/cmake-build simulation -DOT_LOG_LEVEL=DEBG \
         -DOT_TREL=ON -DOT_15_4=ON
 }
+
+build_spinel_only()
+{
+    # Build only the spinel-related library targets.
+    reset_source
+    OT_CMAKE_NINJA_TARGET="openthread-radio-spinel openthread-spinel-ncp openthread-spinel-rcp openthread-hdlc openthread-platform" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_APP_CLI=OFF \
+        -DOT_APP_NCP=OFF \
+        -DOT_APP_RCP=OFF
+
+    # Link test: verify spinel-only files link into a final executable.
+    reset_source
+    OT_CMAKE_NINJA_TARGET="ot-test-spinel-only-link" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_APP_CLI=OFF \
+        -DOT_APP_NCP=OFF \
+        -DOT_APP_RCP=OFF
+}
+
 main()
 {
     build_all_features
     build_nest_common
     build_multi_radio_links
+    build_spinel_only
 }
 
 main "$@"
