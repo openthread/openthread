@@ -809,6 +809,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
 {
     Error           error = kErrorNone;
     ExtensionHeader extHeader;
+    bool            first = true;
 
     while (aReceive || aNextHeader == kProtoHopOpts)
     {
@@ -817,6 +818,9 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
         switch (aNextHeader)
         {
         case kProtoHopOpts:
+            VerifyOrExit(first, error = kErrorDrop);
+            OT_FALL_THROUGH;
+
         case kProtoDstOpts:
             SuccessOrExit(error = HandleOptions(*aMessagePtr, aHeader, aReceive));
             break;
@@ -838,6 +842,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
         }
 
         aNextHeader = extHeader.GetNextHeader();
+        first       = false;
     }
 
 exit:
