@@ -45,6 +45,7 @@
 #include "common/numeric_limits.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/network_diagnostic_types.hpp"
 #include "thread/tmf.hpp"
 #include "thread/uri_paths.hpp"
 
@@ -56,7 +57,10 @@ class MeshDiag;
 
 namespace MeshCoP {
 class TcatAgent;
+namespace BorderAgent {
+class Manager;
 }
+} // namespace MeshCoP
 
 namespace NetworkDiagnostic {
 
@@ -77,6 +81,7 @@ class Client;
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class MeshCoP::BorderAgent::Manager;
     friend class MeshCoP::TcatAgent;
     friend class Client;
 
@@ -119,8 +124,7 @@ public:
     }
 
 private:
-    static constexpr uint16_t kMaxChildEntries              = 398;
-    static constexpr uint16_t kAnswerMessageLengthThreshold = 800;
+    static constexpr uint16_t kMaxChildEntries = 398;
 
     class TlvTypeListIterator
     {
@@ -139,25 +143,6 @@ private:
         BitSet<NumericLimits<uint8_t>::kMax + 1> mProcessedTlvs;
     };
 
-#if OPENTHREAD_FTD
-    struct AnswerInfo
-    {
-        AnswerInfo(void)
-            : mAnswerIndex(0)
-            , mQueryId(0)
-            , mHasQueryId(false)
-            , mFirstAnswer(nullptr)
-        {
-        }
-
-        uint16_t          mAnswerIndex;
-        uint16_t          mQueryId;
-        bool              mHasQueryId;
-        Message::Priority mPriority;
-        Coap::Message    *mFirstAnswer;
-    };
-#endif
-
     Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
     Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
@@ -167,18 +152,18 @@ private:
 #endif
 
 #if OPENTHREAD_MTD
-    void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
+    void           SendAnswer(const Ip6::Address &aDestination, const Coap::Message &aRequest);
+    Coap::Message *PrepareAnswer(const Coap::Message &aRequest);
 #elif OPENTHREAD_FTD
-    Error AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo);
     bool  IsLastAnswer(const Coap::Message &aAnswer) const;
     void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
-    void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest);
+    void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest);
+    Error PrepareAnswers(const Coap::Message &aRequest, AnswerBuilder &aAnswerBuilder);
     void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
     Error AppendChildTable(Message &aMessage);
-    Error AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error AppendRouterNeighborTlvs(Coap::Message *&aAnswer, AnswerInfo &aInfo);
-    Error AppendChildTableIp6AddressList(Coap::Message *&aAnswer, AnswerInfo &aInfo);
+    Error AppendChildTableAsChildTlvs(AnswerBuilder &aAnswerBuilder);
+    Error AppendRouterNeighborTlvs(AnswerBuilder &aAnswerBuilder);
+    Error AppendChildTableIp6AddressList(AnswerBuilder &aAnswerBuilder);
     Error AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
     Error AppendEnhancedRoute(Message &aMessage);
 
@@ -195,6 +180,8 @@ private:
     Error AppendBorderRouterIfAddrs(Message &aMessage);
     Error AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage);
 #endif
+
+    Coap::Message *PrepareResponse(Coap::Msg &aMsg);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 

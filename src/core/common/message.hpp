@@ -1732,6 +1732,15 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
+     * Enqueues all messages from another message queue at the end of this queue.
+     *
+     * Upon return, @p aOtherQueue will be empty.
+     *
+     * @param[in,out] aOtherQueue  The other message queue to enqueue from.
+     */
+    void EnqueueAllFrom(MessageQueue &aOtherQueue);
+
+    /**
      * Gets the information about number of messages and buffers in the queue.
      *
      * @param[out] aInfo  A reference to `Info` structure to update.

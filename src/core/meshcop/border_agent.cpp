@@ -653,6 +653,18 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     case kUriProxyTx:
         HandleTmfProxyTx(aMsg);
         break;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+    case kUriInspectorKeepAlive:
+        HandleTmfInspectorKeepAlive(aMsg);
+        break;
+    case kUriDiagnosticGetRequest:
+        HandleTmfDiagGetRequest(aMsg);
+        break;
+    case kUriDiagnosticGetQuery:
+        HandleTmfDiagGetQuery(aMsg);
+        break;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     case kUriEnrollerRegister:
     case kUriEnrollerKeepAlive:
@@ -1161,6 +1173,89 @@ void Manager::CoapDtlsSession::CopyInfoTo(SessionInfo &aInfo, UptimeMsec aUptime
     aInfo.mIsCommissioner        = IsActiveCommissioner();
     aInfo.mLifetime              = aUptimeNow - GetAllocationTime();
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+
+void Manager::CoapDtlsSession::HandleTmfInspectorKeepAlive(Coap::Msg &aMsg)
+{
+    Log<kUriInspectorKeepAlive>(kReceive);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    VerifyOrExit(!Get<EphemeralKeyManager>().OwnsSession(*this));
+#endif
+
+    mTimer.Start(kKeepAliveTimeout);
+
+    if (aMsg.IsConfirmable())
+    {
+        SuccessOrExit(SendAckResponse(aMsg));
+    }
+
+exit:
+    return;
+}
+
+void Manager::CoapDtlsSession::HandleTmfDiagGetRequest(Coap::Msg &aMsg)
+{
+    OwnedPtr<Coap::Message> response;
+
+    Log<kUriDiagnosticGetRequest>(kReceive);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    VerifyOrExit(!Get<EphemeralKeyManager>().OwnsSession(*this));
+#endif
+
+    response.Reset(Get<NetworkDiagnostic::Server>().PrepareResponse(aMsg));
+    VerifyOrExit(response != nullptr);
+
+    IgnoreError(SendMessage(response.PassOwnership()));
+
+exit:
+    return;
+}
+
+void Manager::CoapDtlsSession::HandleTmfDiagGetQuery(Coap::Msg &aMsg)
+{
+    OwnedPtr<Coap::Message> answer;
+
+    Log<kUriDiagnosticGetQuery>(kReceive);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    VerifyOrExit(!Get<EphemeralKeyManager>().OwnsSession(*this));
+#endif
+
+    if (aMsg.IsConfirmable())
+    {
+        IgnoreError(SendAckResponse(aMsg));
+    }
+
+#if OPENTHREAD_FTD
+    {
+        NetworkDiagnostic::AnswerBuilder answerBuilder(GetInstance());
+
+        SuccessOrExit(Get<NetworkDiagnostic::Server>().PrepareAnswers(aMsg.mMessage, answerBuilder));
+
+        for (Coap::Message &message : answerBuilder.GetAnswers())
+        {
+            answerBuilder.GetAnswers().Dequeue(message);
+            answer.Reset(&message);
+            IgnoreError(SendMessage(answer.PassOwnership()));
+        }
+    }
+#elif OPENTHREAD_MTD
+    {
+        answer.Reset(Get<NetworkDiagnostic::Server>().PrepareAnswer(aMsg.mMessage));
+        VerifyOrExit(answer != nullptr);
+
+        IgnoreError(SendMessage(answer.PassOwnership()));
+    }
+#endif
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 

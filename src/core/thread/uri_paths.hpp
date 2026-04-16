@@ -90,6 +90,7 @@ enum Uri : uint8_t
     kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
     kUriHistoryAnswer,          ///< History Answer ("h/an")
     kUriHistoryQuery,           ///< History Query ("h/qy")
+    kUriInspectorKeepAlive,     ///< Inspector Keep Alive ("i/ka")
     kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
     kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
     kUriMlr,                    ///< Multicast Listener Registration ("n/mr")

@@ -135,6 +135,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+ *
+ * Define to 1 to enable the Border Agent Inspector feature.
+ *
+ * The Inspector feature provides diagnostic and management capabilities over the secure CoAP DTLS session.
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
  *
  * Define to 1 to enable the Border Agent Tracker feature.

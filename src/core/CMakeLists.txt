@@ -268,6 +268,7 @@ set(COMMON_SOURCES
     thread/network_data_types.cpp
     thread/network_diagnostic.cpp
     thread/network_diagnostic_tlvs.cpp
+    thread/network_diagnostic_types.cpp
     thread/panid_query_server.cpp
     thread/peer.cpp
     thread/peer_table.cpp

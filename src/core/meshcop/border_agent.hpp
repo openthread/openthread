@@ -347,6 +347,12 @@ private:
         static Error ReadSteeringDataTlv(const Message &aMessage, SteeringData &aSteeringData);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_INSPECTOR_ENABLE
+        void HandleTmfInspectorKeepAlive(Coap::Msg &aMsg);
+        void HandleTmfDiagGetRequest(Coap::Msg &aMsg);
+        void HandleTmfDiagGetQuery(Coap::Msg &aMsg);
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
         void LogUri(Action aAction, const char *aUriString, const char *aTxt);
 
