@@ -92,7 +92,16 @@ void Leader::IncrementVersions(bool aIncludeStable)
     }
 
     mVersion++;
+
+#if OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+    // Coalesce rapid Network Data changes into a single propagation.
+    // Restart the timer on each change so that we wait for a settling
+    // period after the last change before propagating.
+    mCoalesceTimer.Start(kCoalesceDelay);
+#else
     SignalNetDataChanged();
+#endif
+
     ExitNow();
 
 exit:
