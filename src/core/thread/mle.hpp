@@ -1299,6 +1299,8 @@ private:
     static constexpr uint32_t kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL;
     static constexpr uint32_t kAttachBackoffDelayToResetCounter =
         OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
+    static constexpr uint32_t kAttachBackoffParentReachableInterval =
+        OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_PARENT_REACHABLE_INTERVAL;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Number of Parent Requests in first and next attach cycles
@@ -1933,6 +1935,7 @@ private:
         void             Attach(AttachMode aMode);
         void             CancelAttachOnRoleChange(void);
         void             ResetAttachCounter(void) { mAttachCounter = 0; }
+        uint16_t         GetAttachCounter(void) const { return mAttachCounter; }
         AttachMode       GetAttachMode(void) const { return mMode; }
         ParentCandidate &GetParentCandidate(void) { return mParentCandidate; }
         void             ClearParentCandidate(void) { mParentCandidate.Clear(); }
@@ -1990,6 +1993,7 @@ private:
         using AttachTimer = TimerMilliIn<Mle, &Mle::HandleAttacherTimer>;
 
         bool                    mReceivedResponseFromParent : 1;
+        bool                    mShouldCapBackoff : 1;
         State                   mState;
         AttachMode              mMode;
         ReattachMode            mReattachMode;

@@ -186,6 +186,23 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_PARENT_REACHABLE_INTERVAL
+ *
+ * Specifies the maximum backoff wait interval (in milliseconds) used when a Child ID Request was sent to a parent with
+ * good link quality (link quality 2 or 3) but no Child ID Response was received. This caps the exponential backoff
+ * growth, ensuring the device retries sooner when the parent is likely reachable but the attach handshake did not
+ * complete (e.g., due to channel congestion).
+ *
+ * The cap is applied as `min(normal_backoff_delay, this_value)`. It only takes effect when the computed exponential
+ * backoff exceeds this value.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE`).
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_PARENT_REACHABLE_INTERVAL
+#define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_PARENT_REACHABLE_INTERVAL 60000 // 60 seconds = 1 minute
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL
  *
  * Specifies the delay wait interval (in milliseconds) used by attach backoff feature after a successful attach before
