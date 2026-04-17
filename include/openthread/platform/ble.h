@@ -74,10 +74,10 @@ extern "C" {
 #define OT_BLE_ADV_INTERVAL_MAX 0x4000
 
 /**
- * Default interval for advertising packet (ms).
+ * Default interval for advertising packet in OT_BLE_ADV_INTERVAL_UNIT units (100 ms).
  */
 
-#define OT_BLE_ADV_INTERVAL_DEFAULT 100
+#define OT_BLE_ADV_INTERVAL_DEFAULT 160
 
 /**
  * Unit used to calculate interval duration (0.625ms).
@@ -104,13 +104,13 @@ extern "C" {
 #define OT_BLE_ATT_MTU_DEFAULT 23
 
 /**
- * Default power value for BLE.
+ * Default Tx power value for BLE in dBm.
  */
 
 #define OT_BLE_DEFAULT_POWER 0
 
 /**
- * TOBLE service UUID
+ * ToBLE service UUID (a GATT service UUID for Thread over BLE)
  */
 
 #define OT_TOBLE_SERVICE_UUID 0xfffb
@@ -130,7 +130,7 @@ typedef struct otBleLinkCapabilities
  */
 typedef struct otBleRadioPacket
 {
-    uint8_t *mValue;  ///< The value of an attribute
+    uint8_t *mValue;  ///< Pointer to the packet data
     uint16_t mLength; ///< Length of the @p mValue.
     int8_t   mPower;  ///< Transmit/receive power in dBm.
 } otBleRadioPacket;
@@ -171,18 +171,16 @@ otError otPlatBleDisable(otInstance *aInstance);
  * @section Bluetooth Low Energy GAP.
  ***************************************************************************/
 /**
- * Gets BLE Advertising buffer.
+ * Gets a platform-provided buffer for BLE advertising data.
  *
  * @note This function shall be used only for BLE Peripheral role.
- * Returned buffer should have enough space to fit max advertisement
- * defined by specification.
+ * The platform must provide a buffer of at least @p OT_TCAT_ADVERTISEMENT_MAX_LEN bytes.
  *
- * @param[in] aInstance          The OpenThread instance structure.
- * @param[in] aAdvertisementData The formatted TCAT advertisement frame.
- * @param[in] aAdvertisementLen  The TCAT advertisement frame length.
+ * @param[in]  aInstance             The OpenThread instance structure.
+ * @param[out] aAdvertisementBuffer  A pointer to be set to the platform-provided advertisement buffer.
  *
- * @retval OT_ERROR_NONE           Advertising procedure has been started.
- * @retval OT_ERROR_NO_BUFS        No bufferspace available.
+ * @retval OT_ERROR_NONE      Successfully retrieved the advertisement buffer.
+ * @retval OT_ERROR_NO_BUFS   No buffer space available.
  */
 otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvertisementBuffer);
 
@@ -190,12 +188,13 @@ otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvert
  * Sets BLE Advertising data.
  *
  * @note This function shall be used only for BLE Peripheral role.
+ * It shall only be called while advertising is not active.
  *
  * @param[in] aInstance          The OpenThread instance structure.
  * @param[in] aAdvertisementData The formatted TCAT advertisement frame.
- * @param[in] aAdvertisementLen  The TCAT advertisement frame length.
+ * @param[in] aAdvertisementLen  The length of the @p aAdvertisementData frame.
  *
- * @retval OT_ERROR_NONE           Advertising procedure has been started.
+ * @retval OT_ERROR_NONE           Advertising data set successfully.
  * @retval OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
  * @retval OT_ERROR_INVALID_ARGS   Invalid value has been supplied.
  */
@@ -205,12 +204,13 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
  * Updates BLE Advertising data.
  *
  * @note This function shall be used only for BLE Peripheral role.
+ * It shall only be called while advertising is active.
  *
  * @param[in] aInstance          The OpenThread instance structure.
  * @param[in] aAdvertisementData The formatted TCAT advertisement frame.
- * @param[in] aAdvertisementLen  The TCAT advertisement frame length.
+ * @param[in] aAdvertisementLen  The length of the @p aAdvertisementData frame.
  *
- * @retval OT_ERROR_NONE           Advertising procedure has been started.
+ * @retval OT_ERROR_NONE           Advertising data updated successfully.
  * @retval OT_ERROR_FAILED         Update of data failed.
  * @retval OT_ERROR_INVALID_ARGS   Invalid value has been supplied.
  */
@@ -222,6 +222,8 @@ otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisement
  * The BLE device shall use undirected advertising with no filter applied.
  * A single BLE Advertising packet must be sent on all advertising
  * channels (37, 38 and 39).
+ * The advertising shall remain active until either otPlatBleGapAdvStop() is
+ * called or a BLE Central Device connects (otPlatBleGapOnConnected()).
  *
  * @note This function shall be used only for BLE Peripheral role.
  *
@@ -272,7 +274,7 @@ extern void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnecti
  * Disconnects BLE connection.
  *
  * The BLE device shall use the Remote User Terminated Connection (0x13) reason
- * code when disconnecting from the peer BLE device..
+ * code when disconnecting from the peer BLE device.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -315,7 +317,7 @@ extern void otPlatBleGattOnMtuUpdate(otInstance *aInstance, uint16_t aMtu);
  *
  * @param[in] aInstance   The OpenThread instance structure.
  * @param[in] aHandle     The handle of the attribute to be indicated.
- * @param[in] aPacket     A pointer to the packet contains value to be indicated.
+ * @param[in] aPacket     A pointer to the packet containing the value to be indicated.
  *
  * @retval OT_ERROR_NONE           ATT Handle Value Indication has been sent.
  * @retval OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
@@ -332,22 +334,24 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, con
  *
  * @param[in] aInstance   The OpenThread instance structure.
  * @param[in] aHandle     The handle of the attribute to be written.
- * @param[in] aPacket     A pointer to the packet contains value to be written to the attribute.
+ * @param[in] aPacket     A pointer to the packet containing the value to be written to the attribute.
  */
 extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket);
 
 /**
- * Function to retrieve from platform BLE link capabilities.
+ * Retrieve BLE link capabilities from the platform.
  *
  * @param[in]   aInstance             The OpenThread instance structure.
- * @param[out]  aBleLinkCapabilities  The pointer to retrieve the BLE ling capabilities.
+ * @param[out]  aBleLinkCapabilities  The pointer to retrieve the BLE link capabilities into.
  */
 void otPlatBleGetLinkCapabilities(otInstance *aInstance, otBleLinkCapabilities *aBleLinkCapabilities);
 
 /**
- * Function to retrieve from platform multiradio support of BLE and IEEE.
+ * Check if the platform has multi-radio support for BLE and IEEE 802.15.4.
  *
- * @param[in] aInstance             The OpenThread instance structure.
+ * @param[in] aInstance The OpenThread instance structure.
+ *
+ * @returns TRUE if the platform supports simultaneous BLE and IEEE 802.15.4 operation, FALSE otherwise.
  */
 bool otPlatBleSupportsMultiRadio(otInstance *aInstance);
 /**
