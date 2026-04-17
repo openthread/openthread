@@ -28,12 +28,15 @@
 
 #include "platform-simulation.h"
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
 #include <errno.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <openthread/error.h>
+#include <openthread/logging.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
@@ -43,7 +46,9 @@
 #define PLAT_BLE_MSG_DATA_MAX 2048
 static uint8_t sBleBuffer[PLAT_BLE_MSG_DATA_MAX];
 
-static int sFd = -1;
+static int  sFd              = -1;
+static bool sIsConnected     = false;
+static bool sIsDisconnecting = false;
 
 static const uint16_t kPortBase = 10000;
 static uint16_t       sPort     = 0;
@@ -109,27 +114,47 @@ otError otPlatBleEnable(otInstance *aInstance)
 
 otError otPlatBleDisable(otInstance *aInstance)
 {
-    deinitFds();
     OT_UNUSED_VARIABLE(aInstance);
+    deinitFds();
+    sIsConnected     = false;
+    sIsDisconnecting = false;
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aInterval);
+    if (sIsDisconnecting) // finalize the disconnection of the TCAT client
+    {
+        sIsConnected     = false;
+        sIsDisconnecting = false;
+    }
+    if (sIsConnected)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+    otLogDebgPlat("BLE adv start (interval %u)", aInterval);
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    otLogDebgPlat("BLE adv stop");
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    if (!sIsConnected && !sIsDisconnecting)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+    if (!sIsDisconnecting) // check, to avoid reentrant calls
+    {
+        sIsDisconnecting = true;
+        otPlatBleGapOnDisconnected(aInstance, 0);
+    }
     return OT_ERROR_NONE;
 }
 
@@ -193,6 +218,14 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
         if (rval > 0)
         {
             otBleRadioPacket myPacket;
+
+            if (!sIsConnected)
+            {
+                sIsConnected = true;
+                otLogDebgPlat("BLE client connected");
+                otPlatBleGapOnConnected(aInstance, 0);
+            }
+
             myPacket.mValue  = sBleBuffer;
             myPacket.mLength = (uint16_t)rval;
             myPacket.mPower  = 0;
@@ -215,6 +248,22 @@ exit:
     return;
 }
 
+/* Weak stubs for callbacks defined in the FTD/MTD core library, not available for RCP targets. */
+
+OT_TOOL_WEAK void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+    assert(false);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+    assert(false);
+}
+
 OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aInstance,
                                                     uint16_t                aHandle,
                                                     const otBleRadioPacket *aPacket)
@@ -223,9 +272,6 @@ OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aIns
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
     assert(false);
-    /* In case of rcp there is a problem with linking to otPlatBleGattServerOnWriteRequest
-     * which is available in FTD/MTD library.
-     */
 }
 
 void otPlatBleGetLinkCapabilities(otInstance *aInstance, otBleLinkCapabilities *aBleLinkCapabilities)
@@ -257,3 +303,5 @@ bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return false;
 }
+
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

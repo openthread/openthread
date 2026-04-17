@@ -1069,8 +1069,7 @@ void TcatAgent::HandleTimer(void)
 // internally called when TcatAgent state changes: perform any required actions.
 void TcatAgent::NotifyStateChange(void)
 {
-    Get<Ble::BleSecure>().NotifySendAdvertisements(mState == kStateActive || mState == kStateActiveTemporary ||
-                                                   mState == kStateConnected);
+    Get<Ble::BleSecure>().NotifySendAdvertisements(mState == kStateActive || mState == kStateActiveTemporary);
 }
 
 void TcatAgent::HandleNotifierEvents(Events aEvents)

@@ -56,7 +56,7 @@ BleSecure::BleSecure(Instance &aInstance)
     , mSendMessage(nullptr)
     , mTransmitTask(aInstance)
     , mBleState(kStopped)
-    , mBleAdvRequestedState(kAdvertising)
+    , mBleAdvRequestedState(kStopped)
     , mMtuSize(kInitialMtuSize)
 {
 }
@@ -223,7 +223,7 @@ Error BleSecure::SetRequestedBleAdvertisementsState(void)
         SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
         mBleState = kAdvertising;
     }
-    else if (mBleAdvRequestedState == kNotAdvertising && mBleState == kAdvertising)
+    else if (mBleAdvRequestedState != kAdvertising && mBleState == kAdvertising)
     {
         SuccessOrExit(error = otPlatBleGapAdvStop(&GetInstance()));
         mBleState = kNotAdvertising;
@@ -398,14 +398,12 @@ void BleSecure::HandleBleDisconnected(uint16_t aConnectionId)
 {
     OT_UNUSED_VARIABLE(aConnectionId);
 
-    // kAdvertising is the state that the BLE stack will automatically assume, after a BLE client disconnects.
-    mBleState = kAdvertising;
+    mBleState = kNotAdvertising; // per otPlatBleGapAdvStart() API, advertising stopped already when client connected.
     mMtuSize  = kInitialMtuSize;
 
     Disconnect(); // Stop TLS connection and update advertisement data
 
-    // if a different BLE advertising state was requested earlier while a BLE client was connected,
-    // then now's the time to fulfill the request.
+    // Resume advertising (or fulfill a different advertising state requested while a client was connected).
     IgnoreError(SetRequestedBleAdvertisementsState());
 }
 
