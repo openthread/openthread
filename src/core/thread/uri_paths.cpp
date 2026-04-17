@@ -95,6 +95,8 @@ struct Entry
     _("d/dg", kUriDiagnosticGetRequest, "DiagGetRequest")         \
     _("d/dq", kUriDiagnosticGetQuery, "DiagGetQuery")             \
     _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
+    _("f/n", kUriFragCacheNotify, "FragCacheNotify")              \
+    _("f/r", kUriFragCacheResend, "FragCacheResend")              \
     _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
     _("h/qy", kUriHistoryQuery, "HistQuery")                      \
     _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \

@@ -198,6 +198,41 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+ *
+ * Define as 1 to enable the fragment cache retransmission feature.
+ *
+ * When enabled, a parent router that fails to deliver a fragmented message to a sleepy child will cache
+ * the message and send a CoAP notification to the mesh source. When the source receives an MRP retry
+ * matching the cached message (by UDP checksum and flow 5-tuple), it redirects retransmission to the
+ * caching router instead of forwarding the full message through the mesh again. This saves airtime on
+ * multi-hop paths. If the notification is lost, normal retransmission proceeds as a failsafe.
+ */
+#ifndef OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+#define OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESH_FRAG_CACHE_MAX_ENTRIES
+ *
+ * Specifies the maximum number of cached messages per router for fragment cache retransmission.
+ * Each entry holds a cloned message (~1280 bytes) so this directly impacts RAM usage.
+ */
+#ifndef OPENTHREAD_CONFIG_MESH_FRAG_CACHE_MAX_ENTRIES
+#define OPENTHREAD_CONFIG_MESH_FRAG_CACHE_MAX_ENTRIES 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESH_FRAG_CACHE_TIMEOUT
+ *
+ * Specifies the cache expiry timeout in seconds for fragment cache retransmission entries.
+ * Cached messages are freed after this timeout if no resend request is received.
+ */
+#ifndef OPENTHREAD_CONFIG_MESH_FRAG_CACHE_TIMEOUT
+#define OPENTHREAD_CONFIG_MESH_FRAG_CACHE_TIMEOUT 30
+#endif
+
+/**
  * @}
  */
 

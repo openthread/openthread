@@ -450,6 +450,13 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     {
         // The indirect tx of this message to the child is done.
 
+#if OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+        if (!aChild.GetIndirectTxSuccess())
+        {
+            Get<MeshForwarder>().GetFragCacheRetransmit().HandleIndirectTxFailure(*message, aChild);
+        }
+#endif
+
         Error        txError    = aError;
         uint16_t     childIndex = Get<ChildTable>().GetChildIndex(aChild);
         Mac::Address macDest;

@@ -82,6 +82,9 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mIndirectSender(aInstance)
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+    , mFragCacheRetransmit(aInstance)
+#endif
     , mDataPollSender(aInstance)
 {
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE

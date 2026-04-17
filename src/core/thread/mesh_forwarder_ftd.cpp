@@ -48,6 +48,20 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
     message.SetOffset(0);
     message.SetDatagramTag(0);
     message.SetTimestampToNow();
+
+#if OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+    {
+        uint16_t cachingRouterRloc;
+
+        if (mFragCacheRetransmit.ShouldRedirect(message, cachingRouterRloc))
+        {
+            mFragCacheRetransmit.SendRedirect(cachingRouterRloc, message);
+            message.Free();
+            ExitNow();
+        }
+    }
+#endif
+
     mSendQueue.Enqueue(message);
 
     switch (message.GetType())
@@ -940,6 +954,20 @@ exit:
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
+
+#if OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+
+template <> void MeshForwarder::HandleTmf<kUriFragCacheNotify>(Coap::Msg &aMsg)
+{
+    mFragCacheRetransmit.HandleNotify(aMsg);
+}
+
+template <> void MeshForwarder::HandleTmf<kUriFragCacheResend>(Coap::Msg &aMsg)
+{
+    mFragCacheRetransmit.HandleResend(aMsg);
+}
+
+#endif // OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
 
 } // namespace ot
 

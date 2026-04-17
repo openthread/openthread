@@ -135,6 +135,11 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriDiagnosticGetQuery, NetworkDiagnostic::Server);
         Case(kUriDiagnosticReset, NetworkDiagnostic::Server);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+        Case(kUriFragCacheNotify, MeshForwarder);
+        Case(kUriFragCacheResend, MeshForwarder);
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
         Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
 #endif

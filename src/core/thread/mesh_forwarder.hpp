@@ -57,6 +57,10 @@
 #include "thread/network_data_leader.hpp"
 #include "thread/thread_link_info.hpp"
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+#include "thread/frag_cache_retransmit.hpp"
+#endif
+
 namespace ot {
 
 namespace Mle {
@@ -267,6 +271,12 @@ public:
      *                       `kErrorNoAck` to indicate an ack timeout.
      */
     void HandleDeferredAck(Neighbor &aNeighbor, Error aError);
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
+
+    FragCacheRetransmit &GetFragCacheRetransmit(void) { return mFragCacheRetransmit; }
 #endif
 
 private:
@@ -572,6 +582,10 @@ private:
 
 #if OPENTHREAD_FTD
     FwdFrameInfoArray mFwdFrameInfoArray;
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MESH_FRAG_CACHE_RETRANSMIT_ENABLE
+    FragCacheRetransmit mFragCacheRetransmit;
 #endif
 
     DataPollSender mDataPollSender;
