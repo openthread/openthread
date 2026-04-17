@@ -3645,20 +3645,29 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 {
     Error         error = kErrorNone;
     Tlv::Bookmark tlvBookmark;
-    uint8_t       counter = 0;
+    uint16_t      counter = 0;
+
+    static_assert(kMaxIpAddrsToRegisterOnMtd >= 1, "OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER MUST be at least 1");
 
     SuccessOrExit(error = Tlv::StartTlv(*this, Tlv::kAddressRegistration, tlvBookmark));
 
     // Prioritize ML-EID
     SuccessOrExit(error = AppendAddressRegistrationEntry(Get<Mle>().GetMeshLocalEid()));
-
-    // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
-    VerifyOrExit(aMode != kAppendMeshLocalOnly);
     counter++;
+
+    switch (aMode)
+    {
+    case kAppendAllAddresses:
+        break;
+    case kAppendMeshLocalOnly:
+        ExitNow();
+    }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()))
     {
+        VerifyOrExit(counter < kMaxIpAddrsToRegisterOnMtd);
+
         // Prioritize DUA, compressed entry
         SuccessOrExit(error = AppendAddressRegistrationEntry(Get<DuaManager>().GetDomainUnicastAddress()));
         counter++;
@@ -3684,10 +3693,10 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
         }
 #endif
 
+        VerifyOrExit(counter < kMaxIpAddrsToRegisterOnMtd);
+
         SuccessOrExit(error = AppendAddressRegistrationEntry(addr.GetAddress()));
         counter++;
-        // only continue to append if there is available entry.
-        VerifyOrExit(counter < kMaxIpAddressesToRegister);
     }
 
     // Append external multicast addresses.  For sleepy end device,
@@ -3714,10 +3723,10 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
             }
 #endif
 
+            VerifyOrExit(counter < kMaxIpAddrsToRegisterOnMtd);
+
             SuccessOrExit(error = AppendAddressRegistrationEntry(addr.GetAddress()));
             counter++;
-            // only continue to append if there is available entry.
-            VerifyOrExit(counter < kMaxIpAddressesToRegister);
         }
     }
 

@@ -85,10 +85,13 @@
 /**
  * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER
  *
- * The maximum number of IPv6 address registrations for MTD.
+ * The maximum number (as `uint16_t`) of IPv6 address registrations on an MTD with its parent.
+ *
+ * The default value is set to `0xffff` which is effectively as if no limit is set and requires an MTD child to register
+ * all its addresses.
  */
 #ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER
-#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER (OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD)
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER (0xffff)
 #endif
 
 /**
