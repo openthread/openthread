@@ -429,6 +429,61 @@ otError otPlatCryptoAesSetKey(otCryptoContext *aContext, const otCryptoKey *aKey
 otError otPlatCryptoAesEncrypt(otCryptoContext *aContext, const uint8_t *aInput, uint8_t *aOutput);
 
 /**
+ * Decrypt and verify the given AES-CCM* payload.
+ *
+ * @param[in]      aContext        AES context initialised with `otPlatCryptoAesSetKey()`.
+ * @param[in]      aNonce          Nonce (13 bytes, IEEE 802.15.4 CCM* format).
+ * @param[in]      aHeader         Additional authenticated data (MAC header).
+ * @param[in]      aHeaderLength   Length of @p aHeader in bytes.
+ * @param[in,out]  aPayload        Ciphertext on input; replaced with plaintext in place on success.
+ * @param[in]      aPayloadLength  Length of @p aPayload in bytes.
+ * @param[in]      aTag            MIC buffer of length @p aTagLength bytes.
+ * @param[in]      aTagLength      MIC length in bytes (4, 8, or 16).
+ *
+ * @retval OT_ERROR_NONE          Successfully decrypted and verified @p aPayload.
+ * @retval OT_ERROR_SECURITY      MIC verification failed.
+ * @retval OT_ERROR_INVALID_ARGS  @p aContext, @p aNonce, @p aPayload, or @p aTag was NULL.
+ * @retval OT_ERROR_FAILED        Other failure.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE` is enabled.
+ */
+otError otPlatCryptoAesDecryptAndVerify(otCryptoContext *aContext,
+                                        const uint8_t   *aNonce,
+                                        const void      *aHeader,
+                                        uint16_t         aHeaderLength,
+                                        void            *aPayload,
+                                        uint16_t         aPayloadLength,
+                                        const void      *aTag,
+                                        uint8_t          aTagLength);
+
+/**
+ * Encrypt and tag the given AES-CCM* payload.
+ *
+ * @param[in]      aContext        AES context initialised with `otPlatCryptoAesSetKey()`.
+ * @param[in]      aNonce          Nonce (13 bytes, IEEE 802.15.4 CCM* format).
+ * @param[in]      aHeader         Additional authenticated data (MAC header).
+ * @param[in]      aHeaderLength   Length of @p aHeader in bytes.
+ * @param[in,out]  aPayload        Plaintext on input; replaced with ciphertext in place on success.
+ * @param[in]      aPayloadLength  Length of @p aPayload in bytes.
+ * @param[out]     aTag            Buffer to receive the MIC; must be at least @p aTagLength bytes.
+ * @param[in]      aTagLength      MIC length in bytes (4, 8, or 16).
+ *
+ * @retval OT_ERROR_NONE          Successfully encrypted @p aPayload and generated MIC in @p aTag.
+ * @retval OT_ERROR_INVALID_ARGS  @p aContext, @p aNonce, @p aPayload, or @p aTag was NULL.
+ * @retval OT_ERROR_FAILED        Other failure.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE` is enabled.
+ */
+otError otPlatCryptoAesEncryptAndTag(otCryptoContext *aContext,
+                                     const uint8_t   *aNonce,
+                                     const void      *aHeader,
+                                     uint16_t         aHeaderLength,
+                                     void            *aPayload,
+                                     uint16_t         aPayloadLength,
+                                     void            *aTag,
+                                     uint8_t          aTagLength);
+
+/**
  * Free the AES context.
  *
  * @param[in]  aContext           Context for AES operation.

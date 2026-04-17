@@ -152,6 +152,50 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+// OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE is for hardware AEAD accelerators.
+// Platforms enabling it must supply these symbols; there is no software fallback.
+OT_TOOL_WEAK otError otPlatCryptoAesDecryptAndVerify(otCryptoContext *aContext,
+                                                     const uint8_t   *aNonce,
+                                                     const void      *aHeader,
+                                                     uint16_t         aHeaderLength,
+                                                     void            *aPayload,
+                                                     uint16_t         aPayloadLength,
+                                                     const void      *aTag,
+                                                     uint8_t          aTagLength)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aNonce);
+    OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aHeaderLength);
+    OT_UNUSED_VARIABLE(aPayload);
+    OT_UNUSED_VARIABLE(aPayloadLength);
+    OT_UNUSED_VARIABLE(aTag);
+    OT_UNUSED_VARIABLE(aTagLength);
+    return kErrorFailed;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoAesEncryptAndTag(otCryptoContext *aContext,
+                                                  const uint8_t   *aNonce,
+                                                  const void      *aHeader,
+                                                  uint16_t         aHeaderLength,
+                                                  void            *aPayload,
+                                                  uint16_t         aPayloadLength,
+                                                  void            *aTag,
+                                                  uint8_t          aTagLength)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aNonce);
+    OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aHeaderLength);
+    OT_UNUSED_VARIABLE(aPayload);
+    OT_UNUSED_VARIABLE(aPayloadLength);
+    OT_UNUSED_VARIABLE(aTag);
+    OT_UNUSED_VARIABLE(aTagLength);
+    return kErrorFailed;
+}
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 // HMAC implementations

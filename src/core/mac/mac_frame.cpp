@@ -1388,13 +1388,19 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
-    aesCcm.SetKey(GetAesKey());
-    tagLength = GetFooterLength() - GetFcsSize();
+    tagLength = static_cast<uint8_t>(GetFooterLength() - GetFcsSize());
 
+    aesCcm.SetKey(GetAesKey());
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+    SuccessOrExit(aesCcm.EncryptAndTag(nonce, GetHeader(), GetHeaderLength(), GetPayload(), GetPayloadLength(),
+                                       GetFooter(), tagLength));
+#else
     aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
     aesCcm.Header(GetHeader(), GetHeaderLength());
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kEncrypt);
     aesCcm.Finalize(GetFooter());
+#endif
 
     SetIsSecurityProcessed(true);
 
@@ -1624,11 +1630,11 @@ exit:
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
     Error          error        = kErrorSecurity;
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
     uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tag[kMaxMicSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
 
@@ -1639,21 +1645,33 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
+    tagLength = static_cast<uint8_t>(GetFooterLength() - GetFcsSize());
+
     aesCcm.SetKey(aMacKey);
-    tagLength = GetFooterLength() - GetFcsSize();
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#else
-    // For fuzz tests, execute AES but do not alter the payload. A large
-    aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+    SuccessOrExit(aesCcm.DecryptAndVerify(nonce, GetHeader(), GetHeaderLength(), GetPayload(), GetPayloadLength(),
+                                          GetFooter(), tagLength));
 #endif
-    aesCcm.Finalize(tag);
+#else
+    {
+        uint8_t tag[kMaxMicSize];
 
+        aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+        aesCcm.Header(GetHeader(), GetHeaderLength());
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0);
+        aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+#else
+        // For fuzz tests, execute AES but do not alter the payload. A large
+        // payload would otherwise cause the fuzzer to time out.
+        aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+#endif
+        aesCcm.Finalize(tag);
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+        VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0, error = kErrorSecurity);
+#endif
+    }
 #endif
 
     error = kErrorNone;

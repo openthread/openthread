@@ -297,5 +297,29 @@ void AesCcm::GenerateNonce(const Mac::ExtAddress &aAddress,
     aNonce[0] = aSecurityLevel;
 }
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+Error AesCcm::DecryptAndVerify(const uint8_t *aNonce,
+                               const void    *aHeader,
+                               uint16_t       aHeaderLength,
+                               void          *aPayload,
+                               uint16_t       aPayloadLength,
+                               const void    *aTag,
+                               uint8_t        aTagLength)
+{
+    return mEcb.DecryptAndVerify(aNonce, aHeader, aHeaderLength, aPayload, aPayloadLength, aTag, aTagLength);
+}
+
+Error AesCcm::EncryptAndTag(const uint8_t *aNonce,
+                            const void    *aHeader,
+                            uint16_t       aHeaderLength,
+                            void          *aPayload,
+                            uint16_t       aPayloadLength,
+                            void          *aTag,
+                            uint8_t        aTagLength)
+{
+    return mEcb.EncryptAndTag(aNonce, aHeader, aHeaderLength, aPayload, aPayloadLength, aTag, aTagLength);
+}
+#endif
+
 } // namespace Crypto
 } // namespace ot

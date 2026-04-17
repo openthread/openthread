@@ -48,10 +48,12 @@
 #include "common/error.hpp"
 #include "common/new.hpp"
 #include "config/crypto.h"
+#include "crypto/aes_ccm.hpp"
 #include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "crypto/storage.hpp"
 #include "instance/instance.hpp"
+#include "radio/radio.hpp"
 
 using namespace ot;
 using namespace Crypto;
@@ -388,6 +390,80 @@ OT_TOOL_WEAK otError otPlatCryptoAesFree(otCryptoContext *aContext)
 
     return kErrorNone;
 }
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+
+// Maximum ciphertext-plus-tag buffer for an IEEE 802.15.4 MAC frame (PSDU + max MIC).
+static constexpr uint16_t kMaxCcmCiphertextWithTagSize = Radio::kFrameMaxSize + AesCcm::kMaxTagLength;
+
+OT_TOOL_WEAK otError otPlatCryptoAesDecryptAndVerify(otCryptoContext *aContext,
+                                                     const uint8_t   *aNonce,
+                                                     const void      *aHeader,
+                                                     uint16_t         aHeaderLength,
+                                                     void            *aPayload,
+                                                     uint16_t         aPayloadLength,
+                                                     const void      *aTag,
+                                                     uint8_t          aTagLength)
+{
+    Error         error = kErrorNone;
+    psa_status_t  status;
+    psa_key_id_t *keyRef;
+    uint8_t       ciphertextWithTag[kMaxCcmCiphertextWithTagSize];
+    size_t        plaintextLen;
+
+    SuccessOrExit(error = ValidateContext(aContext, sizeof(psa_key_id_t)));
+    VerifyOrExit(aNonce != nullptr && aPayload != nullptr && aTag != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aPayloadLength + aTagLength <= sizeof(ciphertextWithTag), error = kErrorInvalidArgs);
+
+    memcpy(ciphertextWithTag, aPayload, aPayloadLength);
+    memcpy(ciphertextWithTag + aPayloadLength, aTag, aTagLength);
+
+    keyRef = static_cast<psa_key_id_t *>(aContext->mContext);
+    status =
+        psa_aead_decrypt(*keyRef, PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, aTagLength), aNonce, AesCcm::kNonceSize,
+                         static_cast<const uint8_t *>(aHeader), aHeaderLength, ciphertextWithTag,
+                         aPayloadLength + aTagLength, static_cast<uint8_t *>(aPayload), aPayloadLength, &plaintextLen);
+
+    error = (status == PSA_ERROR_INVALID_SIGNATURE) ? kErrorSecurity : PsaToOtError(status);
+
+exit:
+    return error;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoAesEncryptAndTag(otCryptoContext *aContext,
+                                                  const uint8_t   *aNonce,
+                                                  const void      *aHeader,
+                                                  uint16_t         aHeaderLength,
+                                                  void            *aPayload,
+                                                  uint16_t         aPayloadLength,
+                                                  void            *aTag,
+                                                  uint8_t          aTagLength)
+{
+    Error         error = kErrorNone;
+    psa_status_t  status;
+    psa_key_id_t *keyRef;
+    uint8_t       ciphertextWithTag[kMaxCcmCiphertextWithTagSize];
+    size_t        ciphertextLen;
+
+    SuccessOrExit(error = ValidateContext(aContext, sizeof(psa_key_id_t)));
+    VerifyOrExit(aNonce != nullptr && aPayload != nullptr && aTag != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aPayloadLength + aTagLength <= sizeof(ciphertextWithTag), error = kErrorInvalidArgs);
+
+    keyRef = static_cast<psa_key_id_t *>(aContext->mContext);
+    status =
+        psa_aead_encrypt(*keyRef, PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, aTagLength), aNonce, AesCcm::kNonceSize,
+                         static_cast<const uint8_t *>(aHeader), aHeaderLength, static_cast<const uint8_t *>(aPayload),
+                         aPayloadLength, ciphertextWithTag, sizeof(ciphertextWithTag), &ciphertextLen);
+    SuccessOrExit(error = PsaToOtError(status));
+
+    memcpy(aPayload, ciphertextWithTag, aPayloadLength);
+    memcpy(aTag, ciphertextWithTag + aPayloadLength, aTagLength);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
