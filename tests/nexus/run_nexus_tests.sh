@@ -233,6 +233,7 @@ DEFAULT_TESTS=(
     "1_4_PIC_TC_3"
     "1_4_PIC_TC_4"
     "1_4_CS_TC_3"
+    "inform_previous_parent_on_reattach"
 )
 
 # Use provided arguments or the default test list
