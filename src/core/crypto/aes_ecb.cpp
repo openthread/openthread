@@ -47,6 +47,32 @@ void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSiz
     SuccessOrAssert(otPlatCryptoAesEncrypt(&mContext, aInput, aOutput));
 }
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+Error AesEcb::DecryptAndVerify(const uint8_t *aNonce,
+                               const void    *aHeader,
+                               uint16_t       aHeaderLength,
+                               void          *aPayload,
+                               uint16_t       aPayloadLength,
+                               const void    *aTag,
+                               uint8_t        aTagLength)
+{
+    return otPlatCryptoAesDecryptAndVerify(&mContext, aNonce, aHeader, aHeaderLength, aPayload, aPayloadLength, aTag,
+                                           aTagLength);
+}
+
+Error AesEcb::EncryptAndTag(const uint8_t *aNonce,
+                            const void    *aHeader,
+                            uint16_t       aHeaderLength,
+                            void          *aPayload,
+                            uint16_t       aPayloadLength,
+                            void          *aTag,
+                            uint8_t        aTagLength)
+{
+    return otPlatCryptoAesEncryptAndTag(&mContext, aNonce, aHeader, aHeaderLength, aPayload, aPayloadLength, aTag,
+                                        aTagLength);
+}
+#endif
+
 AesEcb::~AesEcb(void) { SuccessOrAssert(otPlatCryptoAesFree(&mContext)); }
 
 } // namespace Crypto

@@ -187,6 +187,53 @@ public:
                               uint8_t                aSecurityLevel,
                               uint8_t               *aNonce);
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+    /**
+     * Decrypts and verifies the given AES-CCM* payload via the platform hook.
+     *
+     * @param[in]      aNonce          Nonce (13 bytes, IEEE 802.15.4 CCM* format).
+     * @param[in]      aHeader         Additional authenticated data.
+     * @param[in]      aHeaderLength   Length of @p aHeader in bytes.
+     * @param[in,out]  aPayload        Ciphertext on input; replaced with plaintext in place on success.
+     * @param[in]      aPayloadLength  Length of @p aPayload in bytes.
+     * @param[in]      aTag            MIC buffer of length @p aTagLength bytes.
+     * @param[in]      aTagLength      MIC length in bytes (4, 8, or 16).
+     *
+     * @retval kErrorNone      Successfully decrypted and verified @p aPayload.
+     * @retval kErrorSecurity  MIC verification failed.
+     * @retval kErrorFailed    Platform operation failed.
+     */
+    Error DecryptAndVerify(const uint8_t *aNonce,
+                           const void    *aHeader,
+                           uint16_t       aHeaderLength,
+                           void          *aPayload,
+                           uint16_t       aPayloadLength,
+                           const void    *aTag,
+                           uint8_t        aTagLength);
+
+    /**
+     * Encrypts and tags the given AES-CCM* payload via the platform hook.
+     *
+     * @param[in]      aNonce          Nonce (13 bytes, IEEE 802.15.4 CCM* format).
+     * @param[in]      aHeader         Additional authenticated data.
+     * @param[in]      aHeaderLength   Length of @p aHeader in bytes.
+     * @param[in,out]  aPayload        Plaintext on input; replaced with ciphertext in place on success.
+     * @param[in]      aPayloadLength  Length of @p aPayload in bytes.
+     * @param[out]     aTag            Buffer to receive the MIC; must be at least @p aTagLength bytes.
+     * @param[in]      aTagLength      MIC length in bytes (4, 8, or 16).
+     *
+     * @retval kErrorNone    Successfully encrypted @p aPayload and generated MIC in @p aTag.
+     * @retval kErrorFailed  Platform operation failed.
+     */
+    Error EncryptAndTag(const uint8_t *aNonce,
+                        const void    *aHeader,
+                        uint16_t       aHeaderLength,
+                        void          *aPayload,
+                        uint16_t       aPayloadLength,
+                        void          *aTag,
+                        uint8_t        aTagLength);
+#endif
+
 private:
     AesEcb   mEcb;
     uint8_t  mBlock[AesEcb::kBlockSize];

@@ -254,6 +254,66 @@ void TestInPlaceAesCcmProcessing(void)
     testFreeInstance(instance);
 }
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+/**
+ * Verifies the platform AES-CCM* hook using the IEEE 802.15.4-2006 Annex C.2.3 test vector.
+ * Cross-checks encrypt-and-tag and decrypt-and-verify against the same known-good values used by
+ * TestMacCommandFrame(), and confirms that a corrupted MIC returns kErrorSecurity.
+ */
+void TestPlatformAesCcm(void)
+{
+    static constexpr uint16_t kHeaderLength  = 29;
+    static constexpr uint16_t kPayloadLength = 1;
+    static constexpr uint8_t  kTagLength     = 8;
+
+    static const uint8_t kKey[] = {
+        0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
+    };
+
+    static const uint8_t kNonce[] = {
+        0xAC, 0xDE, 0x48, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x06,
+    };
+
+    static const uint8_t kHeader[] = {
+        0x2B, 0xDC, 0x84, 0x21, 0x43, 0x02, 0x00, 0x00, 0x00, 0x00, 0x48, 0xDE, 0xAC, 0xFF, 0xFF,
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x48, 0xDE, 0xAC, 0x06, 0x05, 0x00, 0x00, 0x00, 0x01,
+    };
+
+    static const uint8_t kPlaintext[]  = {0xCE};
+    static const uint8_t kCiphertext[] = {0xD8};
+    static const uint8_t kTag[]        = {0x4F, 0xDE, 0x52, 0x90, 0x61, 0xF9, 0xC6, 0xF1};
+
+    Instance      *instance = testInitInstance();
+    Crypto::AesCcm aesCcm;
+    uint8_t        payload[kPayloadLength];
+    uint8_t        tag[kTagLength];
+    uint8_t        corruptTag[kTagLength];
+
+    VerifyOrQuit(instance != nullptr);
+
+    aesCcm.SetKey(kKey, sizeof(kKey));
+
+    // Encrypt: plaintext in, ciphertext + MIC out.
+    memcpy(payload, kPlaintext, kPayloadLength);
+    SuccessOrQuit(aesCcm.EncryptAndTag(kNonce, kHeader, kHeaderLength, payload, kPayloadLength, tag, kTagLength));
+    VerifyOrQuit(memcmp(payload, kCiphertext, kPayloadLength) == 0);
+    VerifyOrQuit(memcmp(tag, kTag, kTagLength) == 0);
+
+    // Decrypt: ciphertext + MIC in, plaintext out (round-trip).
+    SuccessOrQuit(aesCcm.DecryptAndVerify(kNonce, kHeader, kHeaderLength, payload, kPayloadLength, tag, kTagLength));
+    VerifyOrQuit(memcmp(payload, kPlaintext, kPayloadLength) == 0);
+
+    // Corrupted MIC must return kErrorSecurity.
+    memcpy(payload, kCiphertext, kPayloadLength);
+    memcpy(corruptTag, kTag, kTagLength);
+    corruptTag[0] ^= 0xff;
+    VerifyOrQuit(aesCcm.DecryptAndVerify(kNonce, kHeader, kHeaderLength, payload, kPayloadLength, corruptTag,
+                                         kTagLength) == kErrorSecurity);
+
+    testFreeInstance(instance);
+}
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+
 } // namespace ot
 
 int main(void)
@@ -261,6 +321,9 @@ int main(void)
     ot::TestMacBeaconFrame();
     ot::TestMacCommandFrame();
     ot::TestInPlaceAesCcmProcessing();
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+    ot::TestPlatformAesCcm();
+#endif
     printf("All tests passed\n");
     return 0;
 }

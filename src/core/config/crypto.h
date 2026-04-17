@@ -68,6 +68,20 @@
 #define OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+ *
+ * Define to 1 to enable the platform AES-CCM* hook for MAC frame security.
+ *
+ * When enabled, `ProcessTransmitAesCcm()` and `ProcessReceiveAesCcm()` call
+ * `otPlatCryptoAesEncryptAndTag()` and `otPlatCryptoAesDecryptAndVerify()` respectively,
+ * allowing a platform to offload MAC frame AEAD to a hardware accelerator.
+ * When disabled (default), the OpenThread core `Crypto::AesCcm` engine is used.
+ */
+#ifndef OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+#define OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE 0
+#endif
+
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
 
 /**

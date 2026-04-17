@@ -40,6 +40,11 @@
 #include <openthread/platform/ble.h>
 #endif
 
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+#include <mbedtls/aes.h>
+#include <mbedtls/ccm.h>
+#endif
+
 enum
 {
     FLASH_SWAP_SIZE = 2048,
@@ -124,6 +129,14 @@ bool sDiagMode = false;
 
 static otPlatDiagOutputCallback sOutputCallback        = nullptr;
 static void                    *sOutputCallbackContext = nullptr;
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+// Raw key bytes saved by the otPlatCryptoAesSetKey() override below.
+// mbedtls_aes_context stores only the scheduled round keys, not the original
+// key material, so we stash the bytes here for use by the software CCM hooks.
+static uint8_t sAesCcmKey[32];
+static size_t  sAesCcmKeyLen = 0;
+#endif
 
 extern "C" {
 
@@ -623,6 +636,121 @@ otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKe
 }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
+
+// Strong override of the weak mbedtls stub.  Schedules the key in the
+// mbedtls_aes_context for ECB use (existing behaviour) and also stashes the
+// raw bytes so the CCM hooks below can feed them into mbedtls_ccm_context.
+otError otPlatCryptoAesSetKey(otCryptoContext *aContext, const otCryptoKey *aKey)
+{
+    mbedtls_aes_context *ctx;
+
+    if (aContext == nullptr || aKey == nullptr || aKey->mKey == nullptr)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    if (aContext->mContextSize < sizeof(mbedtls_aes_context))
+    {
+        return OT_ERROR_FAILED;
+    }
+
+    ctx = static_cast<mbedtls_aes_context *>(aContext->mContext);
+
+    if (mbedtls_aes_setkey_enc(ctx, aKey->mKey, aKey->mKeyLength * 8u) != 0)
+    {
+        return OT_ERROR_FAILED;
+    }
+
+    OT_ASSERT(aKey->mKeyLength <= sizeof(sAesCcmKey));
+    memcpy(sAesCcmKey, aKey->mKey, aKey->mKeyLength);
+    sAesCcmKeyLen = aKey->mKeyLength;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatCryptoAesEncryptAndTag(otCryptoContext *aContext,
+                                     const uint8_t   *aNonce,
+                                     const void      *aHeader,
+                                     uint16_t         aHeaderLength,
+                                     void            *aPayload,
+                                     uint16_t         aPayloadLength,
+                                     void            *aTag,
+                                     uint8_t          aTagLength)
+{
+    otError             error = OT_ERROR_NONE;
+    mbedtls_ccm_context ccm;
+
+    OT_UNUSED_VARIABLE(aContext);
+
+    if (aNonce == nullptr || aPayload == nullptr || aTag == nullptr)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    mbedtls_ccm_init(&ccm);
+
+    if (mbedtls_ccm_setkey(&ccm, MBEDTLS_CIPHER_ID_AES, sAesCcmKey, static_cast<unsigned int>(sAesCcmKeyLen * 8)) != 0)
+    {
+        error = OT_ERROR_FAILED;
+    }
+    else if (mbedtls_ccm_encrypt_and_tag(&ccm, aPayloadLength, aNonce, 13u, // IEEE 802.15.4 CCM* nonce length
+                                         static_cast<const uint8_t *>(aHeader), aHeaderLength,
+                                         static_cast<const uint8_t *>(aPayload), static_cast<uint8_t *>(aPayload),
+                                         static_cast<uint8_t *>(aTag), aTagLength) != 0)
+    {
+        error = OT_ERROR_FAILED;
+    }
+
+    mbedtls_ccm_free(&ccm);
+
+    return error;
+}
+
+otError otPlatCryptoAesDecryptAndVerify(otCryptoContext *aContext,
+                                        const uint8_t   *aNonce,
+                                        const void      *aHeader,
+                                        uint16_t         aHeaderLength,
+                                        void            *aPayload,
+                                        uint16_t         aPayloadLength,
+                                        const void      *aTag,
+                                        uint8_t          aTagLength)
+{
+    mbedtls_ccm_context ccm;
+    int                 ret;
+
+    OT_UNUSED_VARIABLE(aContext);
+
+    if (aNonce == nullptr || aPayload == nullptr || aTag == nullptr)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    mbedtls_ccm_init(&ccm);
+
+    if (mbedtls_ccm_setkey(&ccm, MBEDTLS_CIPHER_ID_AES, sAesCcmKey, static_cast<unsigned int>(sAesCcmKeyLen * 8)) != 0)
+    {
+        mbedtls_ccm_free(&ccm);
+        return OT_ERROR_FAILED;
+    }
+
+    ret = mbedtls_ccm_auth_decrypt(&ccm, aPayloadLength, aNonce, 13u, // IEEE 802.15.4 CCM* nonce length
+                                   static_cast<const uint8_t *>(aHeader), aHeaderLength,
+                                   static_cast<const uint8_t *>(aPayload), static_cast<uint8_t *>(aPayload),
+                                   static_cast<const uint8_t *>(aTag), aTagLength);
+
+    mbedtls_ccm_free(&ccm);
+
+    if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED)
+    {
+        return OT_ERROR_SECURITY;
+    }
+
+    return (ret == 0) ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+
+#endif // OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ENABLE
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
