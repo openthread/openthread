@@ -37,7 +37,6 @@
 #include "nexus_radio_model.hpp"
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
-#include "thread/neighbor_table.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -464,11 +463,10 @@ void Core::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeigh
         if (event == NeighborTable::kChildRemoved)
         {
             Instance &instance = *static_cast<Instance *>(aInfo->mInstance);
-            Neighbor *neighbor = instance.Get<NeighborTable>().FindNeighbor(*extAddr, Neighbor::kInStateValid);
 
-            if (neighbor != nullptr)
+            if (instance.Get<RouterTable>().FindRouter(*extAddr) != nullptr)
             {
-                Log("Suppressing CHILD_REMOVED event because neighbor link is established");
+                Log("Suppressing CHILD_REMOVED event because neighbor is a valid router");
                 ExitNow();
             }
         }
