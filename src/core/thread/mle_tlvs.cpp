@@ -56,15 +56,12 @@ void RouteTlv::Init(void)
 
 bool RouteTlv::IsValid(void) const
 {
-    bool    isValid = false;
-    uint8_t numAllocatedIds;
+    bool isValid = false;
 
-    VerifyOrExit(GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask));
+    VerifyOrExit(GetLength() >= sizeof(mRouterIdMask));
 
-    numAllocatedIds = mRouterIdMask.GetNumberOfAllocatedIds();
-    VerifyOrExit(numAllocatedIds <= kMaxRouters);
-
-    isValid = (GetRouteDataLength() >= numAllocatedIds);
+    VerifyOrExit(mRouterIdMask.IsValid());
+    isValid = (GetRouteDataLength() >= mRouterIdMask.DetermineAllocatedCount());
 
 exit:
     return isValid;

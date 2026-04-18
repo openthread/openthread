@@ -1111,7 +1111,7 @@ Error Mle::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
         neighborRloc16 = aRxInfo.mNeighbor->GetRloc16();
     }
 
-    mRouterTable.UpdateRouterIdSet(aRouteTlv.GetRouterIdSequence(), aRouteTlv.GetRouterIdMask());
+    mRouterTable.UpdateRouterIdMask(aRouteTlv.GetRouterIdMask());
 
     if (IsAttached() && !mRouterTable.IsAllocated(RouterIdFromRloc16(GetRloc16())))
     {
@@ -3375,11 +3375,11 @@ exit:
 
 void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 {
-    uint8_t             status;
-    uint16_t            rloc16;
-    ThreadRouterMaskTlv routerMaskTlv;
-    uint8_t             routerId;
-    Router             *router;
+    uint8_t      status;
+    uint16_t     rloc16;
+    RouterIdMask routerIdMask;
+    uint8_t      routerId;
+    Router      *router;
 
     mAddressSolicitPending = false;
 
@@ -3411,8 +3411,8 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
     SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(aMsg->mMessage, rloc16));
     routerId = RouterIdFromRloc16(rloc16);
 
-    SuccessOrExit(Tlv::FindTlv(aMsg->mMessage, routerMaskTlv));
-    VerifyOrExit(routerMaskTlv.IsValid());
+    SuccessOrExit(Tlv::Find<ThreadRouterMaskTlv>(aMsg->mMessage, routerIdMask));
+    VerifyOrExit(routerIdMask.IsValid());
 
     SetAlternateRloc16(GetRloc16());
 
@@ -3429,7 +3429,7 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     mRouterTable.ClearNeighbors();
 
-    mRouterTable.UpdateRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
+    mRouterTable.UpdateRouterIdMask(routerIdMask);
 
     router = mRouterTable.FindRouterById(routerId);
     VerifyOrExit(router != nullptr);
@@ -3655,15 +3655,12 @@ template <> void Mle::HandleTmf<kUriAddressSolicit>(Coap::Msg &aMsg)
 
     if (info.mRouter != nullptr)
     {
-        ThreadRouterMaskTlv routerMaskTlv;
+        RouterIdMask routerIdMask;
 
         SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*response, info.mRouter->GetRloc16()));
 
-        routerMaskTlv.Init();
-        routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
-        mRouterTable.GetRouterIdSet(routerMaskTlv.GetAssignedRouterIdMask());
-
-        SuccessOrExit(routerMaskTlv.AppendTo(*response));
+        mRouterTable.GetRouterIdMask(routerIdMask);
+        SuccessOrExit(Tlv::Append<ThreadRouterMaskTlv>(*response, routerIdMask));
     }
 
     SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));

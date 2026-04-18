@@ -88,13 +88,13 @@ Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback
         tlvs[tlvsLength++] = ChildTableTlv::kType;
     }
 
-    Get<RouterTable>().GetRouterIdSet(mDiscover.mExpectedRouterIdSet);
+    Get<RouterTable>().GetRouterIdMask(mDiscover.mExpectedRouterIds);
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
         Ip6::Address destination;
 
-        if (!mDiscover.mExpectedRouterIdSet.Contains(routerId))
+        if (!mDiscover.mExpectedRouterIds.IsAllocated(routerId))
         {
             continue;
         }
@@ -136,9 +136,9 @@ void MeshDiag::HandleDiagGetResponse(Coap::Msg *aMsg, Error aResult)
         routerInfo.mChildIterator = &childIterator;
     }
 
-    mDiscover.mExpectedRouterIdSet.Remove(routerInfo.mRouterId);
+    mDiscover.mExpectedRouterIds.Remove(routerInfo.mRouterId);
 
-    if (mDiscover.mExpectedRouterIdSet.GetNumberOfAllocatedIds() == 0)
+    if (mDiscover.mExpectedRouterIds.DetermineAllocatedCount() == 0)
     {
         error  = kErrorNone;
         mState = kStateIdle;

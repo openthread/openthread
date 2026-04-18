@@ -260,7 +260,7 @@ private:
     struct DiscoverInfo
     {
         Callback<DiscoverCallback> mCallback;
-        Mle::RouterIdSet           mExpectedRouterIdSet;
+        Mle::RouterIdMask          mExpectedRouterIds;
     };
 
     struct QueryChildTableInfo

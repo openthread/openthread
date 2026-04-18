@@ -137,69 +137,9 @@ typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissio
 typedef UintTlvInfo<ThreadTlv::kStatus, uint8_t> ThreadStatusTlv;
 
 /**
- * Implements Router Mask TLV generation and parsing.
+ * Defines Router Mask TLV  constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kRouterMask);
-        SetLength(sizeof(*this) - sizeof(ThreadTlv));
-        mAssignedRouterIdMask.Clear();
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * Returns the ID Sequence value.
-     *
-     * @returns The ID Sequence value.
-     */
-    uint8_t GetIdSequence(void) const { return mIdSequence; }
-
-    /**
-     * Sets the ID Sequence value.
-     *
-     * @param[in]  aSequence  The ID Sequence value.
-     */
-    void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
-
-    /**
-     * Gets the Assigned Router ID Mask.
-     *
-     * @returns The Assigned Router ID Mask.
-     */
-    const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
-
-    /**
-     * Gets the Assigned Router ID Mask.
-     *
-     * @returns The Assigned Router ID Mask.
-     */
-    Mle::RouterIdSet &GetAssignedRouterIdMask(void) { return mAssignedRouterIdMask; }
-
-    /**
-     * Sets the Assigned Router ID Mask.
-     *
-     * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.
-     */
-    void SetAssignedRouterIdMask(const Mle::RouterIdSet &aRouterIdSet) { mAssignedRouterIdMask = aRouterIdSet; }
-
-private:
-    uint8_t          mIdSequence;
-    Mle::RouterIdSet mAssignedRouterIdMask;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<ThreadTlv::kRouterMask, Mle::RouterIdMask> ThreadRouterMaskTlv;
 
 /**
  * Defines Thread Network Data TLV constants and types.

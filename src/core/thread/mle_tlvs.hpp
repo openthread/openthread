@@ -256,36 +256,31 @@ public:
      *
      * @returns The Router ID Sequence value.
      */
-    uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
-
-    /**
-     * Sets the Router ID Sequence value.
-     *
-     * @param[in]  aSequence  The Router ID Sequence value.
-     */
-    void SetRouterIdSequence(uint8_t aSequence) { mRouterIdSequence = aSequence; }
+    uint8_t GetRouterIdSequence(void) const { return mRouterIdMask.GetSequence(); }
 
     /**
      * Gets the Router ID Mask.
+     *
+     * @returns The Router ID Mask.
      */
-    const RouterIdSet &GetRouterIdMask(void) const { return mRouterIdMask; }
+    const RouterIdMask &GetRouterIdMask(void) const { return mRouterIdMask; }
 
     /**
-     * Sets the Router ID Mask.
+     * Gets the Router ID Mask.
      *
-     * @param[in]  aRouterIdSet The Router ID Mask to set.
+     * @returns The Router ID Mask.
      */
-    void SetRouterIdMask(const RouterIdSet &aRouterIdSet) { mRouterIdMask = aRouterIdSet; }
+    RouterIdMask &GetRouterIdMask(void) { return mRouterIdMask; }
 
     /**
      * Indicates whether or not a Router ID bit is set.
      *
-     * @param[in]  aRouterId  The Router ID bit.
+     * @param[in]  aRouterId  The Router ID.
      *
      * @retval TRUE   If the Router ID bit is set.
      * @retval FALSE  If the Router ID bit is not set.
      */
-    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
+    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.IsAllocated(aRouterId); }
 
     /**
      * Indicates whether the `RouteTlv` is a singleton, i.e., only one router is allocated.
@@ -293,21 +288,21 @@ public:
      * @retval TRUE   It is a singleton.
      * @retval FALSE  It is not a singleton.
      */
-    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.GetNumberOfAllocatedIds() <= 1); }
+    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.DetermineAllocatedCount() <= 1); }
 
     /**
      * Returns the Route Data Length value.
      *
      * @returns The Route Data Length value.
      */
-    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask); }
+    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdMask); }
 
     /**
      * Sets the Route Data Length value.
      *
      * @param[in]  aLength  The Route Data Length value.
      */
-    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength); }
+    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdMask) + aLength); }
 
     /**
      * Returns the Route Cost value for a given Router index.
@@ -365,9 +360,8 @@ private:
     static constexpr uint8_t kRouteCostOffset      = 0;
     static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
 
-    uint8_t     mRouterIdSequence;
-    RouterIdSet mRouterIdMask;
-    uint8_t     mRouteData[kMaxRouterId + 1];
+    RouterIdMask mRouterIdMask;
+    uint8_t      mRouteData[kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
 #else // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
@@ -394,33 +388,28 @@ public:
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask); }
+    bool IsValid(void) const { return GetLength() >= sizeof(RouterIdMask); }
 
     /**
      * Returns the Router ID Sequence value.
      *
      * @returns The Router ID Sequence value.
      */
-    uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
-
-    /**
-     * Sets the Router ID Sequence value.
-     *
-     * @param[in]  aSequence  The Router ID Sequence value.
-     */
-    void SetRouterIdSequence(uint8_t aSequence) { mRouterIdSequence = aSequence; }
+    uint8_t GetRouterIdSequence(void) const { return mRouterIdMask.GetSequence(); }
 
     /**
      * Gets the Router ID Mask.
+     *
+     * @returns The Router ID Mask.
      */
-    const RouterIdSet &GetRouterIdMask(void) const { return mRouterIdMask; }
+    const RouterIdMask &GetRouterIdMask(void) const { return mRouterIdMask; }
 
     /**
-     * Sets the Router ID Mask.
+     * Gets the Router ID Mask.
      *
-     * @param[in]  aRouterIdSet The Router ID Mask to set.
+     * @returns The Router ID Mask.
      */
-    void SetRouterIdMask(const RouterIdSet &aRouterIdSet) { mRouterIdMask = aRouterIdSet; }
+    RouterIdMask &GetRouterIdMask(void) { return mRouterIdMask; }
 
     /**
      * Indicates whether or not a Router ID bit is set.
@@ -430,7 +419,7 @@ public:
      * @retval TRUE   If the Router ID bit is set.
      * @retval FALSE  If the Router ID bit is not set.
      */
-    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
+    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.IsAllocated(aRouterId); }
 
     /**
      * Indicates whether the `RouteTlv` is a singleton, i.e., only one router is allocated.
@@ -438,7 +427,7 @@ public:
      * @retval TRUE   It is a singleton.
      * @retval FALSE  It is not a singleton.
      */
-    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.GetNumberOfAllocatedIds() <= 1); }
+    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.DetermineAllocatedCount() <= 1); }
 
     /**
      * Sets the Router ID bit.
@@ -452,17 +441,14 @@ public:
      *
      * @returns The Route Data Length value in bytes
      */
-    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask); }
+    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdMask); }
 
     /**
      * Sets the Route Data Length value.
      *
      * @param[in]  aLength  The Route Data Length value in number of router entries
      */
-    void SetRouteDataLength(uint8_t aLength)
-    {
-        SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength + (aLength + 1) / 2);
-    }
+    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdMask) + aLength + (aLength + 1) / 2); }
 
     /**
      * Returns the Route Cost value for a given Router index.
@@ -574,8 +560,7 @@ private:
             ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
     }
 
-    uint8_t     mRouterIdSequence;
-    RouterIdSet mRouterIdMask;
+    RouterIdMask mRouterIdMask;
     // Since we do hold 12 (compressible to 11) bits of data per router, each entry occupies 1.5 bytes,
     // consecutively. First 4 bits are link qualities, remaining 8 bits are route cost.
     uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];

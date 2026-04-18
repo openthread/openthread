@@ -105,20 +105,20 @@ Error Server::AppendEnhancedRoute(Message &aMessage)
 {
     Error                 error = kErrorNone;
     Tlv::Bookmark         tlvBookmark;
-    Mle::RouterIdSet      routerIdSet;
+    Mle::RouterIdMask     routerIdMask;
     EnhancedRouteTlvEntry entry;
 
     VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
 
-    Get<RouterTable>().GetRouterIdSet(routerIdSet);
+    Get<RouterTable>().GetRouterIdMask(routerIdMask);
 
     SuccessOrExit(error = Tlv::StartTlv(aMessage, Tlv::kEnhancedRoute, tlvBookmark));
 
-    SuccessOrExit(error = aMessage.Append(routerIdSet));
+    SuccessOrExit(error = routerIdMask.AppendMaskTo(aMessage));
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        if (!routerIdSet.Contains(routerId))
+        if (!routerIdMask.IsAllocated(routerId))
         {
             continue;
         }
@@ -1038,11 +1038,11 @@ static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDi
 
 static Error ParseEnhancedRoute(const Message &aMessage, uint16_t aOffset, otNetworkDiagEnhRoute &aNetworkDiagEnhRoute)
 {
-    Error            error;
-    OffsetRange      offsetRange;
-    Tlv              tlv;
-    Mle::RouterIdSet routerIdSet;
-    uint8_t          index;
+    Error             error;
+    OffsetRange       offsetRange;
+    Tlv               tlv;
+    Mle::RouterIdMask routerIdMask;
+    uint8_t           index;
 
     SuccessOrExit(error = aMessage.Read(aOffset, tlv));
 
@@ -1052,8 +1052,8 @@ static Error ParseEnhancedRoute(const Message &aMessage, uint16_t aOffset, otNet
     aOffset += sizeof(tlv);
     offsetRange.Init(aOffset, tlv.GetLength());
 
-    SuccessOrExit(error = aMessage.Read(offsetRange, routerIdSet));
-    offsetRange.AdvanceOffset(sizeof(routerIdSet));
+    SuccessOrExit(error = routerIdMask.ReadMaskFrom(aMessage, offsetRange));
+    offsetRange.AdvanceOffset(Mle::RouterIdMask::kMaskSize);
 
     index = 0;
 
@@ -1061,7 +1061,7 @@ static Error ParseEnhancedRoute(const Message &aMessage, uint16_t aOffset, otNet
     {
         EnhancedRouteTlvEntry entry;
 
-        if (!routerIdSet.Contains(routerId))
+        if (!routerIdMask.IsAllocated(routerId))
         {
             continue;
         }
