@@ -867,29 +867,12 @@ typedef SimpleTlvInfo<Tlv::kCslChannel, ChannelTlvValue> CslChannelTlv;
 typedef TlvInfo<Tlv::kTimeRequest> TimeRequestTlv;
 
 /**
- * Implements Time Parameter TLV generation and parsing.
+ * Represents a Time Parameter TLV value.
  */
 OT_TOOL_PACKED_BEGIN
-class TimeParameterTlv : public Tlv, public TlvInfo<Tlv::kTimeParameter>
+class TimeParameterTlvValue
 {
 public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kTimeParameter);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
     /**
      * Returns the time sync period.
      *
@@ -922,6 +905,11 @@ private:
     uint16_t mTimeSyncPeriod;
     uint16_t mXtalThreshold;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Time Parameter TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kTimeParameter, TimeParameterTlvValue> TimeParameterTlv;
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 

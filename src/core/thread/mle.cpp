@@ -3788,13 +3788,12 @@ Error Mle::TxMessage::AppendTimeRequestTlv(void)
 
 Error Mle::TxMessage::AppendTimeParameterTlv(void)
 {
-    TimeParameterTlv tlv;
+    TimeParameterTlvValue tlvValue;
 
-    tlv.Init();
-    tlv.SetTimeSyncPeriod(Get<TimeSync>().GetTimeSyncPeriod());
-    tlv.SetXtalThreshold(Get<TimeSync>().GetXtalThreshold());
+    tlvValue.SetTimeSyncPeriod(Get<TimeSync>().GetTimeSyncPeriod());
+    tlvValue.SetXtalThreshold(Get<TimeSync>().GetXtalThreshold());
 
-    return tlv.AppendTo(*this);
+    return Tlv::Append<TimeParameterTlv>(*this, tlvValue);
 }
 
 Error Mle::TxMessage::AppendXtalAccuracyTlv(void)
@@ -5265,9 +5264,6 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     uint32_t         mleFrameCounter;
     Mac::ExtAddress  extAddress;
     Mac::CslAccuracy cslAccuracy;
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    TimeParameterTlv timeParameterTlv;
-#endif
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -5394,23 +5390,23 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-    if (Tlv::FindTlv(aRxInfo.mMessage, timeParameterTlv) == kErrorNone)
     {
-        VerifyOrExit(timeParameterTlv.IsValid());
+        TimeParameterTlvValue tlvValue;
 
-        Get<TimeSync>().SetTimeSyncPeriod(timeParameterTlv.GetTimeSyncPeriod());
-        Get<TimeSync>().SetXtalThreshold(timeParameterTlv.GetXtalThreshold());
-    }
-
+        if (Tlv::Find<TimeParameterTlv>(aRxInfo.mMessage, tlvValue) == kErrorNone)
+        {
+            Get<TimeSync>().SetTimeSyncPeriod(tlvValue.GetTimeSyncPeriod());
+            Get<TimeSync>().SetXtalThreshold(tlvValue.GetXtalThreshold());
+        }
 #if OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
-    else
-    {
-        // If the time sync feature is required, don't choose the
-        // parent which doesn't support it.
-        ExitNow();
-    }
+        else
+        {
+            // If the time sync feature is required, don't choose the
+            // parent which doesn't support it.
+            ExitNow();
+        }
 #endif
+    }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidate.mRxChallenge));
