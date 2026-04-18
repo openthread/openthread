@@ -1012,6 +1012,7 @@ Core::IcmpEchoResponseContext::IcmpEchoResponseContext(Node &aNode, uint16_t aId
     : mNode(aNode)
     , mIdentifier(aIdentifier)
     , mResponseReceived(false)
+    , mExpectedSourceCheck(false)
 {
 }
 
@@ -1036,6 +1037,14 @@ void Core::HandleIcmpResponse(void                *aContext,
 
         Log("Received Echo Reply on Node %u (%s) from %s", context->mNode.GetId(), context->mNode.GetName(),
             messageInfo->GetPeerAddr().ToString().AsCString());
+
+        if (context->mExpectedSourceCheck)
+        {
+            Log("Verifying source address: Expected %s, Actual %s", context->mExpectedSource.ToString().AsCString(),
+                messageInfo->GetSockAddr().ToString().AsCString());
+
+            VerifyOrQuit(messageInfo->GetSockAddr() == context->mExpectedSource);
+        }
     }
 }
 
@@ -1049,6 +1058,30 @@ void Core::SendAndVerifyEchoRequest(Node               &aSender,
 
     IcmpEchoResponseContext icmpContext(aSender, kIdentifier);
     Ip6::Icmp::Handler      icmpHandler(HandleIcmpResponse, &icmpContext);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().RegisterHandler(icmpHandler));
+
+    aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit);
+    AdvanceTime(aResponseTimeout);
+    VerifyOrQuit(icmpContext.mResponseReceived);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().UnregisterHandler(icmpHandler));
+}
+
+void Core::SendAndVerifyEchoRequest(Node               &aSender,
+                                    const Ip6::Address &aExpectedSource,
+                                    const Ip6::Address &aDestination,
+                                    uint16_t            aPayloadSize,
+                                    uint8_t             aHopLimit,
+                                    uint32_t            aResponseTimeout)
+{
+    static constexpr uint16_t kIdentifier = 0x1234;
+
+    IcmpEchoResponseContext icmpContext(aSender, kIdentifier);
+    icmpContext.mExpectedSource      = aExpectedSource;
+    icmpContext.mExpectedSourceCheck = true;
+
+    Ip6::Icmp::Handler icmpHandler(HandleIcmpResponse, &icmpContext);
 
     SuccessOrQuit(aSender.Get<Ip6::Icmp>().RegisterHandler(icmpHandler));
 

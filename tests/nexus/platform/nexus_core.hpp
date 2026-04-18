@@ -91,6 +91,13 @@ public:
                                   uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
                                   uint32_t            aResponseTimeout = 1000);
 
+    void SendAndVerifyEchoRequest(Node               &aSender,
+                                  const Ip6::Address &aExpectedSource,
+                                  const Ip6::Address &aDestination,
+                                  uint16_t            aPayloadSize     = 0,
+                                  uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                  uint32_t            aResponseTimeout = 1000);
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation
 
@@ -121,9 +128,11 @@ private:
     {
         IcmpEchoResponseContext(Node &aNode, uint16_t aIdentifier);
 
-        Node    &mNode;
-        uint16_t mIdentifier;
-        bool     mResponseReceived;
+        Node        &mNode;
+        uint16_t     mIdentifier;
+        bool         mResponseReceived;
+        Ip6::Address mExpectedSource;
+        bool         mExpectedSourceCheck;
     };
 
     struct TestVar
