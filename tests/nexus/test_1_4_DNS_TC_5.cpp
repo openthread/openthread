@@ -287,7 +287,7 @@ void Test_1_4_DNS_TC_5(const char *aJsonFileName)
     br1.Form();
     nexus.AdvanceTime(kFormNetworkTime);
 
-    ed1.Join(br1);
+    ed1.Join(br1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 
     br1.Get<BorderRouter::InfraIf>().Init(1, true);

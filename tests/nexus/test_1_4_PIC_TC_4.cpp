@@ -253,7 +253,7 @@ void Test_1_4_PIC_TC_4(void)
     r1.Join(br1);
     nexus.AdvanceTime(kJoinNetworkTime);
 
-    ed1.Join(r1);
+    ed1.Join(r1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 
     Log("Step 4: BR_1 configures IPv4 address and NAT64 prefix");

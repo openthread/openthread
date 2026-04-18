@@ -308,7 +308,7 @@ void Test_1_4_PIC_TC_3(void)
     r1.Join(br1);
     nexus.AdvanceTime(kJoinNetworkTime);
 
-    ed1.Join(r1);
+    ed1.Join(r1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 
     Log("Step 4: BR_1 obtains OMR prefix via DHCPv6-PD");

@@ -158,7 +158,7 @@ void Test_1_4_DNS_TC_1(const char *aJsonFileName)
     r1.Join(br1);
     nexus.AdvanceTime(kJoinNetworkTime);
 
-    ed1.Join(r1);
+    ed1.Join(r1, Node::kAsFed);
     nexus.AdvanceTime(kJoinNetworkTime);
 
     // Setup BR_1 as Border Router
