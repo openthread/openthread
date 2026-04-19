@@ -889,9 +889,25 @@ void Core::ProcessRadio(Node &aNode)
         }
 
         ackFrame.UpdateFcs();
-        mPcap.WriteFrame(ackFrame, mNow);
 
-        otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
+        {
+            int16_t ackRssi = RadioModel::CalculateRssi(*ackNode, aNode);
+
+            ackFrame.mInfo.mRxInfo.mRssi      = ClampToInt8(ackRssi);
+            ackFrame.mInfo.mRxInfo.mLqi       = kDefaultRxLqi;
+            ackFrame.mInfo.mRxInfo.mTimestamp = mNow;
+
+            mPcap.WriteFrame(ackFrame, mNow);
+
+            if (RadioModel::ShouldDropPacket(ackRssi))
+            {
+                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, nullptr, kErrorNoAck);
+            }
+            else
+            {
+                otPlatRadioTxDone(&aNode.GetInstance(), &aNode.mRadio.mTxFrame, &ackFrame, kErrorNone);
+            }
+        }
     }
     else
     {
