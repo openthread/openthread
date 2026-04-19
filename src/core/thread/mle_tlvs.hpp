@@ -311,7 +311,10 @@ public:
      *
      * @returns The Route Cost value for a given Router index.
      */
-    uint8_t GetRouteCost(uint8_t aRouterIndex) const { return mRouteData[aRouterIndex] & kRouteCostMask; }
+    uint8_t GetRouteCost(uint8_t aRouterIndex) const
+    {
+        return ReadBits<uint8_t, kRouteCostMask>(mRouteData[aRouterIndex]);
+    }
 
     /**
      * Returns the Link Quality In value for a given Router index.
@@ -322,7 +325,7 @@ public:
      */
     LinkQuality GetLinkQualityIn(uint8_t aRouterIndex) const
     {
-        return static_cast<LinkQuality>((mRouteData[aRouterIndex] & kLinkQualityInMask) >> kLinkQualityInOffset);
+        return static_cast<LinkQuality>(ReadBits<uint8_t, kLinkQualityInMask>(mRouteData[aRouterIndex]));
     }
 
     /**
@@ -334,7 +337,7 @@ public:
      */
     LinkQuality GetLinkQualityOut(uint8_t aRouterIndex) const
     {
-        return static_cast<LinkQuality>((mRouteData[aRouterIndex] & kLinkQualityOutMask) >> kLinkQualityOutOffset);
+        return static_cast<LinkQuality>(ReadBits<uint8_t, kLinkQualityOutMask>(mRouteData[aRouterIndex]));
     }
 
     /**
@@ -347,18 +350,22 @@ public:
      */
     void SetRouteData(uint8_t aRouterIndex, LinkQuality aLinkQualityIn, LinkQuality aLinkQualityOut, uint8_t aRouteCost)
     {
-        mRouteData[aRouterIndex] = (((aLinkQualityIn << kLinkQualityInOffset) & kLinkQualityInMask) |
-                                    ((aLinkQualityOut << kLinkQualityOutOffset) & kLinkQualityOutMask) |
-                                    ((aRouteCost << kRouteCostOffset) & kRouteCostMask));
+        mRouteData[aRouterIndex] = 0;
+
+        WriteBits<uint8_t, kLinkQualityInMask>(mRouteData[aRouterIndex], aLinkQualityIn);
+        WriteBits<uint8_t, kLinkQualityOutMask>(mRouteData[aRouterIndex], aLinkQualityOut);
+        WriteBits<uint8_t, kRouteCostMask>(mRouteData[aRouterIndex], aRouteCost);
     }
 
 private:
-    static constexpr uint8_t kLinkQualityOutOffset = 6;
-    static constexpr uint8_t kLinkQualityOutMask   = 3 << kLinkQualityOutOffset;
-    static constexpr uint8_t kLinkQualityInOffset  = 4;
-    static constexpr uint8_t kLinkQualityInMask    = 3 << kLinkQualityInOffset;
-    static constexpr uint8_t kRouteCostOffset      = 0;
-    static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
+    //   7   6   5   4   3   2   1   0
+    // +---+---+---+---+---+---+---+---+
+    // | LQOut | LQIn  |  Route Cost   |
+    // +---+---+---+---+---+---+---+---+
+
+    static constexpr uint8_t kLinkQualityOutMask = 0x03 << 6;
+    static constexpr uint8_t kLinkQualityInMask  = 0x03 << 4;
+    static constexpr uint8_t kRouteCostMask      = 0x0f << 0;
 
     RouterIdMask mRouterIdMask;
     uint8_t      mRouteData[kMaxRouterId + 1];
@@ -459,18 +466,7 @@ public:
      */
     uint8_t GetRouteCost(uint8_t aRouterIndex) const
     {
-        if (aRouterIndex & 1)
-        {
-            return mRouteData[aRouterIndex + aRouterIndex / 2 + 1];
-        }
-        else
-        {
-            return static_cast<uint8_t>((mRouteData[aRouterIndex + aRouterIndex / 2] & kRouteCostMask)
-                                        << kOddEntryOffset) |
-                   ((mRouteData[aRouterIndex + aRouterIndex / 2 + 1] &
-                     static_cast<uint8_t>(kRouteCostMask << kOddEntryOffset)) >>
-                    kOddEntryOffset);
-        }
+        return static_cast<uint8_t>(ReadBits<uint16_t, kRouteCostMask>(ReadEntry(aRouterIndex)));
     }
 
     /**
@@ -482,10 +478,7 @@ public:
      */
     LinkQuality GetLinkQualityIn(uint8_t aRouterIndex) const
     {
-        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        return static_cast<LinkQuality>(
-            (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityInMask >> offset)) >>
-            (kLinkQualityInOffset - offset));
+        return static_cast<LinkQuality>(ReadBits<uint16_t, kLinkQualityInMask>(ReadEntry(aRouterIndex)));
     }
 
     /**
@@ -497,10 +490,7 @@ public:
      */
     LinkQuality GetLinkQualityOut(uint8_t aRouterIndex) const
     {
-        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        return static_cast<LinkQuality>(
-            (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityOutMask >> offset)) >>
-            (kLinkQualityOutOffset - offset));
+        return static_cast<LinkQuality>(ReadBits<uint16_t, kLinkQualityOutMask>(ReadEntry(aRouterIndex)));
     }
 
     /**
@@ -513,57 +503,66 @@ public:
      */
     void SetRouteData(uint8_t aRouterIndex, LinkQuality aLinkQualityIn, LinkQuality aLinkQualityOut, uint8_t aRouteCost)
     {
-        SetLinkQualityIn(aRouterIndex, aLinkQualityIn);
-        SetLinkQualityOut(aRouterIndex, aLinkQualityOut);
-        SetRouteCost(aRouterIndex, aRouteCost);
+        uint16_t data = 0;
+
+        WriteBits<uint16_t, kLinkQualityOutMask>(data, aLinkQualityOut);
+        WriteBits<uint16_t, kLinkQualityInMask>(data, aLinkQualityIn);
+        WriteBits<uint16_t, kRouteCostMask>(data, aRouteCost);
+
+        WriteEntry(aRouterIndex, data);
     }
 
 private:
-    static constexpr uint8_t kLinkQualityOutOffset = 6;
-    static constexpr uint8_t kLinkQualityOutMask   = 3 << kLinkQualityOutOffset;
-    static constexpr uint8_t kLinkQualityInOffset  = 4;
-    static constexpr uint8_t kLinkQualityInMask    = 3 << kLinkQualityInOffset;
-    static constexpr uint8_t kRouteCostOffset      = 0;
-    static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
-    static constexpr uint8_t kOddEntryOffset       = 4;
+    // Under `LOG_ROUTES` feature, Route Data is 12 bits per route
+    // (1.5 bytes). The first 4 bits are link qualities (out/in),
+    // remaining 8 bits are for the route cost. The even and odd
+    // entries are staggered.
 
-    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
+    static constexpr uint16_t kEvenEntryMask = 0xfff << 4;
+    static constexpr uint16_t kOddEntryMask  = 0xfff << 0;
+
+    static constexpr uint16_t kLinkQualityOutMask = 0x03 << 10;
+    static constexpr uint16_t kLinkQualityInMask  = 0x03 << 8;
+    static constexpr uint16_t kRouteCostMask      = 0xff << 0;
+
+    uint16_t ReadEntry(uint8_t aRouterIndex) const
     {
-        if (aRouterIndex & 1)
+        uint16_t data;
+        uint16_t offset = (aRouterIndex + aRouterIndex / 2);
+
+        if (aRouterIndex & 0x1)
         {
-            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = aRouteCost;
+            data = ReadBits<uint16_t, kOddEntryMask>(BigEndian::ReadUint16(&mRouteData[offset]));
         }
         else
         {
-            mRouteData[aRouterIndex + aRouterIndex / 2] =
-                (mRouteData[aRouterIndex + aRouterIndex / 2] & ~kRouteCostMask) |
-                ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
-            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = static_cast<uint8_t>(
-                (mRouteData[aRouterIndex + aRouterIndex / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
-                ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
+            data = ReadBits<uint16_t, kEvenEntryMask>(BigEndian::ReadUint16(&mRouteData[offset]));
         }
+
+        return data;
     }
 
-    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    void WriteEntry(uint8_t aRouterIndex, uint16_t aData)
     {
-        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        mRouteData[aRouterIndex + aRouterIndex / 2] =
-            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityInMask >> offset)) |
-            ((aLinkQuality << (kLinkQualityInOffset - offset)) & (kLinkQualityInMask >> offset));
-    }
+        uint16_t offset = (aRouterIndex + aRouterIndex / 2);
+        uint16_t existing;
 
-    void SetLinkQualityOut(uint8_t aRouterIndex, LinkQuality aLinkQuality)
-    {
-        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        mRouteData[aRouterIndex + aRouterIndex / 2] =
-            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityOutMask >> offset)) |
-            ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
+        existing = BigEndian::ReadUint16(&mRouteData[offset]);
+
+        if (aRouterIndex & 0x1)
+        {
+            WriteBits<uint16_t, kOddEntryMask>(existing, aData);
+        }
+        else
+        {
+            WriteBits<uint16_t, kEvenEntryMask>(existing, aData);
+        }
+
+        BigEndian::WriteUint16(existing, &mRouteData[offset]);
     }
 
     RouterIdMask mRouterIdMask;
-    // Since we do hold 12 (compressible to 11) bits of data per router, each entry occupies 1.5 bytes,
-    // consecutively. First 4 bits are link qualities, remaining 8 bits are route cost.
-    uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
+    uint8_t      mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
