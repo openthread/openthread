@@ -395,6 +395,7 @@ ot_nexus_test(ipv6_source_selection "core;nexus")
 ot_nexus_test(log_override "core;nexus")
 ot_nexus_test(mle_blocking_downgrade "core;nexus")
 ot_nexus_test(nat64_translator "core;nexus")
+ot_nexus_test(reed_address_solicit_rejected "core;nexus")
 ot_nexus_test(router_downgrade_on_sec_policy_change "core;nexus")
 ot_nexus_test(srp_lease "core;nexus")
 
