@@ -186,6 +186,33 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_MAX_INTERVAL
+ *
+ * Specifies the maximum backoff wait interval (in milliseconds) during the initial period after detach.
+ *
+ * During the initial period after detach (specified by `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_PERIOD`),
+ * the backoff interval is clamped to this value. This allows more frequent attach attempts while a distressed
+ * parent stabilizes.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE`).
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_MAX_INTERVAL
+#define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_MAX_INTERVAL 60000 // 60 seconds = 1 minute
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_PERIOD
+ *
+ * Specifies the duration (in milliseconds) of the initial period after detach during which the backoff
+ * interval is clamped to `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_MAX_INTERVAL`.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE`).
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_PERIOD
+#define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_INITIAL_PERIOD 300000 // 300 seconds = 5 minutes
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL
  *
  * Specifies the delay wait interval (in milliseconds) used by attach backoff feature after a successful attach before
