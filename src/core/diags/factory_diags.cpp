@@ -491,19 +491,24 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 #endif
 
+    mStats.Clear();
+    IgnoreError(Get<Radio>().Enable());
+    Get<Radio>().SetDiagMode(true);
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
 
-    IgnoreError(Get<Radio>().Enable());
     Get<Radio>().SetPromiscuous(true);
     Get<Mac::SubMac>().SetRxOnWhenIdle(true);
     otPlatAlarmMilliStop(&GetInstance());
     SuccessOrExit(error = Get<Radio>().Receive(mChannel));
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
-    Get<Radio>().SetDiagMode(true);
-    mStats.Clear();
 
 exit:
+    if (error != kErrorNone)
+    {
+        Get<Radio>().SetDiagMode(false);
+    }
+
     return error;
 }
 
