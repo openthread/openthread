@@ -289,6 +289,11 @@ template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
     {
         error = otInstanceResetToBootloader(GetInstancePtr());
     }
+#else
+    else if (aArgs[0] == "bootloader")
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
+    }
 #endif
     else
     {
@@ -1044,6 +1049,11 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
             OutputLine("| %23s |", Uint64ToString(errorCounters.mCount6To4[i], u64StringBuffer));
         }
     }
+#else
+    else if (aArgs[0] == "cidr" || aArgs[0] == "mappings" || aArgs[0] == "counters")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+    }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     else
     {
@@ -1512,6 +1522,11 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
+#else
+    else if (aArgs[0] == "monitor")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+    }
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
     (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
@@ -1607,6 +1622,11 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             error = otChannelManagerRequestChannelSelect(GetInstancePtr(), enable);
         }
+#else
+        else if (aArgs[1] == "select")
+        {
+            ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+        }
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
         /**
          * @cli channel manager auto
@@ -1654,6 +1674,11 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             otChannelManagerSetAutoCslChannelSelectionEnabled(GetInstancePtr(), enable);
+        }
+#else
+        else if (aArgs[1] == "autocsl")
+        {
+            ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
         }
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
 #if OPENTHREAD_FTD
@@ -1756,6 +1781,11 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
         {
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
+    }
+#else
+    else if (aArgs[0] == "manager")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     else
@@ -2305,6 +2335,11 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
     }
+#else
+    else if (aArgs[0] == "br")
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
+    }
 #endif
     /**
      * @cli counters (mac)
@@ -2696,6 +2731,11 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
     {
         error = ProcessSet(aArgs + 1, otLinkSetCslTimeout);
     }
+#else
+    else if (aArgs[0].IsEmpty() || aArgs[0] == "channel" || aArgs[0] == "period" || aArgs[0] == "timeout")
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
+    }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     else
     {
@@ -2854,6 +2894,11 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 
         otThreadSetDiscoveryRequestCallback(GetInstancePtr(), callback, context);
         ExitNow();
+    }
+#else
+    if (aArgs[0] == "reqcallback")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
 
@@ -3095,6 +3140,11 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otPlatDebugUart_logfile(aArgs[1].GetCString()));
     }
+#else
+    else if (aArgs[0] == "filename")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+    }
 #endif
     else
     {
@@ -3205,6 +3255,11 @@ template <> otError Interpreter::Process<Cmd("fake")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[3].ParseAsUint32(timeSinceLastTransaction));
 
         error = otThreadSendProactiveBackboneNotification(GetInstancePtr(), &target, &mlIid, timeSinceLastTransaction);
+    }
+#else
+    else if (aArgs[0] == "/b/ba")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif
 
@@ -3336,6 +3391,11 @@ template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
     else if (aArgs[0] == "init")
     {
         error = ProcessIfconfigInit(aArgs + 1);
+    }
+#else
+    else if (aArgs[0] == "init")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif
     else
@@ -3798,6 +3858,11 @@ template <> otError Interpreter::Process<Cmd("partitionid")>(Arg aArgs[])
     else if (aArgs[0] == "preferred")
     {
         error = ProcessGetSet(aArgs + 1, otThreadGetPreferredLeaderPartitionId, otThreadSetPreferredLeaderPartitionId);
+    }
+#else
+    else if (aArgs[0] == "preferred")
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
     }
 #endif
 
@@ -4498,6 +4563,11 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
             SuccessOrExit(error = otMultiRadioGetNeighborInfo(GetInstancePtr(), &extAddress, &multiRadioInfo));
             OutputMultiRadioInfo(multiRadioInfo);
         }
+    }
+#else
+    else if (aArgs[0] == "neighbor")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
     else
@@ -5724,6 +5794,11 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
             otRadioTimeStatsReset(GetInstancePtr());
         }
     }
+#else
+    else if (aArgs[0] == "stats")
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
+    }
 #endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
     else
     {
@@ -6471,11 +6546,21 @@ template <> otError Interpreter::Process<Cmd("srp")>(Arg aArgs[])
     {
         ExitNow(error = mSrpClient.Process(aArgs + 1));
     }
+#else
+    if (aArgs[0] == "client")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+    }
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     if (aArgs[0] == "server")
     {
         ExitNow(error = mSrpServer.Process(aArgs + 1));
+    }
+#else
+    if (aArgs[0] == "server")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif
 
@@ -7279,6 +7364,11 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
         {
             error = OT_ERROR_INVALID_ARGS;
         }
+    }
+#else
+    else if (aArgs[0] == "send")
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
     }
 #endif
     else
@@ -8264,6 +8354,11 @@ template <> otError Interpreter::Process<Cmd("p2p")>(Arg aArgs[])
         SuccessOrExit(error = otP2pWakeupAndLink(GetInstancePtr(), &p2pRequest, HandleP2pLinkDone, this));
         error = OT_ERROR_PENDING;
     }
+#else
+    else if (aArgs[0] == "link")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+    }
 #endif
     else
     {
@@ -8375,6 +8470,11 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
     {
         error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
     }
+#else
+    else if (aArgs[0] == "parameters" || aArgs[0] == "listen")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+    }
 #endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     /**
@@ -8401,6 +8501,11 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
         SuccessOrExit(error = otThreadWakeup(GetInstancePtr(), &extAddress, wakeupIntervalUs, wakeupDurationMs,
                                              HandleWakeupResult, this));
         error = OT_ERROR_PENDING;
+    }
+#else
+    else if (aArgs[0] == "wake")
+    {
+        ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
     }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
     else
