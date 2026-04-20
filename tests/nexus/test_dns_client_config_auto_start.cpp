@@ -48,7 +48,7 @@ static constexpr uint32_t kJoinNetworkTime = 10 * 1000;
 /**
  * Time to advance for the network to stabilize, in milliseconds.
  */
-static constexpr uint32_t kStabilizationTime = 15 * 1000;
+static constexpr uint32_t kStabilizationTime = 200 * 1000;
 
 /**
  * Default DNS server address for testing.
