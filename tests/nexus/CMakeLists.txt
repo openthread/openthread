@@ -405,6 +405,7 @@ ot_nexus_test(netdata_publisher "core;nexus")
 ot_nexus_test(reed_address_solicit_rejected "core;nexus")
 ot_nexus_test(router_downgrade_on_sec_policy_change "core;nexus")
 ot_nexus_test(srp_auto_start "core;nexus")
+ot_nexus_test(srp_client_change_lease "core;nexus")
 ot_nexus_test(srp_lease "core;nexus")
 ot_nexus_test(zero_len_external_route "core;nexus")
 
