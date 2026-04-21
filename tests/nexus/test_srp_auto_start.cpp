@@ -67,7 +67,7 @@ void TestSrpAutoStart(void)
     server1.Join(client);
     server2.Join(client);
     server3.Join(client);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(server1.Get<Mle::Mle>().IsFullThreadDevice());
     VerifyOrQuit(server2.Get<Mle::Mle>().IsFullThreadDevice());
     VerifyOrQuit(server3.Get<Mle::Mle>().IsFullThreadDevice());
@@ -80,7 +80,7 @@ void TestSrpAutoStart(void)
     Log("Enable server1 with unicast address mode");
     SuccessOrQuit(server1.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicast));
     server1.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
 
     // Check auto start mode on client and check that server1 is selected
     Log("Check auto start mode on client and check that server1 is selected");
@@ -93,28 +93,28 @@ void TestSrpAutoStart(void)
     // Disable server1 and check client is stopped/disabled.
     Log("Disable server1 and check client is stopped/disabled.");
     server1.Get<Srp::Server>().SetEnabled(false);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(!client.Get<Srp::Client>().IsRunning());
 
     // Enable server2 with unicast address mode and check client starts again.
     Log("Enable server2 with unicast address mode and check client starts again.");
     SuccessOrQuit(server2.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeUnicast));
     server2.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress() == server2Mleid);
 
     // Enable server1 and check that client stays with server2
     Log("Enable server1 and check that client stays with server2");
     server1.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress() == server2Mleid);
 
     // Disable server2 and check client switches to server1.
     Log("Disable server2 and check client switches to server1.");
     server2.Get<Srp::Server>().SetEnabled(false);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress() == server1Mleid);
 
@@ -123,7 +123,7 @@ void TestSrpAutoStart(void)
     SuccessOrQuit(server2.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeAnycast));
     SuccessOrQuit(server2.Get<Srp::Server>().SetAnycastModeSequenceNumber(1));
     server2.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(server2.Get<Srp::Server>().GetAnycastModeSequenceNumber() == 1);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
@@ -135,7 +135,7 @@ void TestSrpAutoStart(void)
     SuccessOrQuit(server3.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeAnycast));
     SuccessOrQuit(server3.Get<Srp::Server>().SetAnycastModeSequenceNumber(2));
     server3.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
 
     VerifyOrQuit(server3.Get<Srp::Server>().GetAnycastModeSequenceNumber() == 2);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
@@ -145,7 +145,7 @@ void TestSrpAutoStart(void)
     // Disable server3 and check that client goes back to server2.
     Log("Disable server3 and check that client goes back to server2.");
     server3.Get<Srp::Server>().SetEnabled(false);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress().GetIid().IsAnycastServiceLocator());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetPort() == anycastPort);
@@ -155,7 +155,7 @@ void TestSrpAutoStart(void)
     Log("Enable server3 with anycast mode seq-num 0 and check that client stays with server2.");
     SuccessOrQuit(server3.Get<Srp::Server>().SetAnycastModeSequenceNumber(0));
     server3.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(server3.Get<Srp::Server>().GetAnycastModeSequenceNumber() == 0);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress().GetIid().IsAnycastServiceLocator());
@@ -164,7 +164,7 @@ void TestSrpAutoStart(void)
     // Disable server2 and check that client goes back to server3.
     Log("Disable server2 and check that client goes back to server3.");
     server2.Get<Srp::Server>().SetEnabled(false);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress().GetIid().IsAnycastServiceLocator());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetPort() == anycastPort);
@@ -172,7 +172,7 @@ void TestSrpAutoStart(void)
     // Disable server3 and check that client goes back to server1 with unicast address.
     Log("Disable server3 and check that client goes back to server1 with unicast address.");
     server3.Get<Srp::Server>().SetEnabled(false);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress() == server1Mleid);
 
@@ -181,7 +181,7 @@ void TestSrpAutoStart(void)
     SuccessOrQuit(server2.Get<Srp::Server>().SetAddressMode(Srp::Server::kAddressModeAnycast));
     SuccessOrQuit(server2.Get<Srp::Server>().SetAnycastModeSequenceNumber(5));
     server2.Get<Srp::Server>().SetEnabled(true);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(server2.Get<Srp::Server>().GetAnycastModeSequenceNumber() == 5);
     VerifyOrQuit(client.Get<Srp::Client>().IsRunning());
     VerifyOrQuit(client.Get<Srp::Client>().GetServerAddress().GetAddress().GetIid().IsAnycastServiceLocator());
@@ -231,7 +231,7 @@ void TestSrpAutoStart(void)
     // Finally disable server2, and check that client is disabled.
     Log("Finally disable server2, and check that client is disabled.");
     server2.Get<Srp::Server>().SetEnabled(false);
-    nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
+    nexus.AdvanceTime(30 * Time::kOneSecondInMsec);
     VerifyOrQuit(!client.Get<Srp::Client>().IsRunning());
 }
 
