@@ -841,7 +841,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
         routerIndex++;
     }
 
-    aRouteTlv.SetRouteDataLength(routerIndex);
+    aRouteTlv.SetRouteDataEntryCount(routerIndex);
 }
 
 void RouterTable::HandleTimeTick(void)

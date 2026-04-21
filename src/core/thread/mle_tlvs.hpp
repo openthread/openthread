@@ -291,18 +291,18 @@ public:
     bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.DetermineAllocatedCount() <= 1); }
 
     /**
-     * Returns the Route Data Length value.
+     * Returns the number of Route Data entries in the Route TLV.
      *
-     * @returns The Route Data Length value.
+     * @returns The Route Data Entry Count.
      */
-    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdMask); }
+    uint8_t GetRouteDataEntryCount(void) const { return GetLength() - sizeof(mRouterIdMask); }
 
     /**
-     * Sets the Route Data Length value.
+     * Sets the Route Data entry count.
      *
-     * @param[in]  aLength  The Route Data Length value.
+     * @param[in]  aCount  The number of Route Data entries in the Route TLV.
      */
-    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdMask) + aLength); }
+    void SetRouteDataEntryCount(uint8_t aCount) { SetLength(sizeof(mRouterIdMask) + aCount); }
 
     /**
      * Returns the Route Cost value for a given Router index.
@@ -437,18 +437,18 @@ public:
     void SetRouterId(uint8_t aRouterId) { mRouterIdMask.Add(aRouterId); }
 
     /**
-     * Returns the Route Data Length value.
+     * Returns the number of Route Data entries in the Route TLV.
      *
-     * @returns The Route Data Length value in bytes
+     * @returns The Route Data Entry Count.
      */
-    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdMask); }
+    uint8_t GetRouteDataEntryCount(void) const { return (GetLength() - sizeof(mRouterIdMask)) * 2 / 3; }
 
     /**
-     * Sets the Route Data Length value.
+     * Sets the Route Data entry count.
      *
-     * @param[in]  aLength  The Route Data Length value in number of router entries
+     * @param[in]  aCount  The number of Route Data entries in the Route TLV.
      */
-    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdMask) + aLength + (aLength + 1) / 2); }
+    void SetRouteDataEntryCount(uint8_t aCount) { SetLength(sizeof(mRouterIdMask) + aCount + (aCount + 1) / 2); }
 
     /**
      * Returns the Route Cost value for a given Router index.
