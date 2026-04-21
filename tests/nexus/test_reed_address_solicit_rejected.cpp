@@ -76,7 +76,11 @@ void TestReedAddressSolicitRejected(void)
         reed.Get<NetworkData::Notifier>().HandleServerDataUpdated();
     }
 
-    nexus.AdvanceTime(5 * 1000);
+    // REED sends a Server Data Notification to the leader, the leader
+    // updates its network data and broadcasts the update to the
+    // network. We advance time enough to ensure all these steps are
+    // completed.
+    nexus.AdvanceTime(15 * 1000);
 
     Log("Step 3: Verify REED has the Service ALOC");
     {
