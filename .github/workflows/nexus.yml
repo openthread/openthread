@@ -107,6 +107,35 @@ jobs:
       run: |
         cd build/nexus && ctest -L trel --output-on-failure
 
+  nexus-long-routes-tests:
+    name: nexus-long-routes-tests
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+
+    - name: Bootstrap
+      env:
+        PR_BODY: "${{ github.event.pull_request.body }}"
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build lcov
+
+    - name: Build Nexus
+      run: |
+        mkdir -p build/nexus
+        top_builddir=build/nexus ./tests/nexus/build.sh long_routes
+
+    - name: Run LONG_ROUTES Tests
+      run: |
+        cd build/nexus && ctest -L long_routes --output-on-failure
+
   nexus-grpc-tests:
     name: nexus-grpc-tests
     runs-on: ubuntu-24.04

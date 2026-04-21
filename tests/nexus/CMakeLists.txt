@@ -411,6 +411,9 @@ ot_nexus_test(zero_len_external_route "core;nexus")
 # Trel
 ot_nexus_test(trel "trel;nexus")
 
+# Long-routes
+ot_nexus_test(long_routes "long_routes;nexus")
+
 # Grpc
 if(OT_NEXUS_GRPC)
     ot_nexus_test(grpc "core;nexus")
