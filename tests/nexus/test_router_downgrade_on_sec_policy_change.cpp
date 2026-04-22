@@ -101,18 +101,19 @@ void TestRouterDowngradeOnSecPolicyChange(void)
         leader.Get<MeshCoP::ActiveDatasetManager>().SaveLocal(datasetInfo);
     }
 
-    // Wait for the dataset to propagate to the router.
-    nexus.AdvanceTime(500);
-
-    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
-    VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
-
-    Log("Leader should take at least 10 seconds before downgrading");
-
+    // Wait for the dataset to propagate and be processed.
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    // We check that security policy is propagated to and applied on
+    // leader and router. This means `IsRouterRoleAllowed()` should be
+    // false on both.
     VerifyOrQuit(!leader.Get<Mle::Mle>().IsRouterRoleAllowed());
     VerifyOrQuit(!router.Get<Mle::Mle>().IsRouterRoleAllowed());
+
+    Log("Leader should stay as leader for at least 10 seconds");
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Change back security policy. This should cancel the ongoing downgrade delay");
@@ -170,14 +171,19 @@ void TestRouterDowngradeOnSecPolicyChange(void)
         leader.Get<MeshCoP::ActiveDatasetManager>().SaveLocal(datasetInfo);
     }
 
-    nexus.AdvanceTime(500);
-    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
-
-    Log("Leader should take at least 10 seconds before downgrading");
-
+    // Wait for the dataset to propagate and be processed.
     nexus.AdvanceTime(5 * Time::kOneSecondInMsec);
+
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
+
+    // We check that security policy is propagated to and applied on
+    // leader and router. This means `IsRouterRoleAllowed()` should be
+    // false on both.
     VerifyOrQuit(!leader.Get<Mle::Mle>().IsRouterRoleAllowed());
+    VerifyOrQuit(!router.Get<Mle::Mle>().IsRouterRoleAllowed());
+
+    Log("Leader should stay as leader for at least 10 seconds");
+    VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
     Log("Make sure both leader and router are downgraded and are now `detached`.");
 
