@@ -153,7 +153,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 
     VerifyOrExit(isPrimary, status = kMlrBbrNotPrimary);
 
-    VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone,
+    VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Ip6AddressesTlv::kType, offsetRange) == kErrorNone,
                  error = kErrorParse);
     VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = kMlrGeneralFailure);
     VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
@@ -296,16 +296,16 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Msg &aMsg,
 
     if (aFailedAddressNum > 0)
     {
-        Ip6AddressesTlv addressesTlv;
+        Tlv::Bookmark tlvBookmark;
 
-        addressesTlv.Init();
-        addressesTlv.SetLength(sizeof(Ip6::Address) * aFailedAddressNum);
-        SuccessOrExit(error = message->Append(addressesTlv));
+        SuccessOrExit(error = Tlv::StartTlv(*message, Ip6AddressesTlv::kType, tlvBookmark));
 
         for (uint8_t i = 0; i < aFailedAddressNum; i++)
         {
             SuccessOrExit(error = message->Append(aFailedAddresses[i]));
         }
+
+        SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
     }
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo));
@@ -322,7 +322,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     Error             error   = kErrorNone;
     Coap::Message    *message = nullptr;
     Ip6::MessageInfo  messageInfo;
-    Ip6AddressesTlv   addressesTlv;
+    Tlv::Bookmark     tlvBookmark;
     BackboneTmfAgent &backboneTmf = Get<BackboneRouter::BackboneTmfAgent>();
 
     OT_ASSERT(aAddressNum >= Ip6AddressesTlv::kMinAddresses && aAddressNum <= Ip6AddressesTlv::kMaxAddresses);
@@ -330,10 +330,9 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     message = backboneTmf.AllocateAndInitNonConfirmablePostMessage(kUriBackboneMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    addressesTlv.Init();
-    addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
-    SuccessOrExit(error = message->Append(addressesTlv));
+    SuccessOrExit(error = Tlv::StartTlv(*message, Ip6AddressesTlv::kType, tlvBookmark));
     SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
     SuccessOrExit(error = Tlv::Append<ThreadTimeoutTlv>(*message, aTimeout));
 

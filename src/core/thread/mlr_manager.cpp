@@ -356,20 +356,19 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
 {
     OT_UNUSED_VARIABLE(aTimeout);
 
-    Error           error   = kErrorNone;
-    Coap::Message  *message = nullptr;
-    Ip6::Address    destAddr;
-    Ip6AddressesTlv addressesTlv;
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
+    Ip6::Address   destAddr;
+    Tlv::Bookmark  tlvBookmark;
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
     message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    addressesTlv.Init();
-    addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);
-    SuccessOrExit(error = message->Append(addressesTlv));
+    SuccessOrExit(error = Tlv::StartTlv(*message, Ip6AddressesTlv::kType, tlvBookmark));
     SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     if (Get<MeshCoP::Commissioner>().IsActive())
@@ -453,7 +452,7 @@ Error MlrManager::ParseMlrResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aSta
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMsg->mMessage, aStatus));
 
-    if (ThreadTlv::FindTlvValueOffsetRange(aMsg->mMessage, Ip6AddressesTlv::kIp6Addresses, offsetRange) == kErrorNone)
+    if (Tlv::FindTlvValueOffsetRange(aMsg->mMessage, Ip6AddressesTlv::kType, offsetRange) == kErrorNone)
     {
         VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, error = kErrorParse);
         VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,

@@ -149,46 +149,15 @@ typedef TlvInfo<ThreadTlv::kThreadNetworkData> ThreadNetworkDataTlv;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * Implements IPv6 Addresses TLV generation and parsing.
+ * Defines IPv6 Addresses TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class Ip6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIp6Addresses>
+class Ip6AddressesTlv : public TlvInfo<ThreadTlv::kIp6Addresses>
 {
 public:
     // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses to [1, 15].
     static constexpr uint8_t kMinAddresses = 1;
     static constexpr uint8_t kMaxAddresses = OT_IP6_MAX_MLR_ADDRESSES;
-
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void) { SetType(kIp6Addresses); }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const
-    {
-        return GetLength() >= sizeof(Ip6::Address) * Ip6AddressesTlv::kMinAddresses &&
-               GetLength() <= sizeof(Ip6::Address) * Ip6AddressesTlv::kMaxAddresses &&
-               (GetLength() % sizeof(Ip6::Address)) == 0;
-    }
-
-    /**
-     * Returns a pointer to the IPv6 address entry.
-     *
-     * @param[in]  aIndex  The index into the IPv6 address list.
-     *
-     * @returns A reference to the IPv6 address.
-     */
-    const Ip6::Address &GetIp6Address(uint8_t aIndex) const
-    {
-        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
-    }
-} OT_TOOL_PACKED_END;
+};
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
