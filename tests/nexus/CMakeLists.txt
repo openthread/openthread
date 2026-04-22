@@ -414,6 +414,7 @@ ot_nexus_test(srp_many_services_mtu_check "core;nexus")
 ot_nexus_test(srp_register_services_diff_lease "core;nexus")
 ot_nexus_test(srp_scale "core;nexus")
 ot_nexus_test(srp_server_reboot_port "core;nexus")
+ot_nexus_test(srp_ttl "core;nexus")
 ot_nexus_test(zero_len_external_route "core;nexus")
 
 # Trel
