@@ -71,10 +71,12 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
     return AsCoreType(aInstance).Get<Mle::Mle>().SetRouterEligible(aEligible);
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     return AsCoreType(aInstance).Get<Mle::Mle>().SetPreferredRouterId(aRouterId);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance)

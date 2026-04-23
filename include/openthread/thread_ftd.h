@@ -180,14 +180,16 @@ bool otThreadIsRouterEligible(otInstance *aInstance);
 otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 
 /**
- * Set the preferred Router Id.
+ * Sets the preferred Router Id.
+ *
+ * Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
  *
  * Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if
  * it can not be used, a randomly generated router id is picked. This property can be set only when the device role is
  * either detached or disabled.
  *
- * @note This API is reserved for testing and demo purposes only. Changing settings with
- * this API will render a production application non-compliant with the Thread Specification.
+ * @note This API is reserved for testing and demo purposes only. Changing settings with this API will render a
+ * production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aRouterId    The preferred Router Id.

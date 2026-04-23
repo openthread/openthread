@@ -875,8 +875,6 @@ public:
      */
     void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
 
-#endif
-
     /**
      * Sets the preferred Router Id. Upon becoming a router/leader the node
      * attempts to use this Router Id. If the preferred Router Id is not set or if it
@@ -889,6 +887,8 @@ public:
      * @retval kErrorInvalidState  Could not set (role is other than detached and disabled)
      */
     Error SetPreferredRouterId(uint8_t aRouterId);
+
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
     /**
      * Gets the Partition Id which the device joined successfully once.
