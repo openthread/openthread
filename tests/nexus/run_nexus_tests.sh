@@ -235,6 +235,8 @@ DEFAULT_TESTS=(
     "1_4_CS_TC_3"
     "srp_client_change_lease"
     "inform_previous_parent_on_reattach"
+    "leader_reboot_multiple_link_request"
+    "router_reboot_multiple_link_request"
 )
 
 # Use provided arguments or the default test list
