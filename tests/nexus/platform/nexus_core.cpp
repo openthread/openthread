@@ -594,6 +594,11 @@ void Core::HandleStateChanged(otChangedFlags aFlags, void *aContext)
         }
         break;
     }
+    case Mle::kRoleRouter:
+    case Mle::kRoleLeader:
+        node->SetLastParentId(0xffff);
+        break;
+
     default:
         break;
     }
