@@ -1295,6 +1295,8 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
     {
         if (aRxInfo.mNeighbor == &mParent)
         {
+            Router *selfRouter;
+
             // MLE Advertisement from parent
             router = &mParent;
 
@@ -1310,6 +1312,15 @@ Error Mle::HandleAdvertisementOnFtd(RxInfo &aRxInfo, uint16_t aSourceAddress, co
             }
 
             mRouterTable.UpdateRouterOnFtdChild(routeTlv, routerId);
+
+            selfRouter = mRouterTable.FindRouter(Get<Mac::Mac>().GetExtAddress());
+            if (selfRouter != nullptr)
+            {
+                // This node still exists in its own router table even though it is now a child,
+                // so the address release sent immediately after becoming a child must have failed.
+                // Retry it here when it is still in the router set of its parent's advertisements.
+                SendAddressRelease(selfRouter->GetRouterId());
+            }
         }
         else
         {
@@ -2204,7 +2215,15 @@ void Mle::HandleChildIdRequest(RxInfo &aRxInfo)
 
     if (router != nullptr)
     {
-        RemoveNeighbor(*router);
+        if (IsLeader())
+        {
+            // Release stale router entries immediately for children attaching to the leader
+            IgnoreError(mRouterTable.Release(router->GetRouterId()));
+        }
+        else
+        {
+            RemoveNeighbor(*router);
+        }
     }
 
     if (!child->IsStateValid())
@@ -3352,6 +3371,14 @@ exit:
 
 void Mle::SendAddressRelease(void)
 {
+    if (mRouterId != kInvalidRouterId)
+    {
+        SendAddressRelease(mRouterId);
+    }
+}
+
+void Mle::SendAddressRelease(uint8_t aRouterId)
+{
     Error          error = kErrorNone;
     Coap::Message *message;
     Ip6::Address   leaderRloc;
@@ -3359,7 +3386,7 @@ void Mle::SendAddressRelease(void)
     message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriAddressRelease);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(mRouterId)));
+    SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(aRouterId)));
     SuccessOrExit(error = Tlv::Append<ThreadExtMacAddressTlv>(*message, Get<Mac::Mac>().GetExtAddress()));
 
     GetLeaderRloc(leaderRloc);
