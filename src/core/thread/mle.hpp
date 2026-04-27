@@ -1501,6 +1501,7 @@ private:
         kTypeChildIdResponse,
         kTypeChildUpdateRequestAsChild,
         kTypeChildUpdateResponseAsChild,
+        kTypeChildUpdateResponseAndRequest,
         kTypeDataRequest,
         kTypeDataResponse,
         kTypeDiscoveryRequest,
@@ -1578,6 +1579,7 @@ private:
         Error AppendResponseTlv(const RxChallenge &aResponse);
         Error AppendLinkFrameCounterTlv(void);
         Error AppendMleFrameCounterTlv(void);
+        Error AppendThreeWayChildUpdateTlv(void);
         Error AppendAddress16Tlv(uint16_t aRloc16);
         Error AppendNetworkDataTlv(NetworkData::Type aType);
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
@@ -1693,6 +1695,7 @@ private:
 
     struct ChildUpdateResponseInfo
     {
+        Command      mCommand;     // The response command.
         TlvList      mTlvList;     // The TLVs to include in the Child Update Response.
         RxChallenge  mChallenge;   // The received challenge from the Child Update Request (can be empty if none).
         Ip6::Address mDestination; // The destination address.
@@ -2339,6 +2342,7 @@ private:
     void       HandleChildUpdateRequestOnChild(RxInfo &aRxInfo);
     void       HandleChildUpdateResponse(RxInfo &aRxInfo);
     void       HandleChildUpdateResponseOnChild(RxInfo &aRxInfo);
+    void       HandleChildUpdateResponseAndRequest(RxInfo &aRxInfo);
     void       HandleDataResponse(RxInfo &aRxInfo);
     Error      HandleLeaderData(RxInfo &aRxInfo);
     uint32_t   GetAttachStartDelay(void) const;
