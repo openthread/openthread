@@ -870,14 +870,17 @@ void TestBorderAgentEpskcRetrieval(void)
 
     nexus.AdvanceTime(0);
 
+    // 1. Form the topology: node0 acts as Leader and Border Agent.
     node0.Form();
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
 
+    // Configure node1 to be on the same channel/panid but not attached.
     SuccessOrQuit(node1.Get<Mac::Mac>().SetPanChannel(node0.Get<Mac::Mac>().GetPanChannel()));
     node1.Get<Mac::Mac>().SetPanId(node0.Get<Mac::Mac>().GetPanId());
     node1.Get<ThreadNetif>().Up();
 
+    // 2. Establish a DTLS connection from Node 1 to Node 0 (Border Agent) using PSKc.
     sockAddr.SetAddress(node0.Get<Mle::Mle>().GetLinkLocalAddress());
     sockAddr.SetPort(node0.Get<Manager>().GetUdpPort());
 
@@ -889,6 +892,7 @@ void TestBorderAgentEpskcRetrieval(void)
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
     VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
 
+    // 3. Send `Commissioner Petition` TMF command to become full commissioner.
     message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
     VerifyOrQuit(message != nullptr);
     SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
@@ -897,6 +901,7 @@ void TestBorderAgentEpskcRetrieval(void)
     nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcCommissionerPetitions == 1);
 
+    // 4. Send the new TMF command to retrieve the ePSKc (TAP).
     responseContext.mReceived = false;
     ClearAllBytes(responseContext.mTap);
 
@@ -908,11 +913,12 @@ void TestBorderAgentEpskcRetrieval(void)
     VerifyOrQuit(responseContext.mReceived);
     Log("Retrieved TAP: %s", responseContext.mTap);
 
+    // 5. Disconnect the initial session.
     node1.Get<Tmf::SecureAgent>().Close();
     nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
     VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
 
-    // Now connect again using the retrieved TAP
+    // 6. Connect again using the retrieved TAP on the ephemeral port.
     sockAddr.SetPort(node0.Get<EphemeralKeyManager>().GetUdpPort());
     SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(responseContext.mTap),
                                                        EphemeralKeyManager::Tap::kLength));
