@@ -212,6 +212,20 @@ service NexusService {
    * Joins a node to a network.
    */
   rpc JoinNetwork(JoinNetworkRequest) returns (JoinNetworkResponse);
+
+  /**
+   * Retrieves the radio model parameters.
+   */
+  rpc GetRadioParameters(GetRadioParametersRequest) returns (GetRadioParametersResponse);
+}
+
+message GetRadioParametersRequest {}
+
+message GetRadioParametersResponse {
+  float path_loss_constant = 1;
+  float path_loss_exponent = 2;
+  float radio_sensitivity = 3;
+  int32 mle_link_request_margin_min = 4;
 }
 
 message StreamRequest {

@@ -44,6 +44,8 @@
 
 #include "nexus_logging.hpp"
 #include "nexus_node.hpp"
+#include "nexus_radio.hpp"
+#include "nexus_radio_model.hpp"
 #include "simulation.grpc.pb.h"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
@@ -267,6 +269,18 @@ public:
 
     exit:
         return status;
+    }
+
+    grpc::Status GetRadioParameters(grpc::ServerContext * /* aContext */,
+                                    const nexus::GetRadioParametersRequest * /* aRequest */,
+                                    nexus::GetRadioParametersResponse *aResponse) override
+    {
+        aResponse->set_path_loss_constant(RadioModel::kPathLossConstant);
+        aResponse->set_path_loss_exponent(RadioModel::kPathLossExponent);
+        aResponse->set_radio_sensitivity(Radio::kRadioSensitivity);
+        aResponse->set_mle_link_request_margin_min(OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN);
+
+        return grpc::Status::OK;
     }
 
 private:

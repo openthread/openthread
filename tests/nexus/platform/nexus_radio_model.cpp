@@ -38,9 +38,6 @@ namespace Nexus {
 
 int16_t RadioModel::CalculateRssi(const Node &aTxNode, const Node &aRxNode)
 {
-    static constexpr double kPathLossConstant = 40.0;
-    static constexpr double kPathLossExponent = 20.0;
-
     // Simple path loss model
     // RSSI = TxPower - PathLoss
     // PathLoss = kPathLossExponent * log10(distance) + kPathLossConstant

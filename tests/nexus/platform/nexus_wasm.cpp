@@ -46,6 +46,8 @@
 
 #include "nexus_core.hpp"
 #include "nexus_node.hpp"
+#include "nexus_radio.hpp"
+#include "nexus_radio_model.hpp"
 #include "mac/mac.hpp"
 #include "thread/mle.hpp"
 #include "thread/neighbor_table.hpp"
@@ -224,6 +226,15 @@ EMSCRIPTEN_BINDINGS(nexus_simulator)
         .value("AsSedWithFullNetData", Node::kAsSedWithFullNetData);
 
     function("pollEvent", optional_override([]() -> val { return WasmManager::Get().PollEvent(); }));
+
+    function("getRadioParameters", optional_override([]() -> val {
+                 val params = val::object();
+                 params.set("pathLossConstant", RadioModel::kPathLossConstant);
+                 params.set("pathLossExponent", RadioModel::kPathLossExponent);
+                 params.set("radioSensitivity", Radio::kRadioSensitivity);
+                 params.set("mleLinkRequestMarginMin", OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN);
+                 return params;
+             }));
 
     function("getNow", optional_override([]() -> uint32_t { return Core::Get().GetNow().GetValue(); }));
 

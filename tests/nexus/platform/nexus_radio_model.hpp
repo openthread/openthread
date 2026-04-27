@@ -43,6 +43,9 @@ class Node;
 class RadioModel
 {
 public:
+    static constexpr double kPathLossConstant = 40.0;
+    static constexpr double kPathLossExponent = 20.0;
+
     RadioModel(void) = delete;
 
     /**
