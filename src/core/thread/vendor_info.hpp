@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/netdiag.h>
+
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -49,6 +51,11 @@ namespace ot {
 class VendorInfo : public InstanceLocator, private NonCopyable
 {
 public:
+    /**
+     * Unspecified Vendor OUI value.
+     */
+    static constexpr uint32_t kUnspecifiedOui = OT_THREAD_UNSPECIFIED_VENDOR_OUI;
+
     /**
      * Initializes the `VendorInfo`.
      *
@@ -130,14 +137,45 @@ public:
      */
     Error SetAppUrl(const char *aAppUrl);
 
+    /**
+     * Indicates whether the Vendor OUI is specified.
+     *
+     * @retval TRUE   The Vendor OUI is specified.
+     * @retval FALSE  The Vendor OUI is not specified.
+     */
+    bool IsOuiSpecified(void) const { return mOui != kUnspecifiedOui; }
+
+    /**
+     * Returns the Vendor OUI-24.
+     *
+     * @returns The Vendor OUI-24 value. Returns `kUnspecifiedOui` if it is not set.
+     */
+    uint32_t GetOui(void) const { return mOui; }
+
+    /**
+     * Sets the Vendor OUI-24.
+     *
+     * @param[in] aOui  The Vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66 is represented as
+     *                  `0x641666`). Must be a 24-bit value.
+     *
+     * @retval kErrorNone         Successfully set the Vendor OUI.
+     * @retval kErrorInvalidArgs  @p aOui is not a valid 24-bit value.
+     */
+    Error SetOui(uint32_t aOui);
+
 #else
     const char *GetName(void) const { return kName; }
     const char *GetModel(void) const { return kModel; }
     const char *GetSwVersion(void) const { return kSwVersion; }
     const char *GetAppUrl(void) const { return kAppUrl; }
+    uint32_t    GetOui(void) const { return kOui; }
+    bool        IsOuiSpecified(void) const { return kOui != kUnspecifiedOui; }
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 private:
+    static constexpr uint32_t kOui     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI;
+    static constexpr uint32_t kOuiMask = 0xffffff;
+
     // String buffer types (max size specified by corresponding TLV)
     typedef NetworkDiagnostic::VendorNameTlv::StringType      NameStringType;
     typedef NetworkDiagnostic::VendorModelTlv::StringType     ModelStringType;
@@ -154,6 +192,7 @@ private:
     ModelStringType     mModel;
     SwVersionStringType mSwVersion;
     AppUrlStringType    mAppUrl;
+    uint32_t            mOui;
 #endif
 };
 

@@ -69,6 +69,7 @@ TxtData::TxtData(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     , mShouldAddVendorName(true)
     , mShouldAddVendorModel(true)
+    , mShouldAddVendorOui(true)
 #endif
 {
 }
@@ -79,7 +80,8 @@ Error TxtData::Prepare(uint8_t  *aBuffer,
                        uint16_t  aBufferSize,
                        uint16_t &aLength,
                        bool      aAddVendorName,
-                       bool      aAddVendorModel)
+                       bool      aAddVendorModel,
+                       bool      aAddVendorOui)
 {
     Error                  error = kErrorNone;
     Dns::TxtDataEncoder    encoder(aBuffer, aBufferSize);
@@ -169,6 +171,14 @@ Error TxtData::Prepare(uint8_t  *aBuffer,
         SuccessOrExit(error = encoder.AppendStringEntry(Key::kModelName, Get<VendorInfo>().GetModel()));
     }
 
+    if (aAddVendorOui && Get<VendorInfo>().IsOuiSpecified())
+    {
+        uint8_t ouiData[kVendorOuiSize];
+
+        BigEndian::WriteUint24(Get<VendorInfo>().GetOui(), ouiData);
+        SuccessOrExit(error = encoder.AppendEntry(Key::kVendorOui, ouiData));
+    }
+
     aLength = encoder.GetLength();
 
 exit:
@@ -178,7 +188,7 @@ exit:
 Error TxtData::Prepare(ServiceTxtData &aTxtData)
 {
     return Prepare(aTxtData.mData, sizeof(aTxtData.mData), aTxtData.mLength, /* aAddVendorName */ false,
-                   /* aAddVendorModel */ false);
+                   /* aAddVendorModel */ false, /* aAddVendorOui */ false);
 }
 
 void TxtData::SetChangedCallback(ChangedCallback aCallback, void *aContext)
@@ -236,11 +246,16 @@ void TxtData::PrepareWithVendorData(Heap::Data &aTxtData)
         size += Tlv::kMaxVendorModelLength + sizeof(Key::kModelName) + sizeof('=');
     }
 
+    if (mShouldAddVendorOui)
+    {
+        size += kVendorOuiSize + sizeof(Key::kVendorOui) + sizeof('=');
+    }
+
     buffer = reinterpret_cast<uint8_t *>(Heap::CAlloc(size, sizeof(uint8_t)));
 
     OT_ASSERT(buffer != nullptr);
 
-    SuccessOrAssert(Prepare(buffer, size, length, mShouldAddVendorName, mShouldAddVendorModel));
+    SuccessOrAssert(Prepare(buffer, size, length, mShouldAddVendorName, mShouldAddVendorModel, mShouldAddVendorOui));
 
     if (mVendorData.GetLength() != 0)
     {
@@ -266,6 +281,7 @@ void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLeng
 
     mShouldAddVendorName  = true;
     mShouldAddVendorModel = true;
+    mShouldAddVendorOui   = true;
 
     iterator.Init(mVendorData.GetBytes(), mVendorData.GetLength());
 
@@ -278,6 +294,10 @@ void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLeng
         else if (entry.MatchesKey(Key::kModelName))
         {
             mShouldAddVendorModel = false;
+        }
+        else if (entry.MatchesKey(Key::kVendorOui))
+        {
+            mShouldAddVendorOui = false;
         }
     }
 
@@ -298,6 +318,14 @@ void TxtData::HandleVendorNameChange(void)
 void TxtData::HandleVendorModelChange(void)
 {
     if (mShouldAddVendorModel)
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleVendorOuiChange(void)
+{
+    if (mShouldAddVendorOui)
     {
         Refresh();
     }

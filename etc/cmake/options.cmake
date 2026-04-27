@@ -362,6 +362,7 @@ ot_int_option(OT_MLE_MAX_CHILDREN OPENTHREAD_CONFIG_MLE_MAX_CHILDREN "set maximu
 ot_int_option(OT_RCP_RESTORATION_MAX_COUNT OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT "set max RCP restoration count")
 ot_int_option(OT_RCP_TIME_SYNC_INTERVAL OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL "set host-RCP time sync interval in microseconds")
 ot_int_option(OT_RCP_TX_WAIT_TIME_SECS OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS "set RCP TX wait TIME in seconds")
+ot_int_option(OT_VENDOR_OUI OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI "set the vendor OUI")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

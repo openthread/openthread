@@ -279,6 +279,7 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 private:
+    static constexpr uint8_t  kVendorOuiSize       = OT_BORDER_AGENT_VENDOR_OUI_SIZE;
     static constexpr uint16_t kMaxSizeNoVendorData = OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH;
 
     static const char kRecordVersion[];
@@ -358,7 +359,12 @@ private:
 #endif
     };
 
-    Error Prepare(uint8_t *aBuffer, uint16_t aBufferSize, uint16_t &aLength, bool aAddVendorName, bool aAddVendorModel);
+    Error Prepare(uint8_t  *aBuffer,
+                  uint16_t  aBufferSize,
+                  uint16_t &aLength,
+                  bool      aAddVendorName,
+                  bool      aAddVendorModel,
+                  bool      aAddVendorOui);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     // Callback from Notifier
@@ -366,6 +372,7 @@ private:
     // Callbacks from VendorInfo
     void HandleVendorNameChange(void);
     void HandleVendorModelChange(void);
+    void HandleVendorOuiChange(void);
 
     void HandleChangedTask(void);
 
@@ -377,6 +384,7 @@ private:
     Heap::Data mVendorData;
     bool       mShouldAddVendorName;
     bool       mShouldAddVendorModel;
+    bool       mShouldAddVendorOui;
 #endif
 #endif
 };

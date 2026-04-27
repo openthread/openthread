@@ -52,7 +52,7 @@ extern "C" {
  *
  * @note This number versions both OpenThread platform and user APIs.
  */
-#define OPENTHREAD_API_VERSION (592)
+#define OPENTHREAD_API_VERSION (593)
 
 /**
  * @addtogroup api-instance

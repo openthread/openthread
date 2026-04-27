@@ -57,11 +57,14 @@ VendorInfo::VendorInfo(Instance &aInstance)
     static_assert(sizeof(kSwVersion) <= sizeof(SwVersionStringType), "VENDOR_SW_VERSION is too long");
     static_assert(sizeof(kAppUrl) <= sizeof(AppUrlStringType), "VENDOR_APP_URL is too long");
 
+    static_assert((kOui == kUnspecifiedOui) || ((kOui & ~kOuiMask) == 0), "VENDOR_OUI is invalid, MUST be 24-bit");
+
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     memcpy(mName, kName, sizeof(kName));
     memcpy(mModel, kModel, sizeof(kModel));
     memcpy(mSwVersion, kSwVersion, sizeof(kSwVersion));
     memcpy(mAppUrl, kAppUrl, sizeof(kAppUrl));
+    mOui = kOui;
 #endif
 }
 
@@ -109,6 +112,23 @@ Error VendorInfo::SetSwVersion(const char *aSwVersion)
 }
 
 Error VendorInfo::SetAppUrl(const char *aAppUrl) { return StringCopy(mAppUrl, aAppUrl, kStringCheckUtf8Encoding); }
+
+Error VendorInfo::SetOui(uint32_t aOui)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit((aOui & ~kOuiMask) == 0, error = kErrorInvalidArgs);
+
+    VerifyOrExit(aOui != mOui);
+    mOui = aOui;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<MeshCoP::BorderAgent::TxtData>().HandleVendorOuiChange();
+#endif
+
+exit:
+    return error;
+}
 
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 

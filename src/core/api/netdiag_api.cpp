@@ -85,7 +85,10 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance)
     return AsCoreType(aInstance).Get<VendorInfo>().GetAppUrl();
 }
 
+uint32_t otThreadGetVendorOui(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetOui(); }
+
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
 {
     return AsCoreType(aInstance).Get<VendorInfo>().SetName(aVendorName);
@@ -105,7 +108,13 @@ otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl
 {
     return AsCoreType(aInstance).Get<VendorInfo>().SetAppUrl(aVendorAppUrl);
 }
-#endif
+
+otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetOui(aVendorOui);
+}
+
+#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 void otThreadSetNonPreferredChannels(otInstance *aInstance, otChannelMask aChannelMask)
 {

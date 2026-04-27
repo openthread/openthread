@@ -426,6 +426,20 @@ const char *otThreadGetVendorSwVersion(otInstance *aInstance);
 const char *otThreadGetVendorAppUrl(otInstance *aInstance);
 
 /**
+ * Represents an unspecified Vendor OUI.
+ */
+#define OT_THREAD_UNSPECIFIED_VENDOR_OUI (0xffffffff)
+
+/**
+ * Get the vendor OUI-24
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The vendor OUI-24 value in hex format, or `OT_THREAD_UNSPECIFIED_VENDOR_OUI` is not specified.
+ */
+uint32_t otThreadGetVendorOui(otInstance *aInstance);
+
+/**
  * Set the vendor name string.
  *
  * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
@@ -493,6 +507,20 @@ otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwV
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorAppUrl is not valid (too long or not UTF8).
  */
 otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl);
+
+/**
+ * Set the vendor OUI-24.
+ *
+ * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aVendorOui   The vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66 is represented as
+ *                         `0x641666`). Must be a 24-bit value.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the vendor OUI.
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorOui is not a valid 24-bit value.
+ */
+otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui);
 
 /**
  * Callback function pointer to notify when a Network Diagnostic Reset request message is received for the

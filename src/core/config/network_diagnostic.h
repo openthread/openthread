@@ -89,6 +89,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI
+ *
+ * Specifies the default Vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66  is represented as
+ * `0x641666`).
+ *
+ * The value of `0xffffffff` (UINT32_MAX) is used to indicate OUI is not specified.
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI (0xffffffff)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
  *
  * Define as 1 to add APIs to allow Vendor Name, Model, SW Version to change at run-time.

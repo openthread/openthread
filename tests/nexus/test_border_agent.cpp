@@ -1461,6 +1461,14 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode, bool aExpectVendorIn
         aTxtData.ValidateKey("mn", expectedModelName);
         VerifyOrQuit(info.mHasModelName);
         VerifyOrQuit(StringMatch(info.mModelName, expectedModelName));
+
+        if (aNode.Get<VendorInfo>().IsOuiSpecified())
+        {
+            uint8_t ouiData[3];
+
+            BigEndian::WriteUint24(aNode.Get<VendorInfo>().GetOui(), ouiData);
+            aTxtData.ValidateKey("vo", ouiData);
+        }
     }
     else
     {
