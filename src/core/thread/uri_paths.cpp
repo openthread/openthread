@@ -67,6 +67,7 @@ struct Entry
     _("c/ar", kUriActiveReplace, "ActiveReplace")                 \
     _("c/as", kUriActiveSet, "ActiveSet")                         \
     _("c/ca", kUriCommissionerKeepAlive, "CommrKeepAlive")        \
+    _("c/ce", kUriCommissionerEpskc, "CommrEpskc")                \
     _("c/cg", kUriCommissionerGet, "CommrGet")                    \
     _("c/cp", kUriCommissionerPetition, "CommrPetition")          \
     _("c/cs", kUriCommissionerSet, "CommrSet")                    \

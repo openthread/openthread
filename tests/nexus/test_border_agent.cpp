@@ -826,6 +826,107 @@ void TestBorderAgentEphemeralKeyTapGeneration(void)
     VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+struct EpskcResponseContext
+{
+    bool mReceived;
+    char mTap[EphemeralKeyManager::Tap::kLength + 1];
+};
+
+static void HandleEpskcResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
+{
+    EpskcResponseContext *context = static_cast<EpskcResponseContext *>(aContext);
+
+    context->mReceived = true;
+    VerifyOrQuit(aResult == kErrorNone);
+    VerifyOrQuit(aMsg != nullptr);
+
+    uint16_t length = aMsg->mMessage.DetermineLengthAfterOffset();
+
+    VerifyOrQuit(length == EphemeralKeyManager::Tap::kLength);
+    
+    OffsetRange offsetRange;
+    offsetRange.InitFromMessageOffsetToEnd(aMsg->mMessage);
+    for (uint16_t i = 0; i < length; i++)
+    {
+        SuccessOrQuit(aMsg->mMessage.Read(offsetRange, context->mTap[i]));
+        offsetRange.AdvanceOffset(sizeof(char));
+    }
+    context->mTap[length] = '\0';
+}
+
+void TestBorderAgentEpskcRetrieval(void)
+{
+    Core                     nexus;
+    Node                    &node0 = nexus.CreateNode();
+    Node                    &node1 = nexus.CreateNode();
+    Ip6::SockAddr            sockAddr;
+    Pskc                     pskc;
+    Coap::Message           *message;
+    EpskcResponseContext     responseContext;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentEpskcRetrieval");
+
+    nexus.AdvanceTime(0);
+
+    node0.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
+
+    SuccessOrQuit(node1.Get<Mac::Mac>().SetPanChannel(node0.Get<Mac::Mac>().GetPanChannel()));
+    node1.Get<Mac::Mac>().SetPanId(node0.Get<Mac::Mac>().GetPanId());
+    node1.Get<ThreadNetif>().Up();
+
+    sockAddr.SetAddress(node0.Get<Mle::Mle>().GetLinkLocalAddress());
+    sockAddr.SetPort(node0.Get<Manager>().GetUdpPort());
+
+    node0.Get<KeyManager>().GetPskc(pskc);
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node0.Get<Manager>().GetCounters().mPskcCommissionerPetitions == 1);
+
+    responseContext.mReceived = false;
+    ClearAllBytes(responseContext.mTap);
+
+    message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerEpskc);
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message, HandleEpskcResponse, &responseContext));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    VerifyOrQuit(responseContext.mReceived);
+    Log("Retrieved TAP: %s", responseContext.mTap);
+
+    node1.Get<Tmf::SecureAgent>().Close();
+    nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+    VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+
+    // Now connect again using the retrieved TAP
+    sockAddr.SetPort(node0.Get<EphemeralKeyManager>().GetUdpPort());
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SetPsk(reinterpret_cast<const uint8_t *>(responseContext.mTap),
+                                                       EphemeralKeyManager::Tap::kLength));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
+    SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+    nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+    VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateConnected);
+
+    node1.Get<Tmf::SecureAgent>().Close();
+}
+#endif
+
 EpskcEvent GetNewestEpskcEvent(Node &aNode)
 {
     const EpskcEvent *epskcEvent = nullptr;
@@ -2574,6 +2675,9 @@ int main(void)
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
     ot::Nexus::TestBorderAgentEphemeralKeyTapGeneration();
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    ot::Nexus::TestBorderAgentEpskcRetrieval();
+#endif
     ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();

@@ -313,6 +313,9 @@ private:
         Error ForwardUdpRelay(const Message &aMessage);
         Error ForwardUdpProxy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
         void  HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        void HandleTmfCommissionerEpskc(Coap::Msg &aMsg);
+#endif
         void  HandleTmfRelayTx(Coap::Msg &aMsg);
         void  HandleTmfProxyTx(Coap::Msg &aMsg);
         void  HandleTmfDatasetGet(Coap::Message &aMessage, Uri aUri);

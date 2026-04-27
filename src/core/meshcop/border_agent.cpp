@@ -37,6 +37,9 @@
 
 #include "instance/instance.hpp"
 #include "meshcop/border_agent_txt_data.hpp"
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#include "meshcop/border_agent_ephemeral_key.hpp"
+#endif
 
 namespace ot {
 namespace MeshCoP {
@@ -642,6 +645,11 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     case kUriCommissionerKeepAlive:
         HandleTmfCommissionerKeepAlive(aMsg);
         break;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    case kUriCommissionerEpskc:
+        HandleTmfCommissionerEpskc(aMsg);
+        break;
+#endif
     case kUriRelayTx:
         HandleTmfRelayTx(aMsg);
         break;
@@ -712,6 +720,43 @@ void Manager::CoapDtlsSession::HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+void Manager::CoapDtlsSession::HandleTmfCommissionerEpskc(Coap::Msg &aMsg)
+{
+    Error                    error = kErrorNone;
+    OwnedPtr<Coap::Message>  response;
+    EphemeralKeyManager::Tap tap;
+
+    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+
+    Log<kUriCommissionerEpskc>(kReceive);
+
+    SuccessOrExit(error = tap.GenerateRandom());
+    SuccessOrExit(error = Get<EphemeralKeyManager>().Start(tap.mTap, 0, 0));
+
+    response.Reset(Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage));
+    VerifyOrExit(response != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = response->AppendPayloadMarker());
+    SuccessOrExit(error = response->AppendBytes(tap.mTap, EphemeralKeyManager::Tap::kLength));
+
+    SuccessOrExit(error = SendMessage(response.PassOwnership()));
+    Log<kUriCommissionerEpskc>(kSend, " response");
+
+exit:
+    if (error != kErrorNone)
+    {
+        Coap::Token token;
+
+        LogWarn("Failed to handle %s: %s", UriToString<kUriCommissionerEpskc>(), ErrorToString(error));
+        if (aMsg.mMessage.ReadToken(token) == kErrorNone)
+        {
+            SendErrorMessage(error, token);
+        }
+    }
+}
+#endif
 
 Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Msg &aMsg, Uri aUri)
 {
