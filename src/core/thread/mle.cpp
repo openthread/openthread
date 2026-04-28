@@ -3645,7 +3645,6 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 {
     Error         error = kErrorNone;
     Tlv::Bookmark tlvBookmark;
-    uint8_t       counter = 0;
 
     SuccessOrExit(error = Tlv::StartTlv(*this, Tlv::kAddressRegistration, tlvBookmark));
 
@@ -3654,14 +3653,12 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 
     // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
     VerifyOrExit(aMode != kAppendMeshLocalOnly);
-    counter++;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()))
     {
         // Prioritize DUA, compressed entry
         SuccessOrExit(error = AppendAddressRegistrationEntry(Get<DuaManager>().GetDomainUnicastAddress()));
-        counter++;
     }
 #endif
 
@@ -3685,9 +3682,6 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 #endif
 
         SuccessOrExit(error = AppendAddressRegistrationEntry(addr.GetAddress()));
-        counter++;
-        // only continue to append if there is available entry.
-        VerifyOrExit(counter < kMaxIpAddressesToRegister);
     }
 
     // Append external multicast addresses.  For sleepy end device,
@@ -3715,9 +3709,6 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 #endif
 
             SuccessOrExit(error = AppendAddressRegistrationEntry(addr.GetAddress()));
-            counter++;
-            // only continue to append if there is available entry.
-            VerifyOrExit(counter < kMaxIpAddressesToRegister);
         }
     }
 
