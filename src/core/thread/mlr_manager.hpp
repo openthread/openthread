@@ -53,6 +53,7 @@
 #include "common/timer.hpp"
 #include "net/netif.hpp"
 #include "thread/child.hpp"
+#include "thread/mlr_types.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/tmf.hpp"
 
@@ -141,7 +142,7 @@ public:
 #endif
 
 private:
-    class AddressArray : public Array<Ip6::Address, Ip6AddressesTlv::kMaxAddresses>
+    class AddressArray : public Array<Ip6::Address, kMlrMaxIp6Addresses>
     {
     public:
         bool IsEmptyOrContains(const Ip6::Address &aAddress) const { return IsEmpty() || Contains(aAddress); }

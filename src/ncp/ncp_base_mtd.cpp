@@ -329,7 +329,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
-        VerifyOrExit(addressesCount < Ip6AddressesTlv::kMaxAddresses, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(addressesCount < OT_IP6_MAX_MLR_ADDRESSES, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
         ++addressesCount;
     }

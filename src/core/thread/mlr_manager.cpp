@@ -310,7 +310,7 @@ Error MlrManager::RegisterMulticastListeners(const Ip6::Address *aAddresses,
     Error error;
 
     VerifyOrExit(aAddresses != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(aAddressNum > 0 && aAddressNum <= Ip6AddressesTlv::kMaxAddresses, error = kErrorInvalidArgs);
+    VerifyOrExit(aAddressNum > 0 && aAddressNum <= kMlrMaxIp6Addresses, error = kErrorInvalidArgs);
     VerifyOrExit(aContext == nullptr || aCallback != nullptr, error = kErrorInvalidArgs);
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
@@ -455,8 +455,7 @@ Error MlrManager::ParseMlrResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aSta
     if (Tlv::FindTlvValueOffsetRange(aMsg->mMessage, Ip6AddressesTlv::kType, offsetRange) == kErrorNone)
     {
         VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, error = kErrorParse);
-        VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
-                     error = kErrorParse);
+        VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= kMlrMaxIp6Addresses, error = kErrorParse);
 
         while (!offsetRange.IsEmpty())
         {

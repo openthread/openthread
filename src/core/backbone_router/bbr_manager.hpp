@@ -49,6 +49,7 @@
 #include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/dua_manager.hpp"
+#include "thread/mlr_types.hpp"
 #include "thread/network_data.hpp"
 #include "thread/tmf.hpp"
 

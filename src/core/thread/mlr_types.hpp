@@ -44,6 +44,9 @@ namespace ot {
  * @{
  */
 
+constexpr uint8_t kMlrMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
+constexpr uint8_t kMlrMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
+
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
 /**

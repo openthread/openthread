@@ -151,13 +151,7 @@ typedef TlvInfo<ThreadTlv::kThreadNetworkData> ThreadNetworkDataTlv;
 /**
  * Defines IPv6 Addresses TLV constants and types.
  */
-class Ip6AddressesTlv : public TlvInfo<ThreadTlv::kIp6Addresses>
-{
-public:
-    // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses to [1, 15].
-    static constexpr uint8_t kMinAddresses = 1;
-    static constexpr uint8_t kMaxAddresses = OT_IP6_MAX_MLR_ADDRESSES;
-};
+typedef TlvInfo<ThreadTlv::kIp6Addresses> Ip6AddressesTlv;
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 

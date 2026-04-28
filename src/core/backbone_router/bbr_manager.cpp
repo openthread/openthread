@@ -140,7 +140,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 
     OffsetRange  offsetRange;
     Ip6::Address address;
-    Ip6::Address addresses[Ip6AddressesTlv::kMaxAddresses];
+    Ip6::Address addresses[kMlrMaxIp6Addresses];
     uint8_t      failedAddressNum  = 0;
     uint8_t      successAddressNum = 0;
     TimeMilli    expireTime;
@@ -156,8 +156,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
     VerifyOrExit(Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Ip6AddressesTlv::kType, offsetRange) == kErrorNone,
                  error = kErrorParse);
     VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, status = kMlrGeneralFailure);
-    VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses,
-                 status = kMlrGeneralFailure);
+    VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= kMlrMaxIp6Addresses, status = kMlrGeneralFailure);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     // Required by Test Specification 5.10.22 MATN-TC-26, only for certification purpose
@@ -229,7 +228,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
             mMulticastListenersTable.Remove(address);
 
             // Put successfully de-registered addresses at the end of `addresses`.
-            addresses[Ip6AddressesTlv::kMaxAddresses - (++successAddressNum)] = address;
+            addresses[kMlrMaxIp6Addresses - (++successAddressNum)] = address;
         }
         else
         {
@@ -263,7 +262,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
             else
             {
                 // Put successfully registered addresses at the end of `addresses`.
-                addresses[Ip6AddressesTlv::kMaxAddresses - (++successAddressNum)] = address;
+                addresses[kMlrMaxIp6Addresses - (++successAddressNum)] = address;
             }
         }
     }
@@ -276,7 +275,7 @@ exit:
 
     if (successAddressNum > 0)
     {
-        SendBackboneMulticastListenerRegistration(&addresses[Ip6AddressesTlv::kMaxAddresses - successAddressNum],
+        SendBackboneMulticastListenerRegistration(&addresses[kMlrMaxIp6Addresses - successAddressNum],
                                                   successAddressNum, timeout);
     }
 }
@@ -325,7 +324,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     Tlv::Bookmark     tlvBookmark;
     BackboneTmfAgent &backboneTmf = Get<BackboneRouter::BackboneTmfAgent>();
 
-    OT_ASSERT(aAddressNum >= Ip6AddressesTlv::kMinAddresses && aAddressNum <= Ip6AddressesTlv::kMaxAddresses);
+    OT_ASSERT(aAddressNum >= kMlrMinIp6Addresses && aAddressNum <= kMlrMaxIp6Addresses);
 
     message = backboneTmf.AllocateAndInitNonConfirmablePostMessage(kUriBackboneMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
