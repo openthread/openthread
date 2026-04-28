@@ -96,7 +96,21 @@ public:
                                   const Ip6::Address &aDestination,
                                   uint16_t            aPayloadSize     = 0,
                                   uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
-                                  uint32_t            aResponseTimeout = 1000);
+                                  uint32_t            aResponseTimeout = 1000,
+                                  bool                aForceSource     = true);
+
+    void SendAndVerifyNoEchoResponse(Node               &aSender,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aPayloadSize     = 0,
+                                     uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                     uint32_t            aResponseTimeout = 1000);
+
+    void SendAndVerifyNoEchoResponse(Node               &aSender,
+                                     const Ip6::Address &aSrcAddress,
+                                     const Ip6::Address &aDestination,
+                                     uint16_t            aPayloadSize     = 0,
+                                     uint8_t             aHopLimit        = Ip6::kDefaultHopLimit,
+                                     uint32_t            aResponseTimeout = 1000);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Used by platform implementation

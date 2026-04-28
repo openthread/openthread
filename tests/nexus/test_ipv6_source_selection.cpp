@@ -78,25 +78,25 @@ void TestIPv6SourceSelection(void)
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1: RLOC source for RLOC destination");
-    nexus.SendAndVerifyEchoRequest(router, routerRloc, leaderRloc);
+    nexus.SendAndVerifyEchoRequest(router, routerRloc, leaderRloc, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 2: ML-EID source for ALOC destination");
-    nexus.SendAndVerifyEchoRequest(router, routerMleid, leaderAloc);
+    nexus.SendAndVerifyEchoRequest(router, routerMleid, leaderAloc, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: ML-EID source for ML-EID destination");
-    nexus.SendAndVerifyEchoRequest(router, routerMleid, leaderMleid);
+    nexus.SendAndVerifyEchoRequest(router, routerMleid, leaderMleid, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 4: Link-local source for Link-local destination");
-    nexus.SendAndVerifyEchoRequest(router, routerLinkLocal, leaderLinkLocal);
+    nexus.SendAndVerifyEchoRequest(router, routerLinkLocal, leaderLinkLocal, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 5: ML-EID source for Realm-local multicast destination");
     Ip6::Address multicastAddr;
     SuccessOrQuit(multicastAddr.FromString("ff03::1"));
-    nexus.SendAndVerifyEchoRequest(router, routerMleid, multicastAddr);
+    nexus.SendAndVerifyEchoRequest(router, routerMleid, multicastAddr, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 6: GUA source for GUA destination");
@@ -120,7 +120,7 @@ void TestIPv6SourceSelection(void)
     VerifyOrQuit(!leaderGua.IsUnspecified());
     VerifyOrQuit(!routerGua.IsUnspecified());
 
-    nexus.SendAndVerifyEchoRequest(router, routerGua, leaderGua);
+    nexus.SendAndVerifyEchoRequest(router, routerGua, leaderGua, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 7: GUA source for external address (default route)");
@@ -137,7 +137,7 @@ void TestIPv6SourceSelection(void)
     extNetifAddr.mValid                = true;
     SuccessOrQuit(otIp6AddUnicastAddress(&leader.GetInstance(), &extNetifAddr));
 
-    nexus.SendAndVerifyEchoRequest(router, routerGua, externalAddr);
+    nexus.SendAndVerifyEchoRequest(router, routerGua, externalAddr, 0, Ip6::kDefaultHopLimit, 1000, false);
 
     nexus.SaveTestInfo("test_ipv6_source_selection.json");
 }

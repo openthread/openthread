@@ -1093,7 +1093,8 @@ void Core::SendAndVerifyEchoRequest(Node               &aSender,
                                     const Ip6::Address &aDestination,
                                     uint16_t            aPayloadSize,
                                     uint8_t             aHopLimit,
-                                    uint32_t            aResponseTimeout)
+                                    uint32_t            aResponseTimeout,
+                                    bool                aForceSource)
 {
     static constexpr uint16_t kIdentifier = 0x1234;
 
@@ -1105,11 +1106,56 @@ void Core::SendAndVerifyEchoRequest(Node               &aSender,
 
     SuccessOrQuit(aSender.Get<Ip6::Icmp>().RegisterHandler(icmpHandler));
 
-    aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit);
+    aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit,
+                            aForceSource ? &aExpectedSource : nullptr);
     AdvanceTime(aResponseTimeout);
-    VerifyOrQuit(icmpContext.mResponseReceived);
 
     SuccessOrQuit(aSender.Get<Ip6::Icmp>().UnregisterHandler(icmpHandler));
+
+    VerifyOrQuit(icmpContext.mResponseReceived);
+}
+
+void Core::SendAndVerifyNoEchoResponse(Node               &aSender,
+                                       const Ip6::Address &aDestination,
+                                       uint16_t            aPayloadSize,
+                                       uint8_t             aHopLimit,
+                                       uint32_t            aResponseTimeout)
+{
+    static constexpr uint16_t kIdentifier = 0x1234;
+
+    IcmpEchoResponseContext icmpContext(aSender, kIdentifier);
+    Ip6::Icmp::Handler      icmpHandler(HandleIcmpResponse, &icmpContext);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().RegisterHandler(icmpHandler));
+
+    aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit);
+    AdvanceTime(aResponseTimeout);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().UnregisterHandler(icmpHandler));
+
+    VerifyOrQuit(!icmpContext.mResponseReceived);
+}
+
+void Core::SendAndVerifyNoEchoResponse(Node               &aSender,
+                                       const Ip6::Address &aSrcAddress,
+                                       const Ip6::Address &aDestination,
+                                       uint16_t            aPayloadSize,
+                                       uint8_t             aHopLimit,
+                                       uint32_t            aResponseTimeout)
+{
+    static constexpr uint16_t kIdentifier = 0x1234;
+
+    IcmpEchoResponseContext icmpContext(aSender, kIdentifier);
+    Ip6::Icmp::Handler      icmpHandler(HandleIcmpResponse, &icmpContext);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().RegisterHandler(icmpHandler));
+
+    aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit, &aSrcAddress);
+    AdvanceTime(aResponseTimeout);
+
+    SuccessOrQuit(aSender.Get<Ip6::Icmp>().UnregisterHandler(icmpHandler));
+
+    VerifyOrQuit(!icmpContext.mResponseReceived);
 }
 
 } // namespace Nexus
