@@ -44,8 +44,6 @@ namespace Mle {
 //---------------------------------------------------------------------------------------------------------------------
 // RouteTlv
 
-#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-
 void RouteTlv::Init(void)
 {
     SetType(kRoute);
@@ -66,8 +64,6 @@ bool RouteTlv::IsValid(void) const
 exit:
     return isValid;
 }
-
-#endif // #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // ConnectivityTlvValue
