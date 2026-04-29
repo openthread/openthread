@@ -699,6 +699,7 @@ Code Message::MapErrorToCoapCode(Error aError)
     case kErrorParse:
     case kErrorNotFound:
     case kErrorInvalidArgs:
+    case kErrorInvalidState:
         code = kCodeBadRequest;
         break;
     case kErrorNotImplemented:

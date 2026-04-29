@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/border_agent_ephemeral_key.h>
 #include <openthread/commissioner.h>
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
@@ -112,6 +113,8 @@ public:
         kScanDuration            = OT_MESHCOP_TLV_SCAN_DURATION,            ///< Scan Duration TLV
         kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,              ///< Energy List TLV
         kThreadDomainName        = OT_MESHCOP_TLV_THREAD_DOMAIN_NAME,       ///< Thread Domain Name TLV
+        kEpskcKey                = OT_MESHCOP_TLV_EPSKC_KEY,                ///< Ephemeral PSKc Key TLV
+        kEpskcTimeout            = OT_MESHCOP_TLV_EPSKC_TIMEOUT,            ///< Ephemeral PSKc Timeout TLV
         kWakeupChannel           = OT_MESHCOP_TLV_WAKEUP_CHANNEL,           ///< Wakeup Channel TLV
         kAdmitterState           = OT_MESHCOP_TLV_ADMITTER_STATE,           ///< Admitter State TLV
         kEnrollerId              = OT_MESHCOP_TLV_ENROLLER_ID,              ///< Enroller ID TLV
@@ -125,6 +128,11 @@ public:
      * Max length of Provisioning URL TLV.
      */
     static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
+
+    /**
+     * Max length of Ephemeral Key TLV.
+     */
+    static constexpr uint8_t kMaxEpskcKeyLength = OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH;
 
     static constexpr uint8_t kMaxCommissionerIdLength   = 64; ///< Max length of Commissioner ID TLV.
     static constexpr uint8_t kMaxEnrollerIdLength       = 64; ///< Max length of Enroller ID TLV.
@@ -260,6 +268,16 @@ typedef UintTlvInfo<Tlv::kPanId, uint16_t> PanIdTlv;
  * Defines Extended PAN ID TLV constants and types.
  */
 typedef SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId> ExtendedPanIdTlv;
+
+/**
+ * Defines Ephemeral PSKc Key TLV constants and types
+ */
+typedef StringTlvInfo<Tlv::kEpskcKey, Tlv::kMaxEpskcKeyLength> EpskcKeyTlv;
+
+/**
+ * Defines Ephemeral PSKc Timeout TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kEpskcTimeout, uint32_t> EpskcTimeoutTlv;
 
 /**
  * Implements Network Name TLV generation and parsing.

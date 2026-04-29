@@ -655,6 +655,11 @@ bool Manager::CoapDtlsSession::HandleResource(const char *aUriPath, Coap::Msg &a
     case kUriCommissionerKeepAlive:
         HandleTmfCommissionerKeepAlive(aMsg);
         break;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    case kUriCommissionerEpskc:
+        HandleTmfCommissionerEpskc(aMsg);
+        break;
+#endif
     case kUriRelayTx:
         HandleTmfRelayTx(aMsg);
         break;
@@ -725,6 +730,84 @@ void Manager::CoapDtlsSession::HandleTmfCommissionerKeepAlive(Coap::Msg &aMsg)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+void Manager::CoapDtlsSession::HandleTmfCommissionerEpskc(Coap::Msg &aMsg)
+{
+    Error                    error           = kErrorNone;
+    bool                     shouldAppendKey = false;
+    OwnedPtr<Coap::Message>  response;
+    StateTlv::State          responseState;
+    EpskcKeyTlv::StringType  keyString;
+    EphemeralKeyManager::Tap tap;
+    uint32_t                 timeout;
+    uint16_t                 port;
+
+    VerifyOrExit(aMsg.IsConfirmable());
+
+    VerifyOrExit(IsActiveCommissioner(), error = kErrorInvalidState);
+
+    Log<kUriCommissionerEpskc>(kReceive);
+
+    switch (error = Tlv::Find<EpskcKeyTlv>(aMsg.mMessage, keyString))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        SuccessOrExit(error = tap.GenerateRandom());
+        IgnoreError(StringCopy(keyString, tap.mTap));
+        shouldAppendKey = true;
+        break;
+    default:
+        ExitNow();
+    }
+
+    switch (error = Tlv::Find<EpskcTimeoutTlv>(aMsg.mMessage, timeout))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        timeout = 0;
+        break;
+    default:
+        ExitNow();
+    }
+
+    switch (error = Tlv::Find<CommissionerUdpPortTlv>(aMsg.mMessage, port))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        port = 0;
+        break;
+    default:
+        ExitNow();
+    }
+
+    responseState = (Get<EphemeralKeyManager>().Start(keyString, timeout, port) == kErrorNone) ? StateTlv::kAccept
+                                                                                               : StateTlv::kReject;
+
+    response.Reset(AllocateAndInitResponseFor(aMsg.mMessage));
+    VerifyOrExit(response != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*response, static_cast<uint8_t>(responseState)));
+
+    if ((responseState == StateTlv::kAccept) && shouldAppendKey)
+    {
+        SuccessOrExit(error = Tlv::Append<EpskcKeyTlv>(*response, keyString));
+    }
+
+    SuccessOrExit(error = SendMessage(response.PassOwnership()));
+
+    Log<kUriCommissionerEpskc>(kSend, " response");
+
+exit:
+    if (error != kErrorNone)
+    {
+        IgnoreError(SendAckResponseIfUnicastRequest(aMsg, error));
+    }
+}
+#endif
 
 Error Manager::CoapDtlsSession::ForwardToLeader(const Coap::Msg &aMsg, Uri aUri)
 {
