@@ -1799,7 +1799,7 @@ void Mle::HandleTimeTick(void)
             continue;
         }
 
-        if (IsLeader() && (mRouterTable.FindNextHopOf(router) == nullptr) &&
+        if (IsLeader() && (mRouterTable.FindNextHopTowards(router) == nullptr) &&
             (mRouterTable.GetLinkCost(router) >= kMaxRouteCost) && (age >= kMaxLeaderToRouterTimeout))
         {
             LogInfo("Router 0x%04x ID timeout expired (no route)", router.GetRloc16());

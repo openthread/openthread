@@ -242,22 +242,22 @@ public:
     const Router *FindRouterByRloc16(uint16_t aRloc16) const;
 
     /**
-     * Finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop towards a given router.
      *
-     * @param[in]  aRouter  The router to find next hop of.
+     * @param[in]  aRouter  The destination router.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    Router *FindNextHopOf(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopOf(aRouter)); }
+    Router *FindNextHopTowards(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopTowards(aRouter)); }
 
     /**
-     * Finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop towards a given router.
      *
-     * @param[in]  aRouter  The router to find next hop of.
+     * @param[in]  aRouter  The destination router.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    const Router *FindNextHopOf(const Router &aRouter) const;
+    const Router *FindNextHopTowards(const Router &aRouter) const;
 
     /**
      * Find the router for a given MAC Extended Address.

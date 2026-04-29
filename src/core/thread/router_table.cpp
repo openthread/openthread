@@ -317,7 +317,10 @@ const Router *RouterTable::FindRouterByRloc16(uint16_t aRloc16) const
     return FindRouterById(Mle::RouterIdFromRloc16(aRloc16));
 }
 
-const Router *RouterTable::FindNextHopOf(const Router &aRouter) const { return FindRouterById(aRouter.GetNextHop()); }
+const Router *RouterTable::FindNextHopTowards(const Router &aRouter) const
+{
+    return FindRouterById(aRouter.GetNextHop());
+}
 
 Router *RouterTable::FindRouter(const Mac::ExtAddress &aExtAddress)
 {
@@ -431,7 +434,7 @@ void RouterTable::GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHop
     }
 
     router  = FindRouterById(Mle::RouterIdFromRloc16(aDestRloc16));
-    nextHop = (router != nullptr) ? FindNextHopOf(*router) : nullptr;
+    nextHop = (router != nullptr) ? FindNextHopTowards(*router) : nullptr;
 
     if (Get<Mle::Mle>().IsChild())
     {
@@ -663,7 +666,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
             continue;
         }
 
-        nextHop = FindNextHopOf(*router);
+        nextHop = FindNextHopTowards(*router);
 
         cost = aRouteTlv.GetRouteCost(index);
         cost = (cost == 0) ? Mle::kMaxRouteCost : cost;
