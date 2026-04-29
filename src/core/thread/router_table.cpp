@@ -763,16 +763,16 @@ void RouterTable::GetRouterIdMask(Mle::RouterIdMask &aRouterIdMask) const
     }
 }
 
-void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor) const
+void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, uint16_t aDestRloc16) const
 {
     uint8_t routerIndex;
 
     GetRouterIdMask(aRouteTlv.GetRouterIdMask());
 
-    if ((aNeighbor != nullptr) && Mle::IsRouterRloc16(aNeighbor->GetRloc16()))
+    if (aDestRloc16 != Mle::kInvalidRloc16)
     {
-        // Sending a Link Accept message that may require truncation
-        // of Route64 TLV.
+        // If a valid destination RLOC16 is provided, we use a compact
+        // format for the Route TLV (used for Link Accept messages).
 
         uint8_t routerCount = mRouters.GetLength();
 
@@ -785,12 +785,13 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
                     break;
                 }
 
-                if (Get<Mle::Mle>().MatchesRouterId(routerId) || (routerId == aNeighbor->GetRouterId()) ||
+                // The Route TLV must include entries for this device, the
+                // leader, and the destination router (the neighbor itself or
+                // its parent if it is a child).
+
+                if (Get<Mle::Mle>().MatchesRouterId(routerId) || (routerId == Mle::RouterIdFromRloc16(aDestRloc16)) ||
                     (routerId == Get<Mle::Mle>().GetLeaderId()))
                 {
-                    // Route64 TLV must contain this device and the
-                    // neighboring router to ensure that at least this
-                    // link can be established.
                     continue;
                 }
 
@@ -802,7 +803,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
             }
 
             // Ensure that the neighbor will process the current
-            // Route64 TLV in a subsequent message exchange
+            // Route TLV in a subsequent message exchange
             aRouteTlv.GetRouterIdMask().SetSequence(GetRouterIdSequence() - kLinkAcceptSequenceRollback);
         }
     }

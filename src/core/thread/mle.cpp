@@ -3957,12 +3957,16 @@ exit:
     return error;
 }
 
-Error Mle::TxMessage::AppendRouteTlv(Neighbor *aNeighbor)
+Error Mle::TxMessage::AppendRouteTlv(void) { return AppendFullOrCompactRouteTlv(kInvalidRloc16); }
+
+Error Mle::TxMessage::AppendCompactRouteTlv(uint16_t aDestRloc16) { return AppendFullOrCompactRouteTlv(aDestRloc16); }
+
+Error Mle::TxMessage::AppendFullOrCompactRouteTlv(uint16_t aDestRloc16)
 {
     RouteTlv tlv;
 
     tlv.Init();
-    Get<RouterTable>().FillRouteTlv(tlv, aNeighbor);
+    Get<RouterTable>().FillRouteTlv(tlv, aDestRloc16);
 
     return tlv.AppendTo(*this);
 }

@@ -1603,7 +1603,8 @@ private:
         Error AppendCslClockAccuracyTlv(void);
 #endif
 #if OPENTHREAD_FTD
-        Error AppendRouteTlv(Neighbor *aNeighbor = nullptr);
+        Error AppendRouteTlv(void);
+        Error AppendCompactRouteTlv(uint16_t aDestRloc16);
         Error AppendActiveDatasetTlv(void);
         Error AppendPendingDatasetTlv(void);
         Error AppendConnectivityTlv(void);
@@ -1625,6 +1626,7 @@ private:
     private:
         Error AppendAddressRegistrationEntry(const Ip6::Address &aAddress);
         Error AppendDatasetTlv(MeshCoP::Dataset::Type aDatasetType);
+        Error AppendFullOrCompactRouteTlv(uint16_t aDestRloc16);
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1711,6 +1713,7 @@ private:
         Mac::ExtAddress mExtAddress;       // The neighbor/router extended address.
         TlvList         mRequestedTlvList; // The requested TLVs in Link Request.
         RxChallenge     mRxChallenge;      // The challenge in Link Request.
+        uint16_t        mRloc16;           // The neighbor/router RLOC16.
         uint8_t         mLinkMargin;       // Link margin of the received Link Request.
     };
 #endif

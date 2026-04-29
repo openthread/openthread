@@ -689,7 +689,6 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
     Neighbor      *neighbor = nullptr;
     uint16_t       version;
     LeaderData     leaderData;
-    uint16_t       sourceAddress;
     LinkAcceptInfo info;
 
     Log(kMessageReceive, kTypeLinkRequest, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -717,12 +716,12 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
 
     info.mLinkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
 
-    switch (Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress))
+    switch (Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, info.mRloc16))
     {
     case kErrorNone:
-        if (IsRouterRloc16(sourceAddress))
+        if (IsRouterRloc16(info.mRloc16))
         {
-            Router *router = mRouterTable.FindRouterByRloc16(sourceAddress);
+            Router *router = mRouterTable.FindRouterByRloc16(info.mRloc16);
 
             VerifyOrExit(router != nullptr, error = kErrorParse);
 
@@ -745,8 +744,9 @@ void Mle::HandleLinkRequest(RxInfo &aRxInfo)
     case kErrorNotFound:
         // A missing source address indicates that the router was
         // recently reset.
-        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsRouterRloc16(aRxInfo.mNeighbor->GetRloc16()),
-                     error = kErrorDrop);
+        VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorDrop);
+        info.mRloc16 = aRxInfo.mNeighbor->GetRloc16();
+        VerifyOrExit(IsRouterRloc16(info.mRloc16), error = kErrorDrop);
         neighbor = aRxInfo.mNeighbor;
         break;
 
@@ -839,7 +839,7 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
         switch (tlvType)
         {
         case Tlv::kRoute:
-            SuccessOrExit(error = message->AppendRouteTlv(router));
+            SuccessOrExit(error = message->AppendCompactRouteTlv(aInfo.mRloc16));
             break;
 
         case Tlv::kAddress16:
@@ -1083,6 +1083,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         }
 
         info.mExtAddress = router->GetExtAddress();
+        info.mRloc16     = router->GetRloc16();
         info.mLinkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
 
         SuccessOrExit(error = SendLinkAccept(info));
