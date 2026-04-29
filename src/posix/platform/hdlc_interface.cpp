@@ -189,7 +189,11 @@ void HdlcInterface::Read(void)
     {
         Decode(buffer, static_cast<uint16_t>(rval));
     }
-    else if ((rval < 0) && (errno != EAGAIN) && (errno != EINTR))
+    else if (rval == 0)
+    {
+        DieNowWithMessage("RCP device disconnected (EOF)", OT_EXIT_FAILURE);
+    }
+    else if ((errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
     {
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
