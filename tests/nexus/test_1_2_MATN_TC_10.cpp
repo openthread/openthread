@@ -50,6 +50,11 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 static constexpr uint32_t kStabilizationTime = 10 * 1000;
 
 /**
+ * Time to advance for address resolution and ping reply, in milliseconds.
+ */
+static constexpr uint32_t kAddressResolutionTime = 20 * 1000;
+
+/**
  * Time to advance for the BBR selection to complete, in milliseconds.
  */
 static constexpr uint32_t kBbrSelectionTime = 10 * 1000;
@@ -298,7 +303,7 @@ void TestMatnTc10(void)
      * - Pass Criteria:
      *   - N/A
      */
-    nexus.AdvanceTime(kStabilizationTime);
+    nexus.AdvanceTime(kAddressResolutionTime);
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 8a: BR_1 powers down");
