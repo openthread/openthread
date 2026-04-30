@@ -30,6 +30,7 @@ import("../../etc/gn/openthread.gni")
 openthread_cli_sources = [
   "cli.cpp",
   "cli.hpp",
+  "cli_api.cpp",
   "cli_ba.cpp",
   "cli_ba.hpp",
   "cli_bbr.cpp",

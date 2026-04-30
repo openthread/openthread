@@ -8826,54 +8826,5 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     return error;
 }
 
-extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
-{
-    Interpreter::Initialize(aInstance, aCallback, aContext);
-
-#if OPENTHREAD_CONFIG_CLI_VENDOR_COMMANDS_ENABLE && OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES > 1
-    otCliVendorSetUserCommands();
-#endif
-}
-
-extern "C" void otCliInputLine(char *aBuf) { Interpreter::GetInterpreter().ProcessLine(aBuf); }
-
-extern "C" otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
-{
-    return Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
-}
-
-extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)
-{
-    Interpreter::GetInterpreter().OutputBytes(aBytes, aLength);
-}
-
-extern "C" void otCliOutputFormat(const char *aFmt, ...)
-{
-    va_list aAp;
-    va_start(aAp, aFmt);
-    Interpreter::GetInterpreter().OutputFormatV(aFmt, aAp);
-    va_end(aAp);
-}
-
-extern "C" void otCliAppendResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
-
-extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-
-    VerifyOrExit(Interpreter::IsInitialized());
-
-    // CLI output is being used for logging, so we set the flag
-    // `EmittingCommandOutput` to false indicate this.
-    Interpreter::GetInterpreter().SetEmittingCommandOutput(false);
-    Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
-    Interpreter::GetInterpreter().OutputNewLine();
-    Interpreter::GetInterpreter().SetEmittingCommandOutput(true);
-
-exit:
-    return;
-}
-
 } // namespace Cli
 } // namespace ot

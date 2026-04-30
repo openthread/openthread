@@ -89,7 +89,6 @@
 namespace ot {
 
 /**
- * @namespace ot::Cli
  *
  * @brief
  *   This namespace contains definitions for the CLI interpreter.
