@@ -124,8 +124,8 @@ void LinkMetricsManager::Update(void)
 // This method updates the Link Metrics Subject in the subject list. It adds new neighbors to the list.
 void LinkMetricsManager::UpdateSubjects(void)
 {
-    Neighbor::Info         neighborInfo;
-    otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+    Neighbor::Info          neighborInfo;
+    NeighborTable::Iterator iterator = NeighborTable::kIteratorInit;
 
     while (Get<NeighborTable>().GetNextNeighborInfo(iterator, neighborInfo) == kErrorNone)
     {

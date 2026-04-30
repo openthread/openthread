@@ -197,7 +197,7 @@ exit:
     return neighbor;
 }
 
-Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(Iterator &aIterator, Neighbor::Info &aNeighInfo)
 {
     Error   error = kErrorNone;
     int16_t index;
@@ -239,12 +239,12 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
             aNeighInfo.SetFrom(*router);
             aNeighInfo.mIsChild = false;
             index++;
-            aIterator = static_cast<otNeighborInfoIterator>(-index);
+            aIterator = static_cast<Iterator>(-index);
             ExitNow();
         }
     }
 
-    aIterator = static_cast<otNeighborInfoIterator>(-index);
+    aIterator = static_cast<Iterator>(-index);
     error     = kErrorNotFound;
 
 exit:
@@ -255,11 +255,11 @@ exit:
 
 #if OPENTHREAD_MTD
 
-Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(Iterator &aIterator, Neighbor::Info &aNeighInfo)
 {
     Error error = kErrorNotFound;
 
-    VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT);
+    VerifyOrExit(aIterator == kIteratorInit);
 
     aIterator++;
     VerifyOrExit(Get<Mle::Mle>().GetParent().IsStateValid());
