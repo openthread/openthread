@@ -73,7 +73,7 @@ void TestRouterReattach(void)
     {
         nodes[i]->Get<Mle::Mle>().SetRouterUpgradeThreshold(32);
         nodes[i]->Get<Mle::Mle>().SetRouterDowngradeThreshold(32);
-        nodes[i]->Get<Mle::Mle>().SetRouterSelectionJitter(1);
+        VerifyOrQuit(nodes[i]->Get<Mle::Mle>().SetRouterSelectionJitter(1) == kErrorNone);
         nodes[i]->Join(*nodes[0]);
         nexus.AdvanceTime(kAttachToRouterTime);
         Log("Node %u role: %s", i + 1, nodes[i]->GetExtendedRoleString());
@@ -85,7 +85,7 @@ void TestRouterReattach(void)
     nodes[1]->Reset();
     nodes[1]->Get<Mle::Mle>().SetRouterUpgradeThreshold(32);
     nodes[1]->Get<Mle::Mle>().SetRouterDowngradeThreshold(32);
-    nodes[1]->Get<Mle::Mle>().SetRouterSelectionJitter(3);
+    VerifyOrQuit(nodes[1]->Get<Mle::Mle>().SetRouterSelectionJitter(3) == kErrorNone);
 
     // Re-enable and start
     Log("Step 4: Restarting Node 2");
