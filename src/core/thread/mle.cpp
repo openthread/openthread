@@ -90,8 +90,14 @@ Mle::Mle(Instance &aInstance)
     , mThreadVersionCheckEnabled(true)
 #endif
     , mNetworkIdTimeout(kNetworkIdTimeout)
+
     , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
     , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
+    , mRouterUpgradeDelayMinimum(kRouterTransitionMinimumDefault)
+    , mRouterUpgradeDelayJitter(kRouterTransitionJitterDefault)
+    , mRouterDowngradeDelayMinimum(kRouterTransitionMinimumDefault)
+    , mRouterDowngradeDelayJitter(kRouterTransitionJitterDefault)
+
     , mPreviousPartitionRouterIdSequence(0)
     , mPreviousPartitionIdTimeout(0)
     , mChildRouterLinks(kChildRouterLinks)
@@ -6094,7 +6100,7 @@ void Mle::AnnounceHandler::HandleAnnounceAttachSuccess(void)
     mState = kStateToInformPreviousChannel;
 
 #if OPENTHREAD_FTD
-    if (Get<Mle>().IsFullThreadDevice() && !Get<Mle>().IsRouter() && Get<Mle>().IsRouterRoleTransitionPending())
+    if (Get<Mle>().IsFullThreadDevice() && !Get<Mle>().IsRouter() && Get<Mle>().IsRouterRoleTransitioning())
     {
         ExitNow();
     }

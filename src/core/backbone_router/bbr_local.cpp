@@ -288,7 +288,7 @@ void Local::HandleTimeTick(void)
     // Delay registration while router role transition is pending
     // (i.e., device may soon switch from REED to router role).
 
-    VerifyOrExit(!Get<Mle::Mle>().IsRouterRoleTransitionPending());
+    VerifyOrExit(!Get<Mle::Mle>().IsRouterRoleTransitioning());
 
     if (mRegistrationTimeout > 0)
     {

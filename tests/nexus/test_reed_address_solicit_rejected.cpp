@@ -99,7 +99,7 @@ void TestReedAddressSolicitRejected(void)
 
     Log("Step 4: Force REED to try to become a router");
     reed.Get<Mle::Mle>().SetRouterUpgradeThreshold(16);
-    reed.Get<Mle::Mle>().SetRouterSelectionJitter(120);
+    VerifyOrQuit(reed.Get<Mle::Mle>().SetRouterSelectionJitter(120) == kErrorNone);
 
     // We advance time enough to cover jitter and router upgrade attempt.
     nexus.AdvanceTime(130 * 1000);

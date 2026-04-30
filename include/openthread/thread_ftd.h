@@ -511,12 +511,22 @@ uint8_t otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
 void otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
+ * For backwards compatibility, the maximum router selection jitter that can be set or fetched through Thread API
+ * functions is limited to 255 seconds.  This maximum will be returned if the actual value is larger.
+ */
+#define OT_API_MAX_ROUTER_SELECTION_JITTER (255)
+
+/**
  * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * Note: This is limited to returning a maximum of 255 seconds if the actual
+ * jitter set is higher than this maximum.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  *
- * @returns The ROUTER_SELECTION_JITTER value.
+ * @returns The ROUTER_SELECTION_JITTER value (or max 255 seconds).
  *
+ * @sa OT_API_MAX_ROUTER_SELECTION_JITTER
  * @sa otThreadSetRouterSelectionJitter
  */
 uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance);
@@ -528,7 +538,7 @@ uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance);
  * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
+ * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value (max 255 seconds).
  *
  * @sa otThreadGetRouterSelectionJitter
  */
