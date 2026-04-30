@@ -49,6 +49,7 @@
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/file.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -420,6 +421,27 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
     {
         perror("open uart failed");
         ExitNow();
+    }
+
+    if (aRadioUrl.HasParam("uart-exclusive"))
+    {
+        // Lock the device early to prevent concurrent access
+        if (flock(fd, LOCK_EX | LOCK_NB) == -1)
+        {
+            // LogCrit("flock failed: %s (device may already be in use)", strerror(errno));
+            perror("flock uart failed, device already in use");
+            close(fd);
+            fd = -1;
+            ExitNow();
+        }
+
+#ifdef TIOCEXCL
+        // Set exclusive access mode if supported by the platform
+        if (ioctl(fd, TIOCEXCL) == -1)
+        {
+            otLogWarnPlat("ioctl(TIOCEXCL) failed: %s", strerror(errno));
+        }
+#endif
     }
 
     if (isatty(fd))
