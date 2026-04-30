@@ -85,6 +85,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
     "    uart-init-deassert             Deassert lines on init when flow control is disabled.\n"     \
     "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"   \
+    "    uart-exclusive                 Lock uart device using flock / TIOCEXCL.\n"                  \
     "\n"
 #else
 #define OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
