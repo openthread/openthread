@@ -355,14 +355,22 @@ private:
 
     struct UserCommandsEntry
     {
+        UserCommandsEntry(void)
+            : mCommands(nullptr)
+            , mLength(0)
+            , mContext(nullptr)
+        {
+        }
+
         const otCliCommand *mCommands;
         uint8_t             mLength;
         void               *mContext;
     };
 
-    UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
-    bool              mCommandIsPending;
-    bool              mInternalDebugCommand;
+    static UserCommandsEntry sUserCommands[kMaxUserCommandEntries];
+
+    bool mCommandIsPending;
+    bool mInternalDebugCommand;
 #if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
     bool mPromptEnabled;
 #endif

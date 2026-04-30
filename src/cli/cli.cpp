@@ -74,6 +74,8 @@ namespace Cli {
 Interpreter *Interpreter::sInterpreter = nullptr;
 static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 
+Interpreter::UserCommandsEntry Interpreter::sUserCommands[kMaxUserCommandEntries];
+
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : OutputImplementer(aCallback, aContext)
     , Utils(aInstance, *this)
@@ -155,8 +157,6 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     otDiagSetOutputCallback(GetInstancePtr(), &Interpreter::HandleDiagOutput, this);
 #endif
-
-    ClearAllBytes(mUserCommands);
 
     OutputPrompt();
 }
@@ -380,7 +380,7 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    for (const UserCommandsEntry &entry : mUserCommands)
+    for (const UserCommandsEntry &entry : sUserCommands)
     {
         for (uint8_t i = 0; i < entry.mLength; i++)
         {
@@ -402,7 +402,7 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
 {
     otError error = OT_ERROR_FAILED;
 
-    for (UserCommandsEntry &entry : mUserCommands)
+    for (UserCommandsEntry &entry : sUserCommands)
     {
         if (entry.mCommands == nullptr)
         {
@@ -8810,7 +8810,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     {
         OutputCommandTable(kCommands);
 
-        for (const UserCommandsEntry &entry : mUserCommands)
+        for (const UserCommandsEntry &entry : sUserCommands)
         {
             for (uint8_t i = 0; i < entry.mLength; i++)
             {
