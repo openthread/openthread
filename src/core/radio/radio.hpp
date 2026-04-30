@@ -916,15 +916,15 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
                              const Mac::KeyMaterial &aCurrKey,
                              const Mac::KeyMaterial &aNextKey)
 {
-    otRadioKeyType aKeyType;
+    otRadioKeyType keyType;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aKeyType = OT_KEY_TYPE_KEY_REF;
+    keyType = OT_KEY_TYPE_KEY_REF;
 #else
-    aKeyType = OT_KEY_TYPE_LITERAL_KEY;
+    keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, aKeyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }
