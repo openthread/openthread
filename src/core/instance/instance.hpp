@@ -210,6 +210,11 @@ public:
 
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
     /**
+     * Specifies number of static OpenThread instances.
+     */
+    static constexpr uint16_t kNumStaticInstances = OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM;
+
+    /**
      * This static method initializes the OpenThread instance.
      *
      * This method utilizes static buffer to initialize the OpenThread instance.
