@@ -49,6 +49,7 @@
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
