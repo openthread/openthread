@@ -176,10 +176,10 @@ public:
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
-     * @param[in]  aContext   @p aUserCommands length.
+     * @param[in]  aContext   Context to use when invoking the command handler.
      *
-     * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aCommands.
-     * @retval OT_ERROR_FAILED  No available UserCommandsEntry to register requested user commands.
+     * @retval OT_ERROR_NONE     Successfully updated command table with commands from @p aCommands.
+     * @retval OT_ERROR_NO_BUFS  No available `UserCommandsEntry` to register the requested user commands.
      */
     otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 

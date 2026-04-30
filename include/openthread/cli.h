@@ -99,11 +99,11 @@ void otCliInputLine(char *aBuf);
  * Set a user command table.
  *
  * @param[in]  aUserCommands  A pointer to an array with user commands.
- * @param[in]  aLength        @p aUserCommands length.
- * @param[in]  aContext       @p The context passed to the handler.
+ * @param[in]  aLength        The @p aUserCommands length.
+ * @param[in]  aContext       The context passed to the handler.
  *
- * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aUserCommands.
- * @retval OT_ERROR_FAILED  Maximum number of command entries have already been set.
+ * @retval OT_ERROR_NONE     Successfully updated command table with commands from @p aUserCommands.
+ * @retval OT_ERROR_NO_BUFS  Maximum number of command entries have already been set.
  */
 otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext);
 
