@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Time Sync service.
- *
  */
 
-#ifndef CONFIG_TIME_SYNC_H_
-#define CONFIG_TIME_SYNC_H_
+#ifndef OT_CORE_CONFIG_TIME_SYNC_H_
+#define OT_CORE_CONFIG_TIME_SYNC_H_
+
+/**
+ * @addtogroup config-time-sync
+ *
+ * @brief
+ *   This module includes configuration variables for the Time Sync service.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
  *
  * Define as 1 to enable the time synchronization service feature.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #define OPENTHREAD_CONFIG_TIME_SYNC_ENABLE 0
@@ -53,7 +60,6 @@
  * If the device is not router capable, the device will remain an orphan.
  *
  * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is set)
- *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
 #define OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED 0
@@ -65,7 +71,6 @@
  * Specifies the default period of time synchronization, in seconds.
  *
  * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
 #define OPENTHREAD_CONFIG_TIME_SYNC_PERIOD 30
@@ -77,7 +82,6 @@
  * Specifies the default XTAL threshold for a device to become Router in time synchronization enabled network, in PPM.
  *
  * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is set)
- *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD
 #define OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD 300
@@ -88,10 +92,13 @@
  *
  * This setting sets the minimum amount of time (in microseconds) that the network time must jump due to
  * a time sync event for listeners to be notified of the new network time.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
 #define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
 #endif
 
-#endif // CONFIG_TIME_SYNC_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_TIME_SYNC_H_

@@ -33,17 +33,7 @@
 
 #include "data_poll_sender.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
-#include "common/num_utils.hpp"
-#include "net/ip6.hpp"
-#include "net/netif.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle.hpp"
-#include "thread/thread_netif.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -67,16 +57,16 @@ DataPollSender::DataPollSender(Instance &aInstance)
 
 const Neighbor &DataPollSender::GetParent(void) const
 {
-    const Neighbor &parentCandidate = Get<Mle::MleRouter>().GetParentCandidate();
+    const Neighbor &parentCandidate = Get<Mle::Mle>().GetParentCandidate();
 
-    return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::MleRouter>().GetParent();
+    return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::Mle>().GetParent();
 }
 
 void DataPollSender::StartPolling(void)
 {
     VerifyOrExit(!mEnabled);
 
-    OT_ASSERT(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
+    OT_ASSERT(!Get<Mle::Mle>().IsRxOnWhenIdle());
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
@@ -125,7 +115,7 @@ exit:
         break;
 
     default:
-        LogWarn("Unexpected error %s requesting data poll", ErrorToString(error));
+        LogWarnOnError(error, "request data poll tx");
         ScheduleNextPoll(kRecalculatePollPeriod);
         break;
     }
@@ -146,7 +136,7 @@ Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 
     // Use extended address attaching to a new parent (i.e. parent is the parent candidate).
     if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) ||
-        (&parent == &Get<Mle::MleRouter>().GetParentCandidate()))
+        (&parent == &Get<Mle::Mle>().GetParentCandidate()))
     {
         aDest.SetExtended(parent.GetExtAddress());
     }
@@ -171,11 +161,7 @@ Error DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
     {
         VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD, error = kErrorInvalidArgs);
 
-        // Clipped by the maximal value.
-        if (aPeriod > kMaxExternalPeriod)
-        {
-            aPeriod = kMaxExternalPeriod;
-        }
+        aPeriod = Min(aPeriod, kMaxExternalPeriod);
     }
 
     if (mExternalPollPeriod != aPeriod)
@@ -208,6 +194,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
+    uint8_t      maxRetxAttempts;
 
     VerifyOrExit(mEnabled);
 
@@ -220,7 +207,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     if (GetParent().IsStateInvalid())
     {
         StopPolling();
-        IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
+        IgnoreError(Get<Mle::Mle>().BecomeDetached());
         ExitNow();
     }
 
@@ -258,20 +245,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         mPollTxFailureCounter++;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts
-                                                                         : kMaxPollRetxAttempts);
+        maxRetxAttempts = aFrame.HasCslIe() ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts;
 #else
-        LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                kMaxPollRetxAttempts);
+        maxRetxAttempts = kMaxPollRetxAttempts;
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (mPollTxFailureCounter <
-            ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
-#else
-        if (mPollTxFailureCounter < kMaxPollRetxAttempts)
-#endif
+        LogInfoOnError(aError, "send data poll, retx:%u/%u", mPollTxFailureCounter, maxRetxAttempts);
+
+        if (mPollTxFailureCounter < maxRetxAttempts)
         {
             if (!mRetxMode)
             {
@@ -344,11 +325,11 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
     bool sendDataPoll = false;
 
     VerifyOrExit(mEnabled);
-    VerifyOrExit(Get<Mle::MleRouter>().GetParent().IsEnhancedKeepAliveSupported());
+    VerifyOrExit(Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported());
     VerifyOrExit(aFrame.GetSecurityEnabled());
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.mInfo.mTxInfo.mIsARetx && (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr))
+    if (aFrame.mInfo.mTxInfo.mIsARetx && aFrame.HasCslIe())
     {
         // For retransmission frame, use a data poll to resync its parent with correct CSL phase
         sendDataPoll = true;
@@ -414,15 +395,8 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
         aNumFastPolls = kDefaultFastPolls;
     }
 
-    if (aNumFastPolls > kMaxFastPolls)
-    {
-        aNumFastPolls = kMaxFastPolls;
-    }
-
-    if (mRemainingFastPolls < aNumFastPolls)
-    {
-        mRemainingFastPolls = aNumFastPolls;
-    }
+    aNumFastPolls       = Min(aNumFastPolls, kMaxFastPolls);
+    mRemainingFastPolls = Max(mRemainingFastPolls, aNumFastPolls);
 
     if (mEnabled && shouldRecalculatePollPeriod)
     {
@@ -515,9 +489,9 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
         period = Min(period, kRetxPollPeriod);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Get<Mac::Mac>().GetCslPeriodMs() > 0)
+        if (Get<Mac::Mac>().GetCslPeriodInMsec() > 0)
         {
-            period = Min(period, Get<Mac::Mac>().GetCslPeriodMs());
+            period = Min(period, Get<Mac::Mac>().GetCslPeriodInMsec());
         }
 #endif
     }
@@ -542,13 +516,15 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
-    uint32_t period    = Time::SecToMsec(Get<Mle::MleRouter>().GetTimeout());
     uint32_t pollAhead = static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
+    uint32_t period;
+
+    period = Time::SecToMsec(Min(Get<Mle::Mle>().GetTimeout(), Time::MsecToSec(TimerMilli::kMaxDelay)));
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        period    = Min(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        period    = Min(period, Time::SecToMsec(Get<Mle::Mle>().GetCslTimeout()));
         pollAhead = static_cast<uint32_t>(kRetxPollPeriod);
     }
 #endif
@@ -563,44 +539,44 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 
 Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
 {
-    Mac::TxFrame  *frame = nullptr;
-    Mac::Addresses addresses;
-    Mac::PanIds    panIds;
+    Mac::TxFrame      *frame = nullptr;
+    Mac::TxFrame::Info frameInfo;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     Mac::RadioType radio;
 
-    SuccessOrExit(GetPollDestinationAddress(addresses.mDestination, radio));
+    SuccessOrExit(GetPollDestinationAddress(frameInfo.mAddrs.mDestination, radio));
     frame = &aTxFrames.GetTxFrame(radio);
 #else
-    SuccessOrExit(GetPollDestinationAddress(addresses.mDestination));
+    SuccessOrExit(GetPollDestinationAddress(frameInfo.mAddrs.mDestination));
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    if (addresses.mDestination.IsExtended())
+    if (frameInfo.mAddrs.mDestination.IsExtended())
     {
-        addresses.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
+        frameInfo.mAddrs.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
     }
     else
     {
-        addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
+        frameInfo.mAddrs.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
     }
 
-    panIds.mSource      = Get<Mac::Mac>().GetPanId();
-    panIds.mDestination = Get<Mac::Mac>().GetPanId();
+    frameInfo.mPanIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
-    Get<MeshForwarder>().PrepareMacHeaders(*frame, Mac::Frame::kTypeMacCmd, addresses, panIds,
-                                           Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode1, nullptr);
+    frameInfo.mType          = Mac::Frame::kTypeMacCmd;
+    frameInfo.mCommandId     = Mac::Frame::kMacCmdDataRequest;
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityEncMic32;
+    frameInfo.mKeyIdMode     = Mac::Frame::kKeyIdMode1;
+
+    Get<MessageFramer>().PrepareMacHeaders(*frame, frameInfo, nullptr);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (frame->GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr)
+    if (frame->HasCslIe())
     {
         // Disable frame retransmission when the data poll has CSL IE included
         aTxFrames.SetMaxFrameRetries(0);
     }
 #endif
-
-    IgnoreError(frame->SetCommandId(Mac::Frame::kMacCmdDataRequest));
 
 exit:
     return frame;

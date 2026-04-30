@@ -40,7 +40,7 @@ def main():
 
     args = parser.parse_args()
 
-    stream = StreamOpen('p', f'{args.rcp} 1', False, 115200, False)
+    stream = StreamOpen('p', f'{args.rcp} 1', False, 460800, False)
     wpan_api = WpanApi(stream, 1)
 
     assert wpan_api.prop_set_value(SPINEL.PROP_PHY_ENABLED, 1) == 1

@@ -1,0 +1,638 @@
+/*
+ *  Copyright (c) 2025, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements generation of Border Agent TXT data.
+ */
+
+#include "border_agent_txt_data.hpp"
+
+#include "common/string.hpp"
+#include "instance/instance.hpp"
+
+namespace ot {
+namespace MeshCoP {
+namespace BorderAgent {
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+
+const char TxtData::kRecordVersion[] = "1";
+
+const char TxtData::Key::kRecordVersion[]   = "rv";
+const char TxtData::Key::kAgentId[]         = "id";
+const char TxtData::Key::kThreadVersion[]   = "tv";
+const char TxtData::Key::kStateBitmap[]     = "sb";
+const char TxtData::Key::kNetworkName[]     = "nn";
+const char TxtData::Key::kExtendedPanId[]   = "xp";
+const char TxtData::Key::kActiveTimestamp[] = "at";
+const char TxtData::Key::kPartitionId[]     = "pt";
+const char TxtData::Key::kDomainName[]      = "dn";
+const char TxtData::Key::kBbrSeqNum[]       = "sq";
+const char TxtData::Key::kBbrPort[]         = "bb";
+const char TxtData::Key::kOmrPrefix[]       = "omr";
+const char TxtData::Key::kExtAddress[]      = "xa";
+const char TxtData::Key::kVendorName[]      = "vn";
+const char TxtData::Key::kModelName[]       = "mn";
+const char TxtData::Key::kVendorOui[]       = "vo";
+
+TxtData::TxtData(Instance &aInstance)
+    : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    , mChangedTask(aInstance)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    , mShouldAddVendorName(true)
+    , mShouldAddVendorModel(true)
+    , mShouldAddVendorOui(true)
+#endif
+{
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+Error TxtData::Prepare(uint8_t  *aBuffer,
+                       uint16_t  aBufferSize,
+                       uint16_t &aLength,
+                       bool      aAddVendorName,
+                       bool      aAddVendorModel,
+                       bool      aAddVendorOui)
+{
+    Error                  error = kErrorNone;
+    Dns::TxtDataEncoder    encoder(aBuffer, aBufferSize);
+    MeshCoP::Dataset::Info datasetInfo;
+
+    VerifyOrExit(aBuffer != nullptr, error = kErrorNoBufs);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    {
+        Id id;
+
+        Get<Manager>().GetId(id);
+        SuccessOrExit(error = encoder.AppendEntry(Key::kAgentId, id));
+    }
+#endif
+    SuccessOrExit(error = encoder.AppendStringEntry(Key::kRecordVersion, kRecordVersion));
+    SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kStateBitmap, StateBitmap::Determine(GetInstance())));
+    SuccessOrExit(error = encoder.AppendStringEntry(Key::kThreadVersion, kThreadVersionString));
+    SuccessOrExit(error = encoder.AppendEntry(Key::kExtAddress, Get<Mac::Mac>().GetExtAddress()));
+
+    if (Get<MeshCoP::ActiveDatasetManager>().IsComplete() &&
+        (Get<MeshCoP::ActiveDatasetManager>().Read(datasetInfo) == kErrorNone))
+    {
+        if (datasetInfo.IsPresent<Dataset::kExtendedPanId>())
+        {
+            SuccessOrExit(error = encoder.AppendEntry(Key::kExtendedPanId, datasetInfo.Get<Dataset::kExtendedPanId>()));
+        }
+
+        if (datasetInfo.IsPresent<Dataset::kNetworkName>())
+        {
+            SuccessOrExit(error = encoder.AppendNameEntry(Key::kNetworkName,
+                                                          datasetInfo.Get<Dataset::kNetworkName>().GetAsData()));
+        }
+    }
+
+    if (Get<Mle::Mle>().IsAttached())
+    {
+        SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kPartitionId,
+                                                               Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
+
+        if (Get<MeshCoP::ActiveDatasetManager>().GetTimestamp().IsValid())
+        {
+            SuccessOrExit(error = encoder.AppendEntry(Key::kActiveTimestamp,
+                                                      Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()));
+        }
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (Get<Mle::Mle>().IsAttached() && Get<BackboneRouter::Local>().IsEnabled())
+    {
+        BackboneRouter::Config bbrConfig;
+
+        Get<BackboneRouter::Local>().GetConfig(bbrConfig);
+        SuccessOrExit(error = encoder.AppendEntry(Key::kBbrSeqNum, bbrConfig.mSequenceNumber));
+        SuccessOrExit(error = encoder.AppendBigEndianUintEntry(Key::kBbrPort, BackboneRouter::kBackboneUdpPort));
+    }
+
+    SuccessOrExit(
+        error = encoder.AppendNameEntry(Key::kDomainName, Get<MeshCoP::NetworkIdentity>().GetDomainName().GetAsData()));
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    {
+        Ip6::Prefix                   prefix;
+        BorderRouter::RoutePreference preference;
+
+        if (Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(prefix, preference) == kErrorNone &&
+            prefix.GetLength() > 0)
+        {
+            uint8_t omrData[Ip6::NetworkPrefix::kSize + 1];
+
+            omrData[0] = prefix.GetLength();
+            memcpy(omrData + 1, prefix.GetBytes(), prefix.GetBytesSize());
+
+            SuccessOrExit(error = encoder.AppendEntry(Key::kOmrPrefix, omrData));
+        }
+    }
+#endif
+
+    if (aAddVendorName)
+    {
+        SuccessOrExit(error = encoder.AppendStringEntry(Key::kVendorName, Get<VendorInfo>().GetName()));
+    }
+
+    if (aAddVendorModel)
+    {
+        SuccessOrExit(error = encoder.AppendStringEntry(Key::kModelName, Get<VendorInfo>().GetModel()));
+    }
+
+    if (aAddVendorOui && Get<VendorInfo>().IsOuiSpecified())
+    {
+        uint8_t ouiData[kVendorOuiSize];
+
+        BigEndian::WriteUint24(Get<VendorInfo>().GetOui(), ouiData);
+        SuccessOrExit(error = encoder.AppendEntry(Key::kVendorOui, ouiData));
+    }
+
+    aLength = encoder.GetLength();
+
+exit:
+    return error;
+}
+
+Error TxtData::Prepare(ServiceTxtData &aTxtData)
+{
+    return Prepare(aTxtData.mData, sizeof(aTxtData.mData), aTxtData.mLength, /* aAddVendorName */ false,
+                   /* aAddVendorModel */ false, /* aAddVendorOui */ false);
+}
+
+void TxtData::SetChangedCallback(ChangedCallback aCallback, void *aContext)
+{
+    mChangedCallback.Set(aCallback, aContext);
+    Refresh();
+}
+
+void TxtData::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadExtPanIdChanged | kEventThreadNetworkNameChanged |
+                            kEventThreadBackboneRouterStateChanged | kEventActiveDatasetChanged))
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleChangedTask(void)
+{
+    VerifyOrExit(Get<Manager>().IsEnabled());
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<Manager>().HandleServiceTxtDataChanged();
+#endif
+
+    mChangedCallback.InvokeIfSet();
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+void TxtData::PrepareWithVendorData(Heap::Data &aTxtData)
+{
+    uint16_t size;
+    uint16_t length;
+    uint8_t *buffer;
+
+    // Allocate a large enough buffer to fit both the base TXT data
+    // generated by the Border Agent and the vendor extra TXT data.
+    // The vendor TXT data is appended at the end. If `mVendorData`
+    // does not contain vendor name or model entries, they are
+    // populated from `VendorInfo` and room is allocated for them.
+
+    size = kMaxSizeNoVendorData + mVendorData.GetLength();
+
+    if (mShouldAddVendorName)
+    {
+        size += Tlv::kMaxVendorNameLength + sizeof(Key::kVendorName) + sizeof('=');
+    }
+
+    if (mShouldAddVendorModel)
+    {
+        size += Tlv::kMaxVendorModelLength + sizeof(Key::kModelName) + sizeof('=');
+    }
+
+    if (mShouldAddVendorOui)
+    {
+        size += kVendorOuiSize + sizeof(Key::kVendorOui) + sizeof('=');
+    }
+
+    buffer = reinterpret_cast<uint8_t *>(Heap::CAlloc(size, sizeof(uint8_t)));
+
+    OT_ASSERT(buffer != nullptr);
+
+    SuccessOrAssert(Prepare(buffer, size, length, mShouldAddVendorName, mShouldAddVendorModel, mShouldAddVendorOui));
+
+    if (mVendorData.GetLength() != 0)
+    {
+        mVendorData.CopyBytesTo(buffer + length);
+        length += mVendorData.GetLength();
+    }
+
+    aTxtData.TakeFrom(buffer, length);
+}
+
+void TxtData::SetVendorData(const uint8_t *aVendorData, uint16_t aVendorDataLength)
+{
+    Dns::TxtEntry           entry;
+    Dns::TxtEntry::Iterator iterator;
+
+    VerifyOrExit(!mVendorData.Matches(aVendorData, aVendorDataLength));
+
+    SuccessOrAssert(mVendorData.SetFrom(aVendorData, aVendorDataLength));
+
+    // Check whether the provided `mVendorData` contains vendor name
+    // or model entries. If not present, the values from `VendorInfo`
+    // will be used and encoded in the TXT data.
+
+    mShouldAddVendorName  = true;
+    mShouldAddVendorModel = true;
+    mShouldAddVendorOui   = true;
+
+    iterator.Init(mVendorData.GetBytes(), mVendorData.GetLength());
+
+    while (iterator.GetNextEntry(entry) == kErrorNone)
+    {
+        if (entry.MatchesKey(Key::kVendorName))
+        {
+            mShouldAddVendorName = false;
+        }
+        else if (entry.MatchesKey(Key::kModelName))
+        {
+            mShouldAddVendorModel = false;
+        }
+        else if (entry.MatchesKey(Key::kVendorOui))
+        {
+            mShouldAddVendorOui = false;
+        }
+    }
+
+    Refresh();
+
+exit:
+    return;
+}
+
+void TxtData::HandleVendorNameChange(void)
+{
+    if (mShouldAddVendorName)
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleVendorModelChange(void)
+{
+    if (mShouldAddVendorModel)
+    {
+        Refresh();
+    }
+}
+
+void TxtData::HandleVendorOuiChange(void)
+{
+    if (mShouldAddVendorOui)
+    {
+        Refresh();
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+
+uint32_t TxtData::StateBitmap::Determine(Instance &aInstance)
+{
+    uint32_t bitmap = 0;
+
+    bitmap |= ((aInstance.Get<Manager>().IsRunning() ? kConnModePskc : kConnModeDisabled) << kOffsetConnMode);
+    bitmap |= (kAvailabilityHigh << kOffsetAvailability);
+
+    switch (aInstance.Get<Mle::Mle>().GetRole())
+    {
+    case Mle::DeviceRole::kRoleDisabled:
+        bitmap |= (kThreadIfNotInit << kOffsetIfState) | (kRoleDisabledDetached << kOffsetRole);
+        break;
+    case Mle::DeviceRole::kRoleDetached:
+        bitmap |= (kThreadIfInit << kOffsetIfState) | (kRoleDisabledDetached << kOffsetRole);
+        break;
+    case Mle::DeviceRole::kRoleChild:
+        bitmap |= (kThreadIfActive << kOffsetIfState) | (kRoleChild << kOffsetRole);
+        break;
+    case Mle::DeviceRole::kRoleRouter:
+        bitmap |= (kThreadIfActive << kOffsetIfState) | (kRoleRouter << kOffsetRole);
+        break;
+    case Mle::DeviceRole::kRoleLeader:
+        bitmap |= (kThreadIfActive << kOffsetIfState) | (kRoleLeader << kOffsetRole);
+        break;
+    }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    {
+        MultiAilState state = kMultiAilDisabled;
+
+        if (aInstance.Get<BorderRouter::MultiAilDetector>().IsEnabled())
+        {
+            state =
+                aInstance.Get<BorderRouter::MultiAilDetector>().IsDetected() ? kMultiAilDetected : kMultiAilNotDetected;
+        }
+
+        bitmap |= (static_cast<uint32_t>(state) << kOffsetMultiAilState);
+    }
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (aInstance.Get<Mle::Mle>().IsAttached())
+    {
+        bitmap |= (aInstance.Get<BackboneRouter::Local>().IsEnabled() ? kFlagBbrIsActive : 0);
+        bitmap |= (aInstance.Get<BackboneRouter::Local>().IsPrimary() ? kFlagBbrIsPrimary : 0);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    if (aInstance.Get<EphemeralKeyManager>().GetState() != EphemeralKeyManager::kStateDisabled)
+    {
+        bitmap |= kFlagEpskcSupported;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    if (aInstance.Get<Admitter>().IsEnabled())
+    {
+        bitmap |= kFlagAdmitterSupported;
+    }
+#endif
+
+    return bitmap;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+
+Error TxtData::Info::ParseFrom(const uint8_t *aTxtData, uint16_t aTxtDataLength)
+{
+    Error                   error;
+    Dns::TxtEntry           entry;
+    Dns::TxtEntry::Iterator iterator;
+
+    Clear();
+
+    iterator.Init(aTxtData, aTxtDataLength);
+
+    while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
+    {
+        ProcessTxtEntry(entry);
+    }
+
+    if (error == kErrorNotFound)
+    {
+        error = kErrorNone;
+    }
+
+    return error;
+}
+
+void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
+{
+    if (aEntry.MatchesKey(Key::kRecordVersion))
+    {
+        ReadStringValue(aEntry, mRecordVersion);
+        mHasRecordVersion = true;
+    }
+    else if (aEntry.MatchesKey(Key::kAgentId))
+    {
+        mHasAgentId = ReadValue(aEntry, mAgentId);
+    }
+    else if (aEntry.MatchesKey(Key::kThreadVersion))
+    {
+        ReadStringValue(aEntry, mThreadVersion);
+        mHasThreadVersion = true;
+    }
+    else if (aEntry.MatchesKey(Key::kStateBitmap))
+    {
+        uint32_t bitmap;
+
+        if (ReadBigEndianUintValue(aEntry, bitmap))
+        {
+            StateBitmap::Parse(bitmap, mStateBitmap);
+            mHasStateBitmap = true;
+        }
+    }
+    else if (aEntry.MatchesKey(Key::kNetworkName))
+    {
+        ReadStringValue(aEntry, mNetworkName.m8);
+        mHasNetworkName = true;
+    }
+    else if (aEntry.MatchesKey(Key::kExtendedPanId))
+    {
+        mHasExtendedPanId = ReadValue(aEntry, mExtendedPanId);
+    }
+    else if (aEntry.MatchesKey(Key::kActiveTimestamp))
+    {
+        Timestamp timestamp;
+
+        if (ReadValue(aEntry, timestamp))
+        {
+            timestamp.ConvertTo(mActiveTimestamp);
+            mHasActiveTimestamp = true;
+        }
+    }
+    else if (aEntry.MatchesKey(Key::kPartitionId))
+    {
+        mHasPartitionId = ReadBigEndianUintValue(aEntry, mPartitionId);
+    }
+    else if (aEntry.MatchesKey(Key::kDomainName))
+    {
+        ReadStringValue(aEntry, mDomainName.m8);
+        mHasDomainName = true;
+    }
+    else if (aEntry.MatchesKey(Key::kBbrSeqNum))
+    {
+        mHasBbrSeqNum = ReadBigEndianUintValue(aEntry, mBbrSeqNum);
+    }
+    else if (aEntry.MatchesKey(Key::kBbrPort))
+    {
+        mHasBbrPort = ReadBigEndianUintValue(aEntry, mBbrPort);
+    }
+    else if (aEntry.MatchesKey(Key::kOmrPrefix))
+    {
+        mHasOmrPrefix = ReadOmrPrefix(aEntry, AsCoreType(&mOmrPrefix));
+    }
+    else if (aEntry.MatchesKey(Key::kExtAddress))
+    {
+        mHasExtAddress = ReadValue(aEntry, mExtAddress);
+    }
+    else if (aEntry.MatchesKey(Key::kVendorName))
+    {
+        ReadStringValue(aEntry, mVendorName);
+        mHasVendorName = true;
+    }
+    else if (aEntry.MatchesKey(Key::kModelName))
+    {
+        ReadStringValue(aEntry, mModelName);
+        mHasModelName = true;
+    }
+    else if (aEntry.MatchesKey(Key::kVendorOui))
+    {
+        mHasVendorOui = ReadValue(aEntry, mVendorOui);
+    }
+}
+
+bool TxtData::Info::ReadValue(const Dns::TxtEntry &aEntry, void *aBuffer, uint16_t aSize)
+{
+    bool didRead = false;
+
+    VerifyOrExit(aEntry.mValueLength >= aSize);
+    memcpy(aBuffer, aEntry.mValue, aSize);
+    didRead = true;
+
+exit:
+    return didRead;
+}
+
+void TxtData::Info::ReadStringValue(const Dns::TxtEntry &aEntry, char *aString, uint16_t aStringSize)
+{
+    uint16_t copyLength = Min<uint16_t>(aStringSize - 1, aEntry.mValueLength);
+
+    memcpy(aString, aEntry.mValue, copyLength);
+    aString[copyLength] = kNullChar;
+}
+
+bool TxtData::Info::ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPrefix)
+{
+    bool    didRead = false;
+    uint8_t length;
+
+    VerifyOrExit(aEntry.mValueLength >= sizeof(uint8_t));
+    length = aEntry.mValue[0];
+
+    VerifyOrExit(length <= Ip6::Prefix::kMaxLength);
+    VerifyOrExit(aEntry.mValueLength >= sizeof(uint8_t) + Ip6::Prefix::SizeForLength(length));
+
+    aPrefix.Set(&aEntry.mValue[1], length);
+    didRead = true;
+
+exit:
+    return didRead;
+}
+
+void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
+{
+    ClearAllBytes(aInfo);
+
+    aInfo.mConnMode      = static_cast<ConnMode>((aBitmap & kMaskConnMode) >> kOffsetConnMode);
+    aInfo.mThreadIfState = static_cast<IfState>((aBitmap & kMaskIfState) >> kOffsetIfState);
+    aInfo.mAvailability  = static_cast<Availability>((aBitmap & kMaskAvailability) >> kOffsetAvailability);
+    aInfo.mThreadRole    = static_cast<Role>((aBitmap & kMaskRole) >> kOffsetRole);
+    aInfo.mMultiAilState =
+        static_cast<otBorderAgentMultiAilState>((aBitmap & kMaskMultiAilState) >> kOffsetMultiAilState);
+    aInfo.mBbrIsActive       = aBitmap & kFlagBbrIsActive;
+    aInfo.mBbrIsPrimary      = aBitmap & kFlagBbrIsPrimary;
+    aInfo.mEpskcSupported    = aBitmap & kFlagEpskcSupported;
+    aInfo.mAdmitterSupported = aBitmap & kFlagAdmitterSupported;
+}
+
+const char *TxtData::ConnModeToString(ConnMode aConnMode)
+{
+#define ConnModeMapList(_)           \
+    _(kConnModeDisabled, "disabled") \
+    _(kConnModePskc, "pskc")         \
+    _(kConnModePskd, "pskd")         \
+    _(kConnModeVendor, "vendor")     \
+    _(kConnModeX509, "x509")
+
+    DefineEnumStringArray(ConnModeMapList);
+
+    return (static_cast<uint8_t>(aConnMode) < GetArrayLength(kStrings)) ? kStrings[aConnMode] : "invalid";
+}
+
+const char *TxtData::IfStateToString(IfState aIfState)
+{
+#define IfStateMapList(_)           \
+    _(kThreadIfNotInit, "not-init") \
+    _(kThreadIfInit, "init")        \
+    _(kThreadIfActive, "active")
+
+    DefineEnumStringArray(IfStateMapList);
+
+    return (static_cast<uint8_t>(aIfState) < GetArrayLength(kStrings)) ? kStrings[aIfState] : "invalid";
+}
+
+const char *TxtData::AvailabilityToString(Availability aAvailability)
+{
+#define AvailabilityMapList(_)       \
+    _(kAvailabilityInfreq, "infreq") \
+    _(kAvailabilityHigh, "high")
+
+    DefineEnumStringArray(AvailabilityMapList);
+
+    return (static_cast<uint8_t>(aAvailability) < GetArrayLength(kStrings)) ? kStrings[aAvailability] : "invalid";
+}
+
+const char *TxtData::RoleToString(Role aRole)
+{
+#define RoleMapList(_)                            \
+    _(kRoleDisabledDetached, "disabled-detached") \
+    _(kRoleChild, "child")                        \
+    _(kRoleRouter, "router")                      \
+    _(kRoleLeader, "leader")
+
+    DefineEnumStringArray(RoleMapList);
+
+    return (static_cast<uint8_t>(aRole) < GetArrayLength(kStrings)) ? kStrings[aRole] : "invalid";
+}
+
+const char *TxtData::MultiAilStateToString(MultiAilState aState)
+{
+#define MultiAilStateMapList(_)             \
+    _(kMultiAilDisabled, "disabled")        \
+    _(kMultiAilNotDetected, "not-detected") \
+    _(kMultiAilDetected, "detected")
+
+    DefineEnumStringArray(MultiAilStateMapList);
+
+    return (static_cast<uint8_t>(aState) < GetArrayLength(kStrings)) ? kStrings[aState] : "invalid";
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+
+} // namespace BorderAgent
+} // namespace MeshCoP
+} // namespace ot

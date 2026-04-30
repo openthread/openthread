@@ -26,78 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_SETTINGS_HPP_
-#define POSIX_PLATFORM_SETTINGS_HPP_
+#ifndef OT_POSIX_PLATFORM_SETTINGS_HPP_
+#define OT_POSIX_PLATFORM_SETTINGS_HPP_
+
+#include <openthread/instance.h>
 
 namespace ot {
 namespace Posix {
 
 /**
- * This function gets a setting from the persisted file.
- *
- * @param[in]      aInstance     The OpenThread instance structure.
- * @param[in]      aKey          The key associated with the requested setting.
- * @param[in]      aIndex        The index of the specific item to get.
- * @param[out]     aValue        A pointer to where the value of the setting should be written.
- * @param[in,out]  aValueLength  A pointer to the length of the value.
- *
- * @retval OT_ERROR_NONE        The given setting was found and fetched successfully.
- * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
- *
- */
-otError PlatformSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength);
-
-/**
- * This function sets a setting in the persisted file.
- *
- * @param[in]  aInstance     The OpenThread instance structure.
- * @param[in]  aKey          The key associated with the requested setting.
- * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
- * @param[in]  aValueLength  The length of the data pointed to by aValue.
- *
- */
-void PlatformSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
-
-/**
- * This function adds a setting to the persisted file.
- *
- * @param[in]  aInstance     The OpenThread instance structure.
- * @param[in]  aKey          The key associated with the requested setting.
- * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
- * @param[in]  aValueLength  The length of the data pointed to by aValue.
- *
- */
-void PlatformSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
-
-/**
- * This function removes a setting either from swap file or persisted file.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aKey       The key associated with the requested setting.
- * @param[in]  aIndex     The index of the value to be removed. If set to -1, all values for this aKey will be removed.
- * @param[out] aSwapFd    A optional pointer to receive file descriptor of the generated swap file descriptor.
- *
- * @note
- *   If @p aSwapFd is null, operate deleting on the setting file.
- *   If @p aSwapFd is not null, operate on the swap file, and aSwapFd will point to the swap file descriptor.
- *
- * @retval OT_ERROR_NONE        The given key and index was found and removed successfully.
- * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
- *
- */
-otError PlatformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
-
-/**
- * This function gets the sensitive keys that should be stored in the secure area.
+ * Gets the sensitive keys that should be stored in the secure area.
  *
  * @param[in]   aInstance    The OpenThread instance structure.
  * @param[out]  aKeys        A pointer to where the pointer to the array containing sensitive keys should be written.
  * @param[out]  aKeysLength  A pointer to where the count of sensitive keys should be written.
- *
  */
 void PlatformSettingsGetSensitiveKeys(otInstance *aInstance, const uint16_t **aKeys, uint16_t *aKeysLength);
 
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_SETTINGS_HPP_
+#endif // OT_POSIX_PLATFORM_SETTINGS_HPP_

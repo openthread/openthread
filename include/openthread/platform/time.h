@@ -41,6 +41,11 @@
 extern "C" {
 #endif
 
+#define OT_MS_PER_S 1000    ///< Number of milliseconds per second
+#define OT_US_PER_MS 1000   ///< Number of microseconds per millisecond
+#define OT_US_PER_S 1000000 ///< Number of microseconds per second
+#define OT_NS_PER_US 1000   ///< Number of nanoseconds per microsecond
+
 /**
  * @addtogroup plat-time
  *
@@ -48,28 +53,46 @@ extern "C" {
  *   This module includes the platform abstraction for the time service.
  *
  * @{
- *
  */
 
 /**
- * Get the current time (64bits width).
+ * Get the current platform time in microseconds referenced to a continuous
+ * monotonic local clock (64 bits width).
+ *
+ * The clock SHALL NOT wrap during the device's uptime. Implementations SHALL
+ * therefore identify and compensate for internal counter overflows. The clock
+ * does not have a defined epoch and it SHALL NOT introduce any continuous or
+ * discontinuous adjustments (e.g. leap seconds). Implementations SHALL
+ * compensate for any sleep times of the device.
+ *
+ * Implementations MAY choose to discipline the platform clock and compensate
+ * for sleep times by any means (e.g. by combining a high precision/low power
+ * RTC with a high resolution counter) as long as the exposed combined clock
+ * provides continuous monotonic microsecond resolution ticks within the
+ * accuracy limits announced by @ref otPlatTimeGetXtalAccuracy.
  *
  * @returns The current time in microseconds.
- *
  */
 uint64_t otPlatTimeGet(void);
 
 /**
- * Get the device's XTAL accuracy.
+ * Get the current estimated worst case accuracy (maximum ± deviation from the
+ * nominal frequency) of the local platform clock in units of PPM.
  *
- * @returns The device's XTAL accuracy, in ppm.
+ * @note Implementations MAY estimate this value based on current operating
+ * conditions (e.g. temperature).
  *
+ * In case the implementation does not estimate the current value but returns a
+ * fixed value, this value MUST be the worst-case accuracy over all possible
+ * foreseen operating conditions (temperature, pressure, etc) of the
+ * implementation.
+ *
+ * @returns The current platform clock accuracy, in PPM.
  */
 uint16_t otPlatTimeGetXtalAccuracy(void);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

@@ -33,7 +33,7 @@
 
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
 
-#include "openthread/thread.h"
+#include <openthread/thread.h>
 
 namespace ot {
 namespace Posix {

@@ -35,14 +35,11 @@
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
-Uptime::Uptime(Instance &aInstance)
+UptimeTracker::UptimeTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mStartTime(TimerMilli::GetNow())
     , mOverflowCount(0)
@@ -51,7 +48,7 @@ Uptime::Uptime(Instance &aInstance)
     mTimer.FireAt(mStartTime + kTimerInterval);
 }
 
-uint64_t Uptime::GetUptime(void) const
+UptimeMsec UptimeTracker::GetUptime(void) const
 {
     TimeMilli now           = TimerMilli::GetNow();
     uint32_t  overflowCount = mOverflowCount;
@@ -78,17 +75,15 @@ uint64_t Uptime::GetUptime(void) const
     // lower 32 bits (which is always correct even under the corner
     // case where the `HandleTimer()` is not yet handled).
 
-    return (static_cast<uint64_t>(overflowCount) << 32) + (now - mStartTime);
+    return (static_cast<UptimeMsec>(overflowCount) << 32) + (now - mStartTime);
 }
 
-void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
+UptimeSec UptimeTracker::GetUptimeInSeconds(void) const
 {
-    StringWriter writer(aBuffer, aSize);
-
-    UptimeToString(GetUptime(), writer);
+    return static_cast<UptimeSec>(GetUptime() / Time::kOneSecondInMsec);
 }
 
-void Uptime::HandleTimer(void)
+void UptimeTracker::HandleTimer(void)
 {
     if (mTimer.GetFireTime() == mStartTime)
     {
@@ -101,7 +96,7 @@ void Uptime::HandleTimer(void)
 static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
 {
     // Returns the quotient of division `aDividend / aDivisor` and updates
-    // `aDividend` to returns the remainder
+    // `aDividend` to the remainder
 
     uint32_t quotient = aDividend / aDivisor;
 
@@ -110,7 +105,15 @@ static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
     return static_cast<uint16_t>(quotient);
 }
 
-void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
+UptimeString UptimeToString(UptimeMsec aUptime, UptimeStringFlags aFlags)
+{
+    UptimeString string;
+
+    UptimeToString(aUptime, string, aFlags);
+    return string;
+}
+
+void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, UptimeStringFlags aFlags)
 {
     uint64_t days = aUptime / Time::kOneDayInMsec;
     uint32_t remainder;
@@ -129,7 +132,17 @@ void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
     minutes   = DivideAndGetRemainder(remainder, Time::kOneMinuteInMsec);
     seconds   = DivideAndGetRemainder(remainder, Time::kOneSecondInMsec);
 
-    aWriter.Append("%02u:%02u:%02u.%03u", hours, minutes, seconds, static_cast<uint16_t>(remainder));
+    if ((days > 0) || (hours > 0) || !(aFlags & kUptimeStringSkipHoursIfZero))
+    {
+        aWriter.Append("%02u:", hours);
+    }
+
+    aWriter.Append("%02u:%02u", minutes, seconds);
+
+    if (aFlags & kUptimeStringIncludeMsec)
+    {
+        aWriter.Append(".%03u", static_cast<uint16_t>(remainder));
+    }
 }
 
 } // namespace ot

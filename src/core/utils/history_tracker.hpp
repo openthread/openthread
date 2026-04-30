@@ -31,8 +31,8 @@
  *   This file includes definitions to support History Tracker module.
  */
 
-#ifndef HISTORY_TRACKER_HPP_
-#define HISTORY_TRACKER_HPP_
+#ifndef OT_CORE_UTILS_HISTORY_TRACKER_HPP_
+#define OT_CORE_UTILS_HISTORY_TRACKER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,12 +41,15 @@
 #include <openthread/history_tracker.h>
 #include <openthread/platform/radio.h>
 
+#include "border_router/routing_manager.hpp"
+#include "border_router/rx_ra_tracker.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "meshcop/border_agent.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -54,10 +57,11 @@
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
 #include "thread/network_data.hpp"
+#include "thread/network_data_service.hpp"
 #include "thread/router_table.hpp"
 
 namespace ot {
-namespace Utils {
+namespace HistoryTracker {
 
 #ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 #error "OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA should not be defined directly." \
@@ -66,14 +70,88 @@ namespace Utils {
 
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA                       \
     ((OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE > 0) || \
-     (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0))
+     (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0) || \
+     (OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE > 0))
+
+class Local;
 
 /**
- * This class implements History Tracker.
- *
+ * Represents an iterator to iterate through a history list.
  */
-class HistoryTracker : public InstanceLocator, private NonCopyable
+class Iterator : public otHistoryTrackerIterator
 {
+    friend class Local;
+
+public:
+    /**
+     * Initializes an `Iterator`
+     *
+     * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
+     * the beginning of the list.
+     */
+    void Init(void) { Init(TimerMilli::GetNow()); }
+
+    /**
+     * Initializes an `Iterator`
+     *
+     * @param[in] aNow  The now time.
+     */
+    void Init(TimeMilli aNow) { ResetEntryNumber(), SetInitTime(aNow); }
+
+private:
+    uint16_t  GetEntryNumber(void) const { return mData16; }
+    void      ResetEntryNumber(void) { mData16 = 0; }
+    void      IncrementEntryNumber(void) { mData16++; }
+    TimeMilli GetInitTime(void) const { return TimeMilli(mData32); }
+    void      SetInitTime(TimeMilli aNow) { mData32 = aNow.GetValue(); }
+};
+
+typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.
+typedef otHistoryTrackerUnicastAddressInfo   UnicastAddressInfo;   ///< Unicast IPv6 address info.
+typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo; ///< Multicast IPv6 address info.
+typedef otHistoryTrackerMessageInfo          MessageInfo;          ///< RX/TX IPv6 message info.
+typedef otHistoryTrackerNeighborInfo         NeighborInfo;         ///< Neighbor info.
+typedef otHistoryTrackerRouterInfo           RouterInfo;           ///< Router info.
+typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
+typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
+typedef otHistoryTrackerDnsSrpAddrInfo       DnsSrpAddrInfo;       ///< Network Data SRP/DNS address info.
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+typedef otHistoryTrackerBorderAgentEpskcEvent EpskcEvent; ///< Border Agent ePSKc Event.
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+typedef otHistoryTrackerFavoredOmrPrefix    FavoredOmrPrefix;    ///< Favored OMR Prefix
+typedef otHistoryTrackerFavoredOnLinkPrefix FavoredOnLinkPrefix; ///< Favored On-link Prefix
+typedef otHistoryTrackerAilRouter           AilRouter;           ///< An AIL router tracked when acting as BR
+typedef otHistoryTrackerDhcp6PdInfo         Dhcp6PdInfo;         ///< DHPCv6-PD info.
+#endif
+
+/**
+ * This constant specifies the maximum age of entries which is 49 days (value in msec).
+ *
+ * Entries older than the max age will give this value as their age.
+ */
+static constexpr uint32_t kMaxAge = OT_HISTORY_TRACKER_MAX_AGE;
+
+/**
+ * This constant specifies the recommend string size to represent an entry age
+ */
+static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
+
+/**
+ * This constants specified no next hop.
+ *
+ * Used for `mNextHop` in `RouteInfo` structure.
+ */
+static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
+
+/**
+ * Implements the local history tracker.
+ */
+class Local : public InstanceLocator, private NonCopyable
+{
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    friend class ot::IndirectSender;
+#endif
     friend class ot::MeshForwarder;
     friend class ot::Notifier;
     friend class ot::Mle::Mle;
@@ -82,75 +160,25 @@ class HistoryTracker : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_FTD
     friend class ot::RouterTable;
 #endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    friend class ot::MeshCoP::BorderAgent::Manager;
+    friend class ot::MeshCoP::BorderAgent::EphemeralKeyManager;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    friend class ot::BorderRouter::RoutingManager;
+    friend class ot::BorderRouter::RxRaTracker;
+#endif
 
 public:
     /**
-     * This constant specifies the maximum age of entries which is 49 days (value in msec).
-     *
-     * Entries older than the max age will give this value as their age.
-     *
-     */
-    static constexpr uint32_t kMaxAge = OT_HISTORY_TRACKER_MAX_AGE;
-
-    /**
-     * This constant specifies the recommend string size to represent an entry age
-     *
-     */
-    static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
-
-    /**
-     * This constants specifid no next hop.
-     *
-     * Used for `mNextHop` in `RouteInfo` struture.
-     *
-     */
-    static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
-
-    /**
-     * This type represents an iterator to iterate through a history list.
-     *
-     */
-    class Iterator : public otHistoryTrackerIterator
-    {
-        friend class HistoryTracker;
-
-    public:
-        /**
-         * This method initializes an `Iterator`
-         *
-         * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
-         * the beginning of the list.
-         *
-         */
-        void Init(void) { ResetEntryNumber(), SetInitTime(); }
-
-    private:
-        uint16_t  GetEntryNumber(void) const { return mData16; }
-        void      ResetEntryNumber(void) { mData16 = 0; }
-        void      IncrementEntryNumber(void) { mData16++; }
-        TimeMilli GetInitTime(void) const { return TimeMilli(mData32); }
-        void      SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
-    };
-
-    typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.
-    typedef otHistoryTrackerUnicastAddressInfo   UnicastAddressInfo;   ///< Unicast IPv6 address info.
-    typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo; ///< Multicast IPv6 address info.
-    typedef otHistoryTrackerMessageInfo          MessageInfo;          ///< RX/TX IPv6 message info.
-    typedef otHistoryTrackerNeighborInfo         NeighborInfo;         ///< Neighbor info.
-    typedef otHistoryTrackerRouterInfo           RouterInfo;           ///< Router info.
-    typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
-    typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
-
-    /**
-     * This constructor initializes the `HistoryTracker`.
+     * Initializes the local tracker.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
-    explicit HistoryTracker(Instance &aInstance);
+    explicit Local(Instance &aInstance);
 
     /**
-     * This method iterates over the entries in the network info history list.
+     * Iterates over the entries in the network info history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -159,7 +187,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `NetworkInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const NetworkInfo *IterateNetInfoHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -167,7 +194,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the unicast address history list.
+     * Iterates over the entries in the unicast address history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -176,7 +203,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `UnicastAddress` entry or `nullptr` if no more entries in the list.
-     *
      */
     const UnicastAddressInfo *IterateUnicastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -184,7 +210,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the multicast address history list.
+     * Iterates over the entries in the multicast address history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -193,7 +219,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MulticastAddress` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MulticastAddressInfo *IterateMulticastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -201,7 +226,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the RX history list.
+     * Iterates over the entries in the RX history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -210,7 +235,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MessageInfo *IterateRxHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -218,7 +242,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the TX history list.
+     * Iterates over the entries in the TX history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -227,7 +251,6 @@ public:
      *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
-     *
      */
     const MessageInfo *IterateTxHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
@@ -254,8 +277,46 @@ public:
         return mExternalRouteHistory.Iterate(aIterator, aEntryAge);
     }
 
+    const DnsSrpAddrInfo *IterateDnsSrpAddrHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mDnsSrpAddrHistory.Iterate(aIterator, aEntryAge);
+    }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    const EpskcEvent *IterateEpskcEventHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mEpskcEventHistory.Iterate(aIterator, aEntryAge);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+    const FavoredOmrPrefix *IterateFavoredOmrPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mFavoredOmrPrefixHistory.Iterate(aIterator, aEntryAge);
+    }
+
+    const FavoredOnLinkPrefix *IterateFavoredOnLinkPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mFavoredOnLinkPrefixHistory.Iterate(aIterator, aEntryAge);
+    }
+
+    const AilRouter *IterateAilRoutersHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mAilRoutersHistory.Iterate(aIterator, aEntryAge);
+    }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    const Dhcp6PdInfo *IterateDhcp6PdHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mDhcp6PdHistory.Iterate(aIterator, aEntryAge);
+    }
+#endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
     /**
-     * This static method converts a given entry age to a human-readable string.
+     * Converts a given entry age to a human-readable string.
      *
      * The entry age string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond
      * (if shorter than one day) or "<dd> days <hh>:<mm>:<ss>.<mmmm>" (if longer than one day).
@@ -266,7 +327,6 @@ public:
      * @param[in]  aEntryAge The entry age (duration in msec).
      * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
      * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_ADDRESS_STRING_SIZE`.
-     *
      */
     static void EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
 
@@ -286,13 +346,19 @@ private:
     static constexpr uint16_t kRouterListSize        = OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE;
     static constexpr uint16_t kOnMeshPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE;
     static constexpr uint16_t kExternalRouteListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE;
+    static constexpr uint16_t kDnsSrpAddrListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE;
+    static constexpr uint16_t kEpskcEventListSize    = OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE;
+    static constexpr uint16_t kOmrPrefixListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE;
+    static constexpr uint16_t kOnLinkPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE;
+    static constexpr uint16_t kAilRouterListSize     = OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE;
+    static constexpr uint16_t kDhcp6PdListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
     static constexpr AddressEvent kAddressAdded   = OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED;
     static constexpr AddressEvent kAddressRemoved = OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED;
 
-    static constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid;
+    static constexpr uint16_t kInvalidRloc16 = Mle::kInvalidRloc16;
 
     typedef otHistoryTrackerNeighborEvent NeighborEvent;
 
@@ -312,6 +378,43 @@ private:
 
     static constexpr NetDataEvent kNetDataEntryAdded   = OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED;
     static constexpr NetDataEvent kNetDataEntryRemoved = OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED;
+
+    typedef otHistoryTrackerDnsSrpAddrType DnsSrpAddrType;
+
+    static constexpr DnsSrpAddrType kDnsSrpAddrTypeUnicastLocal = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_LOCAL;
+    static constexpr DnsSrpAddrType kDnsSrpAddrTypeUnicastInfra = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_UNICAST_INFRA;
+    static constexpr DnsSrpAddrType kDnsSrpAddrTypeAnycast      = OT_HISTORY_TRACKER_DNS_SRP_ADDR_TYPE_ANYCAST;
+
+    static constexpr uint16_t kAnycastServerPort = 53;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    typedef otHistoryTrackerAilRouterEvent AilRouterEvent;
+
+    static constexpr AilRouterEvent kAilRouterAdded   = OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_ADDED;
+    static constexpr AilRouterEvent kAilRouterChanged = OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_CHANGED;
+    static constexpr AilRouterEvent kAilRouterRemoved = OT_HISTORY_TRACKER_AIL_ROUTER_EVENT_REMOVED;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#define DefineEpskcEvent(aName, aPublicEnumName) \
+    static constexpr EpskcEvent kEpskc##aName = OT_HISTORY_TRACKER_BORDER_AGENT_EPSKC_EVENT_##aPublicEnumName
+
+    DefineEpskcEvent(Activated, ACTIVATED);
+    DefineEpskcEvent(Connected, CONNECTED);
+    DefineEpskcEvent(Petitioned, PETITIONED);
+    DefineEpskcEvent(RetrievedActiveDataset, RETRIEVED_ACTIVE_DATASET);
+    DefineEpskcEvent(RetrievedPendingDataset, RETRIEVED_PENDING_DATASET);
+    DefineEpskcEvent(KeepAlive, KEEP_ALIVE);
+    DefineEpskcEvent(DeactivatedLocalClose, DEACTIVATED_LOCAL_CLOSE);
+    DefineEpskcEvent(DeactivatedRemoteClose, DEACTIVATED_REMOTE_CLOSE);
+    DefineEpskcEvent(DeactivatedSessionError, DEACTIVATED_SESSION_ERROR);
+    DefineEpskcEvent(DeactivatedSessionTimeout, DEACTIVATED_SESSION_TIMEOUT);
+    DefineEpskcEvent(DeactivatedMaxAttempts, DEACTIVATED_MAX_ATTEMPTS);
+    DefineEpskcEvent(DeactivatedEpskcTimeout, DEACTIVATED_EPSKC_TIMEOUT);
+    DefineEpskcEvent(DeactivatedUnknown, DEACTIVATED_UNKNOWN);
+
+#undef DefineEpskcEvent
+#endif
 
     class Timestamp
     {
@@ -385,6 +488,7 @@ private:
         Entry       *AddNewEntry(void) { return nullptr; }
         void         AddNewEntry(const Entry &) {}
         const Entry *Iterate(Iterator &, uint32_t &) const { return nullptr; }
+        void         UpdateAgedEntries(void) {}
         void         RemoveAgedEntries(void) {}
     };
 
@@ -399,18 +503,19 @@ private:
         RecordMessage(aMessage, aMacSource, kRxMessage);
     }
 
-    void RecordTxMessage(const Message &aMessage, const Mac::Address &aMacDest)
+    void RecordTxMessage(const Message &aMessage, const Mac::Address &aMacDest, bool aIsTxSuccess)
     {
-        RecordMessage(aMessage, aMacDest, kTxMessage);
+        RecordMessage(aMessage, aMacDest, kTxMessage, aIsTxSuccess);
     }
 
     void RecordNetworkInfo(void);
-    void RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType);
+    void RecordMessage(const Message      &aMessage,
+                       const Mac::Address &aMacAddress,
+                       MessageType         aType,
+                       bool                aIsTxSuccess = true);
     void RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
     void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
-    void RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
-                            const Ip6::Netif::MulticastAddress &aMulticastAddress,
-                            Ip6::Netif::AddressOrigin           aAddressOrigin);
+    void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::MulticastAddress &aMulticastAddress);
     void HandleNotifierEvents(Events aEvents);
     void HandleTimer(void);
 #if OPENTHREAD_FTD
@@ -420,9 +525,29 @@ private:
     void RecordNetworkDataChange(void);
     void RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix);
     void RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute);
+    void RecordDnsSrpAddrEvent(NetDataEvent                                   aEvent,
+                               const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                               NetworkData::Service::DnsSrpUnicastType        aType);
+    void RecordDnsSrpAddrEvent(NetDataEvent aEvent, const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo);
+    bool NetDataContainsDnsSrpUnicast(const NetworkData::NetworkData                &aNetworkData,
+                                      const NetworkData::Service::DnsSrpUnicastInfo &aUnicastInfo,
+                                      NetworkData::Service::DnsSrpUnicastType        aType) const;
+    bool NetDataContainsDnsSrpAnycast(const NetworkData::NetworkData                &aNetworkData,
+                                      const NetworkData::Service::DnsSrpAnycastInfo &aAnycastInfo) const;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    void RecordEpskcEvent(EpskcEvent aEvent);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    void RecordFavoredOmrPrefix(const Ip6::Prefix &aPrefix, BorderRouter::RoutePreference aPreference, bool aIsLocal);
+    void RecordFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix, bool aIsLocal);
+    AilRouter *RecordAilRouterEvent(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    void RecordDhcp6Pd(BorderRouter::RoutingManager::Dhcp6PdState aState, const Ip6::Prefix &aPrefix);
+#endif
 #endif
 
-    using TrackerTimer = TimerMilliIn<HistoryTracker, &HistoryTracker::HandleTimer>;
+    using TrackerTimer = TimerMilliIn<Local, &Local::HandleTimer>;
 
     EntryList<NetworkInfo, kNetInfoListSize>                mNetInfoHistory;
     EntryList<UnicastAddressInfo, kUnicastAddrListSize>     mUnicastAddressHistory;
@@ -433,6 +558,18 @@ private:
     EntryList<RouterInfo, kRouterListSize>                  mRouterHistory;
     EntryList<OnMeshPrefixInfo, kOnMeshPrefixListSize>      mOnMeshPrefixHistory;
     EntryList<ExternalRouteInfo, kExternalRouteListSize>    mExternalRouteHistory;
+    EntryList<DnsSrpAddrInfo, kDnsSrpAddrListSize>          mDnsSrpAddrHistory;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    EntryList<EpskcEvent, kEpskcEventListSize> mEpskcEventHistory;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    EntryList<FavoredOmrPrefix, kOmrPrefixListSize>       mFavoredOmrPrefixHistory;
+    EntryList<FavoredOnLinkPrefix, kOnLinkPrefixListSize> mFavoredOnLinkPrefixHistory;
+    EntryList<AilRouter, kAilRouterListSize>              mAilRoutersHistory;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    EntryList<Dhcp6PdInfo, kDhcp6PdListSize> mDhcp6PdHistory;
+#endif
+#endif
 
     TrackerTimer mTimer;
 
@@ -454,18 +591,18 @@ private:
 #endif
 };
 
-} // namespace Utils
+} // namespace HistoryTracker
 
-DefineCoreType(otHistoryTrackerIterator, Utils::HistoryTracker::Iterator);
-DefineCoreType(otHistoryTrackerNetworkInfo, Utils::HistoryTracker::NetworkInfo);
-DefineCoreType(otHistoryTrackerMessageInfo, Utils::HistoryTracker::MessageInfo);
-DefineCoreType(otHistoryTrackerNeighborInfo, Utils::HistoryTracker::NeighborInfo);
-DefineCoreType(otHistoryTrackerRouterInfo, Utils::HistoryTracker::RouterInfo);
-DefineCoreType(otHistoryTrackerOnMeshPrefixInfo, Utils::HistoryTracker::OnMeshPrefixInfo);
-DefineCoreType(otHistoryTrackerExternalRouteInfo, Utils::HistoryTracker::ExternalRouteInfo);
+DefineCoreType(otHistoryTrackerIterator, HistoryTracker::Iterator);
+DefineCoreType(otHistoryTrackerNetworkInfo, HistoryTracker::NetworkInfo);
+DefineCoreType(otHistoryTrackerMessageInfo, HistoryTracker::MessageInfo);
+DefineCoreType(otHistoryTrackerNeighborInfo, HistoryTracker::NeighborInfo);
+DefineCoreType(otHistoryTrackerRouterInfo, HistoryTracker::RouterInfo);
+DefineCoreType(otHistoryTrackerOnMeshPrefixInfo, HistoryTracker::OnMeshPrefixInfo);
+DefineCoreType(otHistoryTrackerExternalRouteInfo, HistoryTracker::ExternalRouteInfo);
 
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // HISTORY_TRACKER_HPP_
+#endif // OT_CORE_UTILS_HISTORY_TRACKER_HPP_

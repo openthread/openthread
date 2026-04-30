@@ -45,6 +45,8 @@ find_program(SED_EXE sed)
 string(REPLACE "-Wconversion" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE "-Wconversion" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
+set(MBEDTLS_FATAL_WARNINGS OFF CACHE BOOL "Compiler warnings treated as errors" FORCE)
+
 add_subdirectory(repo)
 
 if(UNIFDEFALL_EXE AND SED_EXE AND UNIFDEF_VERSION VERSION_GREATER_EQUAL 2.10)
@@ -72,7 +74,7 @@ else()
     configure_file(mbedtls-config.h openthread-mbedtls-config.h COPYONLY)
 endif()
 
-target_include_directories(ot-config
+target_include_directories(ot-config SYSTEM
     INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/repo/include)

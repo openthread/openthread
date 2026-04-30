@@ -34,7 +34,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
 2. Commit new dataset to the Active Operational Dataset in non-volatile storage.
 
    ```bash
-   dataset commit active
+   > dataset commit active
    Done
    ```
 
@@ -47,7 +47,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
    Done
    ```
 
-4. Observe IPv6 addresses assigned to the Thread inteface.
+4. Observe IPv6 addresses assigned to the Thread interface.
 
    ```bash
    > ipaddr
@@ -142,6 +142,9 @@ After the device successfully attaches to a Thread network, the device will retr
 ## Command List
 
 - [help](#help)
+- [full](#full)
+- [length](#length)
+- [maxlength](#maxlength)
 - [publish](#publish)
 - [register](#register)
 - [show](#show)
@@ -158,12 +161,82 @@ Print netdata help menu.
 
 ```bash
 > netdata help
-help
+full
+length
+maxlength
 publish
 register
 show
 steeringdata
 unpublish
+Done
+```
+
+### full
+
+Usage: `netdata full`
+
+Print "yes" or "no" flag tracking whether or not the "net data full" callback has been invoked since start of Thread operation or since the last time `netdata full reset` was used to reset the flag.
+
+This command requires `OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL`.
+
+The "net data full" callback is invoked whenever:
+
+- The device is acting as a leader and receives a Network Data registration from a Border Router (BR) that it cannot add to Network Data (running out of space).
+- The device is acting as a BR and new entries cannot be added to its local Network Data.
+- The device is acting as a BR and tries to register its local Network Data entries with the leader, but determines that its local entries will not fit.
+
+```bash
+> netdata full
+no
+Done
+```
+
+### full reset
+
+Usage: `netdata full reset`
+
+Reset the flag tracking whether "net data full" callback was invoked.
+
+This command requires `OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL`.
+
+```bash
+> netdata full reset
+Done
+```
+
+### length
+
+Usage: `netdata length`
+
+Get the current length of (number of bytes) Partition's Thread Network Data.
+
+```bash
+> netdata length
+23
+Done
+```
+
+### maxlength
+
+Usage: `netdata maxlength`
+
+Get the maximum observed length of the Thread Network Data since OT stack initialization or since the last call to `netdata maxlength reset`.
+
+```bash
+> netdata maxlength
+40
+Done
+```
+
+### maxlength reset
+
+Usage: `netdata maxlength reset`
+
+Reset the tracked maximum length of the Thread Network Data.
+
+```bash
+> netdata maxlength reset
 Done
 ```
 
@@ -179,22 +252,22 @@ Publish DNS/SRP service entry.
 
 This command requires `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE`.
 
-The following formats are available: :
+The following formats are available:
 
-- `netdata publish dnssrp anycast <seq-num>` to publish "DNS/SRP Service Anycast Address" with a given sequence number.
-- `netdata publish dnssrp unicast <address> <port>` to publish "DNS/SRP Service Unicast Address" with given address and port number info. The address/port info is included in Service TLV data.
-- `netdata publish dnssrp unicast <port>` to publish "DNS/SRP Service Unicast Address" with given port number and the device's mesh-local EID for the address. The address and port info is included in Server TLV data.
+- `netdata publish dnssrp anycast <seq-num> [<version>]` to publish "DNS/SRP Service Anycast Address" with a given sequence number and version.
+- `netdata publish dnssrp unicast <address> <port> [<version>]` to publish "DNS/SRP Service Unicast Address" with given address, port number and version info. The address/port/version info is included in Service TLV data.
+- `netdata publish dnssrp unicast <port> [<version>]` to publish "DNS/SRP Service Unicast Address" with given port number, version, and the device's mesh-local EID for the address. The address/port/version info is included in Server TLV data.
 
 A new call to `netdata publish dnssrp [anycast|unicast] [...]` command will remove and replace any previous "DNS/SRP Service" entry that was being published (from earlier `netdata publish dnssrp [...]` commands).
 
 ```bash
-> netdata publish dnssrp anycast 1
+> netdata publish dnssrp anycast 1 2
 Done
 
-> netdata publish dnssrp unicast fd00::1234 51525
+> netdata publish dnssrp unicast fd00::1234 51525 1
 Done
 
-> netdata publish dnssrp unicast 50152
+> netdata publish dnssrp unicast 50152 2
 Done
 ```
 
@@ -224,10 +297,27 @@ Publish an external route entry.
 
 - s: Stable flag
 - n: NAT64 flag
+- a: Advertising PIO (AP) flag
 - prf: Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
 > netdata publish route fd00:1234:5678::/64 s high
+Done
+```
+
+### publish replace \<old prefix\> \<prefix\> [sn][prf]
+
+Replace a previously published external route entry.
+
+If there is no previously published external route matching old prefix, this command behaves similarly to `netdata publish route`. If there is a previously published route entry, it will be replaced with the new prefix. In particular, if the old prefix was already added in the Network Data, the change to the new prefix is immediately reflected in the Network Data (i.e., old prefix is removed and the new prefix is added in the same Network Data registration request to leader). This ensures that route entries in the Network Data are not abruptly removed.
+
+- s: Stable flag
+- n: NAT64 flag
+- a: Advertising PIO (AP) flag
+- prf: Preference, which may be: 'high', 'med', or 'low'.
+
+```bash
+> netdata publish replace ::/0 fd00:1234:5678::/64 s high
 Done
 ```
 
@@ -244,16 +334,95 @@ Done
 
 ### show
 
-Usage: `netdata show [local] [-x]`
+Usage: `netdata show [local] [-x] [\<rloc16\>]`
+
+Print entries in Network Data, on-mesh prefixes, external routes, services, and 6LoWPAN context information.
+
+If the optional `rloc16` input is specified, prints the entries associated with the given RLOC16 only. The RLOC16 filtering can be used when `-x` or `local` are not used.
+
+On-mesh prefixes are listed under `Prefixes` header:
+
+- The on-mesh prefix
+- Flags
+  - p: Preferred flag
+  - a: Stateless IPv6 Address Autoconfiguration flag
+  - d: DHCPv6 IPv6 Address Configuration flag
+  - c: DHCPv6 Other Configuration flag
+  - r: Default Route flag
+  - o: On Mesh flag
+  - s: Stable flag
+  - n: Nd Dns flag
+  - D: Domain Prefix flag (only available for Thread 1.2).
+- Preference `high`, `med`, or `low`
+- RLOC16 of device which added the on-mesh prefix
+
+External Routes are listed under `Routes` header:
+
+- The route prefix
+- Flags
+  - s: Stable flag
+  - n: NAT64 flag
+  - a: Advertising PIO (AP) flag
+- Preference `high`, `med`, or `low`
+- RLOC16 of device which added the route prefix
+
+Service entries are listed under `Services` header:
+
+- Enterprise number
+- Service data (as hex bytes)
+- Server data (as hex bytes)
+- Flags
+  - s: Stable flag
+- RLOC16 of devices which added the service entry
+- Service ID
+
+6LoWPAN Context IDs are listed under `Contexts` header:
+
+- The prefix
+- Context ID
+- Flags:
+  - s: Stable flag
+  - c: Compress flag
+
+When there are no other flags, `-` will be used.
+
+Commissioning Dataset information is printed under `Commissioning` header:
+
+- Session ID if present in Dataset or `-` otherwise
+- Border Agent RLOC16 (in hex) if present in Dataset or `-` otherwise
+- Joiner UDP port number if present in Dataset or `-` otherwise
+- Steering Data (as hex bytes) if present in Dataset or `-` otherwise
+- Flags:
+  - e: if Dataset contains any extra unknown TLV
 
 Print Network Data received from the Leader.
 
 ```bash
 > netdata show
 Prefixes:
-fd00:dead:beef:cafe::/64 paros med dc00
+fd00:dead:beef:cafe::/64 paros med a000
 Routes:
+fd00:1234:0:0::/64 s med a000
+fd00:4567:0:0::/64 s med 8000
 Services:
+44970 5d fddead00beef00007bad0069ce45948504d2 s a000 0
+Contexts:
+fd00:dead:beef:cafe::/64 1 sc
+Commissioning:
+1248 dc00 9988 00000000000120000000000000000000 e
+Done
+```
+
+Print Network Data entries from the Leader associated with `0xa00` RLOC16.
+
+```bash
+> netdata show 0xa00
+Prefixes:
+fd00:dead:beef:cafe::/64 paros med a000
+Routes:
+fd00:1234:0:0::/64 s med a000
+Services:
+44970 5d fddead00beef00007bad0069ce45948504d2 s a000 0
 Done
 ```
 

@@ -31,15 +31,21 @@
  *   This file includes definitions for Thread network time synchronization service.
  */
 
-#ifndef TIME_SYNC_HPP_
-#define TIME_SYNC_HPP_
+#ifndef OT_CORE_THREAD_TIME_SYNC_SERVICE_HPP_
+#define OT_CORE_THREAD_TIME_SYNC_SERVICE_HPP_
 
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#error "TIME_SYNC feature is not supported under RADIO_LINK_TREL. " \
+       "TIME_SYNC is an experimental feature that only works on 15.4 radio."
+#endif
+
 #include <openthread/network_time.h>
 
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -50,8 +56,7 @@
 namespace ot {
 
 /**
- * This class implements OpenThread Time Synchronization Service.
- *
+ * Implements OpenThread Time Synchronization Service.
  */
 class TimeSync : public InstanceLocator, private NonCopyable
 {
@@ -59,8 +64,17 @@ class TimeSync : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
-     *
+     * Represents Network Time Status
+     */
+    enum Status : int8_t
+    {
+        kUnsynchronized = OT_NETWORK_TIME_UNSYNCHRONIZED, ///< The device hasn't attached to a network.
+        kResyncNeeded   = OT_NETWORK_TIME_RESYNC_NEEDED,  ///< The device hasn’t received time sync for 2 periods.
+        kSynchronized   = OT_NETWORK_TIME_SYNCHRONIZED,   ///< The device network time is synchronized.
+    };
+
+    /**
+     * Initializes the object.
      */
     TimeSync(Instance &aInstance);
 
@@ -70,15 +84,13 @@ public:
      * @param[in,out] aNetworkTime  The Thread network time in microseconds.
      *
      * @returns The time synchronization status.
-     *
      */
-    otNetworkTimeStatus GetTime(uint64_t &aNetworkTime) const;
+    Status GetTime(uint64_t &aNetworkTime) const;
 
     /**
      * Handle the message which includes time synchronization information.
      *
      * @param[in] aMessage  The message which includes time synchronization information.
-     *
      */
     void HandleTimeSyncMessage(const Message &aMessage);
 
@@ -90,24 +102,21 @@ public:
      *       1. Leader send time sync message periodically;
      *       2. Router(except Leader) received a time sync message with newer sequence;
      *       3. Router received a time sync message with older sequence.
-     *
      */
     void ProcessTimeSync(void);
 #endif
 
     /**
-     * This method gets the time synchronization sequence.
+     * Gets the time synchronization sequence.
      *
      * @returns The time synchronization sequence.
-     *
      */
     uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
-     * This method gets the time offset to the Thread network time.
+     * Gets the time offset to the Thread network time.
      *
      * @returns The time offset to the Thread network time, in microseconds.
-     *
      */
     int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
 
@@ -115,7 +124,6 @@ public:
      * Set the time synchronization period.
      *
      * @param[in] aTimeSyncPeriod   The time synchronization period, in seconds.
-     *
      */
     void SetTimeSyncPeriod(uint16_t aTimeSyncPeriod) { mTimeSyncPeriod = aTimeSyncPeriod; }
 
@@ -123,7 +131,6 @@ public:
      * Get the time synchronization period.
      *
      * @returns The time synchronization period, in seconds.
-     *
      */
     uint16_t GetTimeSyncPeriod(void) const { return mTimeSyncPeriod; }
 
@@ -131,7 +138,6 @@ public:
      * Set the time synchronization XTAL accuracy threshold for Router.
      *
      * @param[in] aXtalThreshold   The XTAL accuracy threshold for Router, in PPM.
-     *
      */
     void SetXtalThreshold(uint16_t aXtalThreshold) { mXtalThreshold = aXtalThreshold; }
 
@@ -139,7 +145,6 @@ public:
      * Get the time synchronization XTAL accuracy threshold for Router.
      *
      * @returns The XTAL accuracy threshold for Router, in PPM.
-     *
      */
     uint16_t GetXtalThreshold(void) const { return mXtalThreshold; }
 
@@ -148,7 +153,6 @@ public:
      *
      * @param[in] aCallback The callback to be called when time sync is handled.
      * @param[in] aCallbackContext The context to be passed to callback.
-     *
      */
     void SetTimeSyncCallback(otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
     {
@@ -157,7 +161,6 @@ public:
 
     /**
      * Callback to be called when timer expires.
-     *
      */
     void HandleTimeout(void);
 
@@ -166,7 +169,6 @@ private:
      * Callback to be called when thread state changes.
      *
      * @param[in] aFlags Flags that denote the state change events.
-     *
      */
     void HandleNotifierEvents(Events aEvents);
 
@@ -175,19 +177,16 @@ private:
      *
      * @param[in] aNotifyTimeUpdated True to denote that observers should be notified due to a time change, false
      * otherwise.
-     *
      */
     void CheckAndHandleChanges(bool aNotifyTimeUpdated);
 
     /**
      * Increase the time synchronization sequence.
-     *
      */
     void IncrementTimeSyncSeq(void);
 
     /**
      * Notify any listener of a network time sync update event.
-     *
      */
     void NotifyTimeSyncCallback(void);
 
@@ -205,8 +204,10 @@ private:
 
     Callback<otNetworkTimeSyncCallbackFn> mTimeSyncCallback; ///< Callback when time sync is handled or status updated.
     SyncTimer                             mTimer;            ///< Timer for checking if a resync is required.
-    otNetworkTimeStatus                   mCurrentStatus;    ///< Current network time status.
+    Status                                mCurrentStatus;    ///< Current network time status.
 };
+
+DefineMapEnum(otNetworkTimeStatus, TimeSync::Status);
 
 /**
  * @}
@@ -216,4 +217,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#endif // TIME_SYNC_HPP_
+#endif // OT_CORE_THREAD_TIME_SYNC_SERVICE_HPP_

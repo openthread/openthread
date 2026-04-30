@@ -141,6 +141,12 @@ public:
         : ot::Ncp::NcpHdlc(aInstance, &NcpVendorUart::SendHdlc)
     {
     }
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+    NcpVendorUart(ot::Instance **aInstances, uint8_t count)
+        : ot::Ncp::NcpHdlc(aInstances, count, &NcpVendorUart::SendHdlc)
+    {
+    }
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
 
     // Add public/private methods or member variables
 };
@@ -159,5 +165,28 @@ extern "C" void otAppNcpInit(otInstance *aInstance)
         // assert(false);
     }
 }
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+extern "C" void otAppNcpInitMulti(otInstance **aInstances, uint8_t count)
+{
+    NcpVendorUart *ncpVendor = nullptr;
+    ot::Instance  *instances[SPINEL_HEADER_IID_MAX];
+
+    OT_ASSERT(count < SPINEL_HEADER_IID_MAX);
+    OT_ASSERT(count > 0);
+    OT_ASSERT(aInstances[0] != nullptr);
+
+    for (int i = 0; i < count; i++)
+    {
+        instances[i] = static_cast<ot::Instance *>(aInstances[i]);
+    }
+
+    ncpVendor = new (&sNcpVendorRaw) NcpVendorUart(instances, count);
+
+    if (ncpVendor == nullptr || ncpVendor != ot::Ncp::NcpBase::GetNcpInstance())
+    {
+        OT_ASSERT(false);
+    }
+}
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
 
 #endif // #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK

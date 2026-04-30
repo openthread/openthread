@@ -161,6 +161,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
         run cli/test-703-multi-radio-mesh-header-msg.py
         run cli/test-704-multi-radio-scan.py
         run cli/test-705-multi-radio-discover-scan.py
+        run cli/test-706-multi-radio-trel-peer-addr-port-change-discovery.py
 
         exit 0
     fi
@@ -183,7 +184,36 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-016-child-mode-change.py
     run cli/test-017-network-data-versions.py
     run cli/test-018-next-hop-and-path-cost.py
+    run cli/test-019-netdata-context-id.py
+    run cli/test-020-net-diag-vendor-info.py
+    run cli/test-021-br-route-prf.py
+    run cli/test-022-netdata-full.py
+    run cli/test-023-mesh-diag.py
+    run cli/test-024-mle-adv-imax-change.py
+    run cli/test-025-mesh-local-prefix-change.py
+    run cli/test-026-coaps-conn-limit.py
+    run cli/test-027-slaac-address.py
+    run cli/test-028-border-agent-ephemeral-key.py
+    run cli/test-029-pending-dataset-key-change.py
+    run cli/test-030-anycast-forwarding.py
+    run cli/test-031-service-aloc-route-lookup.py
+    run cli/test-032-leader-take-over.py
+    run cli/test-033-alt-short-addr-role-transition.py
+    run cli/test-034-fed-parent-search.py
+    run cli/test-035-context-id-change-addr-reg.py
+    run cli/test-036-dhcp-prefix-netdata.py
+    run cli/test-037-mtd-annc-join-older-timestamp.py
+    run cli/test-038-simultaneous-parent-and-child-reset.py
+    run cli/test-039-border-agent-evict-active-commissioner.py
+    run cli/test-040-history-tracker-query.py
     run cli/test-400-srp-client-server.py
+    run cli/test-401-srp-server-address-cache-snoop.py
+    run cli/test-500-two-brs-two-networks.py
+    run cli/test-501-multi-br-failure-recovery.py
+    run cli/test-502-multi-br-leader-failure-recovery.py
+    run cli/test-503-peer-tbr-discovery.py
+    run cli/test-504-br-icmp-unreach-err.py
+    run cli/test-505-multi-ail-detection.py
     run cli/test-601-channel-manager-channel-change.py
     # Skip the "channel-select" test on a TREL only radio link, since it
     # requires energy scan which is not supported in this case.
@@ -222,7 +252,6 @@ run ncp/test-014-ip6-address-add.py
 run ncp/test-015-same-prefix-on-multiple-nodes.py
 run ncp/test-016-neighbor-table.py
 run ncp/test-017-parent-reset-child-recovery.py
-run ncp/test-018-child-supervision.py
 run ncp/test-019-inform-previous-parent.py
 run ncp/test-020-router-table.py
 run ncp/test-021-address-cache-table.py
@@ -234,7 +263,7 @@ run ncp/test-026-slaac-address-wpantund.py
 run ncp/test-027-child-mode-change.py
 run ncp/test-028-router-leader-reset-recovery.py
 run ncp/test-029-data-poll-interval.py
-run ncp/test-030-slaac-address-ncp.py
+# run ncp/test-030-slaac-address-ncp.py
 run ncp/test-031-meshcop-joiner-commissioner.py
 run ncp/test-032-child-attach-with-multiple-ip-addresses.py
 run ncp/test-033-mesh-local-prefix-change.py

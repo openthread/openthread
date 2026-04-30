@@ -31,8 +31,8 @@
  *   This file includes definitions for source address match controller.
  */
 
-#ifndef SOURCE_MATCH_CONTROLLER_HPP_
-#define SOURCE_MATCH_CONTROLLER_HPP_
+#ifndef OT_CORE_THREAD_SRC_MATCH_CONTROLLER_HPP_
+#define OT_CORE_THREAD_SRC_MATCH_CONTROLLER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -56,92 +56,83 @@ class Child;
  */
 
 /**
- * This class implements the "source address match" controller.
+ * Implements the "source address match" controller.
  *
  * The source address match feature controls how the radio layer decides the "frame pending" bit for acks sent in
  * response to data request commands from sleepy children.
  *
- * This class updates the source match table and also controls when to enable or disable the source matching
+ * Updates the source match table and also controls when to enable or disable the source matching
  * feature.
  *
  * The source address match table provides the list of children for which there is a pending frame. Either a short
  * address or an extended/long address can be added to the source address match table.
- *
  */
 class SourceMatchController : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance    A reference to the OpenThread instance
-     *
      */
     explicit SourceMatchController(Instance &aInstance);
 
     /**
-     * This method returns the current state of source address matching.
+     * Returns the current state of source address matching.
      *
      * @returns `true` if source address matching is enabled, `false` otherwise.
-     *
      */
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method increments the message count for a child and updates the source match table.
+     * Increments the message count for a child and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void IncrementMessageCount(Child &aChild);
 
     /**
-     * This method decrements the message count for a child and updates the source match table.
+     * Decrements the message count for a child and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void DecrementMessageCount(Child &aChild);
 
     /**
-     * This method resets the message count for a child to zero and updates the source match table.
+     * Resets the message count for a child to zero and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void ResetMessageCount(Child &aChild);
 
     /**
-     * This method sets whether or not to perform source address matching on the extended or short address for
+     * Sets whether or not to perform source address matching on the extended or short address for
      * a child.
      *
      * @param[in] aChild            A reference to the child.
      * @param[in] aUseShortAddress  `true` to match on short source address, `false` otherwise.
-     *
      */
     void SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress);
 
 private:
     /**
-     * This method clears the source match table.
-     *
+     * Clears the source match table.
      */
     void ClearTable(void);
 
     /**
-     * This method enables or disables the source matching.
+     * Enables or disables the source matching.
      *
      * If enabled, the radio uses the source match table to determine whether to set or clear the "frame pending" bit
      * in an acknowledgment to a MAC Data Request command. If disabled, the radio layer sets the "frame pending" on all
      * acknowledgment frames in response to MAC Data Request commands.
      *
      * @param[in] aEnable   `true` to enable, `false` to disable.
-     *
      */
     void Enable(bool aEnable);
 
     /**
-     * This method adds an entry to source match table for a given child and updates the state of source matching
+     * Adds an entry to source match table for a given child and updates the state of source matching
      * feature accordingly.
      *
      * If the entry is added successfully, source matching feature is enabled (if not already enabled) after ensuring
@@ -149,40 +140,36 @@ private:
      * the child is marked to remember the pending entry and source matching is disabled.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void AddEntry(Child &aChild);
 
     /**
-     * This method clears an entry in source match table for a given child and updates the state of source matching
+     * Clears an entry in source match table for a given child and updates the state of source matching
      * feature accordingly.
      *
      * If the entry is removed successfully and frees up space in the source match table, any remaining pending
      * entries are added. If all pending entries are successfully added, source matching is enabled.
      *
      * @param[in] aChild    A reference to the child.
-     *
      */
     void ClearEntry(Child &aChild);
 
     /**
-     * This method adds a given child's address (short or extended address depending on child's setting) to the source
+     * Adds a given child's address (short or extended address depending on child's setting) to the source
      * source match table (@sa SetSrcMatchAsShort.
      *
      * @param[in] aChild            A reference to the child
      *
      * @retval kErrorNone     Child's address was added successfully to the source match table.
      * @retval kErrorNoBufs   No available space in the source match table.
-     *
      */
     Error AddAddress(const Child &aChild);
 
     /**
-     * This method adds all pending entries to the source match table.
+     * Adds all pending entries to the source match table.
      *
      * @retval kErrorNone     All pending entries were successfully added.
      * @retval kErrorNoBufs   No available space in the source match table.
-     *
      */
     Error AddPendingEntries(void);
 
@@ -191,11 +178,10 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace ot
 
 #endif // OPENTHREAD_FTD
 
-#endif // SOURCE_MATCH_CONTROLLER_HPP_
+#endif // OT_CORE_THREAD_SRC_MATCH_CONTROLLER_HPP_

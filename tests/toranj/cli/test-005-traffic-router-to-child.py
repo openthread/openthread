@@ -62,11 +62,11 @@ verify(node3.get_state() == 'child')
 
 ll1 = node1.get_linklocal_ip_addr()
 ll2 = node2.get_linklocal_ip_addr()
-ll3 = node2.get_linklocal_ip_addr()
+ll3 = node3.get_linklocal_ip_addr()
 
 ml1 = node1.get_mleid_ip_addr()
 ml2 = node2.get_mleid_ip_addr()
-ml3 = node2.get_mleid_ip_addr()
+ml3 = node3.get_mleid_ip_addr()
 
 sizes = [0, 80, 500, 1000]
 count = 2

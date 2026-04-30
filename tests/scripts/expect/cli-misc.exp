@@ -86,6 +86,10 @@ send "ifconfig\n"
 expect "up"
 expect_line "Done"
 
+send "instanceid\n"
+expect -re {\d+}
+expect_line "Done"
+
 send "ipaddr add ::\n"
 expect_line "Done"
 send "ipaddr del ::\n"
@@ -118,6 +122,15 @@ expect_line "Done"
 send "txpower\n"
 expect -- "-10 dBm"
 expect_line "Done"
+
+send "targetpower 12 1000\n"
+expect_line "Done"
+
+send "targetpower 12 -1000\n"
+expect_line "Done"
+
+send "targetpower 10 1000\n"
+expect_line "Error 7: InvalidArgs"
 
 send "thread version\n"
 expect_line "Done"
@@ -175,9 +188,6 @@ send "diag start\n"
 expect ": InvalidState"
 
 send "ba port\n"
-expect "Done"
-
-send "ba state\n"
 expect "Done"
 
 send "prefix meshlocal fd00:dead:beef:cafe::/96\n"

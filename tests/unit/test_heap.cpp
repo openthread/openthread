@@ -38,11 +38,12 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+namespace ot {
+
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 /**
  * Verifies single variable allocating and freeing.
- *
  */
 void TestAllocateSingle(void)
 {
@@ -76,7 +77,6 @@ void TestAllocateSingle(void)
  *
  * @param[in]   aSizeLimit  The maximum allocation size.
  * @param[in]   aSeed       The seed for generating random sizes.
- *
  */
 void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
 {
@@ -175,10 +175,12 @@ void RunTimerTests(void)
 
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
+} // namespace ot
+
 int main(void)
 {
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    RunTimerTests();
+    ot::RunTimerTests();
     printf("All tests passed\n");
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     return 0;

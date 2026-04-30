@@ -140,6 +140,27 @@ void TestHeapString(void)
     VerifyString("str1", str1, "name");
 
     printf("------------------------------------------------------------------------------------\n");
+    printf("TakeFrom() and Move()\n\n");
+
+    SuccessOrQuit(str1.Set("string to be moved"));
+    str2.Free();
+    VerifyString("str1", str1, "string to be moved");
+    VerifyString("str2", str2, nullptr);
+
+    str2.TakeFrom(str1.Move());
+    VerifyString("str1", str1, nullptr);
+    VerifyString("str2", str2, "string to be moved");
+
+    // Test moving from self
+    str2.TakeFrom(str2.Move());
+    VerifyString("str2", str2, "string to be moved");
+
+    // Test moving a null string
+    str2.TakeFrom(str1.Move());
+    VerifyString("str1", str1, nullptr);
+    VerifyString("str2", str2, nullptr);
+
+    printf("------------------------------------------------------------------------------------\n");
     printf("operator==() with two null string\n\n");
     str1.Free();
     str2.Free();
@@ -171,11 +192,15 @@ void VerifyData(const Heap::Data &aData, const uint8_t *aBytes, uint16_t aLength
 
     PrintData(aData);
 
+    VerifyOrQuit(aData.Matches(aBytes, aLength));
+    VerifyOrQuit(!aData.Matches(aBytes, aLength + 1));
+
     if (aLength == 0)
     {
         VerifyOrQuit(aData.IsNull());
         VerifyOrQuit(aData.GetBytes() == nullptr);
         VerifyOrQuit(aData.GetLength() == 0);
+        VerifyOrQuit(aData.Matches(nullptr, 0));
     }
     else
     {
@@ -186,6 +211,10 @@ void VerifyData(const Heap::Data &aData, const uint8_t *aBytes, uint16_t aLength
 
         aData.CopyBytesTo(buffer);
         VerifyOrQuit(memcmp(buffer, aBytes, aLength) == 0, "CopyBytesTo() failed");
+
+        VerifyOrQuit(aData.Matches(buffer, aLength));
+        buffer[aLength - 1]++;
+        VerifyOrQuit(!aData.Matches(buffer, aLength));
     }
 }
 
@@ -200,6 +229,7 @@ void TestHeapData(void)
     MessagePool   *messagePool;
     Message       *message;
     Heap::Data     data;
+    Heap::Data     data2;
     uint16_t       offset;
     const uint8_t *oldBuffer;
 
@@ -222,6 +252,10 @@ void TestHeapData(void)
     printf("------------------------------------------------------------------------------------\n");
     printf("After constructor\n");
     VerifyData(data, nullptr, 0);
+
+    VerifyOrQuit(data.Matches(nullptr, 0));
+    VerifyOrQuit(data.Matches(kData1, 0));
+    VerifyOrQuit(!data.Matches(kData1, 1));
 
     printf("------------------------------------------------------------------------------------\n");
     printf("SetFrom(aBuffer, aLength)\n");
@@ -302,8 +336,28 @@ void TestHeapData(void)
 
     printf("------------------------------------------------------------------------------------\n");
     printf("SetFrom() move semantics\n\n");
-    data.SetFrom(GetData());
+    data.TakeFrom(GetData().Move());
     VerifyData(data, &kTestValue, sizeof(kTestValue));
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("TakeFrom() and Move()\n\n");
+
+    SuccessOrQuit(data.SetFrom(kData1, sizeof(kData1)));
+    VerifyData(data, kData1);
+    VerifyData(data2, nullptr, 0);
+
+    data2.TakeFrom(data.Move());
+    VerifyData(data, nullptr, 0);
+    VerifyData(data2, kData1);
+
+    // Test moving from self
+    data2.TakeFrom(data2.Move());
+    VerifyData(data2, kData1);
+
+    // Test moving a null data
+    data2.TakeFrom(data.Move());
+    VerifyData(data, nullptr, 0);
+    VerifyData(data2, nullptr, 0);
 
     printf("\n -- PASS\n");
 }

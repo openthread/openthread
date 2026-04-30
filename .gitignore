@@ -1,64 +1,40 @@
 *.a
+*.a.*
 *.bak
-*.db
 *.flash
 *.gcda
 *.gcno
 *.log
 *.o
-*.lo
-*.la
 *.ninja*
-*.opendb
 *.orig
 *.pcap
 *.pyc
-*.suo
 *.swn
 *.swo
 *.swp
 *.trs
-*.user
 *.bak
+*.map
 *~
-.deps
-.dirstamp
 .DS_Store
-.local-version
-.libs
 .vagrant
-aclocal.m4
-autom4te.cache
 build
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
-configure
-config.log
-config.status
 doc/Doxyfile
 doc/html
-etc/cmake/openthread-config-generic.h
-include/openthread-config.h
-include/openthread-config.h.in
-include/openthread-config-generic.h
-include/openthread-config-generic.h.in
-include/stamp-h1
-ipch
-libtool
-Makefile
-Makefile.in
 output
-third_party/nlbuild-autotools/repo/third_party/autoconf/compile
-third_party/nlbuild-autotools/repo/third_party/autoconf/depcomp
-third_party/nlbuild-autotools/repo/third_party/autoconf/ltmain.sh
-third_party/nlbuild-autotools/repo/third_party/autoconf/m4/libtool.m4
-third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltoptions.m4
-third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltsugar.m4
-third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltversion.m4
-third_party/nlbuild-autotools/repo/third_party/autoconf/m4/lt~obsolete.m4
-third_party/nlbuild-autotools/repo/third_party/autoconf/missing
 /tmp/
+
+# OT exectuables
+ot-cli-ftd
+ot-cli-mtd
+ot-cli-radio
+ot-ncp-ftd
+ot-ncp-mtd
+ot-rcp
 
 # IDE / editor files
 .idea/**
@@ -68,3 +44,18 @@ cmake-build-*/**
 
 # Python bytecodes
 __pycache__
+
+# Python environments
+.venv
+venv/
+
+# Unit test files
+CTestTestfile.cmake
+ot-test-*
+ot_testing/
+Testing/
+tests/nexus/nexus_*
+
+# Misc
+DartConfiguration.tcl
+third_party/mbedtls/openthread-mbedtls-config.h

@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the DNS-SD Server.
- *
  */
 
-#ifndef CONFIG_DNSSD_SERVER_H_
-#define CONFIG_DNSSD_SERVER_H_
+#ifndef OT_CORE_CONFIG_DNSSD_SERVER_H_
+#define OT_CORE_CONFIG_DNSSD_SERVER_H_
+
+/**
+ * @addtogroup config-dnssd-server
+ *
+ * @brief
+ *   This module includes configuration variables for the DNS-SD server.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
  *
  * Define to 1 to enable DNS-SD Server support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 #define OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE 0
@@ -48,8 +55,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
  *
- * Define the the DNS-SD Server port.
- *
+ * Define the DNS-SD Server port.
  */
 #ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
 #define OPENTHREAD_CONFIG_DNSSD_SERVER_PORT 53
@@ -59,7 +65,6 @@
  * @def OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
  *
  * Define to 1 to bind DNS-SD server to unspecified interface, 0 to bind to Thread interface.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
 #define OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF 0
@@ -69,10 +74,43 @@
  * @def OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
  *
  * Specifies the default wait time that DNS-SD Server waits for a query response (e.g. from Discovery Proxy).
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
 #define OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT 6000
 #endif
 
-#endif // CONFIG_DNSSD_SERVER_H_
+/**
+ * @def OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+ *
+ * Define to 1 to enable DNS-SD Discovery Proxy support.
+ */
+#ifndef OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+#define OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+ *
+ * Define to 1 to enable upstream forwarding support. The platform MUST implement `otPlatDnsStartUpstreamQuery` and
+ * `otPlatDnsCancelUpstreamQuery`.
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+#define OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_MOCK_PLAT_APIS_ENABLE
+ *
+ * Define to 1 to add mock (empty) implementation of upstream query platform APIs.
+ *
+ * This is intended for generating code size report only and should not be used otherwise.
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_MOCK_PLAT_APIS_ENABLE
+#define OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_MOCK_PLAT_APIS_ENABLE 0
+#endif
+
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_DNSSD_SERVER_H_

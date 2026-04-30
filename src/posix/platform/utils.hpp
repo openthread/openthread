@@ -29,22 +29,45 @@
 #ifndef OT_POSIX_PLATFORM_UTILS_HPP_
 #define OT_POSIX_PLATFORM_UTILS_HPP_
 
-#include "openthread/error.h"
+#include <stdint.h>
+
+#include <openthread/error.h>
 
 namespace ot {
 namespace Posix {
 
 /**
- * This method formats a system command to execute.
+ * Represents socket block/non-block options.
+ */
+enum SocketBlockOption : uint8_t
+{
+    kSocketBlock,
+    kSocketNonBlock,
+};
+
+/**
+ * Creates a socket with SOCK_CLOEXEC flag set.
+ *
+ * @param[in]   aDomain       The communication domain.
+ * @param[in]   aType         The semantics of communication.
+ * @param[in]   aProtocol     The protocol to use.
+ * @param[in]   aBlockOption  Whether to add nonblock flags.
+ *
+ * @returns The file descriptor of the created socket, or -1 if fails to create the socket.
+ * @retval  -1  Failed to create socket.
+ */
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption);
+
+/**
+ * Formats a system command to execute.
  *
  * @param[in] aFormat  A pointer to the format string.
  * @param[in] ...      Arguments for the format specification.
  *
  * @retval OT_ERROR_NONE    The command was executed successfully.
  * @retval OT_ERROR_FAILED  It failed to execute the command.
- *
  */
-otError ExecuteCommand(const char *aFormat, ...);
+otError ExecuteCommand(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 } // namespace Posix
 } // namespace ot

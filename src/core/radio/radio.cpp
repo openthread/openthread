@@ -28,17 +28,31 @@
 
 #include "radio.hpp"
 
-#include "common/locator_getters.hpp"
-#include "utils/otns.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
+
+const uint8_t Radio::kSupportedChannelPages[kNumChannelPages] = {
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+    kChannelPage0,
+#endif
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+    kChannelPage2,
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE,
+#endif
+};
 
 #if OPENTHREAD_RADIO
 void Radio::Init(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Mac::ExtAddress  allZeroExtAddress;
+    Mac::KeyMaterial emptyKeyMaterial;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    SuccessOrAssert(EnableCsl(0, Mac::kShortAddrInvalid, nullptr));
+    SuccessOrAssert(ResetCsl());
 #endif
 
     EnableSrcMatch(false);
@@ -52,12 +66,15 @@ void Radio::Init(void)
     }
 
     SetPanId(Mac::kPanIdBroadcast);
-    SetExtendedAddress(Mac::ExtAddress{});
+    allZeroExtAddress.Clear();
+    SetExtendedAddress(allZeroExtAddress);
     SetShortAddress(Mac::kShortAddrInvalid);
-    SetMacKey(0, 0, Mac::KeyMaterial{}, Mac::KeyMaterial{}, Mac::KeyMaterial{});
+    emptyKeyMaterial.Clear();
+    SetMacKey(0, 0, emptyKeyMaterial, emptyKeyMaterial, emptyKeyMaterial);
     SetMacFrameCounter(0);
 
     SetPromiscuous(false);
+    SetRxOnWhenIdle(true);
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 }
 #endif // OPENTHREAD_RADIO
@@ -66,10 +83,13 @@ void Radio::Init(void)
 
 void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
 {
-    otPlatRadioSetExtendedAddress(GetInstancePtr(), &aExtAddress);
+    Mac::ExtAddress address;
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitExtendedAddress(aExtAddress);
+    address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
+    otPlatRadioSetExtendedAddress(GetInstancePtr(), &address);
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitExtendedAddress(address);
 #endif
 }
 
@@ -77,19 +97,139 @@ void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
 {
     otPlatRadioSetShortAddress(GetInstancePtr(), aShortAddress);
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitShortAddress(aShortAddress);
 #endif
 }
 
+Error Radio::AddSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
+{
+    Mac::ExtAddress address;
+
+    address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
+    return otPlatRadioAddSrcMatchExtEntry(GetInstancePtr(), &address);
+}
+
+Error Radio::ClearSrcMatchExtEntry(const Mac::ExtAddress &aExtAddress)
+{
+    Mac::ExtAddress address;
+
+    address.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
+    return otPlatRadioClearSrcMatchExtEntry(GetInstancePtr(), &address);
+}
+
 Error Radio::Transmit(Mac::TxFrame &aFrame)
 {
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitTransmit(aFrame);
 #endif
 
     return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
 }
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+inline uint64_t UintSafeMinus(uint64_t aLhs, uint64_t aRhs) { return aLhs > aRhs ? (aLhs - aRhs) : 0; }
+
+Radio::Statistics::Statistics(void)
+    : mStatus(kDisabled)
+{
+    ResetTime();
+}
+
+void Radio::Statistics::RecordStateChange(Status aStatus)
+{
+    UpdateTime();
+    mStatus = aStatus;
+}
+
+void Radio::Statistics::HandleReceiveAt(uint32_t aDurationUs)
+{
+    // The actual rx time of ReceiveAt cannot be obtained from software level. This is a workaround.
+    if (mStatus == kSleep)
+    {
+        mTimeStats.mRxTime += aDurationUs;
+    }
+}
+
+void Radio::Statistics::RecordTxDone(otError aError, uint16_t aPsduLength)
+{
+    if (aError == kErrorNone || aError == kErrorNoAck)
+    {
+        uint32_t txTimeUs = (aPsduLength + Mac::Frame::kPhyHeaderSize) * Radio::kSymbolsPerOctet * Radio::kSymbolTime;
+        uint32_t rxAckTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * Radio::kPhyUsPerByte;
+
+        UpdateTime();
+        mTimeStats.mTxTime += txTimeUs;
+
+        if (mStatus == kReceive)
+        {
+            mTimeStats.mRxTime = UintSafeMinus(mTimeStats.mRxTime, txTimeUs);
+        }
+        else if (mStatus == kSleep)
+        {
+            mTimeStats.mSleepTime = UintSafeMinus(mTimeStats.mSleepTime, txTimeUs);
+            if (aError == kErrorNone)
+            {
+                mTimeStats.mRxTime += rxAckTimeUs;
+                mTimeStats.mSleepTime = UintSafeMinus(mTimeStats.mSleepTime, rxAckTimeUs);
+            }
+        }
+    }
+}
+
+void Radio::Statistics::RecordRxDone(otError aError)
+{
+    uint32_t ackTimeUs;
+
+    VerifyOrExit(aError == kErrorNone);
+
+    UpdateTime();
+    // Currently we cannot know the actual length of ACK. So assume the ACK is an immediate ACK.
+    ackTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * Radio::kPhyUsPerByte;
+    mTimeStats.mTxTime += ackTimeUs;
+    if (mStatus == kReceive)
+    {
+        mTimeStats.mRxTime = UintSafeMinus(mTimeStats.mRxTime, ackTimeUs);
+    }
+
+exit:
+    return;
+}
+
+const Radio::Statistics::TimeStats &Radio::Statistics::GetStats(void)
+{
+    UpdateTime();
+
+    return mTimeStats;
+}
+
+void Radio::Statistics::ResetTime(void)
+{
+    ClearAllBytes(mTimeStats);
+    mLastUpdateTime = TimerMicro::GetNow();
+}
+
+void Radio::Statistics::UpdateTime(void)
+{
+    TimeMicro nowTime     = TimerMicro::GetNow();
+    uint32_t  timeElapsed = nowTime - mLastUpdateTime;
+
+    switch (mStatus)
+    {
+    case kSleep:
+        mTimeStats.mSleepTime += timeElapsed;
+        break;
+    case kReceive:
+        mTimeStats.mRxTime += timeElapsed;
+        break;
+    case kDisabled:
+        mTimeStats.mDisabledTime += timeElapsed;
+        break;
+    }
+    mLastUpdateTime = nowTime;
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 
 } // namespace ot

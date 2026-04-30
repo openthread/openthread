@@ -54,7 +54,7 @@ exit:
 
 Error Data::SetFrom(const Message &aMessage)
 {
-    return SetFrom(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
+    return SetFrom(aMessage, aMessage.GetOffset(), aMessage.DetermineLengthAfterOffset());
 }
 
 Error Data::SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
@@ -72,10 +72,40 @@ exit:
     return error;
 }
 
-void Data::SetFrom(Data &&aData)
+void Data::TakeFrom(Data &&aData)
+{
+    if (&aData != this)
+    {
+        Free();
+        mData.Init(aData.mData.GetBytes(), aData.GetLength());
+        aData.mData.Init(nullptr, 0);
+    }
+}
+
+void Data::TakeFrom(uint8_t *&aHeapAllocatedBuffer, uint16_t aLength)
 {
     Free();
-    TakeFrom(aData);
+    mData.Init(aHeapAllocatedBuffer, aLength);
+    aHeapAllocatedBuffer = nullptr;
+}
+
+bool Data::Matches(const uint8_t *aBuffer, uint16_t aLength) const
+{
+    bool matches = false;
+
+    VerifyOrExit(aLength == mData.GetLength());
+
+    if (IsNull())
+    {
+        matches = (aLength == 0);
+    }
+    else
+    {
+        matches = mData.MatchesBytesIn(aBuffer);
+    }
+
+exit:
+    return matches;
 }
 
 void Data::Free(void)
@@ -90,10 +120,9 @@ Error Data::UpdateBuffer(uint16_t aNewLength)
 
     VerifyOrExit(aNewLength != mData.GetLength());
 
-    Heap::Free(mData.GetBytes());
-
     if (aNewLength == 0)
     {
+        Heap::Free(mData.GetBytes());
         mData.Init(nullptr, 0);
     }
     else
@@ -101,17 +130,12 @@ Error Data::UpdateBuffer(uint16_t aNewLength)
         uint8_t *newBuffer = static_cast<uint8_t *>(Heap::CAlloc(aNewLength, sizeof(uint8_t)));
 
         VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
+        Heap::Free(mData.GetBytes());
         mData.Init(newBuffer, aNewLength);
     }
 
 exit:
     return error;
-}
-
-void Data::TakeFrom(Data &aData)
-{
-    mData.Init(aData.mData.GetBytes(), aData.GetLength());
-    aData.mData.Init(nullptr, 0);
 }
 
 } // namespace Heap

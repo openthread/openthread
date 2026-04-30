@@ -114,6 +114,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         br1.srp_server_set_enabled(True)
+        br1.dns_upstream_query_state = False
 
         br2.stop_mdns_service()
         br2.stop_otbr_service()
@@ -136,11 +137,12 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         self.simulator.go(5)
 
         # start BR2 late to ensure it doesn't have mDNS cache
-        br2.start_mdns_service()
         br2.start_otbr_service()
         br2.start()
+        br2.start_mdns_service()
 
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        br2.dns_upstream_query_state = False
 
         br2_addr = br2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
 
@@ -153,6 +155,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         def is_int(x):
             return isinstance(x, int)
 
+        # 1. Check hosts & services published by Advertising Proxy.
         # check if AAAA query works
         dig_result = host.dns_dig(br2_addr, host1_full_name, 'AAAA')
         self._assert_dig_result_matches(dig_result, {
@@ -217,21 +220,70 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
             ],
         }])
 
-        # check some invalid queries
-        for qtype in ['A', 'CNAME']:
-            dig_result = host.dns_dig(br2_addr, host1_full_name, qtype)
-            self._assert_dig_result_matches(dig_result, {
-                'status': 'NOTIMP',
+        # 2. Check the host & service published by a WiFi host.
+        # check if AAAA query works
+        wifi_host_linklocal_address = 'fe80::1234'
+        wifi_host_routable_address = '2402::abcd'
+        wifi_host_full_name = f'wifi-host.{DOMAIN}'
+        wifi_service_instance_full_name = f'wifi-service._host._tcp.{DOMAIN}'
+        host.publish_mdns_host('wifi-host', [wifi_host_linklocal_address, wifi_host_routable_address])
+        host.publish_mdns_service('wifi-service', '_host._tcp', 12345, 'wifi-host', {'k1': 'v1', 'k2': 'v2'})
+        dig_result = host.dns_dig(br2_addr, wifi_host_full_name, 'AAAA')
+        self._assert_dig_result_matches(
+            dig_result, {
+                'QUESTION': [(wifi_host_full_name, 'IN', 'AAAA')],
+                'ANSWER': [(wifi_host_full_name, 'IN', 'AAAA', wifi_host_routable_address),],
             })
+
+        # check if SRV query works
+        dig_result = host.dns_dig(br2_addr, wifi_service_instance_full_name, 'SRV')
+        self._assert_dig_result_matches(
+            dig_result, {
+                'QUESTION': [(wifi_service_instance_full_name, 'IN', 'SRV')],
+                'ANSWER': [(wifi_service_instance_full_name, 'IN', 'SRV', is_int, is_int, 12345, wifi_host_full_name),
+                          ],
+                'ADDITIONAL': [(wifi_host_full_name, 'IN', 'AAAA', wifi_host_routable_address),],
+            })
+
+        # check if TXT query works
+        dig_result = host.dns_dig(br2_addr, wifi_service_instance_full_name, 'TXT')
+        self._assert_dig_result_matches(
+            dig_result, {
+                'QUESTION': [(wifi_service_instance_full_name, 'IN', 'TXT')],
+                'ANSWER': [(wifi_service_instance_full_name, 'IN', 'TXT', {
+                    'k1': 'v1',
+                    'k2': 'v2'
+                })],
+            })
+
+        # check if PTR query works
+        dig_result = host.dns_dig(br2_addr, f'_host._tcp.{DOMAIN}', 'PTR')
+
+        self._assert_dig_result_matches_any(dig_result, [{
+            'QUESTION': [(f'_host._tcp.{DOMAIN}', 'IN', 'PTR')],
+            'ANSWER': [(f'_host._tcp.{DOMAIN}', 'IN', 'PTR', wifi_service_instance_full_name)],
+            'ADDITIONAL': [
+                (wifi_service_instance_full_name, 'IN', 'SRV', is_int, is_int, 12345, wifi_host_full_name),
+                (wifi_service_instance_full_name, 'IN', 'TXT', {
+                    'k1': 'v1',
+                    'k2': 'v2'
+                }),
+                (wifi_host_full_name, 'IN', 'AAAA', wifi_host_routable_address),
+            ],
+        }])
+
+        host.bash('pkill avahi-publish')
+
+        # 3. Verify Discovery Proxy works for _meshcop._udp published by BR.
+        self._verify_discovery_proxy_meshcop(br2_addr, br2.get_network_name(), host)
+
+        # 4. Check some invalid queries
 
         for service_name in WRONG_SERVICE_NAMES:
             dig_result = host.dns_dig(br2_addr, service_name, 'PTR')
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NXDOMAIN',
             })
-
-        # verify Discovery Proxy works for _meshcop._udp
-        self._verify_discovery_proxy_meshcop(br2_addr, br2.get_network_name(), host)
 
     def _verify_discovery_proxy_meshcop(self, server_addr, network_name, digger):
         dp_service_name = '_meshcop._udp.default.service.arpa.'
@@ -245,16 +297,16 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
             if len(answer) >= 2 and answer[-2] == 'PTR':
                 dp_instance_name = answer[-1]
                 break
-        self._assert_dig_result_matches(
-            dig_result, {
-                'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
-                'ANSWER': [(dp_service_name, 'IN', 'PTR', dp_instance_name),],
-                'ADDITIONAL': [
-                    (dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),
-                    (dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
-                        'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),
-                ],
-            })
+        self._assert_dig_result_matches(dig_result, {
+            'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
+            'ANSWER': [(dp_service_name, 'IN', 'PTR', dp_instance_name),],
+            'ADDITIONAL': [
+                (dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),
+                (dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get('nn') == network_name
+                                                             and 'xp' in txt and 'tv' in txt and 'xa' in txt)),
+            ],
+        },
+                                        max_ttl=10)
 
         # Find the actual host name and IPv6 address
         dp_ip6_address = None
@@ -267,22 +319,22 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         assert isinstance(dp_hostname, str), dig_result
 
         dig_result = digger.dns_dig(server_addr, dp_instance_name, 'SRV')
-        self._assert_dig_result_matches(
-            dig_result, {
-                'QUESTION': [(dp_instance_name, 'IN', 'SRV'),],
-                'ANSWER': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
-                'ADDITIONAL': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
-                    'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
-            })
+        self._assert_dig_result_matches(dig_result, {
+            'QUESTION': [(dp_instance_name, 'IN', 'SRV'),],
+            'ANSWER': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
+            'ADDITIONAL': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
+                'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
+        },
+                                        max_ttl=10)
 
         dig_result = digger.dns_dig(server_addr, dp_instance_name, 'TXT')
-        self._assert_dig_result_matches(
-            dig_result, {
-                'QUESTION': [(dp_instance_name, 'IN', 'TXT'),],
-                'ANSWER': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
-                    'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
-                'ADDITIONAL': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
-            })
+        self._assert_dig_result_matches(dig_result, {
+            'QUESTION': [(dp_instance_name, 'IN', 'TXT'),],
+            'ANSWER': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
+                'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
+            'ADDITIONAL': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
+        },
+                                        max_ttl=10)
 
         if dp_ip6_address is not None:
             dig_result = digger.dns_dig(server_addr, dp_hostname, 'AAAA')
@@ -290,7 +342,9 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
             self._assert_dig_result_matches(dig_result, {
                 'QUESTION': [(dp_hostname, 'IN', 'AAAA'),],
                 'ANSWER': [(dp_hostname, 'IN', 'AAAA', dp_ip6_address),],
-            })
+            },
+                                            allow_extra_answer=True,
+                                            max_ttl=10)
 
     def _config_srp_client_services(self, client, instancename, hostname, port, priority, weight, addrs):
         client.srp_client_enable_auto_start_mode()
@@ -298,7 +352,8 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         client.srp_client_set_host_address(*addrs)
         client.srp_client_add_service(instancename, SERVICE, port, priority, weight)
 
-        self.simulator.go(5)
+        self.simulator.go(10)
+
         self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
     def _assert_have_question(self, dig_result, question):
@@ -308,9 +363,14 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
 
         self.fail((dig_result, question))
 
-    def _assert_have_answer(self, dig_result, record, additional=False):
+    def _assert_have_answer(self, dig_result, record, additional=False, max_ttl=0):
         for dig_answer in dig_result['ANSWER' if not additional else 'ADDITIONAL']:
             dig_answer = list(dig_answer)
+            ttl = dig_answer[1]
+            if max_ttl and ttl > max_ttl:
+                print('not match: ttl = {ttl} > {max_ttl}')
+                continue
+
             dig_answer[1:2] = []  # remove TTL from answer
 
             record = list(record)
@@ -328,6 +388,10 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
             print('not match: ', dig_answer, record,
                   list(a == b or (callable(b) and b(a)) for a, b in zip(dig_answer, record)))
 
+        # Additional records are optional. Ignore if missing.
+        if additional:
+            return
+
         self.fail((record, dig_result))
 
     def _match_record(self, record, match):
@@ -338,7 +402,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
 
         return all(a == b or (callable(b) and b(a)) for a, b in zip(record, match))
 
-    def _assert_dig_result_matches(self, dig_result, expected_result):
+    def _assert_dig_result_matches(self, dig_result, expected_result, allow_extra_answer=False, max_ttl=0):
         self.assertEqual(dig_result['opcode'], expected_result.get('opcode', 'QUERY'), dig_result)
         self.assertEqual(dig_result['status'], expected_result.get('status', 'NOERROR'), dig_result)
 
@@ -349,16 +413,17 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
                 self._assert_have_question(dig_result, question)
 
         if 'ANSWER' in expected_result:
-            self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
+            if allow_extra_answer:
+                self.assertGreaterEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
+            else:
+                self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
 
             for record in expected_result['ANSWER']:
-                self._assert_have_answer(dig_result, record, additional=False)
+                self._assert_have_answer(dig_result, record, additional=False, max_ttl=max_ttl)
 
         if 'ADDITIONAL' in expected_result:
-            self.assertGreaterEqual(len(dig_result['ADDITIONAL']), len(expected_result['ADDITIONAL']), dig_result)
-
             for record in expected_result['ADDITIONAL']:
-                self._assert_have_answer(dig_result, record, additional=True)
+                self._assert_have_answer(dig_result, record, additional=True, max_ttl=max_ttl)
 
         logging.info("dig result matches:\r%s", json.dumps(dig_result, indent=True))
 

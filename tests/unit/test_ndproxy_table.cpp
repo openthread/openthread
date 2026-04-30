@@ -38,11 +38,11 @@
 #include "test_util.h"
 #include "backbone_router/ndproxy_table.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 using namespace ot::BackboneRouter;
 
@@ -50,7 +50,7 @@ Ip6::InterfaceIdentifier generateRandomIid(uint16_t aIndex)
 {
     Ip6::InterfaceIdentifier iid;
 
-    Random::NonCrypto::FillBuffer(iid.mFields.m8, sizeof(iid));
+    Random::NonCrypto::Fill(iid);
     iid.mFields.m16[3] = aIndex;
 
     return iid;

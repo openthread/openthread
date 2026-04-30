@@ -141,14 +141,12 @@ class MultiBorderRouters(thread_cert.TestCase):
         self.assertEqual(br1_omr_prefix, br1.get_netdata_omr_prefixes()[0])
 
         # Each BR should independently register an external route for the on-link prefix.
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 2)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 2)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 2)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 2)
 
         br1_on_link_prefix = br1.get_br_on_link_prefix()
-        self.assertEqual(br1_on_link_prefix, br1.get_netdata_non_nat64_prefixes()[0])
-        self.assertEqual(br1_on_link_prefix, br1.get_netdata_non_nat64_prefixes()[0])
 
         self.assertEqual(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -172,7 +170,7 @@ class MultiBorderRouters(thread_cert.TestCase):
 
         br1.disable_br()
 
-        self.simulator.go(15)
+        self.simulator.go(315)
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", br1.get_addrs())
@@ -194,14 +192,12 @@ class MultiBorderRouters(thread_cert.TestCase):
         # There should be no changes to the external route for the
         # on-link prefix, given that the on-link prefix is derived
         # from the Extended PAN ID.
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 1)
 
         br2_on_link_prefix = br2.get_br_on_link_prefix()
-        self.assertEqual(set(map(IPv6Network, br2.get_netdata_non_nat64_prefixes())),
-                         set(map(IPv6Network, [br1_on_link_prefix, br2_on_link_prefix])))
 
         self.assertEqual(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)

@@ -31,8 +31,8 @@
  *   This file contains definitions for a TCP CLI tool.
  */
 
-#ifndef CLI_TCP_EXAMPLE_HPP_
-#define CLI_TCP_EXAMPLE_HPP_
+#ifndef OT_CLI_CLI_TCP_HPP_
+#define OT_CLI_CLI_TCP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,43 +41,48 @@
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
 
+#include <mbedtls/ssl.h>
+#include <mbedtls/version.h>
+#include <mbedtls/x509_crt.h>
+
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
-#include <mbedtls/ssl.h>
-#include <mbedtls/x509_crt.h>
+#endif
 
 #endif
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/time.hpp"
 
 namespace ot {
 namespace Cli {
 
 /**
- * This class implements a CLI-based TCP example.
- *
+ * Implements a CLI-based TCP example.
  */
-class TcpExample : private Output
+class TcpExample : private Utils
 {
 public:
-    using Arg = Utils::CmdLineParser::Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
-     * This method interprets a list of CLI arguments.
+     * Processes a CLI sub-command.
      *
-     * @param[in]  aArgs   An array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
      *
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
+     * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      */
     otError Process(Arg aArgs[]);
 
@@ -90,7 +95,8 @@ private:
     void    CompleteBenchmark(void);
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    bool ContinueTLSHandshake(void);
+    void PrepareTlsHandshake(void);
+    bool ContinueTlsHandshake(void);
 #endif
 
     static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
@@ -125,11 +131,14 @@ private:
     static void MbedTlsDebugOutput(void *ctx, int level, const char *file, int line, const char *str);
 #endif
 
+    void OutputBenchmarkResult(void);
+
     otTcpEndpoint mEndpoint;
     otTcpListener mListener;
 
     bool mInitialized;
     bool mEndpointConnected;
+    bool mEndpointConnectedFastOpen;
     bool mSendBusy;
     bool mUseCircularSendBuffer;
     bool mUseTls;
@@ -145,15 +154,18 @@ private:
     uint32_t  mBenchmarkBytesTotal;
     uint32_t  mBenchmarkBytesUnsent;
     TimeMilli mBenchmarkStart;
-
+    uint32_t  mBenchmarkTimeUsed;
+    uint32_t  mBenchmarkLastBytesTotal;
     otTcpEndpointAndCircularSendBuffer mEndpointAndCircularSendBuffer;
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    mbedtls_ssl_context     mSslContext;
-    mbedtls_ssl_config      mSslConfig;
-    mbedtls_x509_crt        mSrvCert;
-    mbedtls_pk_context      mPKey;
+    mbedtls_ssl_context mSslContext;
+    mbedtls_ssl_config  mSslConfig;
+    mbedtls_x509_crt    mSrvCert;
+    mbedtls_pk_context  mPKey;
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     mbedtls_entropy_context mEntropy;
+#endif
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
     static constexpr const char *sBenchmarkData =
@@ -216,4 +228,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_TCP_EXAMPLE_HPP_
+#endif // OT_CLI_CLI_TCP_HPP_

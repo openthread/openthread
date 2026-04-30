@@ -33,7 +33,7 @@
 
 #include "heap.hpp"
 
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Heap {

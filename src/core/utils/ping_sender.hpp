@@ -31,8 +31,8 @@
  *   This file includes definitions to support ping functionality.
  */
 
-#ifndef PING_SENDER_HPP_
-#define PING_SENDER_HPP_
+#ifndef OT_CORE_UTILS_PING_SENDER_HPP_
+#define OT_CORE_UTILS_PING_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -55,21 +55,18 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements sending ICMPv6 Echo Request messages and processing ICMPv6 Echo Reply messages.
- *
+ * Implements sending ICMPv6 Echo Request messages and processing ICMPv6 Echo Reply messages.
  */
 class PingSender : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class represents a ping reply.
-     *
+     * Represents a ping reply.
      */
     typedef otPingSenderReply Reply;
 
     /**
-     * This class represents the statistics of several ping requests.
-     *
+     * Represents the statistics of several ping requests.
      */
     struct Statistics : public otPingSenderStatistics
     {
@@ -80,15 +77,14 @@ public:
             mSentCount          = 0;
             mReceivedCount      = 0;
             mTotalRoundTripTime = 0;
-            mMinRoundTripTime   = NumericLimits<uint16_t>::kMax;
-            mMaxRoundTripTime   = NumericLimits<uint16_t>::kMin;
+            mMaxRoundTripTime   = 0;
             mIsMulticast        = false;
+            SetToUintMax(mMinRoundTripTime);
         }
     };
 
     /**
-     * This class represents a ping request configuration.
-     *
+     * Represents a ping request configuration.
      */
     class Config : public otPingSenderConfig
     {
@@ -96,41 +92,37 @@ public:
 
     public:
         /**
-         * This method gets the source IPv6 address of the ping.
+         * Gets the source IPv6 address of the ping.
          *
          * @returns The ping source IPv6 address.
-         *
          */
         Ip6::Address &GetSource(void) { return AsCoreType(&mSource); }
 
         /**
-         * This method gets the source IPv6 address of the ping.
+         * Gets the source IPv6 address of the ping.
          *
          * @returns The ping source IPv6 address.
-         *
          */
         const Ip6::Address &GetSource(void) const { return AsCoreType(&mSource); }
 
         /**
-         * This method gets the destination IPv6 address to ping.
+         * Gets the destination IPv6 address to ping.
          *
          * @returns The ping destination IPv6 address.
-         *
          */
         Ip6::Address &GetDestination(void) { return AsCoreType(&mDestination); }
 
         /**
-         * This method gets the destination IPv6 address to ping.
+         * Gets the destination IPv6 address to ping.
          *
          * @returns The ping destination IPv6 address.
-         *
          */
         const Ip6::Address &GetDestination(void) const { return AsCoreType(&mDestination); }
 
     private:
         static constexpr uint16_t kDefaultSize     = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE;
         static constexpr uint16_t kDefaultCount    = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT;
-        static constexpr uint32_t kDefaultInterval = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL;
+        static constexpr uint32_t kDefaultInterval = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTERVAL;
         static constexpr uint32_t kDefaultTimeout  = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT;
 
         void SetUnspecifiedToDefault(void);
@@ -139,28 +131,25 @@ public:
     };
 
     /**
-     * This constructor initializes the `PingSender` object.
+     * Initializes the `PingSender` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit PingSender(Instance &aInstance);
 
     /**
-     * This method starts a ping.
+     * Starts a ping.
      *
      * @param[in] aConfig          The ping config to use.
      *
      * @retval kErrorNone          The ping started successfully.
      * @retval kErrorBusy          Could not start since busy with a previous ongoing ping request.
      * @retval kErrorInvalidArgs   The @p aConfig contains invalid parameters (e.g., ping interval is too long).
-     *
      */
     Error Ping(const Config &aConfig);
 
     /**
-     * This method stops an ongoing ping.
-     *
+     * Stops an ongoing ping.
      */
     void Stop(void);
 
@@ -195,4 +184,4 @@ DefineCoreType(otPingSenderStatistics, Utils::PingSender::Statistics);
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
-#endif // PING_SENDER_HPP_
+#endif // OT_CORE_UTILS_PING_SENDER_HPP_

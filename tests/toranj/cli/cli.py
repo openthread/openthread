@@ -55,6 +55,8 @@ RADIO_15_4_TREL = "-15.4-trel"
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+DEFAULT_NETWORK_KEY = os.getenv('TORANJ_NETWORK_KEY', None)
+
 
 def _log(text, new_line=True, flush=True):
     sys.stdout.write(text)
@@ -162,7 +164,7 @@ class Node(object):
             _log(f'$ Node{self._index}.cli(\'{cmd}\')', new_line=False)
 
         self._cli_process.send(cmd + '\n')
-        index = self._cli_process.expect(['(.*)Done\r\n', '.*Error (\d+):(.*)\r\n'])
+        index = self._cli_process.expect([r'(.*)Done\r\n', r'.*Error (\d+):(.*)\r\n'])
 
         if index == 0:
             result = [
@@ -214,11 +216,25 @@ class Node(object):
     def get_state(self):
         return self._cli_single_output('state', expected_outputs=['detached', 'child', 'router', 'leader', 'disabled'])
 
+    def get_version(self):
+        return self._cli_single_output('version')
+
     def get_channel(self):
         return self._cli_single_output('channel')
 
     def set_channel(self, channel):
         self._cli_no_output('channel', channel)
+
+    def get_csl_config(self):
+        outputs = self.cli('csl')
+        result = {}
+        for line in outputs:
+            fields = line.split(':')
+            result[fields[0].strip()] = fields[1].strip()
+        return result
+
+    def set_csl_period(self, period):
+        self._cli_no_output('csl period', period)
 
     def get_ext_addr(self):
         return self._cli_single_output('extaddr')
@@ -274,6 +290,12 @@ class Node(object):
     def set_router_eligible(self, enable):
         self._cli_no_output('routereligible', enable)
 
+    def get_context_reuse_delay(self):
+        return self._cli_single_output('contextreusedelay')
+
+    def set_context_reuse_delay(self, delay):
+        self._cli_no_output('contextreusedelay', delay)
+
     def interface_up(self):
         self._cli_no_output('ifconfig up')
 
@@ -292,8 +314,11 @@ class Node(object):
     def get_rloc16(self):
         return self._cli_single_output('rloc16')
 
-    def get_ip_addrs(self):
-        return self.cli('ipaddr')
+    def get_mac_alt_short_addr(self):
+        return self._cli_single_output('mac altshortaddr')
+
+    def get_ip_addrs(self, verbose=None):
+        return self.cli('ipaddr', verbose)
 
     def add_ip_addr(self, address):
         self._cli_no_output('ipaddr add', address)
@@ -319,17 +344,35 @@ class Node(object):
     def add_ip_maddr(self, maddr):
         return self._cli_no_output('ipmaddr add', maddr)
 
+    def get_leader_weight(self):
+        return self._cli_single_output('leaderweight')
+
+    def set_leader_weight(self, weight):
+        self._cli_no_output('leaderweight', weight)
+
     def get_pollperiod(self):
         return self._cli_single_output('pollperiod')
 
     def set_pollperiod(self, period):
         self._cli_no_output('pollperiod', period)
 
+    def get_child_timeout(self):
+        return self._cli_single_output('childtimeout')
+
+    def set_child_timeout(self, timeout):
+        self._cli_no_output('childtimeout', timeout)
+
     def get_partition_id(self):
         return self._cli_single_output('partitionid')
 
     def get_nexthop(self, rloc16):
         return self._cli_single_output('nexthop', rloc16)
+
+    def get_child_max(self):
+        return self._cli_single_output('childmax')
+
+    def set_child_max(self, childmax):
+        self._cli_no_output('childmax', childmax)
 
     def get_parent_info(self):
         outputs = self.cli('parent')
@@ -342,6 +385,9 @@ class Node(object):
     def get_child_table(self):
         return Node.parse_table(self.cli('child table'))
 
+    def get_child_ip(self):
+        return self.cli('childip')
+
     def get_neighbor_table(self):
         return Node.parse_table(self.cli('neighbor table'))
 
@@ -351,18 +397,51 @@ class Node(object):
     def get_eidcache(self):
         return self.cli('eidcache')
 
+    def get_vendor_name(self):
+        return self._cli_single_output('vendor name')
+
+    def set_vendor_name(self, name):
+        self._cli_no_output('vendor name', name)
+
+    def get_vendor_model(self):
+        return self._cli_single_output('vendor model')
+
+    def set_vendor_model(self, model):
+        self._cli_no_output('vendor model', model)
+
+    def get_vendor_sw_version(self):
+        return self._cli_single_output('vendor swversion')
+
+    def set_vendor_sw_version(self, version):
+        return self._cli_no_output('vendor swversion', version)
+
+    def get_vendor_app_url(self):
+        return self._cli_single_output('vendor appurl')
+
+    def set_vendor_app_url(self, url):
+        return self._cli_no_output('vendor appurl', url)
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata
 
-    def get_netdata(self):
-        outputs = self.cli('netdata show')
+    def get_netdata(self, rloc16=None):
+        outputs = self.cli('netdata show', rloc16)
         outputs = [line.strip() for line in outputs]
         routes_index = outputs.index('Routes:')
         services_index = outputs.index('Services:')
+        if rloc16 is None:
+            contexts_index = outputs.index('Contexts:')
+            commissioning_index = outputs.index('Commissioning:')
         result = {}
         result['prefixes'] = outputs[1:routes_index]
         result['routes'] = outputs[routes_index + 1:services_index]
-        result['services'] = outputs[services_index + 1:]
+        if rloc16 is None:
+            result['services'] = outputs[services_index + 1:contexts_index]
+            result['contexts'] = outputs[contexts_index + 1:commissioning_index]
+            result['commissioning'] = outputs[commissioning_index + 1:]
+        else:
+            result['services'] = outputs[services_index + 1:]
+
         return result
 
     def get_netdata_prefixes(self):
@@ -374,9 +453,18 @@ class Node(object):
     def get_netdata_services(self):
         return self.get_netdata()['services']
 
+    def get_netdata_contexts(self):
+        return self.get_netdata()['contexts']
+
+    def get_netdata_commissioning(self):
+        return self.get_netdata()['commissioning']
+
     def get_netdata_versions(self):
         leaderdata = Node.parse_list(self.cli('leaderdata'))
         return (int(leaderdata['Data Version']), int(leaderdata['Stable Data Version']))
+
+    def get_netdata_length(self):
+        return self._cli_single_output('netdata length')
 
     def add_prefix(self, prefix, flags=None, prf=None):
         return self._cli_no_output('prefix add', prefix, flags, prf)
@@ -389,6 +477,12 @@ class Node(object):
 
     def register_netdata(self):
         self._cli_no_output('netdata register')
+
+    def get_netdata_full(self):
+        return self._cli_single_output('netdata full')
+
+    def reset_netdata_full(self):
+        self._cli_no_output('netdata full reset')
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # ping and counters
@@ -404,6 +498,12 @@ class Node(object):
     def get_mle_counter(self):
         return self.cli('counters mle')
 
+    def get_ip_counters(self):
+        return Node.parse_list(self.cli('counters ip'))
+
+    def get_mac_counters(self):
+        return Node.parse_list(self.cli('counters mac'))
+
     def get_br_counter_unicast_outbound_packets(self):
         outputs = self.cli('counters br')
         for line in outputs:
@@ -414,6 +514,42 @@ class Node(object):
         else:
             verify(False)
         return counter
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Misc
+
+    def get_mle_adv_imax(self):
+        return self._cli_single_output('mleadvimax')
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Border Agent
+
+    def ba_get_state(self):
+        return self._cli_single_output('ba state')
+
+    def ba_get_port(self):
+        return self._cli_single_output('ba port')
+
+    def ba_ephemeral_key_get_state(self):
+        return self._cli_single_output('ba ephemeralkey')
+
+    def ba_ephemeral_key_set_enabled(self, enable):
+        self._cli_no_output('ba ephemeralkey', 'enable' if enable else 'disable')
+
+    def ba_ephemeral_key_start(self, keystring, timeout=None, port=None):
+        self._cli_no_output('ba ephemeralkey start', keystring, timeout, port)
+
+    def ba_ephemeral_key_stop(self):
+        self._cli_no_output('ba ephemeralkey stop')
+
+    def ba_ephemeral_key_get_port(self):
+        return self._cli_single_output('ba ephemeralkey port')
+
+    def ba_ephemeral_key_generate_tap(self):
+        return self._cli_single_output('ba ephemeralkey generate-tap')
+
+    def ba_ephemeral_key_validate_tap(self, tapstring):
+        return self._cli_single_output('ba ephemeralkey validate-tap', tapstring)
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
@@ -551,7 +687,8 @@ class Node(object):
         return self._cli_single_output('srp server state', expected_outputs=['disabled', 'running', 'stopped'])
 
     def srp_server_get_addr_mode(self):
-        return self._cli_single_output('srp server addrmode', expected_outputs=['unicast', 'anycast'])
+        return self._cli_single_output('srp server addrmode',
+                                       expected_outputs=['unicast', 'anycast', 'unicast-force-add'])
 
     def srp_server_set_addr_mode(self, mode):
         self._cli_no_output('srp server addrmode', mode)
@@ -568,19 +705,28 @@ class Node(object):
     def srp_server_disable(self):
         self._cli_no_output('srp server disable')
 
+    def srp_server_auto_enable(self):
+        self._cli_no_output('srp server auto enable')
+
+    def srp_server_auto_disable(self):
+        self._cli_no_output('srp server auto disable')
+
     def srp_server_set_lease(self, min_lease, max_lease, min_key_lease, max_key_lease):
         self._cli_no_output('srp server lease', min_lease, max_lease, min_key_lease, max_key_lease)
 
     def srp_server_get_hosts(self):
-        """Returns the host list on the SRP server as a list of property
-           dictionary.
+        """Returns the host list on the SRP server as a list of property dictionary.
 
            Example output:
            [{
                'fullname': 'my-host.default.service.arpa.',
                'name': 'my-host',
                'deleted': 'false',
-               'addresses': ['2001::1', '2001::2']
+               'addresses': ['2001::1', '2001::2'],
+               'lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459'
            }]
         """
         outputs = self.cli('srp server host')
@@ -591,11 +737,19 @@ class Node(object):
             host['name'] = host['fullname'].split('.')[0]
             host['deleted'] = outputs.pop(0).strip().split(':')[1].strip()
             if host['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = outputs.pop(0).strip().split(':')
+                    host[key_value[0].strip()] = key_value[1].strip()
                 host_list.append(host)
                 continue
             addresses = outputs.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
             host['addresses'] = [addr for addr in addresses if addr]
+            for _ in range(4):
+                # `lease`, `key-lease`, `remaining lease`, and `remaining key-lease`
+                key_value = outputs.pop(0).strip().split(':')
+                host[key_value[0].strip()] = key_value[1].strip()
             host_list.append(host)
         return host_list
 
@@ -624,7 +778,9 @@ class Node(object):
                'weight': '0',
                'ttl': '7200',
                'lease': '7200',
-               'key-lease', '1209600',
+               'key-lease': '1209600',
+               'remaining lease': '6322.418',
+               'remaining key-lease': '1109587.418',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -643,10 +799,15 @@ class Node(object):
             service['name'] = '.'.join(name_labels[1:3])
             service['deleted'] = outputs.pop(0).strip().split(':')[1].strip()
             if service['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = outputs.pop(0).strip().split(':')
+                    service[key_value[0].strip()] = key_value[1].strip()
                 service_list.append(service)
                 continue
-            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease'
-            for i in range(0, 7):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease',
+            # 'remaining lease', 'remaining key-lease'.
+            for i in range(0, 9):
                 key_value = outputs.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
             txt_entries = outputs.pop(0).strip().split('[')[1].strip(' ]').split(',')
@@ -671,29 +832,109 @@ class Node(object):
             if (instance_name == service['instance'] and service_name == service['name']):
                 return service
 
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # br
+
+    def br_init(self, if_inex, is_running):
+        self._cli_no_output('br init', if_inex, is_running)
+
+    def br_enable(self):
+        self._cli_no_output('br enable')
+
+    def br_disable(self):
+        self._cli_no_output('br disable')
+
+    def br_get_state(self):
+        return self._cli_single_output('br state')
+
+    def br_get_favored_omrprefix(self):
+        return self._cli_single_output('br omrprefix favored')
+
+    def br_get_local_omrprefix(self):
+        return self._cli_single_output('br omrprefix local')
+
+    def br_get_favored_onlinkprefix(self):
+        return self._cli_single_output('br onlinkprefix favored')
+
+    def br_get_local_onlinkprefix(self):
+        return self._cli_single_output('br onlinkprefix local')
+
+    def br_set_test_local_onlinkprefix(self, prefix):
+        self._cli_no_output('br onlinkprefix test', prefix)
+
+    def br_get_routeprf(self):
+        return self._cli_single_output('br routeprf')
+
+    def br_set_routeprf(self, prf):
+        self._cli_no_output('br routeprf', prf)
+
+    def br_clear_routeprf(self):
+        self._cli_no_output('br routeprf clear')
+
+    def br_get_routers(self):
+        return self.cli('br routers')
+
+    def br_get_peer_brs(self):
+        return self.cli('br peers')
+
+    def br_count_peers(self):
+        return self._cli_single_output('br peers count')
+
+    def br_get_multiail(self):
+        return self._cli_single_output('br multiail')
+
+    def br_get_multiail_state(self):
+        return self.cli('br multiail state')
+
+    def br_get_ifaddrs(self):
+        return self.cli('br ifaddrs')
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # trel
+
+    def trel_get_peers(self):
+        peers = self.cli('trel peers ')
+        return Node.parse_table(peers)
+
+    def trel_test_get_sock_addr(self):
+        return self._cli_single_output('treltest sockaddr')
+
+    def trel_test_change_sock_addr(self):
+        return self._cli_no_output('treltest changesockaddr')
+
+    def trel_test_change_sock_port(self):
+        return self._cli_no_output('treltest changesockport')
+
+    def trel_test_get_notify_addr_counter(self):
+        return self._cli_single_output('treltest notifyaddrcounter')
+
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 
-    def form(self, network_name=None, network_key=None, channel=None, panid=0x1234, xpanid=None):
+    def form(self, network_name=None, network_key=DEFAULT_NETWORK_KEY, channel=None, panid=0x1234, xpanid=None):
+        self._cli_no_output('dataset init new')
+        self._cli_no_output('dataset panid', panid)
         if network_name is not None:
-            self.set_network_name(network_name)
+            self._cli_no_output('dataset networkname', network_name)
         if network_key is not None:
-            self.set_network_key(network_key)
+            self._cli_no_output('dataset networkkey', network_key)
         if channel is not None:
-            self.set_channel(channel)
+            self._cli_no_output('dataset channel', channel)
         if xpanid is not None:
-            self.set_ext_panid(xpanid)
+            self._cli_no_output('dataset extpanid', xpanid)
+        self._cli_no_output('dataset commit active')
         self.set_mode('rdn')
-        self.set_panid(panid)
         self.interface_up()
         self.thread_start()
         verify_within(_check_node_is_leader, self._WAIT_TIME, arg=self)
 
     def join(self, node, type=JOIN_TYPE_ROUTER):
-        self.set_network_name(node.get_network_name())
-        self.set_network_key(node.get_network_key())
-        self.set_channel(node.get_channel())
-        self.set_panid(node.get_panid())
+        self._cli_no_output('dataset clear')
+        self._cli_no_output('dataset networkname', node.get_network_name())
+        self._cli_no_output('dataset networkkey', node.get_network_key())
+        self._cli_no_output('dataset channel', node.get_channel())
+        self._cli_no_output('dataset panid', node.get_panid())
+        self._cli_no_output('dataset commit active')
         if type == JOIN_TYPE_END_DEVICE:
             self.set_mode('rn')
         elif type == JOIN_TYPE_SLEEPY_END_DEVICE:
@@ -718,6 +959,15 @@ class Node(object):
 
     def un_allowlist_node(self, node):
         """Removes a given node (of node `Node) from the allowlist"""
+        self._cli_no_output('macfilter addr remove', node.get_ext_addr())
+
+    def denylist_node(self, node):
+        """Adds a given node to the denylist of `self` and enables denylisting on `self`"""
+        self._cli_no_output('macfilter addr add', node.get_ext_addr())
+        self._cli_no_output('macfilter addr denylist')
+
+    def un_denylist_node(self, node):
+        """Removes a given node (of node `Node) from the denylist"""
         self._cli_no_output('macfilter addr remove', node.get_ext_addr())
 
     def set_macfilter_lqi_to_node(self, node, lqi):
@@ -848,7 +1098,8 @@ def verify_within(condition_checker_func, wait_time, arg=None, delay_time=0.1):
         except VerifyError as e:
             if time.time() - start_time > wait_time:
                 print('Took too long to pass the condition ({}>{} sec)'.format(time.time() - start_time, wait_time))
-                print(e.message)
+                if hasattr(e, 'message'):
+                    print(e.message)
                 raise e
         except BaseException:
             raise

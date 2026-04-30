@@ -201,17 +201,18 @@ verify_within(check_cache_entry_switch_to_retry_state, 20)
 # Now wait for all entries to reach zero timeout.
 
 
-def check_cache_entry_in_retry_state_to_get_to_zero_timeout():
+def check_cache_entry_in_retry_state_to_enter_rampdown():
     cache_table = r1.get_eidcache()
     for entry in cache_table:
         fields = entry.strip().split(' ')
         verify(fields[2] == 'retry')
         verify(fields[3] == 'canEvict=1')
         verify(fields[4].startswith('timeout='))
-        verify(int(fields[4].split('=')[1]) == 0)
+        verify(fields[5].startswith('retryDelay='))
+        verify(fields[6] == 'rampDown=1')
 
 
-verify_within(check_cache_entry_in_retry_state_to_get_to_zero_timeout, 20)
+verify_within(check_cache_entry_in_retry_state_to_enter_rampdown, 20)
 
 # Now send again to the same addresses.
 
@@ -230,6 +231,37 @@ def check_cache_entry_switch_to_query_state():
 
 
 verify_within(check_cache_entry_switch_to_query_state, 20)
+
+
+def check_cache_entry_switch_to_retry_state_with_double_retry_delay():
+    cache_table = r1.get_eidcache()
+    for entry in cache_table:
+        fields = entry.strip().split(' ')
+        verify(fields[2] == 'retry')
+        verify(fields[3] == 'canEvict=1')
+        verify(fields[4].startswith('timeout='))
+        verify(fields[5].startswith('retryDelay='))
+        verify(int(fields[5].split('=')[1]) == 2 * initial_retry_delay)
+
+
+verify_within(check_cache_entry_switch_to_retry_state_with_double_retry_delay, 40)
+
+verify_within(check_cache_entry_in_retry_state_to_enter_rampdown, 40)
+
+
+def check_cache_entry_ramp_down_to_initial_retry_delay():
+    cache_table = r1.get_eidcache()
+    for entry in cache_table:
+        fields = entry.strip().split(' ')
+        verify(fields[2] == 'retry')
+        verify(fields[3] == 'canEvict=1')
+        verify(fields[4].startswith('timeout='))
+        verify(fields[5].startswith('retryDelay='))
+        verify(int(fields[5].split('=')[1]) == initial_retry_delay)
+        verify(fields[6] == 'rampDown=1')
+
+
+verify_within(check_cache_entry_ramp_down_to_initial_retry_delay, 60)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Verify snoop optimization behavior.

@@ -31,13 +31,17 @@
  *   This file includes definitions for IPv6 packet processing.
  */
 
-#ifndef IP6_HEADERS_HPP_
-#define IP6_HEADERS_HPP_
+#ifndef OT_CORE_NET_IP6_HEADERS_HPP_
+#define OT_CORE_NET_IP6_HEADERS_HPP_
 
 #include "openthread-core-config.h"
 
 #include <stddef.h>
 
+#include <openthread/icmp6.h>
+
+#include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
@@ -53,12 +57,8 @@ namespace ot {
  *
  * @brief
  *   This namespace includes definitions for IPv6 networking.
- *
  */
 namespace Ip6 {
-
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-ipv6
@@ -74,7 +74,6 @@ using ot::Encoding::BigEndian::HostSwap32;
  * @defgroup core-ip6-netif Network Interfaces
  *
  * @}
- *
  */
 
 /**
@@ -84,12 +83,10 @@ using ot::Encoding::BigEndian::HostSwap32;
  *   This module includes definitions for core IPv6 networking.
  *
  * @{
- *
  */
 
 /**
- * This class implements IPv6 header generation and parsing.
- *
+ * Implements IPv6 header generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
 class Header : public Clearable<Header>
@@ -102,226 +99,197 @@ public:
     static constexpr uint8_t kDestinationFieldOffset   = 24; ///< Offset of Destination Address field in IPv6 header.
 
     /**
-     * This method initializes the Version to 6 and sets Traffic Class and Flow fields to zero.
+     * Initializes the Version to 6 and sets Traffic Class and Flow fields to zero.
      *
      * The other fields in the IPv6 header remain unchanged.
-     *
      */
     void InitVersionTrafficClassFlow(void) { SetVerionTrafficClassFlow(kVersTcFlowInit); }
 
     /**
-     * This method indicates whether or not the header appears to be well-formed.
+     * Indicates whether or not the header appears to be well-formed.
      *
      * @retval TRUE    If the header appears to be well-formed.
      * @retval FALSE   If the header does not appear to be well-formed.
-     *
      */
     bool IsValid(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 Version is set to 6.
+     * Indicates whether or not the IPv6 Version is set to 6.
      *
      * @retval TRUE   If the IPv6 Version is set to 6.
      * @retval FALSE  If the IPv6 Version is not set to 6.
-     *
      */
     bool IsVersion6(void) const { return (mVerTcFlow.m8[0] & kVersionMask) == kVersion6; }
 
     /**
-     * This method gets the combination of Version, Traffic Class, and Flow fields as a 32-bit value.
+     * Gets the combination of Version, Traffic Class, and Flow fields as a 32-bit value.
      *
      * @returns The Version, Traffic Class, and Flow fields as a 32-bit value.
-     *
      */
-    uint32_t GetVerionTrafficClassFlow(void) const { return HostSwap32(mVerTcFlow.m32); }
+    uint32_t GetVerionTrafficClassFlow(void) const { return BigEndian::HostSwap32(mVerTcFlow.m32); }
 
     /**
-     * This method sets the combination of Version, Traffic Class, and Flow fields as a 32-bit value.
+     * Sets the combination of Version, Traffic Class, and Flow fields as a 32-bit value.
      *
      * @param[in] aVerTcFlow   The Version, Traffic Class, and Flow fields as a 32-bit value.
-     *
      */
-    void SetVerionTrafficClassFlow(uint32_t aVerTcFlow) { mVerTcFlow.m32 = HostSwap32(aVerTcFlow); }
+    void SetVerionTrafficClassFlow(uint32_t aVerTcFlow) { mVerTcFlow.m32 = BigEndian::HostSwap32(aVerTcFlow); }
 
     /**
-     * This method gets the Traffic Class field.
+     * Gets the Traffic Class field.
      *
      * @returns The Traffic Class field.
-     *
      */
     uint8_t GetTrafficClass(void) const
     {
-        return static_cast<uint8_t>((HostSwap16(mVerTcFlow.m16[0]) & kTrafficClassMask) >> kTrafficClassOffset);
+        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kTrafficClassMask>(mVerTcFlow.m16[0]));
     }
 
     /**
-     * This method sets the Traffic Class filed.
+     * Sets the Traffic Class filed.
      *
      * @param[in] aTc  The Traffic Class value.
-     *
      */
     void SetTrafficClass(uint8_t aTc)
     {
-        mVerTcFlow.m16[0] = HostSwap16((HostSwap16(mVerTcFlow.m16[0]) & ~kTrafficClassMask) |
-                                       ((static_cast<uint16_t>(aTc) << kTrafficClassOffset) & kTrafficClassMask));
+        mVerTcFlow.m16[0] =
+            UpdateBitsBigEndian<uint16_t, kTrafficClassMask>(mVerTcFlow.m16[0], static_cast<uint16_t>(aTc));
     }
 
     /**
-     * This method gets the 6-bit Differentiated Services Code Point (DSCP) from Traffic Class field.
+     * Gets the 6-bit Differentiated Services Code Point (DSCP) from Traffic Class field.
      *
      * @returns The DSCP value.
-     *
      */
     uint8_t GetDscp(void) const
     {
-        return static_cast<uint8_t>((HostSwap16(mVerTcFlow.m16[0]) & kDscpMask) >> kDscpOffset);
+        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kDscpMask>(mVerTcFlow.m16[0]));
     }
 
     /**
-     * This method sets 6-bit Differentiated Services Code Point (DSCP) in IPv6 header.
+     * Sets 6-bit Differentiated Services Code Point (DSCP) in IPv6 header.
      *
      * @param[in]  aDscp  The DSCP value.
-     *
      */
     void SetDscp(uint8_t aDscp)
     {
-        mVerTcFlow.m16[0] = HostSwap16((HostSwap16(mVerTcFlow.m16[0]) & ~kDscpMask) |
-                                       ((static_cast<uint16_t>(aDscp) << kDscpOffset) & kDscpMask));
+        mVerTcFlow.m16[0] = UpdateBitsBigEndian<uint16_t, kDscpMask>(mVerTcFlow.m16[0], static_cast<uint16_t>(aDscp));
     }
 
     /**
-     * This method gets the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field.
+     * Gets the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field.
      *
      * @returns The ECN value.
-     *
      */
-    Ecn GetEcn(void) const { return static_cast<Ecn>((mVerTcFlow.m8[1] & kEcnMask) >> kEcnOffset); }
+    Ecn GetEcn(void) const { return static_cast<Ecn>(ReadBits<uint8_t, kEcnMask>(mVerTcFlow.m8[1])); }
 
     /**
-     * This method sets the 2-bit Explicit Congestion Notification (ECN) in IPv6 header..
+     * Sets the 2-bit Explicit Congestion Notification (ECN) in IPv6 header..
      *
      * @param[in]  aEcn  The ECN value.
-     *
      */
-    void SetEcn(Ecn aEcn) { mVerTcFlow.m8[1] = (mVerTcFlow.m8[1] & ~kEcnMask) | ((aEcn << kEcnOffset) & kEcnMask); }
+    void SetEcn(Ecn aEcn) { WriteBits<uint8_t, kEcnMask>(mVerTcFlow.m8[1], aEcn); }
 
     /**
-     * This method gets the 20-bit Flow field.
+     * Gets the 20-bit Flow field.
      *
      * @returns  The Flow value.
-     *
      */
-    uint32_t GetFlow(void) const { return HostSwap32(mVerTcFlow.m32) & kFlowMask; }
+    uint32_t GetFlow(void) const { return ReadBitsBigEndian<uint32_t, kFlowMask>(mVerTcFlow.m32); }
 
     /**
-     * This method sets the 20-bit Flow field in IPv6 header.
+     * Sets the 20-bit Flow field in IPv6 header.
      *
      * @param[in] aFlow  The Flow value.
-     *
      */
-    void SetFlow(uint32_t aFlow)
-    {
-        mVerTcFlow.m32 = HostSwap32((HostSwap32(mVerTcFlow.m32) & ~kFlowMask) | (aFlow & kFlowMask));
-    }
+    void SetFlow(uint32_t aFlow) { mVerTcFlow.m32 = UpdateBitsBigEndian<uint32_t, kFlowMask>(mVerTcFlow.m32, aFlow); }
 
     /**
-     * This method returns the IPv6 Payload Length value.
+     * Returns the IPv6 Payload Length value.
      *
      * @returns The IPv6 Payload Length value.
-     *
      */
-    uint16_t GetPayloadLength(void) const { return HostSwap16(mPayloadLength); }
+    uint16_t GetPayloadLength(void) const { return BigEndian::HostSwap16(mPayloadLength); }
 
     /**
-     * This method sets the IPv6 Payload Length value.
+     * Sets the IPv6 Payload Length value.
      *
      * @param[in]  aLength  The IPv6 Payload Length value.
-     *
      */
-    void SetPayloadLength(uint16_t aLength) { mPayloadLength = HostSwap16(aLength); }
+    void SetPayloadLength(uint16_t aLength) { mPayloadLength = BigEndian::HostSwap16(aLength); }
 
     /**
-     * This method returns the IPv6 Next Header value.
+     * Returns the IPv6 Next Header value.
      *
      * @returns The IPv6 Next Header value.
-     *
      */
     uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
-     * This method sets the IPv6 Next Header value.
+     * Sets the IPv6 Next Header value.
      *
      * @param[in]  aNextHeader  The IPv6 Next Header value.
-     *
      */
     void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
-     * This method returns the IPv6 Hop Limit value.
+     * Returns the IPv6 Hop Limit value.
      *
      * @returns The IPv6 Hop Limit value.
-     *
      */
     uint8_t GetHopLimit(void) const { return mHopLimit; }
 
     /**
-     * This method sets the IPv6 Hop Limit value.
+     * Sets the IPv6 Hop Limit value.
      *
      * @param[in]  aHopLimit  The IPv6 Hop Limit value.
-     *
      */
     void SetHopLimit(uint8_t aHopLimit) { mHopLimit = aHopLimit; }
 
     /**
-     * This method returns the IPv6 Source address.
+     * Returns the IPv6 Source address.
      *
      * @returns A reference to the IPv6 Source address.
-     *
      */
     Address &GetSource(void) { return mSource; }
 
     /**
-     * This method returns the IPv6 Source address.
+     * Returns the IPv6 Source address.
      *
      * @returns A reference to the IPv6 Source address.
-     *
      */
     const Address &GetSource(void) const { return mSource; }
 
     /**
-     * This method sets the IPv6 Source address.
+     * Sets the IPv6 Source address.
      *
      * @param[in]  aSource  A reference to the IPv6 Source address.
-     *
      */
     void SetSource(const Address &aSource) { mSource = aSource; }
 
     /**
-     * This method returns the IPv6 Destination address.
+     * Returns the IPv6 Destination address.
      *
      * @returns A reference to the IPv6 Destination address.
-     *
      */
     Address &GetDestination(void) { return mDestination; }
 
     /**
-     * This method returns the IPv6 Destination address.
+     * Returns the IPv6 Destination address.
      *
      * @returns A reference to the IPv6 Destination address.
-     *
      */
     const Address &GetDestination(void) const { return mDestination; }
 
     /**
-     * This method sets the IPv6 Destination address.
+     * Sets the IPv6 Destination address.
      *
      * @param[in]  aDestination  A reference to the IPv6 Destination address.
-     *
      */
     void SetDestination(const Address &aDestination) { mDestination = aDestination; }
 
     /**
-     * This method parses and validates the IPv6 header from a given message.
+     * Parses and validates the IPv6 header from a given message.
      *
      * The header is read from @p aMessage at offset zero.
      *
@@ -329,7 +297,6 @@ public:
      *
      * @retval kErrorNone   Successfully parsed the IPv6 header from @p aMessage.
      * @retval kErrorParse  Malformed IPv6 header or message (e.g., message does not contained expected payload length).
-     *
      */
     Error ParseFrom(const Message &aMessage);
 
@@ -370,8 +337,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Extension Header generation and processing.
- *
+ * Implements IPv6 Extension Header generation and processing.
  */
 OT_TOOL_PACKED_BEGIN
 class ExtensionHeader
@@ -381,51 +347,45 @@ public:
      * This constant defines the size of Length unit in bytes.
      *
      * The Length field is in 8-bytes unit. The total size of `ExtensionHeader` MUST be a multiple of 8.
-     *
      */
     static constexpr uint16_t kLengthUnitSize = 8;
 
     /**
-     * This method returns the IPv6 Next Header value.
+     * Returns the IPv6 Next Header value.
      *
      * @returns The IPv6 Next Header value.
-     *
      */
     uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
-     * This method sets the IPv6 Next Header value.
+     * Sets the IPv6 Next Header value.
      *
      * @param[in]  aNextHeader  The IPv6 Next Header value.
-     *
      */
     void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
-     * This method returns the IPv6 Header Extension Length value.
+     * Returns the IPv6 Header Extension Length value.
      *
      * The Length is in 8-byte units and does not include the first 8 bytes.
      *
      * @returns The IPv6 Header Extension Length value.
-     *
      */
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method sets the IPv6 Header Extension Length value.
+     * Sets the IPv6 Header Extension Length value.
      *
      * The Length is in 8-byte units and does not include the first 8 bytes.
      *
      * @param[in]  aLength  The IPv6 Header Extension Length value.
-     *
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
-     * This method returns the size (number of bytes) of the Extension Header including Next Header and Length fields.
+     * Returns the size (number of bytes) of the Extension Header including Next Header and Length fields.
      *
      * @returns The size (number of bytes) of the Extension Header.
-     *
      */
     uint16_t GetSize(void) const { return kLengthUnitSize * (mLength + 1); }
 
@@ -440,8 +400,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Hop-by-Hop Options Header generation and parsing.
- *
+ * Implements IPv6 Hop-by-Hop Options Header generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
 class HopByHopHeader : public ExtensionHeader
@@ -449,8 +408,7 @@ class HopByHopHeader : public ExtensionHeader
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Options generation and parsing.
- *
+ * Implements IPv6 Options generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
 class Option
@@ -458,7 +416,6 @@ class Option
 public:
     /**
      * IPv6 Option Type actions for unrecognized IPv6 Options.
-     *
      */
     enum Action : uint8_t
     {
@@ -469,83 +426,74 @@ public:
     };
 
     /**
-     * This method returns the IPv6 Option Type value.
+     * Returns the IPv6 Option Type value.
      *
      * @returns The IPv6 Option Type value.
-     *
      */
     uint8_t GetType(void) const { return mType; }
 
     /**
-     * This method indicates whether IPv6 Option is padding (either Pad1 or PadN).
+     * Indicates whether IPv6 Option is padding (either Pad1 or PadN).
      *
      * @retval TRUE   The Option is padding.
      * @retval FALSE  The Option is not padding.
-     *
      */
     bool IsPadding(void) const { return (mType == kTypePad1) || (mType == kTypePadN); }
 
     /**
-     * This method returns the IPv6 Option action for unrecognized IPv6 Options.
+     * Returns the IPv6 Option action for unrecognized IPv6 Options.
      *
      * @returns The IPv6 Option action for unrecognized IPv6 Options.
-     *
      */
     Action GetAction(void) const { return static_cast<Action>(mType & kActionMask); }
 
     /**
-     * This method returns the IPv6 Option Length value.
+     * Returns the IPv6 Option Length value.
      *
      * @returns The IPv6 Option Length value.
-     *
      */
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the size (number of bytes) of the IPv6 Option.
+     * Returns the size (number of bytes) of the IPv6 Option.
      *
-     * This method returns the proper size of the Option independent of its type, particularly if Option is Pad1 (which
+     * Returns the proper size of the Option independent of its type, particularly if Option is Pad1 (which
      * does not follow the common Option header structure and has only Type field with no Length field). For other
      * Option types, the returned size includes the Type and Length fields.
      *
      * @returns The size of the Option.
-     *
      */
     uint16_t GetSize(void) const;
 
     /**
-     * This method parses and validates the IPv6 Option from a given message.
+     * Parses and validates the IPv6 Option from a given message.
      *
      * The Option is read from @p aOffset in @p aMessage. This method then checks that the entire Option is present
-     * in @p aMessage before the @p aEndOffset.
+     * within @p aOffsetRange.
      *
-     * @param[in]  aMessage    The IPv6 message.
-     * @param[in]  aOffset     The offset in @p aMessage to read the IPv6 Option.
-     * @param[in]  aEndOffset  The end offset in @p aMessage.
+     * @param[in]  aMessage      The IPv6 message.
+     * @param[in]  aOffsetRange  The offset range in @p aMessage to read the IPv6 Option.
      *
      * @retval kErrorNone   Successfully parsed the IPv6 option from @p aMessage.
-     * @retval kErrorParse  Malformed IPv6 Option or Option is not contained within @p aMessage by @p aEndOffset.
-     *
+     * @retval kErrorParse  Malformed IPv6 Option or Option is not contained within @p aMessage and @p aOffsetRange.
      */
-    Error ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t aEndOffset);
+    Error ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange);
 
 protected:
     static constexpr uint8_t kTypePad1 = 0x00; ///< Pad1 Option Type.
     static constexpr uint8_t kTypePadN = 0x01; ///< PanN Option Type.
 
     /**
-     * This method sets the IPv6 Option Type value.
+     * Sets the IPv6 Option Type value.
      *
      * @param[in]  aType  The IPv6 Option Type value.
-     *
      */
     void SetType(uint8_t aType) { mType = aType; }
 
     /**
-     * This method sets the IPv6 Option Length value.
+     * Sets the IPv6 Option Length value.
      *
      * @param[in]  aLength  The IPv6 Option Length value.
-     *
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
@@ -557,8 +505,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Pad Options (Pad1 or PadN) generation.
- *
+ * Implements IPv6 Pad Options (Pad1 or PadN) generation.
  */
 OT_TOOL_PACKED_BEGIN
 class PadOption : public Option, private Clearable<PadOption>
@@ -567,17 +514,16 @@ class PadOption : public Option, private Clearable<PadOption>
 
 public:
     /**
-     * This method initializes the Pad Option for a given total Pad size.
+     * Initializes the Pad Option for a given total Pad size.
      *
      * The @p aPadSize MUST be from range 1-7. Otherwise the behavior of this method is undefined.
      *
      * @param[in]  aPadSize  The total number of needed padding bytes.
-     *
      */
     void InitForPadSize(uint8_t aPadSize);
 
     /**
-     * This method initializes the Pad Option for padding an IPv6 Extension header with a given current size.
+     * Initializes the Pad Option for padding an IPv6 Extension header with a given current size.
      *
      * The Extension Header Length is in 8-bytes unit, so the total size should be a multiple of 8. This method
      * determines the Pad Option size needed for appending to Extension Header based on it current size @p aHeaderSize
@@ -588,7 +534,6 @@ public:
      *
      * @retval kErrorNone     The Pad Option is successfully initialized.
      * @retval kErrorAlready  The @p aHeaderSize is already a multiple of 8 and no padding is needed.
-     *
      */
     Error InitToPadHeaderWithSize(uint16_t aHeaderSize);
 
@@ -599,16 +544,106 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Fragment Header generation and parsing.
- *
+ * Implements IPv6 MPL header generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class MplOption : public Option
+{
+public:
+    static constexpr uint8_t kType    = 0x6d;                 ///< MPL option type - 01 1 01101
+    static constexpr uint8_t kMinSize = (2 + sizeof(Option)); ///< Minimum size (num of bytes) of `MplOption`
+
+    /**
+     * MPL Seed Id Lengths.
+     */
+    enum SeedIdLength : uint8_t
+    {
+        kSeedIdLength0  = 0 << 6, ///< 0-byte MPL Seed Id Length.
+        kSeedIdLength2  = 1 << 6, ///< 2-byte MPL Seed Id Length.
+        kSeedIdLength8  = 2 << 6, ///< 8-byte MPL Seed Id Length.
+        kSeedIdLength16 = 3 << 6, ///< 16-byte MPL Seed Id Length.
+    };
+
+    /**
+     * Initializes the MPL Option.
+     *
+     * The @p aSeedIdLength MUST be either `kSeedIdLength0` or `kSeedIdLength2`. Other values are not supported.
+     *
+     * @param[in] aSeedIdLength   The MPL Seed Id Length.
+     */
+    void Init(SeedIdLength aSeedIdLength);
+
+    /**
+     * Returns the MPL Seed Id Length value.
+     *
+     * @returns The MPL Seed Id Length value.
+     */
+    SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
+
+    /**
+     * Indicates whether or not the MPL M flag is set.
+     *
+     * @retval TRUE   If the MPL M flag is set.
+     * @retval FALSE  If the MPL M flag is not set.
+     */
+    bool IsMaxFlagSet(void) const { return (mControl & kMaxFlag) != 0; }
+
+    /**
+     * Clears the MPL M flag.
+     */
+    void ClearMaxFlag(void) { mControl &= ~kMaxFlag; }
+
+    /**
+     * Sets the MPL M flag.
+     */
+    void SetMaxFlag(void) { mControl |= kMaxFlag; }
+
+    /**
+     * Returns the MPL Sequence value.
+     *
+     * @returns The MPL Sequence value.
+     */
+    uint8_t GetSequence(void) const { return mSequence; }
+
+    /**
+     * Sets the MPL Sequence value.
+     *
+     * @param[in]  aSequence  The MPL Sequence value.
+     */
+    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
+
+    /**
+     * Returns the MPL Seed Id value.
+     *
+     * @returns The MPL Seed Id value.
+     */
+    uint16_t GetSeedId(void) const { return BigEndian::HostSwap16(mSeedId); }
+
+    /**
+     * Sets the MPL Seed Id value.
+     *
+     * @param[in]  aSeedId  The MPL Seed Id value.
+     */
+    void SetSeedId(uint16_t aSeedId) { mSeedId = BigEndian::HostSwap16(aSeedId); }
+
+private:
+    static constexpr uint8_t kSeedIdLengthMask = 3 << 6;
+    static constexpr uint8_t kMaxFlag          = 1 << 5;
+
+    uint8_t  mControl;
+    uint8_t  mSequence;
+    uint16_t mSeedId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements IPv6 Fragment Header generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
 class FragmentHeader
 {
 public:
     /**
-     * This method initializes the IPv6 Fragment header.
-     *
+     * Initializes the IPv6 Fragment header.
      */
     void Init(void)
     {
@@ -618,98 +653,89 @@ public:
     }
 
     /**
-     * This method returns the IPv6 Next Header value.
+     * Returns the IPv6 Next Header value.
      *
      * @returns The IPv6 Next Header value.
-     *
      */
     uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
-     * This method sets the IPv6 Next Header value.
+     * Sets the IPv6 Next Header value.
      *
      * @param[in]  aNextHeader  The IPv6 Next Header value.
-     *
      */
     void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
-     * This method returns the Fragment Offset value.
+     * Returns the Fragment Offset value.
      *
      * @returns The Fragment Offset value.
-     *
      */
-    uint16_t GetOffset(void) const { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
+    uint16_t GetOffset(void) const { return ReadBitsBigEndian<uint16_t, kOffsetMask>(mOffsetMore); }
 
     /**
-     * This method sets the Fragment Offset value.
+     * Sets the Fragment Offset value.
      *
      * @param[in]  aOffset  The Fragment Offset value.
      */
     void SetOffset(uint16_t aOffset)
     {
-        uint16_t tmp = HostSwap16(mOffsetMore);
-        tmp          = (tmp & ~kOffsetMask) | ((aOffset << kOffsetOffset) & kOffsetMask);
-        mOffsetMore  = HostSwap16(tmp);
+        uint16_t tmp = BigEndian::HostSwap16(mOffsetMore);
+        WriteBits<uint16_t, kOffsetMask>(tmp, aOffset);
+        mOffsetMore = BigEndian::HostSwap16(tmp);
     }
 
     /**
-     * This method returns the M flag value.
+     * Returns the M flag value.
      *
      * @returns The M flag value.
-     *
      */
-    bool IsMoreFlagSet(void) const { return HostSwap16(mOffsetMore) & kMoreFlag; }
+    bool IsMoreFlagSet(void) const { return BigEndian::HostSwap16(mOffsetMore) & kMoreFlag; }
 
     /**
-     * This method clears the M flag value.
-     *
+     * Clears the M flag value.
      */
-    void ClearMoreFlag(void) { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) & ~kMoreFlag); }
+    void ClearMoreFlag(void) { mOffsetMore = BigEndian::HostSwap16(BigEndian::HostSwap16(mOffsetMore) & ~kMoreFlag); }
 
     /**
-     * This method sets the M flag value.
-     *
+     * Sets the M flag value.
      */
-    void SetMoreFlag(void) { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) | kMoreFlag); }
+    void SetMoreFlag(void) { mOffsetMore = BigEndian::HostSwap16(BigEndian::HostSwap16(mOffsetMore) | kMoreFlag); }
 
     /**
-     * This method returns the frame identification.
+     * Returns the frame identification.
      *
      * @returns The frame identification.
-     *
      */
     uint32_t GetIdentification(void) const { return mIdentification; }
 
     /**
-     * This method sets the frame identification.
+     * Sets the frame identification.
      *
      * @param[in]  aIdentification  The fragment identification value.
      */
     void SetIdentification(uint32_t aIdentification) { mIdentification = aIdentification; }
 
     /**
-     * This method returns the next valid payload length for a fragment.
+     * Returns the next valid payload length for a fragment.
      *
      * @param[in]  aLength  The payload length to be validated for a fragment.
      *
      * @returns Valid IPv6 fragment payload length.
-     *
      */
     static inline uint16_t MakeDivisibleByEight(uint16_t aLength) { return aLength & 0xfff8; }
 
     /**
-     * This method converts the fragment offset of 8-octet units into bytes.
+     * Converts the fragment offset of 8-octet units into bytes.
      *
      * @param[in]  aOffset  The fragment offset in 8-octet units.
      *
      * @returns The fragment offset in bytes.
-     *
      */
     static inline uint16_t FragmentOffsetToBytes(uint16_t aOffset) { return static_cast<uint16_t>(aOffset << 3); }
 
     /**
-     * This method converts a fragment offset in bytes into a fragment offset in 8-octet units.
+     * Converts a fragment offset in bytes into a fragment offset in 8-octet units.
      *
      * @param[in]  aOffset  The fragment offset in bytes.
      *
@@ -729,11 +755,296 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * Implements UDP header generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class UdpHeader : public Clearable<UdpHeader>
+{
+public:
+    static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
+    static constexpr uint16_t kDestPortFieldOffset   = 2; ///< Byte offset of Destination Port field in UDP header.
+    static constexpr uint16_t kLengthFieldOffset     = 4; ///< Byte offset of Length field in UDP header.
+    static constexpr uint16_t kChecksumFieldOffset   = 6; ///< Byte offset of Checksum field in UDP header.
+
+    /**
+     * Returns the UDP Source Port.
+     *
+     * @returns The UDP Source Port.
+     */
+    uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSourcePort); }
+
+    /**
+     * Sets the UDP Source Port.
+     *
+     * @param[in]  aPort  The UDP Source Port.
+     */
+    void SetSourcePort(uint16_t aPort) { mSourcePort = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Returns the UDP Destination Port.
+     *
+     * @returns The UDP Destination Port.
+     */
+    uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestinationPort); }
+
+    /**
+     * Sets the UDP Destination Port.
+     *
+     * @param[in]  aPort  The UDP Destination Port.
+     */
+    void SetDestinationPort(uint16_t aPort) { mDestinationPort = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Returns the UDP Length.
+     *
+     * @returns The UDP Length.
+     */
+    uint16_t GetLength(void) const { return BigEndian::HostSwap16(mLength); }
+
+    /**
+     * Sets the UDP Length.
+     *
+     * @param[in]  aLength  The UDP Length.
+     */
+    void SetLength(uint16_t aLength) { mLength = BigEndian::HostSwap16(aLength); }
+
+    /**
+     * Returns the UDP Checksum.
+     *
+     * @returns The UDP Checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+
+    /**
+     * Sets the UDP Checksum.
+     *
+     * @param[in]  aChecksum  The UDP Checksum.
+     */
+    void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
+
+private:
+    uint16_t mSourcePort;
+    uint16_t mDestinationPort;
+    uint16_t mLength;
+    uint16_t mChecksum;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements TCP header parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class TcpHeader : public Clearable<TcpHeader>
+{
+public:
+    static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
+
+    /**
+     * Returns the TCP Source Port.
+     *
+     * @returns The TCP Source Port.
+     */
+    uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSource); }
+
+    /**
+     * Returns the TCP Destination Port.
+     *
+     * @returns The TCP Destination Port.
+     */
+    uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestination); }
+
+    /**
+     * Sets the TCP Source Port.
+     *
+     * @param[in]  aPort  The TCP Source Port.
+     */
+    void SetSourcePort(uint16_t aPort) { mSource = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Sets the TCP Destination Port.
+     *
+     * @param[in]  aPort  The TCP Destination Port.
+     */
+    void SetDestinationPort(uint16_t aPort) { mDestination = BigEndian::HostSwap16(aPort); }
+
+    /**
+     * Returns the TCP Sequence Number.
+     *
+     * @returns The TCP Sequence Number.
+     */
+    uint32_t GetSequenceNumber(void) const { return BigEndian::HostSwap32(mSequenceNumber); }
+
+    /**
+     * Returns the TCP Acknowledgment Sequence Number.
+     *
+     * @returns The TCP Acknowledgment Sequence Number.
+     */
+    uint32_t GetAcknowledgmentNumber(void) const { return BigEndian::HostSwap32(mAckNumber); }
+
+    /**
+     * Returns the TCP Flags.
+     *
+     * @returns The TCP Flags.
+     */
+    uint16_t GetFlags(void) const { return BigEndian::HostSwap16(mFlags); }
+
+    /**
+     * Returns the TCP Window.
+     *
+     * @returns The TCP Window.
+     */
+    uint16_t GetWindow(void) const { return BigEndian::HostSwap16(mWindow); }
+
+    /**
+     * Returns the TCP Checksum.
+     *
+     * @returns The TCP Checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+
+    /**
+     * Returns the TCP Urgent Pointer.
+     *
+     * @returns The TCP Urgent Pointer.
+     */
+    uint16_t GetUrgentPointer(void) const { return BigEndian::HostSwap16(mUrgentPointer); }
+
+private:
+    uint16_t mSource;
+    uint16_t mDestination;
+    uint32_t mSequenceNumber;
+    uint32_t mAckNumber;
+    uint16_t mFlags;
+    uint16_t mWindow;
+    uint16_t mChecksum;
+    uint16_t mUrgentPointer;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements ICMPv6 header generation and parsing.
+ */
+OT_TOOL_PACKED_BEGIN
+class Icmp6Header : public otIcmp6Header, public Clearable<Icmp6Header>
+{
+public:
+    /**
+     * ICMPv6 Message Types
+     */
+    enum Type : uint8_t
+    {
+        kTypeDstUnreach       = OT_ICMP6_TYPE_DST_UNREACH,       ///< Destination Unreachable
+        kTypePacketToBig      = OT_ICMP6_TYPE_PACKET_TO_BIG,     ///< Packet To Big
+        kTypeTimeExceeded     = OT_ICMP6_TYPE_TIME_EXCEEDED,     ///< Time Exceeded
+        kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
+        kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
+        kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
+        kTypeRouterSolicit    = OT_ICMP6_TYPE_ROUTER_SOLICIT,    ///< Router Solicitation
+        kTypeRouterAdvert     = OT_ICMP6_TYPE_ROUTER_ADVERT,     ///< Router Advertisement
+        kTypeNeighborSolicit  = OT_ICMP6_TYPE_NEIGHBOR_SOLICIT,  ///< Neighbor Solicitation
+        kTypeNeighborAdvert   = OT_ICMP6_TYPE_NEIGHBOR_ADVERT,   ///< Neighbor Advertisement
+    };
+
+    /**
+     * ICMPv6 Message Codes
+     */
+    enum Code : uint8_t
+    {
+        kCodeDstUnreachNoRoute    = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE,   ///< Dest Unreachable - No Route
+        kCodeDstUnreachProhibited = OT_ICMP6_CODE_DST_UNREACH_PROHIBITED, ///< Dest Unreachable - Admin Prohibited
+        kCodeFragmReasTimeEx      = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,     ///< Time Exceeded - Frag Reassembly
+    };
+
+    static constexpr uint8_t kTypeFieldOffset     = 0; ///< The byte offset of Type field in ICMP6 header.
+    static constexpr uint8_t kCodeFieldOffset     = 1; ///< The byte offset of Code field in ICMP6 header.
+    static constexpr uint8_t kChecksumFieldOffset = 2; ///< The byte offset of Checksum field in ICMP6 header.
+    static constexpr uint8_t kDataFieldOffset     = 4; ///< The byte offset of Data field in ICMP6 header.
+
+    /**
+     * Indicates whether the ICMPv6 message is an error message.
+     *
+     * @retval TRUE if the ICMPv6 message is an error message.
+     * @retval FALSE if the ICMPv6 message is an informational message.
+     */
+    bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
+
+    /**
+     * Returns the ICMPv6 message type.
+     *
+     * @returns The ICMPv6 message type.
+     */
+    Type GetType(void) const { return static_cast<Type>(mType); }
+
+    /**
+     * Sets the ICMPv6 message type.
+     *
+     * @param[in]  aType  The ICMPv6 message type.
+     */
+    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+
+    /**
+     * Returns the ICMPv6 message code.
+     *
+     * @returns The ICMPv6 message code.
+     */
+    Code GetCode(void) const { return static_cast<Code>(mCode); }
+
+    /**
+     * Sets the ICMPv6 message code.
+     *
+     * @param[in]  aCode  The ICMPv6 message code.
+     */
+    void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
+
+    /**
+     * Returns the ICMPv6 message checksum.
+     *
+     * @returns The ICMPv6 message checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+
+    /**
+     * Sets the ICMPv6 message checksum.
+     *
+     * @param[in]  aChecksum  The ICMPv6 message checksum.
+     */
+    void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
+
+    /**
+     * Returns the ICMPv6 message ID for Echo Requests and Replies.
+     *
+     * @returns The ICMPv6 message ID.
+     */
+    uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
+
+    /**
+     * Sets the ICMPv6 message ID for Echo Requests and Replies.
+     *
+     * @param[in]  aId  The ICMPv6 message ID.
+     */
+    void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
+
+    /**
+     * Returns the ICMPv6 message sequence for Echo Requests and Replies.
+     *
+     * @returns The ICMPv6 message sequence.
+     */
+    uint16_t GetSequence(void) const { return BigEndian::HostSwap16(mData.m16[1]); }
+
+    /**
+     * Sets the ICMPv6 message sequence for Echo Requests and Replies.
+     *
+     * @param[in]  aSequence  The ICMPv6 message sequence.
+     */
+    void SetSequence(uint16_t aSequence) { mData.m16[1] = BigEndian::HostSwap16(aSequence); }
+} OT_TOOL_PACKED_END;
+
+/**
  * @}
- *
  */
 
 } // namespace Ip6
+
+DefineCoreType(otIcmp6Header, Ip6::Icmp6Header);
+
 } // namespace ot
 
-#endif // IP6_HEADERS_HPP_
+#endif // OT_CORE_NET_IP6_HEADERS_HPP_

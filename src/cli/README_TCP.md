@@ -31,20 +31,20 @@ On node 2, initialize the TCP CLI module, connect to node 1, and send a simple m
 
 ### Result
 
-After running the `tcp connect` command on node 1, you should see a printout on node 1 similar to below:
+After running the `tcp connect` command on node 2, you should see a printout on node 2 similar to below:
 
 ```bash
 TCP: Connection established
 ```
 
-In addition, you should also see a printout on node 2 similar to below:
+In addition, you should also see a printout on node 1 similar to below:
 
 ```bash
 Accepted connection from [fe80:0:0:0:8f3:f602:bf9b:52f2]:49152
 TCP: Connection established
 ```
 
-After running the `tcp send` command on node 1, you should see a printout on node 2 similar to below:
+After running the `tcp send` command on node 2, you should see a printout on node 1 similar to below:
 
 ```bash
 TCP: Received 5 bytes: hello
@@ -58,9 +58,9 @@ For a more in-depth example, see [this video](https://youtu.be/ppZ784YUKlI).
 - [init](#init-size)
 - [deinit](#deinit)
 - [bind](#bind-ip-port)
-- [connect](#connect-ip-port)
+- [connect](#connect-ip-port-fastopen)
 - [send](#send-message)
-- [benchmark](#benchmark-size)
+- [benchmark](#benchmark-run-size)
 - [sendend](#sendend)
 - [abort](#abort)
 - [listen](#listen-ip-port)
@@ -78,17 +78,32 @@ TCP: Connection reset
 Done
 ```
 
-### benchmark [\<size\>]
+### benchmark run [\<size\>]
 
 Transfers the specified number of bytes using the TCP connection currently associated with the example TCP endpoint (this TCP connection must be established before using this command).
 
 - size: the number of bytes to send for the benchmark. If it is left unspecified, the default size is used.
 
 ```bash
-> tcp benchmark
+> tcp benchmark run
 Done
 TCP Benchmark Complete: Transferred 73728 bytes in 7233 milliseconds
 TCP Goodput: 81.546 kb/s
+```
+
+### benchmark result
+
+Get the last result of TCP benchmark. If the benchmark is ongoing, it will show that benchmark is ongoing. This command is used for test scripts which automate the tcp benchmark test.
+
+```
+> tcp benchmark result
+TCP Benchmark Status: Ongoing
+Done
+
+> tcp benchmark result
+TCP Benchmark Status: Completed
+TCP Benchmark Complete: Transferred 73728 bytes in 7056 milliseconds
+TCP Goodput: 83.592 kb/s
 ```
 
 ### bind \<ip\> \<port\>
@@ -103,7 +118,7 @@ Associates a name (i.e. IPv6 address and port) to the example TCP endpoint.
 Done
 ```
 
-### connect \<ip\> \<port\>
+### connect \<ip\> \<port\> [\<fastopen\>]
 
 Establishes a connection with the specified peer.
 
@@ -111,6 +126,7 @@ If the connection establishment is successful, the resulting TCP connection is a
 
 - ip: the peer's IP address.
 - port: the peer's TCP port.
+- fastopen: if "fast", TCP Fast Open is enabled for this connection; if "slow", it is not. Defaults to "slow".
 
 ```bash
 > tcp connect fe80:0:0:0:a8df:580a:860:ffa4 30000

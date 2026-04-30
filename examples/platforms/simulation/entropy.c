@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements an entropy source based on /dev/urandom or pseudo-random generator.
- *
  */
 
 #include "platform-simulation.h"

@@ -31,12 +31,20 @@
  *   This file includes definitions for Channel Manager.
  */
 
-#ifndef CHANNEL_MANAGER_HPP_
-#define CHANNEL_MANAGER_HPP_
+#ifndef OT_CORE_UTILS_CHANNEL_MANAGER_HPP_
+#define OT_CORE_UTILS_CHANNEL_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+
+#if (OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE && !OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE)
+#error "CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE requires OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE";
+#endif
+
+#if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+
+#include <openthread/channel_manager.h>
 
 #include <openthread/platform/radio.h>
 
@@ -58,28 +66,28 @@ namespace Utils {
  */
 
 /**
- * This class implements the Channel Manager.
- *
+ * Implements the Channel Manager.
  */
 class ChannelManager : public InstanceLocator, private NonCopyable
 {
 public:
+#if OPENTHREAD_FTD
     /**
      * Minimum delay (in seconds) used for network channel change.
-     *
      */
     static constexpr uint16_t kMinimumDelay = OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY;
+#endif
 
     /**
-     * This constructor initializes a `ChanelManager` object.
+     * Initializes a `ChanelManager` object.
      *
      * @param[in]   aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit ChannelManager(Instance &aInstance);
 
+#if OPENTHREAD_FTD
     /**
-     * This method requests a Thread network channel change.
+     * Requests a Thread network channel change.
      *
      * The Thread network switches to the given channel after a specified delay (@sa GetDelay()). The channel change is
      * performed by updating the Pending Operational Dataset.
@@ -89,28 +97,27 @@ public:
      * If the requested channel changes, it will trigger a `Notifier` event `kEventChannelManagerNewChannelChanged`.
      *
      * @param[in] aChannel             The new channel for the Thread network.
-     *
      */
-    void RequestChannelChange(uint8_t aChannel);
+    void RequestNetworkChannelChange(uint8_t aChannel);
+#endif
 
     /**
-     * This method gets the channel from the last successful call to `RequestChannelChange()`.
+     * Gets the channel from the last successful call to `RequestNetworkChannelChange()` or `ChangeCslChannel()`.
      *
      * @returns The last requested channel, or zero if there has been no channel change request yet.
-     *
      */
     uint8_t GetRequestedChannel(void) const { return mChannel; }
 
+#if OPENTHREAD_FTD
     /**
-     * This method gets the delay (in seconds) used for a channel change.
+     * Gets the delay (in seconds) used for a channel change.
      *
      * @returns The delay (in seconds)
-     *
      */
     uint16_t GetDelay(void) const { return mDelay; }
 
     /**
-     * This method sets the delay (in seconds) used for a channel change.
+     * Sets the delay (in seconds) used for a channel change.
      *
      * The delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within the
      * Thread network.
@@ -119,12 +126,13 @@ public:
      *
      * @retval kErrorNone          Delay was updated successfully.
      * @retval kErrorInvalidArgs   The given delay @p aDelay is shorter than `kMinimumDelay`.
-     *
      */
     Error SetDelay(uint16_t aDelay);
+#endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_FTD
     /**
-     * This method requests that `ChannelManager` checks and selects a new channel and starts a channel change.
+     * Requests that `ChannelManager` checks and selects a new network channel and starts a network channel change.
      *
      * Unlike the `RequestChannelChange()`  where the channel must be given as a parameter, this method asks the
      * `ChannelManager` to select a channel by itself (based on the collected channel quality info).
@@ -142,7 +150,7 @@ public:
      *    (@sa SetSupportedChannels, @sa SetFavoredChannels).
      *
      * 3) If the newly selected channel is different from the current channel, `ChannelManager` requests/starts the
-     *    channel change process (internally invoking a `RequestChannelChange()`).
+     *    channel change process (internally invoking a `RequestNetworkChannelChange()`).
      *
      *
      * @param[in] aSkipQualityCheck        Indicates whether the quality check (step 1) should be skipped.
@@ -150,93 +158,133 @@ public:
      * @retval kErrorNone              Channel selection finished successfully.
      * @retval kErrorNotFound          Supported channels is empty, therefore could not select a channel.
      * @retval kErrorInvalidState      Thread is not enabled or not enough data to select new channel.
-     *
      */
-    Error RequestChannelSelect(bool aSkipQualityCheck);
+    Error RequestNetworkChannelSelect(bool aSkipQualityCheck);
+#endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
     /**
-     * This method enables/disables the auto-channel-selection functionality.
+     * Requests that `ChannelManager` checks and selects a new Csl channel and starts a channel change.
+     *
+     * Once called, the `ChannelManager` will perform the following 3 steps:
+     *
+     * 1) `ChannelManager` decides if the channel change would be helpful. This check can be skipped if
+     *    `aSkipQualityCheck` is set to true (forcing a channel selection to happen and skipping the quality check).
+     *    This step uses the collected link quality metrics on the device (such as CCA failure rate, frame and message
+     *    error rates per neighbor, etc.) to determine if the current channel quality is at the level that justifies
+     *    a channel change.
+     *
+     * 2) If the first step passes, then `ChannelManager` selects a potentially better channel. It uses the collected
+     *    channel occupancy data by `ChannelMonitor` module. The supported and favored channels are used at this step.
+     *    (@sa SetSupportedChannels, @sa SetFavoredChannels).
+     *
+     * 3) If the newly selected channel is different from the current Csl channel, `ChannelManager` starts the
+     *    channel change process (internally invoking a `ChangeCslChannel()`).
+     *
+     *
+     * @param[in] aSkipQualityCheck        Indicates whether the quality check (step 1) should be skipped.
+     *
+     * @retval kErrorNone              Channel selection finished successfully.
+     * @retval kErrorNotFound          Supported channels is empty, therefore could not select a channel.
+     * @retval kErrorInvalidState      Thread is not enabled or not enough data to select new channel.
+     */
+    Error RequestCslChannelSelect(bool aSkipQualityCheck);
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+
+#if OPENTHREAD_FTD
+    /**
+     * Enables/disables the auto-channel-selection functionality.
      *
      * When enabled, `ChannelManager` will periodically invoke a `RequestChannelSelect(false)`. The period interval
      * can be set by `SetAutoChannelSelectionInterval()`.
      *
      * @param[in]  aEnabled  Indicates whether to enable or disable this functionality.
-     *
      */
-    void SetAutoChannelSelectionEnabled(bool aEnabled);
+    void SetAutoNetworkChannelSelectionEnabled(bool aEnabled);
 
     /**
-     * This method indicates whether the auto-channel-selection functionality is enabled or not.
+     * Indicates whether the auto-channel-selection functionality is enabled or not.
      *
      * @returns TRUE if enabled, FALSE if disabled.
-     *
      */
-    bool GetAutoChannelSelectionEnabled(void) const { return mAutoSelectEnabled; }
+    bool GetAutoNetworkChannelSelectionEnabled(void) const { return mAutoSelectEnabled; }
+#endif
+
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+    /**
+     * Enables/disables the auto-channel-selection functionality.
+     *
+     * When enabled, `ChannelManager` will periodically invoke a `RequestChannelSelect(false)`. The period interval
+     * can be set by `SetAutoChannelSelectionInterval()`.
+     *
+     * @param[in]  aEnabled  Indicates whether to enable or disable this functionality.
+     */
+    void SetAutoCslChannelSelectionEnabled(bool aEnabled);
 
     /**
-     * This method sets the period interval (in seconds) used by auto-channel-selection functionality.
+     * Indicates whether the auto-channel-selection functionality is enabled or not.
+     *
+     * @returns TRUE if enabled, FALSE if disabled.
+     */
+    bool GetAutoCslChannelSelectionEnabled(void) const { return mAutoSelectCslEnabled; }
+#endif
+
+    /**
+     * Sets the period interval (in seconds) used by auto-channel-selection functionality.
      *
      * @param[in] aInterval            The interval (in seconds).
      *
      * @retval kErrorNone          The interval was set successfully.
      * @retval kErrorInvalidArgs   The @p aInterval is not valid (zero).
-     *
      */
     Error SetAutoChannelSelectionInterval(uint32_t aInterval);
 
     /**
-     * This method gets the period interval (in seconds) used by auto-channel-selection functionality.
+     * Gets the period interval (in seconds) used by auto-channel-selection functionality.
      *
      * @returns The interval (in seconds).
-     *
      */
     uint32_t GetAutoChannelSelectionInterval(void) const { return mAutoSelectInterval; }
 
     /**
-     * This method gets the supported channel mask.
+     * Gets the supported channel mask.
      *
      * @returns  The supported channels mask.
-     *
      */
     uint32_t GetSupportedChannels(void) const { return mSupportedChannelMask.GetMask(); }
 
     /**
-     * This method sets the supported channel mask.
+     * Sets the supported channel mask.
      *
      * @param[in]  aChannelMask  A channel mask.
-     *
      */
     void SetSupportedChannels(uint32_t aChannelMask);
 
     /**
-     * This method gets the favored channel mask.
+     * Gets the favored channel mask.
      *
      * @returns  The favored channels mask.
-     *
      */
     uint32_t GetFavoredChannels(void) const { return mFavoredChannelMask.GetMask(); }
 
     /**
-     * This method sets the favored channel mask.
+     * Sets the favored channel mask.
      *
      * @param[in]  aChannelMask  A channel mask.
-     *
      */
     void SetFavoredChannels(uint32_t aChannelMask);
 
     /**
-     * This method gets the CCA failure rate threshold
+     * Gets the CCA failure rate threshold
      *
      * @returns  The CCA failure rate threshold
-     *
      */
     uint16_t GetCcaFailureRateThreshold(void) const { return mCcaFailureRateThreshold; }
 
     /**
-     * This method sets the CCA failure rate threshold
+     * Sets the CCA failure rate threshold
      *
      * @param[in]  aThreshold  A CCA failure rate threshold.
-     *
      */
     void SetCcaFailureRateThreshold(uint16_t aThreshold);
 
@@ -244,7 +292,7 @@ private:
     // Retry interval to resend Pending Dataset in case of tx failure (in ms).
     static constexpr uint32_t kPendingDatasetTxRetryInterval = 20000;
 
-    // Maximum jitter/wait time to start a requested channel change (in ms).
+    // Maximum jitter/wait time to start a requested network channel change (in ms).
     static constexpr uint32_t kRequestStartJitterInterval = 10000;
 
     // The minimum number of RSSI samples required before using the collected data (by `ChannelMonitor`) to select
@@ -273,38 +321,55 @@ private:
         kStateChangeInProgress,
     };
 
+#if OPENTHREAD_FTD
     void        StartDatasetUpdate(void);
-    static void HandleDatasetUpdateDone(Error aError, void *aContext);
+    static void HandleDatasetUpdateDone(otError aError, void *aContext);
     void        HandleDatasetUpdateDone(Error aError);
-    void        HandleTimer(void);
-    void        StartAutoSelectTimer(void);
+#endif
+    void  HandleTimer(void);
+    void  StartAutoSelectTimer(void);
+    Error RequestChannelSelect(bool aSkipQualityCheck);
+    Error RequestAutoChannelSelect(bool aSkipQualityCheck);
+    void  RequestChannelChange(uint8_t aChannel);
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     Error FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy);
     bool  ShouldAttemptChannelChange(void);
 #endif
 
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+    void ChangeCslChannel(uint8_t aChannel);
+#endif
+
     using ManagerTimer = TimerMilliIn<ChannelManager, &ChannelManager::HandleTimer>;
 
     Mac::ChannelMask mSupportedChannelMask;
     Mac::ChannelMask mFavoredChannelMask;
-    uint16_t         mDelay;
-    uint8_t          mChannel;
-    State            mState;
-    ManagerTimer     mTimer;
-    uint32_t         mAutoSelectInterval;
-    bool             mAutoSelectEnabled;
-    uint16_t         mCcaFailureRateThreshold;
+#if OPENTHREAD_FTD
+    uint16_t mDelay;
+#endif
+    uint8_t      mChannel;
+    uint8_t      mChannelSelected;
+    State        mState;
+    ManagerTimer mTimer;
+    uint32_t     mAutoSelectInterval;
+#if OPENTHREAD_FTD
+    bool mAutoSelectEnabled;
+#endif
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+    bool mAutoSelectCslEnabled;
+#endif
+    uint16_t mCcaFailureRateThreshold;
 };
 
 /**
  * @}
- *
  */
 
 } // namespace Utils
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+#endif // #if (OPENTHREAD_FTD || OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#endif // #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
-#endif // CHANNEL_MANAGER_HPP_
+#endif // OT_CORE_UTILS_CHANNEL_MANAGER_HPP_

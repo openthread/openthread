@@ -31,8 +31,8 @@
  *   This file includes definition for AnnounceSender.
  */
 
-#ifndef ANNOUNCE_SENDER_HPP_
-#define ANNOUNCE_SENDER_HPP_
+#ifndef OT_CORE_THREAD_ANNOUNCE_SENDER_HPP_
+#define OT_CORE_THREAD_ANNOUNCE_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -46,9 +46,9 @@
 namespace ot {
 
 /**
- * This class implements the base class for an `AnnounceSender` and `AnnounceBeginSever`.
+ * Implements the base class for an `AnnounceSender` and `AnnounceBeginSever`.
  *
- * This class provides APIs to schedule periodic transmission of MLE Announcement messages for a given number
+ * Provides APIs to schedule periodic transmission of MLE Announcement messages for a given number
  * transmissions per channel.
  */
 class AnnounceSenderBase : public InstanceLocator, private NonCopyable
@@ -56,23 +56,21 @@ class AnnounceSenderBase : public InstanceLocator, private NonCopyable
 protected:
     /**
      * This constant defines the special channel value to start from the first channel in the channel mask.
-     *
      */
     static constexpr uint8_t kChannelIteratorFirst = Mac::ChannelMask::kChannelIteratorFirst;
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A timer handler provided by sub-class.
-     *
      */
     AnnounceSenderBase(Instance &aInstance, Timer::Handler aHandler);
 
     /**
-     * This method schedules the MLE Announce transmissions.
+     * Schedules the MLE Announce transmissions.
      *
-     * This method requests @p aCount additional MLE transmission cycles to be scheduled. Each cycle covers all the
+     * Requests @p aCount additional MLE transmission cycles to be scheduled. Each cycle covers all the
      * channels in the specified channel mask from `GetChannelMask()`, with `GetPeriod()` as the time interval between
      * any two successive MLE Announcement transmissions (possibly) on different channels from the mask. The
      * `GetJitter()` value is used to add a random interval from `[-jitter, jitter]` to each period interval.
@@ -88,100 +86,88 @@ protected:
      * transmission happens within a short random interval selected from range `[0, jitter]`.
      *
      * @param[in]  aCount     The number of cycles to schedule.
-     *
      */
     void SendAnnounce(uint8_t aCount);
 
     /**
-     * This method stops the ongoing MLE Announce transmissions.
-     *
+     * Stops the ongoing MLE Announce transmissions.
      */
     void Stop(void);
 
     /**
-     * This method indicates whether a previously scheduled MLE Announce transmission is currently in progress or is
+     * Indicates whether a previously scheduled MLE Announce transmission is currently in progress or is
      * finished.
      *
      * @returns TRUE if the MLE Announce transmission is in progress, FALSE otherwise.
-     *
      */
     bool IsRunning(void) const { return mTimer.IsRunning(); }
 
     /**
-     * This method gets the period interval.
+     * Gets the period interval.
      *
      * @returns The period interval (in milliseconds).
-     *
      */
     uint32_t GetPeriod(void) const { return mPeriod; }
 
     /**
-     * This method sets the period interval.
+     * Sets the period interval.
      *
      * The period along with jitter value from (`Get/SetJitter()`) determines the interval between two successive MLE
      * Announcement transmissions (possibly) on different channels from the specified channel mask.
      *
      * @param[in] aPeriod   The period interval (in milliseconds).
-     *
      */
     void SetPeriod(uint32_t aPeriod) { mPeriod = aPeriod; }
 
     /**
-     * This method gets the current jitter interval.
+     * Gets the current jitter interval.
      *
      * @returns The jitter interval (in milliseconds).
-     *
      */
     uint16_t GetJitter(void) const { return mJitter; }
 
     /**
-     * This method sets the jitter interval.
+     * Sets the jitter interval.
      *
      * @param[in] aJitter  The jitter interval (in milliseconds).
-     *
      */
     void SetJitter(uint16_t aJitter) { mJitter = aJitter; }
 
     /**
-     * This method gets the channel mask.
+     * Gets the channel mask.
      *
      * @returns The channel mask.
-     *
      */
     const Mac::ChannelMask GetChannelMask(void) const { return mChannelMask; }
 
     /**
-     * This method sets the channel mask.
+     * Sets the channel mask.
      *
      * @param[in] aChannelMask   The channel mask.
-     *
      */
     void SetChannelMask(Mac::ChannelMask aChannelMask);
 
     /**
-     * This method gets the starting channel, i.e., the first channel in a TX cycle to send MLE Announcement on.
+     * Gets the starting channel, i.e., the first channel in a TX cycle to send MLE Announcement on.
      *
      * @returns The current starting channel.
-     *
      */
     uint8_t GetStartingChannel(void) const { return mStartingChannel; }
 
     /**
-     * This method sets the starting channel, i.e., the first channel in a TX cycle to send MLE Announcement on.
+     * Sets the starting channel, i.e., the first channel in a TX cycle to send MLE Announcement on.
      *
      * @p aStartingChannel MUST be present in the current channel mask (from `GetChannelMask()`), otherwise it is
      * ignored and an MLE transmission cycle starts with the first channel (with smallest channel number) in the channel
      * mask.
      *
      * @param[in] aStartingChannel  The starting channel.
-     *
      */
     void SetStartingChannel(uint8_t aStartingChannel);
 
     /**
-     * This method is the timer handler and must be invoked by sub-class when the timer expires from the `aHandler`
+     * Is the timer handler and must be invoked by sub-class when the timer expires from the `aHandler`
      * callback function provided in the constructor.
-     *
      */
     void HandleTimer(void);
 
@@ -200,8 +186,7 @@ private:
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 /**
- * This class implements an AnnounceSender.
- *
+ * Implements an AnnounceSender.
  */
 class AnnounceSender : public AnnounceSenderBase
 {
@@ -209,17 +194,15 @@ class AnnounceSender : public AnnounceSenderBase
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
-     *
      */
     explicit AnnounceSender(Instance &aInstance);
 
     /**
-     * This method notifies the `AnnounceSender` that a MLE Announcement message was received with a current timestamp
+     * Notifies the `AnnounceSender` that a MLE Announcement message was received with a current timestamp
      * to update its internal state (decide whether or not to skip transmission of MLE Announcement in this cycle).
-     *
      */
     void UpdateOnReceivedAnnounce(void);
 
@@ -270,4 +253,4 @@ private:
 
 } // namespace ot
 
-#endif // ANNOUNCE_SENDER_HPP_
+#endif // OT_CORE_THREAD_ANNOUNCE_SENDER_HPP_

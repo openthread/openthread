@@ -29,8 +29,7 @@
 #ifndef OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
 #define OT_CORE_RADIO_MAX_POWER_TABLE_HPP_
 
-#include "core/radio/radio.hpp"
-#include "openthread/platform/radio.h"
+#include "radio/radio.hpp"
 
 namespace ot {
 
@@ -42,27 +41,24 @@ public:
     MaxPowerTable(void) { memset(mPowerTable, kPowerDefault, sizeof(mPowerTable)); }
 
     /**
-     * This method gets the max allowed transmit power of channel @p aChannel.
+     * Gets the max allowed transmit power of channel @p aChannel.
      *
      * @param[in]  aChannel    The radio channel number.
      *
      * @returns The max supported transmit power in dBm.
-     *
      */
     int8_t GetTransmitPower(uint8_t aChannel) const { return mPowerTable[aChannel - Radio::kChannelMin]; }
 
     /**
-     * This method sets the max allowed transmit power of channel @p aChannel.
+     * Sets the max allowed transmit power of channel @p aChannel.
      *
      * @param[in]  aChannel    The radio channel number.
      * @param[in]  aPower      The max supported transmit power in dBm.
-     *
      */
     void SetTransmitPower(uint8_t aChannel, int8_t aPower) { mPowerTable[aChannel - Radio::kChannelMin] = aPower; }
 
     /**
-     * This method gets the supported channel masks.
-     *
+     * Gets the supported channel masks.
      */
     uint32_t GetSupportedChannelMask(void) const
     {
@@ -72,7 +68,7 @@ public:
         {
             if (mPowerTable[i - Radio::kChannelMin] != OT_RADIO_POWER_INVALID)
             {
-                channelMask |= (1 << i);
+                SetBit<uint32_t>(channelMask, i);
             }
         }
 

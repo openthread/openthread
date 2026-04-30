@@ -30,12 +30,17 @@
  * @file
  * @brief
  *   This file defines the OpenThread TCP API.
- *
  */
 
 #ifndef OPENTHREAD_TCP_H_
 #define OPENTHREAD_TCP_H_
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -49,7 +54,6 @@ extern "C" {
  *   This module includes functions that control TCP communication.
  *
  * @{
- *
  */
 
 /**
@@ -58,7 +62,6 @@ extern "C" {
  * A single otLinkedBuffer structure references an array of bytes in memory,
  * via mData and mLength. The mNext field is used to form a chain of
  * otLinkedBuffer structures.
- *
  */
 typedef struct otLinkedBuffer
 {
@@ -67,7 +70,6 @@ typedef struct otLinkedBuffer
     size_t                 mLength; ///< Length of this linked buffer (number of bytes).
 } otLinkedBuffer;
 
-struct otTcpEndpoint;
 typedef struct otTcpEndpoint otTcpEndpoint;
 
 /**
@@ -75,7 +77,6 @@ typedef struct otTcpEndpoint otTcpEndpoint;
  * complete and that the connection is now established.
  *
  * @param[in]  aEndpoint  The TCP endpoint whose connection is now established.
- *
  */
 typedef void (*otTcpEstablished)(otTcpEndpoint *aEndpoint);
 
@@ -90,7 +91,6 @@ typedef void (*otTcpEstablished)(otTcpEndpoint *aEndpoint);
  *
  * @param[in]  aEndpoint  The TCP endpoint for the connection.
  * @param[in]  aData      A pointer to the otLinkedBuffer that can be reclaimed.
- *
  */
 typedef void (*otTcpSendDone)(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
 
@@ -160,7 +160,6 @@ typedef void (*otTcpSendDone)(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
  * @param[in]  aInSendBuffer  The number of bytes in the send buffer (sum of "in-flight" and "backlog" regions).
  * @param[in]  aBacklog       The number of bytes that are queued for sending but have not yet been sent (the "backlog"
  *                            region).
- *
  */
 typedef void (*otTcpForwardProgress)(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog);
 
@@ -181,7 +180,6 @@ typedef void (*otTcpForwardProgress)(otTcpEndpoint *aEndpoint, size_t aInSendBuf
  *                              can be received.
  * @param[in]  aBytesRemaining  The number of additional bytes that can be received before the receive buffer becomes
  *                              full.
- *
  */
 typedef void (*otTcpReceiveAvailable)(otTcpEndpoint *aEndpoint,
                                       size_t         aBytesAvailable,
@@ -214,7 +212,6 @@ typedef enum otTcpDisconnectedReason
  *
  * @param[in]  aEndpoint  The TCP endpoint whose connection has been lost.
  * @param[in]  aReason    The reason why the connection was lost.
- *
  */
 typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
 
@@ -225,20 +222,19 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  * opaque in its declaration, is treated as struct tcpcb in the TCP
  * implementation.
  */
-#define OT_TCP_ENDPOINT_TCB_SIZE_BASE 368
+#define OT_TCP_ENDPOINT_TCB_SIZE_BASE 392
 #define OT_TCP_ENDPOINT_TCB_NUM_PTR 36
 
 /**
- * This structure represents a TCP endpoint.
+ * Represents a TCP endpoint.
  *
- * An TCP endpoint acts an endpoint of TCP connection. It can be used to
+ * A TCP endpoint acts an endpoint of TCP connection. It can be used to
  * initiate TCP connections, and, once a TCP connection is established, send
  * data to and receive data from the connection peer.
  *
  * The application should not inspect the fields of this structure directly; it
  * should only interact with it via the TCP API functions whose signatures are
  * provided in this file.
- *
  */
 struct otTcpEndpoint
 {
@@ -266,8 +262,7 @@ struct otTcpEndpoint
 };
 
 /**
- * This structure contains arguments to the otTcpEndpointInitialize() function.
- *
+ * Contains arguments to the otTcpEndpointInitialize() function.
  */
 typedef struct otTcpEndpointInitializeArgs
 {
@@ -292,7 +287,6 @@ typedef struct otTcpEndpointInitializeArgs
  * On platforms where memory is particularly constrained and in situations
  * where high bandwidth is not necessary, it may be desirable to manually
  * select a smaller buffer size.
- *
  */
 #define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2598
 
@@ -304,7 +298,6 @@ typedef struct otTcpEndpointInitializeArgs
  *
  * If the TCP connection traverses a very large number of hops (more than 6 or
  * so), then it may be advisable to select a large buffer size manually.
- *
  */
 #define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4157
 
@@ -323,7 +316,6 @@ typedef struct otTcpEndpointInitializeArgs
  *
  * @retval OT_ERROR_NONE    Successfully opened the TCP endpoint.
  * @retval OT_ERROR_FAILED  Failed to open the TCP endpoint.
- *
  */
 otError otTcpEndpointInitialize(otInstance                        *aInstance,
                                 otTcpEndpoint                     *aEndpoint,
@@ -336,7 +328,6 @@ otError otTcpEndpointInitialize(otInstance                        *aInstance,
  * @param[in]  aEndpoint  The TCP endpoint whose instance to obtain.
  *
  * @returns  The otInstance pointer associated with @p aEndpoint.
- *
  */
 otInstance *otTcpEndpointGetInstance(otTcpEndpoint *aEndpoint);
 
@@ -347,7 +338,6 @@ otInstance *otTcpEndpointGetInstance(otTcpEndpoint *aEndpoint);
  * @param[in]  aEndpoint  The TCP endpoint whose context to obtain.
  *
  * @returns  The context pointer associated with @p aEndpoint.
- *
  */
 void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint);
 
@@ -360,7 +350,6 @@ void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint);
  * @param[in]  aEndpoint  The TCP endpoint whose local host and port to obtain.
  *
  * @returns  The local host and port of @p aEndpoint.
- *
  */
 const otSockAddr *otTcpGetLocalAddress(const otTcpEndpoint *aEndpoint);
 
@@ -373,7 +362,6 @@ const otSockAddr *otTcpGetLocalAddress(const otTcpEndpoint *aEndpoint);
  * @param[in]  aEndpoint  The TCP endpoint whose peer's host and port to obtain.
  *
  * @returns  The host and port of the connection peer of @p aEndpoint.
- *
  */
 const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint);
 
@@ -385,13 +373,11 @@ const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint);
  *
  * @retval OT_ERROR_NONE    Successfully bound the TCP endpoint.
  * @retval OT_ERROR_FAILED  Failed to bind the TCP endpoint.
- *
  */
 otError otTcpBind(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName);
 
 /**
- * This enumeration defines flags passed to otTcpConnect().
- *
+ * Defines flags passed to otTcpConnect().
  */
 enum
 {
@@ -401,11 +387,16 @@ enum
 /**
  * Records the remote host and port for this connection.
  *
- * By default TCP Fast Open is used. This means that this function merely
- * records the remote host and port, and that the TCP connection establishment
- * handshake only happens on the first call to otTcpSendByReference(). TCP Fast
- * Open can be explicitly disabled using @p aFlags, in which case the TCP
- * connection establishment handshake is initiated immediately.
+ * TCP Fast Open must be enabled or disabled using @p aFlags. If it is
+ * disabled, then the TCP connection establishment handshake is initiated
+ * immediately. If it is enabled, then this function merely records the
+ * the remote host and port, and the TCP connection establishment handshake
+ * only happens on the first call to `otTcpSendByReference()`.
+ *
+ * If TCP Fast Open is disabled, then the caller must wait for the
+ * `otTcpEstablished` callback indicating that TCP connection establishment
+ * handshake is done before it can start sending data e.g., by calling
+ * `otTcpSendByReference()`.
  *
  * @param[in]  aEndpoint  A pointer to the TCP endpoint structure to connect.
  * @param[in]  aSockName  The IP address and port of the host to which to connect.
@@ -413,13 +404,11 @@ enum
  *
  * @retval OT_ERROR_NONE    Successfully completed the operation.
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
- *
  */
 otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint32_t aFlags);
 
 /**
- * This enumeration defines flags passed to @p otTcpSendByReference.
- *
+ * Defines flags passed to @p otTcpSendByReference.
  */
 enum
 {
@@ -448,7 +437,6 @@ enum
  *
  * @retval OT_ERROR_NONE    Successfully added data to the send buffer.
  * @retval OT_ERROR_FAILED  Failed to add data to the send buffer.
- *
  */
 otError otTcpSendByReference(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer, uint32_t aFlags);
 
@@ -464,7 +452,6 @@ otError otTcpSendByReference(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer, 
  *
  * @retval OT_ERROR_NONE    Successfully added data to the send buffer.
  * @retval OT_ERROR_FAILED  Failed to add data to the send buffer.
- *
  */
 otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags);
 
@@ -482,7 +469,6 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
  *
  * @retval OT_ERROR_NONE    Successfully completed the operation.
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
- *
  */
 otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
 
@@ -499,7 +485,6 @@ otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer *
  *
  * @retval OT_ERROR_NONE    Successfully completed the operation.
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
- *
  */
 otError otTcpReceiveContiguify(otTcpEndpoint *aEndpoint);
 
@@ -515,7 +500,6 @@ otError otTcpReceiveContiguify(otTcpEndpoint *aEndpoint);
  *
  * @retval OT_ERROR_NONE    Successfully completed the receive operation.
  * @retval OT_ERROR_FAILED  Failed to complete the receive operation.
- *
  */
 otError otTcpCommitReceive(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags);
 
@@ -535,7 +519,6 @@ otError otTcpCommitReceive(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t 
  *
  * @retval OT_ERROR_NONE    Successfully queued the "end of stream" condition for transmission.
  * @retval OT_ERROR_FAILED  Failed to queue the "end of stream" condition for transmission.
- *
  */
 otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint);
 
@@ -553,7 +536,6 @@ otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint);
  *
  * @retval OT_ERROR_NONE    Successfully aborted the TCP endpoint's connection.
  * @retval OT_ERROR_FAILED  Failed to abort the TCP endpoint's connection.
- *
  */
 otError otTcpAbort(otTcpEndpoint *aEndpoint);
 
@@ -574,18 +556,15 @@ otError otTcpAbort(otTcpEndpoint *aEndpoint);
  *
  * @retval OT_ERROR_NONE    Successfully deinitialized the TCP endpoint.
  * @retval OT_ERROR_FAILED  Failed to deinitialize the TCP endpoint.
- *
  */
 otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint);
 
-struct otTcpListener;
 typedef struct otTcpListener otTcpListener;
 
 /**
- * This enumeration defines incoming connection actions.
+ * Defines incoming connection actions.
  *
  * This is used in otTcpAcceptReady() callback.
- *
  */
 typedef enum otTcpIncomingConnectionAction
 {
@@ -622,7 +601,6 @@ typedef enum otTcpIncomingConnectionAction
  * @param[out]  aAcceptInto  The TCP endpoint into which to accept the incoming connection.
  *
  * @returns  Description of how to handle the incoming connection.
- *
  */
 typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener    *aListener,
                                                           const otSockAddr *aPeer,
@@ -641,7 +619,6 @@ typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener    *aLis
  * @param[in]  aListener  The TCP listener that matches the incoming connection.
  * @param[in]  aEndpoint  The TCP endpoint into which the incoming connection was accepted.
  * @param[in]  aPeer      the host and port from which the incoming connection originated.
- *
  */
 typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
 
@@ -656,14 +633,13 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
 #define OT_TCP_LISTENER_TCB_NUM_PTR 3
 
 /**
- * This structure represents a TCP listener.
+ * Represents a TCP listener.
  *
  * A TCP listener is used to listen for and accept incoming TCP connections.
  *
  * The application should not inspect the fields of this structure directly; it
  * should only interact with it via the TCP API functions whose signatures are
  * provided in this file.
- *
  */
 struct otTcpListener
 {
@@ -681,8 +657,7 @@ struct otTcpListener
 };
 
 /**
- * This structure contains arguments to the otTcpListenerInitialize() function.
- *
+ * Contains arguments to the otTcpListenerInitialize() function.
  */
 typedef struct otTcpListenerInitializeArgs
 {
@@ -707,7 +682,6 @@ typedef struct otTcpListenerInitializeArgs
  *
  * @retval OT_ERROR_NONE    Successfully opened the TCP listener.
  * @retval OT_ERROR_FAILED  Failed to open the TCP listener.
- *
  */
 otError otTcpListenerInitialize(otInstance                        *aInstance,
                                 otTcpListener                     *aListener,
@@ -720,7 +694,6 @@ otError otTcpListenerInitialize(otInstance                        *aInstance,
  * @param[in]  aListener  The TCP listener whose instance to obtain.
  *
  * @returns  The otInstance pointer associated with @p aListener.
- *
  */
 otInstance *otTcpListenerGetInstance(otTcpListener *aListener);
 
@@ -731,7 +704,6 @@ otInstance *otTcpListenerGetInstance(otTcpListener *aListener);
  * @param[in]  aListener  The TCP listener whose context to obtain.
  *
  * @returns  The context pointer associated with @p aListener.
- *
  */
 void *otTcpListenerGetContext(otTcpListener *aListener);
 
@@ -744,7 +716,6 @@ void *otTcpListenerGetContext(otTcpListener *aListener);
  *
  * @retval OT_ERROR_NONE    Successfully initiated listening on the TCP listener.
  * @retval OT_ERROR_FAILED  Failed to initiate listening on the TCP listener.
- *
  */
 otError otTcpListen(otTcpListener *aListener, const otSockAddr *aSockName);
 
@@ -755,7 +726,6 @@ otError otTcpListen(otTcpListener *aListener, const otSockAddr *aSockName);
  *
  * @retval OT_ERROR_NONE    Successfully stopped listening on the TCP listener.
  * @retval OT_ERROR_FAILED  Failed to stop listening on the TCP listener.
- *
  */
 otError otTcpStopListening(otTcpListener *aListener);
 
@@ -773,13 +743,11 @@ otError otTcpStopListening(otTcpListener *aListener);
  *
  * @retval OT_ERROR_NONE    Successfully deinitialized the TCP listener.
  * @retval OT_ERROR_FAILED  Failed to deinitialize the TCP listener.
- *
  */
 otError otTcpListenerDeinitialize(otTcpListener *aListener);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

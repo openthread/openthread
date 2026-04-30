@@ -49,8 +49,7 @@ class LinkMetricsDataInfo : public LinkedListEntry<LinkMetricsDataInfo>, public 
 
 public:
     /**
-     * Construtor.
-     *
+     * Constructor.
      */
     LinkMetricsDataInfo(void) { Clear(); };
 
@@ -61,7 +60,6 @@ public:
      * @param[in]  aShortAddress    Short Address of the Probing Initiator tracked by this object.
      * @param[in]  aExtAddress      A reference to the Extended Address of the Probing Initiator tracked by this
      *                              object.
-     *
      */
     void Set(otLinkMetrics aLinkMetrics, otShortAddress aShortAddress, const otExtAddress &aExtAddress)
     {
@@ -71,7 +69,7 @@ public:
     }
 
     /**
-     * This method gets Link Metrics data stored in this object.
+     * Gets Link Metrics data stored in this object.
      *
      * TODO: Currently the order of Link Metircs data is fixed. Will update it to follow the order specified in TLV.
      *
@@ -81,7 +79,6 @@ public:
      *                       at least 2 bytes (per spec 4.11.3.4.4.6). Otherwise the behavior would be undefined.
      *
      * @returns  The number of bytes written. `0` on failure.
-     *
      */
     uint8_t GetEnhAckData(uint8_t aLqi, int8_t aRssi, uint8_t *aData) const
     {
@@ -114,10 +111,9 @@ public:
     }
 
     /**
-     * This method gets the length of Link Metrics Data.
+     * Gets the length of Link Metrics Data.
      *
      * @returns  The number of bytes for the data.
-     *
      */
     uint8_t GetEnhAckDataLen() const
     {
@@ -126,10 +122,9 @@ public:
     }
 
     /**
-     * This method gets the metrics configured for the Enhanced-ACK Based Probing.
+     * Gets the metrics configured for the Enhanced-ACK Based Probing.
      *
      * @returns  The metrics configured.
-     *
      */
     otLinkMetrics GetLinkMetrics(void) const { return mLinkMetrics; }
 
@@ -177,7 +172,11 @@ static inline bool IsLinkMetricsClear(otLinkMetrics aLinkMetrics)
     return !aLinkMetrics.mPduCount && !aLinkMetrics.mLqi && !aLinkMetrics.mLinkMargin && !aLinkMetrics.mRssi;
 }
 
-void otLinkMetricsInit(int8_t aNoiseFloor) { sNoiseFloor = aNoiseFloor; }
+void otLinkMetricsInit(int8_t aNoiseFloor)
+{
+    sNoiseFloor = aNoiseFloor;
+    otLinkMetricsResetEnhAckProbing();
+}
 
 otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
                                             const otExtAddress *aExtAddress,
@@ -256,5 +255,11 @@ uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress)
 
 exit:
     return len;
+}
+
+void otLinkMetricsResetEnhAckProbing(void)
+{
+    GetLinkMetricsDataInfoActiveList().Clear();
+    GetLinkMetricsDataInfoPool().FreeAll();
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

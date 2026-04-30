@@ -31,8 +31,8 @@
  *   This file includes definitions for performing SHA-256 computations.
  */
 
-#ifndef SHA256_HPP_
-#define SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_SHA256_HPP_
+#define OT_CORE_CRYPTO_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,6 +47,7 @@
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
 #include "crypto/context_size.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 
@@ -58,19 +59,16 @@ namespace Crypto {
  * @addtogroup core-security
  *
  * @{
- *
  */
 
 /**
- * This class implements SHA-256 computation.
- *
+ * Implements SHA-256 computation.
  */
 class Sha256
 {
 public:
     /**
-     * This type represents a SHA-256 hash.
-     *
+     * Represents a SHA-256 hash.
      */
     class Hash : public otCryptoSha256Hash, public Clearable<Hash>, public Equatable<Hash>
     {
@@ -78,48 +76,42 @@ public:
         static const uint8_t kSize = OT_CRYPTO_SHA256_HASH_SIZE; ///< SHA-256 hash size (bytes)
 
         /**
-         * This method returns a pointer to a byte array containing the hash value.
+         * Returns a pointer to a byte array containing the hash value.
          *
          * @returns A pointer to a byte array containing the hash.
-         *
          */
         const uint8_t *GetBytes(void) const { return m8; }
     };
 
     /**
      * Constructor for `Sha256` object.
-     *
      */
     Sha256(void);
 
     /**
      * Destructor for `Sha256` object.
-     *
      */
     ~Sha256(void);
 
     /**
-     * This method starts the SHA-256 computation.
-     *
+     * Starts the SHA-256 computation.
      */
     void Start(void);
 
     /**
-     * This method inputs bytes into the SHA-256 computation.
+     * Inputs bytes into the SHA-256 computation.
      *
      * @param[in]  aBuf        A pointer to the input buffer.
      * @param[in]  aBufLength  The length of @p aBuf in bytes.
-     *
      */
     void Update(const void *aBuf, uint16_t aBufLength);
 
     /**
-     * This method inputs an object (treated as a sequence of bytes) into the SHA-256 computation.
+     * Inputs an object (treated as a sequence of bytes) into the SHA-256 computation.
      *
      * @tparam    ObjectType   The object type.
      *
      * @param[in] aObject      A reference to the object.
-     *
      */
     template <typename ObjectType> void Update(const ObjectType &aObject)
     {
@@ -128,31 +120,27 @@ public:
     }
 
     /**
-     * This method inputs the bytes read from a given message into the SHA-256 computation.
+     * Inputs the bytes read from a given message into the SHA-256 computation.
      *
      * @param[in] aMessage    The message to read the data from.
      * @param[in] aOffset     The offset into @p aMessage to start to read.
      * @param[in] aLength     The number of bytes to read.
-     *
      */
     void Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
-     * This method finalizes the hash computation.
+     * Finalizes the hash computation.
      *
      * @param[out]  aHash  A reference to a `Hash` to output the calculated hash.
-     *
      */
     void Finish(Hash &aHash);
 
 private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kSha256ContextSize, uint64_t);
+    ContextWith<kSha256ContextSize> mContext;
 };
 
 /**
  * @}
- *
  */
 
 } // namespace Crypto
@@ -161,4 +149,4 @@ DefineCoreType(otCryptoSha256Hash, Crypto::Sha256::Hash);
 
 } // namespace ot
 
-#endif // SHA256_HPP_
+#endif // OT_CORE_CRYPTO_SHA256_HPP_

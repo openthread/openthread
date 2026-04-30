@@ -29,11 +29,10 @@
 /**
  * @file
  *   This file includes definitions for generating and processing Link Metrics TLVs.
- *
  */
 
-#ifndef LINK_METRICS_TYPES_HPP_
-#define LINK_METRICS_TYPES_HPP_
+#ifndef OT_CORE_THREAD_LINK_METRICS_TYPES_HPP_
+#define OT_CORE_THREAD_LINK_METRICS_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -52,55 +51,49 @@ namespace LinkMetrics {
 constexpr uint8_t kMaxTypeIds = 4; ///< Maximum number of Type IDs in a `Metrics`.
 
 /**
- * This type represents Link Metric Flags indicating a set of metrics.
+ * Represents Link Metric Flags indicating a set of metrics.
  *
  * @sa otLinkMetrics
- *
  */
 class Metrics : public otLinkMetrics, public Clearable<Metrics>
 {
 public:
     /**
-     * This method converts the `Metrics` into an array of Type IDs.
+     * Converts the `Metrics` into an array of Type IDs.
      *
      * @param[out] aTypeIds   The array of Type IDs to populate. MUST have at least `kMaxTypeIds` elements.
      *
      * @returns Number of entries added in the array @p aTypeIds.
-     *
      */
     uint8_t ConvertToTypeIds(uint8_t aTypeIds[]) const;
 };
 
 /**
- * This type represents the results (values) for a set of metrics.
+ * Represents the results (values) for a set of metrics.
  *
  * @sa otLinkMetricsValues
- *
  */
 class MetricsValues : public otLinkMetricsValues, public Clearable<MetricsValues>
 {
 public:
     /**
-     * This method gets the metrics flags.
+     * Gets the metrics flags.
      *
      * @returns The metrics flags.
-     *
      */
     Metrics &GetMetrics(void) { return static_cast<Metrics &>(mMetrics); }
 
     /**
-     * This method gets the metrics flags.
+     * Gets the metrics flags.
      *
      * @returns The metrics flags.
-     *
      */
     const Metrics &GetMetrics(void) const { return static_cast<const Metrics &>(mMetrics); }
 
     /**
-     * This method set the metrics flags.
+     * Set the metrics flags.
      *
      * @param[in] aMetrics  The metrics flags to set from.
-     *
      */
     void SetMetrics(const Metrics &aMetrics) { mMetrics = aMetrics; }
 };
@@ -137,7 +130,7 @@ public:
     static constexpr uint8_t kRssi       = (kMetricRssi | kTypeAve);                ///< Type ID for RSSI.
 
     /**
-     * This static method indicates whether or not a given Type ID is extended.
+     * Indicates whether or not a given Type ID is extended.
      *
      * Extended Type IDs are reserved for future use. When set an additional second byte follows the current ID flags.
      *
@@ -145,12 +138,11 @@ public:
      *
      * @retval TRUE  The @p aTypeId is extended.
      * @retval FALSE The @p aTypeId is not extended.
-     *
      */
     static bool IsExtended(uint8_t aTypeId) { return (aTypeId & kExtendedFlag); }
 
     /**
-     * This static method determines the value length (number of bytes) associated with a given Type ID.
+     * Determines the value length (number of bytes) associated with a given Type ID.
      *
      * Type IDs can either have a short value as a `uint8_t` (e.g., `kLqi`, `kLinkMargin` or `kRssi`) or a long value as
      * a `uint32_t` (`kPdu`).
@@ -158,7 +150,6 @@ public:
      * @param[in] aTypeId   The Type ID.
      *
      * @returns the associated value length of @p aTypeId.
-     *
      */
     static uint8_t GetValueLength(uint8_t aTypeId)
     {
@@ -166,74 +157,66 @@ public:
     }
 
     /**
-     * This static method updates a Type ID to mark it as reversed.
+     * Updates a Type ID to mark it as reversed.
      *
      * This is used for testing only.
      *
      * @param[in, out] aTypeId    A reference to a Type ID variable to update.
-     *
      */
-    static void MarkAsReserverd(uint8_t &aTypeId) { aTypeId = (aTypeId & ~kTypeMask) | kTypeReserved; }
+    static void MarkAsReserved(uint8_t &aTypeId) { aTypeId = (aTypeId & ~kTypeMask) | kTypeReserved; }
 
     TypeId(void) = delete;
 };
 
 /**
- * This class represents the Series Flags for Forward Tracking Series.
- *
+ * Represents the Series Flags for Forward Tracking Series.
  */
 class SeriesFlags : public otLinkMetricsSeriesFlags
 {
 public:
     /**
-     * This method converts the `SeriesFlags` to `uint8_t` bit-mask (for inclusion in TLVs).
+     * Converts the `SeriesFlags` to `uint8_t` bit-mask (for inclusion in TLVs).
      *
      * @returns The bit-mask representation.
-     *
      */
     uint8_t ConvertToMask(void) const;
 
     /**
-     * This method sets the `SeriesFlags` from a given bit-mask value.
+     * Sets the `SeriesFlags` from a given bit-mask value.
      *
      * @param[in] aFlagsMask  The bit-mask flags.
-     *
      */
     void SetFrom(uint8_t aFlagsMask);
 
     /**
-     * This method indicates whether or not the Link Probe flag is set.
+     * Indicates whether or not the Link Probe flag is set.
      *
      * @retval true   The Link Probe flag is set.
      * @retval false  The Link Probe flag is not set.
-     *
      */
     bool IsLinkProbeFlagSet(void) const { return mLinkProbe; }
 
     /**
-     * This method indicates whether or not the MAC Data flag is set.
+     * Indicates whether or not the MAC Data flag is set.
      *
      * @retval true   The MAC Data flag is set.
      * @retval false  The MAC Data flag is not set.
-     *
      */
     bool IsMacDataFlagSet(void) const { return mMacData; }
 
     /**
-     * This method indicates whether or not the MAC Data Request flag is set.
+     * Indicates whether or not the MAC Data Request flag is set.
      *
      * @retval true   The MAC Data Request flag is set.
      * @retval false  The MAC Data Request flag is not set.
-     *
      */
     bool IsMacDataRequestFlagSet(void) const { return mMacDataRequest; }
 
     /**
-     * This method indicates whether or not the Mac Ack flag is set.
+     * Indicates whether or not the Mac Ack flag is set.
      *
      * @retval true   The Mac Ack flag is set.
      * @retval false  The Mac Ack flag is not set.
-     *
      */
     bool IsMacAckFlagSet(void) const { return mMacAck; }
 
@@ -245,8 +228,7 @@ private:
 };
 
 /**
- * This enumeration type represent Enhanced-ACK Flags.
- *
+ * Type represent Enhanced-ACK Flags.
  */
 enum EnhAckFlags : uint8_t
 {
@@ -255,15 +237,14 @@ enum EnhAckFlags : uint8_t
 };
 
 /**
- * This class represents one Series that is being tracked by the Subject.
+ * Represents one Series that is being tracked by the Subject.
  *
  * When an Initiator successfully configured a Forward Tracking Series, the Subject would use an instance of this class
  * to track the information of the Series. The Subject has a `Pool` of `SeriesInfo`. It would allocate one when a new
  * Series comes, and free it when a Series finishes.
  *
- * This class inherits `LinkedListEntry` and each `Neighbor` has a list of `SeriesInfo` so that the Subject could track
+ * Inherits `LinkedListEntry` and each `Neighbor` has a list of `SeriesInfo` so that the Subject could track
  * per Series initiated by neighbors as long as it has available resources.
- *
  */
 class SeriesInfo : public LinkedListEntry<SeriesInfo>
 {
@@ -275,67 +256,59 @@ public:
      * This constant represents Link Probe when filtering frames to be accounted using Series Flag. There's
      * already `Mac::Frame::kTypeData`, `Mac::Frame::kTypeAck` and `Mac::Frame::kTypeMacCmd`. This item is
      * added so that we can filter a Link Probe for series in the same way as other frames.
-     *
      */
     static constexpr uint8_t kSeriesTypeLinkProbe = 0;
 
     /**
-     * This method initializes the SeriesInfo object.
+     * Initializes the SeriesInfo object.
      *
      * @param[in]  aSeriesId          The Series ID.
      * @param[in]  aSeriesFlagsMask   The Series Flags bitmask which specify what types of frames are to be accounted.
      * @param[in]  aMetrics           Metrics to query.
-     *
      */
     void Init(uint8_t aSeriesId, uint8_t aSeriesFlagsMask, const Metrics &aMetrics);
 
     /**
-     * This method gets the Series ID.
+     * Gets the Series ID.
      *
      * @returns  The Series ID.
-     *
      */
     uint8_t GetSeriesId(void) const { return mSeriesId; }
 
     /**
-     * This method gets the PDU count.
+     * Gets the PDU count.
      *
      * @returns  The PDU count.
-     *
      */
     uint32_t GetPduCount(void) const { return mPduCount; }
 
     /**
-     * This method gets the average LQI.
+     * Gets the average LQI.
      *
      * @returns  The average LQI.
-     *
      */
     uint8_t GetAverageLqi(void) const { return mLqiAverager.GetAverage(); }
 
     /**
-     * This method gets the average RSS.
+     * Gets the average RSS.
      *
      * @returns  The average RSS.
-     *
      */
     int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
 
     /**
-     * This method aggregates the Link Metrics data of a frame into this series.
+     * Aggregates the Link Metrics data of a frame into this series.
      *
      * @param[in]  aFrameType    The type of the frame.
      * @param[in]  aLqi          The LQI value.
      * @param[in]  aRss          The RSS value.
-     *
      */
     void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
 
     /**
-     * This methods gets the metrics.
+     * Gets the metrics.
      *
      * @returns  The metrics associated with `SeriesInfo`.
-     *
      */
     const Metrics &GetLinkMetrics(void) const { return mMetrics; }
 
@@ -353,8 +326,7 @@ private:
 };
 
 /**
- * This enumeration type represents Link Metrics Status.
- *
+ * Type represents Link Metrics Status.
  */
 enum Status : uint8_t
 {
@@ -378,4 +350,4 @@ DefineMapEnum(otLinkMetricsStatus, LinkMetrics::Status);
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-#endif // LINK_METRICS_TYPES_HPP_
+#endif // OT_CORE_THREAD_LINK_METRICS_TYPES_HPP_

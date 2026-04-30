@@ -31,8 +31,8 @@
  *  This file provides a generic binary search and related helper functions.
  */
 
-#ifndef BINARY_SEARCH_HPP_
-#define BINARY_SEARCH_HPP_
+#ifndef OT_CORE_COMMON_BINARY_SEARCH_HPP_
+#define OT_CORE_COMMON_BINARY_SEARCH_HPP_
 
 #include "openthread-core-config.h"
 
@@ -44,7 +44,7 @@ class BinarySearch
 {
 public:
     /**
-     * This template method performs binary search in a given sorted table array to find an entry matching a given key.
+     * Performs binary search in a given sorted table array to find an entry matching a given key.
      *
      * @note This method requires the array to be sorted, otherwise its behavior is undefined.
      *
@@ -67,7 +67,6 @@ public:
      * @param[in] aTable  A reference to an array of `kLength` entries of type `Entry`
      *
      * @returns A pointer to the entry in the table if a match is found, otherwise `nullptr` (no match in table).
-     *
      */
     template <typename Key, typename Entry, uint16_t kLength>
     static const Entry *Find(const Key &aKey, const Entry (&aTable)[kLength])
@@ -77,9 +76,9 @@ public:
     }
 
     /**
-     * This template method indicates whether a given table array is sorted based or not.
+     * Indicates whether a given table array is sorted based or not.
      *
-     * This method is `constexpr` and is intended for use in `static_assert`s to verify that a `constexpr` lookup table
+     * Is `constexpr` and is intended for use in `static_assert`s to verify that a `constexpr` lookup table
      * array is sorted. It is not recommended for use in other situations.
      *
      * @tparam Entry       The table entry type.
@@ -95,7 +94,6 @@ public:
      *
      * @retval TRUE   If the entries in @p aTable are sorted.
      * @retval FALSE  If the entries in @p aTable are not sorted.
-     *
      */
     template <typename Entry, uint16_t kLength> static constexpr bool IsSorted(const Entry (&aTable)[kLength])
     {
@@ -124,4 +122,4 @@ private:
 
 } // namespace ot
 
-#endif // BINARY_SEARCH_HPP_
+#endif // OT_CORE_COMMON_BINARY_SEARCH_HPP_

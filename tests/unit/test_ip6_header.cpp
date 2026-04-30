@@ -31,8 +31,6 @@
 
 #include "test_util.hpp"
 
-using ot::Encoding::BigEndian::ReadUint16;
-
 namespace ot {
 namespace Ip6 {
 
@@ -97,7 +95,7 @@ void TestIp6Header(void)
 
     // Verify the offsets to different fields.
 
-    VerifyOrQuit(ReadUint16(headerBytes + Header::kPayloadLengthFieldOffset) == kPayloadLength,
+    VerifyOrQuit(BigEndian::ReadUint16(headerBytes + Header::kPayloadLengthFieldOffset) == kPayloadLength,
                  "kPayloadLengthFieldOffset is incorrect");
     VerifyOrQuit(headerBytes[Header::kNextHeaderFieldOffset] == kProtoUdp, "kNextHeaderFieldOffset is incorrect");
     VerifyOrQuit(headerBytes[Header::kHopLimitFieldOffset] == kHopLimit, "kHopLimitFieldOffset is incorrect");

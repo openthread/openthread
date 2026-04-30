@@ -35,8 +35,7 @@
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -52,13 +51,13 @@ Leader::Leader(Instance &aInstance)
 void Leader::Reset(void)
 {
     // Invalid server short address indicates no available Backbone Router service in the Thread Network.
-    mConfig.mServer16 = Mac::kShortAddrInvalid;
+    mConfig.mServer16 = Mle::kInvalidRloc16;
 
     // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
     mDomainPrefix.SetLength(0);
 }
 
-Error Leader::GetConfig(BackboneRouterConfig &aConfig) const
+Error Leader::GetConfig(Config &aConfig) const
 {
     Error error = kErrorNone;
 
@@ -75,8 +74,7 @@ Error Leader::GetServiceId(uint8_t &aServiceId) const
     Error error = kErrorNone;
 
     VerifyOrExit(HasPrimary(), error = kErrorNotFound);
-    error = Get<NetworkData::Service::Manager>().GetServiceId<NetworkData::Service::BackboneRouter>(
-        /* aServerStable */ true, aServiceId);
+    error = Get<NetworkData::Service::Manager>().GetBackboneRouterServiceId(aServiceId);
 
 exit:
     return error;
@@ -84,7 +82,7 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
+void Leader::LogBackboneRouterPrimary(State aState, const Config &aConfig) const
 {
     OT_UNUSED_VARIABLE(aConfig);
 
@@ -97,74 +95,59 @@ void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &
     }
 }
 
-void Leader::LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const
-{
-    LogInfo("Domain Prefix: %s, state: %s", aPrefix.ToString().AsCString(), DomainPrefixStateToString(aState));
-}
-
 const char *Leader::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "None",            //  (0) kStateNone
-        "Added",           //  (1) kStateAdded
-        "Removed",         //  (2) kStateRemoved
-        "Rereg triggered", //  (3) kStateToTriggerRereg
-        "Refreshed",       //  (4) kStateRefreshed
-        "Unchanged",       //  (5) kStateUnchanged
-    };
+#define StateMapList(_)                        \
+    _(kStateNone, "None")                      \
+    _(kStateAdded, "Added")                    \
+    _(kStateRemoved, "Removed")                \
+    _(kStateToTriggerRereg, "Rereg triggered") \
+    _(kStateRefreshed, "Refreshed")            \
+    _(kStateUnchanged, "Unchanged")
 
-    static_assert(0 == kStateNone, "kStateNone value is incorrect");
-    static_assert(1 == kStateAdded, "kStateAdded value is incorrect");
-    static_assert(2 == kStateRemoved, "kStateRemoved value is incorrect");
-    static_assert(3 == kStateToTriggerRereg, "kStateToTriggerRereg value is incorrect");
-    static_assert(4 == kStateRefreshed, "kStateRefreshed value is incorrect");
-    static_assert(5 == kStateUnchanged, "kStateUnchanged value is incorrect");
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
-const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
+const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
 {
-    static const char *const kPrefixStateStrings[] = {
-        "None",      // (0) kDomainPrefixNone
-        "Added",     // (1) kDomainPrefixAdded
-        "Removed",   // (2) kDomainPrefixRemoved
-        "Refreshed", // (3) kDomainPrefixRefreshed
-        "Unchanged", // (4) kDomainPrefixUnchanged
-    };
+#define DomainPrefixEventMapList(_)        \
+    _(kDomainPrefixAdded, "Added")         \
+    _(kDomainPrefixRemoved, "Removed")     \
+    _(kDomainPrefixRefreshed, "Refreshed") \
+    _(kDomainPrefixUnchanged, "Unchanged")
 
-    static_assert(0 == kDomainPrefixNone, "kDomainPrefixNone value is incorrect");
-    static_assert(1 == kDomainPrefixAdded, "kDomainPrefixAdded value is incorrect");
-    static_assert(2 == kDomainPrefixRemoved, "kDomainPrefixRemoved value is incorrect");
-    static_assert(3 == kDomainPrefixRefreshed, "kDomainPrefixRefreshed value is incorrect");
-    static_assert(4 == kDomainPrefixUnchanged, "kDomainPrefixUnchanged value is incorrect");
+    DefineEnumStringArray(DomainPrefixEventMapList);
 
-    return kPrefixStateStrings[aState];
+    return kStrings[aEvent];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void Leader::Update(void)
+void Leader::HandleNotifierEvents(Events aEvents)
 {
-    UpdateBackboneRouterPrimary();
-    UpdateDomainPrefixConfig();
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged))
+    {
+        UpdateBackboneRouterPrimary();
+        UpdateDomainPrefixConfig();
+    }
 }
 
 void Leader::UpdateBackboneRouterPrimary(void)
 {
-    BackboneRouterConfig config;
-    State                state;
-    uint32_t             origMlrTimeout;
+    Config config;
+    State  state;
 
     Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config);
 
     if (config.mServer16 != mConfig.mServer16)
     {
-        if (config.mServer16 == Mac::kShortAddrInvalid)
+        if (config.mServer16 == Mle::kInvalidRloc16)
         {
             state = kStateRemoved;
         }
-        else if (mConfig.mServer16 == Mac::kShortAddrInvalid)
+        else if (mConfig.mServer16 == Mle::kInvalidRloc16)
         {
             state = kStateAdded;
         }
@@ -174,7 +157,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
             state = kStateToTriggerRereg;
         }
     }
-    else if (config.mServer16 == Mac::kShortAddrInvalid)
+    else if (config.mServer16 == Mle::kInvalidRloc16)
     {
         // If no Primary all the time.
         state = kStateNone;
@@ -193,19 +176,15 @@ void Leader::UpdateBackboneRouterPrimary(void)
     }
 
     // Restrain the range of MLR timeout to be always valid
-    if (config.mServer16 != Mac::kShortAddrInvalid)
+    if (config.mServer16 != Mle::kInvalidRloc16)
     {
-        origMlrTimeout     = config.mMlrTimeout;
-        config.mMlrTimeout = config.mMlrTimeout < static_cast<uint32_t>(Mle::kMlrTimeoutMin)
-                                 ? static_cast<uint32_t>(Mle::kMlrTimeoutMin)
-                                 : config.mMlrTimeout;
-        config.mMlrTimeout = config.mMlrTimeout > static_cast<uint32_t>(Mle::kMlrTimeoutMax)
-                                 ? static_cast<uint32_t>(Mle::kMlrTimeoutMax)
-                                 : config.mMlrTimeout;
+        uint32_t origTimeout = config.mMlrTimeout;
 
-        if (config.mMlrTimeout != origMlrTimeout)
+        config.mMlrTimeout = Clamp(config.mMlrTimeout, kMinMlrTimeout, kMaxMlrTimeout);
+
+        if (config.mMlrTimeout != origTimeout)
         {
-            LogNote("Leader MLR Timeout is normalized from %lu to %lu", ToUlong(origMlrTimeout),
+            LogNote("Leader MLR Timeout is normalized from %lu to %lu", ToUlong(origTimeout),
                     ToUlong(config.mMlrTimeout));
         }
     }
@@ -229,13 +208,13 @@ void Leader::UpdateBackboneRouterPrimary(void)
 void Leader::UpdateDomainPrefixConfig(void)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig config;
-    DomainPrefixState               state;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    DomainPrefixEvent               event;
     bool                            found = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
-        if (config.mDp)
+        if (prefixConfig.mDp)
         {
             found = true;
             break;
@@ -244,47 +223,39 @@ void Leader::UpdateDomainPrefixConfig(void)
 
     if (!found)
     {
-        if (mDomainPrefix.GetLength() != 0)
-        {
-            // Domain Prefix does not exist any more.
-            mDomainPrefix.SetLength(0);
-            state = kDomainPrefixRemoved;
-        }
-        else
-        {
-            state = kDomainPrefixNone;
-        }
+        VerifyOrExit(HasDomainPrefix());
+
+        // Domain Prefix does not exist any more.
+        mDomainPrefix.Clear();
+        event = kDomainPrefixRemoved;
     }
-    else if (config.GetPrefix() == mDomainPrefix)
+    else if (prefixConfig.GetPrefix() == mDomainPrefix)
     {
-        state = kDomainPrefixUnchanged;
+        event = kDomainPrefixUnchanged;
     }
     else
     {
-        if (mDomainPrefix.mLength == 0)
-        {
-            state = kDomainPrefixAdded;
-        }
-        else
-        {
-            state = kDomainPrefixRefreshed;
-        }
-
-        mDomainPrefix = config.GetPrefix();
+        event         = HasDomainPrefix() ? kDomainPrefixRefreshed : kDomainPrefixAdded;
+        mDomainPrefix = prefixConfig.GetPrefix();
     }
 
-    LogDomainPrefix(state, mDomainPrefix);
+    LogInfo("%s domain Prefix: %s", DomainPrefixEventToString(event), mDomainPrefix.ToString().AsCString());
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<Local>().HandleDomainPrefixUpdate(state);
+    Get<Local>().HandleDomainPrefixUpdate(event);
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    Get<NdProxyTable>().HandleDomainPrefixUpdate(state);
+    Get<NdProxyTable>().HandleDomainPrefixUpdate(event);
 #endif
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleDomainPrefixUpdate(state);
+    Get<DuaManager>().HandleDomainPrefixUpdate(event);
+#else
+    OT_UNUSED_VARIABLE(event);
 #endif
+
+exit:
+    return;
 }
 
 bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const

@@ -87,6 +87,9 @@ coaps response sent
 - [delete](#delete-uri-path-type-payload)
 - [disconnect](#disconnect)
 - [get](#get-uri-path-type)
+- [isclosed](#isclosed)
+- [isconnactive](#isconnactive)
+- [isconnected](#isconnected)
 - [post](#post-uri-path-type-payload)
 - [psk](#psk-psk-pskid)
 - [put](#put-uri-path-type-payload)
@@ -102,11 +105,13 @@ coaps response sent
 
 ```bash
 > coaps help
-help
 connect
 delete
 disconnect
 get
+isclosed
+isconnactive
+isconnected
 post
 psk
 put
@@ -231,11 +236,16 @@ Sets the content sent by the test resource.
 Done
 ```
 
-### start
+### start \[check-peer-cert\|max-conn-attempts\]
 
 Starts the application coaps service.
 
-- checkPeerCert: Peer Certificate Check can be disabled by typing false.
+The `check-peer-cert` parameter determines if the peer-certificate check is enabled (default) or disabled. The `max-conn-attempts` parameter sets the maximum number of allowed attempts, successful or failed, to connect to the CoAP Secure server. The default value of this parameter is 0, which means that there is no limit to the number of attempts. The `check-peer-cert` and `max-conn-attempts` parameters work together in the following combinations, even though you can only specify one argument:
+
+- No argument specified: Defaults are used.
+- Setting `check-peer-cert` to `true`: Has the same effect as as omitting the argument, which is that the `check-peer-cert` value is `true`, and the `max-conn-attempts` value is 0.
+- Setting `check-peer-cert` to `false`: `check-peer-cert` value is `false`, and the `max-conn-attempts` value is `0`.
+- Specifying a number: `check-peer-cert` is `true`, and the `max-conn-attempts` value is the number specified in the argument.
 
 ```bash
 > coaps start
@@ -248,6 +258,36 @@ Stops the application coaps service.
 
 ```bash
 > coaps stop
+Done
+```
+
+### isconnected
+
+Indicates whether or not the CoAP secure service is connected.
+
+```bash
+> coaps isconnected
+yes
+Done
+```
+
+### isconnactive
+
+Indicates whether or not the CoAP secure service connection is active (already connected or establishing a connection).
+
+```bash
+> coaps isconnactive
+yes
+Done
+```
+
+### isclosed
+
+Indicates whether or not the CoAP secure service is closed.
+
+```bash
+> coaps isclosed
+no
 Done
 ```
 

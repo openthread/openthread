@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 Neighbor Discovery Agent.
  */
 
-#ifndef NEIGHBOR_DISCOVERY_AGENT_HPP_
-#define NEIGHBOR_DISCOVERY_AGENT_HPP_
+#ifndef OT_CORE_NET_ND_AGENT_HPP_
+#define OT_CORE_NET_ND_AGENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -40,6 +40,7 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "net/netif.hpp"
 
 namespace ot {
@@ -47,12 +48,13 @@ namespace NeighborDiscovery {
 
 class Agent : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Agent(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -60,21 +62,12 @@ public:
         FreeAloc();
     }
 
-    /**
-     * This method updates the Neighbor Discovery Agents using current Thread Network Data.
-     *
-     */
-    void UpdateService(void);
-
-    /**
-     * This method updates the prefix of the Neighbor Discovery Agent Anycast Locator.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
-
 private:
     void FreeAloc(void) { mAloc.mNext = &mAloc; }
     bool IsAlocInUse(void) const { return mAloc.mNext != &mAloc; }
+
+    void HandleNotifierEvents(Events aEvents);
+    void UpdateService(void);
 
     Ip6::Netif::UnicastAddress mAloc;
 };
@@ -84,4 +77,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
 
-#endif // NEIGHBOR_DISCOVERY_AGENT_HPP_
+#endif // OT_CORE_NET_ND_AGENT_HPP_

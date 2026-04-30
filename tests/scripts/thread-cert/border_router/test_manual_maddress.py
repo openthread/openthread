@@ -86,11 +86,12 @@ class ManualMulticastAddressConfig(thread_cert.TestCase):
 
         # TD registers for multicast address, MA1, at BR_1.
         td.add_ipmaddr_tun(MA1)
-        self.simulator.go(5)
+        self.simulator.go(10)
 
         # Host sends a ping packet to the multicast address, MA1. TD should
         # respond to the ping request.
-        host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
+        self.assertTrue(
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
     def verify(self, pv: pktverify.packet_verifier.PacketVerifier):
@@ -108,8 +109,7 @@ class ManualMulticastAddressConfig(thread_cert.TestCase):
         # packet back to Host.
         # TD receives the MPL packet containing an encapsulated ping packet to
         # MA1, sent by Host, and unicasts a ping response packet back to Host.
-        pkts.filter_eth_src(vars['TD_ETH']) \
-            .filter_ipv6_dst(_pkt.ipv6.src) \
+        pkts.filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 

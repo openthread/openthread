@@ -29,34 +29,230 @@
 /**
  * @file
  *   This file implements function for managing Thread Network Data service/server entries.
- *
  */
 
 #include "network_data_service.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "thread/network_data_local.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace NetworkData {
 namespace Service {
 
-// Definitions of static const class member variables to allow ODR-use
-// (One Definition Rule), e.g., to get address of `kServiceData`.
+//----------------------------------------------------------------------------------------------------------------------
+// Iterator
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-const uint8_t BackboneRouter::kServiceData;
-#endif
-const uint8_t DnsSrpAnycast::kServiceData;
-const uint8_t DnsSrpUnicast::kServiceData;
+Iterator::Iterator(Instance &aInstance)
+    : Iterator(aInstance, aInstance.Get<Leader>())
+{
+}
+
+Iterator::Iterator(Instance &aInstance, const NetworkData &aNetworkData)
+    : InstanceLocator(aInstance)
+    , mNetworkData(aNetworkData)
+    , mServiceTlv(nullptr)
+    , mServerSubTlv(nullptr)
+{
+}
+
+void Iterator::Reset(void)
+{
+    mServiceTlv   = nullptr;
+    mServerSubTlv = nullptr;
+}
+
+Error Iterator::GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo)
+{
+    Error   error         = kErrorNone;
+    uint8_t serviceNumber = Manager::kDnsSrpAnycastServiceNumber;
+
+    aInfo.Clear();
+
+    do
+    {
+        ServiceData serviceData;
+
+        // Process the next Server sub-TLV in the current Service TLV.
+
+        if (AdvanceToNextServer() == kErrorNone)
+        {
+            uint8_t dataLength = mServiceTlv->GetServiceDataLength();
+
+            if (dataLength >= sizeof(Manager::DnsSrpAnycastServiceData))
+            {
+                const Manager::DnsSrpAnycastServiceData *anycastData =
+                    reinterpret_cast<const Manager::DnsSrpAnycastServiceData *>(mServiceTlv->GetServiceData());
+
+                Get<Mle::Mle>().GetServiceAloc(mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
+                aInfo.mSequenceNumber = anycastData->GetSequenceNumber();
+                aInfo.mRloc16         = mServerSubTlv->GetServer16();
+                aInfo.mVersion =
+                    (mServerSubTlv->GetServerDataLength() >= sizeof(uint8_t)) ? *mServerSubTlv->GetServerData() : 0;
+                ExitNow();
+            }
+        }
+
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(serviceNumber);
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
+
+        // If we have a valid Service TLV, restart the loop
+        // to process its Server sub-TLVs.
+
+    } while (mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastInfo &aInfo)
+{
+    Error   error         = kErrorNone;
+    uint8_t serviceNumber = Manager::kDnsSrpUnicastServiceNumber;
+
+    aInfo.Clear();
+
+    do
+    {
+        ServiceData serviceData;
+
+        // Process Server sub-TLVs in the current Service TLV.
+
+        while (AdvanceToNextServer() == kErrorNone)
+        {
+            aInfo.mRloc16 = mServerSubTlv->GetServer16();
+
+            if (aType == kAddrInServiceData)
+            {
+                if (Manager::DnsSrpUnicast::ServiceData::ParseFrom(*mServiceTlv, aInfo) == kErrorNone)
+                {
+                    ExitNow();
+                }
+
+                // If Service Data does not contain address info, we
+                // break from `while (IterateToNextServer())` loop
+                // to skip over the entire Service TLV and all its
+                // sub-TLVs and go to the next one.
+
+                break;
+            }
+
+            // `aType` is `kAddrInServerData`.
+
+            // Server sub-TLV can contain address and port info
+            // (then we parse and return the info), or it can be
+            // empty (then we skip over it).
+
+            if (Manager::DnsSrpUnicast::ServerData::ParseFrom(*mServerSubTlv, aInfo) == kErrorNone)
+            {
+                ExitNow();
+            }
+
+            if (mServerSubTlv->GetServerDataLength() == sizeof(uint16_t))
+            {
+                // Handle the case where the server TLV data only
+                // contains a port number and use the RLOC as the
+                // IPv6 address.
+
+                aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
+                                                                 mServerSubTlv->GetServer16());
+                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(mServerSubTlv->GetServerData()));
+                aInfo.mVersion = 0;
+                ExitNow();
+            }
+        }
+
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(serviceNumber);
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
+
+        // If we have a valid Service TLV, restart the loop
+        // to process its Server sub-TLVs.
+
+    } while (mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
+Error Iterator::GetNextBorderAdmitterInfo(uint16_t &aRloc16)
+{
+    Error   error         = kErrorNone;
+    uint8_t serviceNumber = Manager::kBorderAdmitterServiceNumber;
+    do
+    {
+        ServiceData serviceData;
+
+        // Process the next Server sub-TLV within the current Service TLV.
+
+        if (AdvanceToNextServer() == kErrorNone)
+        {
+            aRloc16 = mServerSubTlv->GetServer16();
+            ExitNow();
+        }
+
+        // Find the next matching Service TLV.
+
+        serviceData.InitFrom(serviceNumber);
+        mServiceTlv   = mNetworkData.FindNextThreadService(mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
+        mServerSubTlv = nullptr;
+
+    } while (mServiceTlv != nullptr);
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+
+Error Iterator::AdvanceToNextServer(void)
+{
+    Error                 error = kErrorNotFound;
+    const NetworkDataTlv *start;
+    const NetworkDataTlv *end;
+
+    VerifyOrExit(mServiceTlv != nullptr);
+
+    start = (mServerSubTlv != nullptr) ? mServerSubTlv->GetNext() : mServiceTlv->GetSubTlvs();
+    end   = mServiceTlv->GetNext();
+
+    mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(start, end);
+
+    if (mServerSubTlv != nullptr)
+    {
+        error = kErrorNone;
+    }
+
+exit:
+    return error;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Manager
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
+Error Manager::AddDnsSrpAnycastService(uint8_t aSequenceNumber, uint8_t aVersion)
+{
+    DnsSrpAnycastServiceData anycastData(aSequenceNumber);
+
+    return (aVersion == 0) ? AddService(anycastData) : AddService(anycastData, aVersion);
+}
+
 Error Manager::AddService(const void *aServiceData,
                           uint8_t     aServiceDataLength,
-                          bool        aServerStable,
                           const void *aServerData,
                           uint8_t     aServerDataLength)
 {
@@ -66,7 +262,7 @@ Error Manager::AddService(const void *aServiceData,
     serviceData.Init(aServiceData, aServiceDataLength);
     serverData.Init(aServerData, aServerDataLength);
 
-    return Get<Local>().AddService(kThreadEnterpriseNumber, serviceData, aServerStable, serverData);
+    return Get<Local>().AddService(kThreadEnterpriseNumber, serviceData, /* aServerStable */ true, serverData);
 }
 
 Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLength)
@@ -78,53 +274,136 @@ Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLengt
     return Get<Local>().RemoveService(kThreadEnterpriseNumber, serviceData);
 }
 
+void Manager::HandleNotifierEvents(Events aEvents)
+{
+    ot::NetworkData::Iterator iterator;
+    ServiceConfig             service;
+    uint16_t                  deviceRloc16;
+
+    VerifyOrExit(aEvents.Contains(kEventThreadNetdataChanged));
+
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled());
+
+    deviceRloc16 = Get<Mle::Mle>().GetRloc16();
+
+    // First remove all ALOCs which are no longer in the Network
+    // Data to free up space in `mServiceAlocs` array.
+
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
+    {
+        bool found = false;
+
+        if (!serviceAloc.IsInUse())
+        {
+            continue;
+        }
+
+        iterator = kIteratorInit;
+
+        while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
+        {
+            if (service.mServiceId == Mle::Aloc16::ToServiceId(serviceAloc.GetAloc16()))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
+            serviceAloc.MarkAsNotInUse();
+        }
+    }
+
+    // Now add any new ALOCs if there is space in `mServiceAlocs`.
+
+    iterator = kIteratorInit;
+
+    while (Get<Leader>().GetNext(iterator, deviceRloc16, service) == kErrorNone)
+    {
+        uint16_t aloc16 = Mle::Aloc16::FromServiceId(service.mServiceId);
+
+        if (FindInServiceAlocs(aloc16) == nullptr)
+        {
+            // No matching ALOC in `mServiceAlocs`, so we try to add it.
+            ServiceAloc *newServiceAloc = FindInServiceAlocs(ServiceAloc::kNotInUse);
+
+            VerifyOrExit(newServiceAloc != nullptr);
+            newServiceAloc->SetAloc16(aloc16);
+            Get<ThreadNetif>().AddUnicastAddress(*newServiceAloc);
+        }
+    }
+
+exit:
+    return;
+}
+
+Manager::ServiceAloc *Manager::FindInServiceAlocs(uint16_t aAloc16)
+{
+    // Search in `mServiceAlocs` for an entry matching `aAloc16`.
+    // Can be used with `aAloc16 = ServiceAloc::kNotInUse` to find
+    // an unused entry in the array.
+
+    ServiceAloc *match = nullptr;
+
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
+    {
+        if (serviceAloc.GetAloc16() == aAloc16)
+        {
+            match = &serviceAloc;
+            break;
+        }
+    }
+
+    return match;
+}
+
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-Error Manager::GetServiceId(const void *aServiceData,
-                            uint8_t     aServiceDataLength,
-                            bool        aServerStable,
-                            uint8_t    &aServiceId) const
+Error Manager::GetServiceId(uint8_t aServiceNumber, uint8_t &aServiceId) const
 {
     ServiceData serviceData;
 
-    serviceData.Init(aServiceData, aServiceDataLength);
+    serviceData.InitFrom(aServiceNumber);
 
-    return Get<Leader>().GetServiceId(kThreadEnterpriseNumber, serviceData, aServerStable, aServiceId);
+    return Get<Leader>().GetServiceId(kThreadEnterpriseNumber, serviceData, /* aServerStable */ true, aServiceId);
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const
+void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) const
 {
-    const ServerTlv                  *rvalServerTlv  = nullptr;
-    const BackboneRouter::ServerData *rvalServerData = nullptr;
-    const ServiceTlv                 *serviceTlv     = nullptr;
-    ServiceData                       serviceData;
+    const ServerTlv     *rvalServerTlv    = nullptr;
+    const BbrServerData *rvalServerData   = nullptr;
+    const ServiceTlv    *serviceTlv       = nullptr;
+    uint8_t              bbrServiceNumber = kBackboneRouterServiceNumber;
+    ServiceData          serviceData;
 
-    serviceData.Init(&BackboneRouter::kServiceData, BackboneRouter::kServiceDataMinSize);
+    serviceData.InitFrom(bbrServiceNumber);
 
-    aConfig.mServer16 = Mac::kShortAddrInvalid;
+    aConfig.mServer16 = Mle::kInvalidRloc16;
 
     while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, serviceData,
                                                              NetworkData::kServicePrefixMatch)) != nullptr)
     {
-        Iterator iterator;
+        Iterator iterator(GetInstance());
 
         iterator.mServiceTlv = serviceTlv;
 
-        while (IterateToNextServer(iterator) == kErrorNone)
+        while (iterator.AdvanceToNextServer() == kErrorNone)
         {
-            ServerData                        data;
-            const BackboneRouter::ServerData *serverData;
+            ServerData           data;
+            const BbrServerData *serverData;
 
             iterator.mServerSubTlv->GetServerData(data);
 
-            if (data.GetLength() < sizeof(BackboneRouter::ServerData))
+            if (data.GetLength() < sizeof(BbrServerData))
             {
                 continue;
             }
 
-            serverData = reinterpret_cast<const BackboneRouter::ServerData *>(data.GetBytes());
+            serverData = reinterpret_cast<const BbrServerData *>(data.GetBytes());
 
             if (rvalServerTlv == nullptr ||
                 IsBackboneRouterPreferredTo(*iterator.mServerSubTlv, *serverData, *rvalServerTlv, *rvalServerData))
@@ -146,13 +425,13 @@ exit:
     return;
 }
 
-bool Manager::IsBackboneRouterPreferredTo(const ServerTlv                  &aServerTlv,
-                                          const BackboneRouter::ServerData &aServerData,
-                                          const ServerTlv                  &aOtherServerTlv,
-                                          const BackboneRouter::ServerData &aOtherServerData) const
+bool Manager::IsBackboneRouterPreferredTo(const ServerTlv     &aServerTlv,
+                                          const BbrServerData &aServerData,
+                                          const ServerTlv     &aOtherServerTlv,
+                                          const BbrServerData &aOtherServerData) const
 {
     bool     isPreferred;
-    uint16_t leaderRloc16 = Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
+    uint16_t leaderRloc16 = Get<Mle::Mle>().GetLeaderRloc16();
 
     VerifyOrExit(aServerTlv.GetServer16() != leaderRloc16, isPreferred = true);
     VerifyOrExit(aOtherServerTlv.GetServer16() != leaderRloc16, isPreferred = false);
@@ -166,46 +445,21 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info &aInfo) const
+Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo) const
 {
-    Error             error = kErrorNone;
-    ServiceData       serviceData;
-    const ServiceTlv *tlv = aIterator.mServiceTlv;
+    Error             error = kErrorNotFound;
+    Iterator          iterator(GetInstance());
+    DnsSrpAnycastInfo info;
+    DnsSrpAnycastInfo maxNumericalSeqNumInfo;
 
-    serviceData.InitFrom(DnsSrpAnycast::kServiceData);
-
-    do
-    {
-        tlv = Get<Leader>().FindNextThreadService(tlv, serviceData, NetworkData::kServicePrefixMatch);
-        VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
-
-    } while (tlv->GetServiceDataLength() < sizeof(DnsSrpAnycast::ServiceData));
-
-    tlv->GetServiceData(serviceData);
-    aInfo.mAnycastAddress.SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                              Mle::ServiceAlocFromId(tlv->GetServiceId()));
-    aInfo.mSequenceNumber =
-        reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes())->GetSequenceNumber();
-
-    aIterator.mServiceTlv = tlv;
-
-exit:
-    return error;
-}
-
-Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycast::Info &aInfo) const
-{
-    Error               error = kErrorNotFound;
-    Iterator            iterator;
-    DnsSrpAnycast::Info info;
-    DnsSrpAnycast::Info maxNumericalSeqNumInfo;
+    aInfo.Clear();
 
     // Determine the entry with largest seq number in two ways:
     // `aInfo` will track the largest using serial number arithmetic
     // comparison, while `maxNumericalSeqNumInfo` tracks the largest
     // using normal numerical comparison.
 
-    while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
+    while (iterator.GetNextDnsSrpAnycastInfo(info) == kErrorNone)
     {
         if (error == kErrorNotFound)
         {
@@ -234,7 +488,7 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycast::Info &aInfo) const
 
     iterator.Reset();
 
-    while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
+    while (iterator.GetNextDnsSrpAnycastInfo(info) == kErrorNone)
     {
         constexpr uint8_t kMidValue = (NumericLimits<uint8_t>::kMax / 2) + 1;
         uint8_t           seqNumber = info.mSequenceNumber;
@@ -255,106 +509,53 @@ Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycast::Info &aInfo) const
         }
     }
 
-exit:
-    return error;
-}
+    // Determine the minimum version supported among all entries
+    // matching the selected `aInfo.mSequenceNumber`.
 
-Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info &aInfo) const
-{
-    Error       error = kErrorNone;
-    ServiceData serviceData;
+    iterator.Reset();
 
-    serviceData.InitFrom(DnsSrpUnicast::kServiceData);
-
-    while (true)
+    while (iterator.GetNextDnsSrpAnycastInfo(info) == kErrorNone)
     {
-        // Process Server sub-TLVs in the current Service TLV.
-
-        while (IterateToNextServer(aIterator) == kErrorNone)
+        if (info.mSequenceNumber == aInfo.mSequenceNumber)
         {
-            ServerData data;
-
-            // Server sub-TLV can contain address and port info
-            // (then we parse and return the info), or it can be
-            // empty (then we skip over it).
-
-            aIterator.mServerSubTlv->GetServerData(data);
-
-            if (data.GetLength() >= sizeof(DnsSrpUnicast::ServerData))
-            {
-                const DnsSrpUnicast::ServerData *serverData =
-                    reinterpret_cast<const DnsSrpUnicast::ServerData *>(data.GetBytes());
-
-                aInfo.mSockAddr.SetAddress(serverData->GetAddress());
-                aInfo.mSockAddr.SetPort(serverData->GetPort());
-                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
-                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
-                ExitNow();
-            }
-
-            if (data.GetLength() == sizeof(uint16_t))
-            {
-                // Handle the case where the server TLV data only
-                // contains a port number and use the RLOC as the
-                // IPv6 address.
-                aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                                 aIterator.mServerSubTlv->GetServer16());
-                aInfo.mSockAddr.SetPort(Encoding::BigEndian::ReadUint16(data.GetBytes()));
-                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
-                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
-                ExitNow();
-            }
+            aInfo.mVersion = Min(aInfo.mVersion, info.mVersion);
         }
-
-        // Find the next matching Service TLV.
-
-        aIterator.mServiceTlv =
-            Get<Leader>().FindNextThreadService(aIterator.mServiceTlv, serviceData, NetworkData::kServicePrefixMatch);
-
-        VerifyOrExit(aIterator.mServiceTlv != nullptr, error = kErrorNotFound);
-
-        if (aIterator.mServiceTlv->GetServiceDataLength() >= sizeof(DnsSrpUnicast::ServiceData))
-        {
-            // The Service TLV data contains the address and port info.
-
-            const DnsSrpUnicast::ServiceData *dnsServiceData;
-
-            aIterator.mServiceTlv->GetServiceData(serviceData);
-            dnsServiceData = reinterpret_cast<const DnsSrpUnicast::ServiceData *>(serviceData.GetBytes());
-            aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
-            aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
-            aInfo.mOrigin = DnsSrpUnicast::kFromServiceData;
-            aInfo.mRloc16 = Mle::kInvalidRloc16;
-            ExitNow();
-        }
-
-        // Go back to the start of `while (true)` loop to
-        // process the Server sub-TLVs in the new Service TLV.
     }
 
 exit:
     return error;
 }
 
-Error Manager::IterateToNextServer(Iterator &aIterator) const
+//----------------------------------------------------------------------------------------------------------------------
+// Manager::DnsSrpUnicast::AddrData
+
+Error Manager::DnsSrpUnicast::AddrData::ParseFrom(const uint8_t *aData, uint8_t aLength, DnsSrpUnicastInfo &aInfo)
 {
-    Error error = kErrorNotFound;
+    Error           error    = kErrorNone;
+    const AddrData *addrData = reinterpret_cast<const AddrData *>(aData);
 
-    VerifyOrExit(aIterator.mServiceTlv != nullptr);
+    VerifyOrExit(aLength >= kMinLength, error = kErrorParse);
 
-    aIterator.mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(
-        /* aStart */ (aIterator.mServerSubTlv != nullptr) ? aIterator.mServerSubTlv->GetNext()
-                                                          : aIterator.mServiceTlv->GetSubTlvs(),
-        /* aEnd */ aIterator.mServiceTlv->GetNext());
-
-    if (aIterator.mServerSubTlv != nullptr)
-    {
-        error = kErrorNone;
-    }
+    aInfo.mSockAddr.SetAddress(addrData->GetAddress());
+    aInfo.mSockAddr.SetPort(addrData->GetPort());
+    aInfo.mVersion = (aLength >= sizeof(AddrData)) ? addrData->GetVersion() : 0;
 
 exit:
     return error;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// Manager::ServiceAloc
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+Manager::ServiceAloc::ServiceAloc(void)
+{
+    InitAsThreadOriginMeshLocal();
+    GetAddress().GetIid().SetToLocator(kNotInUse);
+}
+
+#endif
 
 } // namespace Service
 } // namespace NetworkData

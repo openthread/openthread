@@ -173,7 +173,7 @@ wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
 slaac_addrs = [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Check recovery after reseting r1 and c1 (same SLAAC address to be added)
+# Check recovery after resetting r1 and c1 (same SLAAC address to be added)
 
 r1.reset()
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)

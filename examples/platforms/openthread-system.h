@@ -42,54 +42,49 @@ extern "C" {
 #endif
 
 /**
- * This function performs all platform-specific initialization of OpenThread's drivers.
+ * Performs all platform-specific initialization of OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when initialization of OpenThread's drivers is most appropriate.
  *
  * @param[in]  argc  Number of arguments in @p argv.
  * @param[in]  argv  Argument vector.
- *
  */
-void otSysInit(int argc, char *argv[]);
+void otSysInit(int aArgCount, char *aArgVector[]);
 
 /**
- * This function performs all platform-specific deinitialization for OpenThread's drivers.
+ * Performs all platform-specific deinitialization for OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when deinitialization of OpenThread's drivers is most appropriate.
- *
  */
 void otSysDeinit(void);
 
 /**
- * This function returns true if a pseudo-reset was requested.
+ * Returns true if a pseudo-reset was requested.
  *
  * In such a case, the main loop should shut down and re-initialize the OpenThread instance.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       in the main loop to determine when to shut down and re-initialize the OpenThread instance.
- *
  */
 bool otSysPseudoResetWasRequested(void);
 
 /**
- * This function performs all platform-specific processing for OpenThread's example applications.
+ * Performs all platform-specific processing for OpenThread's example applications.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       in the main loop when processing OpenThread's drivers is most appropriate.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- *
  */
 void otSysProcessDrivers(otInstance *aInstance);
 
 /**
- * This function is called whenever platform drivers needs processing.
+ * Is called whenever platform drivers needs processing.
  *
  * @note This function is not handled by the OpenThread library. Instead, the system/RTOS should handle this function
  *       and schedule a call to `otSysProcessDrivers()`.
- *
  */
 extern void otSysEventSignalPending(void);
 

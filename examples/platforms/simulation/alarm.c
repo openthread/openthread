@@ -51,13 +51,9 @@ timer_t sMicroTimer;
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/time.h>
 
 #include "lib/platform/exit_code.h"
-
-#define MS_PER_S 1000
-#define NS_PER_US 1000
-#define US_PER_MS 1000
-#define US_PER_S 1000000
 
 #define DEFAULT_TIMEOUT_IN_SEC 10 // seconds
 
@@ -118,7 +114,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
         if (sigaction(OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL, &sa, NULL) == -1)
         {
             perror("sigaction");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         struct sigevent sev;
@@ -130,7 +126,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
         if (-1 == timer_create(CLOCK_MONOTONIC, &sev, &sMicroTimer))
         {
             perror("timer_create");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
     }
 #endif
@@ -146,7 +142,7 @@ uint64_t platformGetNow(void)
 
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    return (uint64_t)now.tv_sec * sSpeedUpFactor * US_PER_S + (uint64_t)now.tv_nsec * sSpeedUpFactor / NS_PER_US;
+    return (uint64_t)now.tv_sec * sSpeedUpFactor * OT_US_PER_S + (uint64_t)now.tv_nsec * sSpeedUpFactor / OT_NS_PER_US;
 }
 #else
 uint64_t platformGetNow(void)
@@ -158,11 +154,11 @@ uint64_t platformGetNow(void)
 
     assert(err == 0);
 
-    return (uint64_t)tv.tv_sec * sSpeedUpFactor * US_PER_S + (uint64_t)tv.tv_usec * sSpeedUpFactor;
+    return (uint64_t)tv.tv_sec * sSpeedUpFactor * OT_US_PER_S + (uint64_t)tv.tv_usec * sSpeedUpFactor;
 }
 #endif // defined(CLOCK_MONOTONIC_RAW) || defined(CLOCK_MONOTONIC)
 
-uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(platformGetNow() / US_PER_MS); }
+uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(platformGetNow() / OT_US_PER_MS); }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
@@ -193,8 +189,8 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
         struct itimerspec its;
         uint32_t          diff = sUsAlarm - otPlatAlarmMicroGetNow();
 
-        its.it_value.tv_sec  = diff / US_PER_S;
-        its.it_value.tv_nsec = (diff % US_PER_S) * NS_PER_US;
+        its.it_value.tv_sec  = diff / OT_US_PER_S;
+        its.it_value.tv_nsec = (diff % OT_US_PER_S) * OT_NS_PER_US;
 
         its.it_interval.tv_sec  = 0;
         its.it_interval.tv_nsec = 0;
@@ -202,7 +198,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
         if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
         {
             perror("otPlatAlarmMicroStartAt timer_settime()");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
     }
 #endif // __linux__
@@ -221,7 +217,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
         if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
         {
             perror("otPlatAlarmMicroStop timer_settime()");
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
     }
 #endif // __linux__
@@ -229,7 +225,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    uint64_t remaining = DEFAULT_TIMEOUT_IN_SEC * US_PER_S; // in usec.
+    uint64_t remaining = DEFAULT_TIMEOUT_IN_SEC * OT_US_PER_S; // in usec.
 
     assert(aTimeout != NULL);
 
@@ -237,7 +233,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     {
         uint32_t msRemaining = calculateDuration(sMsAlarm, otPlatAlarmMilliGetNow());
 
-        remaining = ((uint64_t)msRemaining) * US_PER_MS;
+        remaining = ((uint64_t)msRemaining) * OT_US_PER_MS;
     }
 
     if (sIsUsRunning)
@@ -264,8 +260,8 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
-        aTimeout->tv_usec = remaining % US_PER_S;
+        aTimeout->tv_sec  = (time_t)(remaining / OT_US_PER_S);
+        aTimeout->tv_usec = remaining % OT_US_PER_S;
     }
 }
 

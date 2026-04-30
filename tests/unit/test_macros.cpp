@@ -30,6 +30,8 @@
 
 #include "common/arg_macros.hpp"
 
+namespace ot {
+
 static constexpr uint8_t NumberOfArgs(void) { return 0; }
 
 static constexpr uint8_t NumberOfArgs(uint8_t) { return 1; }
@@ -132,13 +134,15 @@ exit:
     VerifyOrQuit(!reachedEnd && didAction, "VerifyOrExit() failed");
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestMacros();
-    TestVerifyOrExitSuccessNoAction();
-    TestVerifyOrExitFailureNoAction();
-    TestVerifyOrExitSuccessWithAction();
-    TestVerifyOrExitFailureWithAction();
+    ot::TestMacros();
+    ot::TestVerifyOrExitSuccessNoAction();
+    ot::TestVerifyOrExitFailureNoAction();
+    ot::TestVerifyOrExitSuccessWithAction();
+    ot::TestVerifyOrExitFailureWithAction();
     printf("All tests passed\n");
     return 0;
 }

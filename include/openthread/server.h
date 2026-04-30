@@ -35,6 +35,11 @@
 #ifndef OPENTHREAD_SERVER_H_
 #define OPENTHREAD_SERVER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/netdata.h>
 
 #ifdef __cplusplus
@@ -48,18 +53,16 @@ extern "C" {
  *  This module includes functions to manage local network data with the OpenThread Server.
  *
  * @{
- *
  */
 
 /**
- * This method provides a full or stable copy of the local Thread Network Data.
+ * Provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]      aInstance    A pointer to an OpenThread instance.
  * @param[in]      aStable      TRUE when copying the stable version, FALSE when copying the full version.
  * @param[out]     aData        A pointer to the data buffer.
  * @param[in,out]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                              On exit, number of copied bytes.
- *
  */
 otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
@@ -75,7 +78,6 @@ otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aD
  *
  * @sa otServerRemoveService
  * @sa otServerRegister
- *
  */
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig);
 
@@ -92,7 +94,6 @@ otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig
  *
  * @sa otServerAddService
  * @sa otServerRegister
- *
  */
 otError otServerRemoveService(otInstance    *aInstance,
                               uint32_t       aEnterpriseNumber,
@@ -100,7 +101,7 @@ otError otServerRemoveService(otInstance    *aInstance,
                               uint8_t        aServiceDataLength);
 
 /**
- * This function gets the next service in the local Network Data.
+ * Gets the next service in the local Network Data.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
@@ -109,7 +110,6 @@ otError otServerRemoveService(otInstance    *aInstance,
  *
  * @retval OT_ERROR_NONE       Successfully found the next service.
  * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
- *
  */
 otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig);
 
@@ -122,13 +122,11 @@ otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIt
  *
  * @sa otServerAddService
  * @sa otServerRemoveService
- *
  */
 otError otServerRegister(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

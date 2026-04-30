@@ -363,7 +363,7 @@ class PacketFilter(object):
 
         return self.filter_LLANMA(). \
             filter_mle_cmd(consts.MLE_ADVERTISEMENT). \
-            filter(lambda p: tlv_set ==
+            filter(lambda p: tlv_set <=
                              set(p.mle.tlv.type) and \
                              p.ipv6.hlim == 255, **kwargs
                    )
@@ -538,6 +538,10 @@ class PacketFilter(object):
         assert isinstance(addr, (str, EthAddr))
         return self.filter(lambda p: p.eth.src == addr, **kwargs)
 
+    def filter_ipv6_src(self, addr, **kwargs):
+        assert isinstance(addr, (str, Ipv6Addr))
+        return self.filter(lambda p: p.ipv6.src == addr, **kwargs)
+
     def filter_ipv6_dst(self, addr, **kwargs):
         assert isinstance(addr, (str, Ipv6Addr))
         return self.filter(lambda p: p.ipv6.dst == addr, **kwargs)
@@ -553,7 +557,7 @@ class PacketFilter(object):
         return self.filter(lambda p: p.ipv6.src == src_addr and p.ipv6.dst == dst_addr, **kwargs)
 
     def filter_LLATNMA(self, **kwargs):
-        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
+        return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
 
     def filter_RLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_NODES_ADDRESS, **kwargs)
@@ -562,7 +566,7 @@ class PacketFilter(object):
         return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_ROUTERS_ADDRESS, **kwargs)
 
     def filter_RLATNMA(self, **kwargs):
-        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
+        return self.filter(lambda p: p.ipv6.dst == consts.REALM_LOCAL_ALL_THREAD_NODES_MULTICAST_ADDRESS, **kwargs)
 
     def filter_LLANMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, **kwargs)
@@ -625,7 +629,7 @@ class PacketFilter(object):
 
     def filter_has_bbr_dataset(self):
         return self.filter("""
-                thread_nwd.tlv.server.has('16')
+                thread_nwd.tlv.server_16 is not null
                 and thread_nwd.tlv.service.s_data.seqno is not null
                 and thread_nwd.tlv.service.s_data.rrdelay is not null
                 and thread_nwd.tlv.service.s_data.mlrtimeout is not null

@@ -31,12 +31,10 @@
  *   This file includes definitions for handling of data polls and indirect frame transmission.
  */
 
-#ifndef DATA_POLL_HANDLER_HPP_
-#define DATA_POLL_HANDLER_HPP_
+#ifndef OT_CORE_MAC_DATA_POLL_HANDLER_HPP_
+#define OT_CORE_MAC_DATA_POLL_HANDLER_HPP_
 
 #include "openthread-core-config.h"
-
-#if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
@@ -57,11 +55,14 @@ namespace ot {
  * @{
  */
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
+#if OPENTHREAD_FTD
 class Child;
+#endif
 
 /**
- * This class implements the data poll (mac data request command) handler.
- *
+ * Implements the data poll (mac data request command) handler.
  */
 class DataPollHandler : public InstanceLocator, private NonCopyable
 {
@@ -71,8 +72,7 @@ public:
     static constexpr uint8_t kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * This enumeration defines frame change request types used as input to `RequestFrameChange()`.
-     *
+     * Defines frame change request types used as input to `RequestFrameChange()`.
      */
     enum FrameChange : uint8_t
     {
@@ -81,15 +81,14 @@ public:
     };
 
     /**
-     * This class defines all the child info required for handling of data polls and indirect frame transmissions.
+     * Defines all the neighbor info required for handling of data polls and indirect frame transmissions.
      *
-     * `Child` class publicly inherits from this class.
-     *
+     * `Child` (and `CslNeighbor`) class publicly inherits from this class.
      */
-    class ChildInfo
+    class NeighborInfo
     {
         friend class DataPollHandler;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         friend class CslTxScheduler;
 #endif
 
@@ -135,106 +134,22 @@ public:
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
     };
 
-    /**
-     * This class defines the callbacks used by the `DataPollHandler`.
-     *
-     */
-    class Callbacks : public InstanceLocator
-    {
-        friend class DataPollHandler;
-
-    private:
-        /**
-         * This type defines the frame context associated with a prepared frame.
-         *
-         * Data poll handler treats `FrameContext` as an opaque data type. Data poll handler provides the buffer/object
-         * for the context when a new frame is prepared (from the callback `PrepareFrameForChild()`). It ensures
-         * to save the context along with the prepared frame and provide the same context back in the callback
-         * `HandleSentFrameToChild()` when the indirect transmission of the frame is finished.
-         *
-         */
-        typedef IndirectSenderBase::FrameContext FrameContext;
-
-        /**
-         * This constructor initializes the callbacks object.
-         *
-         * @param[in]  aInstance   A reference to the OpenThread instance.
-         *
-         */
-        explicit Callbacks(Instance &aInstance);
-
-        /**
-         * This callback method requests a frame to be prepared for indirect transmission to a given sleepy child.
-         *
-         * @param[out] aFrame    A reference to a MAC frame where the new frame would be placed.
-         * @param[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
-         * @param[in]  aChild    The child for which to prepare the frame.
-         *
-         * @retval kErrorNone   Frame was prepared successfully.
-         * @retval kErrorAbort  Indirect transmission to child should be aborted (no frame for the child).
-         *
-         */
-        Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-
-        /**
-         * This callback method notifies the end of indirect frame transmission to a child.
-         *
-         * @param[in]  aFrame     The transmitted frame.
-         * @param[in]  aContext   The context associated with the frame when it was prepared.
-         * @param[in]  aError     kErrorNone when the frame was transmitted successfully,
-         *                        kErrorNoAck when the frame was transmitted but no ACK was received,
-         *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
-         *                        kErrorAbort when transmission was aborted for other reasons.
-         * @param[in]  aChild     The child to which the frame was transmitted.
-         *
-         */
-        void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                    const FrameContext &aContext,
-                                    Error               aError,
-                                    Child              &aChild);
-
-        /**
-         * This callback method notifies that a requested frame change from `RequestFrameChange()` is processed.
-         *
-         * This callback indicates to the next layer that the indirect frame/message for the child can be safely
-         * updated.
-         *
-         * @param[in]  aChild     The child to update.
-         *
-         */
-        void HandleFrameChangeDone(Child &aChild);
-    };
+#if OPENTHREAD_FTD
 
     /**
-     * This constructor initializes the data poll handler object.
+     * Initializes the data poll handler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
-     *
      */
     explicit DataPollHandler(Instance &aInstance);
 
     /**
-     * This method clears any state/info saved per child for indirect frame transmission.
-     *
+     * Clears any state/info saved per child for indirect frame transmission.
      */
     void Clear(void);
 
     /**
-     * This method informs data poll handler that there is a new frame for a given child.
-     *
-     * After this call, the data poll handler can use the `Callbacks::PrepareFrameForChild()` method to request the
-     * frame to be prepared. A subsequent call to `Callbacks::PrepareFrameForChild()` should ensure to prepare the same
-     * frame (this is used for retransmissions of frame by data poll handler). If/When the frame transmission is
-     * finished, the data poll handler will invoke the `Callbacks::HandleSentFrameToChild()` to indicate the status of
-     * the frame transmission.
-     *
-     * @param[in]  aChild     The child which has a new frame.
-     *
-     */
-    void HandleNewFrame(Child &aChild);
-
-    /**
-     * This method requests a frame change for a given child.
+     * Requests a frame change for a given child.
      *
      * Two types of frame change requests are supported:
      *
@@ -243,7 +158,7 @@ public:
      *
      * If there is no ongoing indirect frame transmission to the child, the request will be handled immediately and the
      * callback `HandleFrameChangeDone()` is called directly from this method itself. This callback notifies the next
-     * layer that the indirect frame/message for the child can be safely updated.
+     * layer (`IndirectSender`) that the indirect frame/message for the child can be safely updated.
      *
      * If there is an ongoing indirect frame transmission to this child, the request can not be handled immediately.
      * The following options can happen based on the request type:
@@ -252,8 +167,8 @@ public:
      *    callback `HandleFrameChangeDone()` is invoked.
      *
      * 2) In case of "replace" request, the ongoing indirect transmission is allowed to finish (current tx attempt).
-     *    2.a) If the tx attempt is successful, the `Callbacks::HandleSentFrameToChild()` in invoked which indicates
-     *         the "replace" could not happen (in this case the `HandleFrameChangeDone()` is no longer called).
+     *    2.a) If the tx attempt is successful, the `IndirectSender::HandleSentFrameToChild()` in invoked which
+     *         indicates the "replace" could not happen (in this case `HandleFrameChangeDone()` is no longer called).
      *    2.b) If the ongoing tx attempt is unsuccessful, then callback `HandleFrameChangeDone()` is invoked to allow
      *         the next layer to update the frame/message for the child.
      *
@@ -263,11 +178,12 @@ public:
      *
      * @param[in]  aChange    The frame change type.
      * @param[in]  aChild     The child to process its frame change.
-     *
      */
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
 private:
+    typedef IndirectSenderBase::FrameContext FrameContext;
+
     // Callbacks from MAC
     void          HandleDataPoll(Mac::RxFrame &aFrame);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
@@ -275,25 +191,20 @@ private:
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
     void ProcessPendingPolls(void);
+    void ResetTxAttempts(Child &aChild);
 
-    // In the current implementation of `DataPollHandler`, we can have a
-    // single indirect tx operation active at MAC layer at each point of
-    // time. `mIndirectTxChild` indicates the child being handled (`nullptr`
-    // indicates no active indirect tx). `mFrameContext` tracks the
-    // context for the prepared frame for the current indirect tx.
+    Child       *mIndirectTxChild; // The child being handled (`nullptr` indicates no active indirect tx).
+    FrameContext mFrameContext;    // Context for the prepared frame for the current indirect tx (if any)
 
-    Child                  *mIndirectTxChild;
-    Callbacks::FrameContext mFrameContext;
-    Callbacks               mCallbacks;
+#endif // OPENTHREAD_FTD
 };
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}
- *
  */
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD
-
-#endif // DATA_POLL_HANDLER_HPP_
+#endif // OT_CORE_MAC_DATA_POLL_HANDLER_HPP_

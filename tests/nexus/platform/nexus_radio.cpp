@@ -1,0 +1,609 @@
+/*
+ *  Copyright (c) 2024, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <openthread/platform/radio.h>
+
+#include "nexus_core.hpp"
+#include "nexus_node.hpp"
+
+namespace ot {
+namespace Nexus {
+
+//---------------------------------------------------------------------------------------------------------------------
+// otPlatRadio APIs
+
+extern "C" {
+
+otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_RADIO_CAPS_TRANSMIT_SEC;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Radio::kRadioSensitivity;
+}
+
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
+{
+    uint32_t nodeId = AsNode(aInstance).GetInstance().GetId();
+
+    memset(aIeeeEui64, 0, sizeof(Mac::ExtAddress));
+
+    aIeeeEui64[6] = (nodeId >> 8) & 0xff;
+    aIeeeEui64[7] = nodeId & 0xff;
+}
+
+void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanId) { AsNode(aInstance).mRadio.mPanId = aPanId; }
+
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    radio.mExtAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    AsCoreType(&radio.mRadioContext.mExtAddress).Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+}
+
+void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    radio.mShortAddress               = aShortAddress;
+    radio.mRadioContext.mShortAddress = aShortAddress;
+}
+
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    AsNode(aInstance).mRadio.mRadioContext.mAlternateShortAddress = aShortAddress;
+}
+
+bool otPlatRadioGetPromiscuous(otInstance *aInstance) { return AsNode(aInstance).mRadio.mPromiscuous; }
+
+void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable) { AsNode(aInstance).mRadio.mPromiscuous = aEnable; }
+
+otRadioState otPlatRadioGetState(otInstance *aInstance) { return AsNode(aInstance).mRadio.mState; }
+
+otError otPlatRadioEnable(otInstance *aInstance)
+{
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    VerifyOrExit(radio.mState == Radio::kStateDisabled, error = kErrorFailed);
+    radio.mState = Radio::kStateSleep;
+
+exit:
+    return error;
+}
+
+otError otPlatRadioDisable(otInstance *aInstance)
+{
+    AsNode(aInstance).mRadio.mState = Radio::kStateDisabled;
+    return kErrorNone;
+}
+
+bool otPlatRadioIsEnabled(otInstance *aInstance) { return AsNode(aInstance).mRadio.mState != Radio::kStateDisabled; }
+
+otError otPlatRadioSleep(otInstance *aInstance)
+{
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    VerifyOrExit(radio.mState != Radio::kStateDisabled, error = kErrorInvalidState);
+    VerifyOrExit(radio.mState != Radio::kStateTransmit, error = kErrorBusy);
+    radio.mState = Radio::kStateSleep;
+
+exit:
+    return error;
+}
+
+otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+{
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    VerifyOrExit(radio.mState != Radio::kStateDisabled, error = kErrorInvalidState);
+    radio.mState   = Radio::kStateReceive;
+    radio.mChannel = aChannel;
+
+exit:
+    return error;
+}
+
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance) { return &AsNode(aInstance).mRadio.mTxFrame; }
+
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
+{
+    OT_UNUSED_VARIABLE(aFrame);
+
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    VerifyOrExit(radio.mState == Radio::kStateReceive, error = kErrorInvalidState);
+    OT_ASSERT(aFrame == &AsNode(aInstance).mRadio.mTxFrame);
+
+    radio.mState = Radio::kStateTransmit;
+
+    Core::Get().MarkPendingAction();
+
+exit:
+    return error;
+}
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return Core::Get().GetNowMicro64();
+}
+
+int8_t otPlatRadioGetRssi(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Radio::kRadioSensitivity;
+}
+
+void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
+{
+    AsNode(aInstance).mRadio.mSrcMatchEnabled = aEnable;
+}
+
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    VerifyOrExit(!radio.mSrcMatchShortEntries.Contains(aShortAddress));
+    error = radio.mSrcMatchShortEntries.PushBack(aShortAddress);
+
+exit:
+    return error;
+}
+
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    Error           error = kErrorNone;
+    Radio          &radio = AsNode(aInstance).mRadio;
+    Mac::ExtAddress extAddress;
+
+    extAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+
+    VerifyOrExit(!radio.mSrcMatchExtEntries.Contains(extAddress));
+    error = radio.mSrcMatchExtEntries.PushBack(extAddress);
+
+exit:
+    return error;
+}
+
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    Error     error = kErrorNone;
+    Radio    &radio = AsNode(aInstance).mRadio;
+    uint16_t *entry;
+
+    entry = radio.mSrcMatchShortEntries.Find(aShortAddress);
+    VerifyOrExit(entry != nullptr, error = kErrorNoAddress);
+
+    radio.mSrcMatchShortEntries.Remove(*entry);
+
+exit:
+    return error;
+}
+
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    Error            error = kErrorNone;
+    Radio           &radio = AsNode(aInstance).mRadio;
+    Mac::ExtAddress  extAddress;
+    Mac::ExtAddress *entry;
+
+    extAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+
+    entry = radio.mSrcMatchExtEntries.Find(extAddress);
+    VerifyOrExit(entry != nullptr, error = kErrorNoAddress);
+
+    radio.mSrcMatchExtEntries.Remove(*entry);
+
+exit:
+    return error;
+}
+
+void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
+{
+    AsNode(aInstance).mRadio.mSrcMatchShortEntries.Clear();
+}
+
+void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance) { AsNode(aInstance).mRadio.mSrcMatchExtEntries.Clear(); }
+
+void otPlatRadioSetMacKey(otInstance             *aInstance,
+                          uint8_t                 aKeyIdMode,
+                          uint8_t                 aKeyId,
+                          const otMacKeyMaterial *aPrevKey,
+                          const otMacKeyMaterial *aCurrKey,
+                          const otMacKeyMaterial *aNextKey,
+                          otRadioKeyType          aKeyType)
+{
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    OT_UNUSED_VARIABLE(aKeyIdMode);
+
+    radio.mRadioContext.mKeyId   = aKeyId;
+    radio.mRadioContext.mKeyType = aKeyType;
+
+    if (!radio.mMacFrameCounterReset)
+    {
+        radio.mRadioContext.mPrevMacFrameCounter = radio.mRadioContext.mMacFrameCounter;
+        radio.mRadioContext.mMacFrameCounter     = 0;
+    }
+
+    radio.mMacFrameCounterReset = false;
+
+    memcpy(&radio.mRadioContext.mPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
+    memcpy(&radio.mRadioContext.mCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
+    memcpy(&radio.mRadioContext.mNextKey, aNextKey, sizeof(otMacKeyMaterial));
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    if (aMacFrameCounter == 0)
+    {
+        radio.mRadioContext.mPrevMacFrameCounter = radio.mRadioContext.mMacFrameCounter;
+        radio.mMacFrameCounterReset              = true;
+    }
+
+    radio.mRadioContext.mMacFrameCounter = aMacFrameCounter;
+}
+
+// Not supported
+
+otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t) { return kErrorNotImplemented; }
+
+otError otPlatRadioGetTransmitPower(otInstance *, int8_t *) { return kErrorNotImplemented; }
+otError otPlatRadioSetTransmitPower(otInstance *, int8_t) { return kErrorNotImplemented; }
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *, int8_t *) { return kErrorNotImplemented; }
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *, int8_t) { return kErrorNotImplemented; }
+otError otPlatRadioGetFemLnaGain(otInstance *, int8_t *) { return kErrorNotImplemented; }
+otError otPlatRadioSetFemLnaGain(otInstance *, int8_t) { return kErrorNotImplemented; }
+bool    otPlatRadioIsCoexEnabled(otInstance *) { return false; }
+otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return kErrorNotImplemented; }
+otError otPlatRadioGetCoexMetrics(otInstance *, otRadioCoexMetrics *) { return kErrorNotImplemented; }
+otError otPlatRadioEnableCsl(otInstance         *aInstance,
+                             uint32_t            aCslPeriod,
+                             otShortAddress      aShortAddr,
+                             const otExtAddress *aExtAddr)
+{
+    Error  error = kErrorNone;
+    Radio &radio = AsNode(aInstance).mRadio;
+
+    if (aCslPeriod > 0)
+    {
+        VerifyOrExit((aShortAddr != OT_RADIO_BROADCAST_SHORT_ADDR) && (aShortAddr != OT_RADIO_INVALID_SHORT_ADDR),
+                     error = kErrorFailed);
+        VerifyOrExit(aExtAddr != nullptr, error = kErrorFailed);
+    }
+
+    radio.mRadioContext.mCslPeriod       = static_cast<uint16_t>(aCslPeriod);
+    radio.mRadioContext.mCslShortAddress = aShortAddr;
+
+    if (aExtAddr != nullptr)
+    {
+        AsCoreType(&radio.mRadioContext.mCslExtAddress).Set(aExtAddr->m8, Mac::ExtAddress::kReverseByteOrder);
+    }
+    else
+    {
+        AsCoreType(&radio.mRadioContext.mCslExtAddress).Clear();
+    }
+
+exit:
+    return error;
+}
+
+otError otPlatRadioResetCsl(otInstance *aInstance)
+{
+    AsNode(aInstance).mRadio.mRadioContext.mCslPeriod = 0;
+    return kErrorNone;
+}
+
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+{
+    AsNode(aInstance).mRadio.mRadioContext.mCslSampleTime = aCslSampleTime;
+}
+
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return 0;
+}
+otError otPlatRadioSetChannelTargetPower(otInstance *, uint8_t, int16_t) { return kErrorNotImplemented; }
+otError otPlatRadioClearCalibratedPowers(otInstance *) { return kErrorNotImplemented; }
+otError otPlatRadioAddCalibratedPower(otInstance *, uint8_t, int16_t, const uint8_t *, uint16_t)
+{
+    return kErrorNotImplemented;
+}
+
+otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
+                                          otLinkMetrics       aLinkMetrics,
+                                          otShortAddress      aShortAddress,
+                                          const otExtAddress *aExtAddress)
+{
+    return AsNode(aInstance).mRadio.ConfigureEnhAckProbing(aShortAddress, AsCoreTypePtr(aExtAddress), aLinkMetrics);
+}
+
+} // extern "C"
+
+//---------------------------------------------------------------------------------------------------------------------
+// Radio
+
+Radio::Radio(void)
+    : mState(kStateDisabled)
+    , mPromiscuous(false)
+    , mSrcMatchEnabled(false)
+    , mMacFrameCounterReset(false)
+    , mChannel(0)
+    , mPanId(0)
+    , mShortAddress(Mac::kShortAddrInvalid)
+{
+    mExtAddress.Clear();
+    ClearAllBytes(mRadioContext);
+    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
+}
+
+void Radio::Reset(void)
+{
+    mState                = kStateDisabled;
+    mPromiscuous          = false;
+    mSrcMatchEnabled      = false;
+    mMacFrameCounterReset = false;
+    mChannel              = 0;
+    mPanId                = 0;
+    mShortAddress         = Mac::kShortAddrInvalid;
+    mExtAddress.Clear();
+    mSrcMatchShortEntries.Clear();
+    mSrcMatchExtEntries.Clear();
+    mLinkMetricsEntries.Clear();
+    ClearAllBytes(mRadioContext);
+    mTxFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
+}
+
+Error Radio::ConfigureEnhAckProbing(Mac::ShortAddress      aShortAddress,
+                                    const Mac::ExtAddress *aExtAddress,
+                                    otLinkMetrics          aMetrics)
+{
+    Error            error    = kErrorNone;
+    LinkMetricsInfo *dataInfo = mLinkMetricsEntries.FindMatching(aShortAddress);
+
+    if (!aMetrics.mPduCount && !aMetrics.mLqi && !aMetrics.mLinkMargin && !aMetrics.mRssi) // Remove entry
+    {
+        VerifyOrExit(dataInfo != nullptr, error = kErrorNotFound);
+        mLinkMetricsEntries.Remove(*dataInfo);
+    }
+    else
+    {
+        VerifyOrExit(aExtAddress != nullptr, error = kErrorInvalidArgs);
+
+        if (dataInfo == nullptr)
+        {
+            dataInfo = mLinkMetricsEntries.PushBack();
+            VerifyOrExit(dataInfo != nullptr, error = kErrorNoBufs);
+        }
+
+        dataInfo->mShortAddress = aShortAddress;
+        dataInfo->mExtAddress   = *aExtAddress;
+        dataInfo->mMetrics      = aMetrics;
+    }
+
+exit:
+    return error;
+}
+
+uint8_t Radio::GenerateEnhAckProbingData(const Mac::Address &aAddress, uint8_t aLqi, int8_t aRssi, uint8_t *aData) const
+{
+    uint8_t                bytes    = 0;
+    const LinkMetricsInfo *dataInfo = nullptr;
+
+    if (aAddress.IsShort())
+    {
+        dataInfo = mLinkMetricsEntries.FindMatching(aAddress.GetShort());
+    }
+    else if (aAddress.IsExtended())
+    {
+        dataInfo = mLinkMetricsEntries.FindMatching(aAddress.GetExtended());
+    }
+
+    VerifyOrExit(dataInfo != nullptr);
+
+    if (dataInfo->mMetrics.mLqi)
+    {
+        aData[bytes++] = aLqi;
+    }
+
+    if (dataInfo->mMetrics.mLinkMargin)
+    {
+        uint8_t linkMargin = ComputeLinkMargin(kRadioSensitivity, aRssi);
+
+        // Linear scale Link Margin from [0, 130] to [0, 255]
+        if (linkMargin > kLinkMetricsScale)
+        {
+            linkMargin = kLinkMetricsScale;
+        }
+
+        aData[bytes++] = static_cast<uint8_t>(static_cast<uint16_t>(linkMargin) * kLinkMetricsMax / kLinkMetricsScale);
+    }
+
+    if (bytes < kEnhAckProbingDataMaxLen && dataInfo->mMetrics.mRssi)
+    {
+        int16_t rssi = aRssi;
+
+        // Linear scale RSSI from [-130, 0] to [0, 255]
+        if (rssi > 0)
+        {
+            rssi = 0;
+        }
+        else if (rssi < -static_cast<int16_t>(kRssiOffset))
+        {
+            rssi = -static_cast<int16_t>(kRssiOffset);
+        }
+
+        aData[bytes++] =
+            static_cast<uint8_t>((static_cast<uint16_t>(rssi + kRssiOffset)) * kLinkMetricsMax / kLinkMetricsScale);
+    }
+
+exit:
+    return bytes;
+}
+
+bool Radio::CanReceiveOnChannel(uint8_t aChannel) const
+{
+    bool canRx = false;
+
+    switch (mState)
+    {
+    case kStateReceive:
+    case kStateTransmit:
+        break;
+    default:
+        ExitNow();
+    }
+
+    VerifyOrExit(mChannel == aChannel);
+    canRx = true;
+
+exit:
+    return canRx;
+}
+
+bool Radio::Matches(const Mac::Address &aAddress, Mac::PanId aPanId) const
+{
+    bool matches = false;
+
+    if (aAddress.IsShort())
+    {
+        VerifyOrExit(aAddress.IsBroadcast() || aAddress.GetShort() == mShortAddress);
+    }
+    else if (aAddress.IsExtended())
+    {
+        VerifyOrExit(aAddress.GetExtended() == mExtAddress);
+    }
+
+    if ((aPanId != Mac::kPanIdBroadcast) && (mPanId != Mac::kPanIdBroadcast))
+    {
+        VerifyOrExit(mPanId == aPanId);
+    }
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
+bool Radio::HasFramePendingFor(const Mac::Address &aAddress) const
+{
+    bool hasPending = false;
+
+    if (!mSrcMatchEnabled)
+    {
+        // Always mark frame pending when `SrcMatch` is disabled.
+        hasPending = true;
+        ExitNow();
+    }
+
+    if (aAddress.IsShort())
+    {
+        hasPending = mSrcMatchShortEntries.Contains(aAddress.GetShort());
+    }
+    else if (aAddress.IsExtended())
+    {
+        hasPending = mSrcMatchExtEntries.Contains(aAddress.GetExtended());
+    }
+
+exit:
+    return hasPending;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Radio::Frame
+
+Radio::Frame::Frame(void)
+{
+    ClearAllBytes(*this);
+    mPsdu = &mPsduBuffer[0];
+}
+
+Radio::Frame::Frame(const Frame &aFrame)
+{
+    ClearAllBytes(*this);
+    mPsdu = &mPsduBuffer[0];
+
+    mLength    = aFrame.mLength;
+    mChannel   = aFrame.mChannel;
+    mRadioType = aFrame.mRadioType;
+    memcpy(mPsdu, aFrame.mPsdu, mLength);
+}
+
+void Radio::Frame::UpdateFcs(void)
+{
+    static const uint16_t kFcsTable[256] = {
+        0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf, 0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5,
+        0xe97e, 0xf8f7, 0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e, 0x9cc9, 0x8d40, 0xbfdb, 0xae52,
+        0xdaed, 0xcb64, 0xf9ff, 0xe876, 0x2102, 0x308b, 0x0210, 0x1399, 0x6726, 0x76af, 0x4434, 0x55bd, 0xad4a, 0xbcc3,
+        0x8e58, 0x9fd1, 0xeb6e, 0xfae7, 0xc87c, 0xd9f5, 0x3183, 0x200a, 0x1291, 0x0318, 0x77a7, 0x662e, 0x54b5, 0x453c,
+        0xbdcb, 0xac42, 0x9ed9, 0x8f50, 0xfbef, 0xea66, 0xd8fd, 0xc974, 0x4204, 0x538d, 0x6116, 0x709f, 0x0420, 0x15a9,
+        0x2732, 0x36bb, 0xce4c, 0xdfc5, 0xed5e, 0xfcd7, 0x8868, 0x99e1, 0xab7a, 0xbaf3, 0x5285, 0x430c, 0x7197, 0x601e,
+        0x14a1, 0x0528, 0x37b3, 0x263a, 0xdecd, 0xcf44, 0xfddf, 0xec56, 0x98e9, 0x8960, 0xbbfb, 0xaa72, 0x6306, 0x728f,
+        0x4014, 0x519d, 0x2522, 0x34ab, 0x0630, 0x17b9, 0xef4e, 0xfec7, 0xcc5c, 0xddd5, 0xa96a, 0xb8e3, 0x8a78, 0x9bf1,
+        0x7387, 0x620e, 0x5095, 0x411c, 0x35a3, 0x242a, 0x16b1, 0x0738, 0xffcf, 0xee46, 0xdcdd, 0xcd54, 0xb9eb, 0xa862,
+        0x9af9, 0x8b70, 0x8408, 0x9581, 0xa71a, 0xb693, 0xc22c, 0xd3a5, 0xe13e, 0xf0b7, 0x0840, 0x19c9, 0x2b52, 0x3adb,
+        0x4e64, 0x5fed, 0x6d76, 0x7cff, 0x9489, 0x8500, 0xb79b, 0xa612, 0xd2ad, 0xc324, 0xf1bf, 0xe036, 0x18c1, 0x0948,
+        0x3bd3, 0x2a5a, 0x5ee5, 0x4f6c, 0x7df7, 0x6c7e, 0xa50a, 0xb483, 0x8618, 0x9791, 0xe32e, 0xf2a7, 0xc03c, 0xd1b5,
+        0x2942, 0x38cb, 0x0a50, 0x1bd9, 0x6f66, 0x7eef, 0x4c74, 0x5dfd, 0xb58b, 0xa402, 0x9699, 0x8710, 0xf3af, 0xe226,
+        0xd0bd, 0xc134, 0x39c3, 0x284a, 0x1ad1, 0x0b58, 0x7fe7, 0x6e6e, 0x5cf5, 0x4d7c, 0xc60c, 0xd785, 0xe51e, 0xf497,
+        0x8028, 0x91a1, 0xa33a, 0xb2b3, 0x4a44, 0x5bcd, 0x6956, 0x78df, 0x0c60, 0x1de9, 0x2f72, 0x3efb, 0xd68d, 0xc704,
+        0xf59f, 0xe416, 0x90a9, 0x8120, 0xb3bb, 0xa232, 0x5ac5, 0x4b4c, 0x79d7, 0x685e, 0x1ce1, 0x0d68, 0x3ff3, 0x2e7a,
+        0xe70e, 0xf687, 0xc41c, 0xd595, 0xa12a, 0xb0a3, 0x8238, 0x93b1, 0x6b46, 0x7acf, 0x4854, 0x59dd, 0x2d62, 0x3ceb,
+        0x0e70, 0x1ff9, 0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330, 0x7bc7, 0x6a4e, 0x58d5, 0x495c,
+        0x3de3, 0x2c6a, 0x1ef1, 0x0f78};
+    uint16_t fcs = 0;
+
+    VerifyOrExit(mLength >= k154FcsSize);
+
+    for (uint16_t i = 0; i < mLength - k154FcsSize; i++)
+    {
+        fcs = (fcs >> 8) ^ kFcsTable[(fcs ^ mPsdu[i]) & 0xff];
+    }
+
+    LittleEndian::WriteUint16(fcs, &mPsdu[mLength - k154FcsSize]);
+
+exit:
+    return;
+}
+
+} // namespace Nexus
+} // namespace ot

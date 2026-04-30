@@ -31,8 +31,8 @@
  *   This file includes definitions for manipulating local Thread Network Data.
  */
 
-#ifndef NETWORK_DATA_LOCAL_HPP_
-#define NETWORK_DATA_LOCAL_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_LOCAL_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_LOCAL_HPP_
 
 #include "openthread-core-config.h"
 
@@ -57,8 +57,7 @@ namespace NetworkData {
 class Notifier;
 
 /**
- * This class implements the Thread Network Data contributed by the local device.
- *
+ * Implements the Thread Network Data contributed by the local device.
  */
 class Local : public MutableNetworkData, private NonCopyable
 {
@@ -66,10 +65,9 @@ class Local : public MutableNetworkData, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the local Network Data.
+     * Initializes the local Network Data.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Local(Instance &aInstance)
         : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
@@ -78,66 +76,61 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
-     * This method adds a Border Router entry to the Thread Network Data.
+     * Adds a Border Router entry to the Thread Network Data.
      *
      * @param[in]  aConfig  A reference to the on mesh prefix configuration.
      *
      * @retval kErrorNone         Successfully added the Border Router entry.
      * @retval kErrorNoBufs       Insufficient space to add the Border Router entry.
      * @retval kErrorInvalidArgs  The prefix is mesh local prefix.
-     *
      */
     Error AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
-     * This method removes a Border Router entry from the Thread Network Data.
+     * Removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        The Prefix to remove.
      *
      * @retval kErrorNone       Successfully removed the Border Router entry.
      * @retval kErrorNotFound   Could not find the Border Router entry.
-     *
      */
     Error RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix) { return RemovePrefix(aPrefix); }
 
     /**
-     * This method indicates whether or not the Thread Network Data contains a given on mesh prefix.
+     * Indicates whether or not the Thread Network Data contains a given on mesh prefix.
      *
      * @param[in]  aPrefix   The on mesh prefix to check.
      *
      * @retval TRUE  if Network Data contains mesh prefix @p aPrefix.
      * @retval FALSE if Network Data does not contain mesh prefix @p aPrefix.
-     *
      */
     bool ContainsOnMeshPrefix(const Ip6::Prefix &aPrefix) const;
 
     /**
-     * This method adds a Has Route entry to the Thread Network data.
+     * Adds a Has Route entry to the Thread Network data.
      *
      * @param[in]  aConfig       A reference to the external route configuration.
      *
      * @retval kErrorNone         Successfully added the Has Route entry.
      * @retval kErrorInvalidArgs  One or more parameters in @p aConfig were invalid.
      * @retval kErrorNoBufs       Insufficient space to add the Has Route entry.
-     *
      */
     Error AddHasRoutePrefix(const ExternalRouteConfig &aConfig);
 
     /**
-     * This method removes a Border Router entry from the Thread Network Data.
+     * Removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        The Prefix to remove.
      *
      * @retval kErrorNone       Successfully removed the Border Router entry.
      * @retval kErrorNotFound   Could not find the Border Router entry.
-     *
      */
     Error RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix) { return RemovePrefix(aPrefix); }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
-     * This method adds a Service entry to the Thread Network local data.
+     * Adds a Service entry to the Thread Network local data.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV.
      * @param[in]  aServiceData       The Service Data.
@@ -146,7 +139,6 @@ public:
      *
      * @retval kErrorNone     Successfully added the Service entry.
      * @retval kErrorNoBufs   Insufficient space to add the Service entry.
-     *
      */
     Error AddService(uint32_t           aEnterpriseNumber,
                      const ServiceData &aServiceData,
@@ -154,14 +146,13 @@ public:
                      const ServerData  &aServerData);
 
     /**
-     * This method removes a Service entry from the Thread Network local data.
+     * Removes a Service entry from the Thread Network local data.
      *
      * @param[in]  aEnterpriseNumber   Enterprise Number of the service to be deleted.
      * @param[in]  aServiceData        The service data.
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.
-     *
      */
     Error RemoveService(uint32_t aEnterpriseNumber, const ServiceData &aServiceData);
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -192,4 +183,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-#endif // NETWORK_DATA_LOCAL_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_LOCAL_HPP_

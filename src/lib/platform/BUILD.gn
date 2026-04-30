@@ -38,5 +38,6 @@ config("platform_config") {
 
 static_library("libopenthread-platform") {
   sources = platform_sources
+  public_deps = [ "../../core:libopenthread_core_headers" ]
   public_configs = [ ":platform_config" ]
 }

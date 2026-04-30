@@ -31,12 +31,10 @@
  *   This file includes definitions for Multicast Listener Registration states of multicast addresses.
  */
 
-#ifndef MLR_TYPES_HPP_
-#define MLR_TYPES_HPP_
+#ifndef OT_CORE_THREAD_MLR_TYPES_HPP_
+#define OT_CORE_THREAD_MLR_TYPES_HPP_
 
 #include "openthread-core-config.h"
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
 namespace ot {
 
@@ -44,12 +42,15 @@ namespace ot {
  * @addtogroup core-mlr
  *
  * @{
- *
  */
+
+constexpr uint8_t kMlrMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
+constexpr uint8_t kMlrMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
 /**
  * Multicast Listener Registration state for multicast addresses.
- *
  */
 enum MlrState : uint8_t
 {
@@ -58,7 +59,22 @@ enum MlrState : uint8_t
     kMlrStateRegistered,  ///< The multicast address is registered.
 };
 
+#endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+
+/**
+ * Multicast Listener Registration (MLR) Status values.
+ */
+enum MlrStatus
+{
+    kMlrSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
+    kMlrInvalid        = 2, ///< Invalid IPv6 address(es) in request.
+    kMlrNoPersistent   = 3, ///< This device does not support persistent registrations.
+    kMlrNoResources    = 4, ///< BBR resource shortage.
+    kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
+    kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
+    kMlrStatusMax      = 6, ///< Max MLR status.
+};
+
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-#endif // MLR_TYPES_HPP_
+#endif // OT_CORE_THREAD_MLR_TYPES_HPP_

@@ -43,65 +43,124 @@ concurrency:
 permissions:  # added using https://github.com/step-security/secure-workflows
   contents: read
 
-jobs:
+env:
+  DOCKERHUB_REPO: openthread/environment
 
-  buildx:
-    name: buildx-${{ matrix.docker_name }}
-    runs-on: ubuntu-20.04
+jobs:
+  build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - docker_name: environment
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+
     steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@18bf8ad2ca49c14cbb28b91346d626ccfb00c518 # v2.1.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - name: Harden Runner
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        submodules: true
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          submodules: recursive
 
-    - name: Prepare
-      id: prepare
-      run: |
-        DOCKER_IMAGE=openthread/${{ matrix.docker_name }}
-        DOCKER_FILE=etc/docker/${{ matrix.docker_name }}/Dockerfile
-        DOCKER_PLATFORMS=linux/amd64
-        VERSION=latest
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
-        TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPO }}
 
-        echo ::set-output name=docker_image::${DOCKER_IMAGE}
-        echo ::set-output name=version::${VERSION}
-        echo ::set-output name=buildx_args::--platform ${DOCKER_PLATFORMS} \
-          --build-arg OT_GIT_REF=${{ github.sha }} \
-          --build-arg VERSION=${VERSION} \
-          --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-          --build-arg VCS_REF=${GITHUB_SHA::8} \
-          ${TAGS} --file ${DOCKER_FILE} .
+      - name: Login to Docker Hub
+        if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325 # v2.2.1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
-    - name: Docker Buildx (build)
-      run: |
-        docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
+      - name: Build and push by digest
+        if: success()
+        id: build
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          file: etc/docker/environment/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,"name=${{ env.DOCKERHUB_REPO }}",push-by-digest=true,name-canonical=true
+          push: ${{ github.repository == 'openthread/openthread' && github.event_name != 'pull_request' }}
 
-    - name: Login to DockerHub
-      if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Export digest
+        if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
-    - name: Docker Buildx (push)
-      if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      run: |
-        docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
+      - name: Upload digest
+        if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
-    - name: Inspect Image
-      if: always() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      run: |
-        docker buildx imagetools inspect ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
+  merge:
+    if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - name: Download digests
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 #	v5.10.0
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ steps.meta.outputs.version }}

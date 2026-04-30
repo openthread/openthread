@@ -34,13 +34,17 @@
 #include "checksum.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip4_types.hpp"
+#include "net/ip6.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
+
+RegisterLogModule("Ip6");
 
 void Checksum::AddUint8(uint8_t aUint8)
 {
@@ -82,10 +86,10 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
 
     if (checksum != 0xffff)
     {
-        checksum = ~checksum;
+        checksum = static_cast<uint16_t>(~checksum);
     }
 
-    checksum = Encoding::BigEndian::HostSwap16(checksum);
+    checksum = BigEndian::HostSwap16(checksum);
 
     aMessage.Write(aOffset, checksum);
 }
@@ -96,7 +100,7 @@ void Checksum::Calculate(const Ip6::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-2460).
 
@@ -122,10 +126,10 @@ void Checksum::Calculate(const Ip4::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-768/792/793).
-    // Note: ICMP checksum won't count the presudo header like TCP and UDP.
+    // Note: ICMP checksum won't count the pseudo header like TCP and UDP.
     if (aIpProto != Ip4::kProtoIcmp)
     {
         AddData(aSource.GetBytes(), sizeof(Ip4::Address));
@@ -147,11 +151,18 @@ void Checksum::Calculate(const Ip4::Address &aSource,
 
 Error Checksum::VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
+    Error    error = kErrorNone;
     Checksum checksum;
 
     checksum.Calculate(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), aIpProto, aMessage);
 
-    return (checksum.GetValue() == kValidRxChecksum) ? kErrorNone : kErrorDrop;
+    if (checksum.GetValue() != kValidRxChecksum)
+    {
+        LogNote("Bad %s checksum", Ip6::Ip6::IpProtoToString(aIpProto));
+        error = kErrorDrop;
+    }
+
+    return error;
 }
 
 void Checksum::UpdateMessageChecksum(Message            &aMessage,
@@ -230,7 +241,7 @@ void Checksum::UpdateIp4HeaderChecksum(Ip4::Header &aHeader)
 
     aHeader.SetChecksum(0);
     checksum.AddData(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
-    aHeader.SetChecksum(~checksum.GetValue());
+    aHeader.SetChecksum(static_cast<uint16_t>(~checksum.GetValue()));
 }
 
 } // namespace ot

@@ -30,15 +30,14 @@
  * @file
  * @brief
  *   This file includes the platform abstraction for Thread Radio Encapsulation Link (TREL) using DNS-SD and UDP/IPv6.
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_TREL_H_
 #define OPENTHREAD_PLATFORM_TREL_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 
@@ -54,11 +53,10 @@ extern "C" {
  *   UDP/IPv6.
  *
  * @{
- *
  */
 
 /**
- * This function initializes and enables TREL platform layer.
+ * Initializes and enables TREL platform layer.
  *
  * Upon this call, the platform layer MUST perform the following:
  *
@@ -67,39 +65,37 @@ extern "C" {
  * The socket is also bound to network interface(s) on which TREL is to be supported. The socket and the chosen port
  * should stay valid while TREL is enabled.
  *
- * 2) Platform layer MUST initiate an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing
- * domain to discover other devices supporting TREL. The ongoing browse will produce two different types of events:
- * "add" events and "remove" events.  When the browse is started, it should produce an "add" event for every TREL peer
- * currently present on the network.  Whenever a TREL peer goes offline, a "remove" event should be produced. "remove"
- * events are not guaranteed, however. When a TREL service instance is discovered, a new ongoing DNS-SD query for an
- * AAAA record should be started on the hostname indicated in the SRV record of the discovered instance. If multiple
- * host IPv6 addressees are discovered for a peer, one with highest scope among all addresses MUST be reported (if
- * there are multiple address at same scope, one must be selected randomly).
- *
- * TREL platform MUST signal back the discovered peer info using `otPlatTrelHandleDiscoveredPeerInfo()` callback. This
- * callback MUST be invoked when a new peer is discovered, when there is a change in an existing entry (e.g., new
- * TXT record or new port number or new IPv6 address), or when the peer is removed.
+ * 2) If `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is enabled, the OpenThread core TREL implementation itself will
+ * handle mDNS (DNS-SD) TREL service registration and peer discovery. Otherwise the platform layer MUST initiate an
+ * ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain to discover other devices
+ * supporting TREL. The ongoing browse will produce two different types of events: "add" events and "remove" events.
+ * When the browse is started, it should produce an "add" event for every TREL peer currently present on the network.
+ * Whenever a TREL peer goes offline, a "remove" event should be produced. "remove" events are not guaranteed, however.
+ * When a TREL service instance is discovered, a new ongoing DNS-SD query for an AAAA record should be started on the
+ * hostname indicated in the SRV record of the discovered instance. If multiple host IPv6 addressees are discovered for
+ * a peer, one with highest scope among all addresses MUST be reported (if there are multiple address at same scope,
+ * one must be selected randomly). TREL platform MUST signal back the discovered peer info using
+ * `otPlatTrelHandleDiscoveredPeerInfo()` callback. This callback MUST be invoked when a new peer is discovered, when
+ * there is a change in an existing entry (e.g., new TXT record or new port number or new IPv6 address), or when the
+ * peer is removed.
  *
  * @param[in]  aInstance  The OpenThread instance.
  * @param[out] aUdpPort   A pointer to return the selected port number by platform layer.
- *
  */
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
 
 /**
- * This function disables TREL platform layer.
+ * Disables TREL platform layer.
  *
  * After this call, the platform layer MUST stop DNS-SD browse on the service name "_trel._udp", stop advertising the
  * TREL DNS-SD service (from `otPlatTrelRegisterService()`) and MUST close the UDP socket used to receive TREL messages.
  *
  * @pram[in]  aInstance  The OpenThread instance.
- *
  */
 void otPlatTrelDisable(otInstance *aInstance);
 
 /**
- * This structure represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
- *
+ * Represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
  */
 typedef struct otPlatTrelPeerInfo
 {
@@ -108,14 +104,12 @@ typedef struct otPlatTrelPeerInfo
      *
      * - TRUE indicates that peer is removed.
      * - FALSE indicates that it is a new entry or an update to an existing entry.
-     *
      */
     bool mRemoved;
 
     /**
      * The TXT record data (encoded as specified by DNS-SD) from the SRV record of the discovered TREL peer service
      * instance.
-     *
      */
     const uint8_t *mTxtData;
 
@@ -127,7 +121,6 @@ typedef struct otPlatTrelPeerInfo
      * The port number is determined from the SRV record of the discovered TREL peer service instance. The IPv6 address
      * is determined from the DNS-SD query for AAAA records on the hostname indicated in the SRV record of the
      * discovered service instance. If multiple host IPv6 addressees are discovered, one with highest scope is used.
-     *
      */
     otSockAddr mSockAddr;
 } otPlatTrelPeerInfo;
@@ -135,17 +128,39 @@ typedef struct otPlatTrelPeerInfo
 /**
  * This is a callback function from platform layer to report a discovered TREL peer info.
  *
+ * This is only applicable when `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is disabled.
+ *
  * @note The @p aInfo structure and its content (e.g., the `mTxtData` buffer) does not need to persist after returning
  * from this call. OpenThread code will make a copy of all the info it needs.
  *
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aInfo       A pointer to the TREL peer info.
- *
  */
 extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 /**
- * This function registers a new service to be advertised using DNS-SD [RFC6763].
+ * Notifies platform that a TREL packet is received from a peer using a different socket address than the one reported
+ * earlier from `otPlatTrelHandleDiscoveredPeerInfo()`.
+ *
+ * This is only applicable when `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is disabled.
+ *
+ * Ideally the platform underlying DNS-SD should detect changes to advertised port and addresses by peers, however,
+ * there are situations where this is not detected reliably. This function signals to the platform layer than we
+ * received a packet from a peer with it using a different port or address. This can be used by the playroom layer to
+ * restart/confirm the DNS-SD service/address resolution for the peer service and/or take any other relevant actions.
+ *
+ * @param[in] aInstance      The OpenThread instance.
+ * @param[in] aPeerSockAddr  The address of the peer, reported from `otPlatTrelHandleDiscoveredPeerInfo()` call.
+ * @param[in] aRxSockAddr    The address of received packet from the same peer (differs from @p aPeerSockAddr).
+ */
+void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
+                                                 const otSockAddr *aPeerSockAddr,
+                                                 const otSockAddr *aRxSockAddr);
+
+/**
+ * Registers a new service to be advertised using DNS-SD [RFC6763].
+ *
+ * This is only applicable when `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE` is disabled.
  *
  * The service name is "_trel._udp". The platform should use its own hostname, which when combined with the service
  * name and the local DNS-SD domain name will produce the full service instance name, for example
@@ -164,19 +179,16 @@ extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPl
  * @param[in] aPort       The port number to include in the SRV record of the advertised service.
  * @param[in] aTxtData    A pointer to the TXT record data (encoded) to be include in the advertised service.
  * @param[in] aTxtLength  The length of @p aTxtData (number of bytes).
- *
- *
  */
 void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength);
 
 /**
- * This function requests a TREL UDP packet to be sent to a given destination.
+ * Requests a TREL UDP packet to be sent to a given destination.
  *
  * @param[in] aInstance        The OpenThread instance structure.
  * @param[in] aUdpPayload      A pointer to UDP payload.
  * @param[in] aUdpPayloadLen   The payload length (number of bytes).
  * @param[in] aDestSockAddr    The destination socket address.
- *
  */
 void otPlatTrelSend(otInstance       *aInstance,
                     const uint8_t    *aUdpPayload,
@@ -184,7 +196,7 @@ void otPlatTrelSend(otInstance       *aInstance,
                     const otSockAddr *aDestSockAddr);
 
 /**
- * This function is a callback from platform to notify of a received TREL UDP packet.
+ * Is a callback from platform to notify of a received TREL UDP packet.
  *
  * @note The buffer content (up to its specified length) may get changed during processing by OpenThread core (e.g.,
  * decrypted in place), so the platform implementation should expect that after returning from this function the
@@ -193,13 +205,41 @@ void otPlatTrelSend(otInstance       *aInstance,
  * @param[in] aInstance        The OpenThread instance structure.
  * @param[in] aBuffer          A buffer containing the received UDP payload.
  * @param[in] aLength          UDP payload length (number of bytes).
- *
+ * @param[in] aSockAddr        The sender address.
  */
-extern void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
+extern void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                     uint8_t          *aBuffer,
+                                     uint16_t          aLength,
+                                     const otSockAddr *aSenderAddr);
+
+/**
+ * Represents a group of TREL related counters in the platform layer.
+ */
+typedef struct otPlatTrelCounters
+{
+    uint64_t mTxPackets; ///< Number of packets successfully transmitted through TREL.
+    uint64_t mTxBytes;   ///< Sum of size of packets successfully transmitted through TREL.
+    uint64_t mTxFailure; ///< Number of packet transmission failures through TREL.
+    uint64_t mRxPackets; ///< Number of packets received through TREL.
+    uint64_t mRxBytes;   ///< Sum of size of packets received through TREL.
+} otPlatTrelCounters;
+
+/**
+ * Gets the pointer to the TREL counters in the platform layer.
+ *
+ * @param[in] aInstance        The OpenThread instance structure.
+ */
+const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance);
+
+/**
+ * Resets the TREL counters in the platform layer.
+ *
+ * @param[in] aInstance        The OpenThread instance structure.
+ */
+void otPlatTrelResetCounters(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

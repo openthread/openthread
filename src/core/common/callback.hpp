@@ -31,8 +31,8 @@
  *  This file defines OpenThread `Callback` class.
  */
 
-#ifndef CALLBACK_HPP_
-#define CALLBACK_HPP_
+#ifndef OT_CORE_COMMON_CALLBACK_HPP_
+#define OT_CORE_COMMON_CALLBACK_HPP_
 
 #include "openthread-core-config.h"
 
@@ -43,8 +43,7 @@
 namespace ot {
 
 /**
- * This enumeration specifies the context argument position in a callback function pointer.
- *
+ * Specifies the context argument position in a callback function pointer.
  */
 enum CallbackContextPosition : uint8_t
 {
@@ -53,26 +52,23 @@ enum CallbackContextPosition : uint8_t
 };
 
 /**
- * This class is the base class for `Callback` (a function pointer handler and a `void *` context).
+ * Is the base class for `Callback` (a function pointer handler and a `void *` context).
  *
  * @tparam HandlerType    The handler function pointer type.
- *
  */
 template <typename HandlerType> class CallbackBase
 {
 public:
     /**
-     * This method clears the `Callback` by setting the handler function pointer to `nullptr`.
-     *
+     * Clears the `Callback` by setting the handler function pointer to `nullptr`.
      */
     void Clear(void) { mHandler = nullptr; }
 
     /**
-     * This method sets the callback handler function pointer and its associated context.
+     * Sets the callback handler function pointer and its associated context.
      *
      * @param[in] aHandler   The handler function pointer.
      * @param[in] aContext   The context associated with handler.
-     *
      */
     void Set(HandlerType aHandler, void *aContext)
     {
@@ -81,43 +77,52 @@ public:
     }
 
     /**
-     * This method indicates whether or not the callback is set (not `nullptr`).
+     * Indicates whether or not the callback is set (not `nullptr`).
      *
      * @retval TRUE   The handler is set.
      * @retval FALSE  The handler is not set.
-     *
      */
     bool IsSet(void) const { return (mHandler != nullptr); }
 
     /**
-     * This method returns the handler function pointer.
+     * Returns the handler function pointer.
      *
      * @returns The handler function pointer.
-     *
      */
     HandlerType GetHandler(void) const { return mHandler; }
 
     /**
-     * This method returns the context associated with callback.
+     * Returns the context associated with callback.
      *
      * @returns The context.
-     *
      */
     void *GetContext(void) const { return mContext; }
 
     /**
-     * This method indicates whether the callback matches a given handler function pointer and context.
+     * Indicates whether the callback matches a given handler function pointer and context.
      *
      * @param[in] aHandler   The handler function pointer to compare with.
      * @param[in] aContext   The context associated with handler.
      *
      * @retval TRUE   The callback matches @p aHandler and @p aContext.
      * @retval FALSE  The callback does not match @p aHandler and @p aContext.
-     *
      */
     bool Matches(HandlerType aHandler, void *aContext) const
     {
         return (mHandler == aHandler) && (mContext == aContext);
+    }
+
+    /**
+     * Overloads operator `==` to evaluate whether or not two given `Callback` objects are equal.
+     *
+     * @param[in] aOtherCallback   The callback to compare with.
+     *
+     * @retval TRUE  The two callbacks are equal.
+     * @retval FALSE The two callbacks are not equal.
+     */
+    bool operator==(const CallbackBase &aOtherCallback) const
+    {
+        return Matches(aOtherCallback.mHandler, aOtherCallback.mContext);
     }
 
 protected:
@@ -132,7 +137,7 @@ protected:
 };
 
 /**
- * This class represents a `Callback` (a function pointer handler and a `void *` context).
+ * Represents a `Callback` (a function pointer handler and a `void *` context).
  *
  * The context is passed as one of the arguments to the function pointer handler when invoked.
  *
@@ -145,7 +150,6 @@ protected:
  *
  * @tparam  HandlerType                The function pointer handler type.
  * @tparam  CallbackContextPosition    Context position (first or last). Automatically determined at compile-time.
- *
  */
 template <typename HandlerType,
           CallbackContextPosition =
@@ -168,20 +172,18 @@ public:
     static constexpr CallbackContextPosition kContextPosition = kContextAsLastArg; ///< Context position.
 
     /**
-     * This constructor initializes `Callback` as empty (`nullptr` handler function pointer).
-     *
+     * Initializes `Callback` as empty (`nullptr` handler function pointer).
      */
     Callback(void) = default;
 
     /**
-     * This method invokes the callback handler.
+     * Invokes the callback handler.
      *
      * The caller MUST ensure that callback is set (`IsSet()` returns `true`) before calling this method.
      *
      * @param[in] aArgs   The args to pass to the callback handler.
      *
      * @returns The return value from handler.
-     *
      */
     template <typename... Args> ReturnType Invoke(Args &&...aArgs) const
     {
@@ -189,12 +191,11 @@ public:
     }
 
     /**
-     * This method invokes the callback handler if it is set.
+     * Invokes the callback handler if it is set.
      *
      * The method MUST be used when the handler function returns `void`.
      *
      * @param[in] aArgs   The args to pass to the callback handler.
-     *
      */
     template <typename... Args> void InvokeIfSet(Args &&...aArgs) const
     {
@@ -205,6 +206,24 @@ public:
         {
             Invoke(static_cast<Args &&>(aArgs)...);
         }
+    }
+
+    /**
+     * Invokes the callback handler if it is set and clears it.
+     *
+     * The method MUST be used when the handler function returns `void`.
+     *
+     * The callback is cleared first before invoking its handler to allow it to be set again from the handler
+     * implementation.
+     *
+     * @param[in] aArgs   The args to pass to the callback handler.
+     */
+    template <typename... Args> void InvokeAndClearIfSet(Args &&...aArgs)
+    {
+        Callback<HandlerType, kContextAsLastArg> callbackCopy = *this;
+
+        CallbackBase<HandlerType>::Clear();
+        callbackCopy.InvokeIfSet(static_cast<Args &&>(aArgs)...);
     }
 };
 
@@ -236,8 +255,26 @@ public:
             Invoke(static_cast<Args &&>(aArgs)...);
         }
     }
+
+    /**
+     * Invokes the callback handler if it is set and clears it.
+     *
+     * The method MUST be used when the handler function returns `void`.
+     *
+     * The callback is cleared first before invoking its handler to allow it to be set again from the handler
+     * implementation.
+     *
+     * @param[in] aArgs   The args to pass to the callback handler.
+     */
+    template <typename... Args> void InvokeAndClearIfSet(Args &&...aArgs)
+    {
+        Callback<HandlerType, kContextAsFirstArg> callbackCopy = *this;
+
+        CallbackBase<HandlerType>::Clear();
+        callbackCopy.InvokeIfSet(static_cast<Args &&>(aArgs)...);
+    }
 };
 
 } // namespace ot
 
-#endif // CALLBACK_HPP_
+#endif // OT_CORE_COMMON_CALLBACK_HPP_

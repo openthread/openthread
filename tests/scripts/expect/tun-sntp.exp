@@ -32,15 +32,9 @@ source "tests/scripts/expect/_common.exp"
 skip_on_macos
 
 spawn_node 1
+setup_default_network
 
-send "panid 0xface\n"
-expect_line "Done"
-send "ifconfig up\n"
-expect_line "Done"
-send "thread start\n"
-expect_line "Done"
-wait_for "state" "leader"
-expect_line "Done"
+attach
 
 send "sntp query ::1 123\n"
 expect -re {SNTP response - Unix time: \d+ \(era: \d+\)}

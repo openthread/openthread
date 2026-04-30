@@ -33,10 +33,7 @@
 
 #include "neighbor_table.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "thread/dua_manager.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -49,15 +46,14 @@ NeighborTable::NeighborTable(Instance &aInstance)
 Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
 {
     Neighbor *neighbor = nullptr;
-    Mle::Mle &mle      = Get<Mle::Mle>();
 
-    if (mle.GetParent().Matches(aMatcher))
+    if (Get<Mle::Mle>().GetParent().Matches(aMatcher))
     {
-        neighbor = &mle.GetParent();
+        neighbor = &Get<Mle::Mle>().GetParent();
     }
-    else if (mle.GetParentCandidate().Matches(aMatcher))
+    else if (Get<Mle::Mle>().GetParentCandidate().Matches(aMatcher))
     {
-        neighbor = &mle.GetParentCandidate();
+        neighbor = &Get<Mle::Mle>().GetParentCandidate();
     }
 
     return neighbor;
@@ -94,6 +90,13 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
         neighbor = FindParent(aMatcher);
     }
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = FindPeer(aMatcher);
+    }
+#endif
+
     return neighbor;
 }
 
@@ -118,6 +121,13 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
+{
+    return Get<PeerTable>().FindPeer(aMatcher);
+}
+#endif
+
 #if OPENTHREAD_FTD
 
 Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatcher)
@@ -139,9 +149,9 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor:
     Neighbor    *neighbor = nullptr;
     Mac::Address macAddress;
 
-    if (aIp6Address.IsLinkLocal())
+    if (aIp6Address.IsLinkLocalUnicast())
     {
-        aIp6Address.GetIid().ConvertToMacAddress(macAddress);
+        macAddress.SetExtendedFromIid(aIp6Address.GetIid());
     }
 
     if (Get<Mle::Mle>().IsRoutingLocator(aIp6Address))
@@ -165,6 +175,15 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor:
 
 exit:
     return neighbor;
+}
+
+Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::ExtAddress &aExtAddress)
+{
+    Mac::Address macAddress;
+
+    macAddress.SetExtended(aExtAddress);
+
+    return FindRxOnlyNeighborRouter(macAddress);
 }
 
 Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddress)
@@ -211,7 +230,7 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
 
     // Negative iterator value gives the current index into mRouters array
 
-    for (index = -aIterator; index <= Mle::kMaxRouterId; index++)
+    for (index = static_cast<int16_t>(-aIterator); index <= Mle::kMaxRouterId; index++)
     {
         Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
 
@@ -220,12 +239,12 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
             aNeighInfo.SetFrom(*router);
             aNeighInfo.mIsChild = false;
             index++;
-            aIterator = -index;
+            aIterator = static_cast<otNeighborInfoIterator>(-index);
             ExitNow();
         }
     }
 
-    aIterator = -index;
+    aIterator = static_cast<otNeighborInfoIterator>(-index);
     error     = kErrorNotFound;
 
 exit:
@@ -283,7 +302,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordNeighborEvent(aEvent, info);
+        Get<HistoryTracker::Local>().RecordNeighborEvent(aEvent, info);
 
         if (mCallback != nullptr)
 #endif
@@ -305,10 +324,20 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
     case kChildRemoved:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<const Child &>(aNeighbor),
-                                                          Mle::ChildDuaState::kRemoved);
+        Get<DuaManager>().HandleChildDuaAddressEvent(static_cast<const Child &>(aNeighbor),
+                                                     DuaManager::kAddressRemoved);
 #endif
         break;
+
+#if OPENTHREAD_FTD
+    case kRouterAdded:
+        Get<RouterTable>().SignalTableChanged(RouterTable::kEventNeighborAdded);
+        break;
+
+    case kRouterRemoved:
+        Get<RouterTable>().SignalTableChanged(RouterTable::kEventNeighborRemoved);
+        break;
+#endif
 
     default:
         break;

@@ -61,7 +61,7 @@ class CoapOptionsTypes(IntEnum):
 
 
 class CoapOptionHeader(object):
-    """ Class representing CoAP optiona header. """
+    """ Class representing CoAP optional header. """
 
     def __init__(self, delta, length):
         self._delta = delta

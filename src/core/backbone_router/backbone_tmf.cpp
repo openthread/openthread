@@ -35,8 +35,8 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -55,33 +55,34 @@ Error BackboneTmfAgent::Start(void)
     Error error = kErrorNone;
 
     SuccessOrExit(error = Coap::Start(kBackboneUdpPort, Ip6::kNetifBackbone));
+    LogInfo("Start listening on port %u", kBackboneUdpPort);
     SubscribeMulticast(Get<Local>().GetAllNetworkBackboneRoutersAddress());
 
 exit:
     return error;
 }
 
-bool BackboneTmfAgent::HandleResource(CoapBase               &aCoapBase,
-                                      const char             *aUriPath,
-                                      ot::Coap::Message      &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+bool BackboneTmfAgent::HandleResource(CoapBase &aCoapBase, const char *aUriPath, ot::Coap::Msg &aMsg)
 {
-    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMsg);
 }
 
-bool BackboneTmfAgent::HandleResource(const char             *aUriPath,
-                                      ot::Coap::Message      &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+bool BackboneTmfAgent::HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg)
 {
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aMsg);
 
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
+#define Case(kUri, Type)                   \
+    case kUri:                             \
+        Get<Type>().HandleTmf<kUri>(aMsg); \
         break
 
     switch (uri)
@@ -98,14 +99,18 @@ bool BackboneTmfAgent::HandleResource(const char             *aUriPath,
 
 #undef Case
 
+exit:
     return didHandle;
 }
 
-Error BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+Error BackboneTmfAgent::Filter(void *aContext, const ot::Coap::Msg &aRxMsg)
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    return static_cast<BackboneTmfAgent *>(aContext)->Filter(aRxMsg);
+}
 
-    return static_cast<BackboneTmfAgent *>(aContext)->IsBackboneTmfMessage(aMessageInfo) ? kErrorNone : kErrorNotTmf;
+Error BackboneTmfAgent::Filter(const ot::Coap::Msg &aRxMsg) const
+{
+    return IsBackboneTmfMessage(aRxMsg.mMessageInfo) ? kErrorNone : kErrorNotTmf;
 }
 
 bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
@@ -119,8 +124,8 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
     //     2. All Domain BBRs (Link-Local scope)
     //     3. A Backbone Link-Local address
     // The source must be a Backbone Link-local address.
-    return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocal() &&
-            (dst.IsLinkLocal() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
+    return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocalUnicast() &&
+            (dst.IsLinkLocalUnicast() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
              dst == Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress()));
 }
 

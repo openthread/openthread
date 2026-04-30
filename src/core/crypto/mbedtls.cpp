@@ -33,9 +33,11 @@
 
 #include "mbedtls.hpp"
 
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
 #include <mbedtls/ctr_drbg.h>
-#include <mbedtls/debug.h>
 #include <mbedtls/entropy.h>
+#endif
+#include <mbedtls/debug.h>
 #include <mbedtls/platform.h>
 #include <mbedtls/threading.h>
 
@@ -53,13 +55,13 @@ namespace Crypto {
 
 MbedTls::MbedTls(void)
 {
-#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
 #ifdef MBEDTLS_DEBUG_C
     // mbedTLS's debug level is almost the same as OpenThread's
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     mbedtls_platform_set_calloc_free(Heap::CAlloc, Heap::Free);
-#endif // OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+#endif
 }
 
 Error MbedTls::MapError(int aMbedTlsError)
@@ -69,8 +71,10 @@ Error MbedTls::MapError(int aMbedTlsError)
     switch (aMbedTlsError)
     {
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_ECP_BAD_INPUT_DATA:
     case MBEDTLS_ERR_MPI_BAD_INPUT_DATA:
+#endif
     case MBEDTLS_ERR_MPI_INVALID_CHARACTER:
 #endif
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -84,7 +88,9 @@ Error MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_PK_INVALID_PUBKEY:
     case MBEDTLS_ERR_PK_INVALID_ALG:
     case MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE:
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_PK_BAD_INPUT_DATA:
+#endif
     case MBEDTLS_ERR_X509_SIG_MISMATCH:
     case MBEDTLS_ERR_X509_BAD_INPUT_DATA:
     case MBEDTLS_ERR_X509_FILE_IO_ERROR:
@@ -101,12 +107,17 @@ Error MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_X509_INVALID_EXTENSIONS:
     case MBEDTLS_ERR_X509_UNKNOWN_VERSION:
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_SSL_BAD_INPUT_DATA:
     case MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG:
     case MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG:
+#else
+    case PSA_ERROR_INVALID_ARGUMENT:
+#endif
         error = kErrorInvalidArgs;
         break;
 
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
     case MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL:
     case MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:
@@ -119,25 +130,37 @@ Error MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_X509_ALLOC_FAILED:
 #endif
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
+#else
+    case PSA_ERROR_INSUFFICIENT_MEMORY:
+    case PSA_ERROR_BUFFER_TOO_SMALL:
+#endif
     case MBEDTLS_ERR_SSL_WANT_WRITE:
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_ENTROPY_MAX_SOURCES:
+#endif
         error = kErrorNoBufs;
         break;
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE:
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH:
+#endif
     case MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE:
     case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED:
     case MBEDTLS_ERR_ENTROPY_SOURCE_FAILED:
     case MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED:
     case MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE:
+#endif
 #if (MBEDTLS_VERSION_NUMBER < 0x03000000)
     case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
 #endif
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     case MBEDTLS_ERR_THREADING_BAD_INPUT_DATA:
+#endif
     case MBEDTLS_ERR_THREADING_MUTEX_ERROR:
         error = kErrorSecurity;
         break;
@@ -170,7 +193,7 @@ Error MbedTls::MapError(int aMbedTlsError)
     return error;
 }
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 int MbedTls::CryptoSecurePrng(void *, unsigned char *aBuffer, size_t aSize)
 {
@@ -179,7 +202,7 @@ int MbedTls::CryptoSecurePrng(void *, unsigned char *aBuffer, size_t aSize)
     return 0;
 }
 
-#endif // !OPENTHREAD_RADIO
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 } // namespace Crypto
 } // namespace ot

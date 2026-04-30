@@ -708,7 +708,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     @API
     def stopListeningToAddr(self, sAddr):
         """
-        Unsubscribe to a given IPv6 address which was subscribed earlier wiht `registerMulticast`.
+        Unsubscribe to a given IPv6 address which was subscribed earlier with `registerMulticast`.
 
         Args:
             sAddr   : str : Multicast address to be unsubscribed. Use an empty string to unsubscribe

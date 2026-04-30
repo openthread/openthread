@@ -27,7 +27,7 @@
  */
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "lib/spinel/spinel_encoder.hpp"
 
 #include "test_util.hpp"
@@ -310,7 +310,7 @@ void TestEncoder(void)
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    printf("\nTest 5: Test saving position and reseting back to a saved position");
+    printf("\nTest 5: Test saving position and resetting back to a saved position");
 
     SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow));
     SuccessOrQuit(encoder.WriteUint8(kUint8));

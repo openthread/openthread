@@ -291,5 +291,7 @@ exit:
     return error;
 }
 
+void Encoder::ClearNcpBuffer(void) { mNcpBuffer.Clear(); }
+
 } // namespace Spinel
 } // namespace ot

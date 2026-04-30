@@ -29,22 +29,26 @@
 #define OT_POSIX_PLATFORM_UDP_HPP_
 
 #include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
+
+#include "logger.hpp"
+#include "mainloop.hpp"
 
 namespace ot {
 namespace Posix {
 
-class Udp : public Mainloop::Source, private NonCopyable
+class Udp : public Mainloop::Source, public Logger<Udp>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[];
+
     static Udp &Get(void);
 
     void Init(const char *aIfName);
     void SetUp(void);
     void TearDown(void);
     void Deinit(void);
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
 };
 
 } // namespace Posix

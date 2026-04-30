@@ -1,0 +1,358 @@
+#!/bin/bash
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euo pipefail
+
+# Determine the temporary directory
+TEMP_DIR="${TMPDIR:-/tmp}"
+
+# Determine the repository root
+REPO_ROOT="$(cd "$(dirname "$0")"/../.. && pwd)"
+
+# Determine the build directory
+if [[ -z ${top_builddir:-} ]]; then
+    BUILD_DIR="build"
+else
+    BUILD_DIR="$top_builddir"
+fi
+if [[ $BUILD_DIR != /* ]]; then
+    BUILD_DIR="${REPO_ROOT}/${BUILD_DIR}"
+fi
+NEXUS_BIN_DIR="${BUILD_DIR}/tests/nexus"
+
+# Default test list if no arguments are provided
+DEFAULT_TESTS=(
+    "1_1_5_1_1"
+    "1_1_5_1_2"
+    "1_1_5_1_3"
+    "1_1_5_1_4"
+    "1_1_5_1_5"
+    "1_1_5_1_6"
+    "1_1_5_1_7"
+    "1_1_5_1_8"
+    "1_1_5_1_9"
+    "1_1_5_1_10"
+    "1_1_5_1_11"
+    "1_1_5_1_12"
+    "1_1_5_1_13"
+    "1_1_5_2_1"
+    "1_1_5_2_3"
+    "1_1_5_2_4"
+    "1_1_5_2_5"
+    "1_1_5_2_6"
+    "1_1_5_2_7"
+    "1_1_5_3_1"
+    "1_1_5_3_2"
+    "1_1_5_3_3"
+    "1_1_5_3_4"
+    "1_1_5_3_5"
+    "1_1_5_3_6"
+    "1_1_5_3_7"
+    "1_1_5_3_8"
+    "1_1_5_3_9"
+    "1_1_5_3_10"
+    "1_1_5_3_11"
+    "1_1_5_5_1"
+    "1_1_5_5_2"
+    "1_1_5_5_3"
+    "1_1_5_5_4_1"
+    "1_1_5_5_4_2"
+    "1_1_5_5_5"
+    "1_1_5_5_7"
+    "1_1_5_6_1"
+    "1_1_5_6_2"
+    "1_1_5_6_3"
+    "1_1_5_6_4"
+    "1_1_5_6_5"
+    "1_1_5_6_6"
+    "1_1_5_6_7"
+    "1_1_5_6_9"
+    "1_1_5_7_1"
+    "1_1_5_7_2"
+    "1_1_5_7_3"
+    "1_1_5_8_2"
+    "1_1_5_8_3"
+    "1_2_BBR_TC_3"
+    "1_1_5_8_4"
+    "1_1_6_1_1_A"
+    "1_1_6_1_1_B"
+    "1_1_6_1_2_A"
+    "1_1_6_1_2_B"
+    "1_1_6_1_3_A"
+    "1_1_6_1_3_B"
+    "1_1_6_1_4"
+    "1_1_6_1_5"
+    "1_1_6_1_6"
+    "1_1_6_1_7"
+    "1_1_6_2_1_A"
+    "1_1_6_2_1_B"
+    "1_1_6_2_2"
+    "1_1_6_3_1_A"
+    "1_1_6_3_1_B"
+    "1_1_6_3_2"
+    "1_1_6_4_1_A"
+    "1_1_6_4_1_B"
+    "1_1_6_4_2"
+    "1_1_6_5_1"
+    "1_1_6_5_2"
+    "1_1_6_5_3"
+    "1_1_6_6_1"
+    "1_1_6_6_2"
+    "1_1_7_1_1"
+    "1_1_7_1_2"
+    "1_1_7_1_3"
+    "1_1_7_1_4"
+    "1_1_7_1_5"
+    "1_1_7_1_6"
+    "1_1_7_1_7"
+    "1_1_7_1_8"
+    "1_1_8_1_1"
+    "1_1_8_1_2"
+    "1_1_8_1_6"
+    "1_1_8_2_1"
+    "1_1_8_2_2"
+    "1_1_8_3_1"
+    "1_1_9_2_1"
+    "1_1_9_2_2"
+    "1_1_9_2_3"
+    "1_1_9_2_4"
+    "1_1_9_2_5"
+    "1_1_9_2_6"
+    "1_1_9_2_7"
+    "1_1_9_2_8"
+    "1_1_9_2_9"
+    "1_1_9_2_10"
+    "1_1_9_2_11"
+    "1_1_9_2_12"
+    "1_1_9_2_13"
+    "1_1_9_2_14"
+    "1_1_9_2_15"
+    "1_1_9_2_16"
+    "1_1_9_2_17"
+    "1_1_9_2_18"
+    "1_1_9_2_19"
+    "1_2_LP_5_2_1"
+    "1_2_LP_5_3_1"
+    "1_2_LP_5_3_2"
+    "1_2_LP_5_3_3"
+    "1_2_LP_5_3_4"
+    "1_2_LP_5_3_5"
+    "1_2_LP_5_3_6"
+    "1_2_LP_5_3_7"
+    "1_2_LP_5_3_8"
+    "1_2_LP_7_1_1"
+    "1_2_LP_7_1_2"
+    "1_2_LP_7_2_1"
+    "1_2_LP_7_2_2"
+    "1_2_MATN_TC_1"
+    "1_2_MATN_TC_2"
+    "1_2_MATN_TC_3"
+    "1_2_MATN_TC_4"
+    "1_2_MATN_TC_5"
+    "1_2_MATN_TC_7"
+    "1_2_MATN_TC_9"
+    "1_2_MATN_TC_10"
+    "1_2_MATN_TC_12"
+    "1_2_MATN_TC_15"
+    "1_2_MATN_TC_16"
+    "1_2_MATN_TC_19"
+    "1_2_MATN_TC_20"
+    "1_2_MATN_TC_21"
+    "1_2_MATN_TC_22"
+    "1_2_MATN_TC_23"
+    "1_2_MATN_TC_26"
+    "1_2_BBR_TC_1"
+    "1_2_BBR_TC_2"
+    "1_2_BBR_TC_3"
+    "1_3_DBR_TC_1"
+    "1_3_DBR_TC_2"
+    "1_3_DBR_TC_3"
+    "1_3_DBR_TC_6"
+    "1_3_DBR_TC_7A"
+    "1_3_DBR_TC_7B"
+    "1_3_DBR_TC_7C"
+    "1_3_DBR_TC_8"
+    "1_3_DBR_TC_10"
+    "1_3_DPR_TC_1"
+    "1_3_DPR_TC_2"
+    "1_3_SRP_TC_1"
+    "1_3_SRP_TC_2"
+    "1_3_SRP_TC_3"
+    "1_3_SRP_TC_4"
+    "1_3_SRP_TC_5"
+    "1_3_SRP_TC_6"
+    "1_3_SRP_TC_8"
+    "1_3_SRP_TC_11"
+    "1_3_SRP_TC_12"
+    "1_3_SRP_TC_13"
+    "1_3_SRP_TC_15"
+    "1_3_SRPC_TC_1"
+    "1_3_SRPC_TC_4"
+    "1_3_SRPC_TC_5"
+    "1_3_SRPC_TC_7"
+    "1_3_GEN_TC_1"
+    "1_3_GEN_TC_2"
+    "1_3_DIAG_TC_1"
+    "1_3_DIAG_TC_2"
+    "1_4_TREL_TC_1"
+    "1_4_TREL_TC_2"
+    "1_4_TREL_TC_3"
+    "1_4_TREL_TC_4"
+    "1_4_TREL_TC_5"
+    "1_4_TREL_TC_6"
+    "1_4_DNS_TC_1"
+    "1_4_DNS_TC_3"
+    "1_4_DNS_TC_5"
+    "1_4_PIC_TC_1"
+    "1_4_PIC_TC_3"
+    "1_4_PIC_TC_4"
+    "1_4_CS_TC_3"
+    "srp_client_change_lease"
+    "inform_previous_parent_on_reattach"
+    "leader_reboot_multiple_link_request"
+    "router_reboot_multiple_link_request"
+    "pbbr_aloc"
+)
+
+# Use provided arguments or the default test list
+if [[ $# -eq 0 ]]; then
+    TESTS_TO_RUN=("${DEFAULT_TESTS[@]}")
+else
+    TESTS_TO_RUN=("$@")
+fi
+
+failed_tests=()
+
+run_test()
+{
+    local test_full="$1"
+    # Strip 'nexus_' prefix if present
+    test_full="${test_full#nexus_}"
+
+    local test_base="${test_full%_[ABC]}"
+    local topology=""
+    if [[ $test_full != "$test_base" ]]; then
+        topology="${test_full##*_}"
+    fi
+
+    local test_name="nexus_${test_base}"
+    local json_file="test_${test_full}.json"
+    local pcap_file="test_${test_full}.pcapng"
+    local verify_script="${REPO_ROOT}/tests/nexus/verify_${test_base}.py"
+    local nexus_bin="${NEXUS_BIN_DIR}/${test_name}"
+
+    if [[ ! -x $nexus_bin ]]; then
+        printf "Error: %s not found or not executable in %s. Did you build the tests?\n" "$test_name" "$NEXUS_BIN_DIR" >&2
+        return 1
+    fi
+
+    # Create a temporary directory for test artifacts
+    local work_dir
+    work_dir=$(mktemp -d "${TEMP_DIR}/nexus_test_${test_full}.XXXXXX")
+    local log_file="${work_dir}/test.log"
+
+    printf "Running %-40s... " "$test_full"
+
+    # Run the Nexus C++ test and verification in a subshell to isolate the working directory
+    (
+        cd "$work_dir"
+
+        # 1. Run the Nexus C++ test
+        export OT_NEXUS_PCAP_FILE="$pcap_file"
+        if ! "$nexus_bin" "$topology" "$json_file"; then
+            printf "C++ test %s FAILED\n" "$test_full" >&2
+            exit 1
+        fi
+
+        # 2. Run the verification script if it exists
+        if [[ -f $verify_script ]]; then
+            printf "\n"
+            printf "Running verification script %s...\n" "$verify_script"
+            if [[ ! -f $json_file ]]; then
+                printf "Error: %s not generated by %s.\n" "$json_file" "$test_name" >&2
+                exit 1
+            fi
+
+            if ! python3 "$verify_script" "$json_file"; then
+                printf "Verification for %s FAILED\n" "$test_full" >&2
+                exit 1
+            fi
+        fi
+    ) >"$log_file" 2>&1
+
+    local exit_code="$?"
+
+    if [[ $exit_code -eq 0 ]]; then
+        printf " PASSED\n"
+        if [[ -d $work_dir && $work_dir == "${TEMP_DIR}/"* ]]; then
+            rm -rf "$work_dir"
+        fi
+        return 0
+    else
+        printf " FAILED\n"
+        printf "========================================================================================\n"
+        cat "$log_file"
+        printf "========================================================================================\n"
+        printf "Artifacts preserved in: %s\n" "$work_dir"
+        return 1
+    fi
+}
+
+expanded_tests=()
+for t in "${TESTS_TO_RUN[@]}"; do
+    case "$t" in
+        1_1_6_1_1 | 1_1_6_1_2 | 1_1_6_1_3 | 1_1_6_1_6 | 1_1_6_2_1 | 1_1_6_2_2 | 1_1_6_3_1 | 1_1_6_3_2 | 1_1_6_4_1 | 1_1_6_4_2 | 1_1_6_5_1 | 1_1_6_5_2 | 1_1_6_5_3 | 1_1_6_6_1 | 1_1_6_6_2 | 1_1_9_2_1 | 1_1_9_2_3 | 1_1_9_2_4 | 1_1_9_2_19)
+            expanded_tests+=("${t}_A" "${t}_B")
+            ;;
+        1_3_GEN_TC_1)
+            expanded_tests+=("${t}_A" "${t}_B" "${t}_C")
+            ;;
+        *)
+            expanded_tests+=("$t")
+            ;;
+    esac
+done
+
+for t in "${expanded_tests[@]}"; do
+    if ! run_test "$t"; then
+        failed_tests+=("$t")
+    fi
+done
+
+printf "========================================================================================\n"
+if [[ ${#failed_tests[@]} -eq 0 ]]; then
+    printf "All tests passed successfully.\n"
+    exit 0
+else
+    printf "The following tests FAILED:\n" >&2
+    for f in "${failed_tests[@]}"; do
+        printf "  - %s\n" "$f" >&2
+    done
+    exit 1
+fi

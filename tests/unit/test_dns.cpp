@@ -34,7 +34,8 @@
 #include "test_util.hpp"
 
 #include "common/array.hpp"
-#include "common/instance.hpp"
+#include "common/string.hpp"
+#include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
 namespace ot {
@@ -56,17 +57,30 @@ void TestDnsName(void)
         const char    *mExpectedReadName;
     };
 
-    Instance    *instance;
-    MessagePool *messagePool;
-    Message     *message;
-    uint8_t      buffer[kMaxSize];
-    uint16_t     len;
-    uint16_t     offset;
-    char         label[Dns::Name::kMaxLabelSize];
-    uint8_t      labelLength;
-    char         name[Dns::Name::kMaxNameSize];
-    const char  *subDomain;
-    const char  *domain;
+    struct TestMatches
+    {
+        const char *mFullName;
+        const char *mFirstLabel;
+        const char *mLabels;
+        const char *mDomain;
+        bool        mShouldMatch;
+    };
+
+    Instance              *instance;
+    MessagePool           *messagePool;
+    Message               *message;
+    uint8_t                buffer[kMaxSize];
+    uint16_t               len;
+    uint16_t               offset;
+    Dns::Name::LabelBuffer label;
+    uint8_t                labelLength;
+    Dns::Name::Buffer      name;
+    const char            *subDomain;
+    const char            *domain;
+    const char            *domain2;
+    const char            *fullName;
+    const char            *suffixName;
+    Dns::Name              dnsName;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -135,6 +149,20 @@ void TestDnsName(void)
 
     static const char kBadLabel[] = "badlabel";
     static const char kBadName[]  = "bad.name";
+
+    static const TestMatches kTestMatches[] = {
+        {"foo.bar.local.", "foo", "bar", "local.", true},
+        {"foo.bar.local.", nullptr, "foo.bar", "local.", true},
+        {"foo.bar.local.", "foo", "ba", "local.", false},
+        {"foo.bar.local.", "fooooo", "bar", "local.", false},
+        {"foo.bar.local.", "foo", "bar", "locall.", false},
+        {"foo.bar.local.", "f", "bar", "local.", false},
+        {"foo.bar.local.", "foo", "barr", "local.", false},
+        {"foo.bar.local.", "foo", "bar", ".local.", false},
+        {"My Lovely Instance._mt._udp.local.", "mY lovely instancE", "_mt._udp", "local.", true},
+        {"My Lovely Instance._mt._udp.local.", nullptr, "mY lovely instancE._mt._udp", "local.", true},
+        {"_s1._sub._srv._udp.default.service.arpa.", "_s1", "_sub._srv._udp", "default.service.arpa.", true},
+    };
 
     printf("================================================================\n");
     printf("TestDnsName()\n");
@@ -210,6 +238,117 @@ void TestDnsName(void)
     domain    = "Vice.arpa.";
     VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
+    domain  = "example.com.";
+    domain2 = "example.com.";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "example.com";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "ExAmPlE.cOm";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com";
+    domain2 = "ExAmPlE.cOm";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "ExAmPlE.cOm.";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "aExAmPlE.cOm.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "cOm.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.";
+    domain2 = "example.com.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = ".example.com.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    printf("----------------------------------------------------------------\n");
+    printf("Extracting label(s) and removing domains:\n");
+
+    {
+        struct TestCase
+        {
+            const char *mFullName;
+            const char *mSuffixName;
+            const char *mLabels;
+        };
+
+        static const TestCase kTestCases[] = {
+            {"my-service._ipps._tcp.default.service.arpa.", "default.service.arpa.", "my-service._ipps._tcp"},
+            {"my-service._ipps._tcp.default.service.arpa", "default.service.arpa", "my-service._ipps._tcp"},
+            {"my.service._ipps._tcp.default.service.arpa.", "_ipps._tcp.default.service.arpa.", "my.service"},
+            {"my-service._ipps._tcp.default.service.arpa.", "DeFault.SerVice.ARPA.", "my-service._ipps._tcp"},
+            {"my-service._ipps._tcp.default.service.arpa", "DeFault.SerVice.ARPA", "my-service._ipps._tcp"},
+
+            {"my-service._ipps._tcp.default.service.arpa", "default.service.arpa.", nullptr},
+            {"my-service._ipps._tcp.default.service.arpa.", "default.service.arpa", nullptr},
+            {"my-service._ipps._tcp.default.service.arpa.", "efault.service.arpa.", nullptr},
+            {"my-service._ipps._tcp.default.service.arpa", "efault.service.arpa", nullptr},
+            {"my-service._ipps._tcp.default.service.arpa.", "xdefault.service.arpa.", nullptr},
+            {"my-service._ipps._tcp.default.service.arpa.", ".default.service.arpa.", nullptr},
+            {"my-service._ipps._tcp.default.service.arpa.", "default.service.arp.", nullptr},
+            {"default.service.arpa.", "default.service.arpa.", nullptr},
+            {"default.service.arpa", "default.service.arpa", nullptr},
+            {"efault.service.arpa.", "default.service.arpa.", nullptr},
+        };
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            Error error;
+
+            printf("\n");
+            printf("  FullName        : %s\n", testCase.mFullName);
+            printf("  SuffixName      : %s\n", testCase.mSuffixName);
+            printf("  Extracted labels: %s\n", (testCase.mLabels != nullptr) ? testCase.mLabels : "(parse)");
+
+            error = Dns::Name::ExtractLabels(testCase.mFullName, testCase.mSuffixName, name);
+
+            if (testCase.mLabels != nullptr)
+            {
+                SuccessOrQuit(error);
+                VerifyOrQuit(strcmp(name, testCase.mLabels) == 0);
+            }
+            else
+            {
+                VerifyOrQuit(error == kErrorParse);
+            }
+
+            strcpy(name, testCase.mFullName);
+            error = Dns::Name::StripName(name, testCase.mSuffixName);
+
+            if (testCase.mLabels != nullptr)
+            {
+                SuccessOrQuit(error);
+                VerifyOrQuit(strcmp(name, testCase.mLabels) == 0);
+            }
+            else
+            {
+                VerifyOrQuit(error == kErrorParse);
+            }
+        }
+
+        fullName   = "my-service._ipps._tcp.default.service.arpa.";
+        suffixName = "default.service.arpa.";
+        SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, 22));
+        VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
+
+        fullName   = "my-service._ipps._tcp.default.service.arpa.";
+        suffixName = "default.service.arpa.";
+        VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, 21) == kErrorNoBufs);
+    }
+
     printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");
 
@@ -252,7 +391,7 @@ void TestDnsName(void)
 
         // Read entire name
         offset = 0;
-        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
 
         printf("Read name =\"%s\"\n", name);
 
@@ -347,9 +486,13 @@ void TestDnsName(void)
 
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", maxLengthName);
+        printf("\"%s\" (len:%u)\n", maxLengthName, static_cast<uint16_t>(strlen(maxLengthName)));
+
+        SuccessOrQuit(Dns::Name::ValidateName(maxLengthName));
 
         SuccessOrQuit(Dns::Name::AppendName(maxLengthName, *message));
+
+        VerifyOrQuit(message->GetLength() == Dns::Name::kMaxNameSize);
     }
 
     printf("----------------------------------------------------------------\n");
@@ -359,7 +502,9 @@ void TestDnsName(void)
     {
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", invalidName);
+        printf("\"%s\" (len:%u)\n", invalidName, static_cast<uint16_t>(strlen(invalidName)));
+
+        VerifyOrQuit(Dns::Name::ValidateName(invalidName) != kErrorNone);
 
         VerifyOrQuit(Dns::Name::AppendName(invalidName, *message) == kErrorInvalidArgs);
     }
@@ -406,6 +551,84 @@ void TestDnsName(void)
         VerifyOrQuit(memcmp(buffer, test.mEncodedData, len) == 0, "Encoded name data does not match expected data");
     }
 
+    printf("----------------------------------------------------------------\n");
+    printf("Name::Matches() variations\n");
+
+    for (const TestMatches &test : kTestMatches)
+    {
+        printf(" \"%s\"\n", test.mFullName);
+
+        dnsName.Set(test.mFullName);
+        VerifyOrQuit(dnsName.Matches(test.mFirstLabel, test.mLabels, test.mDomain) == test.mShouldMatch);
+
+        IgnoreError(message->SetLength(0));
+        SuccessOrQuit(dnsName.AppendTo(*message));
+
+        dnsName.SetFromMessage(*message, 0);
+        VerifyOrQuit(dnsName.Matches(test.mFirstLabel, test.mLabels, test.mDomain) == test.mShouldMatch);
+    }
+
+    IgnoreError(message->SetLength(0));
+    dnsName.SetFromMessage(*message, 0);
+    SuccessOrQuit(Dns::Name::AppendLabel("Name.With.Dot", *message));
+    SuccessOrQuit(Dns::Name::AppendName("_srv._udp.local.", *message));
+
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("nAme.with.dOT", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv", "_udp.local."));
+
+    VerifyOrQuit(!dnsName.Matches("Name", "With.Dot._srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.", "With.Dot._srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With", "Dot._srv._udp", "local."));
+
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dott", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot.", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._tcp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._udp", "arpa."));
+
+    offset = 0;
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    dnsName.Set(name);
+
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("nAme.with.dOT", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv", "_udp.local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dott", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot.", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._tcp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._udp", "arpa."));
+
+    printf("----------------------------------------------------------------\n");
+    printf("Name::ValidateLabel\n");
+
+    SuccessOrQuit(Dns::Name::ValidateLabel("a"));
+    SuccessOrQuit(Dns::Name::ValidateLabel("hello"));
+    SuccessOrQuit(Dns::Name::ValidateLabel("012345678901234567890123456789012345678901234567890123456789012")); // 63
+    VerifyOrQuit(Dns::Name::ValidateLabel("0123456789012345678901234567890123456789012345678901234567890123") ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateLabel("") == kErrorInvalidArgs);
+
+    SuccessOrQuit(Dns::Name::ValidateName("a"));
+    SuccessOrQuit(Dns::Name::ValidateName("a.b.c"));
+    SuccessOrQuit(Dns::Name::ValidateName("a.b.c."));
+    SuccessOrQuit(Dns::Name::ValidateName("a.b.012345678901234567890123456789012345678901234567890123456789012."));
+    SuccessOrQuit(Dns::Name::ValidateName("."));
+
+    // Empty labels
+    VerifyOrQuit(Dns::Name::ValidateName("") == kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName("a..b") == kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName(".a.b") == kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName("a.b..") == kErrorInvalidArgs);
+
+    // Long labels or names
+    VerifyOrQuit(Dns::Name::ValidateName("a.b.0123456789012345678901234567890123456789012345678901234567890123.") ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName("012345678901234567890123456789012345678901234567890123456789012."
+                                         "012345678901234567890123456789012345678901234567890123456789012."
+                                         "012345678901234567890123456789012345678901234567890123456789012."
+                                         "012345678901234567890123456789012345678901234567890123456789012") ==
+                 kErrorInvalidArgs);
+
     message->Free();
     testFreeInstance(instance);
 }
@@ -438,9 +661,17 @@ void TestDnsCompressedName(void)
     static const char *kName3Labels[] = {"ISI", "ARPA"};
     static const char *kName4Labels[] = {"Human.Readable", "F", "ISI", "ARPA"};
 
+    static const char *kName1MultiLabels[]  = {"F.ISI", "ARPA"};
+    static const char *kName2MultiLabels1[] = {"FOO", "F.ISI.ARPA."};
+    static const char *kName2MultiLabels2[] = {"FOO.F.", "ISI.ARPA."};
+
+    static const char kName1BadMultiLabels[] = "F.ISI.ARPA.MORE";
+    static const char kName2BadMultiLabels[] = "FOO.F.IS";
+
     static const char kExpectedReadName1[] = "F.ISI.ARPA.";
     static const char kExpectedReadName2[] = "FOO.F.ISI.ARPA.";
     static const char kExpectedReadName3[] = "ISI.ARPA.";
+    static const char kExpectedReadName4[] = "Human.Readable.F.ISI.ARPA.";
 
     static const char kBadName[] = "bad.name";
 
@@ -542,17 +773,41 @@ void TestDnsCompressedName(void)
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name1Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName1) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::ReadName() returned incorrect offset");
 
     offset = name1Offset;
-
     for (const char *nameLabel : kName1Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name1Offset;
+    for (const char *nameLabel : kName1Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name1Offset;
+    SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kExpectedReadName1));
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name1Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kBadName) == kErrorNotFound);
+
+    offset = name1Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kName1BadMultiLabels) == kErrorNotFound);
+
+    offset = name1Offset;
+    for (const char *nameLabels : kName1MultiLabels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabels));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name1Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kExpectedReadName1));
@@ -599,17 +854,48 @@ void TestDnsCompressedName(void)
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name2Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName2) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::ReadName() returned incorrect offset");
 
     offset = name2Offset;
-
     for (const char *nameLabel : kName2Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    for (const char *nameLabel : kName2Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kExpectedReadName2));
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kBadName) == kErrorNotFound);
+
+    offset = name2Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kName2BadMultiLabels) == kErrorNotFound);
+
+    offset = name2Offset;
+    for (const char *nameLabels : kName2MultiLabels1)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabels));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    for (const char *nameLabels : kName2MultiLabels2)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabels));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name2Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kExpectedReadName2));
@@ -656,17 +942,28 @@ void TestDnsCompressedName(void)
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name3Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName3) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::ReadName() returned incorrect offset");
 
     offset = name3Offset;
-
     for (const char *nameLabel : kName3Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name3Offset;
+    for (const char *nameLabel : kName3Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name3Offset;
+    SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kExpectedReadName3));
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name3Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kExpectedReadName3));
@@ -708,17 +1005,26 @@ void TestDnsCompressedName(void)
         VerifyOrQuit(labelLength == strlen(label), "Name::ReadLabel() returned incorrect label length");
     }
 
-    // `ReadName()` for name-4 should fails due to first label containing dot char.
+    // `ReadName()` for name-4 should still succeed since only the first label contains dot char
     offset = name4Offset;
-    VerifyOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)) == kErrorParse,
-                 "Name::ReadName() did not fail with invalid label");
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    printf("Read name =\"%s\"\n", name);
+    VerifyOrQuit(strcmp(name, kExpectedReadName4) == 0, "Name::ReadName() did not return expected name");
+    VerifyOrQuit(offset == name4Offset + kName4EncodedSize, "Name::ParseName() returned incorrect offset");
 
     offset = name4Offset;
-
     for (const char *nameLabel : kName4Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name4Offset;
+    for (const char *nameLabel : kName4Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name4Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, *message, offset), "Name::CompareName() with itself failed");
@@ -755,13 +1061,92 @@ void TestDnsCompressedName(void)
     SuccessOrQuit(Dns::Name::CompareName(*message2, offset, dnsName4));
 
     offset = 0;
-    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name));
     printf("- Name1 after `AppendTo()`: \"%s\"\n", name);
-    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name));
     printf("- Name2 after `AppendTo()`: \"%s\"\n", name);
-    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name));
     printf("- Name3 after `AppendTo()`: \"%s\"\n", name);
     // `ReadName()` for name-4 will fail due to first label containing dot char.
+
+    printf("----------------------------------------------------------------\n");
+    printf("Improperly formatted names (looped)\n");
+
+    {
+        // Pointer label jumps forward to offset 6.
+        static const uint8_t kEncodedName[] = {3, 'F', 'O', 'O', 0xc0, 6, 2, 'A', 'B', 0};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("pointer-moving-forward", kEncodedName, sizeof(kEncodedName));
+        offset = 0;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+    }
+
+    {
+        // Pointer label jumps back to offset 0 creating a loop.
+        static const uint8_t kEncodedName[] = {0xc0, 0};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("looped-name", kEncodedName, sizeof(kEncodedName));
+        offset = 0;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+    }
+
+    {
+        // After first label, we have a pointer label jumping back to
+        // offset 0, creating a loop.
+
+        static const uint8_t kEncodedName[] = {3, 'F', 'O', 'O', 0xc0, 0};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("looped-one-label", kEncodedName, sizeof(kEncodedName));
+        offset = 0;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+        VerifyOrQuit(Dns::Name::CompareName(*message, offset, "FOO.") == kErrorParse);
+    }
+
+    {
+        // After two labels we have a pointer label jumping back to
+        // start of the first label. Name itself starts at offset 3
+        // (first 3 bytes are unused).
+
+        static const uint8_t kEncodedName[] = {0, 0, 0, 3, 'F', 'O', 'O', 2, 'B', 'A', 0xc0, 3};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("looped-two-labels", kEncodedName, sizeof(kEncodedName));
+        offset = 3;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+        VerifyOrQuit(Dns::Name::CompareName(*message, offset, "FOO.BA.") == kErrorParse);
+    }
+
+    {
+        // Same as last case, but pointer label now points to
+        // immediately before the first label (at offset 2). The name
+        // is now valid.
+
+        static const uint8_t kEncodedName[] = {0, 0, 0, 3, 'F', 'O', 'O', 2, 'B', 'A', 0xc0, 2};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("valid-name", kEncodedName, sizeof(kEncodedName));
+        offset = 3;
+        SuccessOrQuit(Dns::Name::ParseName(*message, offset));
+        VerifyOrQuit(offset == sizeof(kEncodedName));
+
+        offset = 3;
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+        VerifyOrQuit(offset == sizeof(kEncodedName));
+        VerifyOrQuit(strcmp(name, "FOO.BA.") == 0);
+        printf("Read name =\"%s\"\n", name);
+    }
 
     message->Free();
     message2->Free();
@@ -775,7 +1160,7 @@ void TestHeaderAndResourceRecords(void)
         kHeaderOffset    = 0,
         kQuestionCount   = 1,
         kAnswerCount     = 2,
-        kAdditionalCount = 5,
+        kAdditionalCount = 6,
         kTtl             = 7200,
         kTxtTtl          = 7300,
         kSrvPort         = 1234,
@@ -789,9 +1174,9 @@ void TestHeaderAndResourceRecords(void)
     const char    kServiceLabels[]  = "_service._udp";
     const char    kServiceName[]    = "_service._udp.example.com.";
     const char    kInstance1Label[] = "inst1";
-    const char    kInstance2Label[] = "instance2";
+    const char    kInstance2Label[] = "instance.2"; // Instance label includes dot '.' character.
     const char    kInstance1Name[]  = "inst1._service._udp.example.com.";
-    const char    kInstance2Name[]  = "instance2._service._udp.example.com.";
+    const char    kInstance2Name[]  = "instance.2._service._udp.example.com.";
     const char    kHostName[]       = "host.example.com.";
     const uint8_t kTxtData[]        = {9, 'k', 'e', 'y', '=', 'v', 'a', 'l', 'u', 'e', 0};
     const char    kHostAddress[]    = "fd00::abcd:";
@@ -799,30 +1184,34 @@ void TestHeaderAndResourceRecords(void)
     const char *kInstanceLabels[] = {kInstance1Label, kInstance2Label};
     const char *kInstanceNames[]  = {kInstance1Name, kInstance2Name};
 
-    Instance           *instance;
-    MessagePool        *messagePool;
-    Message            *message;
-    Dns::Header         header;
-    uint16_t            messageId;
-    uint16_t            headerOffset;
-    uint16_t            offset;
-    uint16_t            numRecords;
-    uint16_t            len;
-    uint16_t            serviceNameOffset;
-    uint16_t            hostNameOffset;
-    uint16_t            answerSectionOffset;
-    uint16_t            additionalSectionOffset;
-    uint16_t            index;
-    Dns::PtrRecord      ptrRecord;
-    Dns::SrvRecord      srvRecord;
-    Dns::TxtRecord      txtRecord;
-    Dns::AaaaRecord     aaaaRecord;
-    Dns::ResourceRecord record;
-    Ip6::Address        hostAddress;
-
-    char    label[Dns::Name::kMaxLabelSize];
-    char    name[Dns::Name::kMaxNameSize];
-    uint8_t buffer[kMaxSize];
+    Instance                   *instance;
+    MessagePool                *messagePool;
+    Message                    *message;
+    Dns::Header                 header;
+    uint16_t                    messageId;
+    uint16_t                    headerOffset;
+    uint16_t                    offset;
+    uint16_t                    numRecords;
+    uint16_t                    len;
+    uint16_t                    serviceNameOffset;
+    uint16_t                    hostNameOffset;
+    uint16_t                    answerSectionOffset;
+    uint16_t                    additionalSectionOffset;
+    uint16_t                    index;
+    Dns::PtrRecord              ptrRecord;
+    Dns::SrvRecord              srvRecord;
+    Dns::TxtRecord              txtRecord;
+    Dns::AaaaRecord             aaaaRecord;
+    Dns::NsecRecord             nsecRecord;
+    Dns::NsecRecord::TypeBitMap nsecBitmap;
+    Dns::ResourceRecord         record;
+    Ip6::Address                hostAddress;
+    Dns::Name::LabelBuffer      label;
+    Dns::Name::Buffer           name;
+    uint8_t                     buffer[kMaxSize];
+    uint8_t                    *bytes;
+    OwnedPtr<Message>           dataMsg;
+    uint16_t                    dataOffset;
 
     printf("================================================================\n");
     printf("TestHeaderAndResourceRecords()\n");
@@ -912,6 +1301,19 @@ void TestHeaderAndResourceRecords(void)
     aaaaRecord.SetAddress(hostAddress);
     SuccessOrQuit(message->Append(aaaaRecord));
 
+    nsecRecord.Init();
+    nsecRecord.SetTtl(kTtl);
+    nsecBitmap.Clear();
+    nsecBitmap.AddType(Dns::ResourceRecord::kTypeAaaa);
+
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(hostNameOffset, *message));
+    offset = message->GetLength();
+    SuccessOrQuit(message->Append(nsecRecord));
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(hostNameOffset, *message));
+    SuccessOrQuit(message->AppendBytes(&nsecBitmap, nsecBitmap.GetSize()));
+    nsecRecord.SetLength(message->GetLength() - offset - sizeof(Dns::ResourceRecord));
+    message->Write(offset, nsecRecord);
+
     // Dump the entire message
 
     VerifyOrQuit(message->GetLength() < kMaxSize, "Message is too long");
@@ -951,16 +1353,25 @@ void TestHeaderAndResourceRecords(void)
 
     VerifyOrQuit(offset == answerSectionOffset, "answer section offset is incorrect");
 
-    for (const char *instanceName : kInstanceNames)
+    for (const char *instanceLabel : kInstanceLabels)
     {
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, kServiceName));
+
+        SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+        VerifyOrQuit(dataMsg != nullptr);
+        dataOffset = 0;
+        VerifyOrQuit(Dns::Name::CompareName(*dataMsg, dataOffset, kServiceName));
+        VerifyOrQuit(dataOffset == dataMsg->GetLength());
+
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord));
         VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
 
-        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, name, sizeof(name)));
-        VerifyOrQuit(strcmp(name, instanceName) == 0, "Inst1 name is incorrect");
+        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, name));
+        VerifyOrQuit(strcmp(label, instanceLabel) == 0, "Inst label is incorrect");
+        VerifyOrQuit(strcmp(name, kServiceName) == 0);
 
-        printf("    \"%s\" PTR %u %d \"%s\"\n", kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength(), name);
+        printf("    \"%s\" PTR %u %d \"%s.%s\"\n", kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength(), label,
+               name);
     }
 
     VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
@@ -982,7 +1393,7 @@ void TestHeaderAndResourceRecords(void)
         VerifyOrQuit(numRecords == prevNumRecords - 1, "Incorrect num records");
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord));
         VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
-        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, sizeof(label), name, sizeof(name)));
+        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, name));
         printf("    \"%s\" PTR %u %d inst:\"%s\" at \"%s\"\n", kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength(),
                label, name);
     }
@@ -1025,18 +1436,35 @@ void TestHeaderAndResourceRecords(void)
 
         // SRV record
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName));
+        savedOffset = offset;
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord));
         VerifyOrQuit(srvRecord.GetTtl() == kTtl);
         VerifyOrQuit(srvRecord.GetPort() == kSrvPort);
         VerifyOrQuit(srvRecord.GetWeight() == kSrvWeight);
         VerifyOrQuit(srvRecord.GetPriority() == kSrvPriority);
-        SuccessOrQuit(srvRecord.ReadTargetHostName(*message, offset, name, sizeof(name)));
+        SuccessOrQuit(srvRecord.ReadTargetHostName(*message, offset, name));
         VerifyOrQuit(strcmp(name, kHostName) == 0);
         printf("    \"%s\" SRV %u %d %d %d %d \"%s\"\n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
                srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority(), name);
 
+        // SRV record again using `DecompressRecordData()`
+        dataMsg.Free();
+        SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, savedOffset, dataMsg));
+        VerifyOrQuit(dataMsg != nullptr);
+        dataOffset = 0;
+        len        = sizeof(Dns::SrvRecord) - sizeof(Dns::ResourceRecord);
+        bytes      = reinterpret_cast<uint8_t *>(&srvRecord);
+        bytes += sizeof(Dns::ResourceRecord);
+        VerifyOrQuit(dataMsg->CompareBytes(dataOffset, bytes, len));
+        dataOffset += len;
+        SuccessOrQuit(Dns::Name::CompareName(*dataMsg, dataOffset, kHostName));
+        VerifyOrQuit(dataOffset == dataMsg->GetLength());
+
         // TXT record
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName));
+        dataMsg.Free();
+        SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+        VerifyOrQuit(dataMsg == nullptr);
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, txtRecord));
         VerifyOrQuit(txtRecord.GetTtl() == kTxtTtl);
         savedOffset = offset;
@@ -1056,12 +1484,33 @@ void TestHeaderAndResourceRecords(void)
         VerifyOrQuit(savedOffset == offset);
     }
 
+    // AAAA record
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kHostName));
+    dataMsg.Free();
+    SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+    VerifyOrQuit(dataMsg == nullptr);
     SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, aaaaRecord));
     VerifyOrQuit(aaaaRecord.GetTtl() == kTtl);
     VerifyOrQuit(aaaaRecord.GetAddress() == hostAddress);
     printf("    \"%s\" AAAA %u %d \"%s\"\n", kHostName, aaaaRecord.GetTtl(), aaaaRecord.GetLength(),
            aaaaRecord.GetAddress().ToString().AsCString());
+
+    // NSEC record
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, kHostName));
+    dataMsg.Free();
+    SuccessOrQuit(Dns::ResourceRecord::DecompressRecordData(*message, offset, dataMsg));
+    VerifyOrQuit(dataMsg != nullptr);
+    dataOffset = 0;
+    SuccessOrQuit(Dns::Name::CompareName(*dataMsg, dataOffset, kHostName));
+    VerifyOrQuit(dataMsg->CompareBytes(dataOffset, &nsecBitmap, nsecBitmap.GetSize()));
+    dataOffset += nsecBitmap.GetSize();
+    VerifyOrQuit(dataOffset == dataMsg->GetLength());
+    SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record));
+    VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeNsec);
+    VerifyOrQuit(nsecBitmap.ContainsType(Dns::ResourceRecord::kTypeAaaa));
+    printf("    \"%s\" NSEC %u %d bitmap-size:%d\n", kHostName, record.GetTtl(), record.GetLength(),
+           nsecBitmap.GetSize());
+    offset += record.GetLength();
 
     VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
 
@@ -1102,6 +1551,12 @@ void TestHeaderAndResourceRecords(void)
     SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record));
     VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeAaaa);
     offset += record.GetLength();
+
+    SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kHostName)));
+    SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record));
+    VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeNsec);
+    offset += record.GetLength();
+
     VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
 
     printf("Use FindRecord() to search for specific records:\n");
@@ -1178,10 +1633,8 @@ void TestHeaderAndResourceRecords(void)
 
 void TestDnsTxtEntry(void)
 {
-    enum
-    {
-        kMaxTxtDataSize = 255,
-    };
+    static constexpr uint16_t kMaxTxtDataSize   = 255;
+    static constexpr uint16_t kMaxKeyStringSize = Dns::TxtEntry::kMaxIterKeyLength;
 
     struct EncodedTxtData
     {
@@ -1207,6 +1660,9 @@ void TestDnsTxtEntry(void)
     const char kKey6[] = "boolKey";  // Should be encoded as "boolKey" (without `=`).
     const char kKey7[] = "emptyKey"; // Should be encoded as "emptyKey=".
 
+    const char    kKey8[]   = "1234567890123456789012345678901234567890123456789012345678901234567890";
+    const uint8_t kValue8[] = "abcd";
+
     // Invalid key
     const char kShortKey[] = "";
 
@@ -1217,11 +1673,22 @@ void TestDnsTxtEntry(void)
     const uint8_t kEncodedTxt5[] = {12, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', 'a'};
     const uint8_t kEncodedTxt6[] = {7, 'b', 'o', 'o', 'l', 'K', 'e', 'y'};
     const uint8_t kEncodedTxt7[] = {9, 'e', 'm', 'p', 't', 'y', 'K', 'e', 'y', '='};
+    const uint8_t kEncodedTxt8[] = {
+        75,                                               // length
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 10
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 20
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 30
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 40
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 50
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 60
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 70
+        '=', 'a', 'b', 'c', 'd',
+    };
 
     const uint8_t kInvalidEncodedTxt1[] = {4, 'a', '=', 'b'}; // Incorrect length
 
     // Special encoded txt data with zero strings and string starting
-    // with '=' (missing key) whcih should be skipped over silently.
+    // with '=' (missing key) which should be skipped over silently.
     const uint8_t kSpecialEncodedTxt[] = {0, 0, 3, 'A', '=', 'B', 2, '=', 'C', 3, 'D', '=', 'E', 3, '=', '1', '2'};
 
     const Dns::TxtEntry kTxtEntries[] = {
@@ -1232,6 +1699,7 @@ void TestDnsTxtEntry(void)
         Dns::TxtEntry(kKey5, kValue5, sizeof(kValue5)),
         Dns::TxtEntry(kKey6, nullptr, 0),
         Dns::TxtEntry(kKey7, kValue1, 0),
+        Dns::TxtEntry(kKey8, kValue8, sizeof(kValue8)),
     };
 
     const EncodedTxtData kEncodedTxtData[] = {
@@ -1249,6 +1717,7 @@ void TestDnsTxtEntry(void)
     Dns::TxtEntry                  txtEntry;
     Dns::TxtEntry::Iterator        iterator;
     MutableData<kWithUint16Length> data;
+    char                           keyString[kMaxKeyStringSize];
 
     printf("================================================================\n");
     printf("TestDnsTxtEntry()\n");
@@ -1286,7 +1755,7 @@ void TestDnsTxtEntry(void)
         SuccessOrQuit(iterator.GetNextEntry(txtEntry), "TxtEntry::GetNextEntry() failed");
         printf("key:\"%s\" valueLen:%d\n", txtEntry.mKey != nullptr ? txtEntry.mKey : "(null)", txtEntry.mValueLength);
 
-        if (expectedKeyLength > Dns::TxtEntry::kMaxKeyLength)
+        if (expectedKeyLength > Dns::TxtEntry::kMaxIterKeyLength)
         {
             // When the key is longer than recommended max key length,
             // the full encoded string is returned in `mValue` and
@@ -1303,6 +1772,14 @@ void TestDnsTxtEntry(void)
         }
 
         VerifyOrQuit(strcmp(txtEntry.mKey, expectedTxtEntry.mKey) == 0);
+
+        SuccessOrQuit(StringCopy(keyString, expectedTxtEntry.mKey));
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToLowercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToUppercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+
         VerifyOrQuit(txtEntry.mValueLength == expectedTxtEntry.mValueLength);
 
         if (txtEntry.mValueLength != 0)

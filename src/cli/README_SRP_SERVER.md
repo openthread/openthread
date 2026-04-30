@@ -8,6 +8,7 @@ See [README_SRP.md](README_SRP.md).
 
 - [help](#help)
 - [addrmode](#addrmode)
+- [auto](#auto)
 - [disable](#disable)
 - [domain](#domain)
 - [enable](#enable)
@@ -28,12 +29,15 @@ Print SRP server help menu.
 ```bash
 > srp server help
 addrmode
+auto
 disable
 domain
 enable
+faststart
 help
 host
 lease
+port
 seqnum
 service
 state
@@ -64,6 +68,25 @@ Done
 
 > srp server addrmode
 anycast
+Done
+```
+
+### auto
+
+Usage: `srp server auto [enable|disable]`
+
+Enables or disables the auto-enable mode on the SRP server.
+
+When this mode is enabled, the Border Routing Manager controls if and when to enable or disable the SRP server.
+
+This command requires that `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` be enabled.
+
+```bash
+> srp server auto enable
+Done
+
+> srp server auto
+Enabled
 Done
 ```
 
@@ -108,6 +131,29 @@ Enable the SRP server.
 Done
 ```
 
+### faststart
+
+Usage: `srp server faststart [enable]`
+
+This command requires that `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` be enabled.
+
+Enables the "Fast Start Mode" on the SRP server.
+
+The Fast Start Mode is designed for scenarios where a device, often a mobile device, needs to act as a provisional SRP server (e.g., functioning as a temporary Border Router). The SRP server function is enabled only if no other Border Routers (BRs) are already providing the SRP service within the Thread network. Importantly, Fast Start Mode allows the device to quickly start its SRP server functionality upon joining the network, allowing other Thread devices to quickly connect and register their services without the typical delays associated with standard Border Router initialization (and SRP server startup).
+
+The Fast Start Mode can be enabled when the device is in the detached or disabled state, the SRP server is currently disabled, and "auto-enable mode" is not in use.
+
+After successfully enabling Fast Start Mode, it can be disabled by a direct command to enable/disable the SRP server, using `srp server [enable/disable]`.
+
+```bash
+> srp server faststart enable
+Done
+
+> srp server faststart
+Enabled
+Done
+```
+
 ### host
 
 Usage: `srp server host`
@@ -119,9 +165,17 @@ Print information of all registered hosts.
 srp-api-test-1.default.service.arpa.
     deleted: false
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+    lease: 7200
+    key-lease: 1209600
+    remaining lease: 6345.459
+    remaining key-lease: 1208734.459
 srp-api-test-0.default.service.arpa.
     deleted: false
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+    lease: 3600
+    key-lease: 1209600
+    remaining lease: 2600.012
+    remaining key-lease: 1208600.012
 Done
 ```
 
@@ -144,6 +198,18 @@ Set LEASE and KEY-LEASE values.
 
 ```bash
 > srp server lease 1800 7200 86400 1209600
+Done
+```
+
+### port
+
+Usage: `srp server port`
+
+Get the port number the SRP server is listening to. If the server is not running, `0` will be returned.
+
+```bash
+> srp server port
+53536
 Done
 ```
 
@@ -183,6 +249,8 @@ srp-api-test-1._ipps._tcp.default.service.arpa.
     ttl: 7200
     lease: 7200
     key-lease: 1209600
+    remaining lease: 6345.459
+    remaining key-lease: 1208734.459
     TXT: [616263, xyz=585960]
     host: srp-api-test-1.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
@@ -195,6 +263,8 @@ srp-api-test-0._ipps._tcp.default.service.arpa.
     ttl: 3600
     lease: 3600
     key-lease: 1209600
+    remaining lease: 2600.012
+    remaining key-lease: 1208600.012
     TXT: [616263, xyz=585960]
     host: srp-api-test-0.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]

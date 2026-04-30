@@ -45,8 +45,11 @@
 #include "../lib/bitmap.h"
 #include "../lib/cbuf.h"
 #include "cc.h"
+#include "tcp_fastopen.h"
 
 #include "tcp_const.h"
+
+static void reinitialize_tcb(struct tcpcb* tp);
 
 /*
  * samkumar: This is rewritten to have the host network stack to generate the
@@ -60,6 +63,7 @@ tcp_seq tcp_new_isn(struct tcpcb* tp) {
  * samkumar: There used to be a function, void tcp_init(void), that would
  * initialize global state for TCP, including a hash table to store TCBs,
  * allocating memory zones for sockets, and setting global configurable state.
+ * In FreeBSD 12.0, it also makes a call to the function tcp_fastopen_init.
  * None of that is needed for TCPlp: TCB allocation and matching is done by
  * the host system and global configurable state is removed with hardcoded
  * values in order to save memory, for example. Thus, I've removed the function
@@ -90,7 +94,7 @@ tcp_state_change(struct tcpcb *tp, int newstate)
 }
 
  /* samkumar: Based on tcp_newtcb in tcp_subr.c, and tcp_usr_attach in tcp_usrreq.c. */
-__attribute__((used)) void initialize_tcb(struct tcpcb* tp) {
+void initialize_tcb(struct tcpcb* tp) {
 	uint32_t ticks = tcplp_sys_get_ticks();
 
 	/* samkumar: Clear all fields starting laddr; rest are initialized by the host. */
@@ -143,6 +147,15 @@ __attribute__((used)) void initialize_tcb(struct tcpcb* tp) {
 	tcp_sack_init(tp);
 }
 
+/* Re-initialize the TCB. */
+static void reinitialize_tcb(struct tcpcb* tp)
+{
+	uint32_t ntraversed;
+	lbuf_pop(&tp->sendbuf, lbuf_used_space(&tp->sendbuf), &ntraversed);
+	cbuf_pop(&tp->recvbuf, cbuf_used_space(&tp->recvbuf));
+	tp->accepted_from = NULL;
+	initialize_tcb(tp);
+}
 
 /*
  * samkumar: Most of this function was no longer needed. It did things like
@@ -163,6 +176,8 @@ tcp_discardcb(struct tcpcb *tp)
 		CC_ALGO(tp)->cb_destroy(tp->ccv);
 
 	tcp_free_sackholes(tp);
+
+	reinitialize_tcb(tp);
 }
 
 
@@ -177,8 +192,15 @@ tcp_discardcb(struct tcpcb *tp)
  * needed for TCP.
  */
 struct tcpcb *
-tcp_close(struct tcpcb *tp)
+tcp_close_tcb(struct tcpcb *tp)
 {
+	/* samkumar: Eliminate the TFO pending counter. */
+	/*
+	if (tp->t_tfo_pending) {
+		tcp_fastopen_decrement_counter(tp->t_tfo_pending);
+		tp->t_tfo_pending = NULL;
+	}
+	*/
 	tcp_state_change(tp, TCP6S_CLOSED); // for the print statement
 	tcp_discardcb(tp);
 	// Don't reset the TCB by calling initialize_tcb, since that overwrites the buffer contents.
@@ -190,7 +212,8 @@ tcp_close(struct tcpcb *tp)
  * Allocates an mbuf and fills in a skeletal tcp/ip header.  The only
  * use for this function is in keepalives, which use tcp_respond.
  */
-/* samkumar: I changed the signature of this function. Instead of allocating
+/*
+ * samkumar: I changed the signature of this function. Instead of allocating
  * the struct tcptemp using malloc, populating it, and then returning it, I
  * have the caller allocate it. This function merely populates it now.
  */
@@ -342,12 +365,12 @@ struct tcpcb *
 tcp_drop(struct tcpcb *tp, int errnum)
 {
 	if (TCPS_HAVERCVDSYN(tp->t_state)) {
-		tcp_state_change(tp, TCPS_CLOSED);
-		(void) tcp_output(tp);
+		tcp_state_change(tp, TCP6S_CLOSED);
+		(void) tcplp_output(tp);
 	}
 	if (errnum == ETIMEDOUT && tp->t_softerror)
 		errnum = tp->t_softerror;
-	tp = tcp_close(tp);
+	tp = tcp_close_tcb(tp);
 	tcplp_sys_connection_lost(tp, errnum);
 	return tp;
 }

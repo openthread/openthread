@@ -28,15 +28,19 @@
 #
 
 from . import errors
-from .constants import THREAD_VERSION_1_1, THREAD_VERSION_1_2
+from .constants import THREAD_VERSION_1_1, THREAD_VERSION_1_2, THREAD_VERSION_1_3, THREAD_VERSION_1_4
+from .command_handlers import OTCommandHandler
+from .connectors import OtCliHandler
 from .otci import OTCI
-from .otci import \
-    connect_cli_sim, \
-    connect_cli_serial, \
-    connect_ncp_sim, \
-    connect_cmd_handler, \
-    connect_otbr_ssh, \
-    connect_otbr_adb
+from .otci import (
+    connect_cli_sim,
+    connect_cli_serial,
+    connect_ncp_sim,
+    connect_cmd_handler,
+    connect_otbr_ssh,
+    connect_otbr_adb_tcp,
+    connect_otbr_adb_usb,
+)
 
 from .types import Rloc16, ChildId, NetifIdentifier
 
@@ -45,9 +49,21 @@ _connectors = [
     'connect_cli_serial',
     'connect_ncp_sim',
     'connect_otbr_ssh',
-    'connect_otbr_adb',
+    'connect_otbr_adb_tcp',
+    'connect_otbr_adb_usb',
     'connect_cmd_handler',
 ]
 
-__all__ = ['OTCI', 'errors', 'Rloc16', 'ChildId', 'NetifIdentifer', 'THREAD_VERSION_1_1', 'THREAD_VERSION_1_2'
-          ] + _connectors
+__all__ = [
+    'OTCI',
+    'OTCommandHandler',
+    'OTCliHandler',
+    'errors',
+    'Rloc16',
+    'ChildId',
+    'NetifIdentifier',
+    'THREAD_VERSION_1_1',
+    'THREAD_VERSION_1_2',
+    'THREAD_VERSION_1_3',
+    'THREAD_VERSION_1_4',
+] + _connectors

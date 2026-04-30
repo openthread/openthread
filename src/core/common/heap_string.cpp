@@ -66,16 +66,14 @@ exit:
     return error;
 }
 
-Error String::Set(String &&aString)
+void String::TakeFrom(String &&aString)
 {
-    VerifyOrExit(mStringBuffer != aString.mStringBuffer);
-
-    Heap::Free(mStringBuffer);
-    mStringBuffer         = aString.mStringBuffer;
-    aString.mStringBuffer = nullptr;
-
-exit:
-    return kErrorNone;
+    if (&aString != this)
+    {
+        Heap::Free(mStringBuffer);
+        mStringBuffer         = aString.mStringBuffer;
+        aString.mStringBuffer = nullptr;
+    }
 }
 
 void String::Free(void)
@@ -89,7 +87,7 @@ bool String::operator==(const char *aCString) const
     bool isEqual;
 
     VerifyOrExit((aCString != nullptr) && (mStringBuffer != nullptr), isEqual = (mStringBuffer == aCString));
-    isEqual = (strcmp(mStringBuffer, aCString) == 0);
+    isEqual = StringMatch(mStringBuffer, aCString);
 
 exit:
     return isEqual;

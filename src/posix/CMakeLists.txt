@@ -34,6 +34,8 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 
+ot_option(OT_PLATFORM_POSIX_CONFIG_FILE OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE "posix config file")
+
 set(OT_READLINE_VALUES
     "readline"
     "edit"
@@ -81,6 +83,19 @@ elseif(OT_APP_CLI)
     if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         set(CPACK_PACKAGE_NAME "openthread-standalone")
     endif()
+endif()
+
+set(OT_POSIX_FACTORY_CONFIG "" CACHE STRING "OpenThread factory config file")
+set(OT_POSIX_PRODUCT_CONFIG "" CACHE STRING "OpenThread product config file")
+
+if (OT_POSIX_FACTORY_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE=\"${OT_POSIX_FACTORY_CONFIG}\"")
+    message(STATUS "OT_POSIX_FACTORY_CONFIG=\"${OT_POSIX_FACTORY_CONFIG}\"")
+endif()
+
+if (OT_POSIX_PRODUCT_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE=\"${OT_POSIX_PRODUCT_CONFIG}\"")
+    message(STATUS "OT_POSIX_PRODUCT_CONFIG=\"${OT_POSIX_PRODUCT_CONFIG}\"")
 endif()
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

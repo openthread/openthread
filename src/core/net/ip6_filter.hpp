@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv6 datagram filtering.
  */
 
-#ifndef IP6_FILTER_HPP_
-#define IP6_FILTER_HPP_
+#ifndef OT_CORE_NET_IP6_FILTER_HPP_
+#define OT_CORE_NET_IP6_FILTER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -51,21 +51,18 @@ namespace Ip6 {
  *   This module includes definitions for IPv6 datagram filtering.
  *
  * @{
- *
  */
 
 /**
- * This class implements an IPv6 datagram filter.
- *
+ * Implements an IPv6 datagram filter.
  */
 class Filter : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the Filter object.
+     * Initializes the Filter object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Filter(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -73,65 +70,59 @@ public:
     }
 
     /**
-     * This method indicates whether or not the IPv6 datagram passes the filter.
+     * Applies the filter to an IPv6 datagram to determine if it should be dropped.
      *
      * @param[in]  aMessage  The IPv6 datagram to process.
      *
-     * @retval TRUE   Accept the IPv6 datagram.
-     * @retval FALSE  Reject the IPv6 datagram.
-     *
+     * @retval kErrorNone  The message is not filtered and should be accepted.
+     * @retval kErrorDrop  The message matches the filter criteria and should be dropped.
      */
-    bool Accept(Message &aMessage) const;
+    Error Apply(const Message &aMessage) const;
 
     /**
-     * This method adds a port to the allowed unsecured port list.
+     * Adds a port to the allowed unsecured port list.
      *
      * @param[in]  aPort  The port value.
      *
      * @retval kErrorNone         The port was successfully added to the allowed unsecure port list.
      * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
      * @retval kErrorNoBufs       The unsecure port list is full.
-     *
      */
     Error AddUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kAdd, aPort); }
 
     /**
-     * This method removes a port from the allowed unsecure port list.
+     * Removes a port from the allowed unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
      * @retval kErrorNone         The port was successfully removed from the allowed unsecure port list.
      * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
      * @retval kErrorNotFound     The port was not found in the unsecure port list.
-     *
      */
     Error RemoveUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kRemove, aPort); }
 
     /**
-     * This method checks whether a port is in the unsecure port list.
+     * Checks whether a port is in the unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
      * @returns Whether the given port is in the unsecure port list.
-     *
      */
     bool IsUnsecurePort(uint16_t aPort) { return mUnsecurePorts.Contains(aPort); }
 
     /**
-     * This method removes all ports from the allowed unsecure port list.
-     *
+     * Removes all ports from the allowed unsecure port list.
      */
     void RemoveAllUnsecurePorts(void) { mUnsecurePorts.Clear(); }
 
     /**
-     * This method returns a pointer to the unsecure port list.
+     * Returns a pointer to the unsecure port list.
      *
      * @note Port value 0 is used to indicate an invalid entry.
      *
      * @param[out]  aNumEntries  The number of entries in the list.
      *
      * @returns A pointer to the unsecure port list.
-     *
      */
     const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const
     {
@@ -157,4 +148,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // IP6_FILTER_HPP_
+#endif // OT_CORE_NET_IP6_FILTER_HPP_

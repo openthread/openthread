@@ -96,6 +96,9 @@ send "coaps start something_invalid\n"
 expect "Error 7: InvalidArgs"
 
 switch_node 2
+send "coaps disconnect\n"
+expect_line "Done"
+expect "coaps disconnected"
 send "coaps stop\n"
 expect_line "Done"
 

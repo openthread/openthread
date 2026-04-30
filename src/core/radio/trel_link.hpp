@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Radio Encapsulation Link (TREL).
  */
 
-#ifndef TREL_LINK_HPP_
-#define TREL_LINK_HPP_
+#ifndef OT_CORE_RADIO_TREL_LINK_HPP_
+#define OT_CORE_RADIO_TREL_LINK_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,6 +47,8 @@
 #include "mac/mac_types.hpp"
 #include "radio/trel_interface.hpp"
 #include "radio/trel_packet.hpp"
+#include "radio/trel_peer.hpp"
+#include "radio/trel_peer_discoverer.hpp"
 
 namespace ot {
 
@@ -61,12 +63,10 @@ namespace Trel {
  *   This module includes definitions for Thread Radio Encapsulation Link (TREL)
  *
  * @{
- *
  */
 
 /**
- * This class represents a Thread Radio Encapsulation Link (TREL).
- *
+ * Represents a Thread Radio Encapsulation Link (TREL).
  */
 class Link : public InstanceLocator
 {
@@ -79,74 +79,86 @@ public:
     static constexpr uint8_t  kFcsSize = 0;                          ///< FCS size for TREL frame.
 
     /**
-     * This constructor initializes the `Link` object.
+     * Used as input by `CheckPeerAddrOnRxSuccess()` to determine whether the peer socket address can be updated based
+     * on a received TREL packet from the peer if there is a discrepancy.
+     */
+    enum PeerSockAddrUpdateMode : uint8_t
+    {
+        kAllowPeerSockAddrUpdate,    ///< Peer socket address can be updated.
+        kDisallowPeerSockAddrUpdate, ///< Peer socket address cannot be updated.
+    };
+
+    /**
+     * Initializes the `Link` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit Link(Instance &aInstance);
 
     /**
-     * This method sets the PAN Identifier.
+     * Sets the PAN Identifier.
      *
      * @param[in] aPanId   A PAN Identifier.
-     *
      */
     void SetPanId(Mac::PanId aPanId) { mPanId = aPanId; }
 
     /**
-     * This method notifies TREL radio link that device's extended MAC address has changed for it to update any
+     * Notifies TREL radio link that device's extended MAC address has changed for it to update any
      * internal address/state.
-     *
      */
-    void HandleExtAddressChange(void) { mInterface.HandleExtAddressChange(); }
+    void HandleExtAddressChange(void) { mPeerDiscoverer.HandleExtAddressChange(); }
 
     /**
-     * This method enables the TREL radio link.
-     *
+     * Enables the TREL radio link.
      */
     void Enable(void);
 
     /**
-     * This method disables the TREL radio link.
-     *
+     * Disables the TREL radio link.
      */
     void Disable(void);
 
     /**
-     * This method requests TREL radio link to transition to Sleep mode
-     *
+     * Requests TREL radio link to transition to Sleep mode
      */
     void Sleep(void);
 
     /**
-     * This method requests TREL radio link to transition to Receive mode on a given channel.
+     * Requests TREL radio link to transition to Receive mode on a given channel.
      *
      * `Mac::HandleReceivedFrame()` is used to notify MAC layer upon receiving a frame.
      *
      * @param[in] aChannel   The channel to receive on.
-     *
      */
     void Receive(uint8_t aChannel);
 
     /**
-     * This method gets the radio transmit frame for TREL radio link.
+     * Gets the radio transmit frame for TREL radio link.
      *
      * @returns The transmit frame.
-     *
      */
     Mac::TxFrame &GetTransmitFrame(void) { return mTxFrame; }
 
     /**
-     * This method requests a frame to be sent over TREL radio link.
+     * Requests a frame to be sent over TREL radio link.
      *
      * The frame should be already placed in `GetTransmitFrame()` frame.
      *
      * `Mac::RecordFrameTransmitStatus()` and `Mac::HandleTransmitDone()` are used to notify the success or error status
      * of frame transmission upon completion of send.
-     *
      */
     void Send(void);
+
+    /**
+     * Checks the address/port from the last received TREL packet against the ones recorded in the corresponding `Peer`
+     * entry and acts if there is a discrepancy.
+     *
+     * This method signals to the platform about the discrepancy. Based on @p aMode, it may also update the `Peer`
+     * entry information directly to match the new address/port information.
+     *
+     * @param[in] aMode   Determines whether to update the `Peer` entry if there is a discrepancy.
+     */
+    void CheckPeerAddrOnRxSuccess(PeerSockAddrUpdateMode aMode);
 
 private:
     static constexpr uint16_t kMaxHeaderSize   = sizeof(Header);
@@ -168,7 +180,7 @@ private:
     void BeginTransmit(void);
     void InvokeSendDone(Error aError) { InvokeSendDone(aError, nullptr); }
     void InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame);
-    void ProcessReceivedPacket(Packet &aPacket);
+    void ProcessReceivedPacket(Packet &aPacket, const Ip6::SockAddr &aSockAddr);
     void HandleAck(Packet &aAckPacket);
     void SendAck(Packet &aRxPacket);
     void ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError);
@@ -182,29 +194,33 @@ private:
     using TxTasklet    = TaskletIn<Link, &Link::HandleTxTasklet>;
     using TimeoutTimer = TimerMilliIn<Link, &Link::HandleTimer>;
 
-    State        mState;
-    uint8_t      mRxChannel;
-    Mac::PanId   mPanId;
-    uint32_t     mTxPacketNumber;
-    TxTasklet    mTxTasklet;
-    TimeoutTimer mTimer;
-    Interface    mInterface;
-    Mac::RxFrame mRxFrame;
-    Mac::TxFrame mTxFrame;
-    uint8_t      mTxPacketBuffer[kMaxHeaderSize + kMtuSize];
-    uint8_t      mAckPacketBuffer[kMaxHeaderSize];
-    uint8_t      mAckFrameBuffer[k154AckFrameSize];
+    State          mState;
+    uint8_t        mRxChannel;
+    Mac::PanId     mPanId;
+    uint32_t       mTxPacketNumber;
+    TxTasklet      mTxTasklet;
+    TimeoutTimer   mTimer;
+    Interface      mInterface;
+    PeerTable      mPeerTable;
+    PeerDiscoverer mPeerDiscoverer;
+    Ip6::SockAddr  mRxPacketSenderAddr;
+    Peer          *mRxPacketPeer;
+    Mac::RxFrame   mRxFrame;
+    Mac::TxFrame   mTxFrame;
+    uint8_t        mTxPacketBuffer[kMaxHeaderSize + kMtuSize];
+    uint8_t        mAckPacketBuffer[kMaxHeaderSize];
+    uint8_t        mAckFrameBuffer[k154AckFrameSize];
 };
 
 /**
- * This class defines all the neighbor info required for TREL link.
+ * Defines all the neighbor info required for TREL link.
  *
  * `Neighbor` class publicly inherits from this class.
- *
  */
 class NeighborInfo
 {
     friend class Link;
+    friend class Interface;
 
 private:
     uint32_t GetPendingTrelAckCount(void) const { return (mTrelPreviousPendingAcks + mTrelCurrentPendingAcks); }
@@ -239,7 +255,6 @@ private:
 
 /**
  * @}
- *
  */
 
 } // namespace Trel
@@ -247,4 +262,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // TREL_LINK_HPP_
+#endif // OT_CORE_RADIO_TREL_LINK_HPP_

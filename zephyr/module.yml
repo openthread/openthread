@@ -26,6 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+name: openthread
 build:
   cmake-ext: True
   kconfig-ext: True

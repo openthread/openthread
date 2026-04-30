@@ -31,7 +31,7 @@
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,18 +39,21 @@
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/openthread-system.h>
 
+#include "logger.hpp"
+#include "mainloop.hpp"
 #include "platform-posix.h"
 #include "core/common/non_copyable.hpp"
 #include "core/net/ip6_address.hpp"
 #include "lib/url/url.hpp"
-#include "posix/platform/mainloop.hpp"
 
 namespace ot {
 namespace Posix {
 
-class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
+class MulticastRoutingManager : public Mainloop::Source, public Logger<MulticastRoutingManager>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[];
+
     explicit MulticastRoutingManager()
 
         : mLastExpireTime(0)
@@ -58,20 +61,18 @@ public:
     {
     }
 
+    bool IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void SetUp(void);
     void TearDown(void);
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
+    void Update(Mainloop::Context &aContext) override;
+    void Process(const Mainloop::Context &aContext) override;
     void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
 private:
-    enum
-    {
-        kMulticastForwardingCacheExpireTimeout    = 300, //< Expire timeout of Multicast Forwarding Cache (in seconds)
-        kMulticastForwardingCacheExpiringInterval = 60,  //< Expire interval of Multicast Forwarding Cache (in seconds)
-        kMulitcastForwardingCacheTableSize =
-            OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE, //< The max size of MFC table.
-    };
+    static constexpr uint16_t kMulticastForwardingCacheExpireTimeout    = 300; //< Expire timeout (in seconds)
+    static constexpr uint16_t kMulticastForwardingCacheExpiringInterval = 60;  //< Expire interval (in seconds)
+    static constexpr uint16_t kMulticastForwardingCacheTableSize =
+        OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE;
 
     enum MifIndex : uint8_t
     {
@@ -110,7 +111,6 @@ private:
     void    Remove(const Ip6::Address &aAddress);
     void    UpdateMldReport(const Ip6::Address &aAddress, bool isAdd);
     bool    HasMulticastListener(const Ip6::Address &aAddress) const;
-    bool    IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void    InitMulticastRouterSock(void);
     void    FinalizeMulticastRouterSock(void);
     void    ProcessMulticastRouterMessages(void);
@@ -132,7 +132,7 @@ private:
     void               HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
                                                             const Ip6::Address                    &aAddress);
 
-    MulticastForwardingCache mMulticastForwardingCacheTable[kMulitcastForwardingCacheTableSize];
+    MulticastForwardingCache mMulticastForwardingCacheTable[kMulticastForwardingCacheTableSize];
     uint64_t                 mLastExpireTime;
     int                      mMulticastRouterSock;
 };
@@ -140,6 +140,6 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #endif // OT_POSIX_PLATFORM_MULTICAST_ROUTING_HPP_

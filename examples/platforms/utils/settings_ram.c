@@ -29,7 +29,6 @@
 /**
  * @file
  *   This file implements OpenThread platform abstraction for storage of settings in RAM.
- *
  */
 
 #include "settings.h"

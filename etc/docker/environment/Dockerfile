@@ -1,8 +1,14 @@
 # Ubuntu image with tools required to build OpenThread
 FROM ubuntu:22.04
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV LANG en_US.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=en_US.UTF-8
+ENV INSTALL_FORMAT_TOOLS=0
+# Resolves issue with installing libc-bin
+RUN rm /var/lib/dpkg/info/libc-bin.* \
+    && apt-get clean -y \
+    && apt-get update -y \
+    && apt-get install --no-install-recommends -y libc-bin
 
 RUN set -x \
     && apt-get update -y \

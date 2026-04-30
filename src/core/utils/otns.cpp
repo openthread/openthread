@@ -29,65 +29,84 @@
 /**
  * @file
  *   This file implements OTNS utilities.
- *
  */
 
 #include "otns.hpp"
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {
 
 RegisterLogModule("Otns");
 
-const int kMaxStatusStringLength = 128;
+void Otns::EmitShortAddress(uint16_t aShortAddress) const { EmitStatus("rloc16=%d", aShortAddress); }
 
-void Otns::EmitShortAddress(uint16_t aShortAddress) { EmitStatus("rloc16=%d", aShortAddress); }
-
-void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress)
+void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress) const
 {
     Mac::ExtAddress revExtAddress;
+
     revExtAddress.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
     EmitStatus("extaddr=%s", revExtAddress.ToString().AsCString());
 }
 
+void Otns::EmitStatus(const char *aFmt, ...) const
+{
+    StatusString string;
+    va_list      args;
+
+    va_start(args, aFmt);
+    string.AppendVarArgs(aFmt, args);
+    va_end(args);
+
+    EmitStatus(string);
+}
+
+void Otns::EmitStatus(const StatusString &aString) const { otPlatOtnsStatus(aString.AsCString()); }
+
+void Otns::EmitTransmit(const Mac::TxFrame &aFrame) const
+{
+    StatusString string;
+    Mac::Address dst;
+
+    IgnoreError(aFrame.GetDstAddr(dst));
+
+    string.Append("transmit=%d,%04x,%d", aFrame.GetChannel(), aFrame.GetFrameControlField(), aFrame.GetSequence());
+
+    if (dst.IsShort())
+    {
+        string.Append(",%04x", dst.GetShort());
+    }
+    else if (dst.IsExtended())
+    {
+        string.Append(",%s", dst.ToString().AsCString());
+    }
+
+    EmitStatus(string);
+}
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Otns::EmitPingRequest(const Ip6::Address &aPeerAddress,
                            uint16_t            aPingLength,
                            uint32_t            aTimestamp,
-                           uint8_t             aHopLimit)
+                           uint8_t             aHopLimit) const
 {
     OT_UNUSED_VARIABLE(aHopLimit);
-    EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp);
+    EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, ToUlong(aTimestamp));
 }
 
-void Otns::EmitPingReply(const Ip6::Address &aPeerAddress, uint16_t aPingLength, uint32_t aTimestamp, uint8_t aHopLimit)
+void Otns::EmitPingReply(const Ip6::Address &aPeerAddress,
+                         uint16_t            aPingLength,
+                         uint32_t            aTimestamp,
+                         uint8_t             aHopLimit) const
 {
-    EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp, aHopLimit);
+    EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, ToUlong(aTimestamp),
+               aHopLimit);
 }
 
-void Otns::EmitStatus(const char *aFmt, ...)
-{
-    char statusStr[kMaxStatusStringLength + 1];
-    int  n;
-
-    va_list ap;
-    va_start(ap, aFmt);
-
-    n = vsnprintf(statusStr, sizeof(statusStr), aFmt, ap);
-    OT_UNUSED_VARIABLE(n);
-    OT_ASSERT(n >= 0);
-
-    va_end(ap);
-
-    otPlatOtnsStatus(statusStr);
-}
-
-void Otns::HandleNotifierEvents(Events aEvents)
+void Otns::HandleNotifierEvents(Events aEvents) const
 {
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
@@ -96,7 +115,7 @@ void Otns::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadPartitionIdChanged))
     {
-        EmitStatus("parid=%x", Get<Mle::Mle>().GetLeaderData().GetPartitionId());
+        EmitStatus("parid=%lx", ToUlong(Get<Mle::Mle>().GetLeaderData().GetPartitionId()));
     }
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -107,106 +126,112 @@ void Otns::HandleNotifierEvents(Events aEvents)
 #endif
 }
 
-void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor)
+void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor) const
 {
+    StatusString string;
+
     switch (aEvent)
     {
     case NeighborTable::kRouterAdded:
-        EmitStatus("router_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("router_added");
         break;
     case NeighborTable::kRouterRemoved:
-        EmitStatus("router_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("router_removed");
         break;
     case NeighborTable::kChildAdded:
-        EmitStatus("child_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("child_added");
         break;
     case NeighborTable::kChildRemoved:
-        EmitStatus("child_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        string.Append("child_removed");
         break;
     case NeighborTable::kChildModeChanged:
-        break;
+        ExitNow();
     }
+
+    string.Append("=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+    EmitStatus(string);
+
+exit:
+    return;
 }
 
-void Otns::EmitTransmit(const Mac::TxFrame &aFrame)
+void Otns::EmitDeviceMode(Mle::DeviceMode aMode) const
 {
-    Mac::Address dst;
-    uint16_t     frameControlField = aFrame.GetFrameControlField();
-    uint8_t      channel           = aFrame.GetChannel();
-    uint8_t      sequence          = aFrame.GetSequence();
+    StatusString string;
 
-    IgnoreError(aFrame.GetDstAddr(dst));
+    string.Append("mode=");
 
-    if (dst.IsShort())
+    if (aMode.IsRxOnWhenIdle())
     {
-        EmitStatus("transmit=%d,%04x,%d,%04x", channel, frameControlField, sequence, dst.GetShort());
+        string.Append("r");
     }
-    else if (dst.IsExtended())
+
+    if (aMode.IsFullThreadDevice())
     {
-        EmitStatus("transmit=%d,%04x,%d,%s", channel, frameControlField, sequence, dst.ToString().AsCString());
+        string.Append("d");
     }
-    else
+
+    if (aMode.GetNetworkDataType() == NetworkData::kFullSet)
     {
-        EmitStatus("transmit=%d,%04x,%d", channel, frameControlField, sequence);
+        string.Append("m");
     }
+
+    EmitStatus(string);
 }
 
-void Otns::EmitDeviceMode(Mle::DeviceMode aMode)
+void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    EmitStatus("mode=%s%s%s", aMode.IsRxOnWhenIdle() ? "r" : "", aMode.IsFullThreadDevice() ? "d" : "",
-               (aMode.GetNetworkDataType() == NetworkData::kFullSet) ? "n" : "");
+    EmitCoapStatus("send", aMessage, aMessageInfo);
 }
 
-void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    Error error;
+    EmitCoapStatus("recv", aMessage, aMessageInfo);
+}
 
+void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+{
+    EmitCoapStatus("send_error", aMessage, aMessageInfo, &aError);
+}
+
+void Otns::EmitCoapStatus(const char             *aAction,
+                          const Coap::Message    &aMessage,
+                          const Ip6::MessageInfo &aMessageInfo,
+                          Error                  *aError) const
+{
+    Error                              error;
+    Coap::Message::UriPathStringBuffer uriPath;
+    StatusString                       string;
+    Coap::HeaderInfo                   header;
+
+    SuccessOrExit(error = aMessage.ParseHeaderInfo(header));
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
-    EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
-               aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
-exit:
-    if (error != kErrorNone)
+    string.Append("coap=%s,%d,%d,%d,%s,%s,%d", aAction, header.GetMessageId(), header.GetType(), header.GetCode(),
+                  uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
+
+    if (aError != nullptr)
     {
-        LogWarn("EmitCoapSend failed: %s", ErrorToString(error));
+        string.Append(",%s", ErrorToString(*aError));
     }
+
+    EmitStatus(string);
+
+exit:
+    LogWarnOnError(error, "EmitCoapStatus");
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of OTNS platform APIs
+
+extern "C" OT_TOOL_WEAK void otPlatOtnsStatus(const char *aStatus)
 {
-    char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    Error error = kErrorNone;
-
-    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
-
-    EmitStatus("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
-               aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
-exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("EmitCoapReceive failed: %s", ErrorToString(error));
-    }
-}
-
-void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    Error error = kErrorNone;
-
-    SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
-
-    EmitStatus("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
-               uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
-               ErrorToString(aError));
-exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("EmitCoapSendFailure failed: %s", ErrorToString(error));
-    }
+    OT_UNUSED_VARIABLE(aStatus);
+    LogAt(kLogLevelNone, "%s", aStatus);
 }
 
 } // namespace Utils
 } // namespace ot
 
-#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE

@@ -46,7 +46,13 @@ add_library(ot-config-mtd INTERFACE)
 add_library(ot-config-radio INTERFACE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 99)
+
+if(APPLE)
+    set(CMAKE_AR "/usr/bin/ar")
+    set(CMAKE_RANLIB "/usr/bin/ranlib")
+endif()
 
 message(STATUS "OpenThread Source Directory: ${PROJECT_SOURCE_DIR}")
 
@@ -54,6 +60,7 @@ target_include_directories(ot-config INTERFACE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src/include
 )
 
 include(TestBigEndian)
@@ -90,8 +97,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     endif()
 
     set(OT_CFLAGS
-        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow>
-        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wformat-nonliteral -Wextra -Wshadow>
+        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wformat-nonliteral -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+        $<$<CXX_COMPILER_ID:Clang>:-Wc99-extensions>
     )
 endif()
 
@@ -106,66 +114,11 @@ if(OT_PACKAGE_VERSION STREQUAL "")
 endif()
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
-set(OT_THREAD_VERSION "1.3" CACHE STRING "Thread version chosen by the user at configure time")
-set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2" "1.3")
-if(${OT_THREAD_VERSION} EQUAL "1.1")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1")
-elseif(${OT_THREAD_VERSION} EQUAL "1.2")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2")
-elseif(${OT_THREAD_VERSION} EQUAL "1.3")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3")
-else()
-    message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
-endif()
+# Deprecated
+set(OT_CONFIG "" CACHE STRING "OpenThread config header file (deprecated, use `OT_PROJECT_CONFIG` or `OT_PLATFORM_CONFIG` instead")
 
-set(OT_PLATFORM "NO" CACHE STRING "Target platform chosen by the user at configure time")
-ot_get_platforms(OT_PLATFORMS)
-set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_PLATFORMS})
-if(NOT OT_PLATFORM IN_LIST OT_PLATFORMS)
-    message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
-endif()
-
-set(OT_LOG_LEVEL "" CACHE STRING "set OpenThread log level")
-set(OT_LOG_LEVEL_VALUES
-    "NONE"
-    "CRIT"
-    "WARN"
-    "NOTE"
-    "INFO"
-    "DEBG"
-)
-set_property(CACHE OT_LOG_LEVEL PROPERTY STRINGS ${OT_LOG_LEVEL_VALUES})
-if(OT_LOG_LEVEL)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_${OT_LOG_LEVEL}")
-endif()
-
-set(OT_LOG_OUTPUT_VALUES
-    "APP"
-    "DEBUG_UART"
-    "NONE"
-    "PLATFORM_DEFINED"
-)
-if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
-    set(OT_LOG_OUTPUT "APP" CACHE STRING "Set log output to application for reference device")
-else()
-    set(OT_LOG_OUTPUT "" CACHE STRING "Where log output goes to")
-endif()
-set_property(CACHE OT_LOG_OUTPUT PROPERTY STRINGS ${OT_LOG_OUTPUT_VALUES})
-if(OT_LOG_OUTPUT)
-    if(NOT OT_LOG_OUTPUT IN_LIST OT_LOG_OUTPUT_VALUES)
-        message(FATAL_ERROR "Log output unknown: ${OT_LOG_OUTPUT}")
-    endif()
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}")
-    message(STATUS "Log output: ${OT_LOG_OUTPUT}")
-endif()
-
-# OT_CONFIG allows users to specify the path to a customized OpenThread
-# config header file. The default value of this parameter is empty string.
-# When not specified by user (value is ""), a platform cmake file may
-# choose to change this variable to provide its own OpenThread config header
-# file instead.
-
-set(OT_CONFIG "" CACHE STRING "OpenThread project-specific config header file chosen by user at configure time")
+set(OT_PROJECT_CONFIG "" CACHE STRING "OpenThread project-specific config header file")
+set(OT_PLATFORM_CONFIG "" CACHE STRING "OpenThread platform-specific config header file")
 
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
@@ -173,17 +126,40 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 if(OT_PLATFORM STREQUAL "posix")
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/posix/platform)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=1)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_NEXUS=0)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM STREQUAL "external")
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=0)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_NEXUS=0)
     # skip in this case
+elseif(OT_PLATFORM STREQUAL "nexus")
+    if (OT_APP_CLI OR OT_APP_NCP OR OT_APP_RCP)
+        message(FATAL_ERROR "no app (cli/ncp/rcp) should be enabled with nexus simulation platform")
+    endif()
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_NEXUS=1)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=0)
 else()
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=0)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_NEXUS=0)
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
 endif()
 
 if(OT_CONFIG)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_FILE=\"${OT_CONFIG}\"")
-    message(STATUS "OpenThread Config File: \"${OT_CONFIG}\"")
+    message(WARNING "OT_CONFIG is deprecated - use `OT_PROJECT_CONFIG` and `OT_PLATFORM_CONFIG` instead")
+    message(STATUS "OT_CONFIG=\"${OT_CONFIG}\"")
+endif()
+
+if (OT_PROJECT_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_PROJECT_CONFIG}\"")
+    message(STATUS "OT_PROJECT_CONFIG=\"${OT_PROJECT_CONFIG}\"")
+endif()
+
+if (OT_PLATFORM_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_PLATFORM_CORE_CONFIG_FILE=\"${OT_PLATFORM_CONFIG}\"")
+    message(STATUS "OT_PLATFORM_CONFIG=\"${OT_PLATFORM_CONFIG}\"")
 endif()
 
 target_compile_definitions(ot-config INTERFACE ${OT_PLATFORM_DEFINES})

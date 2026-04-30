@@ -33,9 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/dns_client.h>
-
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
 using namespace ot;
@@ -50,10 +48,36 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
     return AsCoreType(aIterator).GetNextEntry(AsCoreType(aEntry));
 }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-void otDnsSetNameCompressionEnabled(bool aEnabled) { Instance::SetDnsNameCompressionEnabled(aEnabled); }
+otError otDnsEncodeTxtData(const otDnsTxtEntry *aTxtEntries,
+                           uint8_t              aNumTxtEntries,
+                           uint8_t             *aTxtData,
+                           uint16_t            *aTxtDataLength)
+{
+    Error                          error;
+    MutableData<kWithUint16Length> data;
 
-bool otDnsIsNameCompressionEnabled(void) { return Instance::IsDnsNameCompressionEnabled(); }
+    AssertPointerIsNotNull(aTxtEntries);
+    AssertPointerIsNotNull(aTxtData);
+    AssertPointerIsNotNull(aTxtDataLength);
+
+    data.Init(aTxtData, *aTxtDataLength);
+    SuccessOrExit(error = Dns::TxtEntry::AppendEntries(AsCoreTypePtr(aTxtEntries), aNumTxtEntries, data));
+    *aTxtDataLength = data.GetLength();
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError otDnsSetNameCompressionEnabled(otInstance *aInstance, bool aEnabled)
+{
+    return AsCoreType(aInstance).SetDnsNameCompressionEnabled(aEnabled);
+}
+
+bool otDnsIsNameCompressionEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).IsDnsNameCompressionEnabled();
+}
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
@@ -188,6 +212,20 @@ otError otDnsClientResolveService(otInstance             *aInstance,
                                                                    AsCoreTypePtr(aConfig));
 }
 
+otError otDnsClientResolveServiceAndHostAddress(otInstance             *aInstance,
+                                                const char             *aInstanceLabel,
+                                                const char             *aServiceName,
+                                                otDnsServiceCallback    aCallback,
+                                                void                   *aContext,
+                                                const otDnsQueryConfig *aConfig)
+{
+    AssertPointerIsNotNull(aInstanceLabel);
+    AssertPointerIsNotNull(aServiceName);
+
+    return AsCoreType(aInstance).Get<Dns::Client>().ResolveServiceAndHostAddress(
+        aInstanceLabel, aServiceName, aCallback, aContext, AsCoreTypePtr(aConfig));
+}
+
 otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse,
                                            char                       *aLabelBuffer,
                                            uint8_t                     aLabelBufferSize,
@@ -220,5 +258,39 @@ otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
+
+otError otDnsClientQueryRecord(otInstance             *aInstance,
+                               uint16_t                aRecordType,
+                               const char             *aFirstLabel,
+                               const char             *aNextLabels,
+                               otDnsRecordCallback     aCallback,
+                               void                   *aContext,
+                               const otDnsQueryConfig *aConfig)
+{
+    AssertPointerIsNotNull(aNextLabels);
+
+    return AsCoreType(aInstance).Get<Dns::Client>().QueryRecord(aRecordType, aFirstLabel, aNextLabels, aCallback,
+                                                                aContext, AsCoreTypePtr(aConfig));
+}
+
+otError otDnsRecordResponseGetQueryName(const otDnsRecordResponse *aResponse,
+                                        char                      *aNameBuffer,
+                                        uint16_t                   aNameBufferSize)
+{
+    AssertPointerIsNotNull(aNameBuffer);
+
+    return AsCoreType(aResponse).GetQueryName(aNameBuffer, aNameBufferSize);
+}
+
+otError otDnsRecordResponseGetRecordInfo(const otDnsRecordResponse *aResponse,
+                                         uint16_t                   aIndex,
+                                         otDnsRecordInfo           *aRecordInfo)
+{
+    return AsCoreType(aResponse).GetRecordInfo(aIndex, AsCoreType(aRecordInfo));
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ARBITRARY_RECORD_QUERY_ENABLE
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

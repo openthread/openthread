@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-#include <openthread/commissioner.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -130,8 +127,8 @@ otError otCommissionerAnnounceBegin(otInstance         *aInstance,
                                     uint16_t            aPeriod,
                                     const otIp6Address *aAddress)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().GetAnnounceBeginClient().SendRequest(
-        aChannelMask, aCount, aPeriod, AsCoreType(aAddress));
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SendAnnounceBeginRequest(aChannelMask, aCount, aPeriod,
+                                                                                       AsCoreType(aAddress));
 }
 
 otError otCommissionerEnergyScan(otInstance                        *aInstance,
@@ -143,7 +140,7 @@ otError otCommissionerEnergyScan(otInstance                        *aInstance,
                                  otCommissionerEnergyReportCallback aCallback,
                                  void                              *aContext)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().GetEnergyScanClient().SendQuery(
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SendEnergyScanQuery(
         aChannelMask, aCount, aPeriod, aScanDuration, AsCoreType(aAddress), aCallback, aContext);
 }
 
@@ -154,8 +151,8 @@ otError otCommissionerPanIdQuery(otInstance                         *aInstance,
                                  otCommissionerPanIdConflictCallback aCallback,
                                  void                               *aContext)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().GetPanIdQueryClient().SendQuery(
-        aPanId, aChannelMask, AsCoreType(aAddress), aCallback, aContext);
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SendPanIdQuery(aPanId, aChannelMask, AsCoreType(aAddress),
+                                                                             aCallback, aContext);
 }
 
 otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength)

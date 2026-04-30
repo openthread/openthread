@@ -118,6 +118,8 @@ struct tcphdr {
 #define    TCPOLEN_TSTAMP_APPA		(TCPOLEN_TIMESTAMP+2) /* appendix A */
 #define	TCPOPT_SIGNATURE	19		/* Keyed MD5: RFC 2385 */
 #define	   TCPOLEN_SIGNATURE		18
+#define	TCPOPT_FAST_OPEN	34
+#define	   TCPOLEN_FAST_OPEN_EMPTY	2
 
 /* Miscellaneous constants */
 #define	MAX_SACK_BLKS	6	/* Max # SACK blocks stored at receiver side */
@@ -138,8 +140,8 @@ struct tcphdr {
  *
  * We use explicit numerical definition here to avoid header pollution.
  */
-#define	TCP_MSS		536
-#define	TCP6_MSS	1220
+#define	TCP_MAXSS   536
+#define	TCP6_MAXSS  1220
 
 /*
  * Limit the lowest MSS we accept for path MTU discovery and the TCP SYN MSS
@@ -167,6 +169,9 @@ struct tcphdr {
 #define TCP_MAXHLEN	(0xf<<2)	/* max length of header in bytes */
 #define TCP_MAXOLEN	(TCP_MAXHLEN - sizeof(struct tcphdr))
 					/* max space left for options */
+#define TCP_FASTOPEN_MIN_COOKIE_LEN	4	/* Per RFC7413 */
+#define TCP_FASTOPEN_MAX_COOKIE_LEN	16	/* Per RFC7413 */
+#define TCP_FASTOPEN_PSK_LEN		16	/* Same as TCP_FASTOPEN_KEY_LEN */
 
 /*
  * User-settable options (used with setsockopt).  These are discrete

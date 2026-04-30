@@ -37,9 +37,7 @@
 
 #include <openthread/border_router.h>
 
-#include "border_router/routing_manager.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -89,7 +87,7 @@ otError otBorderRouterGetNextOnMeshPrefix(otInstance            *aInstance,
 {
     AssertPointerIsNotNull(aIterator);
 
-    return AsCoreType(aInstance).Get<NetworkData::Local>().GetNextOnMeshPrefix(*aIterator, AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Local>().GetNext(*aIterator, AsCoreType(aConfig));
 }
 
 otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
@@ -108,7 +106,7 @@ otError otBorderRouterGetNextRoute(otInstance            *aInstance,
 {
     AssertPointerIsNotNull(aIterator);
 
-    return AsCoreType(aInstance).Get<NetworkData::Local>().GetNextExternalRoute(*aIterator, AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Local>().GetNext(*aIterator, AsCoreType(aConfig));
 }
 
 otError otBorderRouterRegister(otInstance *aInstance)
@@ -117,5 +115,14 @@ otError otBorderRouterRegister(otInstance *aInstance)
 
     return kErrorNone;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+void otBorderRouterSetNetDataFullCallback(otInstance                       *aInstance,
+                                          otBorderRouterNetDataFullCallback aCallback,
+                                          void                             *aContext)
+{
+    AsCoreType(aInstance).Get<NetworkData::Notifier>().SetNetDataFullCallback(aCallback, aContext);
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

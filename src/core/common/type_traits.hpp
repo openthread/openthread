@@ -31,15 +31,16 @@
  *   This file includes type traits definitions.
  */
 
-#ifndef OT_TYPE_TRAITS_HPP_
-#define OT_TYPE_TRAITS_HPP_
+#ifndef OT_CORE_COMMON_TYPE_TRAITS_HPP_
+#define OT_CORE_COMMON_TYPE_TRAITS_HPP_
+
+#include <stdint.h>
 
 namespace ot {
 namespace TypeTraits {
 
 /**
- * This type represents a true value (contains a `true` static `kValue` member variable).
- *
+ * Represents a true value (contains a `true` static `kValue` member variable).
  */
 struct TrueValue
 {
@@ -47,8 +48,7 @@ struct TrueValue
 };
 
 /**
- * This type represents a false value (contains a `false` static `kValue` member variable).
- *
+ * Represents a false value (contains a `false` static `kValue` member variable).
  */
 struct FalseValue
 {
@@ -56,13 +56,12 @@ struct FalseValue
 };
 
 /**
- * This type indicates whether or not a given template `Type` is a pointer type.
+ * Indicates whether or not a given template `Type` is a pointer type.
  *
  * The `constexpr` expression `IsPointer<Type>::kValue` would be `true` when the `Type` is a pointer, otherwise it
  * would be `false`.
  *
  * @tparam Type    A type to check if is a pointer.
- *
  */
 template <typename Type> struct IsPointer : public FalseValue
 {
@@ -82,19 +81,80 @@ template <typename Type> struct IsPointer<volatile Type *> : public TrueValue
 {
 };
 
-template <typename Type> struct IsPointer<const volatile Type *> : TrueValue
+template <typename Type> struct IsPointer<const volatile Type *> : public TrueValue
 {
 };
 
 /**
- * This type indicates whether or not a given template `FirstType is the same as `SecondType`.
+ * Indicates whether or not a given template `Type` is an unsigned integer type (`uint8_t`, `uint16_t`, `uint32_t`, or
+ * `uint64_t`).
+ *
+ * The `constexpr` expression `IsUint<Type>::kValue` would be `true` when the `Type` is an unsigned int, otherwise it
+ * would be `false`.
+ *
+ * @tparam Type    A type to check if is an unsigned integer type.
+ */
+template <typename Type> struct IsUint : public FalseValue
+{
+};
+
+// Template specializations of the `IsUint<Type>`
+
+template <> struct IsUint<uint8_t> : public TrueValue
+{
+};
+
+template <> struct IsUint<uint16_t> : public TrueValue
+{
+};
+
+template <> struct IsUint<uint32_t> : public TrueValue
+{
+};
+
+template <> struct IsUint<uint64_t> : public TrueValue
+{
+};
+
+/**
+ * Indicates whether or not a given template `Type` is a signed integer type (`int8_t`, `int16_t`, `int32_t`, or
+ * `int64_t`).
+ *
+ * The `constexpr` expression `IsInt<Type>::kValue` would be `true` when the `Type` is a signed int, otherwise it
+ * would be `false`.
+ *
+ * @tparam Type    A type to check if is a signed integer type.
+ */
+template <typename Type> struct IsInt : public FalseValue
+{
+};
+
+// Template specializations of the `IsInt<Type>`
+
+template <> struct IsInt<int8_t> : public TrueValue
+{
+};
+
+template <> struct IsInt<int16_t> : public TrueValue
+{
+};
+
+template <> struct IsInt<int32_t> : public TrueValue
+{
+};
+
+template <> struct IsInt<int64_t> : public TrueValue
+{
+};
+
+/**
+ * Indicates whether or not a given template `FirstType is the same as `SecondType`.
  *
  * The `constexpr` expression `IsSame<FirstType, SecondType>::kValue` would be `true` when the two types are the same,
  * otherwise it would be `false`.
  *
  * @tparam FirstType     The first type.
  * @tparam SecondType    The second type.
- *
  */
 template <typename FirstType, typename SecondType> struct IsSame : public FalseValue
 {
@@ -105,7 +165,7 @@ template <typename Type> struct IsSame<Type, Type> : public TrueValue
 };
 
 /**
- * This type selects between two given types based on a boolean condition at compile time.
+ * Selects between two given types based on a boolean condition at compile time.
  *
  * It provides member type named `Type` which is defined as `TypeOnTrue` if `kCondition` is `true` at compile time, or
  * as `TypeOnFalse` if `kCondition` is `false`.
@@ -113,7 +173,6 @@ template <typename Type> struct IsSame<Type, Type> : public TrueValue
  * @tparam kCondition   The boolean condition which is used to select between the two types.
  * @tparam TypeOnTrue   The type to select when `kCondition` is `true`.
  * @tparam TypeOnFalse  The type to select when `kCondition` is `false`.
- *
  */
 template <bool kCondition, typename TypeOnTrue, typename TypeOnFalse> struct Conditional
 {
@@ -126,14 +185,13 @@ template <typename TypeOnTrue, typename TypeOnFalse> struct Conditional<true, Ty
 };
 
 /**
- * This type determines the return type of a given function pointer type.
+ * Determines the return type of a given function pointer type.
  *
  * It provides member type named `Type` which gives the return type of `HandlerType` function pointer.
  *
  * For example, `ReturnTypeOf<Error (*)(void *aContext)>::Type` would be `Error`.
  *
  * @tparam HandlerType   The function pointer type.
- *
  */
 template <typename HandlerType> struct ReturnTypeOf;
 
@@ -143,14 +201,13 @@ template <typename RetType, typename... Args> struct ReturnTypeOf<RetType (*)(Ar
 };
 
 /**
- * This type determines the type of the first argument of a given function pointer type.
+ * Determines the type of the first argument of a given function pointer type.
  *
  * It provides member type named `Type` which gives the first argument type of `HandlerType` function pointer.
  *
  * For example, `ReturnTypeOf<Error (*)(void *aContext)>::Type` would be `void *`.
  *
  * @tparam HandlerType   The function pointer type.
- *
  */
 template <typename HandlerType> struct FirstArgTypeOf;
 
@@ -163,4 +220,4 @@ struct FirstArgTypeOf<RetType (*)(FirstArgType, Args...)>
 } // namespace TypeTraits
 } // namespace ot
 
-#endif // OT_TYPE_TRAITS_HPP_
+#endif // OT_CORE_COMMON_TYPE_TRAITS_HPP_

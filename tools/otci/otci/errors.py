@@ -26,7 +26,9 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-from typing import List
+
+import re
+from typing import Collection, List, Pattern, Union
 
 
 class OTCIError(Exception):
@@ -37,15 +39,26 @@ class OTCIError(Exception):
 class ExpectLineTimeoutError(OTCIError):
     """OTCI failed to find an expected line before timeout."""
 
-    def __init__(self, line):
+    def __init__(self, line: Union[str, Pattern[str], Collection[str]]):
         super(ExpectLineTimeoutError, self).__init__("Expected line %r, but timed out" % line)
 
 
 class CommandError(OTCIError):
     """OTCI failed to execute a command."""
 
+    __COMMAND_OUTPUT_ERROR_PATTERN = re.compile(r'Error (\d+): (.*)')
+
     def __init__(self, cmd: str, output: List[str]):
         self.__output = output
+
+        for line in output:
+            m = self.__COMMAND_OUTPUT_ERROR_PATTERN.match(line)
+            if not m:
+                continue
+            code, msg = m.groups()
+            self.code, self.msg = int(code), str(msg)
+            break
+
         super(CommandError, self).__init__("Command error while executing %r:\n%s\n" % (cmd, '\n'.join(output)))
 
     def error(self) -> str:

@@ -52,9 +52,9 @@ Manager::Manager(void)
 
     VerifyOrExit(sInitCount == 0);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     otPlatCryptoRandomInit();
-    SuccessOrAssert(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
+    SuccessOrAssert(Random::Crypto::Fill(seed));
 #else
     SuccessOrAssert(otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
 #endif
@@ -72,7 +72,7 @@ Manager::~Manager(void)
     sInitCount--;
     VerifyOrExit(sInitCount == 0);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     otPlatCryptoRandomDeinit();
 #endif
 
@@ -158,9 +158,15 @@ void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
 
 uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
 {
-    aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
+    uint32_t delay = 0;
 
-    return aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
+    VerifyOrExit(aValue != 0);
+
+    aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
+    delay   = aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
+
+exit:
+    return delay;
 }
 
 } // namespace NonCrypto

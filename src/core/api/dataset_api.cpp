@@ -33,12 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/dataset.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "meshcop/dataset_manager.hpp"
-#include "meshcop/meshcop.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -61,14 +56,16 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
 
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Save(AsCoreType(aDataset));
+    AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SaveLocal(AsCoreType(aDataset));
+
+    return OT_ERROR_NONE;
 }
 
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
     AssertPointerIsNotNull(aDataset);
 
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Save(*aDataset);
+    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SaveLocal(*aDataset);
 }
 
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
@@ -85,14 +82,16 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Save(AsCoreType(aDataset));
+    AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SaveLocal(AsCoreType(aDataset));
+
+    return OT_ERROR_NONE;
 }
 
 otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
     AssertPointerIsNotNull(aDataset);
 
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Save(*aDataset);
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SaveLocal(*aDataset);
 }
 
 otError otDatasetSendMgmtActiveGet(otInstance                           *aInstance,
@@ -101,8 +100,8 @@ otError otDatasetSendMgmtActiveGet(otInstance                           *aInstan
                                    uint8_t                               aLength,
                                    const otIp6Address                   *aAddress)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(AsCoreType(aDatasetComponents),
-                                                                                     aTlvTypes, aLength, aAddress);
+    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(
+        AsCoreType(aDatasetComponents), aTlvTypes, aLength, AsCoreTypePtr(aAddress));
 }
 
 otError otDatasetSendMgmtActiveSet(otInstance                 *aInstance,
@@ -122,8 +121,8 @@ otError otDatasetSendMgmtPendingGet(otInstance                           *aInsta
                                     uint8_t                               aLength,
                                     const otIp6Address                   *aAddress)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SendGetRequest(AsCoreType(aDatasetComponents),
-                                                                                      aTlvTypes, aLength, aAddress);
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SendGetRequest(
+        AsCoreType(aDatasetComponents), aTlvTypes, aLength, AsCoreTypePtr(aAddress));
 }
 
 otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
@@ -154,6 +153,21 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
     return (error == OT_ERROR_ALREADY) ? OT_ERROR_NONE : error;
 }
 
+bool otDatasetIsValid(const otOperationalDatasetTlvs *aDatasetTlvs, bool aActive)
+{
+    bool             isValid = false;
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+
+    SuccessOrExit(dataset.SetFrom(*aDatasetTlvs));
+    SuccessOrExit(dataset.ValidateTlvs());
+    isValid = dataset.ContainsAllRequiredTlvsFor(aActive ? MeshCoP::Dataset::kActive : MeshCoP::Dataset::kPending);
+
+exit:
+    return isValid;
+}
+
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset)
 {
     Error            error = kErrorNone;
@@ -161,9 +175,55 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
 
     AssertPointerIsNotNull(aDatasetTlvs);
 
-    dataset.SetFrom(*aDatasetTlvs);
-    VerifyOrExit(dataset.IsValid(), error = kErrorInvalidArgs);
+    SuccessOrExit(error = dataset.SetFrom(*aDatasetTlvs));
+    VerifyOrExit(dataset.ValidateTlvs() == kErrorNone, error = kErrorInvalidArgs);
     dataset.ConvertTo(AsCoreType(aDataset));
+
+exit:
+    return error;
+}
+
+bool otDatasetTlvsCompare(const otOperationalDatasetTlvs *aDatasetTlvsA, const otOperationalDatasetTlvs *aDatasetTlvsB)
+{
+    bool             equals = false;
+    MeshCoP::Dataset datasetA;
+    MeshCoP::Dataset datasetB;
+
+    AssertPointerIsNotNull(aDatasetTlvsA);
+    AssertPointerIsNotNull(aDatasetTlvsB);
+
+    SuccessOrExit(datasetA.SetFrom(*aDatasetTlvsA));
+    SuccessOrExit(datasetB.SetFrom(*aDatasetTlvsB));
+
+    SuccessOrExit(datasetA.ValidateTlvs());
+    SuccessOrExit(datasetB.ValidateTlvs());
+
+    equals = datasetA.Equals(datasetB);
+
+exit:
+    return equals;
+}
+
+void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs)
+{
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+
+    dataset.SetFrom(AsCoreType(aDataset));
+    dataset.ConvertTo(*aDatasetTlvs);
+}
+
+otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs)
+{
+    Error            error = kErrorNone;
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+
+    SuccessOrExit(error = dataset.SetFrom(*aDatasetTlvs));
+    SuccessOrExit(error = dataset.WriteTlvsFrom(AsCoreType(aDataset)));
+    dataset.ConvertTo(*aDatasetTlvs);
 
 exit:
     return error;

@@ -42,12 +42,21 @@ target_link_libraries(ot-daemon PRIVATE
     openthread-ftd
     openthread-posix
     openthread-hdlc
+    openthread-radio-spinel
     openthread-spinel-rcp
     ${OT_MBEDTLS}
     ot-posix-config
     ot-config-ftd
     ot-config
 )
+
+if(OT_LINKER_MAP)
+    if(APPLE)
+        target_link_libraries(ot-daemon PRIVATE -Wl,-map,ot-daemon.map)
+    else()
+        target_link_libraries(ot-daemon PRIVATE -Wl,-Map=ot-daemon.map)
+    endif()
+endif()
 
 add_executable(ot-ctl
     client.cpp
@@ -67,6 +76,14 @@ target_link_libraries(ot-ctl PRIVATE
     ot-posix-config
     ot-config
 )
+
+if(OT_LINKER_MAP)
+    if(APPLE)
+        target_link_libraries(ot-ctl PRIVATE -Wl,-map,ot-ctl.map)
+    else()
+        target_link_libraries(ot-ctl PRIVATE -Wl,-Map=ot-ctl.map)
+    endif()
+endif()
 
 target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
 

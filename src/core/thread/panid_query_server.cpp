@@ -33,17 +33,7 @@
 
 #include "panid_query_server.hpp"
 
-#include "coap/coap_message.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "meshcop/meshcop.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -53,87 +43,77 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
+    , mIsRunning(false)
     , mTimer(aInstance)
 {
 }
 
-template <>
-void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Msg &aMsg)
 {
-    uint16_t         panId;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
-    uint32_t         mask;
+    Error    error;
+    uint16_t panId;
+    uint32_t mask;
 
-    VerifyOrExit(aMessage.IsPostRequest());
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    VerifyOrExit(!mIsRunning, error = kErrorBusy);
 
-    SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMessage, panId));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+
+    SuccessOrExit(error = Tlv::Find<MeshCoP::PanIdTlv>(aMsg.mMessage, panId));
 
     mChannelMask  = mask;
-    mCommissioner = aMessageInfo.GetPeerAddr();
+    mCommissioner = aMsg.mMessageInfo.GetPeerAddr();
     mPanId        = panId;
+    mIsRunning    = true;
     mTimer.Start(kScanDelay);
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
-    {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, responseInfo));
-        LogInfo("sent panid query response");
-    }
-
 exit:
-    return;
+    IgnoreError(Get<Tmf::Agent>().SendAckResponseIfUnicastRequest(aMsg, error));
 }
 
-void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext)
-{
-    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aScanResult);
-}
-
-void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
+void PanIdQueryServer::HandleScanResult(const ScanResult *aScanResult)
 {
     if (aScanResult != nullptr)
     {
         if (aScanResult->mPanId == mPanId)
         {
-            mChannelMask |= 1 << aScanResult->mChannel;
+            SetBit<uint32_t>(mChannelMask, aScanResult->mChannel);
         }
     }
     else if (mChannelMask != 0)
     {
+        mIsRunning = false;
         SendConflict();
     }
 }
 
 void PanIdQueryServer::SendConflict(void)
 {
-    Error                   error = kErrorNone;
-    MeshCoP::ChannelMaskTlv channelMask;
-    Tmf::MessageInfo        messageInfo(GetInstance());
-    Coap::Message          *message;
+    Error          error = kErrorNone;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriPanIdConflict);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriPanIdConflict);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    channelMask.Init();
-    channelMask.SetChannelMask(mChannelMask);
-    SuccessOrExit(error = channelMask.AppendTo(*message));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*message, mChannelMask));
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, mPanId));
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, mCommissioner));
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
-
-    LogInfo("sent panid conflict");
+    LogInfo("Sent %s", UriToString<kUriPanIdConflict>());
 
 exit:
     FreeMessageOnError(message, error);
-    MeshCoP::LogError("send panid conflict", error);
+    LogWarnOnError(error, "send panid conflict");
 }
 
 void PanIdQueryServer::HandleTimer(void)
 {
-    IgnoreError(Get<Mac::Mac>().ActiveScan(mChannelMask, 0, HandleScanResult, this));
+    if (Get<Mac::Mac>().ActiveScan(mChannelMask, 0, HandleScanResult, this) != kErrorNone)
+    {
+        mIsRunning = false;
+    }
+
     mChannelMask = 0;
 }
 

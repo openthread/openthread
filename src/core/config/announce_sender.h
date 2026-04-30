@@ -28,12 +28,20 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the DNS Client.
- *
+ *   This file includes compile-time configurations for the Announce Sender.
  */
 
-#ifndef CONFIG_ANNOUNCE_SENDER_H_
-#define CONFIG_ANNOUNCE_SENDER_H_
+#ifndef OT_CORE_CONFIG_ANNOUNCE_SENDER_H_
+#define OT_CORE_CONFIG_ANNOUNCE_SENDER_H_
+
+/**
+ * @addtogroup config-announce-sender
+ *
+ * @brief
+ *   This module includes configuration variables for the Announce Sender.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -41,7 +49,6 @@
  * Define as 1 to enable `AnnounceSender` which will periodically send MLE Announce message on all channels.
  *
  * The list of channels is determined from the Operational Dataset's ChannelMask.
- *
  */
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 #define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE 1
@@ -58,7 +65,6 @@
  * Announcement transmissions).
  *
  * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE`).
- *
  */
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL
 #define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL 688000 // 688 seconds = 11 min and 28 sec.
@@ -73,7 +79,6 @@
  * This is used as the trickle timer redundancy constant in `AnnounceSender`.
  *
  * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE`).
- *
  */
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT
 #define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT 8
@@ -84,10 +89,13 @@
  *
  * Specifies the jitter interval (in milliseconds) used by `AnnounceSender`. A random jitter interval is applied to
  * the period between any two successive MLE Announcement transmissions (possibly) on different channels.
- *
  */
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL
 #define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL 500
 #endif
 
-#endif // CONFIG_ANNOUNCE_SENDER_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_ANNOUNCE_SENDER_H_

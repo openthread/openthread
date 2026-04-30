@@ -37,8 +37,7 @@
 
 #include <openthread/dataset_ftd.h>
 
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -49,12 +48,12 @@ otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *a
 
 uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Leader>().GetDelayTimerMinimal();
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().GetDelayTimerMinimal();
 }
 
 otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Leader>().SetDelayTimerMinimal(aDelayTimerMinimal);
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SetDelayTimerMinimal(aDelayTimerMinimal);
 }
 
 #endif // OPENTHREAD_FTD

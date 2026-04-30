@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic item-pointer iterator class.
  */
 
-#ifndef ITERATOR_UTILS_HPP_
-#define ITERATOR_UTILS_HPP_
+#ifndef OT_CORE_COMMON_ITERATOR_UTILS_HPP_
+#define OT_CORE_COMMON_ITERATOR_UTILS_HPP_
 
 namespace ot {
 
@@ -43,11 +43,10 @@ namespace ot {
  *   This module includes definitions for OpenThread generic item-pointer iterator class.
  *
  * @{
- *
  */
 
 /**
- * This template class is used as a base class for those item-pointer iterators.
+ * Is used as a base class for those item-pointer iterators.
  *
  * These iterators have common methods and operators like `Advance()` and `++` and hold a pointer to the
  * object.
@@ -59,88 +58,79 @@ namespace ot {
  * @tparam  IteratorType  The Iterator class that inherits this class. The class MUST have a method `Advance()` which
  *                        moves the pointer to the next. `Advance()` SHALL NOT be called when `IsDone()` is `true` and
  *                        would set the pointer to `nullptr` when there's no more elements.
- *
  */
 template <typename ItemType, typename IteratorType> class ItemPtrIterator
 {
 public:
     /**
-     * This method indicates whether there are no more items to be accessed (iterator has reached the end).
+     * Indicates whether there are no more items to be accessed (iterator has reached the end).
      *
      * @retval TRUE   There are no more items to be accessed (iterator has reached the end).
      * @retval FALSE  The current item is valid.
-     *
      */
     bool IsDone(void) const { return mItem == nullptr; }
 
     /**
-     * This method overloads `++` operator (pre-increment) to advance the iterator.
+     * Overloads `++` operator (pre-increment) to advance the iterator.
      *
      * The iterator is moved to point to the next item using IteratorType's `Advance` method.
      * If there are no more items, the iterator becomes empty (i.e., `operator*` returns `nullptr` and `IsDone()`
      * returns `true`).
-     *
      */
     void operator++(void) { static_cast<IteratorType *>(this)->Advance(); }
 
     /**
-     * This method overloads `++` operator (post-increment) to advance the iterator.
+     * Overloads `++` operator (post-increment) to advance the iterator.
      *
      * The iterator is moved to point to the next item using IteratorType's `Advance` method.
      * If there are no more items, the iterator becomes empty (i.e., `operator*` returns `nullptr` and `IsDone()`
      * returns `true`).
-     *
      */
     void operator++(int) { static_cast<IteratorType *>(this)->Advance(); }
 
     /**
-     * This method overloads the `*` dereference operator and gets a reference to then item to which the iterator is
+     * Overloads the `*` dereference operator and gets a reference to then item to which the iterator is
      * currently pointing.
      *
-     * This method MUST be used when the iterator is not empty/finished (i.e., `IsDone()` returns `false`).
+     * MUST be used when the iterator is not empty/finished (i.e., `IsDone()` returns `false`).
      *
      * @returns A reference to the item currently pointed by the iterator.
-     *
      */
     ItemType &operator*(void) { return *mItem; }
 
     /**
-     * This method overloads the `->` dereference operator and gets a pointer to the item to which the iterator is
+     * Overloads the `->` dereference operator and gets a pointer to the item to which the iterator is
      * currently pointing.
      *
      * @returns A pointer to the item associated with the iterator, or `nullptr` if iterator is empty/done.
-     *
      */
     ItemType *operator->(void) { return mItem; }
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two `Iterator` instances point to the same
+     * Overloads operator `==` to evaluate whether or not two `Iterator` instances point to the same
      * item.
      *
      * @param[in]  aOther  The other `Iterator` to compare with.
      *
      * @retval TRUE   If the two `Iterator` objects point to the same item or both are done.
      * @retval FALSE  If the two `Iterator` objects do not point to the same item.
-     *
      */
     bool operator==(const IteratorType &aOther) const { return mItem == aOther.mItem; }
 
     /**
-     * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances point to the same
+     * Overloads operator `!=` to evaluate whether or not two `Iterator` instances point to the same
      * child entry.
      *
      * @param[in]  aOther  The other `Iterator` to compare with.
      *
      * @retval TRUE   If the two `Iterator` objects do not point to the same item.
      * @retval FALSE  If the two `Iterator` objects point to the same item or both are done.
-     *
      */
     bool operator!=(const IteratorType &aOther) const { return mItem != aOther.mItem; }
 
 protected:
     /**
      * Default constructor
-     *
      */
     ItemPtrIterator(void)
         : mItem(nullptr)
@@ -149,7 +139,6 @@ protected:
 
     /**
      * Constructor with an Item pointer.
-     *
      */
     explicit ItemPtrIterator(ItemType *item)
         : mItem(item)
@@ -161,9 +150,8 @@ protected:
 
 /**
  * @}
- *
  */
 
 } // namespace ot
 
-#endif // ITERATOR_UTILS_HPP_
+#endif // OT_CORE_COMMON_ITERATOR_UTILS_HPP_

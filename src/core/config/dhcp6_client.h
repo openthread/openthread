@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for DHCPv6 Client.
- *
  */
 
-#ifndef CONFIG_DHCP6_CLIENT_H_
-#define CONFIG_DHCP6_CLIENT_H_
+#ifndef OT_CORE_CONFIG_DHCP6_CLIENT_H_
+#define OT_CORE_CONFIG_DHCP6_CLIENT_H_
+
+/**
+ * @addtogroup config-dhcpv6-client
+ *
+ * @brief
+ *   This module includes configuration variables for the DHCPv6 client.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
  *
  * Define to 1 to enable DHCPv6 Client support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 #define OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE 0
@@ -49,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_DHCP6_MULTICAST_SOLICIT
  *
  * Define to 1 to enable DHCPv6 multicast solicit.
- *
  */
 #ifndef OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
 #define OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT 0
@@ -59,10 +65,13 @@
  * @def OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES
  *
  * The number of dhcp prefixes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES
 #define OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES 4
 #endif
 
-#endif // CONFIG_DHCP6_CLIENT_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_DHCP6_CLIENT_H_

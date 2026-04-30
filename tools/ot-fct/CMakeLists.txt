@@ -34,9 +34,10 @@ include_directories(
     ${OPENTHREAD_DIR}/include
     ${OPENTHREAD_DIR}/src
     ${OPENTHREAD_DIR}/src/core
+    ${OPENTHREAD_DIR}/src/include
     ${OPENTHREAD_DIR}/src/posix/platform
 )
- 
+
 add_executable(ot-fct
     cli.cpp
     main.cpp
@@ -47,3 +48,9 @@ add_executable(ot-fct
     ${OPENTHREAD_DIR}/src/posix/platform/power.cpp
     ${OPENTHREAD_DIR}/src/posix/platform/config_file.cpp
 )
+
+set(OT_POSIX_PRODUCT_CONFIG "" CACHE STRING "OpenThread product config file")
+
+if (OT_POSIX_PRODUCT_CONFIG)
+    target_compile_options(ot-fct PRIVATE -DOPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE=\"${OT_POSIX_PRODUCT_CONFIG}\")
+endif()

@@ -35,8 +35,7 @@
 #ifndef OPENTHREAD_PLATFORM_MISC_H_
 #define OPENTHREAD_PLATFORM_MISC_H_
 
-#include <stdint.h>
-
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus
@@ -50,22 +49,32 @@ extern "C" {
  *   This module includes platform abstractions for miscellaneous behaviors.
  *
  * @{
- *
  */
 
 /**
- * This function performs a software reset on the platform, if supported.
+ * Performs a software reset on the platform, if supported.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+void otPlatReset(otInstance *aInstance);
+
+/**
+ * Performs a hardware reset on the platform to launch bootloader mode, if supported.
+ *
+ * Used when `OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE` is enabled.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
+ * @retval OT_ERROR_NONE         Reset to bootloader successfully.
+ * @retval OT_ERROR_BUSY         Failed due to another operation is ongoing.
+ * @retval OT_ERROR_NOT_CAPABLE  Not capable of resetting to bootloader.
  */
-void otPlatReset(otInstance *aInstance);
+otError otPlatResetToBootloader(otInstance *aInstance);
 
 /**
  * Enumeration of possible reset reason codes.
  *
  * These are in the same order as the Spinel reset reason codes.
- *
  */
 typedef enum
 {
@@ -83,26 +92,23 @@ typedef enum
 } otPlatResetReason;
 
 /**
- * This function returns the reason for the last platform reset.
+ * Returns the reason for the last platform reset.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance);
 
 /**
- * This function provides a platform specific implementation for assert.
+ * Provides a platform specific implementation for assert.
  *
  * @param[in] aFilename    The name of the file where the assert occurred.
  * @param[in] aLineNumber  The line number in the file where the assert occurred.
- *
  */
 void otPlatAssertFail(const char *aFilename, int aLineNumber);
 
 /**
- * This function performs a platform specific operation to wake the host MCU.
+ * Performs a platform specific operation to wake the host MCU.
  * This is used only for NCP configurations.
- *
  */
 void otPlatWakeHost(void);
 
@@ -119,7 +125,6 @@ void otPlatWakeHost(void);
  * external trigger (a "poke") to NCP before it can communicate with the NCP or not.
  *
  * After a reset, the MCU power state MUST be `OT_PLAT_POWER_STATE_ON`.
- *
  */
 typedef enum
 {
@@ -130,7 +135,6 @@ typedef enum
      * external triggers.
      *
      * @note The `ON` power state only determines the MCU's power mode and is not related to radio's state.
-     *
      */
     OT_PLAT_MCU_POWER_STATE_ON = 0,
 
@@ -148,7 +152,6 @@ typedef enum
      *
      * @note The `LOW_POWER` power state only determines the MCU's power mode and is not related to radio's state
      * (radio is managed by OpenThread core and device role, e.g., device being sleepy or not.
-     *
      */
     OT_PLAT_MCU_POWER_STATE_LOW_POWER = 1,
 
@@ -157,13 +160,12 @@ typedef enum
      *
      * An NCP hardware reset (via a RESET pin) is required to bring the NCP back to `SPINEL_MCU_POWER_STATE_ON`.
      * RAM is not retained after reset.
-     *
      */
     OT_PLAT_MCU_POWER_STATE_OFF = 2,
 } otPlatMcuPowerState;
 
 /**
- * This function sets the desired MCU power state.
+ * Sets the desired MCU power state.
  *
  * This is only applicable and used for NCP configuration when `OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL`
  * is enabled.
@@ -173,12 +175,11 @@ typedef enum
  *
  * @retval OT_ERROR_NONE     The power state updated successfully.
  * @retval OT_ERROR_FAILED   The given MCU power state is not supported by the platform.
- *
  */
 otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState);
 
 /**
- * This function gets the current desired MCU power state.
+ * Gets the current desired MCU power state.
  *
  * This is only applicable and used for NCP configuration when `OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL`
  * is enabled.
@@ -189,13 +190,21 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
  * @param[in] aInstance  A pointer to OpenThread instance.
  *
  * @returns The current power state.
- *
  */
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
 
 /**
- * @}
+ * Logs a crash dump using OpenThread logging APIs
  *
+ * @note This API is an optional logging platform API. It's up to the platform layer to implement it.
+ *
+ * @retval OT_ERROR_NONE            Crash dump was logged successfully
+ * @retval OT_ERROR_NOT_CAPABLE     Platform is not capable of logging a crash dump
+ */
+otError otPlatLogCrashDump(void);
+
+/**
+ * @}
  */
 
 #ifdef __cplusplus

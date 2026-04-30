@@ -33,17 +33,41 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     changed_props_set.cpp
+    multipan_platform.cpp
     ncp_base.cpp
     ncp_base_dispatcher.cpp
     ncp_base_radio.cpp
     ncp_spi.cpp
     ncp_hdlc.cpp
+    platform/dnssd.cpp
+    platform/infra_if.cpp
 )
 
 set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")
 if(OT_NCP_VENDOR_HOOK_SOURCE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1")
     list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE_DIR}${OT_NCP_VENDOR_HOOK_SOURCE})
+endif()
+
+option(OT_NCP_INFRA_IF "enable NCP Infra If support")
+if (OT_NCP_INFRA_IF)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_INFRA_IF_ENABLE=0")
+endif()
+
+option(OT_NCP_DNSSD "enable NCP DNSSD")
+if (OT_NCP_DNSSD)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE=0")
+endif()
+
+option(OT_NCP_CLI_STREAM "enable NCP CLI stream ")
+if (OT_NCP_CLI_STREAM)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE=0")
 endif()
 
 set(COMMON_NCP_SOURCES
@@ -68,6 +92,15 @@ endif()
 
 if(OT_RCP)
     include(radio.cmake)
+    if(OT_MULTIPAN_RCP)
+        target_compile_options(ot-config-radio
+            INTERFACE
+                "-DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1"
+                "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0" # Not supporting multiple instances
+                "-DOPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE=1"
+                "-DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+        )
+    endif()
 endif()
 
 set_property(SOURCE ncp_base_mtd.cpp

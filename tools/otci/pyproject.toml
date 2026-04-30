@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openthread-otci"
+version = "0.0.1"
+authors = [
+  { name="The OpenThread Authors", email="openthread-users@googlegroups.com" },
+]
+description = "OpenThread Control Interface"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/openthread/openthread"
+Issues = "https://github.com/openthread/openthread/issues"

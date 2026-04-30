@@ -33,9 +33,7 @@
 
 #include "mac_links.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Mac {
@@ -129,6 +127,7 @@ Links::Links(Instance &aInstance)
     , mTxFrames(aInstance)
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     , mShortAddress(kShortAddrInvalid)
+    , mAlternateShortAddress(kShortAddrInvalid)
 #endif
 {
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

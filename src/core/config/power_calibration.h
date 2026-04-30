@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for power calibration module.
- *
  */
 
-#ifndef CONFIG_POWER_CALIBRATION_H_
-#define CONFIG_POWER_CALIBRATION_H_
+#ifndef OT_CORE_CONFIG_POWER_CALIBRATION_H_
+#define OT_CORE_CONFIG_POWER_CALIBRATION_H_
+
+/**
+ * @addtogroup config-power-calibration
+ *
+ * @brief
+ *   This module includes configuration variables for Power Calibration.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
  *
  * Define as 1 to enable power calibration support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 #define OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE 0
@@ -49,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE
  *
  * The size of the raw power setting byte array.
- *
  */
 #ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE
 #define OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE 16
@@ -59,10 +65,13 @@
  * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_NUM_CALIBRATED_POWER_ENTRIES
  *
  * The number of the calibrated power entries for each channel.
- *
  */
 #ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_NUM_CALIBRATED_POWER_ENTRIES
 #define OPENTHREAD_CONFIG_POWER_CALIBRATION_NUM_CALIBRATED_POWER_ENTRIES 6
 #endif
 
-#endif // CONFIG_POWER_CALIBRATION_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_POWER_CALIBRATION_H_

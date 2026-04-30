@@ -144,8 +144,8 @@ def check_tlv_request_tlv(command_msg, check_type, tlv_id):
 
     elif check_type == CheckType.NOT_CONTAIN:
         if tlv_request_tlv is not None:
-            assert (any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs) is
-                    False), "Error: The msg contains TLV Request TLV ID: {}".format(tlv_id)
+            assert (not any(tlv_id == tlv
+                            for tlv in tlv_request_tlv.tlvs)), f"Error: The msg contains TLV Request TLV ID: {tlv_id}"
 
     elif check_type == CheckType.OPTIONAL:
         if tlv_request_tlv is not None:
@@ -559,7 +559,7 @@ def check_compressed_address_registration_tlv(command_msg, cid, iid, cid_present
             command_msg (MleMessage) : The Mle message to check.
             cid (int): The context id of the domain prefix.
             iid (string): The Interface Identifier.
-            cid_present_once(boolean): True if cid entry should apprear only once in AR Tlv.
+            cid_present_once(boolean): True if cid entry should appear only once in AR Tlv.
                                        False otherwise.
     '''
     found = False
@@ -682,7 +682,7 @@ def check_joiner_router_commissioning_messages(commissioning_messages):
 
 
 def check_payload_same(tp1, tp2):
-    """Verfiy two payloads are totally the same.
+    """Verify two payloads are totally the same.
        A payload is a tuple of tlvs.
     """
     assert len(tp1) == len(tp2)

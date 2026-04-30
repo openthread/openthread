@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
-#include "common/code_utils.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Utils {
@@ -66,7 +63,7 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     , mSampleCount(0)
     , mTimer(aInstance)
 {
-    memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
+    ClearAllBytes(mChannelOccupancy);
 }
 
 Error ChannelMonitor::Start(void)
@@ -98,7 +95,7 @@ void ChannelMonitor::Clear(void)
 {
     mChannelMaskIndex = 0;
     mSampleCount      = 0;
-    memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
+    ClearAllBytes(mChannelOccupancy);
 
     LogDebg("Clearing data");
 }

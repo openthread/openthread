@@ -35,9 +35,13 @@
 
 #include <stdio.h>
 
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#include "net/ip6_address.hpp"
+#endif
 
 namespace ot {
 namespace Mac {
@@ -54,13 +58,21 @@ PanId GenerateRandomPanId(void)
     return panId;
 }
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 void ExtAddress::GenerateRandom(void)
 {
-    IgnoreError(Random::Crypto::FillBuffer(m8, sizeof(ExtAddress)));
+    IgnoreError(Random::Crypto::Fill(*this));
     SetGroup(false);
     SetLocal(true);
 }
+
+void ExtAddress::SetFromIid(const Ip6::InterfaceIdentifier &aIid)
+{
+    Set(aIid.GetBytes());
+    ToggleLocal();
+}
+
 #endif
 
 ExtAddress::InfoString ExtAddress::ToString(void) const
@@ -70,6 +82,29 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
     string.AppendHexBytes(m8, sizeof(ExtAddress));
 
     return string;
+}
+
+Error ExtAddress::FromString(const char *aString)
+{
+    Error   error = kErrorNone;
+    uint8_t high;
+    uint8_t low;
+
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
+
+    for (uint8_t &byte : m8)
+    {
+        SuccessOrExit(error = ParseHexDigit(*aString, high));
+        aString++;
+        SuccessOrExit(error = ParseHexDigit(*aString, low));
+        aString++;
+        byte = static_cast<uint8_t>((high << 4) | low);
+    }
+
+    VerifyOrExit(*aString == kNullChar, error = kErrorParse);
+
+exit:
+    return error;
 }
 
 void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder)
@@ -90,6 +125,43 @@ void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder a
     }
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+void Address::SetExtendedFromIid(const Ip6::InterfaceIdentifier &aIid)
+{
+    mShared.mExtAddress.SetFromIid(aIid);
+    mType = kTypeExtended;
+}
+#endif
+
+bool Address::operator==(const Address &aOther) const
+{
+    bool ret = false;
+
+    VerifyOrExit(GetType() == aOther.GetType());
+
+    switch (GetType())
+    {
+    case kTypeNone:
+        ret = true;
+        break;
+
+    case kTypeShort:
+        ret = (GetShort() == aOther.GetShort());
+        break;
+
+    case kTypeExtended:
+        ret = (GetExtended() == aOther.GetExtended());
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+exit:
+    return ret;
+}
+
 Address::InfoString Address::ToString(void) const
 {
     InfoString string;
@@ -108,6 +180,24 @@ Address::InfoString Address::ToString(void) const
     }
 
     return string;
+}
+
+void PanIds::SetSource(PanId aPanId)
+{
+    mSource          = aPanId;
+    mIsSourcePresent = true;
+}
+
+void PanIds::SetDestination(PanId aPanId)
+{
+    mDestination          = aPanId;
+    mIsDestinationPresent = true;
+}
+
+void PanIds::SetBothSourceDestination(PanId aPanId)
+{
+    SetSource(aPanId);
+    SetDestination(aPanId);
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -229,17 +319,11 @@ uint32_t LinkFrameCounters::GetMaximum(void) const
     uint32_t counter = 0;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (counter < m154Counter)
-    {
-        counter = m154Counter;
-    }
+    counter = Max(counter, m154Counter);
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (counter < mTrelCounter)
-    {
-        counter = mTrelCounter;
-    }
+    counter = Max(counter, mTrelCounter);
 #endif
 
     return counter;
@@ -299,7 +383,7 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 #endif
 }
 
-void KeyMaterial::ExtractKey(Key &aKey)
+void KeyMaterial::ExtractKey(Key &aKey) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     aKey.Clear();
@@ -342,5 +426,45 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 #endif
 }
 
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+uint8_t GetWakeupIdLength(WakeupId aWakeupId)
+{
+    uint8_t zeroBytesCount = 0;
+
+    for (int i = static_cast<int>(sizeof(WakeupId)) - 1; i >= 1; --i)
+    {
+        if (((aWakeupId >> (i * kBitsPerByte)) & 0xFF) == 0)
+        {
+            zeroBytesCount++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return sizeof(WakeupId) - zeroBytesCount;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+void WakeupRequest::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    SetType(kTypeExtAddress);
+    aExtAddress.CopyTo(mShared.mExtAddress.m8);
+}
+
+const ExtAddress &WakeupRequest::GetExtAddress(void) const { return AsCoreType(&mShared.mExtAddress); }
+
+ExtAddress &WakeupRequest::GetExtAddress(void) { return AsCoreType(&mShared.mExtAddress); }
+
+void WakeupRequest::SetType(Type aType) { mType = MapEnum(aType); }
+
+bool WakeupRequest::IsWakeupByExtAddress(void) const { return MapEnum(mType) == kTypeExtAddress; }
+
+bool WakeupRequest::IsWakeupById(void) const { return MapEnum(mType) == kTypeWakeupId; }
+
+bool WakeupRequest::IsWakeupByGroupId(void) const { return MapEnum(mType) == kTypeGroupWakeupId; }
+#endif
 } // namespace Mac
 } // namespace ot

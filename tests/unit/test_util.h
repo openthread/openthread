@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_UTIL_H
-#define TEST_UTIL_H
+#ifndef OT_UNIT_TEST_UTIL_H_
+#define OT_UNIT_TEST_UTIL_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,12 +39,11 @@ extern "C" {
 #endif
 
 /**
- * This macro verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
+ * Verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
  * given error messages and exits the program.
  *
  * @param[in]  aStatus     A scalar error status to be evaluated against zero (0).
  * @param[in]  aMessage    An optional message (constant C string) to print on failure.
- *
  */
 #define SuccessOrQuit(...)                                                                                      \
     do                                                                                                          \
@@ -58,17 +57,19 @@ extern "C" {
     } while (false)
 
 /**
- * This macro verifies that a given boolean condition is true, otherwise, it emits a given error message and exits the
+ * Verifies that a given boolean condition is true, otherwise, it emits a given error message and exits the
  * program.
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.
  * @param[in]  aMessage    An optional message (constant C string) to print on failure.
- *
  */
 #define VerifyOrQuit(...)                                                                                       \
     do                                                                                                          \
     {                                                                                                           \
-        if (!(OT_FIRST_ARG(__VA_ARGS__)))                                                                       \
+        if ((OT_FIRST_ARG(__VA_ARGS__)))                                                                        \
+        {                                                                                                       \
+        }                                                                                                       \
+        else                                                                                                    \
         {                                                                                                       \
             fprintf(stderr, "\nFAILED %s:%d - VerifyOrQuit(%s) " OT_SECOND_ARG(__VA_ARGS__) "\n", __FUNCTION__, \
                     __LINE__, _Stringize(OT_FIRST_ARG(__VA_ARGS__)));                                           \
@@ -84,4 +85,4 @@ extern "C" {
 }
 #endif
 
-#endif
+#endif // OT_UNIT_TEST_UTIL_H_

@@ -35,9 +35,10 @@
 #ifndef OPENTHREAD_PLATFORM_MESSAGEPOOL_H_
 #define OPENTHREAD_PLATFORM_MESSAGEPOOL_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include <openthread/message.h>
+#include <openthread/instance.h>
 
 /**
  * @addtogroup plat-messagepool
@@ -46,7 +47,6 @@
  *   This module includes the platform abstraction for the message pool.
  *
  * @{
- *
  */
 
 #ifdef __cplusplus
@@ -54,8 +54,7 @@ extern "C" {
 #endif
 
 /**
- * This struct represents an OpenThread message buffer.
- *
+ * Represents an OpenThread message buffer.
  */
 typedef struct otMessageBuffer
 {
@@ -65,51 +64,56 @@ typedef struct otMessageBuffer
 /**
  * Initialize the platform implemented message pool.
  *
- * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ * Is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * @param[in] aInstance            A pointer to the OpenThread instance.
  * @param[in] aMinNumFreeBuffers   An uint16 containing the minimum number of free buffers desired by OpenThread.
  * @param[in] aBufferSize          The size in bytes of a buffer object.
- *
  */
 void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, size_t aBufferSize);
 
 /**
  * Allocate a buffer from the platform managed buffer pool.
  *
- * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ * Is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * The returned buffer instance MUST have at least `aBufferSize` bytes (as specified in `otPlatMessagePoolInit()`).
  *
  * @param[in] aInstance            A pointer to the OpenThread instance.
  *
  * @returns A pointer to the buffer or NULL if no buffers are available.
- *
  */
 otMessageBuffer *otPlatMessagePoolNew(otInstance *aInstance);
 
 /**
- * This function is used to free a buffer back to the platform managed buffer pool.
+ * Is used to free a buffer back to the platform managed buffer pool.
  *
- * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ * Is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  * @param[in]  aBuffer    The buffer to free.
- *
  */
 void otPlatMessagePoolFree(otInstance *aInstance, otMessageBuffer *aBuffer);
 
 /**
  * Get the number of free buffers.
  *
- * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ * Is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  *
  * @returns The number of buffers currently free and available to OpenThread.
- *
  */
 uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
+
+/**
+ * Deinitialize the platform implemented message pool.
+ *
+ * Is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ *
+ * @param[in] aInstance  A pointer to the OpenThread instance.
+ */
+void otPlatMessagePoolDeinit(otInstance *aInstance);
 
 #ifdef __cplusplus
 } // extern "C"
@@ -117,7 +121,6 @@ uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #endif // OPENTHREAD_PLATFORM_MESSAGEPOOL_H_

@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the DNS Stateful Operations (DSO).
- *
  */
 
-#ifndef CONFIG_DNS_DSO_H_
-#define CONFIG_DNS_DSO_H_
+#ifndef OT_CORE_CONFIG_DNS_DSO_H_
+#define OT_CORE_CONFIG_DNS_DSO_H_
+
+/**
+ * @addtogroup config-dns-dso
+ *
+ * @brief
+ *   This module includes configuration variables for DNS Stateful Operations.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
  *
  * Define to 1 to enable DSO support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 #define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 0
@@ -49,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_DNS_DSO_CONNECTING_TIMEOUT
  *
  * Specifies the maximum time (in msec) waiting for a connection to be established by DSO platform layer.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNS_DSO_CONNECTING_TIMEOUT
 #define OPENTHREAD_CONFIG_DNS_DSO_CONNECTING_TIMEOUT (45 * 1000)
@@ -59,7 +65,6 @@
  * @def OPENTHREAD_CONFIG_DNS_DSO_RESPONSE_TIMEOUT
  *
  * Specifies the maximum time (in msec) waiting for a response to a request.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNS_DSO_RESPONSE_TIMEOUT
 #define OPENTHREAD_CONFIG_DNS_DSO_RESPONSE_TIMEOUT (30 * 1000)
@@ -69,10 +74,24 @@
  * @def OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS
  *
  * Specifies the maximum number of pending requests per DSO session.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS
 #define OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS 3
 #endif
 
-#endif // CONFIG_DNS_DSO_H_
+/**
+ * @def OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE
+ *
+ * Define to 1 to add mock (empty) implementation of DSO platform APIs.
+ *
+ * This is intended for generating code size report only and should not be used otherwise.
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE
+#define OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE 0
+#endif
+
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_DNS_DSO_H_

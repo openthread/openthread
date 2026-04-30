@@ -34,15 +34,49 @@
 #include "utils.hpp"
 
 #include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <openthread/logging.h>
 
 #include "common/code_utils.hpp"
+#include "lib/platform/exit_code.h"
 
 namespace ot {
 namespace Posix {
+
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption)
+{
+    int rval = 0;
+    int fd   = -1;
+
+#ifdef __APPLE__
+    VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+
+    VerifyOrExit((rval = fcntl(fd, F_GETFD, 0)) != -1, perror("fcntl(F_GETFD)"));
+    rval |= aBlockOption == kSocketNonBlock ? O_NONBLOCK | FD_CLOEXEC : FD_CLOEXEC;
+    VerifyOrExit((rval = fcntl(fd, F_SETFD, rval)) != -1, perror("fcntl(F_SETFD)"));
+#else
+    aType |= aBlockOption == kSocketNonBlock ? SOCK_CLOEXEC | SOCK_NONBLOCK : SOCK_CLOEXEC;
+    VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+#endif
+
+exit:
+    if (rval == -1)
+    {
+        VerifyOrDie(close(fd) == 0, OT_EXIT_ERROR_ERRNO);
+        fd = -1;
+    }
+
+    return fd;
+}
 
 enum
 {

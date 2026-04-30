@@ -29,17 +29,16 @@
 import logging
 import subprocess
 import time
-from abc import abstractmethod
-from typing import Optional
+from abc import abstractmethod, ABC
+from typing import Any, Optional
 
 
-class OtCliHandler:
+class OtCliHandler(ABC):
     """This abstract class defines interfaces for a OT CLI Handler."""
 
     @abstractmethod
-    def readline(self) -> str:
+    def readline(self) -> Optional[str]:
         """Method readline should return the next line read from OT CLI."""
-        pass
 
     @abstractmethod
     def writeline(self, s: str) -> None:
@@ -47,28 +46,25 @@ class OtCliHandler:
 
         It should block until all characters are written to OT CLI.
         """
-        pass
 
     @abstractmethod
-    def wait(self, duration: float) -> None:
+    def wait(self, duration: float, **kwargs) -> None:
         """Method wait should wait for a given duration.
 
         A normal implementation should just call `time.sleep(duration)`. This is intended for proceeding Virtual Time
         Simulation instances.
         """
-        pass
 
     @abstractmethod
     def close(self) -> None:
         """Method close should close the OT CLI Handler."""
-        pass
 
 
-class Simulator:
+class Simulator(ABC):
     """This abstract class defines interfaces for a Virtual Time Simulator."""
 
     @abstractmethod
-    def go(self, duration: float):
+    def go(self, duration: float, **kwargs):
         """Proceed the simulator for a given duration (in seconds)."""
         pass
 
@@ -76,7 +72,7 @@ class Simulator:
 class OtCliPopen(OtCliHandler):
     """Connector for OT CLI process (a Popen instance)."""
 
-    def __init__(self, proc: subprocess.Popen, nodeid: int, simulator: Simulator):
+    def __init__(self, proc: subprocess.Popen[Any], nodeid: int, simulator: Optional[Simulator]):
         self.__otcli_proc = proc
         self.__nodeid = nodeid
         self.__simulator = simulator
@@ -84,22 +80,29 @@ class OtCliPopen(OtCliHandler):
     def __repr__(self):
         return 'OTCli<%d>' % self.__nodeid
 
-    def readline(self) -> str:
+    def readline(self) -> Optional[str]:
+        assert self.__otcli_proc.stdout is not None
         return self.__otcli_proc.stdout.readline().rstrip('\r\n')
 
     def writeline(self, s: str):
+        assert self.__otcli_proc.stdin is not None
         self.__otcli_proc.stdin.write(s + '\n')
         self.__otcli_proc.stdin.flush()
 
-    def wait(self, duration: float):
+    def wait(self, duration: float, **kwargs):
         if self.__simulator is not None:
+            if kwargs.get('maybeoff', False):
+                kwargs['nodeid'] = self.__nodeid
+
             # Virtual time simulation
-            self.__simulator.go(duration)
+            self.__simulator.go(duration, **kwargs)
         else:
             # Real time simulation
             time.sleep(duration)
 
     def close(self):
+        assert self.__otcli_proc.stdin is not None
+        assert self.__otcli_proc.stdout is not None
         self.__otcli_proc.stdin.close()
         self.__otcli_proc.stdout.close()
         self.__otcli_proc.wait()
@@ -108,7 +111,7 @@ class OtCliPopen(OtCliHandler):
 class OtCliSim(OtCliPopen):
     """Connector for OT CLI Simulation instances."""
 
-    def __init__(self, executable: str, nodeid: int, simulator: Simulator):
+    def __init__(self, executable: str, nodeid: int, simulator: Optional[Simulator]):
         logging.info('%s: executable=%s', self.__class__.__name__, executable)
 
         proc = subprocess.Popen(args=[executable, str(nodeid)],
@@ -120,10 +123,10 @@ class OtCliSim(OtCliPopen):
         super().__init__(proc, nodeid, simulator)
 
 
-class OtNcpSim(OtCliHandler):
+class OtNcpSim(OtCliPopen):
     """Connector for OT NCP Simulation instances."""
 
-    def __init__(self, executable: str, nodeid: int, simulator: Simulator):
+    def __init__(self, executable: str, nodeid: int, simulator: Optional[Simulator]):
         logging.info('%s: executable=%s', self.__class__.__name__, executable)
 
         proc = subprocess.Popen(args=f'spinel-cli.py -p "{executable}" -n {nodeid} 2>&1',
@@ -138,12 +141,13 @@ class OtNcpSim(OtCliHandler):
 class OtCliSerial(OtCliHandler):
     """Connector for OT CLI SOC devices via Serial."""
 
-    def __init__(self, dev: str, baudrate: int):
+    def __init__(self, dev: str, baudrate: int, timeout: float = 0.1):
         self.__dev = dev
         self.__baudrate = baudrate
 
         import serial
-        self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=0.1, exclusive=True)
+        self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=timeout, exclusive=True)
+        self.writeline('\r\n')
         self.__linebuffer = b''
 
     def __repr__(self):
@@ -164,9 +168,9 @@ class OtCliSerial(OtCliHandler):
         return None
 
     def writeline(self, s: str):
-        self.__serial.write((s + '\n').encode('utf-8'))
+        self.__serial.write((s + '\r\n').encode('utf-8'))
 
-    def wait(self, duration: float):
+    def wait(self, duration: float, **kwargs):
         time.sleep(duration)
 
     def close(self):

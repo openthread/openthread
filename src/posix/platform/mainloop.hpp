@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for the SPI interface to radio (RCP).
+ *   This file includes definitions for the mainloop events and manager.
  */
 
 #ifndef OT_POSIX_PLATFORM_MAINLOOP_HPP_
@@ -40,9 +40,99 @@ namespace ot {
 namespace Posix {
 namespace Mainloop {
 
+typedef otSysMainloopContext Context; ///<  Represents a `Mainloop` context.
+
 /**
- * This class is the base for all mainloop event sources.
+ * Adds a file descriptor to the read set in the mainloop context.
  *
+ * If the file descriptor @p aFd is valid (non-negative), this method adds it to `aContext.mReadFdSet` and
+ * updates `aContext.mMaxFd` if @p aFd is larger than the current max. If @p aFd is negative, no action is taken.
+ *
+ * @param[in]      aFd       The file descriptor to add.
+ * @param[in,out]  aContext  A reference to the mainloop context.
+ */
+void AddToReadFdSet(int aFd, Context &aContext);
+
+/**
+ * Adds a file descriptor to the write set in the mainloop context.
+ *
+ * If the file descriptor @p aFd is valid (non-negative), this method adds it to `aContext.mWriteFdSet` and
+ * updates `aContext.mMaxFd` if @p aFd is larger than the current max. If @p aFd is negative, no action is taken.
+ *
+ * @param[in]      aFd       The file descriptor to add.
+ * @param[in,out]  aContext  A reference to the mainloop context.
+ */
+void AddToWriteFdSet(int aFd, Context &aContext);
+
+/**
+ * Adds a file descriptor to the error set in the mainloop context.
+ *
+ * If the file descriptor @p aFd is valid (non-negative), this method adds it to `aContext.mErrorFdSet` and
+ * updates `aContext.mMaxFd` if @p aFd is larger than the current max. If @p aFd is negative, no action is taken.
+ *
+ * @param[in]      aFd       The file descriptor to add.
+ * @param[in,out]  aContext  A reference to the mainloop context.
+ */
+void AddToErrorFdSet(int aFd, Context &aContext);
+
+/**
+ * Checks if a file descriptor is in the read set of the mainloop context.
+ *
+ * This is intended to be called after the `select()` call has returned.
+ *
+ * @param[in]  aFd       The file descriptor to check.
+ * @param[in]  aContext  A reference to the mainloop context.
+ *
+ * @returns `true` if the given file descriptor is readable, `false` otherwise.
+ */
+inline bool IsFdReadable(int aFd, const Context &aContext) { return FD_ISSET(aFd, &aContext.mReadFdSet); }
+
+/**
+ * Checks if a file descriptor is in the write set of the mainloop context.
+ *
+ * This is intended to be called after the `select()` call has returned.
+ *
+ * @param[in]  aFd       The file descriptor to check.
+ * @param[in]  aContext  A reference to the mainloop context.
+ *
+ * @returns `true` if the given file descriptor is writable, `false` otherwise.
+ */
+inline bool IsFdWritable(int aFd, const Context &aContext) { return FD_ISSET(aFd, &aContext.mWriteFdSet); }
+
+/**
+ * Checks if a file descriptor is in the error set of the mainloop context.
+ *
+ * This is intended to be called after the `select()` call has returned.
+ *
+ * @param[in]  aFd       The file descriptor to check.
+ * @param[in]  aContext  A reference to the mainloop context.
+ *
+ * @returns `true` if the given file descriptor has an error, `false` otherwise.
+ */
+inline bool HasFdErrored(int aFd, const Context &aContext) { return FD_ISSET(aFd, &aContext.mErrorFdSet); }
+
+/**
+ * Gets the current timeout value from the mainloop context.
+ *
+ * @param[in]  aContext  A reference to the mainloop context.
+ *
+ * @returns The timeout value.
+ */
+uint64_t GetTimeout(const Context &aContext);
+
+/**
+ * Sets the timeout in the mainloop context if the new timeout is earlier than the existing one.
+ *
+ * This method compares `aTimeout` with the current timeout in `aContext` and updates the context's
+ * timeout to `aTimeout` if it is smaller (earlier).
+ *
+ * @param[in]      aTimeout  The new timeout value to potentially set.
+ * @param[in,out]  aContext  A reference to the mainloop context.
+ */
+void SetTimeoutIfEarlier(uint64_t aTimeout, Context &aContext);
+
+/**
+ * Is the base for all mainloop event sources.
  */
 class Source
 {
@@ -50,75 +140,68 @@ class Source
 
 public:
     /**
-     * This method registers events in the mainloop.
+     * Registers events in the mainloop.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
-     *
      */
-    virtual void Update(otSysMainloopContext &aContext) = 0;
+    virtual void Update(Context &aContext) = 0;
 
     /**
-     * This method processes the mainloop events.
+     * Processes the mainloop events.
      *
      * @param[in]   aContext    A reference to the mainloop context.
-     *
      */
-    virtual void Process(const otSysMainloopContext &aContext) = 0;
+    virtual void Process(const Context &aContext) = 0;
 
     /**
-     * This method marks desturctor virtual method.
-     *
+     * Marks destructor virtual method.
      */
-    virtual ~Source() = default;
+    virtual ~Source(void) = default;
 
 private:
+    static void AddFd(int aFd, Context &aContext, fd_set &aFdSet);
+
     Source *mNext = nullptr;
 };
 
 /**
- * This class manages mainloop.
- *
+ * Manages mainloop.
  */
 class Manager
 {
 public:
     /**
-     * This method updates event polls in the mainloop context.
+     * Updates event polls in the mainloop context.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
-     *
      */
-    void Update(otSysMainloopContext &aContext);
+    void Update(Context &aContext);
 
     /**
-     * This method processes events in the mainloop context.
+     * Processes events in the mainloop context.
      *
      * @param[in]   aContext    A reference to the mainloop context.
-     *
      */
-    void Process(const otSysMainloopContext &aContext);
+    void Process(const Context &aContext);
 
     /**
-     * This method adds a new event source into the mainloop.
+     * Adds a new event source into the mainloop.
      *
      * @param[in]   aSource     A reference to the event source.
-     *
      */
     void Add(Source &aSource);
 
     /**
-     * This method removes an event source from the mainloop.
+     * Removes an event source from the mainloop.
      *
      * @param[in]   aSource     A reference to the event source.
-     *
      */
     void Remove(Source &aSource);
 
     /**
-     * This function returns the Mainloop singleton.
+     * Returns the Mainloop singleton.
      *
-     * @returns A refernce to the Mainloop singleton.
-     *
+     * @returns A reference to the Mainloop singleton.
      */
     static Manager &Get(void);
 

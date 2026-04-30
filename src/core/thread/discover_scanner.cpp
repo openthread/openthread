@@ -33,14 +33,7 @@
 
 #include "discover_scanner.hpp"
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "thread/mesh_forwarder.hpp"
-#include "thread/mle.hpp"
-#include "thread/mle_router.hpp"
-#include "thread/version.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Mle {
@@ -52,9 +45,11 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     , mFilterIndexes()
     , mState(kStateIdle)
     , mScanChannel(0)
-    , mAdvDataLength(0)
     , mEnableFiltering(false)
     , mShouldRestorePanId(false)
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    , mAdvDataLength(0)
+#endif
 {
 }
 
@@ -63,15 +58,13 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 bool                    aJoiner,
                                 bool                    aEnableFiltering,
                                 const FilterIndexes    *aFilterIndexes,
-                                Handler                 aCallback,
+                                ScanResult::Handler     aHandler,
                                 void                   *aContext)
 {
-    Error                           error   = kErrorNone;
-    Mle::TxMessage                 *message = nullptr;
-    Tlv                             tlv;
-    Ip6::Address                    destination;
-    MeshCoP::DiscoveryRequestTlv    discoveryRequest;
-    MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
+    Error                             error   = kErrorNone;
+    Mle::TxMessage                   *message = nullptr;
+    Tlv::Bookmark                     tlvBookmark;
+    MeshCoP::DiscoveryRequestTlvValue discoveryRequestTlvValue;
 
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 
@@ -95,7 +88,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         }
     }
 
-    mCallback.Set(aCallback, aContext);
+    mCallback.Set(aHandler, aContext);
     mShouldRestorePanId = false;
     mScanChannels       = Get<Mac::Mac>().GetSupportedChannelMask();
 
@@ -104,38 +97,40 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         mScanChannels.Intersect(aScanChannels);
     }
 
-    VerifyOrExit((message = Get<Mle>().NewMleMessage(Mle::kCommandDiscoveryRequest)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandDiscoveryRequest)) != nullptr, error = kErrorNoBufs);
     message->SetPanId(aPanId);
 
-    // Prepare sub-TLV MeshCoP Discovery Request.
-    discoveryRequest.Init();
-    discoveryRequest.SetVersion(kThreadVersion);
-    discoveryRequest.SetJoiner(aJoiner);
-
-    if (mAdvDataLength != 0)
-    {
-        // Prepare sub-TLV MeshCoP Joiner Advertisement.
-        joinerAdvertisement.Init();
-        joinerAdvertisement.SetOui(mOui);
-        joinerAdvertisement.SetAdvData(mAdvData, mAdvDataLength);
-    }
-
     // Append Discovery TLV with one or two sub-TLVs.
-    tlv.SetType(Tlv::kDiscovery);
-    tlv.SetLength(
-        static_cast<uint8_t>(discoveryRequest.GetSize() + ((mAdvDataLength != 0) ? joinerAdvertisement.GetSize() : 0)));
 
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
+    SuccessOrExit(error = Tlv::StartTlv(*message, Tlv::kDiscovery, tlvBookmark));
 
-    if (mAdvDataLength != 0)
+    discoveryRequestTlvValue.Clear();
+    discoveryRequestTlvValue.SetVersion(kThreadVersion);
+
+    if (aJoiner)
     {
-        SuccessOrExit(error = joinerAdvertisement.AppendTo(*message));
+        discoveryRequestTlvValue.SetJoinerFlag();
     }
 
-    destination.SetToLinkLocalAllRoutersMulticast();
+    SuccessOrExit(error = Tlv::Append<MeshCoP::DiscoveryRequestTlv>(*message, discoveryRequestTlvValue));
 
-    SuccessOrExit(error = message->SendTo(destination));
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    if (mAdvDataLength != 0)
+    {
+        MeshCoP::JoinerAdvertisementTlv joinerAdvTlv;
+
+        joinerAdvTlv.Init();
+        joinerAdvTlv.SetOui(mOui);
+        joinerAdvTlv.SetAdvData(mAdvData, mAdvDataLength);
+        SuccessOrExit(error = joinerAdvTlv.AppendTo(*message));
+    }
+#endif
+
+    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
+
+    message->RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
+
+    SuccessOrExit(error = message->SendTo(Ip6::Address::GetLinkLocalAllRoutersMulticast()));
 
     if ((aPanId == Mac::kPanIdBroadcast) && (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast))
     {
@@ -152,29 +147,36 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
     mState       = (mScanChannels.GetNextChannel(mScanChannel) == kErrorNone) ? kStateScanning : kStateScanDone;
 
-    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
+    // For rx-off-when-idle device, temporarily enable receiver during discovery procedure.
+    if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    }
+
+    Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, Ip6::Address::GetLinkLocalAllRoutersMulticast());
 
 exit:
     FreeMessageOnError(message, error);
     return error;
 }
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
 Error DiscoverScanner::SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit((aAdvData != nullptr) && (aAdvDataLength != 0) &&
-                     (aAdvDataLength <= MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength) && (aOui <= kMaxOui),
-                 error = kErrorInvalidArgs);
+    VerifyOrExit(aAdvData != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(IsValueInRange(aAdvDataLength, kMinAdvDataLength, kMaxAdvDataLength), error = kErrorInvalidArgs);
+    VerifyOrExit(aOui <= kMaxOui, error = kErrorInvalidArgs);
 
     mOui           = aOui;
     mAdvDataLength = aAdvDataLength;
-
     memcpy(mAdvData, aAdvData, aAdvDataLength);
 
 exit:
     return error;
 }
+#endif
 
 Mac::TxFrame *DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
 {
@@ -199,7 +201,16 @@ Mac::TxFrame *DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame
     return frame;
 }
 
-void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)
+void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(const otMessage *aMessage, otError aError, void *aContext)
+{
+    // Since we prepared the discovery message originally, we can
+    // safely cast away the `const` from it.
+
+    static_cast<DiscoverScanner *>(aContext)->HandleDiscoveryRequestFrameTxDone(AsNonConst(AsCoreType(aMessage)),
+                                                                                aError);
+}
+
+void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError)
 {
     switch (mState)
     {
@@ -207,15 +218,29 @@ void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)
         break;
 
     case kStateScanning:
-        // Mark the Discovery Request message for direct tx to ensure it
-        // is not dequeued and freed by `MeshForwarder` and is ready for
-        // the next scan channel. Also pause message tx on `MeshForwarder`
-        // while listening to receive Discovery Responses.
-        aMessage.SetDirectTransmission();
-        aMessage.SetTimestampToNow();
-        Get<MeshForwarder>().PauseMessageTransmissions();
-        mTimer.Start(kDefaultScanDuration);
-        break;
+        if ((aError == kErrorNone) || (aError == kErrorChannelAccessFailure))
+        {
+            // Mark the Discovery Request message for direct tx to ensure it
+            // is not dequeued and freed by `MeshForwarder` and is ready for
+            // the next scan channel. Also pause message tx on `MeshForwarder`
+            // while listening to receive Discovery Responses.
+            aMessage.SetDirectTransmission();
+            aMessage.SetTimestampToNow();
+            aMessage.RegisterTxCallback(HandleDiscoveryRequestFrameTxDone, this);
+            Get<MeshForwarder>().PauseMessageTransmissions();
+            mTimer.Start(kDefaultScanDuration);
+            break;
+        }
+
+        // If we encounter other error failures (e.g., `kErrorDrop` due
+        // to queue management dropping the message or if message being
+        // evicted), `aMessage` may be immediately freed. This prevents
+        // us from reusing it to request a scan on the next scan channel.
+        // As a result, we stop the scan operation in such cases.
+
+        mState = kStateScanDone;
+
+        OT_FALL_THROUGH;
 
     case kStateScanDone:
         HandleDiscoverComplete();
@@ -225,6 +250,12 @@ void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)
 
 void DiscoverScanner::HandleDiscoverComplete(void)
 {
+    // Restore Data Polling or CSL for rx-off-when-idle device.
+    if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+    }
+
     switch (mState)
     {
     case kStateIdle:
@@ -283,98 +314,74 @@ exit:
 
 void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 {
-    Error                         error    = kErrorNone;
-    const ThreadLinkInfo         *linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
-    MeshCoP::Tlv                  meshcopTlv;
-    MeshCoP::DiscoveryResponseTlv discoveryResponse;
-    MeshCoP::NetworkNameTlv       networkName;
-    ScanResult                    result;
-    uint16_t                      offset;
-    uint16_t                      length;
-    uint16_t                      end;
-    bool                          didCheckSteeringData = false;
+    Error                              error = kErrorNone;
+    ScanResult                         result;
+    OffsetRange                        offsetRange;
+    MeshCoP::DiscoveryResponseTlvValue respTlvValue;
+    MeshCoP::SteeringData              steeringData;
 
     Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(mState == kStateScanning, error = kErrorDrop);
 
-    // Find MLE Discovery TLV
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kDiscovery, offset, length));
-    end = offset + length;
+    // Find MLE Discovery TLV and restrict the message to this TLV value,
+    // so we can parse all the included MeshCoP sub-TLVs within this TLV.
 
-    memset(&result, 0, sizeof(result));
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kDiscovery, offsetRange));
+
+    aRxInfo.mMessage.SetOffset(offsetRange.GetOffset());
+    IgnoreError(aRxInfo.mMessage.SetLength(offsetRange.GetEndOffset()));
+
+    result.Clear();
     result.mDiscover = true;
-    result.mPanId    = linkInfo->mPanId;
-    result.mChannel  = linkInfo->mChannel;
-    result.mRssi     = linkInfo->mRss;
-    result.mLqi      = linkInfo->mLqi;
+    result.mPanId    = aRxInfo.mMessage.GetPanId();
+    result.mChannel  = aRxInfo.mMessage.GetChannel();
+    result.mRssi     = aRxInfo.mMessage.GetAverageRss();
+    result.mLqi      = aRxInfo.mMessage.GetAverageLqi();
 
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&result.mExtAddress));
+    AsCoreType(&result.mExtAddress).SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
 
-    // Process MeshCoP TLVs
-    while (offset < end)
+    // Required TLVs
+
+    SuccessOrExit(error = Tlv::Find<MeshCoP::DiscoveryResponseTlv>(aRxInfo.mMessage, respTlvValue));
+    result.mVersion  = respTlvValue.GetVersion();
+    result.mIsNative = respTlvValue.GetNativeCommissionerFlag();
+
+    SuccessOrExit(error = Tlv::Find<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, AsCoreType(&result.mExtendedPanId)));
+    SuccessOrExit(error = Tlv::Find<MeshCoP::NetworkNameTlv>(aRxInfo.mMessage, result.mNetworkName.m8));
+
+    // Optional TLVs
+
+    switch (Tlv::Find<MeshCoP::JoinerUdpPortTlv>(aRxInfo.mMessage, result.mJoinerUdpPort))
     {
-        IgnoreError(aRxInfo.mMessage.Read(offset, meshcopTlv));
-
-        switch (meshcopTlv.GetType())
-        {
-        case MeshCoP::Tlv::kDiscoveryResponse:
-            IgnoreError(aRxInfo.mMessage.Read(offset, discoveryResponse));
-            VerifyOrExit(discoveryResponse.IsValid(), error = kErrorParse);
-            result.mVersion  = discoveryResponse.GetVersion();
-            result.mIsNative = discoveryResponse.IsNativeCommissioner();
-            break;
-
-        case MeshCoP::Tlv::kExtendedPanId:
-            SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aRxInfo.mMessage, offset,
-                                                                       AsCoreType(&result.mExtendedPanId)));
-            break;
-
-        case MeshCoP::Tlv::kNetworkName:
-            IgnoreError(aRxInfo.mMessage.Read(offset, networkName));
-            if (networkName.IsValid())
-            {
-                IgnoreError(AsCoreType(&result.mNetworkName).Set(networkName.GetNetworkName()));
-            }
-            break;
-
-        case MeshCoP::Tlv::kSteeringData:
-            if (meshcopTlv.GetLength() > 0)
-            {
-                MeshCoP::SteeringData &steeringData = AsCoreType(&result.mSteeringData);
-                uint8_t                dataLength   = MeshCoP::SteeringData::kMaxLength;
-
-                if (meshcopTlv.GetLength() < dataLength)
-                {
-                    dataLength = meshcopTlv.GetLength();
-                }
-
-                steeringData.Init(dataLength);
-
-                SuccessOrExit(error = Tlv::ReadTlvValue(aRxInfo.mMessage, offset, steeringData.GetData(), dataLength));
-
-                if (mEnableFiltering)
-                {
-                    VerifyOrExit(steeringData.Contains(mFilterIndexes));
-                }
-
-                didCheckSteeringData = true;
-            }
-            break;
-
-        case MeshCoP::Tlv::kJoinerUdpPort:
-            SuccessOrExit(error =
-                              Tlv::Read<MeshCoP::JoinerUdpPortTlv>(aRxInfo.mMessage, offset, result.mJoinerUdpPort));
-            break;
-
-        default:
-            break;
-        }
-
-        offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        result.mJoinerUdpPort = 0;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
-    VerifyOrExit(!mEnableFiltering || didCheckSteeringData);
+    switch (MeshCoP::SteeringDataTlv::FindIn(aRxInfo.mMessage, steeringData))
+    {
+    case kErrorNone:
+        AsCoreType(&result.mSteeringData) = steeringData;
+
+        if (mEnableFiltering)
+        {
+            VerifyOrExit(steeringData.Contains(mFilterIndexes));
+        }
+
+        break;
+
+    case kErrorNotFound:
+        VerifyOrExit(!mEnableFiltering);
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
+    }
 
     mCallback.InvokeIfSet(&result);
 

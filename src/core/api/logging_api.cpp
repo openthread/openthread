@@ -33,28 +33,47 @@
 
 #include "openthread-core-config.h"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
-otLogLevel otLoggingGetLevel(void) { return static_cast<otLogLevel>(Instance::GetLogLevel()); }
+otLogLevel otGetLogLevel(otInstance *aInstance) { return MapEnum(AsCoreType(aInstance).GetLogLevel()); }
+
+otLogLevel otLoggingGetLevel(void)
+{
+    LogLevel level;
+
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    level = Instance::Get().GetLogLevel();
+#else
+    level = Instance::GetGlobalLogLevel();
+#endif
+
+    return MapEnum(level);
+}
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+
+otError otSetLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
+{
+    return AsCoreType(aInstance).SetLogLevel(MapEnum(aLogLevel));
+}
+
 otError otLoggingSetLevel(otLogLevel aLogLevel)
 {
-    Error error = kErrorNone;
+    Error    error;
+    LogLevel level = MapEnum(aLogLevel);
 
-    VerifyOrExit(aLogLevel <= kLogLevelDebg && aLogLevel >= kLogLevelNone, error = kErrorInvalidArgs);
-    Instance::SetLogLevel(static_cast<LogLevel>(aLogLevel));
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    error = Instance::Get().SetLogLevel(level);
+#else
+    error = Instance::SetGlobalLogLevel(level);
+#endif
 
-exit:
     return error;
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 static const char kPlatformModuleName[] = "Platform";
 
@@ -179,6 +198,38 @@ void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength)
 #endif
 }
 
+void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, ...)
+{
+#if OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(aLogLevel, aPlatModuleName, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aPlatModuleName);
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+}
+
+void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, va_list aArgs)
+{
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_LOG_PLATFORM
+    String<kMaxLogModuleNameLength> moduleName;
+
+    OT_ASSERT(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
+
+    moduleName.Append("P-%s", aPlatModuleName);
+    Logger::LogVarArgs(moduleName.AsCString(), static_cast<LogLevel>(aLogLevel), aFormat, aArgs);
+#else
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aPlatModuleName);
+    OT_UNUSED_VARIABLE(aFormat);
+    OT_UNUSED_VARIABLE(aArgs);
+#endif
+}
+
 void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...)
 {
 #if OT_SHOULD_LOG && OPENTHREAD_CONFIG_LOG_CLI
@@ -198,4 +249,11 @@ exit:
     OT_UNUSED_VARIABLE(aFormat);
 #endif
     return;
+}
+
+otError otLogGenerateNextHexDumpLine(otLogHexDumpInfo *aInfo)
+{
+    AssertPointerIsNotNull(aInfo);
+
+    return GenerateNextHexDumpLine(*aInfo);
 }

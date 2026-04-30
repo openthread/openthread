@@ -38,7 +38,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/error.h>
 #include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus
@@ -52,30 +51,25 @@ extern "C" {
  *   This module includes cryptographic functions.
  *
  * @{
- *
  */
 
 /**
- * @struct otCryptoSha256Hash
- *
- * This structure represents a SHA-256 hash.
- *
+ * Represents a SHA-256 hash.
  */
 typedef otPlatCryptoSha256Hash otCryptoSha256Hash;
 
 /**
- * This function performs HMAC computation.
+ * Performs HMAC computation.
  *
  * @param[in]     aKey           A pointer to the key.
  * @param[in]     aBuf           A pointer to the input buffer.
  * @param[in]     aBufLength     The length of @p aBuf in bytes.
  * @param[out]    aHash          A pointer to a `otCryptoSha256Hash` structure to output the hash value.
- *
  */
 void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash);
 
 /**
- * This method performs AES CCM computation.
+ * Performs AES CCM computation.
  *
  * @param[in]      aKey           A pointer to the key.
  * @param[in]      aTagLength     Length of tag in bytes.
@@ -91,7 +85,6 @@ void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t a
  * @param[in]      aEncrypt       `true` on encrypt and `false` on decrypt.
  *
  * @param[out]     aTag           A pointer to the tag.
- *
  */
 void otCryptoAesCcm(const otCryptoKey *aKey,
                     uint8_t            aTagLength,
@@ -107,7 +100,6 @@ void otCryptoAesCcm(const otCryptoKey *aKey,
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

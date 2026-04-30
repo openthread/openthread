@@ -326,13 +326,25 @@ void TestHeapArrayOfUint16(void)
 
     VerifyArray(array2, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26);
 
-    array2.TakeFrom(static_cast<Heap::Array<uint16_t, 2> &&>(array));
+    array2.TakeFrom(array.Move());
 
     VerifyArray(array);
     VerifyOrQuit(array.GetCapacity() == 0);
 
     VerifyArray(array2, 0, 1, 2, 3, 4, 5);
     VerifyOrQuit(array2.GetCapacity() == 10);
+
+    // Test moving from self
+    array2.TakeFrom(array2.Move());
+    VerifyArray(array2, 0, 1, 2, 3, 4, 5);
+    VerifyOrQuit(array2.GetCapacity() == 10);
+
+    // Test moving a null array
+    array2.TakeFrom(array.Move());
+    VerifyArray(array);
+    VerifyOrQuit(array.GetCapacity() == 0);
+    VerifyArray(array2);
+    VerifyOrQuit(array2.GetCapacity() == 0);
 
     printf("\n -- PASS\n");
 }
@@ -465,13 +477,25 @@ void TestHeapArray(void)
             SuccessOrQuit(array2.PushBack(Entry(num + 0x20)));
         }
 
-        array2.TakeFrom(static_cast<Heap::Array<Entry, 2> &&>(array));
+        array2.TakeFrom(array.Move());
 
         VerifyOrQuit(array.GetLength() == 0);
         VerifyOrQuit(array.GetCapacity() == 0);
 
         VerifyArray(array2, 0, 1, 2, 3, 4, 5);
         VerifyOrQuit(array2.GetCapacity() == 10);
+
+        // Test moving from self
+        array2.TakeFrom(array2.Move());
+        VerifyArray(array2, 0, 1, 2, 3, 4, 5);
+        VerifyOrQuit(array2.GetCapacity() == 10);
+
+        // Test moving a null array
+        array2.TakeFrom(array.Move());
+        VerifyArray(array);
+        VerifyOrQuit(array.GetCapacity() == 0);
+        VerifyArray(array2);
+        VerifyOrQuit(array2.GetCapacity() == 0);
     }
 
     printf("------------------------------------------------------------------------------------\n");

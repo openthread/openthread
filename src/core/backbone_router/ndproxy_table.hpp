@@ -30,8 +30,8 @@
  *   This file includes definitions for NdProxy Table on Thread Backbone Border Router.
  */
 
-#ifndef NDPROXY_TABLE_HPP_
-#define NDPROXY_TABLE_HPP_
+#ifndef OT_CORE_BACKBONE_ROUTER_NDPROXY_TABLE_HPP_
+#define OT_CORE_BACKBONE_ROUTER_NDPROXY_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -40,6 +40,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
@@ -53,15 +54,15 @@ namespace ot {
 namespace BackboneRouter {
 
 /**
- * This class implements NdProxy Table maintenance on Primary Backbone Router.
- *
+ * Implements NdProxy Table maintenance on Primary Backbone Router.
  */
 class NdProxyTable : public InstanceLocator, private NonCopyable
 {
 public:
+    static constexpr uint8_t kDuaDadRepeats = 3; ///< Number multicast DAD queries by BBR
+
     /**
-     * This class represents a ND Proxy instance.
-     *
+     * Represents a ND Proxy instance.
      */
     class NdProxy : private Clearable<NdProxy>
     {
@@ -69,19 +70,30 @@ public:
         friend class Clearable<NdProxy>;
 
     public:
+        typedef otBackboneRouterNdProxyCallback Callback; ///< ND Proxy callback.
+
         /**
-         * This method gets the Mesh-Local IID of the ND Proxy.
+         * Represents the ND Proxy events.
+         */
+        enum Event
+        {
+            kAdded   = OT_BACKBONE_ROUTER_NDPROXY_ADDED,   ///< ND Proxy was added.
+            kRemoved = OT_BACKBONE_ROUTER_NDPROXY_REMOVED, ///< ND Proxy was removed.
+            kRenewed = OT_BACKBONE_ROUTER_NDPROXY_RENEWED, ///< ND Proxy was renewed.
+            kCleared = OT_BACKBONE_ROUTER_NDPROXY_CLEARED, ///< All ND Proxies were cleared.
+        };
+
+        /**
+         * Gets the Mesh-Local IID of the ND Proxy.
          *
          * @returns  The Mesh-Local IID.
-         *
          */
         const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
         /**
-         * This method gets the time since last transaction of the ND Proxy.
+         * Gets the time since last transaction of the ND Proxy.
          *
          * @returns  The time since last transaction in seconds.
-         *
          */
         uint32_t GetTimeSinceLastTransaction(void) const
         {
@@ -89,22 +101,22 @@ public:
         }
 
         /**
-         * This method gets the short address of the device who sends the DUA registration.
+         * Gets the short address of the device who sends the DUA registration.
          *
          * @returns  The RLOC16 value.
-         *
          */
         uint16_t GetRloc16(void) const { return mRloc16; }
 
         /**
-         * This method gets the DAD flag of the ND Proxy.
+         * Gets the DAD flag of the ND Proxy.
          *
          * @returns  The DAD flag.
-         *
          */
         bool GetDadFlag(void) const { return mDadFlag; }
 
     private:
+        static constexpr uint32_t kMaxTimeSinceLastTransaction = 10 * 86400; // In seconds (10 days).
+
         NdProxy(void) { Clear(); }
 
         void Init(const Ip6::InterfaceIdentifier &aAddressIid,
@@ -114,7 +126,7 @@ public:
 
         void Update(uint16_t aRloc16, uint32_t aTimeSinceLastTransaction);
         void IncreaseDadAttempts(void) { mDadAttempts++; }
-        bool IsDadAttemptsComplete() const { return mDadAttempts == Mle::kDuaDadRepeats; }
+        bool IsDadAttemptsComplete(void) const { return mDadAttempts == kDuaDadRepeats; }
 
         Ip6::InterfaceIdentifier mAddressIid;
         Ip6::InterfaceIdentifier mMeshLocalIid;
@@ -124,14 +136,13 @@ public:
         bool                     mDadFlag : 1;
         bool                     mValid : 1;
 
-        static_assert(Mle::kDuaDadRepeats < 4, "Mle::kDuaDadRepeats does not fit in mDadAttempts field as 2-bit value");
+        static_assert(kDuaDadRepeats < 4, "kDuaDadRepeats does not fit in mDadAttempts field as 2-bit value");
     };
 
     /**
-     * This constructor initializes the `NdProxyTable` object.
+     * Initializes the `NdProxyTable` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit NdProxyTable(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -140,7 +151,7 @@ public:
     }
 
     /**
-     * This method registers a given IPv6 address IID with related information to the NdProxy table.
+     * Registers a given IPv6 address IID with related information to the NdProxy table.
      *
      * @param[in] aAddressIid                The IPv6 address IID.
      * @param[in] aMeshLocalIid              The Mesh-Local IID.
@@ -150,7 +161,6 @@ public:
      * @retval kErrorNone        If registered successfully.
      * @retval kErrorDuplicated  If the IPv6 address IID is a duplicate.
      * @retval kErrorNoBufs      Insufficient buffer space available to register.
-     *
      */
     Error Register(const Ip6::InterfaceIdentifier &aAddressIid,
                    const Ip6::InterfaceIdentifier &aMeshLocalIid,
@@ -158,75 +168,67 @@ public:
                    const uint32_t                 *aTimeSinceLastTransaction);
 
     /**
-     * This method checks if a given IPv6 address IID was registered.
+     * Checks if a given IPv6 address IID was registered.
      *
      * @param[in] aAddressIid  The IPv6 address IID.
      *
      * @retval TRUE   If the IPv6 address IID was registered.
      * @retval FALSE  If the IPv6 address IID was not registered.
-     *
      */
     bool IsRegistered(const Ip6::InterfaceIdentifier &aAddressIid) { return FindByAddressIid(aAddressIid) != nullptr; }
 
     /**
-     * This method notifies Domain Prefix status.
+     * Notifies Domain Prefix event.
      *
-     * @param[in]  aState  The Domain Prefix state or state change.
-     *
+     * @param[in]  aEvent  The Domain Prefix event.
      */
-    void HandleDomainPrefixUpdate(Leader::DomainPrefixState aState);
+    void HandleDomainPrefixUpdate(DomainPrefixEvent aEvent);
 
     /**
-     * This method notifies ND Proxy table of the timer tick.
-     *
+     * Notifies ND Proxy table of the timer tick.
      */
     void HandleTimer(void);
 
     /**
-     * This method gets the ND Proxy info for a given Domain Unicast Address.
+     * Gets the ND Proxy info for a given Domain Unicast Address.
      *
      * @param[in] aDua  The Domain Unicast Address.
      *
      * @returns The `NdProxy` instance matching the specified @p aDua, or nullptr if not found.
-     *
      */
     NdProxy *ResolveDua(const Ip6::Address &aDua);
 
     /**
-     * This method notifies DAD completed for a given ND Proxy.
+     * Notifies DAD completed for a given ND Proxy.
      *
      * @param[in] aNdProxy      The ND Proxy to notify of.
      * @param[in] aDuplicated   Whether duplicate was detected.
-     *
      */
     static void NotifyDadComplete(NdProxy &aNdProxy, bool aDuplicated);
 
     /**
-     * This method removes the ND Proxy.
+     * Removes the ND Proxy.
      *
      * @param[in] aNdProxy      The ND Proxy to remove.
-     *
      */
     static void Erase(NdProxy &aNdProxy);
 
     /*
-     * This method sets the ND Proxy callback.
+     * Sets the ND Proxy callback.
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
-     *
      */
-    void SetCallback(otBackboneRouterNdProxyCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
+    void SetCallback(NdProxy::Callback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
 
     /**
-     * This method retrieves the ND Proxy info of the Domain Unicast Address.
+     * Retrieves the ND Proxy info of the Domain Unicast Address.
      *
      * @param[in] aDua          The Domain Unicast Address to get info.
      * @param[in] aNdProxyInfo  A pointer to the ND Proxy info.
      *
      * @retval kErrorNone       Successfully retrieve the ND Proxy info.
      * @retval kErrorNotFound   Failed to find the Domain Unicast Address in the ND Proxy table.
-     *
      */
     Error GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo);
 
@@ -241,8 +243,7 @@ private:
     };
 
     /**
-     * This class represents an iterator for iterating through the NdProxy Table.
-     *
+     * Represents an iterator for iterating through the NdProxy Table.
      */
     class Iterator : public InstanceLocator, public ItemPtrIterator<NdProxy, Iterator>
     {
@@ -289,17 +290,19 @@ private:
     NdProxy        *FindInvalid(void);
     Ip6::Address    GetDua(NdProxy &aNdProxy);
     void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy, bool aIsRenew);
-    void TriggerCallback(otBackboneRouterNdProxyEvent aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
+    void            TriggerCallback(NdProxy::Event aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
 
-    NdProxy                                   mProxies[kMaxNdProxyNum];
-    Callback<otBackboneRouterNdProxyCallback> mCallback;
-    bool                                      mIsAnyDadInProcess : 1;
+    NdProxy                     mProxies[kMaxNdProxyNum];
+    Callback<NdProxy::Callback> mCallback;
+    bool                        mIsAnyDadInProcess : 1;
 };
 
 } // namespace BackboneRouter
+
+DefineMapEnum(otBackboneRouterNdProxyEvent, BackboneRouter::NdProxyTable::NdProxy::Event);
 
 } // namespace ot
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
-#endif // NDPROXY_TABLE_HPP_
+#endif // OT_CORE_BACKBONE_ROUTER_NDPROXY_TABLE_HPP_

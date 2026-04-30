@@ -31,8 +31,8 @@
  *  This file defines OpenThread `Appender` class.
  */
 
-#ifndef APPENDER_HPP_
-#define APPENDER_HPP_
+#ifndef OT_CORE_COMMON_APPENDER_HPP_
+#define OT_CORE_COMMON_APPENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -48,15 +48,13 @@ namespace ot {
  * The `Appender` class acts as a wrapper over either a `Message` or a data buffer and provides different flavors of
  * `Append()` method.
  *
- * This class helps in construction of message content where the destination can be either a `Message` or a buffer.
- *
+ * Helps in construction of message content where the destination can be either a `Message` or a buffer.
  */
 class Appender
 {
 public:
     /**
-     * This enumeration represent the `Appender` Type (whether appending to a `Message` or data buffer).
-     *
+     * Represent the `Appender` Type (whether appending to a `Message` or data buffer).
      */
     enum Type : uint8_t
     {
@@ -65,49 +63,45 @@ public:
     };
 
     /**
-     * This constructor initializes the `Appender` to append to a `Message`.
+     * Initializes the `Appender` to append to a `Message`.
      *
      * New content is appended to the end of @p aMessage, growing its length.
      *
      * @param[in] aMessage   The message to append to.
-     *
      */
     explicit Appender(Message &aMessage);
 
     /**
-     * This constructor initializes the `Appender` to append in a given a buffer
+     * Initializes the `Appender` to append in a given a buffer
      *
      * New content is append in the buffer starting from @p aBuffer up to is size @p aSize. `Appender` does not allow
      * content to be appended beyond the size of the buffer.
      *
      * @param[in] aBuffer  A pointer to start of buffer.
      * @param[in] aSize    The maximum size of @p aBuffer (number of available bytes in buffer).
-     *
      */
     Appender(uint8_t *aBuffer, uint16_t aSize);
 
     /**
-     * This method indicates the `Appender` type (whether appending to a `Message` or data buffer).
+     * Indicates the `Appender` type (whether appending to a `Message` or data buffer).
      *
      * @returns The type of `Appender`.
-     *
      */
     Type GetType(void) const { return mType; }
 
     /**
-     * This method appends bytes to the `Appender` object
+     * Appends bytes to the `Appender` object
      *
      * @param[in] aBuffer  A pointer to a data buffer (MUST NOT be `nullptr`) to append.
      * @param[in] aLength  The number of bytes to append.
      *
      * @retval kErrorNone    Successfully appended the bytes.
      * @retval kErrorNoBufs  Insufficient available buffers.
-     *
      */
     Error AppendBytes(const void *aBuffer, uint16_t aLength);
 
     /**
-     * This method appends an object to the end of the `Appender` object.
+     * Appends an object to the end of the `Appender` object.
      *
      * @tparam    ObjectType   The object type to append to the message.
      *
@@ -115,7 +109,6 @@ public:
      *
      * @retval kErrorNone    Successfully appended the object.
      * @retval kErrorNoBufs  Insufficient available buffers to append @p aObject.
-     *
      */
     template <typename ObjectType> Error Append(const ObjectType &aObject)
     {
@@ -125,42 +118,38 @@ public:
     }
 
     /**
-     * This method returns the number of bytes appended so far using `Appender` methods.
+     * Returns the number of bytes appended so far using `Appender` methods.
      *
-     * This method can be used independent of the `Type` of `Appender`.
+     * Can be used independent of the `Type` of `Appender`.
      *
      * @returns The number of byes appended so far.
-     *
      */
     uint16_t GetAppendedLength(void) const;
 
     /**
-     * This method returns the `Message` associated with `Appender`.
+     * Returns the `Message` associated with `Appender`.
      *
-     * This method MUST be used when `GetType() == kMessage`. Otherwise its behavior is undefined.
+     * MUST be used when `GetType() == kMessage`. Otherwise its behavior is undefined.
      *
      * @returns The `Message` instance associated with `Appender`.
-     *
      */
     Message &GetMessage(void) const { return *mShared.mMessage.mMessage; }
 
     /**
-     * This method returns a pointer to the start of the data buffer associated with `Appender`.
+     * Returns a pointer to the start of the data buffer associated with `Appender`.
      *
-     * This method MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
+     * MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
      *
      * @returns A pointer to the start of the data buffer associated with `Appender`.
-     *
      */
     uint8_t *GetBufferStart(void) const { return AsNonConst(mShared.mFrameBuilder.GetBytes()); }
 
     /**
-     * This method gets the data buffer associated with `Appender` as a `Data`.
+     * Gets the data buffer associated with `Appender` as a `Data`.
      *
-     * This method MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
+     * MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
      *
      * @pram[out] aData  A reference to a `Data` to output the data buffer.
-     *
      */
     void GetAsData(Data<kWithUint16Length> &aData) const;
 
@@ -180,4 +169,4 @@ private:
 
 } // namespace ot
 
-#endif // APPENDER_HPP_
+#endif // OT_CORE_COMMON_APPENDER_HPP_

@@ -30,10 +30,15 @@
 source "tests/scripts/expect/_common.exp"
 
 spawn_node 1
+setup_default_network
 spawn_node 2
 
 switch_node 1
-send "networkname Thread\\ Network\n"
+send "dataset init active\n"
+expect_line "Done"
+send "dataset networkname Thread\\ Network\n"
+expect_line "Done"
+send "dataset commit active\n"
 expect_line "Done"
 send "ifconfig up\n"
 expect_line "Done"
@@ -52,7 +57,11 @@ expect_line "Done"
 switch_node 1
 send "thread stop\n"
 expect_line "Done"
-send "networkname Thread\\ 网络\n"
+send "dataset init active\n"
+expect_line "Done"
+send "dataset networkname Thread\\ 网络\n"
+expect_line "Done"
+send "dataset commit active\n"
 expect_line "Done"
 send "thread start\n"
 expect_line "Done"
@@ -67,7 +76,11 @@ expect_line "Done"
 switch_node 1
 send "thread stop\n"
 expect_line "Done"
-send "networkname スレッド\n"
+send "dataset init active\n"
+expect_line "Done"
+send "dataset networkname スレッド\n"
+expect_line "Done"
+send "dataset commit active\n"
 expect_line "Done"
 send "thread start\n"
 expect_line "Done"

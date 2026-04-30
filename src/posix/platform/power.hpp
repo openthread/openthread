@@ -4,7 +4,7 @@
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must strain the above copyright
+ *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_POWER_H
-#define POSIX_PLATFORM_POWER_H
+#ifndef OT_POSIX_PLATFORM_POWER_HPP_
+#define OT_POSIX_PLATFORM_POWER_HPP_
 
 #include <assert.h>
 #include <stdio.h>
@@ -46,43 +46,39 @@ public:
     Domain(void) { m8[0] = '\0'; }
 
     /**
-     * This method sets the regulatory domain from a given null terminated C string.
+     * Sets the regulatory domain from a given null terminated C string.
      *
      * @param[in] aDomain   A regulatory domain name C string.
      *
      * @retval OT_ERROR_NONE           Successfully set the regulatory domain.
      * @retval OT_ERROR_INVALID_ARGS   Given regulatory domain is too long.
-     *
      */
     otError Set(const char *aDomain);
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two `Domain` instances are equal.
+     * Overloads operator `==` to evaluate whether or not two `Domain` instances are equal.
      *
      * @param[in]  aOther  The other `Domain` instance to compare with.
      *
      * @retval TRUE   If the two `Domain` instances are equal.
      * @retval FALSE  If the two `Domain` instances not equal.
-     *
      */
     bool operator==(const Domain &aOther) const { return strcmp(m8, aOther.m8) == 0; }
 
     /**
-     * This method overloads operator `!=` to evaluate whether or not the `Domain` is unequal to a given C string.
+     * Overloads operator `!=` to evaluate whether or not the `Domain` is unequal to a given C string.
      *
      * @param[in]  aCString  A C string to compare with. Can be `nullptr` which then returns 'TRUE'.
      *
      * @retval TRUE   If the two regulatory domains are not equal.
      * @retval FALSE  If the two regulatory domains are equal.
-     *
      */
     bool operator!=(const char *aCString) const { return (aCString == nullptr) ? true : strcmp(m8, aCString) != 0; }
 
     /**
-     * This method gets the regulatory domain as a null terminated C string.
+     * Gets the regulatory domain as a null terminated C string.
      *
      * @returns The regulatory domain as a null terminated C string array.
-     *
      */
     const char *AsCString(void) const { return m8; }
 
@@ -98,7 +94,7 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method parses an target power string.
+     * Parses an target power string.
      *
      * The string MUST follow the format: "<channel_start>,<channel_end>,<target_power>".
      * For example, "11,26,2000"
@@ -107,39 +103,34 @@ public:
      *
      * @retval OT_ERROR_NONE   Successfully parsed the target power string.
      * @retval OT_ERROR_PARSE  Failed to parse the target power string.
-     *
      */
     otError FromString(char *aString);
 
     /**
-     * This method returns the start channel.
+     * Returns the start channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelStart(void) const { return mChannelStart; }
 
     /**
-     * This method returns the end channel.
+     * Returns the end channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelEnd(void) const { return mChannelEnd; }
 
     /**
-     * This method returns the target power.
+     * Returns the target power.
      *
      * @returns The target power, in 0.01 dBm.
-     *
      */
     int16_t GetTargetPower(void) const { return mTargetPower; }
 
     /**
-     * This method converts the target power into a human-readable string.
+     * Converts the target power into a human-readable string.
      *
      * @returns  An `InfoString` object representing the target power.
-     *
      */
     InfoString ToString(void) const;
 
@@ -157,21 +148,19 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method sets the raw power setting from a given null terminated hex C string.
+     * Sets the raw power setting from a given null terminated hex C string.
      *
      * @param[in] aRawPowerSetting  A raw power setting hex C string.
      *
      * @retval OT_ERROR_NONE           Successfully set the raw power setting.
      * @retval OT_ERROR_INVALID_ARGS   The given raw power setting is too long.
-     *
      */
     otError Set(const char *aRawPowerSetting);
 
     /**
-     * This method converts the raw power setting into a human-readable string.
+     * Converts the raw power setting into a human-readable string.
      *
      * @returns  An `InfoString` object representing the calibrated power.
-     *
      */
     InfoString ToString(void) const;
 
@@ -193,7 +182,7 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method parses an calibrated power string.
+     * Parses an calibrated power string.
      *
      * The string MUST follow the format: "<channel_start>,<channel_end>,<actual_power>,<raw_power_setting>".
      * For example, "11,26,2000,1122aabb"
@@ -202,79 +191,69 @@ public:
      *
      * @retval OT_ERROR_NONE   Successfully parsed the calibrated power string.
      * @retval OT_ERROR_PARSE  Failed to parse the calibrated power string.
-     *
      */
     otError FromString(char *aString);
 
     /**
-     * This method returns the start channel.
+     * Returns the start channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelStart(void) const { return mChannelStart; }
 
     /**
-     * This method sets the start channel.
+     * Sets the start channel.
      *
      * @param[in]  aChannelStart  The start channel.
-     *
      */
     void SetChannelStart(uint8_t aChannelStart) { mChannelStart = aChannelStart; }
 
     /**
-     * This method returns the end channel.
+     * Returns the end channel.
      *
      * @returns The channel.
-     *
      */
     uint8_t GetChannelEnd(void) const { return mChannelEnd; }
 
     /**
-     * This method sets the end channel.
+     * Sets the end channel.
      *
      * @param[in]  aChannelEnd  The end channel.
-     *
      */
     void SetChannelEnd(uint8_t aChannelEnd) { mChannelEnd = aChannelEnd; }
 
     /**
-     * This method returns the actual power.
+     * Returns the actual power.
      *
      * @returns The actual measured power, in 0.01 dBm.
-     *
      */
     int16_t GetActualPower(void) const { return mActualPower; }
 
     /**
-     * This method sets the actual channel.
+     * Sets the actual channel.
      *
      * @param[in]  aActualPower  The actual power in 0.01 dBm.
-     *
      */
     void SetActualPower(int16_t aActualPower) { mActualPower = aActualPower; }
 
     /**
-     * This method returns the raw power setting.
+     * Returns the raw power setting.
      *
      * @returns A reference to the raw power setting.
-     *
      */
     const RawPowerSetting &GetRawPowerSetting(void) const { return mRawPowerSetting; }
 
     /**
-     * This method sets the raw power setting.
+     * Sets the raw power setting.
      *
      * @param[in]  aRawPowerSetting  The raw power setting.
-     *
      */
     void SetRawPowerSetting(const RawPowerSetting &aRawPowerSetting) { mRawPowerSetting = aRawPowerSetting; }
 
     /**
-     * This method converts the calibrated power into a human-readable string.
+     * Converts the calibrated power into a human-readable string.
      *
      * @returns  An `InfoString` object representing the calibrated power.
-     *
      */
     InfoString ToString(void) const;
 
@@ -286,4 +265,4 @@ private:
 };
 } // namespace Power
 } // namespace ot
-#endif // POSIX_PLATFORM_POWER_H
+#endif // OT_POSIX_PLATFORM_POWER_HPP_

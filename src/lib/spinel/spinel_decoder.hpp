@@ -30,13 +30,14 @@
  *   This file contains the definitions of a spinel decoder.
  */
 
-#ifndef SPINEL_DECODER_HPP_
-#define SPINEL_DECODER_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_DECODER_HPP_
+#define OT_LIB_SPINEL_SPINEL_DECODER_HPP_
 
 #include "openthread-spinel-config.h"
 
 #include <openthread/ip6.h>
 #include <openthread/ncp.h>
+#include <openthread/platform/radio.h>
 
 #include "spinel.h"
 
@@ -44,214 +45,192 @@ namespace ot {
 namespace Spinel {
 
 /**
- * This class defines a spinel decoder.
- *
+ * Defines a spinel decoder.
  */
 class Decoder
 {
 public:
-    enum
-    {
-        kMaxNestedStructs = 4, ///< Maximum number of nested structs.
-    };
+    static constexpr uint8_t kMaxNestedStructs = 4; ///< Maximum number of nested structs.
 
     /**
-     * This constructor initializes a `Decoder` object.
-     *
+     * Initializes a `Decoder` object.
      */
     Decoder(void);
 
     /**
-     * This method initializes the decoder to start decoding a new frame.
+     * Initializes the decoder to start decoding a new frame.
      *
      * It sets the read position to the start of the frame and also erases/voids any saved positions (see
      * `SavePosition()` and `ResetToSaved()` methods).
      *
      * @param[in] aFrame                Pointer to the buffer containing the frame to be decoded.
      * @param[in] aLength               Length (number of bytes) of the frame.
-     *
      */
     void Init(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method returns the pointer to the start of the frame.
+     * Returns the pointer to the start of the frame.
      *
      * @returns A pointer to buffer containing current frame being decoded.
-     *
      */
     const uint8_t *GetFrame(void) const { return mFrame; }
 
     /**
-     * This method returns the total length of current frame being decoded.
+     * Returns the total length of current frame being decoded.
      *
      * @returns The length of current frame being decoded.
-     *
      */
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the number of bytes that are already read/decoded from the frame.
+     * Returns the number of bytes that are already read/decoded from the frame.
      *
      * @returns The number of bytes already read from frame.
-     *
      */
     uint16_t GetReadLength(void) const { return mIndex; }
 
     /**
-     * This method returns the number of remaining (not yet read/decoded) bytes in the frame.
+     * Returns the number of remaining (not yet read/decoded) bytes in the frame.
      *
      * @returns The number of remaining unread bytes in the frame.
-     *
      */
     uint16_t GetRemainingLength(void) const { return mLength - mIndex; }
 
     /**
-     * This method indicates whether or not all the bytes in the frame are read.
+     * Indicates whether or not all the bytes in the frame are read.
      *
      * @returns TRUE if all the bytes in the buffer are read, FALSE otherwise.
-     *
      */
     bool IsAllRead(void) const { return (mIndex == mLength); }
 
     /**
-     * This method resets the read position to beginning of frame. It will also void/erase any previously saved
+     * Resets the read position to beginning of frame. It will also void/erase any previously saved
      * position using `SavePosition()` method.
-     *
      */
     void Reset(void);
 
     /**
-     * This method decodes and reads a boolean value form the frame.
+     * Decodes and reads a boolean value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aBool                Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aBool` is untouched.
      */
     otError ReadBool(bool &aBool);
 
     /**
-     * This method decodes and reads an `int8_t` value form the frame.
+     * Decodes and reads an `int8_t` value form the frame.
      *
      * On success, the read position get updated.
      *
      * @param[out] aInt8                Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aInt8` is untouched.
      */
     otError ReadInt8(int8_t &aInt8);
 
     /**
-     * This method decodes and reads an `uint8_t` value form the frame.
+     * Decodes and reads an `uint8_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aUint8               Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aUint8` is untouched.
      */
     otError ReadUint8(uint8_t &aUint8);
 
     /**
-     * This method decodes and reads an `int16_t` value form the frame.
+     * Decodes and reads an `int16_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aInt16               Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aInt16` is untouched.
      */
     otError ReadInt16(int16_t &aInt16);
 
     /**
-     * This method decodes and reads an `uint16_t` value form the frame.
+     * Decodes and reads an `uint16_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aUint16              Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aUint16` is untouched.
      */
     otError ReadUint16(uint16_t &aUint16);
 
     /**
-     * This method decodes and reads an `int32_t` value form the frame.
+     * Decodes and reads an `int32_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aInt32               Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `Int32` is untouched.
      */
     otError ReadInt32(int32_t &aInt32);
 
     /**
-     * This method decodes and reads an `uint32_t` value form the frame.
+     * Decodes and reads an `uint32_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aUint32              Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aUint32` is untouched.
      */
     otError ReadUint32(uint32_t &aUint32);
 
     /**
-     * This method decodes and reads an `int64_t` value form the frame.
+     * Decodes and reads an `int64_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aInt64               Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aInt64` is untouched.
      */
     otError ReadInt64(int64_t &aInt64);
 
     /**
-     * This method decodes and reads an `uint64_t` value form the frame.
+     * Decodes and reads an `uint64_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aUint64              Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aUint64` is untouched.
      */
     otError ReadUint64(uint64_t &aUint64);
 
     /**
-     * This method decodes (using spinel packed integer format) and reads an unsigned integer value form the frame.
+     * Decodes (using spinel packed integer format) and reads an unsigned integer value form the frame.
      *
      * On success, the read position gets updated.
      *
      * @param[out] aUint                Reference to variable to output the read value.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aUint` is untouched.
      */
     otError ReadUintPacked(unsigned int &aUint);
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -259,8 +238,7 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aIp6AddrPtr` is untouched.
      */
     otError ReadIp6Address(const spinel_ipv6addr_t *&aIp6AddrPtr)
     {
@@ -268,7 +246,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -276,8 +254,7 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aIp6AddrPtr` is untouched.
      */
     otError ReadIp6Address(const otIp6Address *&aIp6AddrPtr)
     {
@@ -285,7 +262,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -293,8 +270,7 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aIp6AddrBufPtr` is untouched.
      */
     otError ReadIp6Address(const uint8_t *&aIp6AddrBufPtr)
     {
@@ -302,7 +278,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated and the IP address is copied into the given output variable.
      *
@@ -310,13 +286,12 @@ public:
      *                                  On success, the address is copied into the output variable.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aIp6Addr` is untouched.
      */
     otError ReadIp6Address(spinel_ipv6addr_t &aIp6Addr);
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated and the IP address is copied into the given output variable.
      *
@@ -324,13 +299,12 @@ public:
      *                                  On success, the address is copied into the output variable.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aIp6Addr` is untouched.
      */
     otError ReadIp6Address(otIp6Address &aIp6Addr);
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -338,8 +312,7 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui64Ptr` is untouched.
      */
     otError ReadEui64(const spinel_eui64_t *&aEui64Ptr)
     {
@@ -347,7 +320,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -355,8 +328,7 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui64Ptr` is untouched.
      */
     otError ReadEui64(const otExtAddress *&aEui64Ptr)
     {
@@ -364,7 +336,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -372,13 +344,12 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui64BufPtr` is untouched.
      */
     otError ReadEui64(const uint8_t *&aEui64BufPtr) { return ReadItem(&aEui64BufPtr, sizeof(spinel_eui64_t)); }
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated and the EUI64 value is copied into the given output variable.
      *
@@ -386,13 +357,12 @@ public:
      *                                  On success, the address is copied into the output variable.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui64` is untouched.
      */
     otError ReadEui64(spinel_eui64_t &aEui64);
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated and the EUI64 value is copied into the given output variable.
      *
@@ -400,13 +370,12 @@ public:
      *                                  On success, the address is copied into the output variable.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui64` is untouched.
      */
     otError ReadEui64(otExtAddress &aEui64);
 
     /**
-     * This method decodes and reads an EUI48 value form the frame.
+     * Decodes and reads an EUI48 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -414,8 +383,7 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui48Ptr` is untouched.
      */
     otError ReadEui48(const spinel_eui48_t *&aEui48Ptr)
     {
@@ -423,7 +391,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an EUI48 value form the frame.
+     * Decodes and reads an EUI48 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -431,13 +399,12 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui48BufPtr` is untouched..
      */
     otError ReadEui48(const uint8_t *&aEui48BufPtr) { return ReadItem(&aEui48BufPtr, sizeof(spinel_eui48_t)); }
 
     /**
-     * This method decodes and reads an EUI48 value form the frame.
+     * Decodes and reads an EUI48 value form the frame.
      *
      * On success, the read position gets updated and the EUI48 value is copied into the given output variable.
      *
@@ -445,13 +412,12 @@ public:
      *                                  On success, value is copied into the output variable.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aEui48` is untouched.
      */
     otError ReadEui48(spinel_eui48_t &aEui48);
 
     /**
-     * This method decodes and reads a UTF8 string form the frame.
+     * Decodes and reads a UTF8 string form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -459,13 +425,12 @@ public:
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value and `aUtf8` is untouched.
      */
     otError ReadUtf8(const char *&aUtf8);
 
     /**
-     * This method decodes and reads a data blob (sequence of bytes) form the frame.
+     * Decodes and reads a data blob (sequence of bytes) form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -474,13 +439,12 @@ public:
      * @param[out] aDataLen             Reference to variable to output the data length (number of bytes).
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value. `aData` and `aDataLen` are untouched.
      */
     otError ReadData(const uint8_t *&aData, uint16_t &aDataLen);
 
     /**
-     * This method decodes and reads a data blob (sequence of bytes) with data length.
+     * Decodes and reads a data blob (sequence of bytes) with data length.
      *
      * The data length is assumed to be prepended before the data content (encoded as a `uint16_t`). The size of the
      * length field should not be included in the length value. This method corresponds to `SPINEL_DATATYPE_DATA_WLEN`
@@ -491,13 +455,13 @@ public:
      * @param[out] aDataLen             Reference to variable to out the data length (number of bytes).
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
-     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
-     *
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value. `aDataLen` may be updated and `aData` is
+     *                                  untouched.
      */
     otError ReadDataWithLen(const uint8_t *&aData, uint16_t &aDataLen);
 
     /**
-     * This method opens a struct in the frame.
+     * Opens a struct in the frame.
      *
      * After a successful call to this method, all the subsequent `Read{SomeType}()` methods decode and read the
      * field/value from the current open struct until the struct is closed using `CloseStruct()` method. Structures can
@@ -506,43 +470,39 @@ public:
      * @retval OT_ERROR_NONE            Successfully opened a struct.
      * @retval OT_ERROR_PARSE           Failed to parse/open a struct.
      * @retval OT_ERROR_INVALID_STATE   Already at the maximum number of nested open structures.
-     *
      */
     otError OpenStruct(void);
 
     /**
-     * This method closes the most recently opened struct (using `OpenStruct()`) in the frame.
+     * Closes the most recently opened struct (using `OpenStruct()`) in the frame.
      *
      * On success, the read position is moved to end of the struct skipping any unread bytes within the struct.
      *
      * @retval OT_ERROR_NONE            Successfully closed the struct.
      * @retval OT_ERROR_INVALID_STATE   There is no current open struct to close.
-     *
      */
     otError CloseStruct(void);
 
     /**
-     * This method returns the number of remaining/unread bytes in the current inner-most open structure.
+     * Returns the number of remaining/unread bytes in the current inner-most open structure.
      *
      * If there is no currently open structure the number of remaining bytes in whole frame is returned instead.
      *
      * @returns The number of remaining unread bytes in the inner-most open structure.
-     *
      */
     uint16_t GetRemainingLengthInStruct(void) const { return mEnd - mIndex; }
 
     /**
-     * This method indicates whether or not all the bytes in inner-most open structure are read.
+     * Indicates whether or not all the bytes in inner-most open structure are read.
      *
      * If there is no currently open structure, the whole frame is considered instead.
      *
      * @returns TRUE if all the bytes are read, FALSE otherwise.
-     *
      */
     bool IsAllReadInStruct(void) const { return (mIndex == mEnd); }
 
     /**
-     * This method saves the current read position in the frame.
+     * Saves the current read position in the frame.
      *
      * A subsequent call to `SavePosition()` will overwrite the previously saved position. The saved position can be
      * used to move the read position back (using `ResetToSaved()`) and re-read the same content.
@@ -550,12 +510,11 @@ public:
      * Saved position can be within an open struct, and it remembers its enclosing struct. When the enclosing struct is
      * closed, the saved position will be voided and can no longer be used. This ensures that we cannot jump back to
      * middle an already fully decoded/read and closed struct.
-     *
      */
     void SavePosition(void);
 
     /**
-     * This method resets/moves the read position to a previously saved position.
+     * Resets/moves the read position to a previously saved position.
      *
      * The saved position remembers its enclosing structure. When `ResetToSaved()` is called, the current open
      * structure will be the same as when position was saved.
@@ -563,7 +522,6 @@ public:
      * @retval OT_ERROR_NONE            Successfully reset the read position.
      * @retval OT_ERROR_INVALID_STATE   The saved position is not valid (there is no saved position or the saved
      *                                  position was voided since its enclosing struct was closed).
-     *
      */
     otError ResetToSaved(void);
 
@@ -588,4 +546,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_DECODER_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_DECODER_HPP_

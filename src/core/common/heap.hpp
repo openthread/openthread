@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap`.
  */
 
-#ifndef HEAP_HPP_
-#define HEAP_HPP_
+#ifndef OT_CORE_COMMON_HEAP_HPP_
+#define OT_CORE_COMMON_HEAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -43,27 +43,25 @@ namespace ot {
 namespace Heap {
 
 /**
- * This function allocates memory from heap for an array of given number of object of certain size.
+ * Allocates memory from heap for an array of given number of object of certain size.
  *
  * @param[in] aCount   Number of objects.
  * @param[in] aSize    Size of each object.
  *
  * @returns A pointer to the allocated buffer or `nullptr` if fails to allocate.
- *
  */
 void *CAlloc(size_t aCount, size_t aSize);
 
 /**
- * This function frees a previously heap allocated buffer.
+ * Frees a previously heap allocated buffer.
  *
  * A heap allocated buffer MUST be freed only once.
  *
  * @param[in] aPointer   A pointer to the previously heap allocated buffer. Can be `nullptr` which does nothing.
- *
  */
 void Free(void *aPointer);
 
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_HPP_
+#endif // OT_CORE_COMMON_HEAP_HPP_

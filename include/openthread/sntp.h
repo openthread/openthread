@@ -37,6 +37,8 @@
 
 #include <stdint.h>
 
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -50,15 +52,13 @@ extern "C" {
  *   This module includes functions that control SNTP communication.
  *
  * @{
- *
  */
 
 #define OT_SNTP_DEFAULT_SERVER_IP "2001:4860:4806:8::" ///< Defines default SNTP Server address - Google NTP Server.
 #define OT_SNTP_DEFAULT_SERVER_PORT 123                ///< Defines default SNTP Server port.
 
 /**
- * This structure implements SNTP Query parameters.
- *
+ * Implements SNTP Query parameters.
  */
 typedef struct otSntpQuery
 {
@@ -66,7 +66,7 @@ typedef struct otSntpQuery
 } otSntpQuery;
 
 /**
- * This function pointer is called when a SNTP response is received.
+ * Pointer is called when a SNTP response is received.
  *
  * @param[in]  aContext   A pointer to application-specific context.
  * @param[in]  aTime      Specifies the time at the server when the response left for the client, in UNIX time.
@@ -78,20 +78,18 @@ typedef struct otSntpQuery
  * @retval  OT_ERROR_BUSY              The Kiss-o'-death packet has been received.
  * @retval  OT_ERROR_RESPONSE_TIMEOUT  No SNTP response has been received within timeout.
  * @retval  OT_ERROR_FAILED            A response was received but contains incorrect data.
- *
  */
 typedef void (*otSntpResponseHandler)(void *aContext, uint64_t aTime, otError aResult);
 
 /**
- * This function sends a SNTP query.
+ * Sends a SNTP query.
  *
- * This function is available only if feature `OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE` is enabled.
+ * Is available only if feature `OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE` is enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aQuery      A pointer to specify SNTP query parameters.
  * @param[in]  aHandler    A function pointer that shall be called on response reception or time-out.
  * @param[in]  aContext    A pointer to arbitrary context information.
- *
  */
 otError otSntpClientQuery(otInstance           *aInstance,
                           const otSntpQuery    *aQuery,
@@ -99,19 +97,17 @@ otError otSntpClientQuery(otInstance           *aInstance,
                           void                 *aContext);
 
 /**
- * This function sets the unix era number.
+ * Sets the unix era number.
  *
  * The default value of unix era is set to 0. The subsequent eras start after year 2106.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aUnixEra    Unix era number.
- *
  */
 void otSntpClientSetUnixEra(otInstance *aInstance, uint32_t aUnixEra);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

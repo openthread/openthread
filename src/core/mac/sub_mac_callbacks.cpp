@@ -33,13 +33,7 @@
 
 #include "sub_mac.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#include "mac/mac.hpp"
-#endif
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Mac {
@@ -71,12 +65,11 @@ void SubMac::Callbacks::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 }
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  RxFrame       *aAckFrame,
                                                   Error          aError,
                                                   uint8_t        aRetryCount,
                                                   bool           aWillRetx)
 {
-    Get<Mac>().RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
+    Get<Mac>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
 }
 
 void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
@@ -119,12 +112,11 @@ void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw
 void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t) {}
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  RxFrame       *aAckFrame,
                                                   Error          aError,
                                                   uint8_t        aRetryCount,
                                                   bool           aWillRetx)
 {
-    Get<LinkRaw>().RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
+    Get<LinkRaw>().RecordFrameTransmitStatus(aFrame, aError, aRetryCount, aWillRetx);
 }
 
 void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)

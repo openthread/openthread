@@ -68,11 +68,14 @@ Done
 Assigns a name (i.e. IPv6 address and port) to the example socket.
 
 - netif: the network interface to bind to.
-  - not specified: Thread network interface.
+  - not specified: Thread stack network interface.
   - `-u`: unspecified network interface.
   - `-b`: Backbone network interface.
-- ip: the IPv6 address or the unspecified IPv6 address (`::`).
+  - `-h`: Host Thread network interface.
+- ip: the unicast IPv6 address or the unspecified IPv6 address (`::`).
 - port: the UDP port
+
+> Note: the netif parameter values (-u, -b, -h) are only valid if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE is set.
 
 ```bash
 > udp bind :: 1234
@@ -81,7 +84,11 @@ Done
 Done
 > udp bind -b :: 1234
 Done
+> udp bind -h :: 1234
+Done
 ```
+
+> Note: to receive datagrams sent to a multicast IPv6 address, the unspecified IPv6 address must be used. Using a multicast address for the \<ip\> argument is not supported. Also, the node must subscribe to the multicast group using `ipmaddr add` before it can receive UDP multicast.
 
 ### close
 
@@ -169,7 +176,7 @@ The address can be an IPv4 address, which will be synthesized to an IPv6 address
 > Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
 
 ```bash
-> udp send 172.17.0.1 1234
+> udp send 172.17.0.1 1234 hello
 Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```

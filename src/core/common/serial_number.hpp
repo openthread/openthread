@@ -31,8 +31,8 @@
  *   This file includes definitions for serial number comparison similar to RFC-1982.
  */
 
-#ifndef SERIAL_NUMBER_HPP_
-#define SERIAL_NUMBER_HPP_
+#ifndef OT_CORE_COMMON_SERIAL_NUMBER_HPP_
+#define OT_CORE_COMMON_SERIAL_NUMBER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,7 +47,7 @@ class SerialNumber
 {
 public:
     /**
-     * This static method indicates whether or not a first serial number is strictly less than a second serial number.
+     * Indicates whether or not a first serial number is strictly less than a second serial number.
      *
      * The comparison takes into account the wrapping of serial number values (similar to RFC-1982). It is semantically
      * equivalent to `aFirst < aSecond`.
@@ -59,14 +59,11 @@ public:
      *
      * @retval TRUE  If @p aFirst is less than @p aSecond.
      * @retval FALSE If @p aFirst is not less than @p aSecond.
-     *
      */
     template <typename UintType> static bool IsLess(UintType aFirst, UintType aSecond)
     {
-        static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
-                          TypeTraits::IsSame<UintType, uint32_t>::kValue ||
-                          TypeTraits::IsSame<UintType, uint64_t>::kValue,
-                      "UintType MUST be an 8, 16, 32, or 64 bit `uint` type");
+        static_assert(TypeTraits::IsUint<UintType>::kValue,
+                      "UintType must be an unsigned int (8, 16, 32, or 64 bit len)");
 
         static constexpr UintType kNegativeMask = (NumericLimits<UintType>::kMax >> 1) + 1;
 
@@ -74,7 +71,7 @@ public:
     }
 
     /**
-     * This static method indicates whether or not a first serial number is strictly greater than a second serial
+     * Indicates whether or not a first serial number is strictly greater than a second serial
      * number.
      *
      * The comparison takes into account the wrapping of serial number values (similar to RFC-1982). It is semantically
@@ -87,7 +84,6 @@ public:
      *
      * @retval TRUE  If @p aFirst is greater than @p aSecond.
      * @retval FALSE If @p aFirst is not greater than @p aSecond.
-     *
      */
     template <typename UintType> static bool IsGreater(UintType aFirst, UintType aSecond)
     {
@@ -97,4 +93,4 @@ public:
 
 } // namespace ot
 
-#endif // SERIAL_NUMBER_HPP_
+#endif // OT_CORE_COMMON_SERIAL_NUMBER_HPP_

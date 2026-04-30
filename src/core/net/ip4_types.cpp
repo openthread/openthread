@@ -32,50 +32,47 @@
  */
 
 #include "ip4_types.hpp"
-#include "ip6_address.hpp"
+
+#include "common/numeric_limits.hpp"
+#include "common/offset_range.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Ip4 {
 
-Error Address::FromString(const char *aString)
+Error Address::FromString(const char *aString, char aTerminatorChar)
 {
-    constexpr char kSeperatorChar = '.';
-    constexpr char kNullChar      = '\0';
+    constexpr char kSeparatorChar = '.';
 
-    Error error = kErrorParse;
+    Error       error = kErrorParse;
+    const char *cur   = aString;
 
     for (uint8_t index = 0;; index++)
     {
-        uint16_t value         = 0;
-        uint8_t  hasFirstDigit = false;
-
-        for (char digitChar = *aString;; ++aString, digitChar = *aString)
-        {
-            if ((digitChar < '0') || (digitChar > '9'))
-            {
-                break;
-            }
-
-            value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
-            VerifyOrExit(value <= NumericLimits<uint8_t>::kMax);
-            hasFirstDigit = true;
-        }
-
-        VerifyOrExit(hasFirstDigit);
-
-        mFields.m8[index] = static_cast<uint8_t>(value);
+        SuccessOrExit(StringParseUint8(cur, mFields.m8[index]));
 
         if (index == sizeof(Address) - 1)
         {
             break;
         }
 
-        VerifyOrExit(*aString == kSeperatorChar);
-        aString++;
+        VerifyOrExit(*cur == kSeparatorChar);
+        cur++;
     }
 
-    VerifyOrExit(*aString == kNullChar);
+    VerifyOrExit(*cur == aTerminatorChar);
     error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Address::ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aIp6Address.IsIp4Mapped(), error = kErrorParse);
+    SetBytes(&aIp6Address.GetBytes()[12]);
 
 exit:
     return error;
@@ -109,7 +106,7 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
     OT_ASSERT(Ip6::Prefix::IsValidNat64PrefixLength(aPrefixLength));
 
-    ip6Index = aPrefixLength / CHAR_BIT;
+    ip6Index = aPrefixLength / kBitsPerByte;
 
     for (uint8_t &i : mFields.m8)
     {
@@ -124,12 +121,12 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
 void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
 {
-    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (HostSwap32(aHost) & aCidr.HostMask());
+    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (BigEndian::HostSwap32(aHost) & aCidr.HostMask());
 }
 
 void Address::ToString(StringWriter &aWriter) const
 {
-    aWriter.Append("%d.%d.%d.%d", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
+    aWriter.Append("%u.%u.%u.%u", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
 }
 
 void Address::ToString(char *aBuffer, uint16_t aSize) const
@@ -148,9 +145,33 @@ Address::InfoString Address::ToString(void) const
     return string;
 }
 
+Error Cidr::FromString(const char *aString)
+{
+    constexpr char     kSlashChar     = '/';
+    constexpr uint16_t kMaxCidrLength = 32;
+
+    Error       error = kErrorParse;
+    const char *cur;
+
+    SuccessOrExit(AsCoreType(&mAddress).FromString(aString, kSlashChar));
+
+    cur = StringFind(aString, kSlashChar);
+    VerifyOrExit(cur != nullptr);
+    cur++;
+
+    SuccessOrExit(StringParseUint8(cur, mLength, kMaxCidrLength));
+    VerifyOrExit(*cur == kNullChar);
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
 void Cidr::ToString(StringWriter &aWriter) const
 {
-    aWriter.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
+    AsCoreType(&mAddress).ToString(aWriter);
+    aWriter.Append("/%u", mLength);
 }
 
 void Cidr::ToString(char *aBuffer, uint16_t aSize) const
@@ -171,8 +192,7 @@ Cidr::InfoString Cidr::ToString(void) const
 
 bool Cidr::operator==(const Cidr &aOther) const
 {
-    return (mLength == aOther.mLength) &&
-           (Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), Ip4::Address::kSize) >= mLength);
+    return (mLength == aOther.mLength) && (CountMatchingBits(GetBytes(), aOther.GetBytes(), mLength) >= mLength);
 }
 
 void Cidr::Set(const uint8_t *aAddress, uint8_t aLength)
@@ -189,10 +209,177 @@ Error Header::ParseFrom(const Message &aMessage)
     VerifyOrExit(IsValid());
     VerifyOrExit(GetTotalLength() == aMessage.GetLength());
 
+    if (GetIhl() > kMinIhl)
+    {
+        VerifyOrExit(!HasSourceRouteOption(aMessage));
+    }
+
     error = kErrorNone;
 
 exit:
     return error;
+}
+
+bool Header::HasSourceRouteOption(const Message &aMessage) const
+{
+    bool        hasSourceRoute = false;
+    uint16_t    headerLen      = GetHeaderLength();
+    OffsetRange range;
+
+    VerifyOrExit(headerLen <= aMessage.GetLength());
+    range.InitFromRange(sizeof(Header), headerLen);
+
+    while (!range.IsEmpty())
+    {
+        uint8_t optionType;
+        uint8_t optionLen;
+
+        SuccessOrExit(aMessage.Read(range, optionType));
+        range.AdvanceOffset(sizeof(uint8_t));
+
+        if (optionType == kOptionEnd)
+        {
+            break;
+        }
+
+        if (optionType == kOptionNop)
+        {
+            continue;
+        }
+
+        SuccessOrExit(aMessage.Read(range, optionLen));
+        VerifyOrExit(optionLen >= 2 && range.Contains(optionLen - 1));
+
+        if (optionType == kOptionLsrr || optionType == kOptionSsrr)
+        {
+            hasSourceRoute = true;
+            ExitNow();
+        }
+
+        range.AdvanceOffset(optionLen - 1);
+    }
+
+exit:
+    return hasSourceRoute;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Headers
+
+Error Headers::ParseFrom(const Message &aMessage)
+{
+    Error    error = kErrorParse;
+    uint16_t headerLen;
+
+    Clear();
+
+    SuccessOrExit(mIp4Header.ParseFrom(aMessage));
+
+    headerLen = mIp4Header.GetHeaderLength();
+
+    switch (mIp4Header.GetProtocol())
+    {
+    case kProtoUdp:
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mUdp));
+        break;
+    case kProtoTcp:
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mTcp));
+        break;
+    case kProtoIcmp:
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mIcmp));
+        break;
+    default:
+        break;
+    }
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+uint16_t Headers::GetSourcePort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetSourcePort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetSourcePort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+uint16_t Headers::GetDestinationPort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetDestinationPort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetDestinationPort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+void Headers::SetDestinationPort(uint16_t aDstPort)
+{
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        mHeader.mUdp.SetDestinationPort(aDstPort);
+        break;
+
+    case kProtoTcp:
+        mHeader.mTcp.SetDestinationPort(aDstPort);
+        break;
+
+    default:
+        break;
+    }
+}
+
+uint16_t Headers::GetChecksum(void) const
+{
+    uint16_t checksum = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        checksum = mHeader.mUdp.GetChecksum();
+        break;
+
+    case kProtoTcp:
+        checksum = mHeader.mTcp.GetChecksum();
+        break;
+
+    case kProtoIcmp:
+        checksum = mHeader.mIcmp.GetChecksum();
+        break;
+
+    default:
+        break;
+    }
+
+    return checksum;
 }
 
 } // namespace Ip4

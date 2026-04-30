@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread URIs.
  */
 
-#ifndef URI_PATHS_HPP_
-#define URI_PATHS_HPP_
+#ifndef OT_CORE_THREAD_URI_PATHS_HPP_
+#define OT_CORE_THREAD_URI_PATHS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,8 +41,7 @@
 namespace ot {
 
 /**
- * This enumeration represents Thread URIs.
- *
+ * Represents Thread URIs.
  */
 enum Uri : uint8_t
 {
@@ -58,6 +57,7 @@ enum Uri : uint8_t
     kUriBackboneQuery,          ///< Backbone Query ("b/bq")
     kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
     kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
+    kUriActiveReplace,          ///< MGMT_ACTIVE_REPLACE ("c/ar")
     kUriActiveSet,              ///< MGMT_ACTIVE_SET ("c/as")
     kUriCommissionerKeepAlive,  ///< Commissioner Keep Alive ("c/ca")
     kUriCommissionerGet,        ///< MGMT_COMMISSIONER_GET ("c/cg")
@@ -70,11 +70,17 @@ enum Uri : uint8_t
     kUriJoinerFinalize,         ///< Joiner Finalize ("c/jf")
     kUriLeaderKeepAlive,        ///< Leader Keep Alive ("c/la")
     kUriLeaderPetition,         ///< Leader Petition ("c/lp")
+    kUriEnrollerJoinerAccept,   ///< Enroller Joiner Accept ("c/nj")
+    kUriEnrollerKeepAlive,      ///< Enroller KeepAlive ("c/nk")
+    kUriEnrollerJoinerRelease,  ///< Enroller Joiner Release ("c/nl")
+    kUriEnrollerRegister,       ///< Enroller Register ("c/nr")
+    kUriEnrollerReportState,    ///< Report Admitter State (to enroller) ("c/ns")
     kUriPanIdConflict,          ///< PAN ID Conflict ("c/pc")
     kUriPendingGet,             ///< MGMT_PENDING_GET ("c/pg")
     kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
     kUriPendingSet,             ///< MGMT_PENDING_SET ("c/ps")
     kUriRelayRx,                ///< Relay RX ("c/rx")
+    kUriTcatEnable,             ///< TCAT Enable ("c/te")
     kUriRelayTx,                ///< Relay TX ("c/tx")
     kUriProxyRx,                ///< Proxy RX ("c/ur")
     kUriProxyTx,                ///< Proxy TX ("c/ut")
@@ -82,6 +88,8 @@ enum Uri : uint8_t
     kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
     kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
     kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,          ///< History Answer ("h/an")
+    kUriHistoryQuery,           ///< History Query ("h/qy")
     kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
     kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
     kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
@@ -89,25 +97,80 @@ enum Uri : uint8_t
 };
 
 /**
- * This function returns URI path string for a given URI.
+ * Returns URI path string for a given URI.
  *
  * @param[in] aUri   A URI.
  *
  * @returns The path string for @p aUri.
- *
  */
 const char *PathForUri(Uri aUri);
 
 /**
- * This function looks up the URI from a given path string.
+ * Looks up the URI from a given path string.
  *
  * @param[in] aPath    A path string.
  *
  * @returns The URI associated with @p aPath or `kUriUnknown` if no match is found.
- *
  */
 Uri UriFromPath(const char *aPath);
 
+/**
+ * This template function converts a given URI to a human-readable string.
+ *
+ * @tparam kUri   The URI to convert to string.
+ *
+ * @returns The string representation of @p kUri.
+ */
+template <Uri kUri> const char *UriToString(void);
+
+// Declaring specializations of `UriToString` for every `Uri`
+template <> const char *UriToString<kUriAddressError>(void);
+template <> const char *UriToString<kUriAddressNotify>(void);
+template <> const char *UriToString<kUriAddressQuery>(void);
+template <> const char *UriToString<kUriAddressRelease>(void);
+template <> const char *UriToString<kUriAddressSolicit>(void);
+template <> const char *UriToString<kUriServerData>(void);
+template <> const char *UriToString<kUriAnycastLocate>(void);
+template <> const char *UriToString<kUriBackboneAnswer>(void);
+template <> const char *UriToString<kUriBackboneMlr>(void);
+template <> const char *UriToString<kUriBackboneQuery>(void);
+template <> const char *UriToString<kUriAnnounceBegin>(void);
+template <> const char *UriToString<kUriActiveGet>(void);
+template <> const char *UriToString<kUriActiveReplace>(void);
+template <> const char *UriToString<kUriActiveSet>(void);
+template <> const char *UriToString<kUriCommissionerKeepAlive>(void);
+template <> const char *UriToString<kUriCommissionerGet>(void);
+template <> const char *UriToString<kUriCommissionerPetition>(void);
+template <> const char *UriToString<kUriCommissionerSet>(void);
+template <> const char *UriToString<kUriDatasetChanged>(void);
+template <> const char *UriToString<kUriEnergyReport>(void);
+template <> const char *UriToString<kUriEnergyScan>(void);
+template <> const char *UriToString<kUriJoinerEntrust>(void);
+template <> const char *UriToString<kUriJoinerFinalize>(void);
+template <> const char *UriToString<kUriLeaderKeepAlive>(void);
+template <> const char *UriToString<kUriLeaderPetition>(void);
+template <> const char *UriToString<kUriEnrollerJoinerAccept>(void);
+template <> const char *UriToString<kUriEnrollerKeepAlive>(void);
+template <> const char *UriToString<kUriEnrollerJoinerRelease>(void);
+template <> const char *UriToString<kUriEnrollerRegister>(void);
+template <> const char *UriToString<kUriEnrollerReportState>(void);
+template <> const char *UriToString<kUriPanIdConflict>(void);
+template <> const char *UriToString<kUriPendingGet>(void);
+template <> const char *UriToString<kUriPanIdQuery>(void);
+template <> const char *UriToString<kUriPendingSet>(void);
+template <> const char *UriToString<kUriRelayRx>(void);
+template <> const char *UriToString<kUriTcatEnable>(void);
+template <> const char *UriToString<kUriRelayTx>(void);
+template <> const char *UriToString<kUriProxyRx>(void);
+template <> const char *UriToString<kUriProxyTx>(void);
+template <> const char *UriToString<kUriDiagnosticGetAnswer>(void);
+template <> const char *UriToString<kUriDiagnosticGetRequest>(void);
+template <> const char *UriToString<kUriDiagnosticGetQuery>(void);
+template <> const char *UriToString<kUriDiagnosticReset>(void);
+template <> const char *UriToString<kUriDuaRegistrationNotify>(void);
+template <> const char *UriToString<kUriDuaRegistrationRequest>(void);
+template <> const char *UriToString<kUriMlr>(void);
+
 } // namespace ot
 
-#endif // URI_PATHS_HPP_
+#endif // OT_CORE_THREAD_URI_PATHS_HPP_

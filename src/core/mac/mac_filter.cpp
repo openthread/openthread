@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "thread/topology.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Mac {
@@ -266,7 +263,7 @@ Error Filter::ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, N
     {
         // Clear the previous RSS average to ensure the fixed RSS
         // value takes effect quickly.
-        aNeighbor->GetLinkInfo().CleaAverageRss();
+        aNeighbor->GetLinkInfo().ClearAverageRss();
     }
 
 exit:

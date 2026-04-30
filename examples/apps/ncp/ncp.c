@@ -61,4 +61,17 @@ void otAppNcpInit(otInstance *aInstance)
     otNcpHdlcInit(aInstance, NcpSend);
 #endif
 }
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+void otAppNcpInitMulti(otInstance **aInstances, uint8_t aCount)
+{
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+#error Multipan support not implemented for SPI
+#else
+    IgnoreError(otPlatUartEnable());
+
+    otNcpHdlcInitMulti(aInstances, aCount, NcpSend);
+#endif
+}
+#endif
 #endif // !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK

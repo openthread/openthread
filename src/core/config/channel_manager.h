@@ -29,20 +29,38 @@
 /**
  * @file
  *   This file includes compile-time configurations for Channel Manager.
- *
  */
 
-#ifndef CONFIG_CHANNEL_MANAGER_H_
-#define CONFIG_CHANNEL_MANAGER_H_
+#ifndef OT_CORE_CONFIG_CHANNEL_MANAGER_H_
+#define OT_CORE_CONFIG_CHANNEL_MANAGER_H_
+
+/**
+ * @addtogroup config-channel-manager
+ *
+ * @brief
+ *   This module includes configuration variables for Channel Manager.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
  *
  * Define as 1 to enable Channel Manager support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+ *
+ * Define as 1 to enable Channel Manager support for selecting CSL channels.
+ *
+ * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` must be enabled in addition.
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE 0
 #endif
 
 /**
@@ -54,7 +72,6 @@
  * the Thread network.
  *
  * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY 120
@@ -68,7 +85,6 @@
  *
  * Applicable only if Channel Manager and Channel Monitoring features are both enabled (i.e.,
  * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT 500
@@ -86,7 +102,6 @@
  * a threshold). Value 0 maps to 0% and 0xffff maps to 100%.
  *
  * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED (0xffff * 7 / 100)
@@ -103,7 +118,6 @@
  * a threshold). Value 0 maps to 0% rate and 0xffff maps to 100%.
  *
  * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
@@ -115,7 +129,6 @@
  * The default time interval (in seconds) used by Channel Manager for auto-channel-selection functionality.
  *
  * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL (3 * 60 * 60)
@@ -130,10 +143,13 @@
  * Value 0 maps to 0% and 0xffff maps to 100%.
  *
  * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD (0xffff * 14 / 100)
 #endif
 
-#endif // CONFIG_CHANNEL_MANAGER_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_CHANNEL_MANAGER_H_

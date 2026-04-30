@@ -29,20 +29,41 @@
 /**
  * @file
  *   This file includes compile-time configurations for Channel Monitor.
- *
  */
 
-#ifndef CONFIG_CHANNEL_MONITOR_H_
-#define CONFIG_CHANNEL_MONITOR_H_
+#ifndef OT_CORE_CONFIG_CHANNEL_MONITOR_H_
+#define OT_CORE_CONFIG_CHANNEL_MONITOR_H_
+
+/**
+ * @addtogroup config-channel-monitor
+ *
+ * @brief
+ *   This module includes configuration variables for Channel Monitor.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
  *
  * Define to 1 to enable Channel Monitor support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
+ *
+ * Define to 0 to require the Channel Monitor to be manually started.
+ *
+ * If enabled, the Channel Monitor will start and stop automatically when the Thread network interface is brought up
+ * and down.
+ *
+ * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE 1
 #endif
 
 /**
@@ -54,7 +75,6 @@
  * interval.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL 41000
@@ -71,7 +91,6 @@
  * It is recommended that this value is set to same value as the CCA threshold used by radio.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD -75
@@ -86,10 +105,13 @@
  * that are above the RSSI threshold within (approximately) this sample window.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is set).
- *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW 960
 #endif
 
-#endif // CONFIG_CHANNEL_MONITOR_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_CHANNEL_MONITOR_H_

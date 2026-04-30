@@ -35,6 +35,10 @@
 #ifndef OPENTHREAD_CHANNEL_MONITOR_H_
 #define OPENTHREAD_CHANNEL_MONITOR_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus
@@ -60,7 +64,6 @@ extern "C" {
  *   occupancy).
  *
  * @{
- *
  */
 
 /**
@@ -77,17 +80,15 @@ extern "C" {
  *
  * @retval OT_ERROR_NONE      Channel Monitoring state changed successfully
  * @retval OT_ERROR_ALREADY   Channel Monitoring is already in the same state.
- *
  */
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether the Channel Monitoring operation is enabled and running.
+ * Indicates whether the Channel Monitoring operation is enabled and running.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
  * @returns TRUE if the Channel Monitoring operation is enabled, FALSE otherwise.
- *
  */
 bool otChannelMonitorIsEnabled(otInstance *aInstance);
 
@@ -97,7 +98,6 @@ bool otChannelMonitorIsEnabled(otInstance *aInstance);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
  * @returns  The channel monitor sample interval in milliseconds.
- *
  */
 uint32_t otChannelMonitorGetSampleInterval(otInstance *aInstance);
 
@@ -107,7 +107,6 @@ uint32_t otChannelMonitorGetSampleInterval(otInstance *aInstance);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
  * @returns  The RSSI threshold in dBm.
- *
  */
 int8_t otChannelMonitorGetRssiThreshold(otInstance *aInstance);
 
@@ -117,7 +116,6 @@ int8_t otChannelMonitorGetRssiThreshold(otInstance *aInstance);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
  * @returns  The averaging sample window.
- *
  */
 uint32_t otChannelMonitorGetSampleWindow(otInstance *aInstance);
 
@@ -130,7 +128,6 @@ uint32_t otChannelMonitorGetSampleWindow(otInstance *aInstance);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
  * @returns  Total number of RSSI samples (per channel) taken so far.
- *
  */
 uint32_t otChannelMonitorGetSampleCount(otInstance *aInstance);
 
@@ -151,13 +148,11 @@ uint32_t otChannelMonitorGetSampleCount(otInstance *aInstance);
  * @param[in]  aChannel        The channel for which to get the link occupancy.
  *
  * @returns The current channel occupancy for the given channel.
- *
  */
 uint16_t otChannelMonitorGetChannelOccupancy(otInstance *aInstance, uint8_t aChannel);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

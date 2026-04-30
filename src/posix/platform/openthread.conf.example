@@ -22,3 +22,13 @@ calibrated_power=11,25,1900,112233
 calibrated_power=11,25,1000,223344
 calibrated_power=26,26,1500,334455
 calibrated_power=26,26,700,445566
+
+# The radio supported channel mask that the device is allowed to be on.
+# supported_channel_mask=<RegulatoryDomain>,<ChannelMask>
+supported_channel_mask=ETSI,0x3fff800
+supported_channel_mask=FCC,0x7fff800
+
+# The radio preferred channel mask that the device prefers to form on.
+# preferred_channel_mask=<RegulatoryDomain>,<ChannelMask>
+preferred_channel_mask=ETSI,0x1fff800
+preferred_channel_mask=FCC,0x3fff800

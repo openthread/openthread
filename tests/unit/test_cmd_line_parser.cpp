@@ -32,21 +32,23 @@
 
 #include <openthread/config.h>
 
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "utils/parse_cmdline.hpp"
 
 #include "test_util.hpp"
 
-using ot::Utils::CmdLineParser::ParseAsBool;
-using ot::Utils::CmdLineParser::ParseAsHexString;
-using ot::Utils::CmdLineParser::ParseAsHexStringSegment;
-using ot::Utils::CmdLineParser::ParseAsInt16;
-using ot::Utils::CmdLineParser::ParseAsInt32;
-using ot::Utils::CmdLineParser::ParseAsInt8;
-using ot::Utils::CmdLineParser::ParseAsUint16;
-using ot::Utils::CmdLineParser::ParseAsUint32;
-using ot::Utils::CmdLineParser::ParseAsUint64;
-using ot::Utils::CmdLineParser::ParseAsUint8;
+namespace ot {
+
+using Utils::CmdLineParser::ParseAsBool;
+using Utils::CmdLineParser::ParseAsHexString;
+using Utils::CmdLineParser::ParseAsHexStringSegment;
+using Utils::CmdLineParser::ParseAsInt16;
+using Utils::CmdLineParser::ParseAsInt32;
+using Utils::CmdLineParser::ParseAsInt8;
+using Utils::CmdLineParser::ParseAsUint16;
+using Utils::CmdLineParser::ParseAsUint32;
+using Utils::CmdLineParser::ParseAsUint64;
+using Utils::CmdLineParser::ParseAsUint8;
 
 template <typename ValueType> struct TestCase
 {
@@ -309,7 +311,7 @@ void TestParsingHexStrings(void)
 
     for (uint8_t testIter = 0; testIter <= 1; testIter++)
     {
-        for (uint8_t segmentLen = 1; segmentLen <= sizeof(buffer); segmentLen++)
+        for (size_t segmentLen = 1; segmentLen <= sizeof(buffer); segmentLen++)
         {
             if (testIter == 0)
             {
@@ -324,7 +326,7 @@ void TestParsingHexStrings(void)
 
             len = segmentLen;
 
-            printf("\"%s\" segLen:%d -> ", string, segmentLen);
+            printf("\"%s\" segLen:%zu -> ", string, segmentLen);
 
             while (true)
             {
@@ -352,10 +354,12 @@ void TestParsingHexStrings(void)
     }
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestParsingInts();
-    TestParsingHexStrings();
+    ot::TestParsingInts();
+    ot::TestParsingHexStrings();
 
     printf("All tests passed\n");
     return 0;

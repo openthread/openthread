@@ -34,7 +34,6 @@
 #include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,60 +64,53 @@
 #endif
 #include <common/code_utils.hpp>
 #include <lib/platform/exit_code.h>
+#include <lib/platform/reset_util.h>
+#include <lib/spinel/coprocessor_type.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/misc.h>
 
-#include "lib/platform/reset_util.h"
-
 /**
- * This function initializes NCP app.
+ * Initializes NCP app.
  *
  * @param[in]  aInstance    A pointer to the OpenThread instance.
- *
  */
 void otAppNcpInit(otInstance *aInstance);
 
 /**
- * This function deinitializes NCP app.
- *
+ * Deinitializes NCP app.
  */
 void otAppNcpUpdate(otSysMainloopContext *aContext);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by console.
+ * Updates the file descriptor sets with file descriptors used by console.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
- *
  */
 void otAppNcpProcess(const otSysMainloopContext *aContext);
 
 /**
- * This function initializes CLI app.
+ * Initializes CLI app.
  *
  * @param[in]  aInstance    A pointer to the OpenThread instance.
- *
  */
 void otAppCliInit(otInstance *aInstance);
 
 /**
- * This function deinitializes CLI app.
- *
+ * Deinitializes CLI app.
  */
 void otAppCliDeinit(void);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by console.
+ * Updates the file descriptor sets with file descriptors used by console.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
- *
  */
 void otAppCliUpdate(otSysMainloopContext *aMainloop);
 
 /**
- * This function performs console driver processing.
+ * Performs console driver processing.
  *
  * @param[in]    aMainloop      A pointer to the mainloop context.
- *
  */
 void otAppCliProcess(const otSysMainloopContext *aMainloop);
 
@@ -131,8 +123,7 @@ typedef struct PosixConfig
 } PosixConfig;
 
 /**
- * This enumeration defines the argument return values.
- *
+ * Defines the argument return values.
  */
 enum
 {
@@ -147,12 +138,18 @@ enum
 
     OT_POSIX_OPT_SHORT_MAX = 128,
 
+    OT_POSIX_OPT_DATA_PATH,
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
+    OT_POSIX_OPT_SETTINGS_FILE,
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    OT_POSIX_OPT_TUN_DEVICE,
+#endif
 };
 
 static const struct option kOptions[] = {
     {"backbone-interface-name", required_argument, NULL, OT_POSIX_OPT_BACKBONE_INTERFACE_NAME},
+    {"data-path", required_argument, NULL, OT_POSIX_OPT_DATA_PATH},
     {"debug-level", required_argument, NULL, OT_POSIX_OPT_DEBUG_LEVEL},
     {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
     {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
@@ -160,7 +157,11 @@ static const struct option kOptions[] = {
     {"persistent-interface", no_argument, NULL, OT_POSIX_OPT_PERSISTENT_INTERFACE},
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
+    {"settings-file", required_argument, NULL, OT_POSIX_OPT_SETTINGS_FILE},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    {"tun-device", required_argument, NULL, OT_POSIX_OPT_TUN_DEVICE},
+#endif
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
     {0, 0, 0, 0}};
 
@@ -170,6 +171,11 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
+            "        --data-path               Path of directory to store data.\n"
+            "        --settings-file           Fixed settings file base name (overrides EUI64-based naming).\n"
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+            "        --tun-device              POSIX TUN Device.\n"
+#endif
             "    -B  --backbone-interface-name Backbone network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -180,7 +186,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
-#ifdef __linux__
+#ifdef SIGRTMIN
     fprintf(aStream,
             "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
             "                                  Use +N for relative value to SIGRTMIN, and use N for absolute value.\n");
@@ -197,7 +203,12 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mPersistentInterface = false;
     aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
     aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
-#ifdef __linux__
+    aConfig->mPlatformConfig.mInterfaceName       = OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
+    aConfig->mPlatformConfig.mDataPath            = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    aConfig->mPlatformConfig.mTunDevice = NULL;
+#endif
+#ifdef SIGRTMIN
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
 
@@ -252,7 +263,13 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case OT_POSIX_OPT_RADIO_VERSION:
             aConfig->mPrintRadioVersion = true;
             break;
-#ifdef __linux__
+        case OT_POSIX_OPT_DATA_PATH:
+            aConfig->mPlatformConfig.mDataPath = optarg;
+            break;
+        case OT_POSIX_OPT_SETTINGS_FILE:
+            aConfig->mPlatformConfig.mSettingsFile = optarg;
+            break;
+#ifdef SIGRTMIN
         case OT_POSIX_OPT_REAL_TIME_SIGNAL:
             if (optarg[0] == '+')
             {
@@ -263,7 +280,12 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
                 aConfig->mPlatformConfig.mRealTimeSignal = atoi(optarg);
             }
             break;
-#endif // __linux__
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+        case OT_POSIX_OPT_TUN_DEVICE:
+            aConfig->mPlatformConfig.mTunDevice = optarg;
+            break;
+#endif
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -275,12 +297,14 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 
     for (; optind < aArgCount; optind++)
     {
-        VerifyOrDie(aConfig->mPlatformConfig.mRadioUrlNum < OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mRadioUrls),
+        VerifyOrDie(aConfig->mPlatformConfig.mCoprocessorUrls.mNum <
+                        OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mCoprocessorUrls.mUrls),
                     OT_EXIT_INVALID_ARGUMENTS);
-        aConfig->mPlatformConfig.mRadioUrls[aConfig->mPlatformConfig.mRadioUrlNum++] = aArgVector[optind];
+        aConfig->mPlatformConfig.mCoprocessorUrls.mUrls[aConfig->mPlatformConfig.mCoprocessorUrls.mNum++] =
+            aArgVector[optind];
     }
 
-    if (aConfig->mPlatformConfig.mRadioUrlNum == 0)
+    if (aConfig->mPlatformConfig.mCoprocessorUrls.mNum == 0)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
@@ -297,6 +321,12 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     instance = otSysInit(&aConfig->mPlatformConfig);
     VerifyOrDie(instance != NULL, OT_EXIT_FAILURE);
     syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
+
+    if (aConfig->mPlatformConfig.mCoprocessorType != OT_COPROCESSOR_RCP)
+    {
+        printf("Only RCP is supported by posix app now!\n");
+        exit(OT_EXIT_FAILURE);
+    }
 
     if (aConfig->mPrintRadioVersion)
     {
@@ -380,7 +410,10 @@ int main(int argc, char *argv[])
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     otAppCliInit(instance);
 #endif
-    otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance);
+
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE || OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+    IgnoreError(otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance));
+#endif
 
     while (true)
     {

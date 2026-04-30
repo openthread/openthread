@@ -31,61 +31,57 @@
  *   This file includes helper methods to cast between const and non-const objects and/or pointers.
  */
 
-#ifndef CONST_CAST_HPP_
-#define CONST_CAST_HPP_
+#ifndef OT_CORE_COMMON_CONST_CAST_HPP_
+#define OT_CORE_COMMON_CONST_CAST_HPP_
 
 #include "openthread-core-config.h"
 
 namespace ot {
 
 /**
- * This template method casts a given non-const reference to a const reference.
+ * Casts a given non-const reference to a const reference.
  *
  * @tparam Type        The reference type.
  *
  * @param[in] aObject  A non-const reference to an object.
  *
  * @returns A const reference to @p aObject reference.
- *
  */
 template <typename Type> const Type &AsConst(Type &aObject) { return const_cast<const Type &>(aObject); }
 
 /**
- * This template method casts a given non-const pointer to a const pointer.
+ * Casts a given non-const pointer to a const pointer.
  *
  * @tparam Type        The pointer type.
  *
  * @param[in] aPointer  A non-const pointer to an object.
  *
  * @returns A const pointer to @p aPointer pointer.
- *
  */
 template <typename Type> const Type *AsConst(Type *aPointer) { return const_cast<const Type *>(aPointer); }
 
 /**
- * This template method casts a given const reference to a non-const reference.
+ * Casts a given const reference to a non-const reference.
  *
  * @tparam Type        The reference type.
  *
  * @param[in] aObject  A const reference to an object.
  *
  * @returns A non-const reference to @p aObject reference.
- *
  */
 template <typename Type> Type &AsNonConst(const Type &aObject) { return const_cast<Type &>(aObject); }
 
 /**
- * This template method casts a given const pointer to a non-const pointer.
+ * Casts a given const pointer to a non-const pointer.
  *
  * @tparam Type        The pointer type.
  *
  * @param[in] aPointer  A const pointer to an object.
  *
  * @returns A non-const pointer to @p aPointer pointer.
- *
  */
 template <typename Type> Type *AsNonConst(const Type *aPointer) { return const_cast<Type *>(aPointer); }
 
 } // namespace ot
 
-#endif // CONST_CAST_HPP_
+#endif // OT_CORE_COMMON_CONST_CAST_HPP_

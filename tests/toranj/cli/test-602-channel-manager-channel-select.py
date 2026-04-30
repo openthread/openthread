@@ -66,6 +66,10 @@ def check_channel():
     verify(int(node.get_channel()) == channel)
 
 
+delay = int(node.cli('channel manager delay')[0])
+# add kRequestStartJitterInterval=10000ms to expected channel manager delay
+delay += 10 / speedup
+
 check_channel()
 
 all_channels_mask = int('0x7fff800', 0)
@@ -99,7 +103,7 @@ node.cli('channel manager select 1')
 result = cli.Node.parse_list(node.cli('channel manager'))
 verify(result['channel'] == '11')
 channel = 11
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 # Set channels 12-15 as favorable and request a channel select, verify
 # that channel is switched to 12.
@@ -112,13 +116,13 @@ node.cli('channel manager favored', chan_12_to_15_mask)
 
 channel = 25
 node.cli('channel manager change', channel)
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 node.cli('channel manager select 1')
 result = cli.Node.parse_list(node.cli('channel manager'))
 verify(result['channel'] == '12')
 channel = 12
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 # Set channels 15-17 as favorables and request a channel select,
 # verify that channel is switched to 11.
@@ -129,7 +133,7 @@ verify_within(check_channel, 2)
 
 channel = 25
 node.cli('channel manager change', channel)
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 node.cli('channel manager favored', chan_15_to_17_mask)
 
@@ -137,7 +141,7 @@ node.cli('channel manager select 1')
 result = cli.Node.parse_list(node.cli('channel manager'))
 verify(result['channel'] == '11')
 channel = 11
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 # Set channels 12-15 as favorable and request a channel select, verify
 # that channel is not switched.
@@ -145,10 +149,11 @@ verify_within(check_channel, 2)
 node.cli('channel manager favored', chan_12_to_15_mask)
 
 node.cli('channel manager select 1')
+
 result = cli.Node.parse_list(node.cli('channel manager'))
 verify(result['channel'] == '11')
 channel = 11
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 # Starting from channel 12 and issuing a channel select (which would
 # pick 11 as best channel). However, since quality difference between
@@ -157,14 +162,60 @@ verify_within(check_channel, 2)
 
 channel = 12
 node.cli('channel manager change', channel)
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
 
 node.cli('channel manager favored', all_channels_mask)
 
 node.cli('channel manager select 1')
 result = cli.Node.parse_list(node.cli('channel manager'))
 verify(result['channel'] == '12')
-verify_within(check_channel, 2)
+verify_within(check_channel, delay)
+
+# -----------------------------------------------------------------------------------------------------------------------
+# Auto Select
+
+# Set channel manager cca failure rate threshold to 0
+# as we cannot control cca success in simulation
+node.cli('channel manager threshold 0')
+
+# Set short channel selection interval to speedup
+interval = 30
+node.cli(f'channel manager interval {interval}')
+
+# Set channels 15-17 as favorable and request a channel select, verify
+# that channel is switched to 11.
+
+channel = 25
+node.cli('channel manager change', channel)
+verify_within(check_channel, delay)
+node.cli('channel manager favored', chan_15_to_17_mask)
+
+# Active auto channel selection
+node.cli('channel manager auto 1')
+
+channel = 11
+result = cli.Node.parse_list(node.cli('channel manager'))
+verify(result['auto'] == '1')
+verify(result['channel'] == str(channel))
+
+verify_within(check_channel, delay)
+
+# while channel selection timer is running change to channel 25,
+# set channels 12-15 as favorable, wait for auto channel selection
+# and verify that channel is switched to 12.
+
+node.cli('channel manager favored', chan_12_to_15_mask)
+channel = 25
+node.cli('channel manager change', channel)
+
+# wait for timeout of auto selection timer
+time.sleep(2 * interval / speedup)
+
+channel = 12
+result = cli.Node.parse_list(node.cli('channel manager'))
+verify(result['channel'] == str(channel))
+
+verify_within(check_channel, delay)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

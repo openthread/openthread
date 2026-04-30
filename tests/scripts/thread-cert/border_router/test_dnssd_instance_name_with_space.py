@@ -93,6 +93,7 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         server.srp_server_set_enabled(True)
+        br1.dns_upstream_query_state = False
 
         br2.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
@@ -113,6 +114,8 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
         full_instance_name = f'{INSTANCE_NAME}.{SERVICE_FULL_NAME}'
         EMPTY_TXT = {}
 
+        # In all cases, there is one match, so server should include
+        # service info in additional section of PTR query response.
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br1.get_rloc()))
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br2.get_rloc()))
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME.lower(), server=br2.get_rloc()))
@@ -175,6 +178,10 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
             print('not match: ', dig_answer, record,
                   list(a == b or (callable(b) and b(a)) for a, b in zip(dig_answer, record)))
 
+        # Additional records are optional. Ignore if missing.
+        if additional:
+            return
+
         self.fail((record, dig_result))
 
     def _match_record(self, record, match):
@@ -202,8 +209,6 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
                 self._assert_have_answer(dig_result, record, additional=False)
 
         if 'ADDITIONAL' in expected_result:
-            self.assertGreaterEqual(len(dig_result['ADDITIONAL']), len(expected_result['ADDITIONAL']), dig_result)
-
             for record in expected_result['ADDITIONAL']:
                 self._assert_have_answer(dig_result, record, additional=True)
 

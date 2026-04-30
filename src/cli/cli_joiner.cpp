@@ -78,7 +78,7 @@ template <> otError Joiner::Process<Cmd("discerner")>(Arg aArgs[])
     {
         otJoinerDiscerner discerner;
 
-        memset(&discerner, 0, sizeof(discerner));
+        ClearAllBytes(discerner);
 
         /**
          * @cli joiner discerner clear
@@ -108,7 +108,7 @@ template <> otError Joiner::Process<Cmd("discerner")>(Arg aArgs[])
         else
         {
             VerifyOrExit(aArgs[1].IsEmpty());
-            SuccessOrExit(Interpreter::ParseJoinerDiscerner(aArgs[0], discerner));
+            SuccessOrExit(ParseJoinerDiscerner(aArgs[0], discerner));
             error = otJoinerSetDiscerner(GetInstancePtr(), &discerner);
         }
     }
@@ -157,12 +157,12 @@ template <> otError Joiner::Process<Cmd("start")>(Arg aArgs[])
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     error = otJoinerStart(GetInstancePtr(),
-                          aArgs[0].GetCString(),           // aPskd
-                          aArgs[1].GetCString(),           // aProvisioningUrl (`nullptr` if aArgs[1] is empty)
-                          PACKAGE_NAME,                    // aVendorName
-                          OPENTHREAD_CONFIG_PLATFORM_INFO, // aVendorModel
-                          PACKAGE_VERSION,                 // aVendorSwVersion
-                          nullptr,                         // aVendorData
+                          aArgs[0].GetCString(),                    // aPskd
+                          aArgs[1].GetCString(),                    // aProvisioningUrl (`nullptr` if aArgs[1] is empty)
+                          otThreadGetVendorName(GetInstancePtr()),  // aVendorName
+                          otThreadGetVendorModel(GetInstancePtr()), // aVendorModel
+                          otThreadGetVendorSwVersion(GetInstancePtr()), // aVendorSwVersion
+                          nullptr,                                      // aVendorData
                           &Joiner::HandleCallback, this);
 
 exit:
@@ -216,10 +216,7 @@ template <> otError Joiner::Process<Cmd("state")>(Arg aArgs[])
 
 otError Joiner::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                              \
-    {                                                         \
-        aCommandString, &Joiner::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Joiner::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("discerner"), CmdEntry("id"), CmdEntry("start"), CmdEntry("state"), CmdEntry("stop"),

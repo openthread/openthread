@@ -35,11 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -63,7 +59,7 @@ RadioSelector::RadioSelector(Instance &aInstance)
 
 void RadioSelector::NeighborInfo::PopulateMultiRadioInfo(MultiRadioInfo &aInfo)
 {
-    memset(&aInfo, 0, sizeof(MultiRadioInfo));
+    ClearAllBytes(aInfo);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (GetSupportedRadioTypes().Contains(Mac::kRadioTypeIeee802154))
@@ -85,28 +81,28 @@ void RadioSelector::NeighborInfo::PopulateMultiRadioInfo(MultiRadioInfo &aInfo)
 LogLevel RadioSelector::UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference)
 {
     uint8_t old        = aNeighbor.GetRadioPreference(aRadioType);
-    int16_t preferecne = static_cast<int16_t>(old);
+    int16_t preference = static_cast<int16_t>(old);
 
-    preferecne += aDifference;
+    preference += aDifference;
 
-    if (preferecne > kMaxPreference)
+    if (preference > kMaxPreference)
     {
-        preferecne = kMaxPreference;
+        preference = kMaxPreference;
     }
 
-    if (preferecne < kMinPreference)
+    if (preference < kMinPreference)
     {
-        preferecne = kMinPreference;
+        preference = kMinPreference;
     }
 
-    aNeighbor.SetRadioPreference(aRadioType, static_cast<uint8_t>(preferecne));
+    aNeighbor.SetRadioPreference(aRadioType, static_cast<uint8_t>(preference));
 
     // We check whether the update to the preference value caused it
     // to cross the threshold `kHighPreference`. Based on this we
     // return a suggested log level. If there is cross, suggest info
     // log level, otherwise debug log level.
 
-    return ((old >= kHighPreference) != (preferecne >= kHighPreference)) ? kLogLevelInfo : kLogLevelDebg;
+    return ((old >= kHighPreference) != (preference >= kHighPreference)) ? kLogLevelInfo : kLogLevelDebg;
 }
 
 void RadioSelector::UpdateOnReceive(Neighbor &aNeighbor, Mac::RadioType aRadioType, bool aIsDuplicate)
@@ -365,7 +361,7 @@ void RadioSelector::Log(LogLevel        aLogLevel,
     String<kRadioPreferenceStringSize> preferenceString;
     bool                               isFirstEntry = true;
 
-    VerifyOrExit(Instance::GetLogLevel() >= aLogLevel);
+    VerifyOrExit(GetInstance().GetLogLevel() >= aLogLevel);
 
     for (Mac::RadioType radio : sRadioSelectionOrder)
     {

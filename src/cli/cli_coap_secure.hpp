@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI CoAP Secure server and client.
  */
 
-#ifndef CLI_COAP_SECURE_HPP_
-#define CLI_COAP_SECURE_HPP_
+#ifndef OT_CLI_CLI_COAP_SECURE_HPP_
+#define OT_CLI_CLI_COAP_SECURE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,7 +42,7 @@
 
 #include <openthread/coap_secure.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
@@ -52,44 +52,43 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI CoAP Secure server and client.
- *
+ * Implements the CLI CoAP Secure server and client.
  */
-class CoapSecure : private Output
+class CoapSecure : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
-     * This method interprets a list of CLI arguments.
+     * Processes a CLI sub-command.
      *
-     * @param[in]  aArgs        An array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
      *
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
+     * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      */
     otError Process(Arg aArgs[]);
 
 private:
-    enum
-    {
-        kMaxUriLength   = 32,
-        kMaxBufferSize  = 16,
-        kPskMaxLength   = 32,
-        kPskIdMaxLength = 32
-    };
+    static constexpr uint16_t kMaxUriLength   = 32;
+    static constexpr uint16_t kMaxBufferSize  = 16;
+    static constexpr uint8_t  kPskMaxLength   = 32;
+    static constexpr uint8_t  kPskIdMaxLength = 32;
 
     using Command = CommandEntry<CoapSecure>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum BlockType : uint8_t{
+    enum BlockType : uint8_t
+    {
         kBlockType1,
         kBlockType2,
     };
@@ -100,6 +99,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
+    otError ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *));
 
     void Stop(void);
 
@@ -135,8 +135,8 @@ private:
     void        DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
-    static void HandleConnected(bool aConnected, void *aContext);
-    void        HandleConnected(bool aConnected);
+    static void HandleConnectEvent(otCoapSecureConnectEvent aEvent, void *aContext);
+    void        HandleConnectEvent(otCoapSecureConnectEvent aEvent);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     otCoapBlockwiseResource mResource;
@@ -162,4 +162,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-#endif // CLI_COAP_SECURE_HPP_
+#endif // OT_CLI_CLI_COAP_SECURE_HPP_

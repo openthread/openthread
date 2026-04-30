@@ -31,8 +31,8 @@
  *   This file includes definitions for a pointer wrapper.
  */
 
-#ifndef PTR_WRAPPER_HPP_
-#define PTR_WRAPPER_HPP_
+#ifndef OT_CORE_COMMON_PTR_WRAPPER_HPP_
+#define OT_CORE_COMMON_PTR_WRAPPER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,19 +42,17 @@
 namespace ot {
 
 /**
- * This template class represents a wrapper over a pointer.
+ * Represents a wrapper over a pointer.
  *
  * This is intended as base class of `OwnedPtr` or `RetainPtr` providing common simple methods.
  *
  * @tparam Type  The pointer type.
- *
  */
 template <class Type> class Ptr
 {
 public:
     /**
      * This is the default constructor for `Ptr` initializing it as null.
-     *
      */
     Ptr(void)
         : mPointer(nullptr)
@@ -62,10 +60,9 @@ public:
     }
 
     /**
-     * This constructor initializes the `Ptr` with a given pointer.
+     * Initializes the `Ptr` with a given pointer.
      *
      * @param[in] aPointer  A pointer to initialize with.
-     *
      */
     explicit Ptr(Type *aPointer)
         : mPointer(aPointer)
@@ -73,107 +70,96 @@ public:
     }
 
     /**
-     * This method indicates whether the `Ptr` is null or not.
+     * Indicates whether the `Ptr` is null or not.
      *
      * @retval TRUE   The `Ptr` is null.
      * @retval FALSE  The `Ptr` is not null.
-     *
      */
     bool IsNull(void) const { return (mPointer == nullptr); }
 
     /**
-     * This method gets the wrapped pointer.
+     * Gets the wrapped pointer.
      *
      * @returns The wrapped pointer.
-     *
      */
     Type *Get(void) { return mPointer; }
 
     /**
-     * This method gets the wrapped pointer.
+     * Gets the wrapped pointer.
      *
      * @returns The wrapped pointer.
-     *
      */
     const Type *Get(void) const { return mPointer; }
 
     /**
-     * This method overloads the `->` dereference operator and returns the pointer.
+     * Overloads the `->` dereference operator and returns the pointer.
      *
      * @returns The wrapped pointer.
-     *
      */
     Type *operator->(void) { return mPointer; }
 
     /**
-     * This method overloads the `->` dereference operator and returns the pointer.
+     * Overloads the `->` dereference operator and returns the pointer.
      *
      * @returns The wrapped pointer.
-     *
      */
     const Type *operator->(void) const { return mPointer; }
 
     /**
-     * This method overloads the `*` dereference operator and returns a reference to the pointed object.
+     * Overloads the `*` dereference operator and returns a reference to the pointed object.
      *
      * The behavior is undefined if `IsNull() == true`.
      *
      * @returns A reference to the pointed object.
-     *
      */
     Type &operator*(void) { return *mPointer; }
 
     /**
-     * This method overloads the `*` dereference operator and returns a reference to the pointed object.
+     * Overloads the `*` dereference operator and returns a reference to the pointed object.
      *
      * The behavior is undefined if `IsNull() == true`.
      *
      * @returns A reference to the pointed object.
-     *
      */
     const Type &operator*(void) const { return *mPointer; }
 
     /**
-     * This method overloads the operator `==` to compare the `Ptr` with a given pointer.
+     * Overloads the operator `==` to compare the `Ptr` with a given pointer.
      *
      * @param[in] aPointer   The pointer to compare with.
      *
      * @retval TRUE   If `Ptr` is equal to @p aPointer.
      * @retval FALSE  If `Ptr` is not equal to @p aPointer.
-     *
      */
     bool operator==(const Type *aPointer) const { return (mPointer == aPointer); }
 
     /**
-     * This method overloads the operator `!=` to compare the `Ptr` with a given pointer.
+     * Overloads the operator `!=` to compare the `Ptr` with a given pointer.
      *
      * @param[in] aPointer   The pointer to compare with.
      *
      * @retval TRUE   If `Ptr` is not equal to @p aPointer.
      * @retval FALSE  If `Ptr` is equal to @p aPointer.
-     *
      */
     bool operator!=(const Type *aPointer) const { return (mPointer != aPointer); }
 
     /**
-     * This method overloads the operator `==` to compare the `Ptr` with another `Ptr`.
+     * Overloads the operator `==` to compare the `Ptr` with another `Ptr`.
      *
      * @param[in] aOther   The other `Ptr` to compare with.
      *
      * @retval TRUE   If `Ptr` is equal to @p aOther.
      * @retval FALSE  If `Ptr` is not equal to @p aOther.
-     *
      */
     bool operator==(const Ptr &aOther) const { return (mPointer == aOther.mPointer); }
 
     /**
-     * This method overloads the operator `!=` to compare the `Ptr` with another `Ptr`.
+     * Overloads the operator `!=` to compare the `Ptr` with another `Ptr`.
      *
      * @param[in] aOther   The other `Ptr` to compare with.
      *
      * @retval TRUE   If `Ptr` is not equal to @p aOther.
      * @retval FALSE  If `Ptr` is equal to @p aOther.
-     *
      */
     bool operator!=(const Ptr &aOther) const { return (mPointer != aOther.mPointer); }
 
@@ -183,4 +169,4 @@ protected:
 
 } // namespace ot
 
-#endif // PTR_WRAPPER_HPP_
+#endif // OT_CORE_COMMON_PTR_WRAPPER_HPP_

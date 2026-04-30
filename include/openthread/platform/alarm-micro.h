@@ -47,16 +47,17 @@ extern "C" {
  * @addtogroup plat-alarm
  *
  * @{
- *
  */
 
 /**
  * Set the alarm to fire at @p aDt microseconds after @p aT0.
  *
+ * For @p aT0, the platform MUST support all values in [0, 2^32-1].
+ * For @p aDt, the platform MUST support all values in [0, 2^31-1].
+ *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aT0        The reference time.
  * @param[in]  aDt        The time delay in microseconds from @p aT0.
- *
  */
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
@@ -64,15 +65,16 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
  * Stop the alarm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 void otPlatAlarmMicroStop(otInstance *aInstance);
 
 /**
  * Get the current time.
  *
- * @returns  The current time in microseconds.
+ * The current time MUST represent a free-running timer. When maintaining current time, the time value MUST utilize the
+ * entire range [0, 2^32-1] and MUST NOT wrap before 2^32.
  *
+ * @returns  The current time in microseconds.
  */
 uint32_t otPlatAlarmMicroGetNow(void);
 
@@ -85,7 +87,6 @@ extern void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

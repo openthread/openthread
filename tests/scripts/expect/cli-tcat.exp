@@ -1,0 +1,140 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2022, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+
+spawn_node 1 "cli"
+
+spawn_tcat_client_for_node 1
+
+send "network_name\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x06"
+
+send "get_dataset\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x06"
+
+send "get_comm_cert\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x06"
+
+send "commission\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x00"
+
+send "get_dataset\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t106"
+expect_line "\tVALUE:\t0x0e080000000000010000000300001235060004001fffe00208ef1398c2fd504b670708fd35344133d1d73e0510fda7c771a27202e232ecd04cf934f476030f4f70656e5468726561642d633634650102c64e04105e9b9b360f80b88be2603fb0135c8d650c0402a0f7f8"
+
+send "get_comm_cert\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tVALUE:\t0x308201d53082017ba00302010202030e1a83300a06082a8648ce3d04030230713126302406035504030c1d5468726561642043657274696669636174696f6e20446576696365434131193017060355040a0c105468726561642047726f757020496e633112301006035504070c0953616e2052616d6f6e310b300906035504080c024341310b3009060355040613025553301e170d3234303530373039333934355a170d3234303532313039333934355a303a311f301d06035504030c1654434154204578616d706c6520436f6d6d4365727431311730150603550405130e333532332d313534332d303030313059301306072a8648ce3d020106082a8648ce3d030107034200041d9abcbe167cd7a244860a9eeb364a8a830315baca1242659d17d224475f5d96124bde30505287cc41dc018dcf53820f4c69c5e69bac504e35ac96b69fcbc2efa3393037301f0603551d230418301680145fab1b296888a1d4b431a88661e7e76659edf819301406092b0601040182df2a03040704052101010101300a06082a8648ce3d0403020348003045022077847ce3845f78f26b6f9b24ca06104705139e9e50e8dacfd6954edd6ca041bc022100d2d68718da4682313f6f890b5b6edd77c1fe0ff1f990d6eaf49966f5cb74efc6"
+
+send "thread start\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x00"
+
+send "ping\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t10"
+
+send "ping 255\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t255"
+
+send "ping 512\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t512"
+
+send "network_name\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t15"
+expect_line "\tVALUE:\t0x4f70656e5468726561642d63363465"
+
+send "device_id\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+expect_line "\tVALUE:\t0x18b4300000000001"
+
+send "ext_panid\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+expect_line "\tVALUE:\t0xef1398c2fd504b67"
+
+send "provisioning_url\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tLEN:\t1"
+expect_line "\tVALUE:\t0x01"
+
+send "get_apps\n"
+expect_line "\tApplication 1 is UDP service: echo"
+expect_line "\tApplication 2 is TCP service: discard"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t15"
+expect_line "\tVALUE:\t0x89046563686f8a0764697363617264"
+
+send "appdata1 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t8"
+expect_line "\tVALUE:\t0x1122334455667788"
+
+send "appdata2 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x00"
+
+send "appdata3 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x01"
+
+send "appdata4 1122334455667788\n"
+expect_line "\tTYPE:\tRESPONSE_W_STATUS"
+expect_line "\tVALUE:\t0x01"
+
+send "vendor_data 74657874\n"
+expect_line "\tTYPE:\tRESPONSE_W_PAYLOAD"
+expect_line "\tLEN:\t4"
+expect_line "\tVALUE:\t0x74657874"
+
+
+dispose_tcat_client 1
+
+switch_node 1
+send "tcat stop\n"
+expect_line "Done"
+
+send "networkkey\n"
+expect_line "fda7c771a27202e232ecd04cf934f476"
+expect_line "Done"
+
+wait_for "state" "leader"
+expect_line "Done"
+
+dispose_all

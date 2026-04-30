@@ -172,7 +172,9 @@ size_t cbuf_pop(struct cbufhead* chdr, size_t numbytes) {
     if (used_space < numbytes) {
         numbytes = used_space;
     }
-    chdr->r_index = (chdr->r_index + numbytes) % chdr->size;
+    if (chdr->size > 0) {
+        chdr->r_index = (chdr->r_index + numbytes) % chdr->size;
+    }
     chdr->used -= numbytes;
     return numbytes;
 }
@@ -287,16 +289,14 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
     uint8_t* buf_data = chdr->buf;
     size_t free_space = cbuf_free_space(chdr);
     size_t start_index;
-    size_t end_index;
     size_t bytes_to_end;
-    if (offset > free_space) {
+    if (chdr->size == 0 || offset > free_space) {
         return 0;
     } else if (offset + numbytes > free_space) {
         numbytes = free_space - offset;
     }
     start_index = (cbuf_get_w_index(chdr) + offset) % chdr->size;
-    end_index = (start_index + numbytes) % chdr->size;
-    if (end_index >= start_index) {
+    if (numbytes <= chdr->size - start_index) {
         copy_from(buf_data, start_index, data, data_offset, numbytes);
         if (bitmap) {
             bmp_setrange(bitmap, start_index, numbytes);
@@ -337,8 +337,14 @@ size_t cbuf_reass_merge(struct cbufhead* chdr, size_t numbytes, uint8_t* bitmap)
 }
 
 size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitmap, size_t limit) {
-    size_t bitmap_size = BITS_TO_BYTES(chdr->size);
+    size_t bitmap_size;
     size_t until_end;
+
+    if (chdr->size == 0) {
+        return 0;
+    }
+
+    bitmap_size = BITS_TO_BYTES(chdr->size);
     offset = (cbuf_get_w_index(chdr) + offset) % chdr->size;
     until_end = bmp_countset(bitmap, bitmap_size, offset, limit);
     if (until_end >= limit || until_end < (chdr->size - offset)) {
@@ -351,8 +357,15 @@ size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitma
 }
 
 int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index) {
-    size_t range_start = cbuf_get_w_index(chdr);
-    size_t range_end = (range_start + offset) % chdr->size;
+    size_t range_start;
+    size_t range_end;
+
+    if (chdr->size == 0) {
+        return 0;
+    }
+
+    range_start = cbuf_get_w_index(chdr);
+    range_end = (range_start + offset) % chdr->size;
     if (range_end >= range_start) {
         return index >= range_start && index < range_end;
     } else {

@@ -31,8 +31,8 @@
  *   This file includes definitions for using mbedTLS.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#ifndef OT_CORE_CRYPTO_MBEDTLS_HPP_
+#define OT_CORE_CRYPTO_MBEDTLS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -64,42 +64,37 @@ namespace Crypto {
  * @addtogroup core-security
  *
  * @{
- *
  */
 
 /**
- * This class implements mbedTLS memory.
- *
+ * Implements mbedTLS memory.
  */
 class MbedTls : private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
-     *
+     * Initializes the object.
      */
     MbedTls(void);
 
     /**
-     * This method converts an mbed TLS error to OpenThread error.
+     * Converts an mbed TLS error to OpenThread error.
      *
      * @param[in] aMbedTlsError  The mbed TLS error.
      *
      * @returns The mapped Error.
-     *
      */
     static Error MapError(int aMbedTlsError);
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
-     * This function fills a given buffer with cryptographically secure random bytes.
+     * Fills a given buffer with cryptographically secure random bytes.
      *
      * @param[in]  aContext A pointer to arbitrary context.
      * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
      * @param[in]  aSize    Size of buffer (number of bytes to fill).
      *
      * @retval kErrorNone   Successfully filled buffer with random values.
-     *
      */
     static int CryptoSecurePrng(void *aContext, unsigned char *aBuffer, size_t aSize);
 #endif
@@ -107,10 +102,9 @@ public:
 
 /**
  * @}
- *
  */
 
 } // namespace Crypto
 } // namespace ot
 
-#endif // OT_MBEDTLS_HPP_
+#endif // OT_CORE_CRYPTO_MBEDTLS_HPP_

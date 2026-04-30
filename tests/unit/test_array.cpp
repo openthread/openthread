@@ -36,8 +36,8 @@
 #include "common/array.hpp"
 #include "common/debug.hpp"
 #include "common/equatable.hpp"
-#include "common/instance.hpp"
 #include "common/type_traits.hpp"
+#include "instance/instance.hpp"
 
 #include "test_util.h"
 

@@ -80,7 +80,7 @@
 #define	TCPS_HAVERCVDFIN(s)	((s) >= TCPS_TIME_WAIT)
 
  /*
- * Flags used when sending segments in tcp_output.  Basic flags (TH_RST,
+ * Flags used when sending segments in tcplp_output.  Basic flags (TH_RST,
  * TH_ACK,TH_SYN,TH_FIN) are totally determined by state, with the proviso
  * that TH_FIN is sent only if all data queued for output is included in the
  * segment.

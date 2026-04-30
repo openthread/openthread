@@ -29,12 +29,19 @@
 add_library(openthread-mtd)
 
 target_compile_definitions(openthread-mtd PRIVATE
+    OPENTHREAD_FTD=0
     OPENTHREAD_MTD=1
+    OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-mtd PRIVATE
     ${OT_CFLAGS}
+    -Wundef
 )
+
+if(APPLE)
+    target_compile_options(openthread-mtd PRIVATE -Wimplicit-int-conversion)
+endif()
 
 target_include_directories(openthread-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
@@ -47,6 +54,4 @@ target_link_libraries(openthread-mtd
         ot-config
 )
 
-if(NOT OT_EXCLUDE_TCPLP_LIB)
-    target_link_libraries(openthread-mtd PRIVATE tcplp-mtd)
-endif()
+target_link_libraries(openthread-mtd PRIVATE tcplp-mtd)

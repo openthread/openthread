@@ -143,9 +143,11 @@ class Summary(object):
     def _analyze_packets(self):
         for i, p in enumerate(self._pkts):
             extaddr, src = None, None
-            # each packet should be either wpan or eth
-            assert (p.wpan and not p.eth) or (p.eth and not p.wpan)
+            # each packet should be either wpan, eth or raw ipv6
+            assert not (p.wpan and p.eth)
+
             if p.wpan:
+
                 # it is a 802.15.4 packet
                 extaddr = p.wpan.src64
 

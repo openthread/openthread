@@ -89,13 +89,16 @@ exit:
 
 uint16_t StringLength(const char *aString, uint16_t aMaxLength)
 {
-    uint16_t ret;
+    uint16_t ret = 0;
 
-    for (ret = 0; (ret < aMaxLength) && (aString[ret] != kNullChar); ret++)
+    VerifyOrExit(aString != nullptr);
+
+    for (; (ret < aMaxLength) && (aString[ret] != kNullChar); ret++)
     {
         // Empty loop.
     }
 
+exit:
     return ret;
 }
 
@@ -155,9 +158,71 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
     return (subLen > 0) && (len >= subLen) && (Match(&aString[len - subLen], aSubString, aMode) != kNoMatch);
 }
 
+bool StringMatch(const char *aFirstString, const char *aSecondString)
+{
+    return Match(aFirstString, aSecondString, kStringExactMatch) == kFullMatch;
+}
+
 bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode)
 {
     return Match(aFirstString, aSecondString, aMode) == kFullMatch;
+}
+
+Error StringCopy(char *aTargetBuffer, uint16_t aTargetSize, const char *aSource, StringEncodingCheck aEncodingCheck)
+{
+    Error    error = kErrorNone;
+    uint16_t length;
+
+    if (aSource == nullptr)
+    {
+        aTargetBuffer[0] = kNullChar;
+        ExitNow();
+    }
+
+    length = StringLength(aSource, aTargetSize);
+    VerifyOrExit(length < aTargetSize, error = kErrorInvalidArgs);
+
+    switch (aEncodingCheck)
+    {
+    case kStringNoEncodingCheck:
+        break;
+    case kStringCheckUtf8Encoding:
+        VerifyOrExit(IsValidUtf8String(aSource), error = kErrorParse);
+        break;
+    }
+
+    memcpy(aTargetBuffer, aSource, length + 1); // `+ 1` to also copy null char.
+
+exit:
+    return error;
+}
+
+Error StringParseUint8(const char *&aString, uint8_t &aUint8)
+{
+    return StringParseUint8(aString, aUint8, NumericLimits<uint8_t>::kMax);
+}
+
+Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue)
+{
+    Error       error = kErrorParse;
+    const char *cur   = aString;
+    uint16_t    value = 0;
+    uint8_t     digit;
+
+    while (ParseDigit(*cur, digit) == kErrorNone)
+    {
+        value *= 10;
+        value += digit;
+        VerifyOrExit(value <= aMaxValue, error = kErrorParse);
+        error = kErrorNone;
+        cur++;
+    }
+
+    aString = cur;
+    aUint8  = static_cast<uint8_t>(value);
+
+exit:
+    return error;
 }
 
 void StringConvertToLowercase(char *aString)
@@ -178,7 +243,7 @@ void StringConvertToUppercase(char *aString)
 
 char ToLowercase(char aChar)
 {
-    if ((aChar >= 'A') && (aChar <= 'Z'))
+    if (IsUppercase(aChar))
     {
         aChar += 'a' - 'A';
     }
@@ -188,12 +253,49 @@ char ToLowercase(char aChar)
 
 char ToUppercase(char aChar)
 {
-    if ((aChar >= 'a') && (aChar <= 'z'))
+    if (IsLowercase(aChar))
     {
         aChar -= 'a' - 'A';
     }
 
     return aChar;
+}
+
+bool IsDigit(char aChar) { return ('0' <= aChar && aChar <= '9'); }
+
+bool IsUppercase(char aChar) { return ('A' <= aChar && aChar <= 'Z'); }
+
+bool IsLowercase(char aChar) { return ('a' <= aChar && aChar <= 'z'); }
+
+Error ParseDigit(char aDigitChar, uint8_t &aValue)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsDigit(aDigitChar), error = kErrorInvalidArgs);
+    aValue = static_cast<uint8_t>(aDigitChar - '0');
+
+exit:
+    return error;
+}
+
+Error ParseHexDigit(char aHexChar, uint8_t &aValue)
+{
+    Error error = kErrorNone;
+
+    if (('A' <= aHexChar) && (aHexChar <= 'F'))
+    {
+        ExitNow(aValue = static_cast<uint8_t>(aHexChar - 'A' + 10));
+    }
+
+    if (('a' <= aHexChar) && (aHexChar <= 'f'))
+    {
+        ExitNow(aValue = static_cast<uint8_t>(aHexChar - 'a' + 10));
+    }
+
+    error = ParseDigit(aHexChar, aValue);
+
+exit:
+    return error;
 }
 
 const char *ToYesNo(bool aBool)
@@ -250,6 +352,26 @@ StringWriter &StringWriter::AppendHexBytes(const uint8_t *aBytes, uint16_t aLeng
     while (aLength--)
     {
         Append("%02x", *aBytes++);
+    }
+
+    return *this;
+}
+
+StringWriter &StringWriter::AppendHexBytesUppercase(const uint8_t *aBytes, uint16_t aLength)
+{
+    while (aLength--)
+    {
+        Append("%02X", *aBytes++);
+    }
+
+    return *this;
+}
+
+StringWriter &StringWriter::AppendCharMultipleTimes(char aChar, uint16_t aCount)
+{
+    while (aCount--)
+    {
+        Append("%c", aChar);
     }
 
     return *this;

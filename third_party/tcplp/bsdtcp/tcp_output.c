@@ -34,6 +34,7 @@
 
 #include "../tcplp.h"
 #include "tcp.h"
+#include "tcp_fastopen.h"
 #include "tcp_fsm.h"
 #include "tcp_var.h"
 #include "tcp_seq.h"
@@ -96,7 +97,7 @@ tcp_setpersist(struct tcpcb *tp)
  * Tcp output routine: figure out what should be sent and send it.
  */
 int
-tcp_output(struct tcpcb *tp)
+tcplp_output(struct tcpcb *tp)
 {
 	/*
 	 * samkumar: The biggest change in this function is in how outgoing
@@ -118,10 +119,24 @@ tcp_output(struct tcpcb *tp)
 	struct sackhole* p;
 	unsigned ipoptlen, optlen, hdrlen;
 	struct tcpopt to;
+	unsigned int wanted_cookie = 0;
+	unsigned int dont_sendalot = 0;
 	uint8_t opt[TCP_MAXOLEN];
 	uint32_t ticks = tcplp_sys_get_ticks();
 
 	/* samkumar: Code for TCP offload has been removed. */
+
+	/*
+	 * For TFO connections in SYN_SENT or SYN_RECEIVED,
+	 * only allow the initial SYN or SYN|ACK and those sent
+	 * by the retransmit timer.
+	 */
+	if (IS_FASTOPEN(tp->t_flags) &&
+	    ((tp->t_state == TCPS_SYN_SENT) ||
+	     (tp->t_state == TCPS_SYN_RECEIVED)) &&
+	    SEQ_GT(tp->snd_max, tp->snd_una) && /* initial SYN or SYN|ACK sent */
+	    (tp->snd_nxt != tp->snd_una))       /* not a retransmit */
+		return (0);
 
 	/*
 	 * Determine length of data that should be transmitted,
@@ -166,7 +181,7 @@ again:
 	 * to send out new data (when sendalot is 1), bypass this function.
 	 * If we retransmit in fast recovery mode, decrement snd_cwnd, since
 	 * we're replacing a (future) new transmission with a retransmission
-	 * now, and we previously incremented snd_cwnd in tcp_input().
+	 * now, and we previously incremented snd_cwnd in tcplp_input().
 	 */
 	/*
 	 * Still in sack recovery , reset rxmit flag to zero.
@@ -323,6 +338,13 @@ after_sack_rexmit:
 	if ((flags & TH_SYN) && SEQ_GT(tp->snd_nxt, tp->snd_una)) {
 		if (tp->t_state != TCPS_SYN_RECEIVED)
 			flags &= ~TH_SYN;
+		/*
+		 * When sending additional segments following a TFO SYN|ACK,
+		 * do not include the SYN bit.
+		 */
+		if (IS_FASTOPEN(tp->t_flags) &&
+		    (tp->t_state == TCPS_SYN_RECEIVED))
+			flags &= ~TH_SYN;
 		off--, len++;
 	}
 
@@ -336,6 +358,29 @@ after_sack_rexmit:
 		flags &= ~TH_FIN;
 	}
 
+	/*
+	 * On TFO sockets, ensure no data is sent in the following cases:
+	 *
+	 *  - When retransmitting SYN|ACK on a passively-created socket
+	 *
+	 *  - When retransmitting SYN on an actively created socket
+	 *
+	 *  - When sending a zero-length cookie (cookie request) on an
+	 *    actively created socket
+	 *
+	 *  - When the socket is in the CLOSED state (RST is being sent)
+	 */
+	/*
+	 * samkumar: I commented out the check to ensure no data is sent
+	 * on a TFO cookie request. As far as I am aware, this is still
+	 * compliant with the RFC.
+	 */
+	if (IS_FASTOPEN(tp->t_flags) &&
+	    (((flags & TH_SYN) && (tp->t_rxtshift > 0)) ||
+	     /*((tp->t_state == TCPS_SYN_SENT) &&
+	      (tp->t_tfo_client_cookie_len == 0)) ||*/
+	     (flags & TH_RST)))
+		len = 0;
 	if (len <= 0) {
 		/*
 		 * If FIN has been sent but not acked,
@@ -602,7 +647,7 @@ dontupdate:
 	    ((tp->t_flags & TF_SENTFIN) == 0 || tp->snd_nxt == tp->snd_una))
 		goto send;
 	/*
-	 * In SACK, it is possible for tcp_output to fail to send a segment
+	 * In SACK, it is possible for tcplp_output to fail to send a segment
 	 * after the retransmission timer has been turned off.  Make sure
 	 * that the retransmission timer is set.
 	 */
@@ -675,16 +720,52 @@ send:
 	 * We only have to care about SYN and established connection
 	 * segments.  Options for SYN-ACK segments are handled in TCP
 	 * syncache.
-	 * Sam: I've done away with the syncache. However, it seems that
-	 * the existing logic works fine for SYN-ACK as well
 	 */
+	/*
+	 * samkumar: I've done away with the syncache. However, it
+	 * seems that the existing logic works fine for SYN-ACK as
+	 * well.
+	 */
+	to.to_flags = 0;
 	if ((tp->t_flags & TF_NOOPT) == 0) {
-		to.to_flags = 0;
 		/* Maximum segment size. */
 		if (flags & TH_SYN) {
 			tp->snd_nxt = tp->iss;
 			to.to_mss = tcp_mssopt(tp);
 			to.to_flags |= TOF_MSS;
+
+			/*
+			 * On SYN or SYN|ACK transmits on TFO connections,
+			 * only include the TFO option if it is not a
+			 * retransmit, as the presence of the TFO option may
+			 * have caused the original SYN or SYN|ACK to have
+			 * been dropped by a middlebox.
+			 */
+			if (IS_FASTOPEN(tp->t_flags) &&
+			    (tp->t_rxtshift == 0)) {
+				if (tp->t_state == TCPS_SYN_RECEIVED) {
+					to.to_tfo_len = TCP_FASTOPEN_COOKIE_LEN;
+					to.to_tfo_cookie =
+					    (u_int8_t *)&tp->t_tfo_cookie.server;
+					to.to_flags |= TOF_FASTOPEN;
+					wanted_cookie = 1;
+				} else if (tp->t_state == TCPS_SYN_SENT) {
+					to.to_tfo_len =
+					    tp->t_tfo_client_cookie_len;
+					to.to_tfo_cookie =
+					    tp->t_tfo_cookie.client;
+					to.to_flags |= TOF_FASTOPEN;
+					wanted_cookie = 1;
+					/*
+					 * If we wind up having more data to
+					 * send with the SYN than can fit in
+					 * one segment, don't send any more
+					 * until the SYN|ACK comes back from
+					 * the other end.
+					 */
+					dont_sendalot = 1;
+				}
+			}
 		}
 		/* Window scaling. */
 		if ((flags & TH_SYN) && (tp->t_flags & TF_REQ_SCALE)) {
@@ -724,6 +805,13 @@ send:
 
 		/* Processing the options. */
 		hdrlen += optlen = tcp_addoptions(&to, opt);
+		/*
+		 * If we wanted a TFO option to be added, but it was unable
+		 * to fit, ensure no data is sent.
+		 */
+		if (IS_FASTOPEN(tp->t_flags) && wanted_cookie &&
+		    !(to.to_flags & TOF_FASTOPEN))
+			len = 0;
 	}
 	/*
 	 * samkumar: This used to be set to ip6_optlen(tp->t_inpcb), instead of 0,
@@ -746,6 +834,8 @@ send:
 		 */
 		len = tp->t_maxopd - optlen - ipoptlen;
 		sendalot = 1;
+		if (dont_sendalot)
+				sendalot = 0;
 	}
 	/*
 	 * samkumar: The else case of the above "if" statement would set tso to 0.
@@ -958,9 +1048,9 @@ send:
 	}
 
 	/*
-	 * samkumar: Make tcp_output reply with ECE flag in the SYN-ACK for
+	 * samkumar: Make tcplp_output reply with ECE flag in the SYN-ACK for
 	 * ECN-enabled connections. The existing code in FreeBSD didn't have to do
-	 * this, because it didn't use tcp_output to send the SYN-ACK; it
+	 * this, because it didn't use tcplp_output to send the SYN-ACK; it
 	 * constructed the SYN-ACK segment manually. Yet another consequnce of
 	 * removing the SYN cache...
 	 */
@@ -1192,7 +1282,7 @@ timer:
 			 * 3) A -> B: ACK for #2, 0 len packet
 			 *
 			 * In this case, A will not activate the persist timer,
-			 * because it chose to send a packet. Unless tcp_output
+			 * because it chose to send a packet. Unless tcplp_output
 			 * is called for some other reason (delayed ack timer,
 			 * another input packet from B, socket syscall), A will
 			 * not send zero window probes.
@@ -1451,6 +1541,25 @@ tcp_addoptions(struct tcpopt *to, uint8_t *optp)
 				sack++;
 			}
 			/* samkumar: Removed TCPSTAT_INC(tcps_sack_send_blocks); */
+			break;
+			}
+		case TOF_FASTOPEN:
+			{
+			int total_len;
+
+			/* XXX is there any point to aligning this option? */
+			total_len = TCPOLEN_FAST_OPEN_EMPTY + to->to_tfo_len;
+			if (TCP_MAXOLEN - optlen < total_len) {
+				to->to_flags &= ~TOF_FASTOPEN;
+				continue;
+			}
+			*optp++ = TCPOPT_FAST_OPEN;
+			*optp++ = total_len;
+			if (to->to_tfo_len > 0) {
+				bcopy(to->to_tfo_cookie, optp, to->to_tfo_len);
+				optp += to->to_tfo_len;
+			}
+			optlen += total_len;
 			break;
 			}
 		default:

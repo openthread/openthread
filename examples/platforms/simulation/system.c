@@ -36,6 +36,7 @@
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
@@ -44,10 +45,17 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+
+#include <openthread-select.h>
+#include <openthread-system.h>
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/toolchain.h>
+
+#include "simul_utils.h"
 
 uint32_t gNodeId = 1;
 
@@ -64,13 +72,13 @@ static void handleSignal(int aSignal)
 }
 
 /**
- * This enumeration defines the argument return values.
- *
+ * Defines the argument return values.
  */
 enum
 {
     OT_SIM_OPT_HELP               = 'h',
     OT_SIM_OPT_ENABLE_ENERGY_SCAN = 'E',
+    OT_SIM_OPT_LOCAL_INTERFACE    = 'L',
     OT_SIM_OPT_SLEEP_TO_TX        = 't',
     OT_SIM_OPT_TIME_SPEED         = 's',
     OT_SIM_OPT_LOG_FILE           = 'l',
@@ -84,6 +92,7 @@ static void PrintUsage(const char *aProgramName, int aExitCode)
             "    %s [Options] NodeId\n"
             "Options:\n"
             "    -h --help                  Display this usage information.\n"
+            "    -L --local-interface=val   The address or name of the netif to simulate Thread radio.\n"
             "    -E --enable-energy-scan    Enable energy scan capability.\n"
             "    -t --sleep-to-tx           Let radio support direct transition from sleep to TX with CSMA.\n"
             "    -s --time-speed=val        Speed up the time in simulation.\n"
@@ -106,6 +115,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
         {"enable-energy-scan", no_argument, 0, OT_SIM_OPT_ENABLE_ENERGY_SCAN},
         {"sleep-to-tx", no_argument, 0, OT_SIM_OPT_SLEEP_TO_TX},
         {"time-speed", required_argument, 0, OT_SIM_OPT_TIME_SPEED},
+        {"local-interface", required_argument, 0, OT_SIM_OPT_LOCAL_INTERFACE},
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
         {"log-file", required_argument, 0, OT_SIM_OPT_LOG_FILE},
 #endif
@@ -113,9 +123,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
     };
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
-    static const char options[] = "Ehts:l:";
+    static const char options[] = "Ehts:L:l:";
 #else
-    static const char options[] = "Ehts:";
+    static const char options[] = "Ehts:L:";
 #endif
 
     if (gPlatformPseudoResetWasRequested)
@@ -148,6 +158,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
             break;
         case OT_SIM_OPT_SLEEP_TO_TX:
             gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+            break;
+        case OT_SIM_OPT_LOCAL_INTERFACE:
+            gLocalInterface = optarg;
             break;
         case OT_SIM_OPT_TIME_SPEED:
             speedUpFactor = (uint32_t)strtol(optarg, &endptr, 10);
@@ -189,6 +202,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelInit(speedUpFactor);
 #endif
+#if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfInit();
+#endif
     platformRandomInit();
 }
 
@@ -200,53 +216,101 @@ void otSysDeinit(void)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelDeinit();
 #endif
+#if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfDeinit();
+#endif
     platformLoggingDeinit();
 }
 
 void otSysProcessDrivers(otInstance *aInstance)
 {
-    fd_set         read_fds;
-    fd_set         write_fds;
-    fd_set         error_fds;
-    int            max_fd = -1;
+    fd_set         readFdSet;
+    fd_set         writeFdSet;
+    fd_set         errorFdSet;
+    int            maxFd = -1;
     struct timeval timeout;
-    int            rval;
 
-    FD_ZERO(&read_fds);
-    FD_ZERO(&write_fds);
-    FD_ZERO(&error_fds);
+    FD_ZERO(&readFdSet);
+    FD_ZERO(&writeFdSet);
+    FD_ZERO(&errorFdSet);
 
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    platformAlarmUpdateTimeout(&timeout);
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+    otSysUpdateEvents(aInstance, &maxFd, &readFdSet, &writeFdSet, &errorFdSet, &timeout);
+
+    if (select(maxFd + 1, &readFdSet, &writeFdSet, &errorFdSet, &timeout) < 0)
+    {
+        if (errno != EINTR)
+        {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+
+        FD_ZERO(&readFdSet);
+        FD_ZERO(&writeFdSet);
+        FD_ZERO(&errorFdSet);
+    }
+
+    otSysProcessEvents(aInstance, &readFdSet, &writeFdSet, &errorFdSet);
+}
+
+void otSysUpdateEvents(otInstance     *aInstance,
+                       int            *aMaxFd,
+                       fd_set         *aReadFdSet,
+                       fd_set         *aWriteFdSet,
+                       fd_set         *aErrorFdSet,
+                       struct timeval *aTimeout)
+{
+    OT_UNUSED_VARIABLE(aErrorFdSet);
+
+#if OPENTHREAD_SIMULATION_UART_ENABLE
+    platformUartUpdateFdSet(aReadFdSet, aWriteFdSet, aErrorFdSet, aMaxFd);
+#endif
+    platformAlarmUpdateTimeout(aTimeout);
+    platformRadioUpdateFdSet(aReadFdSet, aWriteFdSet, aTimeout, aMaxFd);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+    platformTrelUpdateFdSet(aReadFdSet, aWriteFdSet, aTimeout, aMaxFd);
+#endif
+#if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfUpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd);
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
+    platformMdnsSocketUpdateFdSet(aReadFdSet, aMaxFd);
 #endif
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    platformBleUpdateFdSet(aReadFdSet, aWriteFdSet, aTimeout, aMaxFd);
+#endif
     if (otTaskletsArePending(aInstance))
     {
-        timeout.tv_sec  = 0;
-        timeout.tv_usec = 0;
+        aTimeout->tv_sec  = 0;
+        aTimeout->tv_usec = 0;
     }
+}
 
-    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+void otSysProcessEvents(otInstance   *aInstance,
+                        const fd_set *aReadFdSet,
+                        const fd_set *aWriteFdSet,
+                        const fd_set *aErrorFdSet)
+{
+    OT_UNUSED_VARIABLE(aErrorFdSet);
 
-    if (rval >= 0)
-    {
-        platformUartProcess();
-        platformRadioProcess(aInstance, &read_fds, &write_fds);
-    }
-    else if (errno != EINTR)
-    {
-        perror("select");
-        exit(EXIT_FAILURE);
-    }
+#if OPENTHREAD_SIMULATION_UART_ENABLE
+    platformUartProcess();
+#endif
+    platformRadioProcess(aInstance, aReadFdSet, aWriteFdSet);
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    platformBleProcess(aInstance, aReadFdSet, aWriteFdSet);
+#endif
 
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelProcess(aInstance, &read_fds, &write_fds);
+    platformTrelProcess(aInstance, aReadFdSet, aWriteFdSet);
 #endif
-
+#if OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfProcess(aInstance, aReadFdSet, aWriteFdSet);
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SOCKET_IMPLEMENT_POSIX
+    platformMdnsSocketProcess(aInstance, aReadFdSet);
+#endif
     if (gTerminate)
     {
         exit(0);

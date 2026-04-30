@@ -26,6 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+add_library(ot-lib-config INTERFACE)
+
+set(OT_LIB_CONFIG "" CACHE STRING "Lib project-specific config header file")
+if (OT_LIB_CONFIG)
+    target_compile_definitions(ot-lib-config INTERFACE "OPENTHREAD_PROJECT_LIB_CONFIG_FILE=\"${OT_LIB_CONFIG}\"")
+    message(STATUS "OT_LIB_CONFIG=\"${OT_LIB_CONFIG}\"")
+endif()
+
 add_subdirectory(hdlc)
 add_subdirectory(platform)
 add_subdirectory(spinel)

@@ -33,20 +33,7 @@
 
 #include "ip6_address.hpp"
 
-#include <stdio.h>
-
-#include "common/array.hpp"
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/encoding.hpp"
-#include "common/instance.hpp"
-#include "common/num_utils.hpp"
-#include "common/numeric_limits.hpp"
-#include "common/random.hpp"
-#include "net/ip4_types.hpp"
-#include "net/netif.hpp"
-
-using ot::Encoding::BigEndian::HostSwap32;
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -61,6 +48,17 @@ Error NetworkPrefix::GenerateRandomUla(void)
     return Random::Crypto::FillBuffer(&m8[1], kSize - 1);
 }
 
+Error NetworkPrefix::SetFrom(const Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aPrefix.GetLength() == kLength, error = kErrorInvalidArgs);
+    memcpy(m8, aPrefix.GetBytes(), kSize);
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // Prefix methods
 
@@ -72,7 +70,8 @@ void Prefix::Set(const uint8_t *aPrefix, uint8_t aLength)
 
 bool Prefix::IsLinkLocal(void) const
 {
-    return (mLength >= 10) && ((mPrefix.mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80));
+    return (mLength >= 10) &&
+           ((mPrefix.mFields.m16[0] & BigEndian::HostSwap16(0xffc0)) == BigEndian::HostSwap16(0xfe80));
 }
 
 bool Prefix::IsMulticast(void) const { return (mLength >= 8) && (mPrefix.mFields.m8[0] == 0xff); }
@@ -81,34 +80,51 @@ bool Prefix::IsUniqueLocal(void) const { return (mLength >= 7) && ((mPrefix.mFie
 
 bool Prefix::IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const
 {
-    return (mLength == aPrefixLength) && (MatchLength(GetBytes(), aPrefixBytes, GetBytesSize()) >= mLength);
+    return (mLength == aPrefixLength) && (CountMatchingBits(GetBytes(), aPrefixBytes, mLength) >= mLength);
 }
 
 bool Prefix::ContainsPrefix(const Prefix &aSubPrefix) const
 {
     return (mLength >= aSubPrefix.mLength) &&
-           (MatchLength(GetBytes(), aSubPrefix.GetBytes(), aSubPrefix.GetBytesSize()) >= aSubPrefix.GetLength());
+           (CountMatchingBits(GetBytes(), aSubPrefix.GetBytes(), aSubPrefix.GetLength()) >= aSubPrefix.GetLength());
 }
 
 bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
 {
     return (mLength >= NetworkPrefix::kLength) &&
-           (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
+           (CountMatchingBits(GetBytes(), aSubPrefix.m8, NetworkPrefix::kLength) >= NetworkPrefix::kLength);
+}
+
+void Prefix::Tidy(void)
+{
+    uint8_t byteLength      = GetBytesSize();
+    uint8_t lastByteBitMask = static_cast<uint8_t>(~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1));
+
+    if (byteLength != 0)
+    {
+        mPrefix.mFields.m8[byteLength - 1] &= lastByteBitMask;
+    }
+
+    for (uint16_t i = byteLength; i < GetArrayLength(mPrefix.mFields.m8); i++)
+    {
+        mPrefix.mFields.m8[i] = 0;
+    }
 }
 
 bool Prefix::operator==(const Prefix &aOther) const
 {
-    return (mLength == aOther.mLength) && (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());
+    return (mLength == aOther.mLength) &&
+           (CountMatchingBits(GetBytes(), aOther.GetBytes(), GetLength()) >= GetLength());
 }
 
 bool Prefix::operator<(const Prefix &aOther) const
 {
-    bool    isSmaller;
-    uint8_t minLength;
-    uint8_t matchedLength;
+    bool     isSmaller;
+    uint8_t  minLength;
+    uint16_t matchedLength;
 
     minLength     = Min(GetLength(), aOther.GetLength());
-    matchedLength = MatchLength(GetBytes(), aOther.GetBytes(), SizeForLength(minLength));
+    matchedLength = CountMatchingBits(GetBytes(), aOther.GetBytes(), minLength);
 
     if (matchedLength >= minLength)
     {
@@ -116,45 +132,40 @@ bool Prefix::operator<(const Prefix &aOther) const
         ExitNow();
     }
 
-    isSmaller = GetBytes()[matchedLength / CHAR_BIT] < aOther.GetBytes()[matchedLength / CHAR_BIT];
+    isSmaller = GetBytes()[matchedLength / kBitsPerByte] < aOther.GetBytes()[matchedLength / kBitsPerByte];
 
 exit:
     return isSmaller;
-}
-
-uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxSize)
-{
-    uint8_t matchedLength = 0;
-
-    OT_ASSERT(aMaxSize <= Address::kSize);
-
-    for (uint8_t i = 0; i < aMaxSize; i++)
-    {
-        uint8_t diff = aPrefixA[i] ^ aPrefixB[i];
-
-        if (diff == 0)
-        {
-            matchedLength += CHAR_BIT;
-        }
-        else
-        {
-            while ((diff & 0x80) == 0)
-            {
-                matchedLength++;
-                diff <<= 1;
-            }
-
-            break;
-        }
-    }
-
-    return matchedLength;
 }
 
 bool Prefix::IsValidNat64PrefixLength(uint8_t aLength)
 {
     return (aLength == 32) || (aLength == 40) || (aLength == 48) || (aLength == 56) || (aLength == 64) ||
            (aLength == 96);
+}
+
+Error Prefix::FromString(const char *aString)
+{
+    constexpr char kSlashChar = '/';
+
+    Error       error = kErrorParse;
+    const char *cur;
+
+    VerifyOrExit(aString != nullptr);
+
+    cur = StringFind(aString, kSlashChar);
+    VerifyOrExit(cur != nullptr);
+
+    SuccessOrExit(AsCoreType(&mPrefix).ParseFrom(aString, kSlashChar));
+
+    cur++;
+    SuccessOrExit(StringParseUint8(cur, mLength, kMaxLength));
+    VerifyOrExit(*cur == kNullChar);
+
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 Prefix::InfoString Prefix::ToString(void) const
@@ -175,9 +186,11 @@ void Prefix::ToString(char *aBuffer, uint16_t aSize) const
 
 void Prefix::ToString(StringWriter &aWriter) const
 {
-    uint8_t sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
+    uint8_t sizeInUint16 = DivideAndRoundUp<uint8_t>(GetBytesSize(), sizeof(uint16_t));
+    Prefix  tidyPrefix   = *this;
 
-    AsCoreType(&mPrefix).AppendHexWords(aWriter, sizeInUint16);
+    tidyPrefix.Tidy();
+    AsCoreType(&tidyPrefix.mPrefix).AppendHexWords(aWriter, sizeInUint16);
 
     if (GetBytesSize() < Address::kSize - 1)
     {
@@ -208,11 +221,11 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
     // | 1111110111...111 | anycast ID |
     // +------------------+------------+
 
-    return (mFields.m32[0] == HostSwap32(0xfdffffff) && mFields.m16[2] == HostSwap16(0xffff) && mFields.m8[6] == 0xff &&
-            mFields.m8[7] >= 0x80);
+    return (mFields.m32[0] == BigEndian::HostSwap32(0xfdffffff) && mFields.m16[2] == BigEndian::HostSwap16(0xffff) &&
+            mFields.m8[6] == 0xff && mFields.m8[7] >= 0x80);
 }
 
-void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::FillBuffer(mFields.m8, kSize)); }
+void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::Fill(*this)); }
 
 void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
@@ -225,30 +238,18 @@ void InterfaceIdentifier::SetFromExtAddress(const Mac::ExtAddress &aExtAddress)
     addr.CopyTo(mFields.m8);
 }
 
-void InterfaceIdentifier::ConvertToExtAddress(Mac::ExtAddress &aExtAddress) const
-{
-    aExtAddress.Set(mFields.m8);
-    aExtAddress.ToggleLocal();
-}
-
-void InterfaceIdentifier::ConvertToMacAddress(Mac::Address &aMacAddress) const
-{
-    aMacAddress.SetExtended(mFields.m8);
-    aMacAddress.GetExtended().ToggleLocal();
-}
-
 void InterfaceIdentifier::SetToLocator(uint16_t aLocator)
 {
     // Locator IID pattern `0000:00ff:fe00:xxxx`
-    mFields.m32[0] = HostSwap32(0x000000ff);
-    mFields.m16[2] = HostSwap16(0xfe00);
-    mFields.m16[3] = HostSwap16(aLocator);
+    mFields.m32[0] = BigEndian::HostSwap32(0x000000ff);
+    mFields.m16[2] = BigEndian::HostSwap16(0xfe00);
+    mFields.m16[3] = BigEndian::HostSwap16(aLocator);
 }
 
 bool InterfaceIdentifier::IsLocator(void) const
 {
     // Locator IID pattern 0000:00ff:fe00:xxxx
-    return (mFields.m32[0] == HostSwap32(0x000000ff) && mFields.m16[2] == HostSwap16(0xfe00));
+    return (mFields.m32[0] == BigEndian::HostSwap32(0x000000ff) && mFields.m16[2] == BigEndian::HostSwap16(0xfe00));
 }
 
 bool InterfaceIdentifier::IsRoutingLocator(void) const
@@ -266,7 +267,7 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
 {
     uint16_t locator = GetLocator();
 
-    return (IsLocator() && (locator >= Mle::kAloc16ServiceStart) && (locator <= Mle::kAloc16ServiceEnd));
+    return (IsLocator() && Mle::Aloc16::IsForService(locator));
 }
 
 void InterfaceIdentifier::ApplyPrefix(const Prefix &aPrefix)
@@ -297,59 +298,57 @@ bool Address::IsUnspecified(void) const
 
 bool Address::IsLoopback(void) const
 {
-    return (mFields.m32[0] == 0 && mFields.m32[1] == 0 && mFields.m32[2] == 0 && mFields.m32[3] == HostSwap32(1));
+    return (mFields.m32[0] == 0 && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
+            mFields.m32[3] == BigEndian::HostSwap32(1));
 }
 
-bool Address::IsLinkLocal(void) const { return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80); }
+bool Address::IsLinkLocalUnicast(void) const
+{
+    return (mFields.m16[0] & BigEndian::HostSwap16(0xffc0)) == BigEndian::HostSwap16(0xfe80);
+}
 
 void Address::SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
 {
-    mFields.m32[0] = HostSwap32(0xfe800000);
+    mFields.m32[0] = BigEndian::HostSwap32(0xfe800000);
     mFields.m32[1] = 0;
     GetIid().SetFromExtAddress(aExtAddress);
 }
 
 void Address::SetToLinkLocalAddress(const InterfaceIdentifier &aIid)
 {
-    mFields.m32[0] = HostSwap32(0xfe800000);
+    mFields.m32[0] = BigEndian::HostSwap32(0xfe800000);
     mFields.m32[1] = 0;
     SetIid(aIid);
 }
 
 bool Address::IsLinkLocalMulticast(void) const { return IsMulticast() && (GetScope() == kLinkLocalScope); }
 
-bool Address::IsLinkLocalAllNodesMulticast(void) const { return (*this == GetLinkLocalAllNodesMulticast()); }
-
-void Address::SetToLinkLocalAllNodesMulticast(void) { *this = GetLinkLocalAllNodesMulticast(); }
-
-bool Address::IsLinkLocalAllRoutersMulticast(void) const { return (*this == GetLinkLocalAllRoutersMulticast()); }
-
-void Address::SetToLinkLocalAllRoutersMulticast(void) { *this = GetLinkLocalAllRoutersMulticast(); }
+bool Address::IsLinkLocalUnicastOrMulticast(void) const { return IsLinkLocalUnicast() || IsLinkLocalMulticast(); }
 
 bool Address::IsRealmLocalMulticast(void) const { return IsMulticast() && (GetScope() == kRealmLocalScope); }
 
 bool Address::IsMulticastLargerThanRealmLocal(void) const { return IsMulticast() && (GetScope() > kRealmLocalScope); }
 
-bool Address::IsRealmLocalAllNodesMulticast(void) const { return (*this == GetRealmLocalAllNodesMulticast()); }
+bool Address::IsIp4Mapped(void) const
+{
+    return (mFields.m32[0] == 0) && (mFields.m32[1] == 0) && (mFields.m32[2] == BigEndian::HostSwap32(0xffff));
+}
 
-void Address::SetToRealmLocalAllNodesMulticast(void) { *this = GetRealmLocalAllNodesMulticast(); }
-
-bool Address::IsRealmLocalAllRoutersMulticast(void) const { return (*this == GetRealmLocalAllRoutersMulticast()); }
-
-void Address::SetToRealmLocalAllRoutersMulticast(void) { *this = GetRealmLocalAllRoutersMulticast(); }
-
-bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRealmLocalAllMplForwarders()); }
-
-void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
+void Address::SetToIp4Mapped(const Ip4::Address &aIp4Address)
+{
+    Clear();
+    mFields.m16[5] = 0xffff;
+    memcpy(&mFields.m8[12], aIp4Address.GetBytes(), sizeof(Ip4::Address));
+}
 
 bool Address::MatchesPrefix(const Prefix &aPrefix) const
 {
-    return Prefix::MatchLength(mFields.m8, aPrefix.GetBytes(), aPrefix.GetBytesSize()) >= aPrefix.GetLength();
+    return CountMatchingBits(mFields.m8, aPrefix.GetBytes(), aPrefix.GetLength()) >= aPrefix.GetLength();
 }
 
 bool Address::MatchesPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
 {
-    return Prefix::MatchLength(mFields.m8, aPrefix, Prefix::SizeForLength(aPrefixLength)) >= aPrefixLength;
+    return CountMatchingBits(mFields.m8, aPrefix, aPrefixLength) >= aPrefixLength;
 }
 
 void Address::SetPrefix(const NetworkPrefix &aNetworkPrefix) { mFields.mComponents.mNetworkPrefix = aNetworkPrefix; }
@@ -362,8 +361,8 @@ void Address::CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
     // the case where `aNumBits` may not be a multiple of 8. It leaves the
     // remaining bits beyond `aNumBits` in `aDst` unchanged.
 
-    uint8_t numBytes  = aNumBits / CHAR_BIT;
-    uint8_t extraBits = aNumBits % CHAR_BIT;
+    uint8_t numBytes  = aNumBits / kBitsPerByte;
+    uint8_t extraBits = aNumBits % kBitsPerByte;
 
     memcpy(aDst, aSrc, numBytes);
 
@@ -376,7 +375,7 @@ void Address::CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
         // ((0x80 >> 2) - 1) = (0b0010_0000 - 1) = 0b0001_1111
 
         aDst[numBytes] &= mask;
-        aDst[numBytes] |= (aSrc[numBytes] & ~mask);
+        aDst[numBytes] |= (aSrc[numBytes] & static_cast<uint8_t>(~mask));
     }
 }
 
@@ -400,7 +399,7 @@ uint8_t Address::GetScope(void) const
     {
         rval = mFields.m8[1] & 0xf;
     }
-    else if (IsLinkLocal())
+    else if (IsLinkLocalUnicast())
     {
         rval = kLinkLocalScope;
     }
@@ -418,32 +417,7 @@ uint8_t Address::GetScope(void) const
 
 uint8_t Address::PrefixMatch(const Address &aOther) const
 {
-    return Prefix::MatchLength(mFields.m8, aOther.mFields.m8, sizeof(Address));
-}
-
-bool Address::MatchesFilter(TypeFilter aFilter) const
-{
-    bool matches = true;
-
-    switch (aFilter)
-    {
-    case kTypeAny:
-        break;
-
-    case kTypeUnicast:
-        matches = !IsUnspecified() && !IsMulticast();
-        break;
-
-    case kTypeMulticast:
-        matches = IsMulticast();
-        break;
-
-    case kTypeMulticastLargerThanRealmLocal:
-        matches = IsMulticastLargerThanRealmLocal();
-        break;
-    }
-
-    return matches;
+    return static_cast<uint8_t>(CountMatchingBits(mFields.m8, aOther.mFields.m8, BitSizeOf(Address)));
 }
 
 void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
@@ -477,7 +451,7 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
     Clear();
     SetPrefix(aPrefix);
 
-    ip6Index = aPrefix.GetLength() / CHAR_BIT;
+    ip6Index = aPrefix.GetLength() / kBitsPerByte;
 
     for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
     {
@@ -490,12 +464,13 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
     }
 }
 
-Error Address::FromString(const char *aString)
+Error Address::FromString(const char *aString) { return ParseFrom(aString, kNullChar); }
+
+Error Address::ParseFrom(const char *aString, char aTerminatorChar)
 {
     constexpr uint8_t kInvalidIndex = 0xff;
     constexpr char    kColonChar    = ':';
     constexpr char    kDotChar      = '.';
-    constexpr char    kNullChar     = '\0';
 
     Error   error      = kErrorParse;
     uint8_t index      = 0;
@@ -513,7 +488,7 @@ Error Address::FromString(const char *aString)
         colonIndex = index;
     }
 
-    while (*aString != kNullChar)
+    while (*aString != aTerminatorChar)
     {
         const char *start = aString;
         uint32_t    value = 0;
@@ -522,22 +497,9 @@ Error Address::FromString(const char *aString)
 
         while (true)
         {
-            char    c = *aString;
             uint8_t digit;
 
-            if (('A' <= c) && (c <= 'F'))
-            {
-                digit = static_cast<uint8_t>(c - 'A' + 10);
-            }
-            else if (('a' <= c) && (c <= 'f'))
-            {
-                digit = static_cast<uint8_t>(c - 'a' + 10);
-            }
-            else if (('0' <= c) && (c <= '9'))
-            {
-                digit = static_cast<uint8_t>(c - '0');
-            }
-            else
+            if (ParseHexDigit(*aString, digit) != kErrorNone)
             {
                 break;
             }
@@ -560,10 +522,10 @@ Error Address::FromString(const char *aString)
             break;
         }
 
-        VerifyOrExit((*aString == kColonChar) || (*aString == kNullChar));
+        VerifyOrExit((*aString == kColonChar) || (*aString == aTerminatorChar));
 
         VerifyOrExit(index < endIndex);
-        mFields.m16[index++] = HostSwap16(static_cast<uint16_t>(value));
+        mFields.m16[index++] = BigEndian::HostSwap16(static_cast<uint16_t>(value));
 
         if (*aString == kColonChar)
         {
@@ -594,7 +556,7 @@ Error Address::FromString(const char *aString)
     {
         Ip4::Address ip4Addr;
 
-        SuccessOrExit(error = ip4Addr.FromString(aString));
+        SuccessOrExit(error = ip4Addr.FromString(aString, aTerminatorChar));
         memcpy(GetArrayEnd(mFields.m8) - Ip4::Address::kSize, ip4Addr.GetBytes(), Ip4::Address::kSize);
     }
 
@@ -636,7 +598,7 @@ void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
             aWriter.Append(":");
         }
 
-        aWriter.Append("%x", HostSwap16(mFields.m16[index]));
+        aWriter.Append("%x", BigEndian::HostSwap16(mFields.m16[index]));
     }
 }
 

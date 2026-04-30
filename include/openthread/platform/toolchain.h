@@ -51,7 +51,6 @@
  *    @endcode
  *
  * @{
- *
  */
 
 #ifndef OPENTHREAD_PLATFORM_TOOLCHAIN_H_
@@ -73,7 +72,6 @@ extern "C" {
  *       as attribute [[nodiscard]]).
  * @note To suppress the 'unused-result' warning/error, please use the
  *       '-Wno-unused-result' compiler option.
- *
  */
 #if defined(__clang__) && (__clang_major__ >= 4 || (__clang_major__ >= 3 && __clang_minor__ >= 9))
 #define OT_MUST_USE_RESULT __attribute__((warn_unused_result))
@@ -85,7 +83,6 @@ extern "C" {
  * @def OT_TOOL_PACKED_BEGIN
  *
  * Compiler-specific indication that a class or struct must be byte packed.
- *
  */
 
 /**
@@ -93,30 +90,27 @@ extern "C" {
  *
  * Indicate to the compiler a nested struct or union to be packed
  * within byte packed class or struct.
- *
  */
 
 /**
  * @def OT_TOOL_PACKED_END
  *
  * Compiler-specific indication at the end of a byte packed class or struct.
- *
  */
 
 /**
  * @def OT_TOOL_WEAK
  *
  * Compiler-specific weak symbol modifier.
- *
  */
 
 /**
  * @def OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK
  *
- * This macro specifies that a function or method takes `printf` style arguments and should be type-checked against
+ * Specifies that a function or method takes `printf` style arguments and should be type-checked against
  * a format string.
  *
- * This macro must be added after the function/method declaration. For example:
+ * Must be added after the function/method declaration. For example:
  *
  *    `void MyPrintf(void *aObject, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);`
  *
@@ -125,7 +119,6 @@ extern "C" {
  *
  * @param[in] aFmtIndex    The argument index of the format string.
  * @param[in] aStartIndex  The argument index of the first argument to check against the format string.
- *
  */
 
 // =========== TOOLCHAIN SELECTION : START ===========
@@ -188,14 +181,12 @@ extern "C" {
  * @def OT_UNUSED_VARIABLE
  *
  * Suppress unused variable warning in specific toolchains.
- *
  */
 
 /**
  * @def OT_UNREACHABLE_CODE
  *
  * Suppress Unreachable code warning in specific toolchains.
- *
  */
 
 #if defined(__ICCARM__)
@@ -288,7 +279,6 @@ extern "C" {
  * @def OT_FALL_THROUGH
  *
  * Suppress fall through warning in specific compiler.
- *
  */
 #if defined(__cplusplus) && (__cplusplus >= 201703L)
 #define OT_FALL_THROUGH [[fallthrough]]
@@ -303,9 +293,25 @@ extern "C" {
     } while (false) /* fallthrough */
 #endif
 
+// A known false positive warning occurs on some GCC toolchains,
+// resulting in "error: writing x byte into a region of size 0". The following
+// macros are used to suppress this warning/error in specific code blocks.
+
+#if defined(__GNUC__) && (__GNUC__ >= 7)
+
+#define OT_SUPPRESS_GCC_STRING_OP_BEGIN \
+    _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic warning \"-Wstringop-overflow=0\"")
+#define OT_SUPPRESS_GCC_STRING_OP_END _Pragma("GCC diagnostic pop")
+
+#else
+
+#define OT_SUPPRESS_GCC_STRING_OP_BEGIN
+#define OT_SUPPRESS_GCC_STRING_OP_END
+
+#endif
+
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

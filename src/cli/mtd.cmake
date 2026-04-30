@@ -30,11 +30,14 @@ add_library(openthread-cli-mtd)
 
 target_compile_definitions(openthread-cli-mtd
     PRIVATE
+        OPENTHREAD_FTD=0
         OPENTHREAD_MTD=1
+        OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-cli-mtd PRIVATE
     ${OT_CFLAGS}
+    -Wundef
 )
 
 target_include_directories(openthread-cli-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
@@ -49,3 +52,7 @@ target_link_libraries(openthread-cli-mtd
         ot-config-mtd
         ot-config
 )
+
+if(OT_CLI_VENDOR_TARGET)
+    target_link_libraries(openthread-cli-mtd PRIVATE ${OT_CLI_VENDOR_TARGET})
+endif()

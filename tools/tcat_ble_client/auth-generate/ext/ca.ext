@@ -1,0 +1,9 @@
+# This file contains X509v3 extension definitions for OpenSSL
+# certificate generation. 
+
+[ ca ]
+subjectAltName = email:ca-admin@example.org
+keyUsage = critical, digitalSignature, keyCertSign, cRLSign
+basicConstraints = critical,CA:TRUE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = none

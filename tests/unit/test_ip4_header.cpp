@@ -31,8 +31,6 @@
 
 #include "test_util.hpp"
 
-using ot::Encoding::BigEndian::ReadUint16;
-
 namespace ot {
 namespace Ip4 {
 
@@ -49,6 +47,17 @@ void VerifyEcnDscp(const Header &aHeader, uint8_t aDscp, Ecn aEcn)
 
 void TestIp4Header(void)
 {
+    static constexpr uint8_t kHeaderVersionIhlOffset         = 0;
+    static constexpr uint8_t kHeaderTrafficClassOffset       = 1;
+    static constexpr uint8_t kHeaderTotalLengthOffset        = 2;
+    static constexpr uint8_t kHeaderIdentificationOffset     = 4;
+    static constexpr uint8_t kHeaderFlagsFragmentOffset      = 6;
+    static constexpr uint8_t kHeaderTtlOffset                = 8;
+    static constexpr uint8_t kHeaderProtocolOffset           = 9;
+    static constexpr uint8_t kHeaderHeaderChecksumOffset     = 10;
+    static constexpr uint8_t kHeaderSourceAddressOffset      = 12;
+    static constexpr uint8_t kHeaderDestinationAddressOffset = 16;
+
     static constexpr uint16_t kTotalLength = 84;
     static constexpr uint8_t  kTtl         = 64;
 
@@ -69,8 +78,9 @@ void TestIp4Header(void)
 
     header.Clear();
     header.InitVersionIhl();
+    header.SetTotalLength(header.GetHeaderLength());
     VerifyOrQuit(header.IsValid());
-    VerifyOrQuit(header.GetTotalLength() == 0);
+    VerifyOrQuit(header.GetTotalLength() == sizeof(Header));
     VerifyOrQuit(header.GetProtocol() == 0);
     VerifyOrQuit(header.GetTtl() == 0);
     VerifyOrQuit(header.GetSource().mFields.m32 == 0);
@@ -91,12 +101,13 @@ void TestIp4Header(void)
 
     // Verify the offsets to different fields.
 
-    VerifyOrQuit(ReadUint16(headerBytes + Header::kTotalLengthOffset) == kTotalLength, "kTotalLength is incorrect");
-    VerifyOrQuit(headerBytes[Header::kProtocolOffset] == kProtoIcmp, "kProtocol is incorrect");
-    VerifyOrQuit(headerBytes[Header::kTtlOffset] == kTtl, "kTtl is incorrect");
-    VerifyOrQuit(memcmp(&headerBytes[Header::kSourceAddressOffset], &source, sizeof(source)) == 0,
+    VerifyOrQuit(BigEndian::ReadUint16(headerBytes + kHeaderTotalLengthOffset) == kTotalLength,
+                 "kTotalLength is incorrect");
+    VerifyOrQuit(headerBytes[kHeaderProtocolOffset] == kProtoIcmp, "kProtocol is incorrect");
+    VerifyOrQuit(headerBytes[kHeaderTtlOffset] == kTtl, "kTtl is incorrect");
+    VerifyOrQuit(memcmp(&headerBytes[kHeaderSourceAddressOffset], &source, sizeof(source)) == 0,
                  "Source address is incorrect");
-    VerifyOrQuit(memcmp(&headerBytes[Header::kDestinationAddressOffset], &destination, sizeof(destination)) == 0,
+    VerifyOrQuit(memcmp(&headerBytes[kHeaderDestinationAddressOffset], &destination, sizeof(destination)) == 0,
                  "Destination address is incorrect");
 
     for (uint8_t dscp : kDscps)
@@ -112,13 +123,14 @@ void TestIp4Header(void)
 
     memcpy(&header, kExampleIp4Header, sizeof(header));
     VerifyOrQuit(header.IsValid());
-    VerifyOrQuit(memcmp(&headerBytes[Header::kSourceAddressOffset], &source, sizeof(source)) == 0,
+    VerifyOrQuit(memcmp(&headerBytes[kHeaderSourceAddressOffset], &source, sizeof(source)) == 0,
                  "Source address is incorrect");
-    VerifyOrQuit(memcmp(&headerBytes[Header::kDestinationAddressOffset], &destination, sizeof(destination)) == 0,
+    VerifyOrQuit(memcmp(&headerBytes[kHeaderDestinationAddressOffset], &destination, sizeof(destination)) == 0,
                  "Destination address is incorrect");
-    VerifyOrQuit(ReadUint16(headerBytes + Header::kTotalLengthOffset) == kTotalLength, "kTotalLength is incorrect");
-    VerifyOrQuit(headerBytes[Header::kProtocolOffset] == kProtoIcmp, "kProtocol is incorrect");
-    VerifyOrQuit(headerBytes[Header::kTtlOffset] == kTtl, "kTtl is incorrect");
+    VerifyOrQuit(BigEndian::ReadUint16(headerBytes + kHeaderTotalLengthOffset) == kTotalLength,
+                 "kTotalLength is incorrect");
+    VerifyOrQuit(headerBytes[kHeaderProtocolOffset] == kProtoIcmp, "kProtocol is incorrect");
+    VerifyOrQuit(headerBytes[kHeaderTtlOffset] == kTtl, "kTtl is incorrect");
 }
 
 } // namespace Ip4

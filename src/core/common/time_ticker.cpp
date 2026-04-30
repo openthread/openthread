@@ -33,12 +33,7 @@
 
 #include "time_ticker.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/random.hpp"
-#include "thread/mle_router.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -79,9 +74,9 @@ void TimeTicker::HandleTimer(void)
     }
 
 #if OPENTHREAD_FTD
-    if (mReceivers & Mask(kMleRouter))
+    if (mReceivers & Mask(kMle))
     {
-        Get<Mle::MleRouter>().HandleTimeTick();
+        Get<Mle::Mle>().HandleTimeTick();
     }
 
     if (mReceivers & Mask(kAddressResolver))
@@ -96,12 +91,10 @@ void TimeTicker::HandleTimer(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     if (mReceivers & Mask(kChildSupervisor))
     {
-        Get<Utils::ChildSupervisor>().HandleTimeTick();
+        Get<ChildSupervisor>().HandleTimeTick();
     }
-#endif
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
@@ -129,6 +122,13 @@ void TimeTicker::HandleTimer(void)
     {
         Get<Ip6::Mpl>().HandleTimeTick();
     }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mReceivers & Mask(kBbrLocal))
+    {
+        Get<BackboneRouter::Local>().HandleTimeTick();
+    }
+#endif
 }
 
 } // namespace ot

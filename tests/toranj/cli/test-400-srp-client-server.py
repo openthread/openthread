@@ -61,12 +61,12 @@ verify(client.get_state() == 'router')
 verify(server.srp_server_get_state() == 'disabled')
 verify(server.srp_server_get_addr_mode() == 'unicast')
 verify(client.srp_client_get_state() == 'Disabled')
-verify(client.srp_client_get_auto_start_mode() == 'Disabled')
 
 # Start server and client and register single service
 server.srp_server_enable()
-client.srp_client_enable_auto_start_mode()
 
+client.srp_client_enable_auto_start_mode()
+verify(client.srp_client_get_auto_start_mode() == 'Enabled')
 client.srp_client_set_host_name('host')
 client.srp_client_set_host_address('fd00::cafe')
 client.srp_client_add_service('ins', '_test._udp', 777, 2, 1)
@@ -121,6 +121,22 @@ verify(service['priority'] == '2')
 verify(service['weight'] == '1')
 verify(service['host'] == 'host')
 verify(service['addresses'] == ['fd00:0:0:0:0:0:0:cafe'])
+
+# Check the client address is added in EID cache table (snoop).
+
+cache_table = server.get_eidcache()
+client_rloc = int(client.get_rloc16(), 16)
+found_entry = False
+
+for entry in cache_table:
+    fields = entry.strip().split(' ')
+    if (fields[0] == 'fd00:0:0:0:0:0:0:cafe'):
+        verify(int(fields[1], 16) == client_rloc)
+        verify(fields[2] == 'snoop')
+        found_entry = True
+        break
+
+verify(found_entry)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

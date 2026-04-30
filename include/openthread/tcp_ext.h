@@ -30,12 +30,15 @@
  * @file
  * @brief
  *   This file defines extensions to the OpenThread TCP API.
- *
  */
 
 #ifndef OPENTHREAD_TCP_EXT_H_
 #define OPENTHREAD_TCP_EXT_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
 #include <openthread/tcp.h>
 
 #ifdef __cplusplus
@@ -49,11 +52,10 @@ extern "C" {
  *   This module includes easy-to-use abstractions on top of the base TCP API.
  *
  * @{
- *
  */
 
 /**
- * This structure represents a circular send buffer for use with a TCP endpoint.
+ * Represents a circular send buffer for use with a TCP endpoint.
  *
  * Using a circular send buffer is optional. Applications can use a TCP
  * endpoint to send data by managing otLinkedBuffers directly. However, some
@@ -84,7 +86,6 @@ extern "C" {
  * The application should not inspect the fields of this structure directly; it
  * should only interact with it via the TCP Circular Send Buffer API functions
  * whose signature are provided in this file.
- *
  */
 typedef struct otTcpCircularSendBuffer
 {
@@ -108,8 +109,7 @@ typedef struct otTcpCircularSendBuffer
 void otTcpCircularSendBufferInitialize(otTcpCircularSendBuffer *aSendBuffer, void *aDataBuffer, size_t aCapacity);
 
 /**
- * This enumeration defines flags passed to @p otTcpCircularSendBufferWrite.
- *
+ * Defines flags passed to @p otTcpCircularSendBufferWrite.
  */
 enum
 {
@@ -248,7 +248,6 @@ int otTcpMbedTlsSslRecvCallback(void *aCtx, unsigned char *aBuf, size_t aLen);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

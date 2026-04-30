@@ -35,9 +35,10 @@
 #ifndef OPENTHREAD_SRP_SERVER_H_
 #define OPENTHREAD_SRP_SERVER_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/dns.h>
+#include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 
@@ -52,88 +53,25 @@ extern "C" {
  *  This module includes functions of the Service Registration Protocol.
  *
  * @{
- *
  */
 
 /**
  * This opaque type represents a SRP service host.
- *
  */
 typedef struct otSrpServerHost otSrpServerHost;
 
 /**
  * This opaque type represents a SRP service.
- *
  */
 typedef struct otSrpServerService otSrpServerService;
 
 /**
  * The ID of a SRP service update transaction on the SRP Server.
- *
  */
 typedef uint32_t otSrpServerServiceUpdateId;
 
 /**
- * The service flag type to indicate which services to include or exclude when searching in (or iterating over) the
- * list of SRP services.
- *
- * This is a combination of bit-flags. The specific bit-flags are defined in the enumeration `OT_SRP_SERVER_FLAG_*`.
- *
- */
-typedef uint8_t otSrpServerServiceFlags;
-
-enum
-{
-    OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE = 1 << 0, ///< Include base services (not a sub-type).
-    OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE  = 1 << 1, ///< Include sub-type services.
-    OT_SRP_SERVER_SERVICE_FLAG_ACTIVE    = 1 << 2, ///< Include active (not deleted) services.
-    OT_SRP_SERVER_SERVICE_FLAG_DELETED   = 1 << 3, ///< Include deleted services.
-};
-
-enum
-{
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting any service (base/sub-type,
-     * active/deleted).
-     *
-     */
-    OT_SRP_SERVER_FLAGS_ANY_SERVICE = (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE |
-                                       OT_SRP_SERVER_SERVICE_FLAG_ACTIVE | OT_SRP_SERVER_SERVICE_FLAG_DELETED),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting base service only.
-     *
-     */
-    OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY =
-        (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE | OT_SRP_SERVER_SERVICE_FLAG_DELETED),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting sub-type service only.
-     *
-     */
-    OT_SRP_SERVER_FLAGS_SUB_TYPE_SERVICE_ONLY =
-        (OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE | OT_SRP_SERVER_SERVICE_FLAG_DELETED),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting any active service (not deleted).
-     *
-     */
-    OT_SRP_SERVER_FLAGS_ANY_TYPE_ACTIVE_SERVICE =
-        (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE |
-         OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting any deleted service.
-     *
-     */
-    OT_SRP_SERVER_FLAGS_ANY_TYPE_DELETED_SERVICE =
-        (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE |
-         OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
-};
-
-/**
- * This enumeration represents the state of the SRP server.
- *
+ * Represents the state of the SRP server.
  */
 typedef enum
 {
@@ -143,21 +81,25 @@ typedef enum
 } otSrpServerState;
 
 /**
- * This enumeration represents the address mode used by the SRP server.
+ * Represents the address mode used by the SRP server.
  *
  * Address mode specifies how the address and port number are determined by the SRP server and how this info is
  * published in the Thread Network Data.
  *
+ * @warning Using the `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD` option will make the implementation
+ * non-compliant with the Thread specification. This option is intended for testing and specific use-cases.
+ * When selected, the SRP server, upon being enabled, will bypass the Network Data publisher and always add the
+ * "SRP/DNS unicast" entry directly to the Network Data, regardless of how many other similar entries are present.
  */
 typedef enum otSrpServerAddressMode
 {
-    OT_SRP_SERVER_ADDRESS_MODE_UNICAST = 0, ///< Unicast address mode.
-    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST = 1, ///< Anycast address mode.
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST           = 0, ///< Unicast address mode. Use Network Data publisher.
+    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST           = 1, ///< Anycast address mode. Use Network Data publisher
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD = 2, ///< Unicast address mode. Immediately force add to Network Data.
 } otSrpServerAddressMode;
 
 /**
- * This structure includes SRP server TTL configurations.
- *
+ * Includes SRP server TTL configurations.
  */
 typedef struct otSrpServerTtlConfig
 {
@@ -166,8 +108,7 @@ typedef struct otSrpServerTtlConfig
 } otSrpServerTtlConfig;
 
 /**
- * This structure includes SRP server LEASE and KEY-LEASE configurations.
- *
+ * Includes SRP server LEASE and KEY-LEASE configurations.
  */
 typedef struct otSrpServerLeaseConfig
 {
@@ -178,8 +119,7 @@ typedef struct otSrpServerLeaseConfig
 } otSrpServerLeaseConfig;
 
 /**
- * This structure includes SRP server lease information of a host/service.
- *
+ * Includes SRP server lease information of a host/service.
  */
 typedef struct otSrpServerLeaseInfo
 {
@@ -190,8 +130,7 @@ typedef struct otSrpServerLeaseInfo
 } otSrpServerLeaseInfo;
 
 /**
- * This structure includes the statistics of SRP server responses.
- *
+ * Includes the statistics of SRP server responses.
  */
 typedef struct otSrpServerResponseCounters
 {
@@ -204,7 +143,7 @@ typedef struct otSrpServerResponseCounters
 } otSrpServerResponseCounters;
 
 /**
- * This function returns the domain authorized to the SRP server.
+ * Returns the domain authorized to the SRP server.
  *
  * If the domain if not set by SetDomain, "default.service.arpa." will be returned.
  * A trailing dot is always appended even if the domain is set without it.
@@ -212,15 +151,14 @@ typedef struct otSrpServerResponseCounters
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns A pointer to the dot-joined domain string.
- *
  */
 const char *otSrpServerGetDomain(otInstance *aInstance);
 
 /**
- * This function sets the domain on the SRP server.
+ * Sets the domain on the SRP server.
  *
  * A trailing dot will be appended to @p aDomain if it is not already there.
- * This function should only be called before the SRP server is enabled.
+ * Should only be called before the SRP server is enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aDomain    The domain to be set. MUST NOT be NULL.
@@ -229,91 +167,83 @@ const char *otSrpServerGetDomain(otInstance *aInstance);
  * @retval  OT_ERROR_INVALID_STATE  The SRP server is already enabled and the Domain cannot be changed.
  * @retval  OT_ERROR_INVALID_ARGS   The argument @p aDomain is not a valid DNS domain name.
  * @retval  OT_ERROR_NO_BUFS        There is no memory to store content of @p aDomain.
- *
  */
 otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain);
 
 /**
- * This function returns the state of the SRP server.
+ * Returns the state of the SRP server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns The current state of the SRP server.
- *
  */
 otSrpServerState otSrpServerGetState(otInstance *aInstance);
 
 /**
- * This function returns the port the SRP server is listening to.
+ * Returns the port the SRP server is listening to.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns  The port of the SRP server. It returns 0 if the server is not running.
- *
  */
 uint16_t otSrpServerGetPort(otInstance *aInstance);
 
 /**
- * This function returns the address mode being used by the SRP server.
+ * Returns the address mode being used by the SRP server.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
  * @returns The SRP server's address mode.
- *
  */
 otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance);
 
 /**
- * This function sets the address mode to be used by the SRP server.
+ * Sets the address mode to be used by the SRP server.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aMode      The address mode to use.
  *
  * @retval OT_ERROR_NONE           Successfully set the address mode.
  * @retval OT_ERROR_INVALID_STATE  The SRP server is enabled and the address mode cannot be changed.
- *
  */
 otError otSrpServerSetAddressMode(otInstance *aInstance, otSrpServerAddressMode aMode);
 
 /**
- * This function returns the sequence number used with anycast address mode.
+ * Returns the sequence number used with anycast address mode.
  *
  * The sequence number is included in "DNS/SRP Service Anycast Address" entry published in the Network Data.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
  * @returns The anycast sequence number.
- *
  */
 uint8_t otSrpServerGetAnycastModeSequenceNumber(otInstance *aInstance);
 
 /**
- * This function sets the sequence number used with anycast address mode.
+ * Sets the sequence number used with anycast address mode.
  *
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aSequenceNumber  The sequence number to use.
  *
  * @retval OT_ERROR_NONE            Successfully set the address mode.
  * @retval OT_ERROR_INVALID_STATE   The SRP server is enabled and the sequence number cannot be changed.
- *
  */
 otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t aSequenceNumber);
 
 /**
- * This function enables/disables the SRP server.
+ * Enables/disables the SRP server.
  *
  * On a Border Router, it is recommended to use `otSrpServerSetAutoEnableMode()` instead.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the SRP server.
- *
  */
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function enables/disables the auto-enable mode on SRP server.
+ * Enables/disables the auto-enable mode on SRP server.
  *
- * This function requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` feature.
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` feature.
  *
  * When this mode is enabled, the Border Routing Manager controls if/when to enable or disable the SRP server.
  * SRP sever is auto-enabled if/when Border Routing is started and it is done with the initial prefix and route
@@ -327,35 +257,87 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
  * it stays enabled).
  *
  * @param[in] aInstance   A pointer to an OpenThread instance.
- * @param[in] aEnbaled    A boolean to enable/disable the auto-enable mode.
- *
+ * @param[in] aEnabled    A boolean to enable/disable the auto-enable mode.
  */
 void otSrpServerSetAutoEnableMode(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether the auto-enable mode is enabled or disabled.
+ * Indicates whether the auto-enable mode is enabled or disabled.
  *
- * This function requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` feature.
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` feature.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @retval TRUE   The auto-enable mode is enabled.
  * @retval FALSE  The auto-enable mode is disabled.
- *
  */
 bool otSrpServerIsAutoEnableMode(otInstance *aInstance);
 
 /**
- * This function returns SRP server TTL configuration.
+ * Enables the "Fast Start Mode" on the SRP server.
+ *
+ * Requires the `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` feature to be enabled.
+ *
+ * The Fast Start Mode is designed for scenarios where a device, often a mobile device, needs to act as a provisional
+ * SRP server (e.g., functioning as a temporary Border Router). The SRP server function is enabled only if no other
+ * Border Routers (BRs) are already providing the SRP service within the Thread network. A common use case is a mobile
+ * device joining a Thread network where it may be the first, or only, BR.  Importantly, Fast Start Mode allows the
+ * device to quickly start its SRP server functionality upon joining the network, allowing other Thread devices to
+ * quickly connect and register their services without the typical delays associated with standard Border Router
+ * initialization (and SRP server startup).
+ *
+ * When Fast Start Mode is enabled, the SRP server manages when to start or stop based on the presence of other BRs,
+ * following this process:
+ * - Upon initial attachment to the Thread network, the device immediately inspects the received Network Data for any
+ *   existing "SRP/DNS" entries. These entries indicate the presence of other active BRs providing SRP server service:
+ *   - If no "SRP/DNS" entries from other BRs are found, the device immediately enables its own SRP server. This
+ *     activation uses `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD`, which bypasses the usual delay associated with
+ *     the standard Network Data publisher, directly adding its own "SRP/DNS unicast" entry to the Network Data.
+ *   - If "SRP/DNS" entries from other BRs are detected, the device will not enable its SRP server, deferring to the
+ *     existing ones.
+ * - After starting its SRP server in Fast Start Mode, the device continuously monitors the Network Data. If, at any
+ *   point, new "SRP/DNS" entries appear (indicating that another BR has become active), the device automatically
+ *   disables its own SRP server functionality, relinquishing the role to the newly available BR.
+ *
+ * The Fast Start Mode can be enabled when the device is in the detached or disabled state, the SRP server is currently
+ * disabled, and "auto-enable mode" is not in use (i.e., `otSrpServerIsAutoEnableMode()` returns `false`).
+ *
+ * After successfully enabling Fast Start Mode, it can be disabled either by a call to `otSrpServerSetEnabled()`,
+ * explicitly enabling or disabling the SRP server, or by a call to `otSrpServerSetAutoEnableMode()`, enabling or
+ * disabling the auto-enable mode. If the Fast Start Mode (while active) enables the SRP server, upon disabling
+ * Fast Start Mode (regardless of how it is done), the SRP server will also be stopped, and the use of the
+ * `OT_SRP_SERVER_ADDRESS_MODE_UNICAST_FORCE_ADD` address mode will be stopped, and the address mode will be
+ * automatically reverted back to its previous setting before Fast Start Mode was enabled.
+ *
+ * @param[in] aInstance             A pointer to the OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE            Fast Start Mode was successfully enabled.
+ * @retval OT_ERROR_INVALID_STATE   Cannot enable Fast Start Mode (e.g., already attached or server already enabled).
+ */
+otError otSrpServerEnableFastStartMode(otInstance *aInstance);
+
+/**
+ * Indicates whether the Fast Start Mode is enabled or disabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_SERVER_FAST_START_MODE_ENABLE` feature to be enabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   The fast-start mode is enabled.
+ * @retval FALSE  The fast-start mode is disabled.
+ */
+bool otSrpServerIsFastStartModeEnabled(otInstance *aInstance);
+
+/**
+ * Returns SRP server TTL configuration.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aTtlConfig  A pointer to an `otSrpServerTtlConfig` instance.
- *
  */
 void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlConfig);
 
 /**
- * This function sets SRP server TTL configuration.
+ * Sets SRP server TTL configuration.
  *
  * The granted TTL will always be no greater than the max lease interval configured via `otSrpServerSetLeaseConfig()`,
  * regardless of the minimum and maximum TTL configuration.
@@ -365,21 +347,19 @@ void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlCo
  *
  * @retval  OT_ERROR_NONE          Successfully set the TTL configuration.
  * @retval  OT_ERROR_INVALID_ARGS  The TTL configuration is not valid.
- *
  */
 otError otSrpServerSetTtlConfig(otInstance *aInstance, const otSrpServerTtlConfig *aTtlConfig);
 
 /**
- * This function returns SRP server LEASE and KEY-LEASE configurations.
+ * Returns SRP server LEASE and KEY-LEASE configurations.
  *
  * @param[in]   aInstance     A pointer to an OpenThread instance.
  * @param[out]  aLeaseConfig  A pointer to an `otSrpServerLeaseConfig` instance.
- *
  */
 void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aLeaseConfig);
 
 /**
- * This function sets SRP server LEASE and KEY-LEASE configurations.
+ * Sets SRP server LEASE and KEY-LEASE configurations.
  *
  * When a non-zero LEASE time is requested from a client, the granted value will be
  * limited in range [aMinLease, aMaxLease]; and a non-zero KEY-LEASE will be granted
@@ -391,14 +371,13 @@ void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aL
  *
  * @retval  OT_ERROR_NONE          Successfully set the LEASE and KEY-LEASE ranges.
  * @retval  OT_ERROR_INVALID_ARGS  The LEASE or KEY-LEASE range is not valid.
- *
  */
 otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseConfig *aLeaseConfig);
 
 /**
- * This function handles SRP service updates.
+ * Handles SRP service updates.
  *
- * This function is called by the SRP server to notify that a SRP host and possibly SRP services
+ * Is called by the SRP server to notify that a SRP host and possibly SRP services
  * are being updated. It is important that the SRP updates are not committed until the handler
  * returns the result by calling otSrpServerHandleServiceUpdateResult or times out after @p aTimeout.
  *
@@ -426,7 +405,6 @@ otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseC
  *
  * @sa otSrpServerSetServiceUpdateHandler
  * @sa otSrpServerHandleServiceUpdateResult
- *
  */
 typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
                                                 const otSrpServerHost     *aHost,
@@ -434,20 +412,19 @@ typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
                                                 void                      *aContext);
 
 /**
- * This function sets the SRP service updates handler on SRP server.
+ * Sets the SRP service updates handler on SRP server.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aServiceHandler  A pointer to a service handler. Use NULL to remove the handler.
  * @param[in]  aContext         A pointer to arbitrary context information.
  *                              May be NULL if not used.
- *
  */
 void otSrpServerSetServiceUpdateHandler(otInstance                     *aInstance,
                                         otSrpServerServiceUpdateHandler aServiceHandler,
                                         void                           *aContext);
 
 /**
- * This function reports the result of processing a SRP update to the SRP server.
+ * Reports the result of processing a SRP update to the SRP server.
  *
  * The Service Update Handler should call this function to return the result of its
  * processing of a SRP update.
@@ -457,33 +434,30 @@ void otSrpServerSetServiceUpdateHandler(otInstance                     *aInstanc
  *                        provided via `otSrpServerServiceUpdateHandler`.
  * @param[in]  aError     An error to be returned to the SRP server. Use OT_ERROR_DUPLICATED
  *                        to represent DNS name conflicts.
- *
  */
 void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, otSrpServerServiceUpdateId aId, otError aError);
 
 /**
- * This function returns the next registered host on the SRP server.
+ * Returns the next registered host on the SRP server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHost      A pointer to current host; use NULL to get the first host.
  *
  * @returns  A pointer to the registered host. NULL, if no more hosts can be found.
- *
  */
 const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrpServerHost *aHost);
 
 /**
- * This function returns the response counters of the SRP server.
+ * Returns the response counters of the SRP server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns  A pointer to the response counters of the SRP server.
- *
  */
 const otSrpServerResponseCounters *otSrpServerGetResponseCounters(otInstance *aInstance);
 
 /**
- * This function tells if the SRP service host has been deleted.
+ * Tells if the SRP service host has been deleted.
  *
  * A SRP service host can be deleted but retains its name for future uses.
  * In this case, the host instance is not removed from the SRP server/registry.
@@ -491,95 +465,63 @@ const otSrpServerResponseCounters *otSrpServerGetResponseCounters(otInstance *aI
  * @param[in]  aHost  A pointer to the SRP service host.
  *
  * @returns  TRUE if the host has been deleted, FALSE if not.
- *
  */
 bool otSrpServerHostIsDeleted(const otSrpServerHost *aHost);
 
 /**
- * This function returns the full name of the host.
+ * Returns the full name of the host.
  *
  * @param[in]  aHost  A pointer to the SRP service host.
  *
  * @returns  A pointer to the null-terminated host name string.
- *
  */
 const char *otSrpServerHostGetFullName(const otSrpServerHost *aHost);
 
 /**
- * This function returns the addresses of given host.
+ * Indicates whether the host matches a given host name.
+ *
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
+ *
+ * @param[in]  aHost       A pointer to the SRP service host.
+ * @param[in]  aFullName   A full host name.
+ *
+ * @retval  TRUE   If host matches the host name.
+ * @retval  FALSE  If host does not match the host name.
+ */
+bool otSrpServerHostMatchesFullName(const otSrpServerHost *aHost, const char *aFullName);
+
+/**
+ * Returns the addresses of given host.
  *
  * @param[in]   aHost          A pointer to the SRP service host.
  * @param[out]  aAddressesNum  A pointer to where we should output the number of the addresses to.
  *
  * @returns  A pointer to the array of IPv6 Address.
- *
  */
 const otIp6Address *otSrpServerHostGetAddresses(const otSrpServerHost *aHost, uint8_t *aAddressesNum);
 
 /**
- * This function returns the LEASE and KEY-LEASE information of a given host.
+ * Returns the LEASE and KEY-LEASE information of a given host.
  *
  * @param[in]   aHost       A pointer to the SRP server host.
  * @param[out]  aLeaseInfo  A pointer to where to output the LEASE and KEY-LEASE information.
- *
  */
 void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseInfo *aLeaseInfo);
 
 /**
- * This function returns the next service (excluding any sub-type services) of given host.
- *
- * @note This function is being deprecated and will be removed. `otSrpServerHostFindNextService()` can be used
- *       instead.
+ * Returns the next service of given host.
  *
  * @param[in]  aHost     A pointer to the SRP service host.
  * @param[in]  aService  A pointer to current SRP service instance; use NULL to get the first service.
  *
  * @returns  A pointer to the next service or NULL if there is no more services.
- *
  */
 const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost    *aHost,
                                                         const otSrpServerService *aService);
 
 /**
- * This function finds the next matching service on the host.
- *
- * The combination of flags and service and instance names enables iterating over the full list of services and/or a
- * subset of them matching certain conditions, or finding a specific service.
- *
- * To iterate over all services of a host:
- *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_ANY_SERVICE, NULL, NULL);
- *
- * To iterate over base services only (exclude sub-types):
- *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY, NULL, NULL);
- *
- * To iterate over sub-types of a specific instance name `instanceName`:
- *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_SUB_TYPE_SERVICE_ONLY, NULL,
- *                                            instanceName);
- *
- * To find a specific service with service name `serviceName` and service instance name `instanceName`:
- *   service = otSrpServerHostFindNextService(host, NULL, OT_SRP_SERVER_FLAGS_ANY_SERVICE, serviceName, instanceName);
- *
- * To find the base type service with a given service instance name `instanceName`:
- *   service = otSrpServerHostFindNextService(host, NULL, OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY, NULL,
- *                                            instanceName);
- *
- * @param[in] aHost          A pointer to the SRP service host (MUST NOT be NULL).
- * @param[in] aPrevService   A pointer to the previous service or NULL to start from the beginning of the list.
- * @param[in] aFlags         Flags indicating which services to include (base/sub-type, active/deleted).
- * @param[in] aServiceName   The service name to match. Set to NULL to accept any name.
- * @param[in] aInstanceName  The service instance name to match. Set to NULL to accept any name.
- *
- * @returns  A pointer to the next matching service or NULL if no matching service could be found.
- *
- */
-const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost    *aHost,
-                                                         const otSrpServerService *aPrevService,
-                                                         otSrpServerServiceFlags   aFlags,
-                                                         const char               *aServiceName,
-                                                         const char               *aInstanceName);
-
-/**
- * This function indicates whether or not the SRP service has been deleted.
+ * Indicates whether or not the SRP service has been deleted.
  *
  * A SRP service can be deleted but retains its name for future uses.
  * In this case, the service instance is not removed from the SRP server/registry.
@@ -588,148 +530,179 @@ const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost  
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  TRUE if the service has been deleted, FALSE if not.
- *
  */
 bool otSrpServerServiceIsDeleted(const otSrpServerService *aService);
 
 /**
- * This function indicates whether or not the SRP service is sub-type.
- *
- * @param[in]  aService  A pointer to the SRP service.
- *
- * @returns  TRUE if the service is a sub-type, FALSE if not.
- *
- */
-bool otSrpServerServiceIsSubType(const otSrpServerService *aService);
-
-/**
- * This function returns the full service instance name of the service.
- *
- * @note This function is being deprecated and will be removed. `otSrpServerServiceGetInstanceName()` can be used
- *       instead.
+ * Returns the full service instance name of the service.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  A pointer to the null-terminated service instance name string.
- *
- */
-const char *otSrpServerServiceGetFullName(const otSrpServerService *aService);
-
-/**
- * This function returns the full service instance name of the service.
- *
- * @param[in]  aService  A pointer to the SRP service.
- *
- * @returns  A pointer to the null-terminated service instance name string.
- *
  */
 const char *otSrpServerServiceGetInstanceName(const otSrpServerService *aService);
 
 /**
- * This function returns the full service name of the service.
+ * Indicates whether this service matches a given service instance name.
+ *
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
+ *
+ * @param[in]  aService       A pointer to the SRP service.
+ * @param[in]  aInstanceName  The service instance name.
+ *
+ * @retval  TRUE   If service matches the service instance name.
+ * @retval  FALSE  If service does not match the service instance name.
+ */
+bool otSrpServerServiceMatchesInstanceName(const otSrpServerService *aService, const char *aInstanceName);
+
+/**
+ * Returns the service instance label (first label in instance name) of the service.
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ *
+ * @returns  A pointer to the null-terminated service instance label string..
+ */
+const char *otSrpServerServiceGetInstanceLabel(const otSrpServerService *aService);
+
+/**
+ * Returns the full service name of the service.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  A pointer to the null-terminated service name string.
- *
  */
 const char *otSrpServerServiceGetServiceName(const otSrpServerService *aService);
 
 /**
- * This function gets the sub-type label from service name.
+ * Indicates whether this service matches a given service name.
  *
- * This function is intended to be used when the @p aService is a sub-type, i.e., `otSrpServerServiceIsSubType()` for
- * the service returns TRUE. If it is not a sub-type this function returns `OT_ERROR_INVALID_ARGS`.
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
  *
- * The full service name for a sub-type service follows "<sub-label>._sub.<service-labels>.<domain>.". This function
- * copies the `<sub-label>` into the @p aLabel buffer.
+ * @param[in]  aService       A pointer to the SRP service.
+ * @param[in]  aServiceName  The service  name.
  *
- * The @p aLabel is ensured to always be null-terminated after returning even in case of failure.
- *
- * @param[in]  aService           A pointer to the SRP service.
- * @param[out] aLabel             A pointer to a buffer to copy the sub-type label name into.
- * @param[in]  aMaxSize           Maximum size of @p aLabel buffer.
- *
- * @retval OT_ERROR_NONE          @p aLabel was updated successfully.
- * @retval OT_ERROR_NO_BUFS       The sub-type label could not fit in @p aLabel buffer (number of chars from label
- *                                that could fit are copied in @p aLabel ensuring it is null-terminated).
- * @retval OT_ERROR_INVALID_ARGS  SRP service is not a sub-type.
- *
+ * @retval  TRUE   If service matches the service name.
+ * @retval  FALSE  If service does not match the service name.
  */
-otError otSrpServerServiceGetServiceSubTypeLabel(const otSrpServerService *aService, char *aLabel, uint8_t aMaxSize);
+bool otSrpServerServiceMatchesServiceName(const otSrpServerService *aService, const char *aServiceName);
 
 /**
- * This function returns the port of the service instance.
+ * Gets the number of sub-types of the service.
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ *
+ * @returns The number of sub-types of @p aService.
+ */
+uint16_t otSrpServerServiceGetNumberOfSubTypes(const otSrpServerService *aService);
+
+/**
+ * Gets the sub-type service name (full name) of the service at a given index
+ *
+ * The full service name for a sub-type service follows "<sub-label>._sub.<service-labels>.<domain>.".
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ * @param[in] aIndex     The index to get.
+ *
+ * @returns A pointer to sub-type service name at @p aIndex, or `NULL` if no sub-type at this index.
+ */
+const char *otSrpServerServiceGetSubTypeServiceNameAt(const otSrpServerService *aService, uint16_t aIndex);
+
+/**
+ * Indicates whether or not the service has a given sub-type.
+ *
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
+ *
+ * @param[in] aService             A pointer to the SRP service.
+ * @param[in] aSubTypeServiceName  The sub-type service name (full name) to check.
+ *
+ * @retval TRUE   Service contains the sub-type @p aSubTypeServiceName.
+ * @retval FALSE  Service does not contain the sub-type @p aSubTypeServiceName.
+ */
+bool otSrpServerServiceHasSubTypeServiceName(const otSrpServerService *aService, const char *aSubTypeServiceName);
+
+/**
+ * Parses a sub-type service name (full name) and extracts the sub-type label.
+ *
+ * The full service name for a sub-type service follows "<sub-label>._sub.<service-labels>.<domain>.".
+ *
+ * @param[in]  aSubTypeServiceName  A sub-type service name (full name).
+ * @param[out] aLabel               A pointer to a buffer to copy the extracted sub-type label.
+ * @param[in]  aLabelSize           Maximum size of @p aLabel buffer.
+ *
+ * @retval OT_ERROR_NONE          Name was successfully parsed and @p aLabel was updated.
+ * @retval OT_ERROR_NO_BUFS       The sub-type label could not fit in @p aLabel buffer (number of chars from label
+ *                                that could fit are copied in @p aLabel ensuring it is null-terminated).
+ * @retval OT_ERROR_INVALID_ARGS  @p aSubTypeServiceName is not a valid sub-type format.
+ */
+otError otSrpServerParseSubTypeServiceName(const char *aSubTypeServiceName, char *aLabel, uint8_t aLabelSize);
+
+/**
+ * Returns the port of the service instance.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  The port of the service.
- *
  */
 uint16_t otSrpServerServiceGetPort(const otSrpServerService *aService);
 
 /**
- * This function returns the weight of the service instance.
+ * Returns the weight of the service instance.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  The weight of the service.
- *
  */
 uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService);
 
 /**
- * This function returns the priority of the service instance.
+ * Returns the priority of the service instance.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  The priority of the service.
- *
  */
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService);
 
 /**
- * This function returns the TTL of the service instance.
+ * Returns the TTL of the service instance.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  The TTL of the service instance..
- *
  */
 uint32_t otSrpServerServiceGetTtl(const otSrpServerService *aService);
 
 /**
- * This function returns the TXT record data of the service instance.
+ * Returns the TXT record data of the service instance.
  *
  * @param[in]  aService        A pointer to the SRP service.
  * @param[out] aDataLength     A pointer to return the TXT record data length. MUST NOT be NULL.
  *
  * @returns A pointer to the buffer containing the TXT record data (the TXT data length is returned in @p aDataLength).
- *
  */
 const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, uint16_t *aDataLength);
 
 /**
- * This function returns the host which the service instance reside on.
+ * Returns the host which the service instance reside on.
  *
  * @param[in]  aService  A pointer to the SRP service.
  *
  * @returns  A pointer to the host instance.
- *
  */
 const otSrpServerHost *otSrpServerServiceGetHost(const otSrpServerService *aService);
 
 /**
- * This function returns the LEASE and KEY-LEASE information of a given service.
+ * Returns the LEASE and KEY-LEASE information of a given service.
  *
  * @param[in]   aService    A pointer to the SRP server service.
  * @param[out]  aLeaseInfo  A pointer to where to output the LEASE and KEY-LEASE information.
- *
  */
 void otSrpServerServiceGetLeaseInfo(const otSrpServerService *aService, otSrpServerLeaseInfo *aLeaseInfo);
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

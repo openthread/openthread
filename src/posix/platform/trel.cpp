@@ -43,35 +43,92 @@
 #include <unistd.h>
 
 #include <openthread/logging.h>
+#include <openthread/openthread-system.h>
 #include <openthread/platform/trel.h>
 
+#include "logger.hpp"
+#include "mainloop.hpp"
 #include "radio_url.hpp"
 #include "system.hpp"
+#include "utils.hpp"
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#define TREL_MAX_PACKET_SIZE 1400
-#define TREL_PACKET_POOL_SIZE 5
+static constexpr uint16_t kMaxPacketSize = 1400; // The max size of a TREL packet.
 
 typedef struct TxPacket
 {
     struct TxPacket *mNext;
-    uint8_t          mBuffer[TREL_MAX_PACKET_SIZE];
+    uint8_t          mBuffer[kMaxPacketSize];
     uint16_t         mLength;
     otSockAddr       mDestSockAddr;
 } TxPacket;
 
-static uint8_t   sRxPacketBuffer[TREL_MAX_PACKET_SIZE];
-static uint16_t  sRxPacketLength;
-static TxPacket  sTxPacketPool[TREL_PACKET_POOL_SIZE];
-static TxPacket *sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
-static TxPacket *sTxPacketQueueTail; // A circular linked list for queued tx packets.
+static uint8_t            sRxPacketBuffer[kMaxPacketSize];
+static uint16_t           sRxPacketLength;
+static TxPacket           sTxPacketPool[OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE];
+static TxPacket          *sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
+static TxPacket          *sTxPacketQueueTail; // A circular linked list for queued tx packets.
+static otPlatTrelCounters sCounters;
 
 static char sInterfaceName[IFNAMSIZ + 1];
 static bool sInitialized = false;
 static bool sEnabled     = false;
 static int  sSocket      = -1;
+
+static const char kLogModuleName[] = "Trel";
+
+static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+
+static void LogCrit(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_CRIT, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogWarn(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_WARN, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogNote(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_NOTE, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogInfo(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_INFO, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogDebg(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_DEBG, kLogModuleName, aFormat, args);
+    va_end(args);
+}
 
 static const char *Ip6AddrToString(const void *aAddress)
 {
@@ -121,9 +178,9 @@ static void PrepareSocket(uint16_t &aUdpPort)
     struct sockaddr_in6 sockAddr;
     socklen_t           sockLen;
 
-    otLogDebgPlat("[trel] PrepareSocket()");
+    LogDebg("PrepareSocket()");
 
-    sSocket = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, kSocketNonBlock);
+    sSocket = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     // Make the socket non-blocking to allow immediate tx attempt.
@@ -131,6 +188,11 @@ static void PrepareSocket(uint16_t &aUdpPort)
     VerifyOrDie(val != -1, OT_EXIT_ERROR_ERRNO);
     val = val | O_NONBLOCK;
     VerifyOrDie(fcntl(sSocket, F_SETFL, val) == 0, OT_EXIT_ERROR_ERRNO);
+
+#if defined(IPV6_ADDR_PREFERENCES) && defined(IPV6_PREFER_SRC_PUBLIC)
+    val = IPV6_PREFER_SRC_PUBLIC;
+    setsockopt(sSocket, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &val, sizeof(val));
+#endif
 
     // Bind the socket.
 
@@ -141,15 +203,24 @@ static void PrepareSocket(uint16_t &aUdpPort)
 
     if (bind(sSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
     {
-        otLogCritPlat("[trel] Failed to bind socket");
+        LogCrit("Failed to bind socket");
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
+
+#ifdef __linux__
+    // Bind to the TREL interface
+    if (setsockopt(sSocket, SOL_SOCKET, SO_BINDTODEVICE, sInterfaceName, strlen(sInterfaceName)) < 0)
+    {
+        LogCrit("Failed to bind socket to the interface %s", sInterfaceName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+#endif
 
     sockLen = sizeof(sockAddr);
 
     if (getsockname(sSocket, (struct sockaddr *)&sockAddr, &sockLen) == -1)
     {
-        otLogCritPlat("[trel] Failed to get the socket name");
+        LogCrit("Failed to get the socket name");
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
@@ -173,7 +244,7 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
 
     if (ret != aLength)
     {
-        otLogDebgPlat("[trel] SendPacket() -- sendto() failed errno %d", errno);
+        LogDebg("SendPacket() -- sendto() failed errno %d", errno);
 
         switch (errno)
         {
@@ -187,11 +258,19 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
             error = OT_ERROR_INVALID_STATE;
         }
     }
+    else
+    {
+        ++sCounters.mTxPackets;
+        sCounters.mTxBytes += aLength;
+    }
 
 exit:
-    otLogDebgPlat("[trel] SendPacket([%s]:%u) err:%s pkt:%s", Ip6AddrToString(&aDestSockAddr->mAddress),
-                  aDestSockAddr->mPort, otThreadErrorToString(error), BufferToString(aBuffer, aLength));
-
+    LogDebg("SendPacket([%s]:%u) err:%s pkt:%s", Ip6AddrToString(&aDestSockAddr->mAddress), aDestSockAddr->mPort,
+            otThreadErrorToString(error), BufferToString(aBuffer, aLength));
+    if (error != OT_ERROR_NONE)
+    {
+        ++sCounters.mTxFailure;
+    }
     return error;
 }
 
@@ -214,12 +293,20 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
         sRxPacketLength = sizeof(sRxPacketLength);
     }
 
-    otLogDebgPlat("[trel] ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
-                  ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
+    LogDebg("ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
+            ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
 
     if (sEnabled)
     {
-        otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength);
+        otSockAddr senderAddr;
+
+        ++sCounters.mRxPackets;
+        sCounters.mRxBytes += sRxPacketLength;
+
+        memcpy(&senderAddr.mAddress, &sockAddr.sin6_addr, sizeof(otIp6Address));
+        senderAddr.mPort = ntohs(sockAddr.sin6_port);
+
+        otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength, &senderAddr);
     }
 }
 
@@ -247,7 +334,7 @@ static void SendQueuedPackets(void)
 
         if (SendPacket(packet->mBuffer, packet->mLength, &packet->mDestSockAddr) == OT_ERROR_INVALID_STATE)
         {
-            otLogDebgPlat("[trel] SendQueuedPackets() - SendPacket() would block");
+            LogDebg("SendQueuedPackets() - SendPacket() would block");
             break;
         }
 
@@ -277,7 +364,7 @@ static void EnqueuePacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
     // Allocate an available packet entry (from the free packet list)
     // and copy the packet content into it.
 
-    VerifyOrExit(sFreeTxPacketHead != NULL, otLogWarnPlat("[trel] EnqueuePacket failed, queue is full"));
+    VerifyOrExit(sFreeTxPacketHead != NULL, LogWarn("EnqueuePacket failed, queue is full"));
     packet            = sFreeTxPacketHead;
     sFreeTxPacketHead = sFreeTxPacketHead->mNext;
 
@@ -299,12 +386,14 @@ static void EnqueuePacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
         sTxPacketQueueTail        = packet;
     }
 
-    otLogDebgPlat("[trel] EnqueuePacket([%s]:%u) - %s", Ip6AddrToString(&aDestSockAddr->mAddress), aDestSockAddr->mPort,
-                  BufferToString(aBuffer, aLength));
+    LogDebg("EnqueuePacket([%s]:%u) - %s", Ip6AddrToString(&aDestSockAddr->mAddress), aDestSockAddr->mPort,
+            BufferToString(aBuffer, aLength));
 
 exit:
     return;
 }
+
+static void ResetCounters() { memset(&sCounters, 0, sizeof(sCounters)); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // trelDnssd
@@ -353,6 +442,25 @@ OT_TOOL_WEAK void trelDnssdStopBrowse(void)
     // earlier call to `trelDnssdStartBrowse()`.
 }
 
+OT_TOOL_WEAK void trelDnssdNotifyPeerSocketAddressDifference(const otSockAddr *aPeerSockAddr,
+                                                             const otSockAddr *aRxSockAddr)
+{
+    // Notifies platform that a TREL packet was received from a previously
+    // discovered peer with `aPeerSockAddr` now using a different socket
+    // address `aRxSockAddr` compared to the one reported earlier by DNS-SD
+    // using the `otPlatTrelHandleDiscoveredPeerInfo()` callback.
+    //
+    // Ideally the platform DNS-SD should detect changes to advertised port
+    // and addresses by peers, however, there are situations where this is
+    // not detected reliably. This function signals to that we received a
+    // packet from a peer with it using a different port or address. This can
+    // be used to restart/confirm the DNS-SD service/address resolution for
+    // the peer service and/or take any other relevant actions.
+
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aRxSockAddr);
+}
+
 OT_TOOL_WEAK void trelDnssdRegisterService(uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength)
 {
     // This function registers a new service to be advertised using
@@ -388,24 +496,20 @@ OT_TOOL_WEAK void trelDnssdRemoveService(void)
     // advertising TREL service after this call.
 }
 
-OT_TOOL_WEAK void trelDnssdUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
+OT_TOOL_WEAK void trelDnssdUpdateFdSet(otSysMainloopContext *aContext)
 {
     // This function can be used to update the file descriptor sets
     // by DNS-SD layer (if needed).
 
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aMaxFd);
-    OT_UNUSED_VARIABLE(aTimeout);
+    OT_UNUSED_VARIABLE(aContext);
 }
 
-OT_TOOL_WEAK void trelDnssdProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+OT_TOOL_WEAK void trelDnssdProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     // This function performs processing by DNS-SD (if needed).
 
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
+    OT_UNUSED_VARIABLE(aContext);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -417,9 +521,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 
     VerifyOrExit(!IsSystemDryRun());
 
-    assert(sInitialized);
-
-    VerifyOrExit(!sEnabled);
+    VerifyOrExit(sInitialized && !sEnabled);
 
     PrepareSocket(*aUdpPort);
     trelDnssdStartBrowse();
@@ -436,8 +538,7 @@ void otPlatTrelDisable(otInstance *aInstance)
 
     VerifyOrExit(!IsSystemDryRun());
 
-    assert(sInitialized);
-    VerifyOrExit(sEnabled);
+    VerifyOrExit(sInitialized && sEnabled);
 
     close(sSocket);
     sSocket = -1;
@@ -460,7 +561,7 @@ void otPlatTrelSend(otInstance       *aInstance,
 
     VerifyOrExit(sEnabled);
 
-    assert(aUdpPayloadLen <= TREL_MAX_PACKET_SIZE);
+    assert(aUdpPayloadLen <= kMaxPacketSize);
 
     // We try to send the packet immediately. If it fails (e.g.,
     // network is down) `SendPacket()` returns `OT_ERROR_ABORT`. If
@@ -479,10 +580,21 @@ exit:
     return;
 }
 
+void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
+                                                 const otSockAddr *aPeerSockAddr,
+                                                 const otSockAddr *aRxSockAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    trelDnssdNotifyPeerSocketAddressDifference(aPeerSockAddr, aRxSockAddr);
+}
+
 void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
     VerifyOrExit(!IsSystemDryRun());
+
+    VerifyOrExit(sEnabled);
 
     trelDnssdRegisterService(aPort, aTxtData, aTxtLength);
 
@@ -490,80 +602,111 @@ exit:
     return;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-// platformTrel system
-
-void platformTrelInit(const char *aTrelUrl)
+// We keep counters at the platform layer because TREL failures can only be captured accurately within
+// the platform layer as the platform sometimes only queues the packet and the packet will be sent later
+// and the error is only known after sent.
+const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance)
 {
-    otLogDebgPlat("[trel] platformTrelInit(aTrelUrl:\"%s\")", aTrelUrl != nullptr ? aTrelUrl : "");
+    OT_UNUSED_VARIABLE(aInstance);
+    return &sCounters;
+}
 
-    assert(!sInitialized);
+void otPlatTrelResetCounters(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    ResetCounters();
+}
 
-    if (aTrelUrl != nullptr)
-    {
-        ot::Posix::RadioUrl url(aTrelUrl);
-        strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName) - 1);
-        sInterfaceName[sizeof(sInterfaceName) - 1] = '\0';
-    }
+void otSysTrelInit(const char *aInterfaceName)
+{
+    // To silence "unused function" warning.
+    (void)LogCrit;
+    (void)LogWarn;
+    (void)LogInfo;
+    (void)LogNote;
+    (void)LogDebg;
+
+    LogDebg("otSysTrelInit(aInterfaceName:\"%s\")", aInterfaceName != nullptr ? aInterfaceName : "");
+
+    VerifyOrExit(!sInitialized && !sEnabled && aInterfaceName != nullptr);
+
+    strncpy(sInterfaceName, aInterfaceName, sizeof(sInterfaceName) - 1);
+    sInterfaceName[sizeof(sInterfaceName) - 1] = '\0';
 
     trelDnssdInitialize(sInterfaceName);
 
     InitPacketQueue();
     sInitialized = true;
+
+    ResetCounters();
+
+exit:
+    return;
+}
+
+void otSysTrelDeinit(void) { platformTrelDeinit(); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// platformTrel system
+
+void platformTrelInit(const char *aTrelUrl)
+{
+    LogDebg("platformTrelInit(aTrelUrl:\"%s\")", aTrelUrl != nullptr ? aTrelUrl : "");
+
+    if (aTrelUrl != nullptr)
+    {
+        ot::Posix::RadioUrl url(aTrelUrl);
+
+        otSysTrelInit(url.GetPath());
+    }
 }
 
 void platformTrelDeinit(void)
 {
-    VerifyOrExit(sInitialized);
+    VerifyOrExit(sInitialized && !sEnabled);
 
-    otPlatTrelDisable(nullptr);
     sInterfaceName[0] = '\0';
     sInitialized      = false;
-    otLogDebgPlat("[trel] platformTrelDeinit()");
+    LogDebg("platformTrelDeinit()");
 
 exit:
     return;
 }
 
-void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
+void platformTrelUpdateFdSet(ot::Posix::Mainloop::Context *aContext)
 {
-    assert((aReadFdSet != NULL) && (aWriteFdSet != NULL) && (aMaxFd != NULL) && (aTimeout != NULL));
+    assert(aContext != nullptr);
 
     VerifyOrExit(sEnabled);
 
-    FD_SET(sSocket, aReadFdSet);
+    ot::Posix::Mainloop::AddToReadFdSet(sSocket, *aContext);
 
-    if (sTxPacketQueueTail != NULL)
+    if (sTxPacketQueueTail != nullptr)
     {
-        FD_SET(sSocket, aWriteFdSet);
+        ot::Posix::Mainloop::AddToWriteFdSet(sSocket, *aContext);
     }
 
-    if (*aMaxFd < sSocket)
-    {
-        *aMaxFd = sSocket;
-    }
-
-    trelDnssdUpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd, aTimeout);
+    trelDnssdUpdateFdSet(aContext);
 
 exit:
     return;
 }
 
-void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+void platformTrelProcess(otInstance *aInstance, const ot::Posix::Mainloop::Context *aContext)
 {
     VerifyOrExit(sEnabled);
 
-    if (FD_ISSET(sSocket, aWriteFdSet))
+    if (ot::Posix::Mainloop::IsFdWritable(sSocket, *aContext))
     {
         SendQueuedPackets();
     }
 
-    if (FD_ISSET(sSocket, aReadFdSet))
+    if (ot::Posix::Mainloop::IsFdReadable(sSocket, *aContext))
     {
         ReceivePacket(sSocket, aInstance);
     }
 
-    trelDnssdProcess(aInstance, aReadFdSet, aWriteFdSet);
+    trelDnssdProcess(aInstance, aContext);
 
 exit:
     return;

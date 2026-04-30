@@ -309,6 +309,153 @@ void TestStringToLowercase(void)
     printf(" -- PASS\n");
 }
 
+void TestStringParseUint8(void)
+{
+    struct TestCase
+    {
+        const char *mString;
+        Error       mError;
+        uint8_t     mExpectedValue;
+        uint16_t    mParsedLength;
+    };
+
+    static const TestCase kTestCases[] = {
+        {"0", kErrorNone, 0, 1},
+        {"1", kErrorNone, 1, 1},
+        {"12", kErrorNone, 12, 2},
+        {"91", kErrorNone, 91, 2},
+        {"200", kErrorNone, 200, 3},
+        {"00000", kErrorNone, 0, 5},
+        {"00000255", kErrorNone, 255, 8},
+        {"2 00", kErrorNone, 2, 1},
+        {"77a12", kErrorNone, 77, 2},
+        {"", kErrorParse},     // Does not start with digit char ['0'-'9']
+        {"a12", kErrorParse},  // Does not start with digit char ['0'-'9']
+        {" 12", kErrorParse},  // Does not start with digit char ['0'-'9']
+        {"256", kErrorParse},  // Larger than max `uint8_t`
+        {"1000", kErrorParse}, // Larger than max `uint8_t`
+        {"0256", kErrorParse}, // Larger than max `uint8_t`
+    };
+
+    uint8_t digit;
+
+    printf("\nTest 11: TestStringParseUint8() function\n");
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        const char *string = testCase.mString;
+        Error       error;
+        uint8_t     u8;
+
+        error = StringParseUint8(string, u8);
+
+        VerifyOrQuit(error == testCase.mError);
+
+        if (testCase.mError == kErrorNone)
+        {
+            printf("\n%-10s -> %-3u (expect: %-3u), len:%u (expect:%u)", testCase.mString, u8, testCase.mExpectedValue,
+                   static_cast<uint8_t>(string - testCase.mString), testCase.mParsedLength);
+
+            VerifyOrQuit(u8 == testCase.mExpectedValue);
+            VerifyOrQuit(string - testCase.mString == testCase.mParsedLength);
+        }
+        else
+        {
+            printf("\n%-10s -> kErrorParse", testCase.mString);
+        }
+    }
+
+    for (char c = '0'; c <= '9'; c++)
+    {
+        VerifyOrQuit(IsDigit(c));
+        VerifyOrQuit(!IsUppercase(c));
+        VerifyOrQuit(!IsLowercase(c));
+
+        SuccessOrQuit(ParseDigit(c, digit));
+        VerifyOrQuit(digit == (c - '0'));
+
+        SuccessOrQuit(ParseHexDigit(c, digit));
+        VerifyOrQuit(digit == (c - '0'));
+    }
+
+    for (char c = 'A'; c <= 'Z'; c++)
+    {
+        VerifyOrQuit(!IsDigit(c));
+        VerifyOrQuit(IsUppercase(c));
+        VerifyOrQuit(!IsLowercase(c));
+        VerifyOrQuit(ParseDigit(c, digit) != kErrorNone);
+
+        if (c <= 'F')
+        {
+            SuccessOrQuit(ParseHexDigit(c, digit));
+            VerifyOrQuit(digit == (c - 'A' + 10));
+        }
+        else
+        {
+            VerifyOrQuit(ParseHexDigit(c, digit) != kErrorNone);
+        }
+    }
+
+    for (char c = 'a'; c <= 'z'; c++)
+    {
+        VerifyOrQuit(!IsDigit(c));
+        VerifyOrQuit(!IsUppercase(c));
+        VerifyOrQuit(IsLowercase(c));
+        VerifyOrQuit(ParseDigit(c, digit) != kErrorNone);
+
+        if (c <= 'f')
+        {
+            SuccessOrQuit(ParseHexDigit(c, digit));
+            VerifyOrQuit(digit == (c - 'a' + 10));
+        }
+        else
+        {
+            VerifyOrQuit(ParseHexDigit(c, digit) != kErrorNone);
+        }
+    }
+
+    VerifyOrQuit(!IsDigit(static_cast<char>('0' - 1)));
+    VerifyOrQuit(!IsDigit(static_cast<char>('9' + 1)));
+
+    VerifyOrQuit(!IsUppercase(static_cast<char>('A' - 1)));
+    VerifyOrQuit(!IsUppercase(static_cast<char>('Z' + 1)));
+
+    VerifyOrQuit(!IsLowercase(static_cast<char>('a' - 1)));
+    VerifyOrQuit(!IsLowercase(static_cast<char>('z' + 1)));
+
+    printf("\n\n -- PASS\n");
+}
+
+void TestStringCopy(void)
+{
+    char buffer[10];
+    char smallBuffer[1];
+
+    printf("\nTest 11: StringCopy() function\n");
+
+    SuccessOrQuit(StringCopy(buffer, "foo", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, "foo"));
+
+    SuccessOrQuit(StringCopy(buffer, nullptr, kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, ""));
+
+    SuccessOrQuit(StringCopy(buffer, "", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, ""));
+
+    SuccessOrQuit(StringCopy(buffer, "123456789", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, "123456789"));
+
+    VerifyOrQuit(StringCopy(buffer, "1234567890") == kErrorInvalidArgs);
+    VerifyOrQuit(StringCopy(buffer, "1234567890abcdef") == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(smallBuffer, "", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(smallBuffer, ""));
+
+    VerifyOrQuit(StringCopy(smallBuffer, "a") == kErrorInvalidArgs);
+
+    printf(" -- PASS\n");
+}
+
 // gcc-4 does not support constexpr function
 #if __GNUC__ > 4
 static_assert(ot::AreStringsInOrder("a", "b"), "AreStringsInOrder() failed");
@@ -318,6 +465,15 @@ static_assert(!ot::AreStringsInOrder("cd", "cd"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("z", "abcd"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("0", ""), "AreStringsInOrder() failed");
 #endif
+
+static_assert(ot::CheckConstStringPrefix("abc", "a"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", "ab"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", "abc"), "CheckConstStringPrefix() failed");
+static_assert(ot::CheckConstStringPrefix("abc", ""), "CheckConstStringPrefix() failed");
+
+static_assert(!ot::CheckConstStringPrefix("abc", "b"), "CheckConstStringPrefix() failed");
+static_assert(!ot::CheckConstStringPrefix("abc", "abcd"), "CheckConstStringPrefix() failed");
+static_assert(!ot::CheckConstStringPrefix("", "a"), "CheckConstStringPrefix() failed");
 
 } // namespace ot
 
@@ -331,6 +487,8 @@ int main(void)
     ot::TestStringEndsWith();
     ot::TestStringMatch();
     ot::TestStringToLowercase();
+    ot::TestStringParseUint8();
+    ot::TestStringCopy();
     printf("\nAll tests passed.\n");
     return 0;
 }

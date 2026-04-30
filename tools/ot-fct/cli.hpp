@@ -4,7 +4,7 @@
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must strain the above copyright
+ *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
@@ -47,8 +47,7 @@ namespace Fct {
 class Cli;
 
 /**
- * This class implements the factory CLI.
- *
+ * Implements the factory CLI.
  */
 class Cli
 {
@@ -60,25 +59,22 @@ public:
     }
 
     /**
-     * This method processes a factory command.
+     * Processes a factory command.
      *
      * @param[in]   aArgs          The arguments of command line.
      * @param[in]   aArgsLength    The number of args in @p aArgs.
-     *
      */
     void ProcessCommand(Utils::CmdLineParser::Arg aArgs[]);
 
     /**
-     * This method processes the command line.
+     * Processes the command line.
      *
      * @param[in]  aLine   A pointer to a command line string.
-     *
      */
     void ProcessLine(char *aLine);
 
     /**
-     * This method outputs the prompt.
-     *
+     * Outputs the prompt.
      */
     void OutputPrompt(void);
 

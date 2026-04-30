@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Radio Encapsulation Link (TREL) interface.
  */
 
-#ifndef TREL_INTERFACE_HPP_
-#define TREL_INTERFACE_HPP_
+#ifndef OT_CORE_RADIO_TREL_INTERFACE_HPP_
+#define OT_CORE_RADIO_TREL_INTERFACE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,172 +41,76 @@
 #include <openthread/trel.h>
 #include <openthread/platform/trel.h>
 
-#include "common/array.hpp"
 #include "common/locator.hpp"
-#include "common/tasklet.hpp"
-#include "common/time.hpp"
-#include "mac/mac_types.hpp"
-#include "net/ip6_address.hpp"
 #include "net/socket.hpp"
 #include "radio/trel_packet.hpp"
-#include "thread/mle_types.hpp"
 
 namespace ot {
 namespace Trel {
 
 class Link;
 
-extern "C" void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
-extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
+extern "C" void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                         uint8_t          *aBuffer,
+                                         uint16_t          aLength,
+                                         const otSockAddr *aSenderAddr);
+/**
+ * Represents a group of TREL counters.
+ */
+typedef otTrelCounters Counters;
 
 /**
- * This class represents a TREL link interface.
- *
+ * Represents a TREL link interface.
  */
 class Interface : public InstanceLocator
 {
     friend class Link;
-    friend void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
-    friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
+    friend void otPlatTrelHandleReceived(otInstance       *aInstance,
+                                         uint8_t          *aBuffer,
+                                         uint16_t          aLength,
+                                         const otSockAddr *aSenderAddr);
 
 public:
     /**
-     * This class represents information about a discovered TREL peer.
-     *
+     * Represents an entity requesting to enable or disable the TREL interface (via `SetEnabled()`).
      */
-    class Peer : public otTrelPeer
+    enum Requester : uint8_t
     {
-        friend class Interface;
-        friend void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
-
-    public:
-        /**
-         * This method returns the Extended MAC Address of the discovered TREL peer.
-         *
-         * @returns The Extended MAC Address of the TREL peer.
-         *
-         */
-        const Mac::ExtAddress &GetExtAddress(void) const { return static_cast<const Mac::ExtAddress &>(mExtAddress); }
-
-        /**
-         * This method returns the Extended PAN Identifier of the discovered TREL peer.
-         *
-         * @returns The Extended PAN Identifier of the TREL peer.
-         *
-         */
-        const MeshCoP::ExtendedPanId &GetExtPanId(void) const
-        {
-            return static_cast<const MeshCoP::ExtendedPanId &>(mExtPanId);
-        }
-
-        /**
-         * This method returns the IPv6 socket address of the discovered TREL peer.
-         *
-         * @returns The IPv6 socket address of the TREP peer.
-         *
-         */
-        const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
-
-        /**
-         * This method indicates whether the peer matches a given Extended Address.
-         *
-         * @param[in] aExtAddress   A Extended Address to match with.
-         *
-         * @retval TRUE if the peer matches @p aExtAddress.
-         * @retval FALSE if the peer does not match @p aExtAddress.
-         *
-         */
-        bool Matches(const Mac::ExtAddress &aExtAddress) const { return GetExtAddress() == aExtAddress; }
-
-        /**
-         * This method indicates whether the peer matches a given Socket Address.
-         *
-         * @param[in] aSockAddr   A Socket Address to match with.
-         *
-         * @retval TRUE if the peer matches @p aSockAddr.
-         * @retval FALSE if the peer does not match @p aSockAddr.
-         *
-         */
-        bool Matches(const Ip6::SockAddr &aSockAddr) const { return GetSockAddr() == aSockAddr; }
-
-    private:
-        class Info : public otPlatTrelPeerInfo
-        {
-        public:
-            bool                 IsRemoved(void) const { return mRemoved; }
-            const uint8_t       *GetTxtData(void) const { return mTxtData; }
-            uint16_t             GetTxtLength(void) const { return mTxtLength; }
-            const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
-        };
-
-        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
-        void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
-        void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
-        void Log(const char *aAction) const;
+        kRequesterUser,  ///< Requested by user (public OT API).
+        kRequesterStack, ///< Requested by stack itself (`Link`).
     };
 
     /**
-     * This type represents an iterator for iterating over TREL peer table entries.
+     * Enables or disables the TREL interface by a `Requester`.
      *
+     * The interface is enabled only when it is enabled by both `kRequesterUser` and `kRequesterStack`. Otherwise, it
+     * is disabled.
+     *
+     * Upon OpenThread initialization, the interface state relative to `kRequesterUser` is considered enabled, i.e.,
+     * the stack itself will directly control when to enable/disable the TREL interface (when radio link state changes).
+     *
+     * However, the user can explicitly disable the TREL interface, which can only be re-enabled by the user. This
+     * ensures that if the user disables the TREL interface, it stays disabled regardless of other OpenThread stack
+     * state changes which may trigger disabling/enabling of all radio links, including the TREL link and its interface.
+     *
+     * @param[in] aEnable     A boolean to enable/disable the TREL interface.
+     * @param[in] aRequester  The requester (user or stack).
      */
-    typedef otTrelPeerIterator PeerIterator;
+    void SetEnabled(bool aEnable, Requester aRequester);
 
     /**
-     * This method enables or disables the TREL interface.
+     * Indicates whether the TREL interface is enabled.
      *
-     * @param[in] aEnable A boolean to enable/disable the TREL interface.
-     */
-    void SetEnabled(bool aEnable);
-
-    /**
-     * This method enables the TREL interface.
-     *
-     * This call initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain
-     * to discover other devices supporting TREL. Device also registers a new service to be advertised using DNS-SD,
-     * with the service name is "_trel._udp" indicating its support for TREL. Device is ready to receive TREL messages
-     * from peers.
-     *
-     */
-    void Enable(void);
-
-    /**
-     * This method disables the TREL interface.
-     *
-     * This call stops the DNS-SD browse on the service name "_trel._udp", stops advertising TREL DNS-SD service, and
-     * clears the TREL peer table.
-     *
-     */
-    void Disable(void);
-
-    /**
-     * This method indicates whether the TREL interface is enabled.
+     * The interface is enabled only when it is enabled by both `kRequesterUser` and `kRequesterStack`. Otherwise, it
+     * is disabled.
      *
      * @retval TRUE if the TREL interface is enabled.
      * @retval FALSE if the TREL interface is disabled.
-     *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const { return mState == kStateEnabled; }
 
     /**
-     * This method initializes a peer table iterator.
-     *
-     * @param[in] aIterator   The iterator to initialize.
-     *
-     */
-    void InitIterator(PeerIterator &aIterator) const { aIterator = 0; }
-
-    /**
-     * This method iterates over the peer table entries.
-     *
-     * @param[in] aIterator   The iterator. MUST be initialized.
-     *
-     * @returns A pointer to the next `Peer` entry or `nullptr` if no more entries in the table.
-     *
-     */
-    const Peer *GetNextPeer(PeerIterator &aIterator) const;
-
-    /**
-     * This method sets the filter mode (enables/disables filtering).
+     * Sets the filter mode (enables/disables filtering).
      *
      * When filtering is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly
      * intended for use during testing.
@@ -215,56 +119,61 @@ public:
      * TREL interface continues to be enabled.
      *
      * @param[in] aFiltered  TRUE to enable filter mode, FALSE to disable filter mode.
-     *
      */
     void SetFilterEnabled(bool aEnable) { mFiltered = aEnable; }
 
     /**
-     * This method indicates whether or not the filter mode is enabled.
+     * Indicates whether or not the filter mode is enabled.
      *
      * @retval TRUE if the TREL filter mode is enabled.
      * @retval FALSE if the TREL filter mode is disabled.
-     *
      */
     bool IsFilterEnabled(void) const { return mFiltered; }
 
+    /**
+     * Gets the TREL counters.
+     *
+     * The counters are initialized to zero when the TREL platform is initialized.
+     */
+    const Counters *GetCounters(void) const;
+
+    /**
+     * Resets the TREL counters.
+     */
+    void ResetCounters(void);
+
+    /**
+     * Returns the TREL UDP port.
+     *
+     * @returns The TREL UDP port.
+     */
+    uint16_t GetUdpPort(void) const { return mUdpPort; }
+
 private:
-    static constexpr uint16_t kPeerTableExtraEntries = 32;
-    static constexpr uint16_t kPeerTableSize         = Mle::kMaxRouters + Mle::kMaxChildren + kPeerTableExtraEntries;
-
-    static const char kTxtRecordExtAddressKey[];
-    static const char kTxtRecordExtPanIdKey[];
-
-    typedef Array<Peer, kPeerTableSize, uint16_t> PeerTable;
+    enum State : uint8_t
+    {
+        kStateUninitialized,
+        kStateDisabled,
+        kStateEnabled,
+    };
 
     explicit Interface(Instance &aInstance);
 
+    void UpdateState(void);
+
     // Methods used by `Trel::Link`.
     void  Init(void);
-    void  HandleExtAddressChange(void);
-    void  HandleExtPanIdChange(void);
-    Error Send(const Packet &aPacket, bool aIsDiscovery = false);
+    Error Send(Packet &aPacket, bool aIsDiscovery = false);
 
     // Callbacks from `otPlatTrel`.
-    void HandleReceived(uint8_t *aBuffer, uint16_t aLength);
-    void HandleDiscoveredPeerInfo(const Peer::Info &aInfo);
+    void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
 
-    void  RegisterService(void);
-    Error ParsePeerInfoTxtData(const Peer::Info       &aInfo,
-                               Mac::ExtAddress        &aExtAddress,
-                               MeshCoP::ExtendedPanId &aExtPanId) const;
-    Peer *GetNewPeerEntry(void);
-    void  RemovePeerEntry(Peer &aEntry);
-
-    using RegsiterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
-
-    bool                mInitialized : 1;
-    bool                mEnabled : 1;
-    bool                mFiltered : 1;
-    RegsiterServiceTask mRegisterServiceTask;
-    uint16_t            mUdpPort;
-    Packet              mRxPacket;
-    PeerTable           mPeerTable;
+    bool     mUserEnabled : 1;
+    bool     mStackEnabled : 1;
+    bool     mFiltered : 1;
+    State    mState;
+    uint16_t mUdpPort;
+    Packet   mRxPacket;
 };
 
 } // namespace Trel
@@ -272,4 +181,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // TREL_INTERFACE_HPP_
+#endif // OT_CORE_RADIO_TREL_INTERFACE_HPP_

@@ -33,13 +33,7 @@
 
 #include "settings.hpp"
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/num_utils.hpp"
-#include "meshcop/dataset.hpp"
-#include "thread/mle.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -106,78 +100,76 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+void SettingsBase::BorderAgentId::Log(Action aAction, const MeshCoP::BorderAgent::Id &aId)
+{
+    static constexpr uint8_t kStringSize = sizeof(MeshCoP::BorderAgent::Id) * 2 + 1;
+
+    String<kStringSize> string;
+
+    string.AppendHexBytes(aId.mId, sizeof(aId));
+    LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), string.AsCString());
+}
+#endif
+
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *SettingsBase::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Read",     // (0) kActionRead
-        "Saved",    // (1) kActionSave
-        "Re-saved", // (2) kActionResave
-        "Deleted",  // (3) kActionDelete
-#if OPENTHREAD_FTD
-        "Added",      // (4) kActionAdd,
-        "Removed",    // (5) kActionRemove,
-        "Deleted all" // (6) kActionDeleteAll
-#endif
-    };
+#define ActionMapList(_)         \
+    _(kActionRead, "Read")       \
+    _(kActionSave, "Saved")      \
+    _(kActionResave, "Re-saved") \
+    _(kActionDelete, "Deleted")  \
+    FtdActionMapList(_)
 
-    static_assert(0 == kActionRead, "kActionRead value is incorrect");
-    static_assert(1 == kActionSave, "kActionSave value is incorrect");
-    static_assert(2 == kActionResave, "kActionResave value is incorrect");
-    static_assert(3 == kActionDelete, "kActionDelete value is incorrect");
 #if OPENTHREAD_FTD
-    static_assert(4 == kActionAdd, "kActionAdd value is incorrect");
-    static_assert(5 == kActionRemove, "kActionRemove value is incorrect");
-    static_assert(6 == kActionDeleteAll, "kActionDeleteAll value is incorrect");
+#define FtdActionMapList(_)     \
+    _(kActionAdd, "Added")      \
+    _(kActionRemove, "Removed") \
+    _(kActionDeleteAll, "Deleted all")
+#else
+#define FtdActionMapList(_)
 #endif
 
-    return kActionStrings[aAction];
+    DefineEnumStringArray(ActionMapList);
+
+    return kStrings[aAction];
 }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 const char *SettingsBase::KeyToString(Key aKey)
 {
-    static const char *const kKeyStrings[] = {
-        "",                  // (0)  (Unused)
-        "ActiveDataset",     // (1)  kKeyActiveDataset
-        "PendingDataset",    // (2)  kKeyPendingDataset
-        "NetworkInfo",       // (3)  kKeyNetworkInfo
-        "ParentInfo",        // (4)  kKeyParentInfo
-        "ChildInfo",         // (5)  kKeyChildInfo
-        "",                  // (6)  Removed (previously auto-start).
-        "SlaacIidSecretKey", // (7)  kKeySlaacIidSecretKey
-        "DadInfo",           // (8)  kKeyDadInfo
-        "",                  // (9)  Removed (previously OMR prefix).
-        "",                  // (10) Removed (previously on-link prefix).
-        "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
-        "SrpClientInfo",     // (12) kKeySrpClientInfo
-        "SrpServerInfo",     // (13) kKeySrpServerInfo
-        "",                  // (14) Removed (previously NAT64 prefix)
-        "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
-        "BrOnLinkPrefixes"   // (16) kKeyBrOnLinkPrefixes
-    };
+#define KeyMapList(_)                             \
+    _(0, "")                                      \
+    _(kKeyActiveDataset, "ActiveDataset")         \
+    _(kKeyPendingDataset, "PendingDataset")       \
+    _(kKeyNetworkInfo, "NetworkInfo")             \
+    _(kKeyParentInfo, "ParentInfo")               \
+    _(kKeyChildInfo, "ChildInfo")                 \
+    _(6, "")                                      \
+    _(kKeySlaacIidSecretKey, "SlaacIidSecretKey") \
+    _(kKeyDadInfo, "DadInfo")                     \
+    _(9, "")                                      \
+    _(10, "")                                     \
+    _(kKeySrpEcdsaKey, "SrpEcdsaKey")             \
+    _(kKeySrpClientInfo, "SrpClientInfo")         \
+    _(kKeySrpServerInfo, "SrpServerInfo")         \
+    _(14, "")                                     \
+    _(kKeyBrUlaPrefix, "BrUlaPrefix")             \
+    _(kKeyBrOnLinkPrefixes, "BrOnLinkPrefixes")   \
+    _(kKeyBorderAgentId, "BorderAgentId")         \
+    _(kKeyTcatCommrCert, "TcatCommrCert")
 
-    static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
-    static_assert(2 == kKeyPendingDataset, "kKeyPendingDataset value is incorrect");
-    static_assert(3 == kKeyNetworkInfo, "kKeyNetworkInfo value is incorrect");
-    static_assert(4 == kKeyParentInfo, "kKeyParentInfo value is incorrect");
-    static_assert(5 == kKeyChildInfo, "kKeyChildInfo value is incorrect");
-    static_assert(7 == kKeySlaacIidSecretKey, "kKeySlaacIidSecretKey value is incorrect");
-    static_assert(8 == kKeyDadInfo, "kKeyDadInfo value is incorrect");
-    static_assert(11 == kKeySrpEcdsaKey, "kKeySrpEcdsaKey value is incorrect");
-    static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
-    static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
-    static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
-    static_assert(16 == kKeyBrOnLinkPrefixes, "kKeyBrOnLinkPrefixes is incorrect");
+    DefineEnumStringArray(KeyMapList);
 
-    static_assert(kLastKey == kKeyBrOnLinkPrefixes, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyTcatCommrCert, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
-    return kKeyStrings[aKey];
+    return kStrings[aKey];
 }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
@@ -208,39 +200,48 @@ Settings::Key Settings::KeyForDatasetType(MeshCoP::Dataset::Type aType)
     return (aType == MeshCoP::Dataset::kActive) ? kKeyActiveDataset : kKeyPendingDataset;
 }
 
-Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
+void Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
 {
     Key   key   = KeyForDatasetType(aType);
-    Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetSize());
+    Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetLength());
 
     Log(kActionSave, error, key);
 
-    return error;
+    SuccessOrAssert(error);
 }
 
 Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const
 {
     Error    error  = kErrorNone;
-    uint16_t length = MeshCoP::Dataset::kMaxSize;
+    uint16_t length = MeshCoP::Dataset::kMaxLength;
 
     SuccessOrExit(error = Get<SettingsDriver>().Get(KeyForDatasetType(aType), aDataset.GetBytes(), &length));
-    VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = kErrorNotFound);
+    VerifyOrExit(length <= MeshCoP::Dataset::kMaxLength, error = kErrorNotFound);
 
-    aDataset.SetSize(length);
+    aDataset.SetLength(static_cast<uint8_t>(length));
 
 exit:
     return error;
 }
 
-Error Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
+void Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
 {
     Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);
-
-    return error;
 }
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+void Settings::SaveTcatCommissionerCertificate(uint8_t *aCert, uint16_t aCertLen)
+{
+    Error error = Get<SettingsDriver>().Set(kKeyTcatCommrCert, aCert, aCertLen);
+
+    Log(kActionSave, error, kKeyTcatCommrCert);
+
+    SuccessOrAssert(error);
+}
+#endif
 
 #if OPENTHREAD_FTD
 Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
@@ -252,13 +253,11 @@ Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
     return error;
 }
 
-Error Settings::DeleteAllChildInfo(void)
+void Settings::DeleteAllChildInfo(void)
 {
     Error error = Get<SettingsDriver>().Delete(kKeyChildInfo);
 
     Log(kActionDeleteAll, error, kKeyChildInfo);
-
-    return error;
 }
 
 Settings::ChildInfoIterator::ChildInfoIterator(Instance &aInstance)
@@ -339,26 +338,22 @@ exit:
     return error;
 }
 
-Error Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
+void Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
 {
-    Error          error = kErrorNotFound;
     BrOnLinkPrefix brPrefix;
 
     for (int index = 0; ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone; index++)
     {
         if (brPrefix.GetPrefix() == aPrefix)
         {
-            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            IgnoreError(Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
             brPrefix.Log("Removed");
             break;
         }
     }
-
-exit:
-    return error;
 }
 
-Error Settings::DeleteAllBrOnLinkPrefixes(void) { return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes); }
+void Settings::DeleteAllBrOnLinkPrefixes(void) { IgnoreError(Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes)); }
 
 Error Settings::ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix)
 {
@@ -390,7 +385,7 @@ Error Settings::ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const
     return error;
 }
 
-Error Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength)
+void Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength)
 {
     Error    error      = kErrorNone;
     uint16_t readLength = aLength;
@@ -408,16 +403,14 @@ Error Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aL
 
     Log(action, error, aKey, aValue);
 
-    return error;
+    SuccessOrAssert(error);
 }
 
-Error Settings::DeleteEntry(Key aKey)
+void Settings::DeleteEntry(Key aKey)
 {
     Error error = Get<SettingsDriver>().Delete(aKey);
 
     Log(kActionDelete, error, aKey);
-
-    return error;
 }
 
 void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
@@ -515,6 +508,12 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         case kKeySrpServerInfo:
             reinterpret_cast<const SrpServerInfo *>(aValue)->Log(aAction);
+            break;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+        case kKeyBorderAgentId:
+            BorderAgentId::Log(aAction, *reinterpret_cast<const MeshCoP::BorderAgent::Id *>(aValue));
             break;
 #endif
 

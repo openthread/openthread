@@ -1,0 +1,237 @@
+#!/usr/bin/expect -f
+
+#
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+set WL1 1
+set WL2 2
+set WC1 3
+set WC2 4
+set WL1_EXT_ADDRESS "deadbeefcafe0001"
+set WL2_EXT_ADDRESS "deadbeefcafe0002"
+set WC1_EXT_ADDRESS "deadbeefcafe0003"
+set WC2_EXT_ADDRESS "deadbeefcafe0004"
+
+
+send_user "\n\n>>> Setup WL1\n"
+spawn_node $WL1
+
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+send "wakeup listen enable\n"
+expect_line "Done"
+
+set wl1_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> Setup WL2\n"
+spawn_node $WL2
+
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WL2_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+send "wakeup listen enable\n"
+expect_line "Done"
+
+set wl2_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> Setup WC1\n"
+spawn_node $WC1
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WC1_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+set wc1_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> Setup WC2\n"
+spawn_node $WC2
+setup_default_network
+
+send "mode rdn\n"
+expect_line "Done"
+
+send "extaddr $WC2_EXT_ADDRESS\n"
+expect_line "Done"
+
+send "wakeup channel 11\n"
+expect_line "Done"
+
+send "routerupgradethreshold 0\n"
+expect_line "Done"
+
+send "ifconfig up\n"
+expect_line "Done"
+
+send "thread start\n"
+expect_line "Done"
+
+set wc2_link_local_addr [get_ipaddr linklocal]
+
+
+send_user "\n\n>>> WC1 establishes a P2P link with WL1\n"
+switch_node $WC1
+send "p2p link extaddr $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+send_user "\n\n>>> WC1 pings WL1\n"
+send "ping $wl1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wl1_link_local_addr: icmp_seq=$i"
+}
+
+sleep 1
+
+
+send_user "\n\n>>> WC1 establishes a P2P link with WL2\n"
+send "p2p link extaddr $WL2_EXT_ADDRESS\n"
+expect_line "Done"
+
+sleep 1
+
+send_user "\n\n>>> WC1 pings WL2\n"
+send "ping $wl2_link_local_addr 20 5\n"
+for {set i 6} {$i <= 10} {incr i} {
+    expect "28 bytes from $wl2_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WC2 establishes a P2P link with WL1\n"
+switch_node $WC2
+send "p2p link extaddr $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+sleep 1
+
+send_user "\n\n>>> WC2 pings WL1\n"
+send "ping $wl1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wl1_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WL1 pings WC1\n"
+switch_node $WL1
+
+send "ping $wc1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wc1_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WL1 pings WC2\n"
+send "ping $wc2_link_local_addr 20 5\n"
+for {set i 6} {$i <= 10} {incr i} {
+    expect "28 bytes from $wc2_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WL2 pings WC1\n"
+switch_node $WL2
+
+send "ping $wc1_link_local_addr 20 5\n"
+for {set i 1} {$i <= 5} {incr i} {
+    expect "28 bytes from $wc1_link_local_addr: icmp_seq=$i"
+}
+
+
+send_user "\n\n>>> WC1 tears down the P2P link with WL1\n"
+switch_node $WC1
+send "p2p unlink $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+
+send_user "\n\n>>> WC2 tears down the P2P link with WL1\n"
+switch_node $WC2
+send "p2p unlink $WL1_EXT_ADDRESS\n"
+expect_line "Done"
+
+
+send_user "\n\n>>> WL2 tears down the P2P link with WC1\n"
+switch_node $WL2
+send "p2p unlink $WC1_EXT_ADDRESS\n"
+expect_line "Done"
+
+sleep 1
+
+dispose_all

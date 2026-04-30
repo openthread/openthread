@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to Announce Requests.
  */
 
-#ifndef ANNOUNCE_BEGIN_SERVER_HPP_
-#define ANNOUNCE_BEGIN_SERVER_HPP_
+#ifndef OT_CORE_THREAD_ANNOUNCE_BEGIN_SERVER_HPP_
+#define OT_CORE_THREAD_ANNOUNCE_BEGIN_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -45,8 +45,7 @@
 namespace ot {
 
 /**
- * This class implements handling Announce Begin Requests.
- *
+ * Implements handling Announce Begin Requests.
  */
 class AnnounceBeginServer : public AnnounceSenderBase
 {
@@ -54,18 +53,16 @@ class AnnounceBeginServer : public AnnounceSenderBase
 
 public:
     /**
-     * This constructor initializes the object.
-     *
+     * Initializes the object.
      */
     explicit AnnounceBeginServer(Instance &aInstance);
 
     /**
-     * This method begins the MLE Announce transmission process.
+     * Begins the MLE Announce transmission process.
      *
      * @param[in]  aChannelMask   The channels to use for transmission.
      * @param[in]  aCount         The number of transmissions per channel.
      * @param[in]  aPeriod        The time between transmissions (milliseconds).
-     *
      */
     void SendAnnounce(uint32_t aChannelMask, uint8_t aCount = kDefaultCount, uint16_t aPeriod = kDefaultPeriod);
 
@@ -74,7 +71,7 @@ private:
     static constexpr uint16_t kDefaultPeriod = 1000;
     static constexpr uint16_t kDefaultJitter = 0;
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
     static void HandleTimer(Timer &aTimer);
 };
@@ -87,4 +84,4 @@ DeclareTmfHandler(AnnounceBeginServer, kUriAnnounceBegin);
 
 } // namespace ot
 
-#endif // ANNOUNCE_BEGIN_SERVER_HPP_
+#endif // OT_CORE_THREAD_ANNOUNCE_BEGIN_SERVER_HPP_

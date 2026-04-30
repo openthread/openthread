@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the SNTP Client.
- *
  */
 
-#ifndef CONFIG_SNTP_CLIENT_H_
-#define CONFIG_SNTP_CLIENT_H_
+#ifndef OT_CORE_CONFIG_SNTP_CLIENT_H_
+#define OT_CORE_CONFIG_SNTP_CLIENT_H_
+
+/**
+ * @addtogroup config-sntp-client
+ *
+ * @brief
+ *   This module includes configuration variables for the SNTP Client.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
  *
  * Define to 1 to enable SNTP Client support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 #define OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE 0
@@ -49,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT
  *
  * Maximum time that SNTP Client waits for response in milliseconds.
- *
  */
 #ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT
 #define OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT 3000
@@ -59,10 +65,13 @@
  * @def OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT
  *
  * Maximum number of retransmissions for SNTP client.
- *
  */
 #ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT
 #define OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT 2
 #endif
 
-#endif // CONFIG_SNTP_CLIENT_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_SNTP_CLIENT_H_

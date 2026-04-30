@@ -30,6 +30,7 @@ project("TCPlp" C)
 
 set(src_tcplp
     bsdtcp/cc/cc_newreno.c
+    bsdtcp/tcp_fastopen.c
     bsdtcp/tcp_input.c
     bsdtcp/tcp_output.c
     bsdtcp/tcp_reass.c

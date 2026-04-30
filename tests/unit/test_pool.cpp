@@ -30,17 +30,19 @@
 
 #include <openthread/config.h>
 
-#include "common/instance.hpp"
 #include "common/pool.hpp"
+#include "instance/instance.hpp"
 
 #include "test_util.h"
+
+namespace ot {
 
 struct EntryBase
 {
     EntryBase *mNext;
 };
 
-struct Entry : public EntryBase, ot::LinkedListEntry<Entry>
+struct Entry : public EntryBase, LinkedListEntry<Entry>
 {
 public:
     Entry(void)
@@ -48,7 +50,7 @@ public:
     {
     }
 
-    void Init(ot::Instance &) { mInitWithInstance = true; }
+    void Init(Instance &) { mInitWithInstance = true; }
 
     bool IsInitializedWithInstance(void) const { return mInitWithInstance; }
 
@@ -56,12 +58,10 @@ private:
     bool mInitWithInstance;
 };
 
-enum : uint16_t
-{
-    kPoolSize = 11,
-};
+constexpr uint16_t kPoolSize = 11;
 
-typedef ot::Pool<Entry, kPoolSize> EntryPool;
+typedef Pool<Entry, kPoolSize> EntryPool;
+typedef ConfigPool<Entry>      ConfigEntryPool;
 
 static Entry sNonPoolEntry;
 
@@ -80,7 +80,15 @@ void VerifyEntry(EntryPool &aPool, const Entry &aEntry, bool aInitWithInstance)
     VerifyOrQuit(aEntry.IsInitializedWithInstance() == aInitWithInstance, "Pool did not correctly Init() entry");
 }
 
-void TestPool(EntryPool &aPool, bool aInitWithInstance)
+void VerifyEntry(ConfigEntryPool &aPool, const Entry &aEntry, bool aInitWithInstance)
+{
+    OT_UNUSED_VARIABLE(aInitWithInstance);
+
+    VerifyOrQuit(aPool.IsPoolEntry(aEntry));
+    VerifyOrQuit(!aPool.IsPoolEntry(sNonPoolEntry), "Pool::IsPoolEntry() succeeded for non-pool entry");
+}
+
+template <typename PoolType> void TestPool(PoolType &aPool, bool aInitWithInstance = false)
 {
     Entry *entries[kPoolSize];
 
@@ -118,19 +126,37 @@ void TestPool(EntryPool &aPool, bool aInitWithInstance)
 
 void TestPool(void)
 {
-    ot::Instance *instance = testInitInstance();
-    EntryPool     pool1;
-    EntryPool     pool2(*instance);
+    Instance *instance = testInitInstance();
+    EntryPool pool1;
+    EntryPool pool2(*instance);
 
+    printf("TestPool(/* aInitWithInstance */ false)\n");
     TestPool(pool1, /* aInitWithInstance */ false);
+
+    printf("TestPool(/* aInitWithInstance */ true)\n");
     TestPool(pool2, /* aInitWithInstance */ true);
 
     testFreeInstance(instance);
 }
 
+void TestConfigPool(void)
+{
+    ConfigEntryPool pool;
+    Entry           entries[kPoolSize];
+
+    printf("TestConfigPool()\n");
+    SuccessOrQuit(pool.Init(entries, kPoolSize));
+    TestPool(pool);
+
+    VerifyOrQuit(pool.Init(entries, kPoolSize) != kErrorNone);
+}
+
+} // namespace ot
+
 int main(void)
 {
-    TestPool();
+    ot::TestPool();
+    ot::TestConfigPool();
     printf("All tests passed\n");
     return 0;
 }

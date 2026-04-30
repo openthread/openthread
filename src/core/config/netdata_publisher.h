@@ -29,11 +29,19 @@
 /**
  * @file
  *   This file includes compile-time configurations for Network Data Publisher.
- *
  */
 
-#ifndef CONFIG_NETDATA_PUBLISHER_H_
-#define CONFIG_NETDATA_PUBLISHER_H_
+#ifndef OT_CORE_CONFIG_NETDATA_PUBLISHER_H_
+#define OT_CORE_CONFIG_NETDATA_PUBLISHER_H_
+
+/**
+ * @addtogroup config-netdata-publisher
+ *
+ * @brief
+ *   This module includes configuration variables for Network Data Publisher.
+ *
+ * @{
+ */
 
 #include "config/border_router.h"
 #include "config/border_routing.h"
@@ -47,7 +55,6 @@
  * Network Data Publisher provides mechanisms to limit the number of similar Service and/or Prefix (on-mesh prefix
  * or external route) entries in the Thread Network Data by monitoring the Network Data and managing if or when to add
  * or remove entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE \
@@ -59,7 +66,6 @@
  *
  * Specifies the maximum value (in milliseconds) of the random delay used before adding an entry in the Thread Network
  * Data.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD 3500
@@ -70,7 +76,6 @@
  *
  * Specifies the maximum value (in milliseconds) of the random wait time used before removing an entry from the Thread
  * Network Data.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_REMOVE
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_REMOVE 15000
@@ -91,7 +96,6 @@
  * It is recommended that `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED` to be set to a
  * value larger than `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_REMOVE` to ensure that non-preferred entries
  * are removed first.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED 16000
@@ -103,7 +107,6 @@
  * Specifies the desired number of "DNS/SRP Service Anycast Address" entries in the Thread Network Data.
  *
  * Publisher attempts to limit the number of such entries to this value.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_ANYCAST_DNS_SRP_SERVICE_ENTRIES
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_ANYCAST_DNS_SRP_SERVICE_ENTRIES 8
@@ -115,7 +118,6 @@
  * Specifies the desired number of "DNS/SRP Service Anycast Address" entries in the Thread Network Data.
  *
  * Publisher attempts to limit the number of such entries to this value.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_UNICAST_DNS_SRP_SERVICE_ENTRIES
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_UNICAST_DNS_SRP_SERVICE_ENTRIES 2
@@ -127,7 +129,6 @@
  * Specifies the desired number of matching On-mesh Prefix entries in the Thread Network Data.
  *
  * Publisher attempts to limit the number of matching entries to this value.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_ON_MESH_PREFIX_ENTRIES
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_ON_MESH_PREFIX_ENTRIES 3
@@ -139,7 +140,6 @@
  * Specifies the desired number of matching External Route entries in the Thread Network Data.
  *
  * Publisher attempts to limit the number of matching entries to this value.
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_EXTERNAL_ROUTE_ENTRIES
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_DESIRED_NUM_EXTERNAL_ROUTE_ENTRIES 10
@@ -150,10 +150,13 @@
  *
  * Specifies maximum number of prefix (on-mesh prefix or external route) entries reserved by Publisher for use by
  * user (through OT public APIs).
- *
  */
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES 3
 #endif
 
-#endif // CONFIG_NETDATA_PUBLISHER_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_NETDATA_PUBLISHER_H_

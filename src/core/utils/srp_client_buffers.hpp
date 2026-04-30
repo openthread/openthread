@@ -31,8 +31,8 @@
  *   This file includes definitions for the SRP client buffers and service pool.
  */
 
-#ifndef SRP_CLIENT_BUFFERS_HPP_
-#define SRP_CLIENT_BUFFERS_HPP_
+#ifndef OT_CORE_UTILS_SRP_CLIENT_BUFFERS_HPP_
+#define OT_CORE_UTILS_SRP_CLIENT_BUFFERS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -56,57 +56,48 @@ namespace Utils {
 #endif
 
 /**
- * This class represents the SRP client buffers and service pool.
- *
+ * Represents the SRP client buffers and service pool.
  */
 class SrpClientBuffers : public InstanceLocator, private NonCopyable
 {
 public:
     /**
      * Maximum number of service entries in the pool.
-     *
      */
     static constexpr uint16_t kMaxServices = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES;
 
     /**
      * Max number of host address entries.
-     *
      */
     static constexpr uint16_t kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES;
 
     /**
      * Size (number of char) of host name string (includes null `\0` termination char).
-     *
      */
     static constexpr uint16_t kHostNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_HOST_NAME_SIZE;
 
     /**
      * Size (number of char) of service name string (includes null `\0` termination char).
-     *
      */
     static constexpr uint16_t kServiceNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_NAME_SIZE;
 
     /**
      * Array length for service subtype label.
-     *
      */
     static constexpr uint16_t kServiceMaxSubTypes = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_MAX_SUB_TYPES;
 
     /**
      * Size (number of char) of service instance name string (includes null `\0` termination char).
-     *
      */
     static constexpr uint16_t kInstanceNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_INSTANCE_NAME_SIZE;
 
     /**
      * Size (number of bytes) of TXT record buffer.
-     *
      */
     static constexpr uint16_t kTxtBufferSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE;
 
     /**
-     * This class represents a SRP client service entry from the pool.
-     *
+     * Represents a SRP client service entry from the pool.
      */
     class ServiceEntry : public otSrpClientBuffersServiceEntry, public Clearable<ServiceEntry>
     {
@@ -115,12 +106,11 @@ public:
 
     public:
         /**
-         * This method gets the string buffer for the service name from the service entry.
+         * Gets the string buffer for the service name from the service entry.
          *
          * @param[out] aSize    Reference to a variable to return the size (number of bytes) of the string buffer.
          *
          * @returns A pointer to the string buffer.
-         *
          */
         char *GetServiceNameString(uint16_t &aSize)
         {
@@ -129,12 +119,11 @@ public:
         }
 
         /**
-         * This method gets the string buffer for the instance name from the service entry.
+         * Gets the string buffer for the instance name from the service entry.
          *
          * @param[out] aSize    Reference to a variable to return the size (number of bytes) of the string buffer.
          *
          * @returns A pointer to the string buffer.
-         *
          */
         char *GetInstanceNameString(uint16_t &aSize)
         {
@@ -143,12 +132,11 @@ public:
         }
 
         /**
-         * This method gets the buffer for the TXT value from the service entry.
+         * Gets the buffer for the TXT value from the service entry.
          *
          * @param[out] aSize    Reference to a variable to return the size (number of bytes) of the buffer.
          *
          * @returns A pointer to the buffer.
-         *
          */
         uint8_t *GetTxtBuffer(uint16_t &aSize)
         {
@@ -157,12 +145,11 @@ public:
         }
 
         /**
-         * This method gets the array for service subtype labels from the service entry.
+         * Gets the array for service subtype labels from the service entry.
          *
          * @param[out] aArrayLength    Reference to a variable to return the array length.
          *
          * @returns A pointer to the array.
-         *
          */
         const char **GetSubTypeLabelsArray(uint16_t &aArrayLength)
         {
@@ -182,20 +169,18 @@ public:
     };
 
     /**
-     * This constructor initializes the `SrpClientBuffers` object.
+     * Initializes the `SrpClientBuffers` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit SrpClientBuffers(Instance &aInstance);
 
     /**
-     * This method gets the string buffer to use for SRP client host name.
+     * Gets the string buffer to use for SRP client host name.
      *
      * @param[out] aSize      Reference to a variable to return the size (number of bytes) of the string buffer.
      *
      * @returns A pointer to char buffer to use for SRP client host name.
-     *
      */
     char *GetHostNameString(uint16_t &aSize)
     {
@@ -204,13 +189,12 @@ public:
     }
 
     /**
-     * This method gets the array of IPv6 address entries to use as SRP client host address list.
+     * Gets the array of IPv6 address entries to use as SRP client host address list.
      *
      * @param[out] aArrayLength  Reference to a variable to return the array length (number of IPv6 address entries in
      * *                         the array).
      *
      * @returns A pointer to an array of `Ip6::Address` entries (number of entries is returned in @p aArrayLength).
-     *
      */
     Ip6::Address *GetHostAddressesArray(uint8_t &aArrayLength)
     {
@@ -219,7 +203,7 @@ public:
     }
 
     /**
-     * This method allocates a new service entry from the pool.
+     * Allocates a new service entry from the pool.
      *
      * The returned service entry instance will be initialized as follows:
      *
@@ -235,24 +219,21 @@ public:
      *  - All related data/string buffers and arrays are cleared to all zero.
      *
      * @returns A pointer to the newly allocated service entry or `nullptr` if not more entry available in the pool.
-     *
      */
     ServiceEntry *AllocateService(void);
 
     /**
-     * This method frees a previously allocated service entry.
+     * Frees a previously allocated service entry.
      *
      * The @p aService MUST be previously allocated using `AllocateService()` and not yet freed. Otherwise the behavior
      * of this method is undefined.
      *
      * @param[in] aServiceEntry     A service entry to free.
-     *
      */
     void FreeService(ServiceEntry &aServiceEntry) { mServicePool.Free(aServiceEntry); }
 
     /**
-     * This method frees all previously allocated service entries.
-     *
+     * Frees all previously allocated service entries.
      */
     void FreeAllServices(void) { mServicePool.FreeAll(); }
 
@@ -270,4 +251,4 @@ DefineCoreType(otSrpClientBuffersServiceEntry, Utils::SrpClientBuffers::ServiceE
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 
-#endif // SRP_CLIENT_BUFFERS_HPP_
+#endif // OT_CORE_UTILS_SRP_CLIENT_BUFFERS_HPP_

@@ -32,27 +32,43 @@
  *   This file includes the definitions of the radio spinel metrics.
  */
 
-#ifndef RADIO_SPINEL_METRICS_H_
-#define RADIO_SPINEL_METRICS_H_
+#ifndef OT_LIB_SPINEL_RADIO_SPINEL_METRICS_H_
+#define OT_LIB_SPINEL_RADIO_SPINEL_METRICS_H_
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * This structure represents the radio spinel metrics.
- *
+ * Represents the radio spinel metrics.
  */
 typedef struct otRadioSpinelMetrics
 {
     uint32_t mRcpTimeoutCount;         ///< The number of RCP timeouts.
-    uint32_t mRcpUnexpectedResetCount; ///< The number of RCP unexcepted resets.
+    uint32_t mRcpUnexpectedResetCount; ///< The number of RCP unexpected resets.
     uint32_t mRcpRestorationCount;     ///< The number of RCP restorations.
     uint32_t mSpinelParseErrorCount;   ///< The number of spinel frame parse errors.
 } otRadioSpinelMetrics;
+
+/**
+ * Represents RCP interface metrics.
+ */
+typedef struct otRcpInterfaceMetrics
+{
+    uint8_t  mRcpInterfaceType;             ///< The RCP interface type.
+    uint64_t mTransferredFrameCount;        ///< The number of transferred frames.
+    uint64_t mTransferredValidFrameCount;   ///< The number of transferred valid frames.
+    uint64_t mTransferredGarbageFrameCount; ///< The number of transferred garbage frames.
+    uint64_t mRxFrameCount;                 ///< The number of received frames.
+    uint64_t mRxFrameByteCount;             ///< The number of received bytes.
+    uint64_t mTxFrameCount;                 ///< The number of transmitted frames.
+    uint64_t mTxFrameByteCount;             ///< The number of transmitted bytes.
+} otRcpInterfaceMetrics;
 
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
 
-#endif // RADIO_SPINEL_METRICS_H_
+#endif // OT_LIB_SPINEL_RADIO_SPINEL_METRICS_H_

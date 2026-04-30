@@ -30,12 +30,13 @@
  *   This file contains definitions for a HDLC based NCP interface to the OpenThread stack.
  */
 
-#ifndef NCP_HDLC_HPP_
-#define NCP_HDLC_HPP_
+#ifndef OT_NCP_NCP_HDLC_HPP_
+#define OT_NCP_NCP_HDLC_HPP_
 
 #include "openthread-core-config.h"
 
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 #include "ncp/ncp_base.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
@@ -54,29 +55,37 @@ public:
      * Constructor
      *
      * @param[in]  aInstance  The OpenThread instance structure.
-     *
      */
     explicit NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback);
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
     /**
-     * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
+     * Constructor
      *
+     * @param[in]  aInstancs      The OpenThread instance pointers array.
+     * @param[in]  aCount         Number of instances in the array.
+     * @param[in]  aSendCallback  Callback for sending data.
+     */
+    explicit NcpHdlc(Instance **aInstances, uint8_t aCount, otNcpHdlcSendCallback aSendCallback);
+
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+
+    /**
+     * Is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
      */
     void HandleHdlcSendDone(void);
 
     /**
-     * This method is called when uart received a data buffer.
-     *
+     * Is called when uart received a data buffer.
      */
     void HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
-    enum
-    {
-        kHdlcTxBufferSize = OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE,   // HDLC tx buffer size.
-        kRxBufferSize     = OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE + // Rx buffer size (should be large enough to fit
-                        OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE, // one whole (decoded) received frame).
-    };
+    static constexpr uint16_t kHdlcTxBufferSize = OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE; // HDLC tx buffer size.
+
+    // Rx buffer size (should be large enough to fit one whole (decoded) received frame).
+    static constexpr uint16_t kRxBufferSize =
+        OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE + OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE;
 
     enum HdlcTxState
     {
@@ -128,14 +137,14 @@ private:
                                                       Spinel::Buffer          *aBuffer);
     otNcpHdlcSendCallback mSendCallback;
 
-    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
-    Hdlc::Encoder                        mFrameEncoder;
-    Hdlc::Decoder                        mFrameDecoder;
-    HdlcTxState                          mState;
-    uint8_t                              mByte;
-    Hdlc::FrameBuffer<kRxBufferSize>     mRxBuffer;
-    bool                                 mHdlcSendImmediate;
-    Tasklet                              mHdlcSendTask;
+    Spinel::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
+    Hdlc::Encoder                          mFrameEncoder;
+    Hdlc::Decoder                          mFrameDecoder;
+    HdlcTxState                            mState;
+    uint8_t                                mByte;
+    Spinel::FrameBuffer<kRxBufferSize>     mRxBuffer;
+    bool                                   mHdlcSendImmediate;
+    Tasklet                                mHdlcSendTask;
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     BufferEncrypterReader mTxFrameBufferEncrypterReader;
@@ -145,4 +154,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_HDLC_HPP_
+#endif // OT_NCP_NCP_HDLC_HPP_

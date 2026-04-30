@@ -161,7 +161,7 @@ class BBR_5_11_01(thread_cert.TestCase):
             and ipv6.src.is_link_local
         """)
 
-        # Commissioner registers MA3 with deafult timeout
+        # Commissioner registers MA3 with default timeout
         pkts.filter_wpan_src64(COMMISSIONER).filter_coap_request('/n/mr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA3}']
             and thread_bl.tlv.timeout is null

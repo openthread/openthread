@@ -33,11 +33,7 @@
 
 #include "uri_paths.hpp"
 
-#include "common/binary_search.hpp"
-#include "common/debug.hpp"
-#include "common/string.hpp"
-
-#include <string.h>
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -55,90 +51,79 @@ struct Entry
     int Compare(const char *aPath) const { return strcmp(aPath, mPath); }
 };
 
-// The list of URI paths (MUST be sorted alphabetically)
-static constexpr Entry kEntries[] = {
-    {"a/ae"},  // (0) kUriAddressError
-    {"a/an"},  // (1) kUriAddressNotify
-    {"a/aq"},  // (2) kUriAddressQuery
-    {"a/ar"},  // (3) kUriAddressRelease
-    {"a/as"},  // (4) kUriAddressSolicit
-    {"a/sd"},  // (5) kUriServerData
-    {"a/yl"},  // (6) kUriAnycastLocate
-    {"b/ba"},  // (7) kUriBackboneAnswer
-    {"b/bmr"}, // (8) kUriBackboneMlr
-    {"b/bq"},  // (9) kUriBackboneQuery
-    {"c/ab"},  // (10) kUriAnnounceBegin
-    {"c/ag"},  // (11) kUriActiveGet
-    {"c/as"},  // (12) kUriActiveSet
-    {"c/ca"},  // (13) kUriCommissionerKeepAlive
-    {"c/cg"},  // (14) kUriCommissionerGet
-    {"c/cp"},  // (15) kUriCommissionerPetition
-    {"c/cs"},  // (16) kUriCommissionerSet
-    {"c/dc"},  // (17) kUriDatasetChanged
-    {"c/er"},  // (18) kUriEnergyReport
-    {"c/es"},  // (19) kUriEnergyScan
-    {"c/je"},  // (20) kUriJoinerEntrust
-    {"c/jf"},  // (21) kUriJoinerFinalize
-    {"c/la"},  // (22) kUriLeaderKeepAlive
-    {"c/lp"},  // (23) kUriLeaderPetition
-    {"c/pc"},  // (24) kUriPanIdConflict
-    {"c/pg"},  // (25) kUriPendingGet
-    {"c/pq"},  // (26) kUriPanIdQuery
-    {"c/ps"},  // (27) kUriPendingSet
-    {"c/rx"},  // (28) kUriRelayRx
-    {"c/tx"},  // (29) kUriRelayTx
-    {"c/ur"},  // (30) kUriProxyRx
-    {"c/ut"},  // (31) kUriProxyTx
-    {"d/da"},  // (32) kUriDiagnosticGetAnswer
-    {"d/dg"},  // (33) kUriDiagnosticGetRequest
-    {"d/dq"},  // (34) kUriDiagnosticGetQuery
-    {"d/dr"},  // (35) kUriDiagnosticReset
-    {"n/dn"},  // (36) kUriDuaRegistrationNotify
-    {"n/dr"},  // (37) kUriDuaRegistrationRequest
-    {"n/mr"},  // (38) kUriMlr
-};
+#define UriEntryMapList(_)                                        \
+    _("a/ae", kUriAddressError, "AddrError")                      \
+    _("a/an", kUriAddressNotify, "AddrNotify")                    \
+    _("a/aq", kUriAddressQuery, "AddrQuery")                      \
+    _("a/ar", kUriAddressRelease, "AddrRelease")                  \
+    _("a/as", kUriAddressSolicit, "AddrSolicit")                  \
+    _("a/sd", kUriServerData, "ServerData")                       \
+    _("a/yl", kUriAnycastLocate, "AnycastLocate")                 \
+    _("b/ba", kUriBackboneAnswer, "BbAnswer")                     \
+    _("b/bmr", kUriBackboneMlr, "BbMlr")                          \
+    _("b/bq", kUriBackboneQuery, "BbQuery")                       \
+    _("c/ab", kUriAnnounceBegin, "AnnounceBegin")                 \
+    _("c/ag", kUriActiveGet, "ActiveGet")                         \
+    _("c/ar", kUriActiveReplace, "ActiveReplace")                 \
+    _("c/as", kUriActiveSet, "ActiveSet")                         \
+    _("c/ca", kUriCommissionerKeepAlive, "CommrKeepAlive")        \
+    _("c/cg", kUriCommissionerGet, "CommrGet")                    \
+    _("c/cp", kUriCommissionerPetition, "CommrPetition")          \
+    _("c/cs", kUriCommissionerSet, "CommrSet")                    \
+    _("c/dc", kUriDatasetChanged, "DatasetChanged")               \
+    _("c/er", kUriEnergyReport, "EnergyReport")                   \
+    _("c/es", kUriEnergyScan, "EnergyScan")                       \
+    _("c/je", kUriJoinerEntrust, "JoinerEntrust")                 \
+    _("c/jf", kUriJoinerFinalize, "JoinerFinalize")               \
+    _("c/la", kUriLeaderKeepAlive, "LeaderKeepAlive")             \
+    _("c/lp", kUriLeaderPetition, "LeaderPetition")               \
+    _("c/nj", kUriEnrollerJoinerAccept, "EnrollerJoinerAccept")   \
+    _("c/nk", kUriEnrollerKeepAlive, "EnrollerKeepAlive")         \
+    _("c/nl", kUriEnrollerJoinerRelease, "EnrollerJoinerRelease") \
+    _("c/nr", kUriEnrollerRegister, "EnrollerRegister")           \
+    _("c/ns", kUriEnrollerReportState, "EnrollerReportState")     \
+    _("c/pc", kUriPanIdConflict, "PanIdConflict")                 \
+    _("c/pg", kUriPendingGet, "PendingGet")                       \
+    _("c/pq", kUriPanIdQuery, "PanIdQuery")                       \
+    _("c/ps", kUriPendingSet, "PendingSet")                       \
+    _("c/rx", kUriRelayRx, "RelayRx")                             \
+    _("c/te", kUriTcatEnable, "TcatEnable")                       \
+    _("c/tx", kUriRelayTx, "RelayTx")                             \
+    _("c/ur", kUriProxyRx, "ProxyRx")                             \
+    _("c/ut", kUriProxyTx, "ProxyTx")                             \
+    _("d/da", kUriDiagnosticGetAnswer, "DiagGetAnswer")           \
+    _("d/dg", kUriDiagnosticGetRequest, "DiagGetRequest")         \
+    _("d/dq", kUriDiagnosticGetQuery, "DiagGetQuery")             \
+    _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
+    _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
+    _("h/qy", kUriHistoryQuery, "HistQuery")                      \
+    _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \
+    _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")        \
+    _("n/mr", kUriMlr, "Mlr")
 
+// We use the X-Macro pattern here. The `UriEntryMapList` macro defines the
+// mapping between URI path string, its `kUri*` enum and its name string (for
+// `UriToString`).
+//
+// The `UriEntryMapList` macro accepts a single parameter, which is a "visitor"
+// macro (`_`). The visitor macro is called for each entry in the list. We define
+// different visitor macros: one to define the `kEntries[]` array, another to
+// validate the entries in the array (ensuring the URI paths match the enum
+// values and are sorted properly), and a third to define the `UriToString()`
+// template specializations.
+
+#define _EntryArrayElement(kPathString, kUri, kName) {kPathString},
+
+static constexpr const Entry kEntries[] = {UriEntryMapList(_EntryArrayElement)};
+
+// The URI entries MUST be sorted based on their path string (e.g. `c/ut`)
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
 
-static_assert(0 == kUriAddressError, "kUriAddressError (`a/ae`) is invalid");
-static_assert(1 == kUriAddressNotify, "kUriAddressNotify (`a/an`) is invalid");
-static_assert(2 == kUriAddressQuery, "kUriAddressQuery (`a/aq`) is invalid");
-static_assert(3 == kUriAddressRelease, "kUriAddressRelease (`a/ar`) is invalid");
-static_assert(4 == kUriAddressSolicit, "kUriAddressSolicit (`a/as`) is invalid");
-static_assert(5 == kUriServerData, "kUriServerData (`a/sd`) is invalid");
-static_assert(6 == kUriAnycastLocate, "kUriAnycastLocate (`a/yl`) is invalid");
-static_assert(7 == kUriBackboneAnswer, "kUriBackboneAnswer (`b/ba`) is invalid");
-static_assert(8 == kUriBackboneMlr, "kUriBackboneMlr (`b/bmr`) is invalid");
-static_assert(9 == kUriBackboneQuery, "kUriBackboneQuery (`b/bq`) is invalid");
-static_assert(10 == kUriAnnounceBegin, "kUriAnnounceBegin (`c/ab`) is invalid");
-static_assert(11 == kUriActiveGet, "kUriActiveGet (`c/ag`) is invalid");
-static_assert(12 == kUriActiveSet, "kUriActiveSet (`c/as`) is invalid");
-static_assert(13 == kUriCommissionerKeepAlive, "kUriCommissionerKeepAlive (`c/ca`) is invalid");
-static_assert(14 == kUriCommissionerGet, "kUriCommissionerGet (`c/cg`) is invalid");
-static_assert(15 == kUriCommissionerPetition, "kUriCommissionerPetition (`c/cp`) is invalid");
-static_assert(16 == kUriCommissionerSet, "kUriCommissionerSet (`c/cs`) is invalid");
-static_assert(17 == kUriDatasetChanged, "kUriDatasetChanged (`c/dc`) is invalid");
-static_assert(18 == kUriEnergyReport, "kUriEnergyReport (`c/er`) is invalid");
-static_assert(19 == kUriEnergyScan, "kUriEnergyScan (`c/es`) is invalid");
-static_assert(20 == kUriJoinerEntrust, "kUriJoinerEntrust (`c/je`) is invalid");
-static_assert(21 == kUriJoinerFinalize, "kUriJoinerFinalize (`c/jf`) is invalid");
-static_assert(22 == kUriLeaderKeepAlive, "kUriLeaderKeepAlive (`c/la`) is invalid");
-static_assert(23 == kUriLeaderPetition, "kUriLeaderPetition (`c/lp`) is invalid");
-static_assert(24 == kUriPanIdConflict, "kUriPanIdConflict (`c/pc`) is invalid");
-static_assert(25 == kUriPendingGet, "kUriPendingGet (`c/pg`) is invalid");
-static_assert(26 == kUriPanIdQuery, "kUriPanIdQuery (`c/pq`) is invalid");
-static_assert(27 == kUriPendingSet, "kUriPendingSet (`c/ps`) is invalid");
-static_assert(28 == kUriRelayRx, "kUriRelayRx (`c/rx`) is invalid");
-static_assert(29 == kUriRelayTx, "kUriRelayTx (`c/tx`) is invalid");
-static_assert(30 == kUriProxyRx, "kUriProxyRx (`c/ur`) is invalid");
-static_assert(31 == kUriProxyTx, "kUriProxyTx (`c/ut`) is invalid");
-static_assert(32 == kUriDiagnosticGetAnswer, "kUriDiagnosticGetAnswer (`d/da`) is invalid");
-static_assert(33 == kUriDiagnosticGetRequest, "kUriDiagnosticGetRequest (`d/dg`) is invalid");
-static_assert(34 == kUriDiagnosticGetQuery, "kUriDiagnosticGetQuery (`d/dq`) is invalid");
-static_assert(35 == kUriDiagnosticReset, "kUriDiagnosticReset (`d/dr`) is invalid");
-static_assert(36 == kUriDuaRegistrationNotify, "kUriDuaRegistrationNotify (`n/dn`) is invalid");
-static_assert(37 == kUriDuaRegistrationRequest, "kUriDuaRegistrationRequest (`n/dr`) is invalid");
-static_assert(38 == kUriMlr, "kUriMlr (`n/mr`) is invalid");
+#define _ValidateEntryElement(kPathString, kUri, kName)                    \
+    static_assert(AreConstStringsEqual(kEntries[kUri].mPath, kPathString), \
+                  #kUri " value is incorrect. list is not sorted");
+
+UriEntryMapList(_ValidateEntryElement)
 
 } // namespace UriList
 
@@ -160,5 +145,10 @@ Uri UriFromPath(const char *aPath)
 exit:
     return uri;
 }
+
+#define _DefineUriToString(kPathString, kUri, kName) \
+    template <> const char *UriToString<kUri>(void) { return kName; }
+
+UriEntryMapList(_DefineUriToString)
 
 } // namespace ot

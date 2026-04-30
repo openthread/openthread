@@ -35,10 +35,7 @@
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-#include <openthread/server.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -78,7 +75,7 @@ otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIt
 
     VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
-    error = AsCoreType(aInstance).Get<NetworkData::Local>().GetNextService(*aIterator, AsCoreType(aConfig));
+    error = AsCoreType(aInstance).Get<NetworkData::Local>().GetNext(*aIterator, AsCoreType(aConfig));
 
 exit:
     return error;

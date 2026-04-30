@@ -57,7 +57,7 @@ def if_indextoname(index):
     ifname = ctypes.create_string_buffer(32)
     ifname = libc.if_indextoname(index, ifname)
     if not ifname:
-        raise RuntimeError("Inavlid Index")
+        raise RuntimeError("Invalid Index")
     return ifname
 
 

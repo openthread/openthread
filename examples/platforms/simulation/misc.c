@@ -31,6 +31,7 @@
 #include <setjmp.h>
 #include <unistd.h>
 
+#include <openthread/logging.h>
 #include <openthread/platform/misc.h>
 
 #include "openthread-system.h"
@@ -59,6 +60,15 @@ void otPlatReset(otInstance *aInstance)
 
 #endif // OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+otError otPlatResetToBootloader(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_ERROR_NOT_CAPABLE;
+}
+#endif
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
@@ -98,4 +108,17 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     return gPlatMcuPowerState;
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+otError otPlatLogCrashDump(void) { return OT_ERROR_NONE; }
+#endif
+
+void otPlatAssertFail(const char *aFilename, int aLineNumber)
+{
+    otLogCritPlat("assert failed at %s:%d", aFilename, aLineNumber);
+
+    // For debug build, use assert to generate a core dump
+    assert(false);
+    exit(1);
 }

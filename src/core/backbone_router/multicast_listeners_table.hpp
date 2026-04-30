@@ -31,8 +31,8 @@
  *   This file includes definitions for Multicast Listeners Table.
  */
 
-#ifndef MULTICAST_LISTENERS_TABLE_HPP
-#define MULTICAST_LISTENERS_TABLE_HPP
+#ifndef OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_
+#define OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -40,6 +40,7 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -51,8 +52,7 @@ namespace ot {
 namespace BackboneRouter {
 
 /**
- * This class implements the definitions for Multicast Listeners Table.
- *
+ * Implements the definitions for Multicast Listeners Table.
  */
 class MulticastListenersTable : public InstanceLocator, private NonCopyable
 {
@@ -60,33 +60,39 @@ class MulticastListenersTable : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class represents a Multicast Listener entry.
-     *
+     * Represents a Multicast Listener entry.
      */
     class Listener : public Clearable<Listener>
     {
         friend class MulticastListenersTable;
 
     public:
+        typedef otBackboneRouterMulticastListenerCallback Callback; ///< Listener callback.
+        typedef otBackboneRouterMulticastListenerIterator Iterator; ///< Iterator to go over Listener entries.
+        typedef otBackboneRouterMulticastListenerInfo     Info;     ///< Listener info.
+
+        enum Event : uint8_t ///< Listener Event
+        {
+            kEventAdded   = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED,   ///< Listener was added.
+            kEventRemoved = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, ///< Listener was removed.
+        };
+
         /**
-         * This constructor initializes the `Listener` object.
-         *
+         * Initializes the `Listener` object.
          */
         Listener(void) { Clear(); }
 
         /**
-         * This method returns the Multicast Listener address.
+         * Returns the Multicast Listener address.
          *
          * @returns The Multicast Listener address.
-         *
          */
         const Ip6::Address &GetAddress(void) const { return mAddress; }
 
         /**
-         * This method returns the expire time of the Multicast Listener.
+         * Returns the expire time of the Multicast Listener.
          *
          * @returns The Multicast Listener expire time.
-         *
          */
         const TimeMilli GetExpireTime(void) const { return mExpireTime; }
 
@@ -101,10 +107,9 @@ public:
     };
 
     /**
-     * This constructor initializes the Multicast Listeners Table.
+     * Initializes the Multicast Listeners Table.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit MulticastListenersTable(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -113,7 +118,7 @@ public:
     }
 
     /**
-     * This method adds a Multicast Listener with given address and expire time.
+     * Adds a Multicast Listener with given address and expire time.
      *
      * @param[in] aAddress     The Multicast Listener address.
      * @param[in] aExpireTime  The Multicast Listener expire time.
@@ -121,78 +126,77 @@ public:
      * @retval kErrorNone         If the Multicast Listener was successfully added.
      * @retval kErrorInvalidArgs  If the Multicast Listener address was invalid.
      * @retval kErrorNoBufs       No space available to save the Multicast Listener.
-     *
      */
     Error Add(const Ip6::Address &aAddress, TimeMilli aExpireTime);
 
     /**
-     * This method removes a given Multicast Listener.
+     * Removes a given Multicast Listener.
      *
      * @param[in] aAddress  The Multicast Listener address.
-     *
      */
     void Remove(const Ip6::Address &aAddress);
 
     /**
-     * This method removes expired Multicast Listeners.
-     *
+     * Removes expired Multicast Listeners.
      */
     void Expire(void);
 
     /**
-     * This method counts the number of valid Multicast Listeners.
+     * Counts the number of valid Multicast Listeners.
      *
      * @returns The number of valid Multicast Listeners.
-     *
      */
     uint16_t Count(void) const { return mNumValidListeners; }
 
     /**
-     * This method enables range-based `for` loop iteration over all Multicast Listeners.
+     * Indicates whether or not the Multicast Listeners Table contains the given address.
      *
-     * This method should be used as follows:
+     * @param[in] aAddress  The Multicast Listener address.
+     *
+     * @retval True   If the Multicast Listeners Table contains the given address.
+     * @retval False  If the Multicast Listeners Table does not contain the given address.
+     */
+    bool Has(const Ip6::Address &aAddress) const;
+
+    /**
+     * Enables range-based `for` loop iteration over all Multicast Listeners.
+     *
+     * Should be used as follows:
      *
      *     for (MulticastListenersTable::Listener &listener : Get<MulticastListenersTable>().Iterate())
      *
      * @returns An IteratorBuilder instance.
-     *
      */
     IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
 
     /**
-     * This method removes all the Multicast Listeners.
-     *
+     * Removes all the Multicast Listeners.
      */
     void Clear(void);
 
     /**
-     * This method sets the Multicast Listener callback.
+     * Sets the Multicast Listener callback.
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
-     *
      */
-    void SetCallback(otBackboneRouterMulticastListenerCallback aCallback, void *aContext);
+    void SetCallback(Listener::Callback aCallback, void *aContext);
 
     /**
-     * This method gets the next Multicast Listener.
+     * Gets the next Multicast Listener.
      *
-     * @param[in] aIterator       A pointer to the Multicast Listener Iterator.
-     * @param[out] aListenerInfo  A pointer to where the Multicast Listener info is placed.
+     * @param[in]  aIterator      A pointer to the Multicast Listener Iterator.
+     * @param[out] aInfo          A reference to output the Multicast Listener info.
      *
      * @retval kErrorNone         Successfully found the next Multicast Listener info.
      * @retval kErrorNotFound     No subsequent Multicast Listener was found.
-     *
      */
-    Error GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                  otBackboneRouterMulticastListenerInfo     &aListenerInfo);
+    Error GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo);
 
 private:
-    static constexpr uint16_t kMulticastListenersTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
+    static constexpr uint16_t kTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
 
-    static_assert(
-        kMulticastListenersTableSize >= 75,
-        "Thread 1.2 Conformance requires the Multicast Listener Table size to be larger than or equal to 75.");
+    static_assert(kTableSize >= 75, "Thread 1.2 Conformance requires table size of at least 75 listeners.");
 
     class IteratorBuilder : InstanceLocator
     {
@@ -206,23 +210,28 @@ private:
         Listener *end(void);
     };
 
-    void LogMulticastListenersTable(const char         *aAction,
-                                    const Ip6::Address &aAddress,
-                                    TimeMilli           aExpireTime,
-                                    Error               aError);
+    enum Action : uint8_t
+    {
+        kAdd,
+        kRemove,
+        kExpire,
+    };
+
+    void Log(Action aAction, const Ip6::Address &aAddress, TimeMilli aExpireTime, Error aError) const;
 
     void FixHeap(uint16_t aIndex);
     bool SiftHeapElemDown(uint16_t aIndex);
     void SiftHeapElemUp(uint16_t aIndex);
     void CheckInvariants(void) const;
 
-    Listener mListeners[kMulticastListenersTableSize];
-    uint16_t mNumValidListeners;
-
-    Callback<otBackboneRouterMulticastListenerCallback> mCallback;
+    Listener                     mListeners[kTableSize];
+    uint16_t                     mNumValidListeners;
+    Callback<Listener::Callback> mCallback;
 };
 
 } // namespace BackboneRouter
+
+DefineMapEnum(otBackboneRouterMulticastListenerEvent, BackboneRouter::MulticastListenersTable::Listener::Event);
 
 /**
  * @}
@@ -232,4 +241,4 @@ private:
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
-#endif // MULTICAST_LISTENERS_TABLE_HPP
+#endif // OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_

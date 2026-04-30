@@ -36,40 +36,53 @@
 #include <openthread/platform/logging.h>
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    OT_UNUSED_VARIABLE(aLogRegion);
 
-    va_list args;
+static int ConvertLogLevelToSyslogLevel(otLogLevel aLogLevel)
+{
+    int level = LOG_DEBUG;
 
     switch (aLogLevel)
     {
     case OT_LOG_LEVEL_NONE:
-        aLogLevel = LOG_ALERT;
+        level = LOG_ALERT;
         break;
     case OT_LOG_LEVEL_CRIT:
-        aLogLevel = LOG_CRIT;
+        level = LOG_CRIT;
         break;
     case OT_LOG_LEVEL_WARN:
-        aLogLevel = LOG_WARNING;
+        level = LOG_WARNING;
         break;
     case OT_LOG_LEVEL_NOTE:
-        aLogLevel = LOG_NOTICE;
+        level = LOG_NOTICE;
         break;
     case OT_LOG_LEVEL_INFO:
-        aLogLevel = LOG_INFO;
+        level = LOG_INFO;
         break;
     case OT_LOG_LEVEL_DEBG:
-        aLogLevel = LOG_DEBUG;
+        level = LOG_DEBUG;
         break;
     default:
         assert(false);
-        aLogLevel = LOG_DEBUG;
         break;
     }
 
+    return level;
+}
+
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel aLogLevel, const char *aLogLine)
+{
+    syslog(ConvertLogLevelToSyslogLevel(aLogLevel), "%s", aLogLine);
+}
+#else
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion, const char *aFormat, ...)
+{
+    va_list args;
+
     va_start(args, aFormat);
-    vsyslog(aLogLevel, aFormat, args);
+    vsyslog(ConvertLogLevelToSyslogLevel(aLogLevel), aFormat, args);
     va_end(args);
 }
+#endif
+
 #endif // OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED

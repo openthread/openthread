@@ -44,7 +44,6 @@
 
 /**
  * Diagnostics mode variables.
- *
  */
 static bool sDiagMode = false;
 
@@ -58,9 +57,16 @@ static bool       sGpioValue = false;
 static uint8_t    sRawPowerSetting[OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE];
 static uint16_t   sRawPowerSettingLength = 0;
 
+void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aContext);
+}
+
 void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
 
-bool otPlatDiagModeGet() { return sDiagMode; }
+bool otPlatDiagModeGet(void) { return sDiagMode; }
 
 void otPlatDiagChannelSet(uint8_t aChannel) { OT_UNUSED_VARIABLE(aChannel); }
 
@@ -162,6 +168,14 @@ otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable
 }
 
 otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEnable);

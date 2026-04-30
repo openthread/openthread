@@ -30,12 +30,16 @@
  * @file
  * @brief
  *  This file defines the OpenThread UDP API.
- *
  */
 
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 
@@ -50,21 +54,27 @@ extern "C" {
  *   This module includes functions that control UDP communication.
  *
  * @{
- *
  */
 
 /**
- * This callback allows OpenThread to provide specific handlers for certain UDP messages.
+ * Represents a callback to handle a received UDP message.
  *
- * @retval  true    The message is handled by this receiver and should not be further processed.
- * @retval  false   The message is not handled by this receiver.
+ * This callback is used by a UDP receiver (see `otUdpAddReceiver()`) to process an incoming UDP message.
  *
+ * This callback does not transfer ownership of @p aMessage. The callback implementation must not modify the message
+ * content. The message is guaranteed to be valid only within the context of the callback.
+ *
+ * @param[in] aContext      A pointer to the application-specific context.
+ * @param[in] aMessage      A pointer to the received UDP message.
+ * @param[in] aMessageInfo  A pointer to the IPv6 message info structure.
+ *
+ * @retval  TRUE    The message is handled by this receiver and should not be further processed.
+ * @retval  FALSE   The message is not handled by this receiver.
  */
 typedef bool (*otUdpHandler)(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This structure represents a UDP receiver.
- *
+ * Represents a UDP receiver.
  */
 typedef struct otUdpReceiver
 {
@@ -74,51 +84,65 @@ typedef struct otUdpReceiver
 } otUdpReceiver;
 
 /**
- * This function adds a UDP receiver.
+ * Adds a UDP receiver.
  *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aUdpReceiver    A pointer to the UDP receiver.
  *
  * @retval  OT_ERROR_NONE       The receiver is successfully added.
  * @retval  OT_ERROR_ALREADY    The UDP receiver was already added.
- *
  */
 otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 
 /**
- * This function removes a UDP receiver.
+ * Removes a UDP receiver.
  *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aUdpReceiver    A pointer to the UDP receiver.
  *
  * @retval  OT_ERROR_NONE       The receiver is successfully removed.
  * @retval  OT_ERROR_NOT_FOUND  The UDP receiver was not added.
- *
  */
 otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 
 /**
- * This function sends a UDP message without socket.
+ * Sends a UDP message without socket.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMessage      A pointer to a message without UDP header.
  * @param[in]  aMessageInfo  A pointer to a message info associated with @p aMessage.
  *
- * @retval OT_ERROR_NONE     Successfully enqueued the message into an output interface.
- * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
- *
+ * @retval OT_ERROR_NONE          Successfully enqueued the message into an output interface.
+ * @retval OT_ERROR_NO_BUFS       Insufficient available buffer to add the IPv6 headers.
+ * @retval OT_ERROR_INVALID_ARGS  Invalid arguments are given.
  */
 otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo);
 
 /**
- * This callback allows OpenThread to inform the application of a received UDP message.
+ * Callback function pointer to notify the application of a received UDP message on a UDP socket.
  *
+ * This callback does not transfer ownership of @p aMessage. The callback implementation must not modify the message
+ * content. The message is guaranteed to be valid only within the context of the callback.
+ *
+ * @param[in] aContext      A pointer to the application-specific context.
+ * @param[in] aMessage      A pointer to the received UDP message.
+ * @param[in] aMessageInfo  A pointer to the IPv6 message info structure.
  */
 typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This structure represents a UDP socket.
- *
+ * Defines the OpenThread network interface identifiers.
+ */
+typedef enum otNetifIdentifier
+{
+    OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
+    OT_NETIF_THREAD_HOST,     ///< The host Thread interface - allow use of platform UDP.
+    OT_NETIF_THREAD_INTERNAL, ///< The internal Thread interface (within OpenThread) - do not use platform UDP.
+    OT_NETIF_BACKBONE,        ///< The Backbone interface.
+} otNetifIdentifier;
+
+/**
+ * Represents a UDP socket.
  */
 typedef struct otUdpSocket
 {
@@ -128,18 +152,8 @@ typedef struct otUdpSocket
     void               *mContext;  ///< A pointer to application-specific context.
     void               *mHandle;   ///< A handle to platform's UDP.
     struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
+    otNetifIdentifier   mNetifId;  ///< The network interface identifier.
 } otUdpSocket;
-
-/**
- * This enumeration defines the OpenThread network interface identifiers.
- *
- */
-typedef enum otNetifIdentifier
-{
-    OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
-    OT_NETIF_THREAD,          ///< The Thread interface.
-    OT_NETIF_BACKBONE,        ///< The Backbone interface.
-} otNetifIdentifier;
 
 /**
  * Allocate a new message buffer for sending a UDP message.
@@ -153,7 +167,6 @@ typedef enum otNetifIdentifier
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
  * @sa otMessageFree
- *
  */
 otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
@@ -167,7 +180,6 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
  *
  * @retval OT_ERROR_NONE    Successfully opened the socket.
  * @retval OT_ERROR_FAILED  Failed to open the socket.
- *
  */
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
@@ -178,7 +190,6 @@ otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCal
  * @param[in]  aSocket    A pointer to a UDP socket structure.
  *
  * @returns Whether the UDP socket is open.
- *
  */
 bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket);
 
@@ -190,7 +201,6 @@ bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket);
  *
  * @retval OT_ERROR_NONE   Successfully closed the socket.
  * @retval OT_ERROR_FAILED Failed to close UDP Socket.
- *
  */
 otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket);
 
@@ -204,7 +214,6 @@ otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket);
  *
  * @retval OT_ERROR_NONE   Bind operation was successful.
  * @retval OT_ERROR_FAILED Failed to bind UDP socket.
- *
  */
 otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName, otNetifIdentifier aNetif);
 
@@ -217,7 +226,6 @@ otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr 
  *
  * @retval OT_ERROR_NONE   Connect operation was successful.
  * @retval OT_ERROR_FAILED Failed to connect UDP socket.
- *
  */
 otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName);
 
@@ -236,23 +244,20 @@ otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAd
  * @retval OT_ERROR_NONE           The message is successfully scheduled for sending.
  * @retval OT_ERROR_INVALID_ARGS   Invalid arguments are given.
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffer to add the UDP and IPv6 headers.
- *
  */
 otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This function gets the head of linked list of UDP Sockets.
+ * Gets the head of linked list of UDP Sockets.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  * @returns A pointer to the head of UDP Socket linked list.
- *
  */
 otUdpSocket *otUdpGetSockets(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 /**
@@ -265,18 +270,16 @@ otUdpSocket *otUdpGetSockets(otInstance *aInstance);
  *   enabled.
  *
  * @{
- *
  */
 
 /**
- * This function pointer delivers the UDP packet to host and host should send the packet through its own network stack.
+ * Pointer delivers the UDP packet to host and host should send the packet through its own network stack.
  *
  * @param[in]  aMessage   A pointer to the UDP Message.
  * @param[in]  aPeerPort  The destination UDP port.
  * @param[in]  aPeerAddr  A pointer to the destination IPv6 address.
  * @param[in]  aSockPort  The source UDP port.
  * @param[in]  aContext   A pointer to application-specific context.
- *
  */
 typedef void (*otUdpForwarder)(otMessage    *aMessage,
                                uint16_t      aPeerPort,
@@ -290,7 +293,6 @@ typedef void (*otUdpForwarder)(otMessage    *aMessage,
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aForwarder           A pointer to a function called to forward UDP packet to host.
  * @param[in]  aContext             A pointer to application-specific context.
- *
  */
 void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext);
 
@@ -304,7 +306,6 @@ void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, 
  * @param[in]  aSockPort            The destination UDP port.
  *
  * @warning No matter the call success or fail, the message is freed.
- *
  */
 void otUdpForwardReceive(otInstance         *aInstance,
                          otMessage          *aMessage,
@@ -320,13 +321,11 @@ void otUdpForwardReceive(otInstance         *aInstance,
  *
  * @retval true    The port is being used exclusively by OpenThread.
  * @retval false   The port is not used by any of the OpenThread API or is shared (e.g. is Backbone socket).
- *
  */
 bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

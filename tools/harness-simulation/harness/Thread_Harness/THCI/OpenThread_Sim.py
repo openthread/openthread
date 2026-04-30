@@ -89,7 +89,7 @@ class SSHHandle(object):
         self.__stdout.channel.setblocking(0)
 
         # Some commands such as `udp send <ip> -x <hex>` send binary data
-        # The UDP packet recevier will output the data in binary to stdout
+        # The UDP packet receiver will output the data in binary to stdout
         self.__stdout._set_mode('rb')
 
     def __disconnect(self, dwCtrlType):

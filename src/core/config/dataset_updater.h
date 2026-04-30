@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for Dataset Updater.
- *
  */
 
-#ifndef CONFIG_DATASET_UPDATER_H_
-#define CONFIG_DATASET_UPDATER_H_
+#ifndef OT_CORE_CONFIG_DATASET_UPDATER_H_
+#define OT_CORE_CONFIG_DATASET_UPDATER_H_
+
+/**
+ * @addtogroup config-dataset-updater
+ *
+ * @brief
+ *   This module includes configuration variables for Dataset Updater.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE
  *
  * Define as 1 to enable Dataset Updater support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE
 #define OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE 0
@@ -49,7 +56,6 @@
  * @def OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY
  *
  * Specifies the default delay (in ms) used by Dataset Updater when not included in Dataset already.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY
 #define OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY 30000
@@ -61,10 +67,13 @@
  * Specifies the default retry wait interval (in ms) for Dataset Updater to wait (in addition to Dataset delay) after
  * sending MGMT Set Pending Dataset command waiting for Active Dataset to be updated before retrying again before
  * retrying the MGMT Set Pending Dataset command.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL
 #define OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL 1500
 #endif
 
-#endif // CONFIG_DATASET_UPDATER_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_DATASET_UPDATER_H_

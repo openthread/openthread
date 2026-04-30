@@ -26,140 +26,197 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "net/nat64_translator.hpp"
+#include <stdio.h>
 
 #include "test_platform.h"
 #include "test_util.hpp"
 
-#include "string.h"
-
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/message.hpp"
-#include "net/ip6.hpp"
+#include "instance/instance.hpp"
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 namespace ot {
-namespace BorderRouter {
+namespace Nat64 {
+
+#define Log(...) printf(OT_FIRST_ARG(__VA_ARGS__) "\n" OT_REST_ARGS(__VA_ARGS__))
 
 static ot::Instance *sInstance;
 
-void DumpMessageInHex(const char *prefix, const uint8_t *aBuf, size_t aBufLen)
+void DumpIp6Message(const char *aTextMessage, const Message &aMessage)
 {
-    // This function dumps all packets the output of this function can be imported to packet analyser for debugging.
-    printf("%s", prefix);
-    for (uint16_t i = 0; i < aBufLen; i++)
+    Ip6::Headers ip6Headers;
+
+    Log("%s", aTextMessage);
+
+    if (ip6Headers.ParseFrom(aMessage) != kErrorNone)
     {
-        printf("%02x", aBuf[i]);
-    }
-    printf("\n");
-}
-
-bool CheckMessage(const Message &aMessage, const uint8_t *aExpectedMessage, size_t aExpectedMessageLen)
-{
-    uint8_t  readMessage[OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH];
-    uint16_t messageLength;
-    bool     success = true;
-
-    success       = success && (aMessage.GetLength() == aExpectedMessageLen);
-    messageLength = aMessage.ReadBytes(0, readMessage, aMessage.GetLength());
-    success       = success && (aExpectedMessageLen == messageLength);
-    success       = success && (memcmp(readMessage, aExpectedMessage, aExpectedMessageLen) == 0);
-
-    if (!success)
-    {
-        printf("Expected Message\n");
-        for (uint16_t i = 0; i < aExpectedMessageLen; i++)
-        {
-            printf("%02x%c", aExpectedMessage[i], " \n"[(i & 0xf) == 0xf]);
-        }
-        printf("\n");
-        printf("Actual Message\n");
-        for (uint16_t i = 0; i < messageLength; i++)
-        {
-            printf("%02x%c", readMessage[i], " \n"[(i & 0xf) == 0xf]);
-        }
-        printf("\n");
+        Log("    Malformed IPv6 message");
+        ExitNow();
     }
 
-    return success;
-}
+    Log("    IPv6 Headers");
+    Log("       src      : %s", ip6Headers.GetSourceAddress().ToString().AsCString());
+    Log("       dst      : %s", ip6Headers.GetDestinationAddress().ToString().AsCString());
+    Log("       proto    : %s", otIp6ProtoToString(ip6Headers.GetIpProto()));
 
-template <size_t N>
-void TestCase6To4(const char *aTestName,
-                  const uint8_t (&aIp6Message)[N],
-                  Nat64::Translator::Result aResult,
-                  const uint8_t            *aOutMessage,
-                  size_t                    aOutMessageLen)
-{
-    Message *msg = sInstance->Get<Ip6::Ip6>().NewMessage(0);
-
-    printf("Testing NAT64 6 to 4: %s\n", aTestName);
-
-    VerifyOrQuit(msg != nullptr);
-    SuccessOrQuit(msg->AppendBytes(aIp6Message, N));
-
-    DumpMessageInHex("I ", aIp6Message, N);
-
-    VerifyOrQuit(sInstance->Get<Nat64::Translator>().TranslateFromIp6(*msg) == aResult);
-
-    if (aOutMessage != nullptr)
+    if (ip6Headers.IsTcp() || ip6Headers.IsUdp())
     {
-        DumpMessageInHex("O ", aOutMessage, aOutMessageLen);
-        VerifyOrQuit(CheckMessage(*msg, aOutMessage, aOutMessageLen));
+        Log("       src-port : %u", ip6Headers.GetSourcePort());
+        Log("       dst-port : %u", ip6Headers.GetDestinationPort());
+    }
+    else if (ip6Headers.IsIcmp6())
+    {
+        Log("       icmp6-id : %u", ip6Headers.GetIcmpHeader().GetId());
     }
 
-    printf("  ... PASS\n");
+exit:
+    return;
 }
 
-template <size_t N>
-void TestCase4To6(const char *aTestName,
-                  const uint8_t (&aIp4Message)[N],
-                  Nat64::Translator::Result aResult,
-                  const uint8_t            *aOutMessage,
-                  size_t                    aOutMessageLen)
+void DumpIp4Message(const char *aTextMessage, const Message &aMessage)
 {
-    Message *msg = sInstance->Get<Ip6::Ip6>().NewMessage(0);
+    Ip4::Headers ip4Headers;
 
-    printf("Testing NAT64 4 to 6: %s\n", aTestName);
+    Log("%s", aTextMessage);
 
-    VerifyOrQuit(msg != nullptr);
-    SuccessOrQuit(msg->AppendBytes(aIp4Message, N));
-
-    DumpMessageInHex("I ", aIp4Message, N);
-
-    VerifyOrQuit(sInstance->Get<Nat64::Translator>().TranslateToIp6(*msg) == aResult);
-
-    if (aOutMessage != nullptr)
+    if (ip4Headers.ParseFrom(aMessage) != kErrorNone)
     {
-        DumpMessageInHex("O ", aOutMessage, aOutMessageLen);
-        VerifyOrQuit(CheckMessage(*msg, aOutMessage, aOutMessageLen));
+        Log("    Malformed IPv4 message");
+        ExitNow();
     }
 
-    printf("  ... PASS\n");
+    Log("    IPv4 Headers");
+    Log("       src      : %s", ip4Headers.GetSourceAddress().ToString().AsCString());
+    Log("       dst      : %s", ip4Headers.GetDestinationAddress().ToString().AsCString());
+    Log("       proto    : %s", ip4Headers.IsIcmp4() ? "ICMP4" : otIp6ProtoToString(ip4Headers.GetIpProto()));
+
+    if (ip4Headers.IsTcp() || ip4Headers.IsUdp())
+    {
+        Log("       src-port : %u", ip4Headers.GetSourcePort());
+        Log("       dst-port : %u", ip4Headers.GetDestinationPort());
+    }
+    else if (ip4Headers.IsIcmp4())
+    {
+        Log("       icmp4-id : %u", ip4Headers.GetIcmpHeader().GetId());
+    }
+
+exit:
+    return;
 }
 
-void TestNat64(void)
+void VerifyMessage(const Message &aMessage, const uint8_t *aExpectedContent, uint16_t aExpectedLength)
 {
-    Ip6::Prefix  nat64prefix;
-    Ip4::Cidr    nat64cidr;
-    Ip6::Address ip6Source;
-    Ip6::Address ip6Dest;
+    VerifyOrQuit(aMessage.GetLength() == aExpectedLength);
+    VerifyOrQuit(aMessage.CompareBytes(0, aExpectedContent, aExpectedLength));
+}
+
+void Verify6To4(const char    *aTestName,
+                const uint8_t *aIp6Message,
+                const uint16_t aIp6Length,
+                const uint8_t *aIp4Message,
+                uint16_t       aIp4Length,
+                Error          aError)
+{
+    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage();
+    Error    error;
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Translate IPv6 to IPv4: %s", aTestName);
+
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->AppendBytes(aIp6Message, aIp6Length));
+
+    DumpIp6Message("IPv6 message", *message);
+
+    error = sInstance->Get<Translator>().TranslateIp6ToIp4(*message);
+    Log("Error: %s (expecting:%s)", ErrorToString(error), ErrorToString(aError));
+    VerifyOrQuit(error == aError);
+
+    if (aIp4Message != nullptr)
+    {
+        DumpIp4Message("Translated IPv4 message", *message);
+        VerifyMessage(*message, aIp4Message, aIp4Length);
+    }
+}
+
+template <uint16_t kIp6Length, uint16_t kIp4Length>
+void Verify6To4(const char *aTestName,
+                const uint8_t (&aIp6Message)[kIp6Length],
+                const uint8_t (&aIp4Message)[kIp4Length],
+                Error aError)
+{
+    Verify6To4(aTestName, aIp6Message, kIp6Length, aIp4Message, kIp4Length, aError);
+}
+
+template <uint16_t kIp6Length>
+void Verify6To4(const char *aTestName, const uint8_t (&aIp6Message)[kIp6Length], Error aError)
+{
+    Verify6To4(aTestName, aIp6Message, kIp6Length, nullptr, 0, aError);
+}
+
+void Verify4To6(const char    *aTestName,
+                const uint8_t *aIp4Message,
+                uint16_t       aIp4Length,
+                const uint8_t *aIp6Message,
+                uint16_t       aIp6Length,
+                Error          aError)
+{
+    Message *message = sInstance->Get<Ip6::Ip6>().NewMessage();
+    Error    error;
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Translate IPv4 to IPv6: %s", aTestName);
+
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->AppendBytes(aIp4Message, aIp4Length));
+
+    DumpIp4Message("IPv4 message", *message);
+
+    error = sInstance->Get<Translator>().TranslateIp4ToIp6(*message);
+    Log("Error: %s (expecting:%s)", ErrorToString(error), ErrorToString(aError));
+    VerifyOrQuit(error == aError);
+
+    if (aIp6Message != nullptr)
+    {
+        DumpIp6Message("Translated IPv6 message", *message);
+        VerifyMessage(*message, aIp6Message, aIp6Length);
+    }
+}
+
+template <uint16_t kIp4Length, uint16_t kIp6Length>
+void Verify4To6(const char *aTestName,
+                const uint8_t (&aIp4Message)[kIp4Length],
+                const uint8_t (&aIp6Message)[kIp6Length],
+                Error aError)
+{
+    Verify4To6(aTestName, aIp4Message, kIp4Length, aIp6Message, kIp6Length, aError);
+}
+
+template <uint16_t kIp4Length>
+void Verify4To6(const char *aTestName, const uint8_t (&aIp4Message)[kIp4Length], Error aError)
+{
+    Verify4To6(aTestName, aIp4Message, kIp4Length, nullptr, 0, aError);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void TestNat64Translation(void)
+{
+    Ip6::Prefix prefix;
+    Ip4::Cidr   cidr;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestNat64Translation");
 
     sInstance = testInitInstance();
+    VerifyOrQuit(sInstance != nullptr);
 
-    {
-        const uint8_t ip6Address[] = {0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        const uint8_t ip4Address[] = {192, 168, 123, 1};
+    SuccessOrQuit(prefix.FromString("fd01::/96"));
+    SuccessOrQuit(cidr.FromString("192.168.123.1/32"));
 
-        nat64cidr.Set(ip4Address, 32);
-        nat64prefix.Set(ip6Address, 96);
-        SuccessOrQuit(sInstance->Get<Nat64::Translator>().SetIp4Cidr(nat64cidr));
-        sInstance->Get<Nat64::Translator>().SetNat64Prefix(nat64prefix);
-    }
+    SuccessOrQuit(sInstance->Get<Translator>().SetIp4Cidr(cidr));
+    sInstance->Get<Translator>().SetNat64Prefix(prefix);
+    sInstance->Get<Translator>().SetEnabled(true);
 
     {
         // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
@@ -173,7 +230,7 @@ void TestNat64(void)
                                       0x4d, 192,  168,  123,  1,    172,  16,   243,  197,  0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase6To4("good v6 udp datagram", kIp6Packet, Nat64::Translator::kForward, kIp4Packet, sizeof(kIp4Packet));
+        Verify6To4("Valid v6 UDP", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     {
@@ -188,7 +245,7 @@ void TestNat64(void)
             0x00, 0x00, 0x00, 0x01, 0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase4To6("good v4 udp datagram", kIp4Packet, Nat64::Translator::kForward, kIp6Packet, sizeof(kIp6Packet));
+        Verify4To6("Valid v4 UDP", kIp4Packet, kIp6Packet, kErrorNone);
     }
 
     {
@@ -205,7 +262,7 @@ void TestNat64(void)
                                       0x12, 0x34, 0x87, 0x65, 0x43, 0x21, 0x12, 0x34, 0x56, 0x78, 0x50,
                                       0x10, 0x00, 0x01, 0x1e, 0x54, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase6To4("good v6 tcp datagram", kIp6Packet, Nat64::Translator::kForward, kIp4Packet, sizeof(kIp4Packet));
+        Verify6To4("Valid v6 TCP", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     {
@@ -222,7 +279,7 @@ void TestNat64(void)
             0x12, 0x34, 0x56, 0x78, 0x50, 0x10, 0x00, 0x01, 0x5f, 0xf8, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase4To6("good v4 tcp datagram", kIp4Packet, Nat64::Translator::kForward, kIp6Packet, sizeof(kIp6Packet));
+        Verify4To6("Valid v4 TCP", kIp4Packet, kIp6Packet, kErrorNone);
     }
 
     {
@@ -237,8 +294,7 @@ void TestNat64(void)
                                       0x5d, 192,  168,  123,  1,    172,  16,   243,  197,  0x08, 0x00,
                                       0x88, 0x7c, 0xaa, 0xbb, 0x00, 0x01, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase6To4("good v6 icmp ping request datagram", kIp6Packet, Nat64::Translator::kForward, kIp4Packet,
-                     sizeof(kIp4Packet));
+        Verify6To4("Valid v6 ICMP ping", kIp6Packet, kIp4Packet, kErrorNone);
     }
 
     {
@@ -253,8 +309,7 @@ void TestNat64(void)
             0x00, 0x00, 0x00, 0x01, 0x81, 0x00, 0x75, 0x59, 0xaa, 0xbb, 0x00, 0x01, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase4To6("good v4 icmp ping response datagram", kIp4Packet, Nat64::Translator::kForward, kIp6Packet,
-                     sizeof(kIp6Packet));
+        Verify4To6("Valid v4 ICMP ping", kIp4Packet, kIp6Packet, kErrorNone);
     }
 
     {
@@ -263,7 +318,7 @@ void TestNat64(void)
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 172,  16,   243};
 
-        TestCase6To4("bad v6 datagram", kIp6Packet, Nat64::Translator::kDrop, nullptr, 0);
+        Verify6To4("Invalid v6", kIp6Packet, kErrorDrop);
     }
 
     {
@@ -271,7 +326,7 @@ void TestNat64(void)
         const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x11,
                                       0xa0, 0x4c, 172,  16,   243,  197,  192,  168,  123};
 
-        TestCase4To6("bad v4 datagram", kIp4Packet, Nat64::Translator::kDrop, nullptr, 0);
+        Verify4To6("Invalid v4", kIp4Packet, kErrorDrop);
     }
 
     {
@@ -280,24 +335,107 @@ void TestNat64(void)
                                       0x4c, 172,  16,   243,  197,  192,  168,  123,  2,    0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8c, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase4To6("no v4 mapping", kIp4Packet, Nat64::Translator::kDrop, nullptr, 0);
+        Verify4To6("No v4 mapping", kIp4Packet, kErrorDrop);
     }
 
-    {
-        // fd02::2               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
-        const uint8_t kIp6Packet[] = {
-            0x60, 0x08, 0x6e, 0x38, 0x00, 0x0c, 0x11, 0x40, 0xfd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x30, 0x61, 0x62, 0x63, 0x64,
-        };
-
-        TestCase6To4("mapping pool exhausted", kIp6Packet, Nat64::Translator::kDrop, nullptr, 0);
-    }
+    Log("End of TestNat64Translation");
 
     testFreeInstance(sInstance);
 }
 
-} // namespace BorderRouter
+void TestNat64Counters(void)
+{
+    Ip6::Prefix                        prefix;
+    Ip4::Cidr                          cidr;
+    Translator::AddressMappingIterator iter;
+    Translator::AddressMapping         mapping;
+    Translator::ProtocolCounters       expectedCounters;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestNat64Counters");
+
+    sInstance = testInitInstance();
+    VerifyOrQuit(sInstance != nullptr);
+
+    SuccessOrQuit(prefix.FromString("fd01::/96"));
+    SuccessOrQuit(cidr.FromString("192.168.123.1/32"));
+
+    SuccessOrQuit(sInstance->Get<Translator>().SetIp4Cidr(cidr));
+    sInstance->Get<Translator>().SetNat64Prefix(prefix);
+    sInstance->Get<Translator>().SetEnabled(true);
+
+    // Step 1: Make the mapping table dirty.
+    {
+        // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
+        const uint8_t kIp6Packet[] = {
+            0x60, 0x08, 0x6e, 0x38, 0x00, 0x0c, 0x11, 0x40, 0xfd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
+        };
+        // 192.168.123.1         172.16.243.197        UDP      32     43981 → 4660 Len=4
+        const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x9f,
+                                      0x4d, 192,  168,  123,  1,    172,  16,   243,  197,  0xab, 0xcd,
+                                      0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
+
+        Verify6To4("First translation", kIp6Packet, kIp4Packet, kErrorNone);
+    }
+
+    iter.Init(*sInstance);
+
+    SuccessOrQuit(iter.GetNext(mapping));
+
+    expectedCounters.Clear();
+    expectedCounters.mUdp.m6To4Packets   = 1;
+    expectedCounters.mUdp.m6To4Bytes     = 12;
+    expectedCounters.mTotal.m6To4Packets = 1;
+    expectedCounters.mTotal.m6To4Bytes   = 12;
+    VerifyOrQuit(AsCoreType(&mapping.mCounters) == expectedCounters);
+
+    VerifyOrQuit(iter.GetNext(mapping) == kErrorNotFound);
+
+    // Step 2: Release the mapping table item.
+    {
+        SuccessOrQuit(prefix.FromString("fd01::/96"));
+        SuccessOrQuit(cidr.FromString("192.168.124.1/32"));
+
+        SuccessOrQuit(sInstance->Get<Translator>().SetIp4Cidr(cidr));
+        sInstance->Get<Translator>().SetNat64Prefix(prefix);
+    }
+
+    // Step 3: Reuse the same object for new mapping table item.
+    // If the counters are not reset, the verification below will fail.
+    {
+        // fd02::1               fd01::ac10:f3c5       UDP      52     43981 → 4660 Len=4
+        const uint8_t kIp6Packet[] = {
+            0x60, 0x08, 0x6e, 0x38, 0x00, 0x0c, 0x11, 0x40, 0xfd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
+        };
+        // 192.168.124.1         172.16.243.197        UDP      32     43981 → 4660 Len=4
+        const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11, 0x9e,
+                                      0x4d, 192,  168,  124,  1,    172,  16,   243,  197,  0xab, 0xcd,
+                                      0x12, 0x34, 0x00, 0x0c, 0xa0, 0x8d, 0x61, 0x62, 0x63, 0x64};
+
+        Verify6To4("Translation with new mapping", kIp6Packet, kIp4Packet, kErrorNone);
+    }
+
+    iter.Init(*sInstance);
+
+    SuccessOrQuit(iter.GetNext(mapping));
+
+    expectedCounters.Clear();
+    expectedCounters.mUdp.m6To4Packets   = 1;
+    expectedCounters.mUdp.m6To4Bytes     = 12;
+    expectedCounters.mTotal.m6To4Packets = 1;
+    expectedCounters.mTotal.m6To4Bytes   = 12;
+    VerifyOrQuit(AsCoreType(&mapping.mCounters) == expectedCounters);
+
+    VerifyOrQuit(iter.GetNext(mapping) == kErrorNotFound);
+
+    Log("End of TestNat64Counters");
+}
+
+} // namespace Nat64
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -305,10 +443,12 @@ void TestNat64(void)
 int main(void)
 {
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    ot::BorderRouter::TestNat64();
+    ot::Nat64::TestNat64Translation();
+    ot::Nat64::TestNat64Counters();
     printf("All tests passed\n");
-#else  // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#else
     printf("NAT64 is not enabled\n");
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif
+
     return 0;
 }

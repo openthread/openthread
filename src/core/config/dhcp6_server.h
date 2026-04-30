@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for DHCPv6 Server.
- *
  */
 
-#ifndef CONFIG_DHCP6_SERVER_H_
-#define CONFIG_DHCP6_SERVER_H_
+#ifndef OT_CORE_CONFIG_DHCP6_SERVER_H_
+#define OT_CORE_CONFIG_DHCP6_SERVER_H_
+
+/**
+ * @addtogroup config-dhcpv6-server
+ *
+ * @brief
+ *   This module includes configuration variables for the DHCPv6 server.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
  *
  * Define to 1 to enable DHCPv6 Server support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 #define OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE 0
@@ -49,10 +56,13 @@
  * @def OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES
  *
  * The number of dhcp prefixes.
- *
  */
 #ifndef OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES
 #define OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES 4
 #endif
 
-#endif // CONFIG_DHCP6_SERVER_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_DHCP6_SERVER_H_

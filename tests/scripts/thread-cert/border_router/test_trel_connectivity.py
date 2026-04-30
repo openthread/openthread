@@ -104,8 +104,14 @@ class TestTrelConnectivity(thread_cert.TestCase):
         br2 = self.nodes[BR2]
         router2 = self.nodes[ROUTER2]
 
-        if br1.get_trel_state() is None:
-            self.skipTest("TREL is not enabled")
+        if br1.is_trel_enabled() is None:
+            self.skipTest("TREL is not supported")
+
+        if br1.is_trel_enabled() == False:
+            br1.enable_trel()
+
+        if br2.is_trel_enabled() == False:
+            br2.enable_trel()
 
         br1.start()
         self.wait_node_state(br1, 'leader', 10)
@@ -136,6 +142,25 @@ class TestTrelConnectivity(thread_cert.TestCase):
         self.assertTrue(fed1.ping(router2_mleid))
         self.assertTrue(med1.ping(router2_mleid))
         self.assertTrue(sed1.ping(router2_mleid))
+
+        counters = br1.get_trel_counters()
+        print('br1 trel counters', counters)
+        self.assertTrue(counters['Inbound']['packets'] > 0)
+        self.assertTrue(counters['Inbound']['bytes'] > 0)
+        self.assertTrue(counters['Outbound']['packets'] > 0)
+        self.assertTrue(counters['Outbound']['bytes'] > 0)
+        self.assertTrue(counters['Outbound']['failures'] >= 0)
+
+        br1.reset_trel_counters()
+        counters = br1.get_trel_counters()
+        print('br1 trel counters after reset', counters)
+        self.assertTrue(counters['Inbound']['packets'] == 0)
+        self.assertTrue(counters['Inbound']['bytes'] == 0)
+        self.assertTrue(counters['Outbound']['packets'] == 0)
+        self.assertTrue(counters['Outbound']['bytes'] == 0)
+        self.assertTrue(counters['Outbound']['failures'] == 0)
+
+        self.assertGreater(br1.get_trel_port(), 0)
 
     def verify(self, pv: PacketVerifier):
         pkts: PacketFilter = pv.pkts

@@ -29,9 +29,9 @@
 #include <ctype.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "lib/spinel/spinel_buffer.hpp"
 
 #include "test_platform.h"
@@ -57,8 +57,8 @@ static const uint8_t sMottoText[]      = "Think good thoughts, say good words, d
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 static const uint8_t sHexText[]        = "0123456789abcdef";
 
-static ot::Instance *sInstance;
-static MessagePool  *sMessagePool;
+static Instance    *sInstance;
+static MessagePool *sMessagePool;
 
 struct CallbackContext
 {
@@ -868,7 +868,6 @@ void TestBuffer(void)
  * When writing a frame, use a random length (1 up to `kMaxFrameLen`) and generate random byte sequences.
  * When reading a frame ensure the length and the content matches what was written earlier.
  * Handle the cases where buffer gets full or empty.
- *
  */
 
 enum
@@ -891,7 +890,7 @@ uint32_t GetRandom(uint32_t max)
 
     if (kUseTrueRandomNumberGenerator)
     {
-        SuccessOrQuit(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value)));
+        SuccessOrQuit(Random::Crypto::Fill(value));
     }
     else
     {

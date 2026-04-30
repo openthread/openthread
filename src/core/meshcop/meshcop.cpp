@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
@@ -33,19 +34,16 @@
 
 #include "meshcop.hpp"
 
-#include "common/crc16.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/string.hpp"
-#include "crypto/sha256.hpp"
-#include "mac/mac_types.hpp"
-#include "thread/thread_netif.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
 RegisterLogModule("MeshCoP");
 
 namespace MeshCoP {
+
+//---------------------------------------------------------------------------------------------------------------------
+// JoinerPskd
 
 Error JoinerPskd::SetFrom(const char *aPskdString)
 {
@@ -64,7 +62,7 @@ bool JoinerPskd::operator==(const JoinerPskd &aOther) const
 {
     bool isEqual = true;
 
-    for (uint8_t i = 0; i < sizeof(m8); i++)
+    for (size_t i = 0; i < sizeof(m8); i++)
     {
         if (m8[i] != aOther.m8[i])
         {
@@ -72,7 +70,7 @@ bool JoinerPskd::operator==(const JoinerPskd &aOther) const
             ExitNow();
         }
 
-        if (m8[i] == '\0')
+        if (m8[i] == kNullChar)
         {
             break;
         }
@@ -93,7 +91,7 @@ bool JoinerPskd::IsPskdValid(const char *aPskdString)
     {
         char c = aPskdString[i];
 
-        VerifyOrExit(isdigit(c) || isupper(c));
+        VerifyOrExit(IsDigit(c) || IsUppercase(c));
         VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z');
     }
 
@@ -102,6 +100,9 @@ bool JoinerPskd::IsPskdValid(const char *aPskdString)
 exit:
     return valid;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// JoinerDiscerner
 
 void JoinerDiscerner::GenerateJoinerId(Mac::ExtAddress &aJoinerId) const
 {
@@ -118,7 +119,7 @@ bool JoinerDiscerner::Matches(const Mac::ExtAddress &aJoinerId) const
 
     mask = GetMask();
 
-    return (Encoding::BigEndian::ReadUint64(aJoinerId.m8) & mask) == (mValue & mask);
+    return (BigEndian::ReadUint64(aJoinerId.m8) & mask) == (mValue & mask);
 }
 
 void JoinerDiscerner::CopyTo(Mac::ExtAddress &aExtAddress) const
@@ -135,12 +136,12 @@ void JoinerDiscerner::CopyTo(Mac::ExtAddress &aExtAddress) const
     OT_ASSERT(IsValid());
 
     // Write full bytes
-    while (remaining >= CHAR_BIT)
+    while (remaining >= kBitsPerByte)
     {
         *cur = static_cast<uint8_t>(value & 0xff);
-        value >>= CHAR_BIT;
+        value >>= kBitsPerByte;
         cur--;
-        remaining -= CHAR_BIT;
+        remaining -= kBitsPerByte;
     }
 
     // Write any remaining bits (not a full byte)
@@ -167,11 +168,11 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
 {
     InfoString string;
 
-    if (mLength <= sizeof(uint16_t) * CHAR_BIT)
+    if (mLength <= BitSizeOf(uint16_t))
     {
         string.Append("0x%04x", static_cast<uint16_t>(mValue));
     }
-    else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
+    else if (mLength <= BitSizeOf(uint32_t))
     {
         string.Append("0x%08lx", ToUlong(static_cast<uint32_t>(mValue)));
     }
@@ -186,106 +187,7 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
     return string;
 }
 
-void SteeringData::Init(uint8_t aLength)
-{
-    OT_ASSERT(aLength <= kMaxLength);
-    mLength = aLength;
-    memset(m8, 0, sizeof(m8));
-}
-
-void SteeringData::SetToPermitAllJoiners(void)
-{
-    Init(1);
-    m8[0] = kPermitAll;
-}
-
-void SteeringData::UpdateBloomFilter(const Mac::ExtAddress &aJoinerId)
-{
-    HashBitIndexes indexes;
-
-    CalculateHashBitIndexes(aJoinerId, indexes);
-    UpdateBloomFilter(indexes);
-}
-
-void SteeringData::UpdateBloomFilter(const JoinerDiscerner &aDiscerner)
-{
-    HashBitIndexes indexes;
-
-    CalculateHashBitIndexes(aDiscerner, indexes);
-    UpdateBloomFilter(indexes);
-}
-
-void SteeringData::UpdateBloomFilter(const HashBitIndexes &aIndexes)
-{
-    OT_ASSERT((mLength > 0) && (mLength <= kMaxLength));
-
-    SetBit(aIndexes.mIndex[0] % GetNumBits());
-    SetBit(aIndexes.mIndex[1] % GetNumBits());
-}
-
-bool SteeringData::Contains(const Mac::ExtAddress &aJoinerId) const
-{
-    HashBitIndexes indexes;
-
-    CalculateHashBitIndexes(aJoinerId, indexes);
-
-    return Contains(indexes);
-}
-
-bool SteeringData::Contains(const JoinerDiscerner &aDiscerner) const
-{
-    HashBitIndexes indexes;
-
-    CalculateHashBitIndexes(aDiscerner, indexes);
-
-    return Contains(indexes);
-}
-
-bool SteeringData::Contains(const HashBitIndexes &aIndexes) const
-{
-    return (mLength > 0) && GetBit(aIndexes.mIndex[0] % GetNumBits()) && GetBit(aIndexes.mIndex[1] % GetNumBits());
-}
-
-void SteeringData::CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes)
-{
-    Crc16 ccitt(Crc16::kCcitt);
-    Crc16 ansi(Crc16::kAnsi);
-
-    for (uint8_t b : aJoinerId.m8)
-    {
-        ccitt.Update(b);
-        ansi.Update(b);
-    }
-
-    aIndexes.mIndex[0] = ccitt.Get();
-    aIndexes.mIndex[1] = ansi.Get();
-}
-
-void SteeringData::CalculateHashBitIndexes(const JoinerDiscerner &aDiscerner, HashBitIndexes &aIndexes)
-{
-    Mac::ExtAddress address;
-
-    address.Clear();
-    aDiscerner.CopyTo(address);
-
-    CalculateHashBitIndexes(address, aIndexes);
-}
-
-bool SteeringData::DoesAllMatch(uint8_t aMatch) const
-{
-    bool matches = true;
-
-    for (uint8_t i = 0; i < mLength; i++)
-    {
-        if (m8[i] != aMatch)
-        {
-            matches = false;
-            break;
-        }
-    }
-
-    return matches;
-}
+//---------------------------------------------------------------------------------------------------------------------
 
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {
@@ -298,21 +200,6 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 
     memcpy(&aJoinerId, hash.GetBytes(), sizeof(aJoinerId));
     aJoinerId.SetLocal(true);
-}
-
-Error GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
-{
-    Error                        error = kErrorNone;
-    const BorderAgentLocatorTlv *borderAgentLocator;
-
-    borderAgentLocator = As<BorderAgentLocatorTlv>(
-        aNetif.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
-    VerifyOrExit(borderAgentLocator != nullptr, error = kErrorNotFound);
-
-    aRloc = borderAgentLocator->GetBorderAgentLocator();
-
-exit:
-    return error;
 }
 
 #if OPENTHREAD_FTD
@@ -338,7 +225,7 @@ Error GeneratePskc(const char          *aPassPhrase,
                      (networkNameLen <= OT_NETWORK_NAME_MAX_SIZE),
                  error = kErrorInvalidArgs);
 
-    memset(salt, 0, sizeof(salt));
+    ClearAllBytes(salt);
     memcpy(salt, saltPrefix, sizeof(saltPrefix) - 1);
     saltLen += static_cast<uint16_t>(sizeof(saltPrefix) - 1);
 
@@ -348,22 +235,32 @@ Error GeneratePskc(const char          *aPassPhrase,
     memcpy(salt + saltLen, aNetworkName.GetAsCString(), networkNameLen);
     saltLen += networkNameLen;
 
-    otPlatCryptoPbkdf2GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen, 16384,
-                                  OT_PSKC_MAX_SIZE, aPskc.m8);
+    error = otPlatCryptoPbkdf2GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen,
+                                          16384, OT_PSKC_MAX_SIZE, aPskc.m8);
 
 exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void LogError(const char *aActionText, Error aError)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+void LogCertMessage(const char *aText, const Coap::Message &aMessage)
 {
-    if (aError != kErrorNone && aError != kErrorAlready)
-    {
-        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
-    }
+    OT_UNUSED_VARIABLE(aText);
+
+    uint8_t  buf[Buffer::kSize];
+    uint16_t length = aMessage.DetermineLengthAfterOffset();
+
+    VerifyOrExit(length <= sizeof(buf));
+    aMessage.ReadBytes(aMessage.GetOffset(), buf, length);
+
+    DumpCert(aText, buf, length);
+
+exit:
+    return;
 }
+
 #endif
 
 } // namespace MeshCoP

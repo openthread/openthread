@@ -31,44 +31,47 @@
  *   This file wraps the calls to platform OTNS abstractions.
  */
 
-#ifndef UTILS_OTNS_HPP_
-#define UTILS_OTNS_HPP_
+#ifndef OT_CORE_UTILS_OTNS_HPP_
+#define OT_CORE_UTILS_OTNS_HPP_
 
 #include "openthread-core-config.h"
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
 
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/otns.h>
-
-#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/notifier.hpp"
+#include "common/string.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#include "coap/coap_message.hpp"
+#include "common/notifier.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/neighbor.hpp"
 #include "thread/neighbor_table.hpp"
-#include "thread/topology.hpp"
+#endif
 
 namespace ot {
 namespace Utils {
 
 /**
- * This class implements the OTNS Stub that interacts with OTNS.
- *
+ * Implements the OTNS Stub that interacts with OTNS.
  */
 class Otns : public InstanceLocator, private NonCopyable
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     friend class ot::Notifier;
+#endif
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Otns(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -76,110 +79,114 @@ public:
     }
 
     /**
-     * This function emits radio short address to OTNS when changed.
+     * Emits radio short address to OTNS when changed.
      *
      * @param[in]  aShortAddress  The new short address.
-     *
      */
-    static void EmitShortAddress(uint16_t aShortAddress);
+    void EmitShortAddress(uint16_t aShortAddress) const;
 
     /**
-     * This function emits radio extended address to OTNS when changed.
+     * Emits radio extended address to OTNS when changed.
      *
      * @param[in]  aExtAddress  The new extended address.
-     *
      */
-    static void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress);
+    void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress) const;
 
     /**
-     * This function emits ping request information to OTNS when sending.
+     * Emits a transmit event to OTNS.
+     *
+     * @param[in]  aFrame  The frame of the transmission.
+     */
+    void EmitTransmit(const Mac::TxFrame &aFrame) const;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
+     * Emits ping request information to OTNS when sending.
      *
      * @param[in]  aPeerAddress  The peer address of the ping request.
      * @param[in]  aPingLength   The data length of the ping request.
      * @param[in]  aTimestamp    The timestamp of the ping request.
      * @param[in]  aHopLimit     The hop limit of the ping request.
-     *
      */
-    static void EmitPingRequest(const Ip6::Address &aPeerAddress,
-                                uint16_t            aPingLength,
-                                uint32_t            aTimestamp,
-                                uint8_t             aHopLimit);
+    void EmitPingRequest(const Ip6::Address &aPeerAddress,
+                         uint16_t            aPingLength,
+                         uint32_t            aTimestamp,
+                         uint8_t             aHopLimit) const;
 
     /**
-     * This function emits ping reply information to OTNS when received.
+     * Emits ping reply information to OTNS when received.
      *
      * @param[in]  aPeerAddress  The peer address of the ping request.
      * @param[in]  aPingLength   The data length of the ping reply.
      * @param[in]  aTimestamp    The timestamp of the ping reply.
      * @param[in]  aHopLimit     The hop limit of the ping reply.
-     *
      */
-    static void EmitPingReply(const Ip6::Address &aPeerAddress,
-                              uint16_t            aPingLength,
-                              uint32_t            aTimestamp,
-                              uint8_t             aHopLimit);
+    void EmitPingReply(const Ip6::Address &aPeerAddress,
+                       uint16_t            aPingLength,
+                       uint32_t            aTimestamp,
+                       uint8_t             aHopLimit) const;
 
     /**
-     * This function emits a neighbor table event to OTNS when a neighbor is added or removed.
+     * Emits a neighbor table event to OTNS when a neighbor is added or removed.
      *
      * @param[in]  aEvent     The event type.
      * @param[in]  aNeighbor  The neighbor that is added or removed.
-     *
      */
-    static void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor);
+    void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor) const;
 
     /**
-     * This function emits a transmit event to OTNS.
-     *
-     * @param[in]  aFrame  The frame of the transmission.
-     *
-     */
-    static void EmitTransmit(const Mac::TxFrame &aFrame);
-
-    /**
-     * This function emits the device mode to OTNS.
+     * Emits the device mode to OTNS.
      *
      * @param[in] aMode The device mode.
-     *
      */
-    static void EmitDeviceMode(Mle::DeviceMode aMode);
+    void EmitDeviceMode(Mle::DeviceMode aMode) const;
 
     /**
-     * This function emits the sending COAP message info to OTNS.
+     * Emits the sending COAP message info to OTNS.
      *
      * @param[in] aMessage      The sending COAP message.
      * @param[in] aMessageInfo  The message info.
-     *
      */
-    static void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
-     * This function emits the COAP message sending failure to OTNS.
+     * Emits the COAP message sending failure to OTNS.
      *
      * @param[in] aError        The error in sending the COAP message.
      * @param[in] aMessage      The COAP message failed to send.
      * @param[in] aMessageInfo  The message info.
-     *
      */
-    static void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
-     * This function emits the received COAP message info to OTNS.
+     * Emits the received COAP message info to OTNS.
      *
      * @param[in] aMessage      The received COAP message.
      * @param[in] aMessageInfo  The message info.
-     *
      */
-    static void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    void EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 private:
-    static void EmitStatus(const char *aFmt, ...);
-    void        HandleNotifierEvents(Events aEvents);
+    static constexpr uint16_t kStatusStringLength = 128;
+
+    using StatusString = String<kStatusStringLength>;
+
+    void EmitStatus(const StatusString &aString) const;
+    void EmitStatus(const char *aFmt, ...) const OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    void EmitCoapStatus(const char             *aAction,
+                        const Coap::Message    &aMessage,
+                        const Ip6::MessageInfo &aMessageInfo,
+                        Error                  *aError = nullptr) const;
+    void HandleNotifierEvents(Events aEvents) const;
+#endif
 };
 
 } // namespace Utils
 } // namespace ot
 
-#endif //(OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
 
-#endif // UTILS_OTNS_HPP_
+#endif // OT_CORE_UTILS_OTNS_HPP_

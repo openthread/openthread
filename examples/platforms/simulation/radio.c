@@ -41,16 +41,12 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "simul_utils.h"
+#include "lib/platform/exit_code.h"
 #include "utils/code_utils.h"
 #include "utils/link_metrics.h"
 #include "utils/mac_frame.h"
 #include "utils/soft_source_match_table.h"
-
-// The IPv4 group for receiving packets of radio simulation
-#define OT_RADIO_GROUP "224.0.0.116"
-
-#define MS_PER_S 1000
-#define US_PER_MS 1000
 
 enum
 {
@@ -75,11 +71,9 @@ extern int      sSockFd;
 extern uint16_t sPortBase;
 extern uint16_t sPortOffset;
 #else
-static int      sTxFd       = -1;
-static int      sRxFd       = -1;
-static uint16_t sPortBase   = 9000;
-static uint16_t sPortOffset = 0;
-static uint16_t sPort       = 0;
+static utilsSocket sSocket;
+static uint16_t    sPortBase   = 9000;
+static uint16_t    sPortOffset = 0;
 #endif
 
 static int8_t   sEnergyScanResult  = OT_RADIO_RSSI_INVALID;
@@ -104,7 +98,9 @@ static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-static uint8_t generateAckIeData(uint8_t *aLinkMetricsIeData, uint8_t aLinkMetricsIeDataLen);
+static uint8_t generateAckIeData(uint8_t                   *aLinkMetricsIeData,
+                                 uint8_t                    aLinkMetricsIeDataLen,
+                                 const struct otRadioFrame *aReceivedFrame);
 #endif
 
 static otRadioState        sState = OT_RADIO_STATE_DISABLED;
@@ -119,15 +115,13 @@ static otRadioFrame        sAckFrame;
 static otRadioIeInfo sTransmitIeInfo;
 #endif
 
-static otExtAddress   sExtAddress;
-static otShortAddress sShortAddress;
-static otPanId        sPanid;
-static bool           sPromiscuous = false;
-static bool           sTxWait      = false;
-static int8_t         sTxPower     = 0;
-static int8_t         sCcaEdThresh = -74;
-static int8_t         sLnaGain     = 0;
-static uint16_t       sRegionCode  = 0;
+static otPanId  sPanid;
+static bool     sPromiscuous = false;
+static bool     sTxWait      = false;
+static int8_t   sTxPower     = 0;
+static int8_t   sCcaEdThresh = -74;
+static int8_t   sLnaGain     = 0;
+static uint16_t sRegionCode  = 0;
 
 enum
 {
@@ -144,11 +138,6 @@ static uint8_t sAckIeData[OT_ACK_IE_MAX_SIZE];
 static uint8_t sAckIeDataLength = 0;
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint32_t sCslSampleTime;
-static uint32_t sCslPeriod;
-#endif
-
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool sRadioCoexEnabled = true;
 #endif
@@ -160,12 +149,7 @@ otRadioCaps gRadioCaps =
     OT_RADIO_CAPS_NONE;
 #endif
 
-static uint32_t         sMacFrameCounter;
-static uint8_t          sKeyId;
-static otMacKeyMaterial sPrevKey;
-static otMacKeyMaterial sCurrKey;
-static otMacKeyMaterial sNextKey;
-static otRadioKeyType   sKeyType;
+static otRadioContext sRadioContext;
 
 static int8_t GetRssi(uint16_t aChannel);
 
@@ -190,6 +174,8 @@ static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
 {
     bool isConnectable = true;
 
+    otEXPECT_ACTION(aNodeId != gNodeId, isConnectable = false);
+
     switch (sFilterMode)
     {
     case kFilterOff:
@@ -202,6 +188,7 @@ static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
         break;
     }
 
+exit:
     return isConnectable;
 }
 
@@ -236,7 +223,7 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
             break;
         }
 
-        for (uint16_t nodeId = 0; nodeId <= MAX_NETWORK_SIZE; nodeId++)
+        for (uint16_t nodeId = 0; nodeId <= (uint16_t)MAX_NETWORK_SIZE; nodeId++)
         {
             if (FilterContainsId(nodeId))
             {
@@ -386,7 +373,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
     assert(aInstance != NULL);
 
-    ReverseExtAddress(&sExtAddress, aExtAddress);
+    ReverseExtAddress(&sRadioContext.mExtAddress, aExtAddress);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
@@ -395,7 +382,16 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
 
     assert(aInstance != NULL);
 
-    sShortAddress = aShortAddress;
+    sRadioContext.mShortAddress = aShortAddress;
+}
+
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL);
+
+    sRadioContext.mAlternateShortAddress = aShortAddress;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
@@ -407,82 +403,15 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     sPromiscuous = aEnable;
 }
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-static void initFds(void)
-{
-    int                fd;
-    int                one = 1;
-    struct sockaddr_in sockaddr;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
-    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sTxFd)"));
-
-    sPort                    = (uint16_t)(sPortBase + sPortOffset + gNodeId);
-    sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons(sPort);
-    sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &sockaddr.sin_addr, sizeof(sockaddr.sin_addr)) != -1,
-                    perror("setsockopt(sTxFd, IP_MULTICAST_IF)"));
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, IP_MULTICAST_LOOP)"));
-
-    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sTxFd)"));
-
-    // Tx fd is successfully initialized.
-    sTxFd = fd;
-
-    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sRxFd)"));
-
-    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, SO_REUSEADDR)"));
-    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, SO_REUSEPORT)"));
-
-    {
-        struct ip_mreqn mreq;
-
-        memset(&mreq, 0, sizeof(mreq));
-        inet_pton(AF_INET, OT_RADIO_GROUP, &mreq.imr_multiaddr);
-
-        // Always use loopback device to send simulation packets.
-        mreq.imr_address.s_addr = inet_addr("127.0.0.1");
-
-        otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &mreq.imr_address, sizeof(mreq.imr_address)) != -1,
-                        perror("setsockopt(sRxFd, IP_MULTICAST_IF)"));
-        otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != -1,
-                        perror("setsockopt(sRxFd, IP_ADD_MEMBERSHIP)"));
-    }
-
-    sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset));
-    sockaddr.sin_addr.s_addr = inet_addr(OT_RADIO_GROUP);
-
-    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sRxFd)"));
-
-    // Rx fd is successfully initialized.
-    sRxFd = fd;
-
-exit:
-    if (sRxFd == -1 || sTxFd == -1)
-    {
-        exit(EXIT_FAILURE);
-    }
-}
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-
 void platformRadioInit(void)
 {
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
     parseFromEnvAsUint16("PORT_BASE", &sPortBase);
-
     parseFromEnvAsUint16("PORT_OFFSET", &sPortOffset);
     sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
-    initFds();
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+    utilsInitSocket(&sSocket, sPortBase + sPortOffset);
+#endif
 
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
@@ -493,6 +422,7 @@ void platformRadioInit(void)
 #else
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
 #endif
+    sAckFrame.mInfo.mTxInfo.mIeInfo = NULL;
 
     for (size_t i = 0; i <= kMaxChannel - kMinChannel; i++)
     {
@@ -503,17 +433,6 @@ void platformRadioInit(void)
     otLinkMetricsInit(SIM_RECEIVE_SENSITIVITY);
 #endif
 }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint16_t getCslPhase(void)
-{
-    uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
-
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
-}
-#endif
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -674,7 +593,11 @@ static void radioReceive(otInstance *aInstance)
     {
         if (otMacFrameIsAckRequested(&sTransmitFrame))
         {
-            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
+            uint8_t rxSeq;
+            uint8_t txSeq;
+
+            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame, &rxSeq) == OT_ERROR_NONE &&
+                       otMacFrameGetSequence(&sTransmitFrame, &txSeq) == OT_ERROR_NONE && rxSeq == txSeq;
         }
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
         // Simulate tx done when receiving the echo frame.
@@ -691,17 +614,7 @@ static void radioReceive(otInstance *aInstance)
         sState  = OT_RADIO_STATE_RECEIVE;
         sTxWait = false;
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
-        }
-        else
-#endif
-        {
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, (isAck ? &sReceiveFrame : NULL), OT_ERROR_NONE);
-        }
+        otPlatRadioTxDone(aInstance, &sTransmitFrame, (isAck ? &sReceiveFrame : NULL), OT_ERROR_NONE);
     }
     else if (!isAck || sPromiscuous)
     {
@@ -726,92 +639,17 @@ static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
     aMessage->mPsdu[crc_offset + 1] = crc >> 8;
 }
 
-static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
-{
-    otError error = OT_ERROR_NONE;
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    otMacKeyMaterial *key = NULL;
-    uint8_t           keyId;
-
-    otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
-             !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
-
-    if (otMacFrameIsAck(aFrame))
-    {
-        keyId = otMacFrameGetKeyId(aFrame);
-
-        otEXPECT_ACTION(keyId != 0, error = OT_ERROR_FAILED);
-
-        if (keyId == sKeyId)
-        {
-            key = &sCurrKey;
-        }
-        else if (keyId == sKeyId - 1)
-        {
-            key = &sPrevKey;
-        }
-        else if (keyId == sKeyId + 1)
-        {
-            key = &sNextKey;
-        }
-        else
-        {
-            error = OT_ERROR_SECURITY;
-            otEXPECT(false);
-        }
-    }
-    else
-    {
-        key   = &sCurrKey;
-        keyId = sKeyId;
-    }
-
-    aFrame->mInfo.mTxInfo.mAesKey = key;
-
-    if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
-    {
-        otMacFrameSetKeyId(aFrame, keyId);
-        otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
-    }
-#else
-    otEXPECT(!aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-
-    otMacFrameProcessTransmitAesCcm(aFrame, &sExtAddress);
-
-exit:
-    return error;
-}
-
 void radioSendMessage(otInstance *aInstance)
 {
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
+    // This block should be called in SFD ISR
     {
-        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
-        uint64_t time = (uint64_t)((int64_t)otPlatTimeGet() + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset);
+        uint64_t sfdTxTime = otPlatTimeGet();
 
-        *timeIe = sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
-
-        *(++timeIe) = (uint8_t)(time & 0xff);
-        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
-        {
-            time        = time >> 8;
-            *(++timeIe) = (uint8_t)(time & 0xff);
-        }
+        sRadioContext.mCslPresent = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
+        otEXPECT(otMacFrameProcessTxSfd(&sTransmitFrame, sfdTxTime, &sRadioContext) == OT_ERROR_NONE);
     }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0 && !sTransmitFrame.mInfo.mTxInfo.mIsHeaderUpdated)
-    {
-        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
-    }
-#endif
 
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
-
-    otEXPECT(radioProcessTransmitSecurity(&sTransmitFrame) == OT_ERROR_NONE);
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
     radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
@@ -822,18 +660,7 @@ void radioSendMessage(otInstance *aInstance)
     if (!sTxWait)
     {
         sState = OT_RADIO_STATE_RECEIVE;
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
-        }
-        else
-#endif
-        {
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
-        }
+        otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
     }
 #else
     // Wait for echo radio in virtual time mode.
@@ -859,24 +686,14 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 #else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
-    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sTxWait))
+    if (sState != OT_RADIO_STATE_TRANSMIT || sTxWait)
     {
-        FD_SET(sRxFd, aReadFdSet);
-
-        if (aMaxFd != NULL && *aMaxFd < sRxFd)
-        {
-            *aMaxFd = sRxFd;
-        }
+        utilsAddSocketRxFd(&sSocket, aReadFdSet, aMaxFd);
     }
 
-    if (aWriteFdSet != NULL && platformRadioIsTransmitPending())
+    if (platformRadioIsTransmitPending())
     {
-        FD_SET(sTxFd, aWriteFdSet);
-
-        if (aMaxFd != NULL && *aMaxFd < sTxFd)
-        {
-            *aMaxFd = sTxFd;
-        }
+        utilsAddSocketTxFd(&sSocket, aWriteFdSet, aMaxFd);
     }
 
     if (sEnergyScanning)
@@ -888,8 +705,8 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct ti
         {
             uint32_t remaining = sEnergyScanEndTime - now;
 
-            tv.tv_sec  = remaining / MS_PER_S;
-            tv.tv_usec = (remaining % MS_PER_S) * US_PER_MS;
+            tv.tv_sec  = remaining / OT_MS_PER_S;
+            tv.tv_usec = (remaining % OT_MS_PER_S) * OT_US_PER_MS;
         }
 
         if (timercmp(&tv, aTimeout, <))
@@ -900,18 +717,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct ti
 }
 
 // no need to close in virtual time mode.
-void platformRadioDeinit(void)
-{
-    if (sRxFd != -1)
-    {
-        close(sRxFd);
-    }
-
-    if (sTxFd != -1)
-    {
-        close(sTxFd);
-    }
-}
+void platformRadioDeinit(void) { utilsDeinitSocket(&sSocket); }
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 
 void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
@@ -919,41 +725,22 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    if (FD_ISSET(sRxFd, aReadFdSet))
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    if (utilsCanSocketReceive(&sSocket, aReadFdSet))
     {
-        struct sockaddr_in sockaddr;
-        socklen_t          len = sizeof(sockaddr);
-        ssize_t            rval;
+        uint16_t senderNodeId;
+        uint16_t len;
 
-        memset(&sockaddr, 0, sizeof(sockaddr));
-        rval =
-            recvfrom(sRxFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, (struct sockaddr *)&sockaddr, &len);
+        len = utilsReceiveFromSocket(&sSocket, &sReceiveMessage, sizeof(sReceiveMessage), &senderNodeId);
 
-        if (rval > 0)
+        if (NodeIdFilterIsConnectable(senderNodeId))
         {
-            uint16_t srcPort   = ntohs(sockaddr.sin_port);
-            uint16_t srcNodeId = srcPort - sPortOffset - sPortBase;
-
-            if (NodeIdFilterIsConnectable(srcNodeId) && srcPort != sPort)
-            {
-                sReceiveFrame.mLength = (uint16_t)(rval - 1);
-
-                radioReceive(aInstance);
-            }
-        }
-        else if (rval == 0)
-        {
-            // socket is closed, which should not happen
-            assert(false);
-        }
-        else if (errno != EINTR && errno != EAGAIN)
-        {
-            perror("recvfrom(sRxFd)");
-            exit(EXIT_FAILURE);
+            sReceiveFrame.mLength = len - 1;
+            radioReceive(aInstance);
         }
     }
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#endif
+
     if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
@@ -968,33 +755,17 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    ssize_t            rval;
-    struct sockaddr_in sockaddr;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, OT_RADIO_GROUP, &sockaddr.sin_addr);
-
-    sockaddr.sin_port = htons((uint16_t)(sPortBase + sPortOffset));
-    rval =
-        sendto(sTxFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-
-    if (rval < 0)
-    {
-        perror("sendto(sTxFd)");
-        exit(EXIT_FAILURE);
-    }
-#else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    utilsSendOverSocket(&sSocket, aMessage, aFrame->mLength + 1); // + 1 is for `mChannel`
+#else
     struct Event event;
 
     event.mDelay      = 1; // 1us for now
     event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
     event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);
-
     otSimSendEvent(&event);
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#endif
 }
 
 void radioSendAck(void)
@@ -1034,20 +805,11 @@ void radioSendAck(void)
         }
 #endif
 
-        sAckIeDataLength = generateAckIeData(dataPtr, linkMetricsDataLen);
+        sAckIeDataLength = generateAckIeData(dataPtr, linkMetricsDataLen, &sReceiveFrame);
 
         otEXPECT(otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending,
                                           sAckIeData, sAckIeDataLength, &sAckFrame) == OT_ERROR_NONE);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (sCslPeriod > 0)
-        {
-            otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
-        }
-#endif
-        if (otMacFrameIsSecurityEnabled(&sAckFrame))
-        {
-            otEXPECT(radioProcessTransmitSecurity(&sAckFrame) == OT_ERROR_NONE);
-        }
+        otEXPECT(otMacFrameProcessTxSfd(&sAckFrame, otPlatTimeGet(), &sRadioContext) == OT_ERROR_NONE);
     }
     else
 #endif
@@ -1080,7 +842,8 @@ void radioProcessFrame(otInstance *aInstance)
 
     otEXPECT(sPromiscuous == false);
 
-    otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress),
+    otEXPECT_ACTION(otMacFrameDoesAddrMatchAny(&sReceiveFrame, sPanid, sRadioContext.mShortAddress,
+                                               sRadioContext.mAlternateShortAddress, &sRadioContext.mExtAddress),
                     error = OT_ERROR_ABORT);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -1104,16 +867,7 @@ exit:
 
     if (error != OT_ERROR_ABORT)
     {
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
-        }
-        else
-#endif
-        {
-            otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
-        }
+        otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
     }
 }
 
@@ -1296,15 +1050,21 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-static uint8_t generateAckIeData(uint8_t *aLinkMetricsIeData, uint8_t aLinkMetricsIeDataLen)
+static uint8_t generateAckIeData(uint8_t                   *aLinkMetricsIeData,
+                                 uint8_t                    aLinkMetricsIeDataLen,
+                                 const struct otRadioFrame *aReceivedFrame)
 {
     OT_UNUSED_VARIABLE(aLinkMetricsIeData);
     OT_UNUSED_VARIABLE(aLinkMetricsIeDataLen);
+    OT_UNUSED_VARIABLE(aReceivedFrame);
 
     uint8_t offset = 0;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0)
+    sRadioContext.mCslPresent =
+        (sRadioContext.mCslPeriod > 0) && otMacFrameSrcAddrMatchCslReceiverPeer(aReceivedFrame, &sRadioContext);
+
+    if (sRadioContext.mCslPresent)
     {
         offset += otMacFrameGenerateCslIeTemplate(sAckIeData);
     }
@@ -1328,21 +1088,36 @@ otError otPlatRadioEnableCsl(otInstance         *aInstance,
                              const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddr);
-    OT_UNUSED_VARIABLE(aExtAddr);
-
     otError error = OT_ERROR_NONE;
 
-    sCslPeriod = aCslPeriod;
+    assert(aCslPeriod < UINT16_MAX);
+    otEXPECT_ACTION((aShortAddr != OT_RADIO_BROADCAST_SHORT_ADDR) && (aShortAddr != OT_RADIO_INVALID_SHORT_ADDR),
+                    error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(aExtAddr != NULL, error = OT_ERROR_FAILED);
 
+    sRadioContext.mCslPeriod       = (uint16_t)aCslPeriod;
+    sRadioContext.mCslShortAddress = aShortAddr;
+
+    ReverseExtAddress(&sRadioContext.mCslExtAddress, aExtAddr);
+
+exit:
     return error;
+}
+
+otError otPlatRadioResetCsl(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioContext.mCslPeriod = 0;
+
+    return OT_ERROR_NONE;
 }
 
 void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sCslSampleTime = aCslSampleTime;
+    sRadioContext.mCslSampleTime = aCslSampleTime;
 }
 
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
@@ -1366,11 +1141,14 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
     otEXPECT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
-    sKeyId   = aKeyId;
-    sKeyType = aKeyType;
-    memcpy(&sPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
-    memcpy(&sCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
-    memcpy(&sNextKey, aNextKey, sizeof(otMacKeyMaterial));
+    sRadioContext.mKeyId               = aKeyId;
+    sRadioContext.mKeyType             = aKeyType;
+    sRadioContext.mPrevMacFrameCounter = sRadioContext.mMacFrameCounter;
+    sRadioContext.mMacFrameCounter     = 0;
+
+    memcpy(&sRadioContext.mPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
+    memcpy(&sRadioContext.mCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
+    memcpy(&sRadioContext.mNextKey, aNextKey, sizeof(otMacKeyMaterial));
 
 exit:
     return;
@@ -1380,7 +1158,7 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sMacFrameCounter = aMacFrameCounter;
+    sRadioContext.mMacFrameCounter = aMacFrameCounter;
 }
 
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
@@ -1441,7 +1219,7 @@ void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue)
         if (*endptr != '\0')
         {
             fprintf(stderr, "Invalid %s: %s\n", aEnvName, env);
-            exit(EXIT_FAILURE);
+            DieNow(OT_EXIT_FAILURE);
         }
     }
 }

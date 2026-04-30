@@ -26,12 +26,24 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+option(OT_BUILD_GTEST "enable gtest")
+
 if(OT_FTD AND BUILD_TESTING)
-    add_subdirectory(unit)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_USE_STD_NEW=1")
+    if(NOT OT_PLATFORM STREQUAL "nexus")
+        add_subdirectory(unit)
+        if(OT_BUILD_GTEST)
+            add_subdirectory(gtest)
+        endif()
+    endif()
 endif()
 
 option(OT_FUZZ_TARGETS "enable fuzz targets" OFF)
 
 if(OT_FUZZ_TARGETS)
     add_subdirectory(fuzz)
+endif()
+
+if(OT_PLATFORM STREQUAL "nexus")
+    add_subdirectory(nexus)
 endif()

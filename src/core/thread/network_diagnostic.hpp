@@ -31,24 +31,33 @@
  *   This file includes definitions for handle network diagnostic.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_HPP_
-#define NETWORK_DIAGNOSTIC_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-
 #include <openthread/netdiag.h>
 
+#include "common/bit_set.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/network_diagnostic_types.hpp"
 #include "thread/tmf.hpp"
 #include "thread/uri_paths.hpp"
 
 namespace ot {
+
+namespace Utils {
+class MeshDiag;
+}
+
+namespace MeshCoP {
+class TcatAgent;
+}
 
 namespace NetworkDiagnostic {
 
@@ -61,30 +70,152 @@ namespace NetworkDiagnostic {
  * @{
  */
 
+class Client;
+
 /**
- * This class implements the Network Diagnostic processing.
- *
+ * Implements the Network Diagnostic server responding to requests.
  */
-class NetworkDiagnostic : public InstanceLocator, private NonCopyable
+class Server : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class MeshCoP::TcatAgent;
+    friend class Client;
+
+public:
+    /**
+     * Callback function pointer to notify a reset request for `kNonPreferredChannels` TLV value.
+     */
+    typedef otThreadNonPreferredChannelsResetCallback NonPreferredChannelsResetCallback;
+
+    /**
+     * Initializes the Server.
+     *
+     * @param[in] aInstance   The OpenThread instance.
+     */
+    explicit Server(Instance &aInstance);
+
+    /**
+     * Sets the non-preferred channels value for `kNonPreferredChannels` TLV.
+     *
+     * @param[in] aChannelMask   A channel mask for non-preferred channels.
+     */
+    void SetNonPreferredChannels(uint32_t aChannelMask) { mNonPreferredChannels = aChannelMask; }
+
+    /**
+     * Gets the non-preferred channel mask value for `kNonPreferredChannels` TLV.
+     *
+     * @returns The non-preferred channels as a channel mask.
+     */
+    uint32_t GetNonPreferredChannels(void) const { return mNonPreferredChannels; }
+
+    /**
+     * Sets the callback to notify when a Diagnostic Reset request is received for `kNonPreferredChannels` TLV value.
+     *
+     * @param[in] aCallback   The callback function pointer.
+     * @param[in] aContext    An arbitrary context used with @p aCallback.
+     */
+    void SetNonPreferredChannelsResetCallback(NonPreferredChannelsResetCallback aCallback, void *aContext)
+    {
+        mNonPreferredChannelsResetCallback.Set(aCallback, aContext);
+    }
+
+private:
+    static constexpr uint16_t kMaxChildEntries = 398;
+
+    class TlvTypeListIterator
+    {
+        // Iterates through a list of TLV types in a message (e.g., in a
+        // `TypeListTlv`), reading them one by one and skipping over any
+        // duplicate TLV type in the list.
+
+    public:
+        void  Init(const Message &aMessage, const OffsetRange &aOffsetRange);
+        Error InitForTypeListTlv(const Message &aMessage);
+        Error ReadNextTlvType(uint8_t &aTlvType);
+
+    private:
+        const Message                           *mMessage;
+        OffsetRange                              mOffsetRange;
+        BitSet<NumericLimits<uint8_t>::kMax + 1> mProcessedTlvs;
+    };
+
+    Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
+    Error AppendIp6AddressList(Message &aMessage);
+    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);
+#endif
+
+#if OPENTHREAD_MTD
+    void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
+#elif OPENTHREAD_FTD
+    bool  IsLastAnswer(const Coap::Message &aAnswer) const;
+    void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
+    void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest);
+    Error PrepareAnswers(const Coap::Message &aRequest, AnswerBuilder &aAnswerBuilder);
+    void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
+    Error AppendChildTable(Message &aMessage);
+    Error AppendChildTableAsChildTlvs(AnswerBuilder &aAnswerBuilder);
+    Error AppendRouterNeighborTlvs(AnswerBuilder &aAnswerBuilder);
+    Error AppendChildTableIp6AddressList(AnswerBuilder &aAnswerBuilder);
+    Error AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
+    Error AppendEnhancedRoute(Message &aMessage);
+
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Error AppendChildTableAsChildTlvs(Message &aMessage);
+    Error AppendRouterNeighborTlvs(Message &aMessage);
+    Error AppendChildTableIp6AddressList(Message &aMessage);
+#endif
+
+    static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);
+    void        HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Error AppendBorderRouterIfAddrs(Message &aMessage);
+    Error AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage);
+#endif
+
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
+
+#if OPENTHREAD_FTD
+    Coap::MessageQueue mAnswerQueue;
+#endif
+    uint32_t                                    mNonPreferredChannels;
+    Callback<NonPreferredChannelsResetCallback> mNonPreferredChannelsResetCallback;
+};
+
+DeclareTmfHandler(Server, kUriDiagnosticGetRequest);
+DeclareTmfHandler(Server, kUriDiagnosticGetQuery);
+DeclareTmfHandler(Server, kUriDiagnosticGetAnswer);
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+/**
+ * Implements the Network Diagnostic client sending requests and queries.
+ */
+class Client : public InstanceLocator, private NonCopyable
+{
+    friend class Tmf::Agent;
+    friend class Utils::MeshDiag;
 
 public:
     typedef otNetworkDiagIterator          Iterator;    ///< Iterator to go through TLVs in `GetNextDiagTlv()`.
-    typedef otNetworkDiagTlv               TlvInfo;     ///< Parse info from a Network Diagnostic TLV.
+    typedef otNetworkDiagTlv               DiagTlv;     ///< Parse info from a Network Diagnostic TLV.
     typedef otNetworkDiagChildEntry        ChildInfo;   ///< Parsed info for child table entry.
     typedef otReceiveDiagnosticGetCallback GetCallback; ///< Diagnostic Get callback function pointer type.
 
     static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
 
     /**
-     * This constructor initializes the object.
+     * Initializes the Client.
      *
+     * @param[in] aInstance   The OpenThread instance.
      */
-    explicit NetworkDiagnostic(Instance &aInstance);
+    explicit Client(Instance &aInstance);
 
     /**
-     * This method sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
+     * Sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
      * message is sent or the DIAG_GET.req otherwise.
      *
      * @param[in]  aDestination      The destination address.
@@ -92,7 +223,6 @@ public:
      * @param[in]  aCount            Number of types in @p aTlvTypes.
      * @param[in]  aCallback         Callback when Network Diagnostic Get response is received (can be NULL).
      * @param[in]  Context           Application-specific context used with @p aCallback.
-     *
      */
     Error SendDiagnosticGet(const Ip6::Address &aDestination,
                             const uint8_t       aTlvTypes[],
@@ -101,73 +231,72 @@ public:
                             void               *Context);
 
     /**
-     * This method sends Diagnostic Reset request.
+     * Sends Diagnostic Reset request.
      *
      * @param[in] aDestination  The destination address.
      * @param[in] aTlvTypes     An array of Network Diagnostic TLV types.
      * @param[in] aCount        Number of types in aTlvTypes
-     *
      */
     Error SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
-     * This static method gets the next Network Diagnostic TLV in a given message.
+     * Gets the next Network Diagnostic TLV in a given message.
      *
      * @param[in]      aMessage    Message to read TLVs from.
      * @param[in,out]  aIterator   The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
-     * @param[out]     aTlvInfo    A reference to a `TlvInfo` to output the next TLV data.
+     * @param[out]     aDiagTlv    A reference to a `DiagTlv` to output the next TLV data.
      *
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
      * @retval kErrorParse      Parsing the next Network Diagnostic failed.
-     *
      */
-    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
+    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, DiagTlv &aDiagTlv);
+
+    /**
+     * This method returns the query ID used for the last Network Diagnostic Query command.
+     *
+     * @returns The query ID used for last query.
+     */
+    uint16_t GetLastQueryId(void) const { return mQueryId; }
 
 private:
-    static constexpr uint16_t kMaxChildEntries = 398;
-
-    enum Action : uint8_t
-    {
-        kMessageSend,
-        kMessageReceive,
-    };
+    typedef otNetworkDiagData        DiagData;
+    typedef otNetworkDiagChildTable  ChildTable;
+    typedef otNetworkDiagIp6AddrList Ip6AddrList;
 
     Error SendCommand(Uri                   aUri,
+                      Message::Priority     aPriority,
                       const Ip6::Address   &aDestination,
                       const uint8_t         aTlvTypes[],
                       uint8_t               aCount,
-                      Coap::ResponseHandler aHandler = nullptr,
-                      void                 *aContext = nullptr);
+                      Coap::ResponseHandler aHandler,
+                      void                 *aContext);
 
-    Error AppendIp6AddressList(Message &aMessage);
-    Error AppendChildTable(Message &aMessage);
-    void  FillMacCountersTlv(MacCountersTlv &aTlv);
-    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse, Tlv &aTlv);
-    void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
+    Error SendCommand(Uri                 aUri,
+                      Message::Priority   aPriority,
+                      const Ip6::Address &aDestination,
+                      const uint8_t       aTlvTypes[],
+                      uint8_t             aCount);
 
-    static void HandleGetResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  Error                aResult);
-    void        HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    DeclareTmfResponseHandlerIn(Client, HandleGetResponse);
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
+
+    static void  ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo);
+    static Error ParseChildTable(ChildTable &aChildTable, const Message &aMessage, OffsetRange aOffsetRange);
+    static void  ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *UriToString(Uri aUri);
-    void               Log(Action aAction, Uri aUri, const Ip6::Address &aIp6Address) const;
-#else
-    void Log(Action, Uri, const Ip6::Address &) const {}
 #endif
 
+    uint16_t              mQueryId;
     Callback<GetCallback> mGetCallback;
 };
 
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetRequest);
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetQuery);
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetAnswer);
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticReset);
+DeclareTmfHandler(Client, kUriDiagnosticReset);
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
 /**
  * @}
@@ -176,6 +305,4 @@ DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticReset);
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-
-#endif // NETWORK_DIAGNOSTIC_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_

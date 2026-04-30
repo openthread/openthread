@@ -73,7 +73,7 @@ uint8_t Metrics::ConvertToTypeIds(uint8_t aTypeIds[]) const
     {
         for (uint8_t i = 0; i < count; i++)
         {
-            TypeId::MarkAsReserverd(aTypeIds[i]);
+            TypeId::MarkAsReserved(aTypeIds[i]);
         }
     }
 #endif

@@ -31,6 +31,7 @@
 #include <openthread/config.h>
 
 #include "test_util.hpp"
+#include "common/clearable.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/timestamp.hpp"
 
@@ -54,101 +55,250 @@ void TestSteeringData(void)
     steeringData.SetToPermitAllJoiners();
 
     DumpBuffer("After SetToPermitAllJoiners()", steeringData.GetData(), steeringData.GetLength());
-    VerifyOrQuit(steeringData.GetLength() == 1, "after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.PermitsAllJoiners(), "after SetToPermitAllJoiners()");
-    VerifyOrQuit(!steeringData.IsEmpty(), "after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.Contains(joinerId1), "after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.Contains(joinerId2), "after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.Contains(indexes), "after SetToPermitAllJoiners()");
+    VerifyOrQuit(steeringData.GetLength() == 1);
+    VerifyOrQuit(steeringData.PermitsAllJoiners());
+    VerifyOrQuit(!steeringData.IsEmpty());
+    VerifyOrQuit(steeringData.Contains(joinerId1));
+    VerifyOrQuit(steeringData.Contains(joinerId2));
+    VerifyOrQuit(steeringData.Contains(indexes));
 
     steeringData.Clear();
 
     DumpBuffer("After Clear()", steeringData.GetData(), steeringData.GetLength());
-    VerifyOrQuit(steeringData.GetLength() == 1, "after Clear()");
-    VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after Clear()");
-    VerifyOrQuit(steeringData.IsEmpty(), "after Clear()");
-    VerifyOrQuit(!steeringData.Contains(joinerId1), "after Clear()");
-    VerifyOrQuit(!steeringData.Contains(joinerId2), "after Clear()");
-    VerifyOrQuit(!steeringData.Contains(indexes), "after Clear()");
+    VerifyOrQuit(steeringData.GetLength() == 1);
+    VerifyOrQuit(!steeringData.PermitsAllJoiners());
+    VerifyOrQuit(steeringData.IsEmpty());
+    VerifyOrQuit(!steeringData.Contains(joinerId1));
+    VerifyOrQuit(!steeringData.Contains(joinerId2));
+    VerifyOrQuit(!steeringData.Contains(indexes));
 
-    for (uint8_t len = 1; len <= MeshCoP::SteeringData::kMaxLength; len++)
+    for (uint8_t len = MeshCoP::SteeringData::kMinLength; len <= MeshCoP::SteeringData::kMaxLength; len++)
     {
         printf("\n--------------------------------------------");
 
-        steeringData.Init(len);
+        SuccessOrQuit(steeringData.Init(len));
 
-        VerifyOrQuit(steeringData.GetLength() == len, "after Init()");
-        VerifyOrQuit(steeringData.IsEmpty(), "IsEmpy() failed after Init()");
-        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after Init()");
-        VerifyOrQuit(!steeringData.Contains(joinerId1), "after Init()");
-        VerifyOrQuit(!steeringData.Contains(joinerId2), "after Init()");
-        VerifyOrQuit(!steeringData.Contains(indexes), "after Init()");
+        VerifyOrQuit(steeringData.GetLength() == len);
+        VerifyOrQuit(steeringData.IsEmpty());
+        VerifyOrQuit(!steeringData.PermitsAllJoiners());
+        VerifyOrQuit(!steeringData.Contains(joinerId1));
+        VerifyOrQuit(!steeringData.Contains(joinerId2));
+        VerifyOrQuit(!steeringData.Contains(indexes));
 
-        steeringData.UpdateBloomFilter(joinerId1);
-        DumpBuffer("After UpdateBloomFilter(joinerId1)", steeringData.GetData(), steeringData.GetLength());
-        VerifyOrQuit(steeringData.GetLength() == len, "after UpdateBloomFilter()");
-        VerifyOrQuit(!steeringData.IsEmpty(), "IsEmpy() failed after UpdateBloomFilter()");
-        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(joinerId1), "after UpdateBloomFilter");
+        SuccessOrQuit(steeringData.UpdateBloomFilter(joinerId1));
+        printf("\nAfter UpdateBloomFilter(joinerId1): %s", steeringData.ToString().AsCString());
+        VerifyOrQuit(steeringData.GetLength() == len);
+        VerifyOrQuit(!steeringData.IsEmpty());
+        VerifyOrQuit(!steeringData.PermitsAllJoiners());
+        VerifyOrQuit(steeringData.Contains(joinerId1));
 
-        steeringData.UpdateBloomFilter(joinerId2);
-        DumpBuffer("After UpdateBloomFilter(joinerId2)", steeringData.GetData(), steeringData.GetLength());
-        VerifyOrQuit(steeringData.GetLength() == len, "after UpdateBloomFilter()");
-        VerifyOrQuit(!steeringData.IsEmpty(), "IsEmpy() failed after UpdateBloomFilter()");
-        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(joinerId1), "after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(joinerId2), "after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(indexes), "after UpdateBloomFilter");
+        SuccessOrQuit(steeringData.UpdateBloomFilter(joinerId2));
+        printf("\nAfter UpdateBloomFilter(joinerId2): %s", steeringData.ToString().AsCString());
+        VerifyOrQuit(steeringData.GetLength() == len);
+        VerifyOrQuit(!steeringData.IsEmpty());
+        VerifyOrQuit(!steeringData.PermitsAllJoiners());
+        VerifyOrQuit(steeringData.Contains(joinerId1));
+        VerifyOrQuit(steeringData.Contains(joinerId2));
+        VerifyOrQuit(steeringData.Contains(indexes));
     }
 
-    steeringData.Init(0);
+    VerifyOrQuit(steeringData.Init(0) == kErrorInvalidArgs);
+    VerifyOrQuit(steeringData.Init(MeshCoP::SteeringData::kMaxLength + 1) == kErrorInvalidArgs);
 
-    VerifyOrQuit(steeringData.GetLength() == 0, "after Init()");
-    VerifyOrQuit(steeringData.IsEmpty(), "IsEmpy() failed after Init()");
-    VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after Init()");
-    VerifyOrQuit(!steeringData.Contains(joinerId1), "after Init()");
-    VerifyOrQuit(!steeringData.Contains(joinerId2), "after Init()");
-    VerifyOrQuit(!steeringData.Contains(indexes), "after Init()");
+    ClearAllBytes(steeringData);
+    VerifyOrQuit(steeringData.GetLength() == 0);
+    VerifyOrQuit(steeringData.UpdateBloomFilter(joinerId1) == kErrorInvalidArgs);
 
     printf("TestSteeringData() passed\n");
 }
 
+void TestSteeringDataBloomFilterMerge(void)
+{
+    static constexpr uint8_t kMaxJoinerIds = 3;
+
+    static const uint8_t kTestSteeringDataLengths[] = {16, 8, 4, 2, 1};
+
+    Instance             *instance;
+    MeshCoP::SteeringData steeringData;
+    MeshCoP::SteeringData otherSteeringData;
+
+    Mac::ExtAddress joinerIds[kMaxJoinerIds];
+    Mac::ExtAddress otherJoinerIds[kMaxJoinerIds];
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    printf("\n--------------------------------------------");
+    printf("\nTestSteeringDataBloomFilterMerge()");
+    printf("\nJoiner IDs for SteeringData");
+
+    for (Mac::ExtAddress &id : joinerIds)
+    {
+        uint8_t buffer[sizeof(Mac::ExtAddress)];
+
+        Random::NonCrypto::FillBuffer(buffer, sizeof(buffer));
+        id.Set(buffer);
+        printf("\n %s", id.ToString().AsCString());
+    }
+
+    printf("\n--------------------------------------------");
+    printf("\nJoiner IDs for OtherSteeringData");
+
+    for (Mac::ExtAddress &id : otherJoinerIds)
+    {
+        uint8_t buffer[sizeof(Mac::ExtAddress)];
+
+        Random::NonCrypto::FillBuffer(buffer, sizeof(buffer));
+        id.Set(buffer);
+        printf("\n %s", id.ToString().AsCString());
+    }
+
+    for (uint8_t length : kTestSteeringDataLengths)
+    {
+        for (uint8_t otherLength : kTestSteeringDataLengths)
+        {
+            printf("\n--------------------------------------------");
+            printf("\nLen:%u OtherLen:%u", length, otherLength);
+
+            SuccessOrQuit(steeringData.Init(length));
+            SuccessOrQuit(otherSteeringData.Init(otherLength));
+
+            VerifyOrQuit(steeringData.GetLength() == length);
+            VerifyOrQuit(otherSteeringData.GetLength() == otherLength);
+            VerifyOrQuit(steeringData.IsEmpty());
+            VerifyOrQuit(otherSteeringData.IsEmpty());
+
+            if (otherLength > length)
+            {
+                VerifyOrQuit(steeringData.MergeBloomFilterWith(otherSteeringData) != kErrorNone);
+                continue;
+            }
+
+            SuccessOrQuit(steeringData.MergeBloomFilterWith(otherSteeringData));
+
+            VerifyOrQuit(steeringData.GetLength() == length);
+            VerifyOrQuit(otherSteeringData.GetLength() == otherLength);
+            VerifyOrQuit(steeringData.IsEmpty());
+            VerifyOrQuit(otherSteeringData.IsEmpty());
+
+            for (Mac::ExtAddress &id : joinerIds)
+            {
+                SuccessOrQuit(steeringData.UpdateBloomFilter(id));
+                VerifyOrQuit(steeringData.Contains(id));
+            }
+
+            for (Mac::ExtAddress &id : otherJoinerIds)
+            {
+                SuccessOrQuit(otherSteeringData.UpdateBloomFilter(id));
+                VerifyOrQuit(otherSteeringData.Contains(id));
+            }
+
+            printf("\nSteering Data       : %s", steeringData.ToString().AsCString());
+            printf("\nOther Steering Data : %s", otherSteeringData.ToString().AsCString());
+
+            SuccessOrQuit(steeringData.MergeBloomFilterWith(otherSteeringData));
+
+            printf("\nMerged Steering Data: %s", steeringData.ToString().AsCString());
+
+            VerifyOrQuit(steeringData.GetLength() == length);
+
+            for (const Mac::ExtAddress &id : joinerIds)
+            {
+                VerifyOrQuit(steeringData.Contains(id));
+            }
+
+            for (const Mac::ExtAddress &id : otherJoinerIds)
+            {
+                VerifyOrQuit(steeringData.Contains(id));
+            }
+        }
+    }
+
+    printf("\nTestSteeringDataBloomFilterMerge() passed\n");
+}
+
 void TestTimestamp(void)
 {
-    MeshCoP::Timestamp t1;
-    MeshCoP::Timestamp t2;
+    MeshCoP::Timestamp       t1;
+    MeshCoP::Timestamp       t2;
+    MeshCoP::Timestamp::Info info;
 
     t1.Clear();
-    t2.Clear();
-
     VerifyOrQuit(t1.GetSeconds() == 0);
     VerifyOrQuit(t1.GetTicks() == 0);
     VerifyOrQuit(!t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t1) == 0);
 
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, nullptr) > 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(nullptr, &t2) < 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(nullptr, nullptr) == 0);
+    t1.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0);
+    VerifyOrQuit(info.mTicks == 0);
+    VerifyOrQuit(!info.mAuthoritative);
 
-    t1.SetTicks(10);
-    VerifyOrQuit(t1.GetTicks() == 10);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
+    t2.SetToInvalid();
+    VerifyOrQuit(!t2.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t2) == 0);
 
-    t2.SetTicks(10);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+    t2.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0xffffffffffff);
+    VerifyOrQuit(info.mTicks == 0x7fff);
+    VerifyOrQuit(info.mAuthoritative);
+
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t1) < 0);
+
+    t2 = t1;
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
+    VerifyOrQuit(t2.IsValid());
+    VerifyOrQuit(t1.IsValid());
+
+    t1.SetSeconds(0x12345678abcd);
+    VerifyOrQuit(t1.GetSeconds() == 0x12345678abcd);
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t1) < 0);
+
+    t2.SetSeconds(0x12345678abcd);
+    VerifyOrQuit(t1.GetSeconds() == 0x12345678abcd);
+    VerifyOrQuit(t2.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
 
     t1.SetAuthoritative(true);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
+    VerifyOrQuit(t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
 
-    t1.SetSeconds(1);
-    VerifyOrQuit(t1.GetSeconds() == 1);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
+    t1.SetAuthoritative(false);
+    VerifyOrQuit(!t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
 
-    t2.SetSeconds(1);
-    t2.SetAuthoritative(true);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+    t1.SetTicks(0x7fff);
+    VerifyOrQuit(t1.GetTicks() == 0x7fff);
+    VerifyOrQuit(!t1.GetAuthoritative());
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t2, t1) < 0);
+
+    t2.SetTicks(0x7fff);
+    VerifyOrQuit(t2.GetTicks() == 0x7fff);
+    VerifyOrQuit(!t2.GetAuthoritative());
+    VerifyOrQuit(t2.IsValid());
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(t1, t2) == 0);
+
+    t2.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0x12345678abcd);
+    VerifyOrQuit(info.mTicks == 0x7fff);
+    VerifyOrQuit(!info.mAuthoritative);
+
+    t1.SetToOrphanAnnounce();
+    VerifyOrQuit(t1.IsValid());
+    VerifyOrQuit(t1.IsOrphanAnnounce());
+
+    t1.ConvertTo(info);
+    VerifyOrQuit(info.mSeconds == 0);
+    VerifyOrQuit(info.mTicks == 0);
+    VerifyOrQuit(info.mAuthoritative);
 
     printf("TestTimestamp() passed\n");
 }
@@ -158,7 +308,9 @@ void TestTimestamp(void)
 int main(void)
 {
     ot::TestSteeringData();
+    ot::TestSteeringDataBloomFilterMerge();
     ot::TestTimestamp();
+
     printf("\nAll tests passed.\n");
     return 0;
 }

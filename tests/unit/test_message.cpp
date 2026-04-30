@@ -28,23 +28,20 @@
 
 #include "common/appender.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
 
 namespace ot {
 
-void TestMessage(void)
+void TestMessage(uint16_t aReservedLength)
 {
-    enum : uint16_t
-    {
-        kMaxSize    = (kBufferSize * 3 + 24),
-        kOffsetStep = 101,
-        kLengthStep = 21,
-    };
+    static constexpr uint16_t kMaxSize    = (Buffer::kSize * 3 + 24);
+    static constexpr uint16_t kOffsetStep = 101;
+    static constexpr uint16_t kLengthStep = 21;
 
     Instance    *instance;
     MessagePool *messagePool;
@@ -54,7 +51,7 @@ void TestMessage(void)
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
 
-    printf("TestMessage\n");
+    printf("TestMessage(aReservedLength: %u)\n", aReservedLength);
 
     memset(zeroBuffer, 0, sizeof(zeroBuffer));
 
@@ -65,7 +62,13 @@ void TestMessage(void)
 
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
-    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
+    message->SetLinkSecurityEnabled(kWithLinkSecurity);
+    SuccessOrQuit(message->SetPriority(Message::Priority::kPriorityNet));
+    message->SetType(Message::Type::kType6lowpan);
+    message->SetSubType(Message::SubType::kSubTypeJoinerEntrust);
+    message->SetLoopbackToHostAllowed(true);
+    message->SetOrigin(Message::kOriginHostUntrusted);
     SuccessOrQuit(message->SetLength(kMaxSize));
     message->WriteBytes(0, writeBuffer, kMaxSize);
     SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
@@ -73,6 +76,8 @@ void TestMessage(void)
     VerifyOrQuit(message->CompareBytes(0, readBuffer, kMaxSize));
     VerifyOrQuit(message->Compare(0, readBuffer));
     VerifyOrQuit(message->GetLength() == kMaxSize);
+
+    message->SetOffset(0);
 
     for (uint16_t offset = 0; offset < kMaxSize; offset++)
     {
@@ -130,6 +135,32 @@ void TestMessage(void)
             VerifyOrQuit(!message->CompareBytes(offset, readBuffer, length));
             VerifyOrQuit(message->CompareBytes(offset, readBuffer, readLength));
         }
+
+        // Verify `Read()` behavior when requested read length goes beyond available bytes in the message.
+
+        for (uint16_t length = kMaxSize - offset + 1; length <= kMaxSize + 1; length++)
+        {
+            Error error;
+
+            memset(readBuffer, 0, sizeof(readBuffer));
+
+            error = message->Read(offset, readBuffer, length);
+
+            if (length < kMaxSize - offset)
+            {
+                uint16_t readLength = kMaxSize - offset;
+
+                SuccessOrQuit(error);
+                VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], readLength) == 0);
+                VerifyOrQuit(memcmp(&readBuffer[readLength], zeroBuffer, kMaxSize - readLength) == 0,
+                             "read after length");
+            }
+            else
+            {
+                VerifyOrQuit(error == kErrorParse);
+                VerifyOrQuit(memcmp(readBuffer, zeroBuffer, sizeof(readBuffer)) == 0, "Read() updated buffer on error");
+            }
+        }
     }
 
     VerifyOrQuit(message->GetLength() == kMaxSize);
@@ -137,7 +168,7 @@ void TestMessage(void)
     // Test `WriteBytesFromMessage()` behavior copying between different
     // messages.
 
-    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
     SuccessOrQuit(message2->SetLength(kMaxSize));
 
     for (uint16_t readOffset = 0; readOffset < kMaxSize; readOffset += kOffsetStep)
@@ -269,7 +300,7 @@ void TestMessage(void)
     {
         for (uint16_t length = 0; length <= kMaxSize - offset; length += kLengthStep)
         {
-            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
             SuccessOrQuit(message->AppendBytes(writeBuffer, kMaxSize));
 
             message->RemoveHeader(offset, length);
@@ -290,7 +321,7 @@ void TestMessage(void)
     {
         for (uint16_t length = 0; length <= kMaxSize; length += kLengthStep)
         {
-            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+            VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6, aReservedLength)) != nullptr);
             SuccessOrQuit(message->AppendBytes(writeBuffer, kMaxSize));
 
             SuccessOrQuit(message->InsertHeader(offset, length));
@@ -308,6 +339,114 @@ void TestMessage(void)
 
     testFreeInstance(instance);
 }
+
+class UnitTester
+{
+public:
+    static void TestCloning(void)
+    {
+        static constexpr uint16_t kLength = 100;
+
+        Instance    *instance;
+        MessagePool *messagePool;
+        Message     *message;
+        Message     *clone;
+        uint8_t      buffer[kLength];
+
+        printf("TestCloning()\n");
+
+        instance = static_cast<Instance *>(testInitInstance());
+        VerifyOrQuit(instance != nullptr);
+
+        messagePool = &instance->Get<MessagePool>();
+
+        // Create a message with specific properties
+        message = messagePool->Allocate(Message::kTypeIp6, /* aReserveHeader */ 60);
+        VerifyOrQuit(message != nullptr);
+
+        Random::NonCrypto::FillBuffer(buffer, sizeof(buffer));
+        SuccessOrQuit(message->Append(buffer));
+
+        VerifyOrQuit(message->GetLength() == kLength);
+        VerifyOrQuit(message->GetType() == Message::kTypeIp6);
+        VerifyOrQuit(message->GetReserved() == 60);
+
+        SuccessOrQuit(message->SetPriority(Message::kPriorityHigh));
+        message->SetOffset(10);
+        message->SetSubType(Message::kSubTypeMle);
+        message->SetLinkSecurityEnabled(true);
+        message->SetLoopbackToHostAllowed(true);
+        message->SetOrigin(Message::kOriginHostUntrusted);
+
+        // Test 1: Default cloning
+        clone = message->Clone<kSameReservedHeader>();
+        VerifyOrQuit(clone != nullptr);
+
+        VerifyOrQuit(clone->GetLength() == message->GetLength());
+        VerifyOrQuit(clone->GetPriority() == message->GetPriority());
+        VerifyOrQuit(clone->GetReserved() == message->GetReserved());
+        VerifyOrQuit(clone->GetOffset() == message->GetOffset());
+        VerifyOrQuit(clone->GetType() == message->GetType());
+        VerifyOrQuit(clone->GetSubType() == message->GetSubType());
+        VerifyOrQuit(clone->IsLinkSecurityEnabled() == message->IsLinkSecurityEnabled());
+        VerifyOrQuit(clone->IsLoopbackToHostAllowed() == message->IsLoopbackToHostAllowed());
+        VerifyOrQuit(clone->GetOrigin() == message->GetOrigin());
+        VerifyOrQuit(clone->Compare(0, buffer));
+        VerifyOrQuit(clone->CompareBytes(0, buffer, kLength));
+
+        clone->Free();
+
+        // Test 2: Cloning with shorter length
+        clone = message->Clone<kSameReservedHeader>(kLength / 2);
+        VerifyOrQuit(clone != nullptr);
+
+        VerifyOrQuit(clone->GetLength() == kLength / 2);
+        VerifyOrQuit(clone->GetPriority() == message->GetPriority());
+        VerifyOrQuit(clone->GetReserved() == message->GetReserved());
+        VerifyOrQuit(clone->GetOffset() == 10); // Offset should be preserved if < new length
+        VerifyOrQuit(clone->CompareBytes(0, buffer, kLength / 2));
+
+        clone->Free();
+
+        // Test 3: Cloning with shorter length, offset change
+        message->SetOffset(80);
+
+        clone = message->Clone<kNoReservedHeader>(kLength / 2);
+        VerifyOrQuit(clone != nullptr);
+
+        VerifyOrQuit(clone->GetLength() == kLength / 2);
+        VerifyOrQuit(clone->GetPriority() == message->GetPriority());
+        VerifyOrQuit(clone->GetReserved() == 0);
+        VerifyOrQuit(clone->GetOffset() == 50); // Offset should be updated
+        VerifyOrQuit(clone->CompareBytes(0, buffer, kLength / 2));
+
+        clone->Free();
+
+        // Test 4: Cloning with overridden reserved header size
+        clone = message->Clone(message->GetLength(), 0);
+        VerifyOrQuit(clone != nullptr);
+
+        VerifyOrQuit(clone->GetLength() == message->GetLength());
+        VerifyOrQuit(clone->GetPriority() == message->GetPriority());
+        VerifyOrQuit(clone->GetReserved() == 0);
+        VerifyOrQuit(clone->Compare(0, buffer));
+
+        clone->Free();
+
+        // Test 5: Cloning with all shorter length and different reserved header size
+        clone = message->Clone(kLength / 4, 40);
+        VerifyOrQuit(clone != nullptr);
+
+        VerifyOrQuit(clone->GetLength() == kLength / 4);
+        VerifyOrQuit(clone->GetReserved() == 40);
+        VerifyOrQuit(clone->CompareBytes(0, buffer, kLength / 4));
+
+        clone->Free();
+
+        message->Free();
+        testFreeInstance(instance);
+    }
+};
 
 void TestAppender(void)
 {
@@ -402,8 +541,16 @@ void TestAppender(void)
 
 int main(void)
 {
-    ot::TestMessage();
+    static const uint16_t kReserveLengths[] = {0, 33, 400};
+
+    for (uint16_t reservedLength : kReserveLengths)
+    {
+        ot::TestMessage(reservedLength);
+    }
+
+    ot::UnitTester::TestCloning();
     ot::TestAppender();
+
     printf("All tests passed\n");
     return 0;
 }

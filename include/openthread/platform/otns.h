@@ -50,11 +50,10 @@ extern "C" {
  *   This module includes the platform abstraction for OTNS.
  *
  * @{
- *
  */
 
 /**
- * This function exports status information to OTNS.
+ * Exports status information to OTNS.
  *
  * The status information is represented by a null-terminated string with format recognizable by OTNS.
  * Each call to `otPlatOtnsStatus` can send multiple statuses, separated by ';', e.x. "parid=577fbc37;lrid=5".
@@ -67,13 +66,11 @@ extern "C" {
  * Currently, OTNS only supports virtual time simulation.
  *
  * @param[in]  aStatus  The status string.
- *
  */
 void otPlatOtnsStatus(const char *aStatus);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus

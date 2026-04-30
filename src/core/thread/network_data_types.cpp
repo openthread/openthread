@@ -33,30 +33,10 @@
 
 #include "network_data_types.hpp"
 
-#include "common/instance.hpp"
-#include "thread/network_data_tlvs.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace NetworkData {
-
-const char *RoutePreferenceToString(RoutePreference aPreference)
-{
-    const char *str = "low";
-
-    switch (aPreference)
-    {
-    case kRoutePreferenceHigh:
-        str = "high";
-        break;
-    case kRoutePreferenceMedium:
-        str = "med";
-        break;
-    case kRoutePreferenceLow:
-        break;
-    }
-
-    return str;
-}
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
@@ -203,6 +183,11 @@ uint8_t ExternalRouteConfig::ConvertToTlvFlags(void) const
         flags |= HasRouteEntry::kNat64Flag;
     }
 
+    if (mAdvPio)
+    {
+        flags |= HasRouteEntry::kAdvPioFlag;
+    }
+
     flags |= (RoutePreferenceToValue(mPreference) << HasRouteEntry::kPreferenceOffset);
 
     return flags;
@@ -221,12 +206,13 @@ void ExternalRouteConfig::SetFrom(Instance            &aInstance,
     SetFromTlvFlags(aHasRouteEntry.GetFlags());
     mStable              = aHasRouteTlv.IsStable();
     mRloc16              = aHasRouteEntry.GetRloc();
-    mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::MleRouter>().GetRloc16());
+    mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::Mle>().GetRloc16());
 }
 
 void ExternalRouteConfig::SetFromTlvFlags(uint8_t aFlags)
 {
     mNat64      = ((aFlags & HasRouteEntry::kNat64Flag) != 0);
+    mAdvPio     = ((aFlags & HasRouteEntry::kAdvPioFlag) != 0);
     mPreference = RoutePreferenceFromValue(aFlags >> HasRouteEntry::kPreferenceOffset);
 }
 
@@ -266,6 +252,15 @@ void ServiceConfig::SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aSer
     mServiceDataLength = serviceData.GetLength();
     serviceData.CopyBytesTo(mServiceData);
     GetServerConfig().SetFrom(aServerTlv);
+}
+
+void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &aContextTlv)
+{
+    mContextId    = aContextTlv.GetContextId();
+    mCompressFlag = aContextTlv.IsCompress();
+    mStable       = aContextTlv.IsStable();
+    aPrefixTlv.CopyPrefixTo(GetPrefix());
+    GetPrefix().SetLength(aContextTlv.GetContextLength());
 }
 
 } // namespace NetworkData

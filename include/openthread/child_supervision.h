@@ -29,11 +29,13 @@
 /**
  * @file
  * @brief
- *   This file includes the OpenThread API for child supervision feature
+ *   This file includes the OpenThread API for child supervision feature.
  */
 
 #ifndef OPENTHREAD_CHILD_SUPERVISION_H_
 #define OPENTHREAD_CHILD_SUPERVISION_H_
+
+#include <stdint.h>
 
 #include <openthread/instance.h>
 
@@ -45,40 +47,34 @@ extern "C" {
  * @addtogroup api-child-supervision
  *
  * @brief
- *   This module includes functions for child supervision feature.
- *
- *   The functions in this module are available when child supervision feature
- *   (`OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE`) is enabled.
+ *   This module includes functions for Child Supervision feature.
  *
  * @{
- *
  */
 
 /**
- * Gets the child supervision interval (in seconds).
+ * Gets the Child Supervision interval (in seconds) on a child.
  *
- * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
- * within the supervision interval. If there is no transmission to the child within the supervision interval,
- * OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child.
+ * Child Supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
+ * within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread
+ * enqueues and sends a Child Supervision Message to the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
- * @returns  The child supervision interval. Zero indicates that child supervision is disabled.
- *
+ * @returns  The child supervision interval. Zero indicates that supervision is disabled.
  */
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance);
 
 /**
- * Sets the child supervision interval (in seconds).
+ * Sets the child supervision interval (in seconds) on the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aInterval       The supervision interval (in seconds). Zero to disable supervision on parent.
- *
+ * @param[in]  aInterval       The supervision interval (in seconds). Zero to disable supervision.
  */
 void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval);
 
 /**
- * Gets the supervision check timeout interval (in seconds).
+ * Gets the supervision check timeout interval (in seconds) on the child.
  *
  * If the device is a sleepy child and it does not hear from its parent within the specified check timeout, it initiates
  * the re-attach process (MLE Child Update Request/Response exchange with its parent).
@@ -86,22 +82,32 @@ void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
  * @returns  The supervision check timeout. Zero indicates that supervision check on the child is disabled.
- *
  */
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance);
 
 /**
- * Sets the supervision check timeout interval (in seconds).
+ * Sets the supervision check timeout interval (in seconds) on the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aTimeout        The check timeout (in seconds). Zero to disable supervision check on the child.
- *
  */
 void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout);
 
 /**
- * @}
+ * Get the value of supervision check timeout failure counter.
  *
+ * The counter tracks the number of supervision check failures on the child. It is incremented when the child does
+ * not hear from its parent within the specified check timeout interval.
+ */
+uint16_t otChildSupervisionGetCheckFailureCounter(otInstance *aInstance);
+
+/**
+ * Reset the supervision check timeout failure counter to zero.
+ */
+void otChildSupervisionResetCheckFailureCounter(otInstance *aInstance);
+
+/**
+ * @}
  */
 
 #ifdef __cplusplus

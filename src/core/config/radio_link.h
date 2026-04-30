@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the radio links.
- *
  */
 
-#ifndef CONFIG_RADIO_LINK_H_
-#define CONFIG_RADIO_LINK_H_
+#ifndef OT_CORE_CONFIG_RADIO_LINK_H_
+#define OT_CORE_CONFIG_RADIO_LINK_H_
+
+/**
+ * @addtogroup config-radio-link
+ *
+ * @brief
+ *   This module includes configuration variables for radio links.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
  *
  * Set to 1 to enable support for IEEE802.15.4 radio link.
- *
  */
 #ifndef OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 #define OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE 1
@@ -49,10 +56,19 @@
  * @def OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
  *
  * Set to 1 to enable support for Thread Radio Encapsulation Link (TREL).
- *
  */
 #ifndef OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #define OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+ *
+ * Set to 1 to enable support for Radio Statistics. Note that this option only works for OPENTHREAD_FTD and
+ * OPENTHREAD_MTD.
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+#define OPENTHREAD_CONFIG_RADIO_STATS_ENABLE 0
 #endif
 
 //--------------------------------------------------------------
@@ -76,10 +92,13 @@
  * @def OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
  *
  * Specifies the fragment tag timeout interval in milliseconds.
- *
  */
 #ifndef OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
 #define OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT (20 * 1000)
 #endif
 
-#endif // CONFIG_RADIO_LINK_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_RADIO_LINK_H_

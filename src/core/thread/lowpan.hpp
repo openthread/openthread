@@ -31,8 +31,8 @@
  *   This file includes definitions for 6LoWPAN header compression.
  */
 
-#ifndef LOWPAN_HPP_
-#define LOWPAN_HPP_
+#ifndef OT_CORE_THREAD_LOWPAN_HPP_
+#define OT_CORE_THREAD_LOWPAN_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,8 +47,13 @@
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_types.hpp"
+#include "thread/network_data_tlvs.hpp"
 
 namespace ot {
+
+namespace NetworkData {
+class Leader;
+}
 
 /**
  * @addtogroup core-6lowpan
@@ -64,41 +69,84 @@ namespace ot {
  *
  * @brief
  *   This namespace includes definitions for 6LoWPAN message processing.
- *
  */
 namespace Lowpan {
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 /**
- * This structure represents a LOWPAN_IPHC Context.
- *
+ * Represents a 6LoWPAN IPHC Context.
  */
-struct Context : public Clearable<Context>
+class Context : public Clearable<Context>
 {
-    Ip6::Prefix mPrefix;       ///< The Prefix
-    uint8_t     mContextId;    ///< The Context ID.
-    bool        mCompressFlag; ///< The Context compression flag.
-    bool        mIsValid;      ///< Indicates whether the context is valid.
+    friend class ot::NetworkData::Leader;
+
+public:
+    /**
+     * Indicates whether the context entry is valid.
+     *
+     * @retval TRUE   The context is valid and can be used.
+     * @retval FALSE  The context is not valid.
+     */
+    bool IsValid(void) const { return mIsValid; }
+
+    /**
+     * Gets the IPv6 prefix associated with this context.
+     *
+     * @returns The IPv6 prefix.
+     */
+    const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+
+    /**
+     * Gets the Context ID.
+     *
+     * @returns The Context ID.
+     */
+    uint8_t GetContextId(void) const { return mContextId; }
+
+    /**
+     * Gets the context compression flag.
+     *
+     * This flag indicates whether this context can be used for 6LoWPAN IPHC compression.
+     *
+     * @retval TRUE   Context compression is enabled.
+     * @retval FALSE  Context compression is disabled.
+     */
+    bool GetCompressFlag(void) const { return mCompressFlag; }
+
+    /**
+     * Checks whether this context is valid and matches a given Context ID.
+     *
+     * @param[in] aContextId  The Context ID to match.
+     *
+     * @retval TRUE   This context is valid and its ID matches @p aContextId.
+     * @retval FALSE  This context is not valid or its ID does not match.
+     */
+    bool MatchesContextId(uint8_t aContextId) const { return mIsValid && (mContextId == aContextId); }
+
+private:
+    void InitForMeshLocalPrefix(Instance &aInstance);
+    void InitFrom(const NetworkData::PrefixTlv &aPrefixTlv, const NetworkData::ContextTlv &aContextTlv);
+
+    Ip6::Prefix mPrefix;
+    uint8_t     mContextId;
+    bool        mCompressFlag : 1;
+    bool        mIsValid : 1;
 };
 
 /**
- * This class implements LOWPAN_IPHC header compression.
- *
+ * Implements LOWPAN_IPHC header compression.
  */
 class Lowpan : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Lowpan(Instance &aInstance);
 
     /**
-     * This method indicates whether or not the header is a LOWPAN_IPHC header.
+     * Indicates whether or not the header is a LOWPAN_IPHC header.
      *
      * @param[in]  aHeader  A pointer to the header.
      *
@@ -111,7 +159,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not header in a given frame is a LOWPAN_IPHC header.
+     * Indicates whether or not header in a given frame is a LOWPAN_IPHC header.
      *
      * @param[in] aFrameData    The frame data.
      *
@@ -124,19 +172,18 @@ public:
     }
 
     /**
-     * This method compresses an IPv6 header.
+     * Compresses an IPv6 header.
      *
      * @param[in]   aMessage       A reference to the IPv6 message.
      * @param[in]   aMacAddrs      The MAC source and destination addresses.
      * @param[in]   aFrameBuilder  The `FrameBuilder` to use to append the compressed headers.
      *
      * @returns The size of the compressed header in bytes.
-     *
      */
     Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
 
     /**
-     * This method decompresses a LOWPAN_IPHC header.
+     * Decompresses a LOWPAN_IPHC header.
      *
      * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
@@ -148,15 +195,15 @@ public:
      * @retval kErrorNone    The header was decompressed successfully. @p aMessage and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
      * @retval kErrorNoBufs  Could not grow @p aMessage to write the parsed IPv6 header.
-     *
      */
     Error Decompress(Message              &aMessage,
                      const Mac::Addresses &aMacAddrs,
                      FrameData            &aFrameData,
-                     uint16_t              aDatagramLength);
+                     uint16_t              aDatagramLength,
+                     uint8_t               aRecursionDepth = 0);
 
     /**
-     * This method decompresses a LOWPAN_IPHC header.
+     * Decompresses a LOWPAN_IPHC header.
      *
      * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
@@ -165,9 +212,8 @@ public:
      * @param[in]     aMacAddrs              The MAC source and destination addresses
      * @param[in,out] aFrameData             A frame data containing the LOWPAN_IPHC header.
      *
-     * @retval kErrorNone    The header was decompressed successfully. @p aIp6Headre and @p aFrameData are updated.
+     * @retval kErrorNone    The header was decompressed successfully. @p aIp6Header and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
-     *
      */
     Error DecompressBaseHeader(Ip6::Header          &aIp6Header,
                                bool                 &aCompressedNextHeader,
@@ -175,7 +221,7 @@ public:
                                FrameData            &aFrameData);
 
     /**
-     * This method decompresses a LOWPAN_NHC UDP header.
+     * Decompresses a LOWPAN_NHC UDP header.
      *
      * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
@@ -184,34 +230,33 @@ public:
      *
      * @retval kErrorNone    The header was decompressed successfully. @p aUdpHeader and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
-     *
      */
     Error DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData);
 
     /**
-     * This method decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
+     * Decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
      *
      * @param[in] aMessage  The message to read the IPHC header from.
      * @param[in] aOffset   The offset in @p aMessage to start of IPHC header.
      *
      * @returns The decompressed ECN field. If the IPHC header is not valid `kEcnNotCapable` is returned.
-     *
      */
     Ip6::Ecn DecompressEcn(const Message &aMessage, uint16_t aOffset) const;
 
     /**
-     * This method updates the compressed ECN field in a LOWPAN_IPHC header to `kEcnMarked`.
+     * Updates the compressed ECN field in a LOWPAN_IPHC header to `kEcnMarked`.
      *
-     * This method MUST be used when the ECN field is not elided in the IPHC header. Note that the ECN is not elided
+     * MUST be used when the ECN field is not elided in the IPHC header. Note that the ECN is not elided
      * when it is not zero (`kEcnNotCapable`).
      *
      * @param[in,out] aMessage  The message containing the IPHC header and to update.
      * @param[in]     aOffset   The offset in @p aMessage to start of IPHC header.
-     *
      */
     void MarkCompressedEcn(Message &aMessage, uint16_t aOffset);
 
 private:
+    static constexpr uint8_t kMaxRecursionDepth = 4;
+
     static constexpr uint16_t kHcDispatch     = 3 << 13;
     static constexpr uint16_t kHcDispatchMask = 7 << 13;
 
@@ -291,24 +336,22 @@ private:
 };
 
 /**
- * This class implements Mesh Header generation and processing.
- *
+ * Implements Mesh Header generation and processing.
  */
 class MeshHeader
 {
 public:
     /**
-     * This method initializes the Mesh Header with a given Mesh Source, Mesh Destination and Hops Left value.
+     * Initializes the Mesh Header with a given Mesh Source, Mesh Destination and Hops Left value.
      *
      * @param[in]  aSource       The Mesh Source address.
      * @param[in]  aDestination  The Mesh Destination address.
      * @param[in]  aHopsLeft     The Hops Left value.
-     *
      */
     void Init(uint16_t aSource, uint16_t aDestination, uint8_t aHopsLeft);
 
     /**
-     * This static method indicates whether or not the header (in a given frame) is a Mesh Header.
+     * Indicates whether or not the header (in a given frame) is a Mesh Header.
      *
      * @note This method checks whether the first byte in header/frame (dispatch byte) matches the Mesh Header dispatch
      * It does not fully parse and validate the Mesh Header. `ParseFrom()` method can be used to fully parse and
@@ -316,12 +359,11 @@ public:
      *
      * @retval TRUE   If the header matches the Mesh Header dispatch value.
      * @retval FALSE  If the header does not match the Mesh Header dispatch value.
-     *
      */
     static bool IsMeshHeader(const FrameData &aFrameData);
 
     /**
-     * This method parses the Mesh Header from a frame @p aFrame.
+     * Parses the Mesh Header from a frame @p aFrame.
      *
      * @param[in]  aFrame        The pointer to the frame.
      * @param[in]  aFrameLength  The length of the frame.
@@ -329,12 +371,11 @@ public:
      *
      * @retval kErrorNone     Mesh Header parsed successfully.
      * @retval kErrorParse    Mesh Header could not be parsed.
-     *
      */
     Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     /**
-     * This method parses the Mesh Header from a given frame data.
+     * Parses the Mesh Header from a given frame data.
      *
      * If the Mesh Header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
@@ -342,12 +383,11 @@ public:
      *
      * @retval kErrorNone     Mesh Header parsed successfully. @p aFrameData is updated to skip over parsed header.
      * @retval kErrorParse    Mesh Header could not be parsed.
-     *
      */
     Error ParseFrom(FrameData &aFrameData);
 
     /**
-     * This method parses the Mesh Header from a given message.
+     * Parses the Mesh Header from a given message.
      *
      * @note The Mesh Header is read from offset zero within the @p aMessage.
      *
@@ -355,12 +395,11 @@ public:
      *
      * @retval kErrorNone   Mesh Header parsed successfully.
      * @retval kErrorParse  Mesh Header could not be parsed.
-     *
      */
     Error ParseFrom(const Message &aMessage);
 
     /**
-     * This method parses the Mesh Header from a given message.
+     * Parses the Mesh Header from a given message.
      *
      * @note The Mesh Header is read from offset zero within the @p aMessage.
      *
@@ -369,72 +408,64 @@ public:
      *
      * @retval kErrorNone   Mesh Header parsed successfully.
      * @retval kErrorParse  Mesh Header could not be parsed.
-     *
      */
     Error ParseFrom(const Message &aMessage, uint16_t &aHeaderLength);
 
     /**
-     * This method returns the the Mesh Header length when written to a frame.
+     * Returns the the Mesh Header length when written to a frame.
      *
      * @note The returned value from this method gives the header length (number of bytes) when the header is written
      * to a frame or message. This should not be used to determine the parsed length (number of bytes read) when the
      * Mesh Header is parsed from a frame/message (using `ParseFrom()` methods).
      *
      * @returns The length of the Mesh Header (in bytes) when written to a frame.
-     *
      */
     uint16_t GetHeaderLength(void) const;
 
     /**
-     * This method returns the Hops Left value.
+     * Returns the Hops Left value.
      *
      * @returns The Hops Left value.
-     *
      */
     uint8_t GetHopsLeft(void) const { return mHopsLeft; }
 
     /**
-     * This method decrements the Hops Left value (if it is not zero).
-     *
+     * Decrements the Hops Left value (if it is not zero).
      */
     void DecrementHopsLeft(void);
 
     /**
-     * This method returns the Mesh Source address.
+     * Returns the Mesh Source address.
      *
      * @returns The Mesh Source address.
-     *
      */
     uint16_t GetSource(void) const { return mSource; }
 
     /**
-     * This method returns the Mesh Destination address.
+     * Returns the Mesh Destination address.
      *
      * @returns The Mesh Destination address.
-     *
      */
     uint16_t GetDestination(void) const { return mDestination; }
 
     /**
-     * This method appends the Mesh Header into a given frame.
+     * Appends the Mesh Header into a given frame.
      *
-     * @param[out]  aFrameBuilder  The `FrameBuidler` to append to.
+     * @param[out]  aFrameBuilder  The `FrameBuilder` to append to.
      *
-     * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuildr.
+     * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuilder.
      * @retval kErrorNoBufs  Insufficient available buffers.
-     *
      */
     Error AppendTo(FrameBuilder &aFrameBuilder) const;
 
     /**
-     * This method appends the Mesh Header to a given message.
+     * Appends the Mesh Header to a given message.
      *
      *
      * @param[out] aMessage  A message to append the Mesh Header to.
      *
      * @retval kErrorNone    Successfully appended the Mesh Header to @p aMessage.
      * @retval kErrorNoBufs  Insufficient available buffers to grow @p aMessage.
-     *
      */
     Error AppendTo(Message &aMessage) const;
 
@@ -456,8 +487,7 @@ private:
 };
 
 /**
- * This class implements Fragment Header generation and parsing.
- *
+ * Implements Fragment Header generation and parsing.
  */
 class FragmentHeader
 {
@@ -467,16 +497,15 @@ public:
     {
     public:
         /**
-         * This method initializes the `FirstFrag`.
+         * Initializes the `FirstFrag`.
          *
          * @param[in] aSize  The Datagram Size value.
          * @param[in] aTag   The Datagram Tag value.
-         *
          */
         void Init(uint16_t aSize, uint16_t aTag)
         {
-            mDispatchSize = HostSwap16(kFirstDispatch | (aSize & kSizeMask));
-            mTag          = HostSwap16(aTag);
+            mDispatchSize = BigEndian::HostSwap16(kFirstDispatch | (aSize & kSizeMask));
+            mTag          = BigEndian::HostSwap16(aTag);
         }
 
     private:
@@ -497,17 +526,16 @@ public:
     {
     public:
         /**
-         * This method initializes the `NextFrag`.
+         * Initializes the `NextFrag`.
          *
          * @param[in] aSize    The Datagram Size value.
          * @param[in] aTag     The Datagram Tag value.
          * @param[in] aOffset  The Datagram Offset value.
-         *
          */
         void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset)
         {
-            mDispatchSize = HostSwap16(kNextDispatch | (aSize & kSizeMask));
-            mTag          = HostSwap16(aTag);
+            mDispatchSize = BigEndian::HostSwap16(kNextDispatch | (aSize & kSizeMask));
+            mTag          = BigEndian::HostSwap16(aTag);
             mOffset       = static_cast<uint8_t>(aOffset >> 3);
         }
 
@@ -528,7 +556,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This static method indicates whether or not the header (in a given frame) is a Fragment Header.
+     * Indicates whether or not the header (in a given frame) is a Fragment Header.
      *
      * @note This method checks whether the frame has the minimum required length and that the first byte in
      * header (dispatch byte) matches the Fragment Header dispatch value. It does not fully parse and validate the
@@ -538,12 +566,11 @@ public:
      *
      * @retval TRUE   If the header matches the Fragment Header dispatch value.
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
-     *
      */
     static bool IsFragmentHeader(const FrameData &aFrameData);
 
     /**
-     * This method parses the Fragment Header from a given frame data.
+     * Parses the Fragment Header from a given frame data.
      *
      * If the Fragment Header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
@@ -551,12 +578,11 @@ public:
      *
      * @retval kErrorNone     Fragment Header parsed successfully. @p aFrameData is updated to skip over parsed header.
      * @retval kErrorParse    Fragment header could not be parsed.
-     *
      */
     Error ParseFrom(FrameData &aFrameData);
 
     /**
-     * This method parses the Fragment Header from a message.
+     * Parses the Fragment Header from a message.
      *
      * @param[in]  aMessage      The message to read from.
      * @param[in]  aOffset       The offset within the message to start reading from.
@@ -564,33 +590,29 @@ public:
      *
      * @retval kErrorNone     Fragment Header parsed successfully.
      * @retval kErrorParse    Fragment header could not be parsed from @p aFrame.
-     *
      */
     Error ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t &aHeaderLength);
 
     /**
-     * This method returns the Datagram Size value.
+     * Returns the Datagram Size value.
      *
      * @returns The Datagram Size value.
-     *
      */
     uint16_t GetDatagramSize(void) const { return mSize; }
 
     /**
-     * This method returns the Datagram Tag value.
+     * Returns the Datagram Tag value.
      *
      * @returns The Datagram Tag value.
-     *
      */
     uint16_t GetDatagramTag(void) const { return mTag; }
 
     /**
-     * This method returns the Datagram Offset value.
+     * Returns the Datagram Offset value.
      *
      * The returned offset value is always multiple of 8.
      *
      * @returns The Datagram Offset value (multiple of 8).
-     *
      */
     uint16_t GetDatagramOffset(void) const { return mOffset; }
 
@@ -622,4 +644,4 @@ private:
 } // namespace Lowpan
 } // namespace ot
 
-#endif // LOWPAN_HPP_
+#endif // OT_CORE_THREAD_LOWPAN_HPP_

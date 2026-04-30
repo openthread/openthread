@@ -33,21 +33,13 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-
-#include <string.h>
-#include <openthread/diag.h>
-#include <openthread/thread.h>
-#include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
 
-#include "common/as_core_type.hpp"
-#include "common/debug.hpp"
-#include "common/locator_getters.hpp"
-#include "common/random.hpp"
-#include "mac/mac_frame.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
@@ -59,6 +51,11 @@ bool otLinkRawIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Ge
 otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetShortAddress(aShortAddress);
+}
+
+otError otLinkRawSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetAlternateShortAddress(aShortAddress);
 }
 
 bool otLinkRawGetPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio>().GetPromiscuous(); }
@@ -140,16 +137,12 @@ exit:
 
 otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Mac::ExtAddress address;
-    Error           error    = kErrorNone;
-    Instance       &instance = AsCoreType(aInstance);
-
-    AssertPointerIsNotNull(aExtAddress);
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    address.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
-    error = instance.Get<Radio>().AddSrcMatchExtEntry(address);
+    error = instance.Get<Radio>().AddSrcMatchExtEntry(AsCoreType(aExtAddress));
 
 exit:
     return error;
@@ -169,16 +162,12 @@ exit:
 
 otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Mac::ExtAddress address;
-    Error           error    = kErrorNone;
-    Instance       &instance = AsCoreType(aInstance);
-
-    AssertPointerIsNotNull(aExtAddress);
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 
-    address.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
-    error = instance.Get<Radio>().ClearSrcMatchExtEntry(address);
+    error = instance.Get<Radio>().ClearSrcMatchExtEntry(AsCoreType(aExtAddress));
 
 exit:
     return error;
@@ -284,3 +273,21 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
 #endif // OPENTHREAD_RADIO
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+otError otLinkSetRxOnWhenIdle(otInstance *aInstance, bool aRxOnWhenIdle)
+{
+    Error error = OT_ERROR_NONE;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    VerifyOrExit(AsCoreType(aInstance).Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+#else
+    VerifyOrExit(AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled() &&
+                     AsCoreType(aInstance).Get<Mle::Mle>().IsDisabled(),
+                 error = kErrorInvalidState);
+#endif
+
+    AsCoreType(aInstance).Get<Mac::SubMac>().SetRxOnWhenIdle(aRxOnWhenIdle);
+
+exit:
+    return error;
+}

@@ -33,7 +33,6 @@
  *
  *   APIs defined in this module could be used by a platform to implement Enhanced-ACK Based Probing feature
  *   (Probing Subject side) in its radio driver.
- *
  */
 
 #ifndef OPENTHREAD_UTILS_LINK_METRICS_H
@@ -48,41 +47,39 @@ extern "C" {
 #endif
 
 /**
- * This method initializes the Link Metrics util module.
+ * Initializes the Link Metrics util module.
  *
  * @param[in]  aNoiseFloor    The noise floor used by Link Metrics. It should be set to the platform's
  *                            noise floor (measured noise floor, receiver sensitivity or a constant).
- *
  */
 void otLinkMetricsInit(int8_t aNoiseFloor);
 
 /**
- * This method sets/clears Enhanced-ACK Based Probing for a specific Initiator.
+ * Sets/clears Enhanced-ACK Based Probing for a specific Initiator.
  *
- * This method can start/stop Enhanced-ACK Based Probing for a neighbor that has the address @p aShortAddress and
+ * Can start/stop Enhanced-ACK Based Probing for a neighbor that has the address @p aShortAddress and
  * @p aExtAddress. Once the Probing is started, the device would record the Link Metrics data of link layer frames
  * sent from that neighbor and include the data into header IE in Enhanced-ACK sent to that neighbor.
  *
  * @param[in]  aShortAddress    The short address of the Initiator.
  * @param[in]  aExtAddress      A pointer to the extended address of the Initiator.
  * @param[in]  aLinkMetrics     Flags specifying what metrics to query (Pdu Count would be omitted). When
- *                              @p aLinkMetrics is eqaul to `0`, this method clears the Initiator.
+ *                              @p aLinkMetrics is equal to `0`, this method clears the Initiator.
  *
  * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
  * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `nullptr`.
  * @retval  OT_ERROR_NOT_FOUND       The Initiator indicated by @p aShortAddress is not found when trying to clear.
  * @retval  OT_ERROR_NO_BUFS         No more Initiator can be supported.
- *
  */
 otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
                                             const otExtAddress *aExtAddress,
                                             otLinkMetrics       aLinkMetrics);
 
 /**
- * This method generates the Link Metrics data (assessed for the acknowledged frame) bytes that would be included in
+ * Generates the Link Metrics data (assessed for the acknowledged frame) bytes that would be included in
  * Vendor-Specific IE.
  *
- * This method first checks what Link Metrics are specified by the Initiator indicated by @p aMacAddress. And then
+ * First checks what Link Metrics are specified by the Initiator indicated by @p aMacAddress. And then
  * write the values to @p aData.
  *
  * @param[in]  aMacAddress    The Mac address of the Initiator.
@@ -93,19 +90,22 @@ otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
  *                            configured before.
  *
  * @returns  The size of data read. Would be `0` if the Initiator is not found or @p aData is invalid.
- *
  */
 uint8_t otLinkMetricsEnhAckGenData(const otMacAddress *aMacAddress, uint8_t aLqi, int8_t aRssi, uint8_t *aData);
 
 /**
- * This method returns the data length of Enhanced-ACK Based Probing for a specific Initiator.
+ * Returns the data length of Enhanced-ACK Based Probing for a specific Initiator.
  *
  * @param[in]  aMacAddress    The Mac address of the Initiator.
  *
  * @returns  The size of data. `0` if it's not configured for the Initiator.
- *
  */
 uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress);
+
+/**
+ * This method resets Enhanced-ACK Based Probing data.
+ */
+void otLinkMetricsResetEnhAckProbing(void);
 
 #ifdef __cplusplus
 } // extern "C"

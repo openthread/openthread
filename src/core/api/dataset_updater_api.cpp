@@ -35,11 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
 
-#include <openthread/dataset_updater.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
-#include "meshcop/dataset_updater.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 

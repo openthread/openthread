@@ -36,6 +36,11 @@
 namespace ot {
 namespace Ip6 {
 
+bool MessageInfo::HasSamePeerAddrAndPort(const MessageInfo &aOther) const
+{
+    return (GetPeerPort() == aOther.GetPeerPort()) && (GetPeerAddr() == aOther.GetPeerAddr());
+}
+
 SockAddr::InfoString SockAddr::ToString(void) const
 {
     InfoString string;

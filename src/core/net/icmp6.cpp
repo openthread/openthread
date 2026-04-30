@@ -33,14 +33,7 @@
 
 #include "icmp6.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/message.hpp"
-#include "net/checksum.hpp"
-#include "net/ip6.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -54,9 +47,9 @@ Icmp::Icmp(Instance &aInstance)
 {
 }
 
-Message *Icmp::NewMessage(uint16_t aReserved) { return Get<Ip6>().NewMessage(sizeof(Header) + aReserved); }
-
 Error Icmp::RegisterHandler(Handler &aHandler) { return mHandlers.Add(aHandler); }
+
+Error Icmp::UnregisterHandler(Handler &aHandler) { return mHandlers.Remove(aHandler); }
 
 Error Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier)
 {
@@ -99,7 +92,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
     MessageInfo       messageInfoLocal;
     Message          *message = nullptr;
     Header            icmp6Header;
-    Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
+    Message::Settings settings(kWithLinkSecurity, Message::kPriorityNet);
 
     if (aHeaders.GetIpProto() == kProtoIcmp6)
     {
@@ -108,7 +101,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
 
     messageInfoLocal = aMessageInfo;
 
-    VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Ip6>().NewMessage(settings)) != nullptr, error = kErrorNoBufs);
 
     // Prepare the ICMPv6 error message. We only include the IPv6 header
     // of the original message causing the error.
@@ -153,7 +146,7 @@ exit:
     return error;
 }
 
-bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
+bool Icmp::ShouldHandleEchoRequest(const Address &aAddress)
 {
     bool rval = false;
 
@@ -163,13 +156,16 @@ bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
         rval = false;
         break;
     case OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY:
-        rval = !aMessageInfo.GetSockAddr().IsMulticast();
+        rval = !aAddress.IsMulticast();
         break;
     case OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY:
-        rval = aMessageInfo.GetSockAddr().IsMulticast();
+        rval = aAddress.IsMulticast();
         break;
     case OT_ICMP6_ECHO_HANDLER_ALL:
         rval = true;
+        break;
+    case OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY:
+        rval = aAddress.GetIid().IsLocator();
         break;
     }
 
@@ -184,15 +180,14 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     MessageInfo replyMessageInfo;
     uint16_t    dataOffset;
 
-    // always handle Echo Request destined for RLOC or ALOC
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo.GetSockAddr()));
 
     LogInfo("Received Echo Request");
 
     icmp6Header.Clear();
     icmp6Header.SetType(Header::kTypeEchoReply);
 
-    if ((replyMessage = Get<Ip6>().NewMessage(0)) == nullptr)
+    if ((replyMessage = Get<Ip6>().NewMessage()) == nullptr)
     {
         LogDebg("Failed to allocate a new message");
         ExitNow();

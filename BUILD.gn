@@ -38,6 +38,7 @@ config("openthread_config") {
   include_dirs += [
     "${root_gen_dir}/include",
     "include",
+    "src/include",
   ]
 }
 
@@ -98,6 +99,11 @@ group("libopenthread-spinel-ncp") {
 group("libopenthread-spinel-rcp") {
   public_deps = [ "src/lib/spinel:spinel-api" ]
   deps = [ "src/lib/spinel:libopenthread-spinel-rcp" ]
+}
+
+group("libopenthread-radio-spinel") {
+  public_deps = [ "src/lib/spinel:spinel-api" ]
+  deps = [ "src/lib/spinel:libopenthread-radio-spinel" ]
 }
 
 if (current_os == "fuchsia") {

@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef PANID_QUERY_SERVER_HPP_
-#define PANID_QUERY_SERVER_HPP_
+#ifndef OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_
+#define OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,8 +47,7 @@
 namespace ot {
 
 /**
- * This class implements handling PANID Query Requests.
- *
+ * Implements handling PANID Query Requests.
  */
 class PanIdQueryServer : public InstanceLocator, private NonCopyable
 {
@@ -56,23 +55,20 @@ class PanIdQueryServer : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
-     *
+     * Initializes the object.
      */
     explicit PanIdQueryServer(Instance &aInstance);
 
 private:
     static constexpr uint32_t kScanDelay = 1000; ///< SCAN_DELAY (in msec)
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    static void HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext);
-    void        HandleScanResult(Mac::ActiveScanResult *aScanResult);
-
-    void HandleTimer(void);
+    DeclareScanResultHandlerIn(PanIdQueryServer, HandleScanResult);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+    void HandleTimer(void);
     void SendConflict(void);
 
     using DelayTimer = TimerMilliIn<PanIdQueryServer, &PanIdQueryServer::HandleTimer>;
@@ -80,8 +76,8 @@ private:
     Ip6::Address mCommissioner;
     uint32_t     mChannelMask;
     uint16_t     mPanId;
-
-    DelayTimer mTimer;
+    bool         mIsRunning;
+    DelayTimer   mTimer;
 };
 
 DeclareTmfHandler(PanIdQueryServer, kUriPanIdQuery);
@@ -92,4 +88,4 @@ DeclareTmfHandler(PanIdQueryServer, kUriPanIdQuery);
 
 } // namespace ot
 
-#endif // PANID_QUERY_SERVER_HPP_
+#endif // OT_CORE_THREAD_PANID_QUERY_SERVER_HPP_

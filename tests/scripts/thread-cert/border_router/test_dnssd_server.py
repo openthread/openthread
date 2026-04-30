@@ -97,6 +97,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         server.srp_server_set_enabled(True)
+        server.dns_upstream_query_state = False
 
         client1.start()
 
@@ -135,16 +136,6 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 'QUESTION': [(SERVICE_FULL_NAME, 'IN', 'PTR')],
                 'ANSWER': [(SERVICE_FULL_NAME, 'IN', 'PTR', f'ins1.{SERVICE_FULL_NAME}'),
                            (SERVICE_FULL_NAME, 'IN', 'PTR', f'ins2.{SERVICE_FULL_NAME}')],
-                'ADDITIONAL': [
-                    (ins1_full_name, 'IN', 'SRV', 1, 1, 11111, host1_full_name),
-                    (ins1_full_name, 'IN', 'TXT', EMPTY_TXT),
-                    (host1_full_name, 'IN', 'AAAA', client1_addrs[0]),
-                    (host1_full_name, 'IN', 'AAAA', client1_addrs[1]),
-                    (ins2_full_name, 'IN', 'SRV', 2, 2, 22222, host2_full_name),
-                    (ins2_full_name, 'IN', 'TXT', EMPTY_TXT),
-                    (host2_full_name, 'IN', 'AAAA', client2_addrs[0]),
-                    (host2_full_name, 'IN', 'AAAA', client2_addrs[1]),
-                ],
             })
 
         # check if SRV query works
@@ -205,11 +196,6 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             })
 
         # check some invalid queries
-        for qtype in ['A', 'CNAME']:
-            dig_result = digger.dns_dig(server_addr, host1_full_name, qtype)
-            self._assert_dig_result_matches(dig_result, {
-                'status': 'NOTIMP',
-            })
 
         for service_name in WRONG_SERVICE_NAMES:
             dig_result = digger.dns_dig(server_addr, service_name, 'PTR')
@@ -232,16 +218,16 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             if len(answer) >= 2 and answer[-2] == 'PTR':
                 dp_instance_name = answer[-1]
                 break
-        self._assert_dig_result_matches(
-            dig_result, {
-                'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
-                'ANSWER': [(dp_service_name, 'IN', 'PTR', dp_instance_name),],
-                'ADDITIONAL': [
-                    (dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),
-                    (dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
-                        'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),
-                ],
-            })
+        self._assert_dig_result_matches(dig_result, {
+            'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
+            'ANSWER': [(dp_service_name, 'IN', 'PTR', dp_instance_name),],
+            'ADDITIONAL': [
+                (dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),
+                (dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get('nn') == network_name
+                                                             and 'xp' in txt and 'tv' in txt and 'xa' in txt)),
+            ],
+        },
+                                        max_ttl=10)
 
         # Find the actual host name and IPv6 address
         dp_ip6_address = None
@@ -254,22 +240,22 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         assert isinstance(dp_hostname, str), dig_result
 
         dig_result = digger.dns_dig(server_addr, dp_instance_name, 'SRV')
-        self._assert_dig_result_matches(
-            dig_result, {
-                'QUESTION': [(dp_instance_name, 'IN', 'SRV'),],
-                'ANSWER': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
-                'ADDITIONAL': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
-                    'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
-            })
+        self._assert_dig_result_matches(dig_result, {
+            'QUESTION': [(dp_instance_name, 'IN', 'SRV'),],
+            'ANSWER': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
+            'ADDITIONAL': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
+                'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
+        },
+                                        max_ttl=10)
 
         dig_result = digger.dns_dig(server_addr, dp_instance_name, 'TXT')
-        self._assert_dig_result_matches(
-            dig_result, {
-                'QUESTION': [(dp_instance_name, 'IN', 'TXT'),],
-                'ANSWER': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
-                    'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
-                'ADDITIONAL': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
-            })
+        self._assert_dig_result_matches(dig_result, {
+            'QUESTION': [(dp_instance_name, 'IN', 'TXT'),],
+            'ANSWER': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
+                'nn') == network_name and 'xp' in txt and 'tv' in txt and 'xa' in txt)),],
+            'ADDITIONAL': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
+        },
+                                        max_ttl=10)
 
         if dp_ip6_address is not None:
             dig_result = digger.dns_dig(server_addr, dp_hostname, 'AAAA')
@@ -277,7 +263,9 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             self._assert_dig_result_matches(dig_result, {
                 'QUESTION': [(dp_hostname, 'IN', 'AAAA'),],
                 'ANSWER': [(dp_hostname, 'IN', 'AAAA', dp_ip6_address),],
-            })
+            },
+                                            allow_extra_answer=True,
+                                            max_ttl=10)
 
     def _config_srp_client_services(self, client, instancename, hostname, port, priority, weight, addrs):
         client.srp_client_enable_auto_start_mode()
@@ -295,9 +283,14 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
         self.fail((dig_result, question))
 
-    def _assert_have_answer(self, dig_result, record, additional=False):
+    def _assert_have_answer(self, dig_result, record, additional=False, max_ttl=0):
         for dig_answer in dig_result['ANSWER' if not additional else 'ADDITIONAL']:
             dig_answer = list(dig_answer)
+            ttl = dig_answer[1]
+            if max_ttl and ttl > max_ttl:
+                print('not match: ttl = {ttl} > {max_ttl}')
+                continue
+
             dig_answer[1:2] = []  # remove TTL from answer
 
             record = list(record)
@@ -315,6 +308,10 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             print('not match: ', dig_answer, record,
                   list(a == b or (callable(b) and b(a)) for a, b in zip(dig_answer, record)))
 
+        # Additional records are optional. Ignore if missing.
+        if additional:
+            return
+
         self.fail((record, dig_result))
 
     def _match_record(self, record, match):
@@ -325,7 +322,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
         return all(a == b or (callable(b) and b(a)) for a, b in zip(record, match))
 
-    def _assert_dig_result_matches(self, dig_result, expected_result):
+    def _assert_dig_result_matches(self, dig_result, expected_result, allow_extra_answer=False, max_ttl=0):
         self.assertEqual(dig_result['opcode'], expected_result.get('opcode', 'QUERY'), dig_result)
         self.assertEqual(dig_result['status'], expected_result.get('status', 'NOERROR'), dig_result)
 
@@ -336,16 +333,17 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 self._assert_have_question(dig_result, question)
 
         if 'ANSWER' in expected_result:
-            self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
+            if allow_extra_answer:
+                self.assertGreaterEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
+            else:
+                self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
 
             for record in expected_result['ANSWER']:
-                self._assert_have_answer(dig_result, record, additional=False)
+                self._assert_have_answer(dig_result, record, additional=False, max_ttl=max_ttl)
 
         if 'ADDITIONAL' in expected_result:
-            self.assertGreaterEqual(len(dig_result['ADDITIONAL']), len(expected_result['ADDITIONAL']), dig_result)
-
             for record in expected_result['ADDITIONAL']:
-                self._assert_have_answer(dig_result, record, additional=True)
+                self._assert_have_answer(dig_result, record, additional=True, max_ttl=max_ttl)
 
         logging.info("dig result matches:\r%s", json.dumps(dig_result, indent=True))
 

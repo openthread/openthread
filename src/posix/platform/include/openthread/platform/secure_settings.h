@@ -32,8 +32,8 @@
  *   This file includes platform abstraction for secure non-volatile storage of settings.
  */
 
-#ifndef OPENTHREAD_POSIX_SECURE_SETTINGS_H_
-#define OPENTHREAD_POSIX_SECURE_SETTINGS_H_
+#ifndef OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_PLATFORM_SECURE_SETTINGS_H_
+#define OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_PLATFORM_SECURE_SETTINGS_H_
 
 #include <openthread/instance.h>
 
@@ -48,31 +48,28 @@ extern "C" {
  *   This module includes the platform abstraction for secure non-volatile storage of settings.
  *
  * @{
- *
  */
 
 /**
- * This function performs any initialization for the secure settings subsystem, if necessary.
+ * Performs any initialization for the secure settings subsystem, if necessary.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- *
  */
 void otPosixSecureSettingsInit(otInstance *aInstance);
 
 /**
- * This function performs any de-initialization for the secure settings subsystem, if necessary.
+ * Performs any de-initialization for the secure settings subsystem, if necessary.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- *
  */
 void otPosixSecureSettingsDeinit(otInstance *aInstance);
 
 /**
- * This function fetches the value of the setting identified by aKey and write it to the memory pointed to by aValue.
+ * Fetches the value of the setting identified by aKey and write it to the memory pointed to by aValue.
  * It then writes the length to the integer pointed to by aValueLength. The initial value of aValueLength is the
  * maximum number of bytes to be written to aValue.
  *
- * This function can be used to check for the existence of a key without fetching the value by setting aValue and
+ * Can be used to check for the existence of a key without fetching the value by setting aValue and
  * aValueLength to NULL. You can also check the length of the setting without fetching it by setting only aValue
  * to NULL.
  *
@@ -92,7 +89,6 @@ void otPosixSecureSettingsDeinit(otInstance *aInstance);
  * @retval OT_ERROR_NONE             The given setting was found and fetched successfully.
  * @retval OT_ERROR_NOT_FOUND        The given setting was not found in the setting store.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
- *
  */
 otError otPosixSecureSettingsGet(otInstance *aInstance,
                                  uint16_t    aKey,
@@ -101,7 +97,7 @@ otError otPosixSecureSettingsGet(otInstance *aInstance,
                                  uint16_t   *aValueLength);
 
 /**
- * This function sets or replaces the value of a setting identified by aKey. If there was more than one value
+ * Sets or replaces the value of a setting identified by aKey. If there was more than one value
  * previously associated with aKey, then they are all deleted and replaced with this single entry.
  *
  * Calling this function successfully may cause unrelated settings with multiple values to be reordered.
@@ -115,12 +111,11 @@ otError otPosixSecureSettingsGet(otInstance *aInstance,
  * @retval OT_ERROR_NONE             The given setting was changed or staged.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
- *
  */
 otError otPosixSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /**
- * This function adds the value to a setting identified by aKey, without replacing any existing values.
+ * Adds the value to a setting identified by aKey, without replacing any existing values.
  *
  * Note that the underlying implementation is not required to maintain the order of the items associated with a
  * specific key. The added value may be added to the end, the beginning, or even somewhere in the middle. The order
@@ -137,12 +132,11 @@ otError otPosixSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uin
  * @retval OT_ERROR_NONE             The given setting was added or staged to be added.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
- *
  */
 otError otPosixSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /**
- * This function deletes a specific value from the setting identified by aKey from the secure settings store.
+ * Deletes a specific value from the setting identified by aKey from the secure settings store.
  *
  * Note that the underlying implementation is not required to maintain the order of the items associated with a
  * specific key.
@@ -154,25 +148,22 @@ otError otPosixSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uin
  * @retval OT_ERROR_NONE             The given key and index was found and removed successfully.
  * @retval OT_ERROR_NOT_FOUND        The given key or index was not found in the setting store.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
- *
  */
 otError otPosixSecureSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 
 /**
- * This function deletes all settings from the secure settings store, resetting it to its initial factory state.
+ * Deletes all settings from the secure settings store, resetting it to its initial factory state.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 void otPosixSecureSettingsWipe(otInstance *aInstance);
 
 /**
  * @}
- *
  */
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_POSIX_SECURE_SETTINGS_H_
+#endif // OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_PLATFORM_SECURE_SETTINGS_H_

@@ -33,45 +33,33 @@
 
 #include "ip6_filter.hpp"
 
-#include <stdio.h>
-
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "meshcop/meshcop.hpp"
-#include "net/ip6.hpp"
-#include "net/tcp6.hpp"
-#include "net/udp6.hpp"
-#include "thread/mle.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
 
 RegisterLogModule("Ip6Filter");
 
-bool Filter::Accept(Message &aMessage) const
+Error Filter::Apply(const Message &aMessage) const
 {
-    bool     rval = false;
+    Error    error = kErrorDrop;
     Headers  headers;
     uint16_t dstPort;
 
     // Allow all received IPv6 datagrams with link security enabled
     if (aMessage.IsLinkSecurityEnabled())
     {
-        ExitNow(rval = true);
+        ExitNow(error = kErrorNone);
     }
 
     SuccessOrExit(headers.ParseFrom(aMessage));
 
-    // Allow only link-local unicast or multicast
-    VerifyOrExit(headers.GetDestinationAddress().IsLinkLocal() ||
-                 headers.GetDestinationAddress().IsLinkLocalMulticast());
+    VerifyOrExit(headers.GetDestinationAddress().IsLinkLocalUnicastOrMulticast());
 
     // Allow all link-local IPv6 datagrams when Thread is not enabled
-    if (Get<Mle::MleRouter>().GetRole() == Mle::kRoleDisabled)
+    if (Get<Mle::Mle>().GetRole() == Mle::kRoleDisabled)
     {
-        ExitNow(rval = true);
+        ExitNow(error = kErrorNone);
     }
 
     dstPort = headers.GetDestinationPort();
@@ -82,15 +70,15 @@ bool Filter::Accept(Message &aMessage) const
         // Allow MLE traffic
         if (dstPort == Mle::kUdpPort)
         {
-            ExitNow(rval = true);
+            ExitNow(error = kErrorNone);
         }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         // Allow native commissioner traffic
         if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled &&
-            dstPort == Get<MeshCoP::BorderAgent>().GetUdpPort())
+            dstPort == Get<MeshCoP::BorderAgent::Manager>().GetUdpPort())
         {
-            ExitNow(rval = true);
+            ExitNow(error = kErrorNone);
         }
 #endif
         break;
@@ -104,10 +92,13 @@ bool Filter::Accept(Message &aMessage) const
     }
 
     // Check against allowed unsecure port list
-    rval = mUnsecurePorts.Contains(dstPort);
+    if (mUnsecurePorts.Contains(dstPort))
+    {
+        error = kErrorNone;
+    }
 
 exit:
-    return rval;
+    return error;
 }
 
 Error Filter::UpdateUnsecurePorts(Action aAction, uint16_t aPort)

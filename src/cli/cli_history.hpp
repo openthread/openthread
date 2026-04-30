@@ -31,15 +31,15 @@
  *   This file contains definitions for CLI to control History Tracker
  */
 
-#ifndef CLI_HISTORY_HPP_
-#define CLI_HISTORY_HPP_
+#ifndef OT_CLI_CLI_HISTORY_HPP_
+#define OT_CLI_CLI_HISTORY_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/history_tracker.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
@@ -47,31 +47,32 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the History Tracker CLI interpreter.
- *
+ * Implements the History Tracker CLI interpreter.
  */
-class History : private Output
+class History : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     History(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 
     /**
-     * This method interprets a list of CLI arguments.
+     * Processes a CLI sub-command.
      *
-     * @param[in]  aArgs        A pointer an array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
      *
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
+     * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      */
     otError Process(Arg aArgs[]);
 
@@ -96,9 +97,35 @@ private:
     void    OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
     void    OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
 
+    void OutputNetInfoTableHeader(void);
+    void OutputNetInfoEntry(bool aIsList, const otHistoryTrackerNetworkInfo &aInfo, uint32_t aEntryAge);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    void    OutputResult(otError aError);
+    otError ParseQueryArgs(Arg       aArgs[],
+                           bool     &aIsList,
+                           uint16_t &aRloc16,
+                           uint16_t &aNumEntries,
+                           uint32_t &aMaxEntryAge) const;
+
+    void HandleNetInfo(otError aError, const otHistoryTrackerNetworkInfo *aNetworkInfo, uint32_t aEntryAge);
+
+    static void HandleNetInfo(otError                            aError,
+                              const otHistoryTrackerNetworkInfo *aNetworkInfo,
+                              uint32_t                           aEntryAge,
+                              void                              *aContext);
+
+#endif
+
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
+    static const char *DnsSrpAddrTypeToString(otHistoryTrackerDnsSrpAddrType aType);
+    static const char *AilRouterEventToString(otHistoryTrackerAilRouterEvent aEvent);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    bool mQueryUseListFormat;
+#endif
 };
 
 } // namespace Cli
@@ -106,4 +133,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
-#endif // CLI_HISTORY_HPP_
+#endif // OT_CLI_CLI_HISTORY_HPP_

@@ -165,7 +165,7 @@ class TestMlrTimeout(thread_cert.TestCase):
         # PBBR should forward this ping request to Thread network because MA doesn't expire yet
         pkts.filter_wpan_src64(PBBR).filter_AMPLFMA().filter_ping_request(
             identifier=ping.icmpv6.echo.identifier).must_next()
-        # Router should NOT reply because it has unsubcribed the multicast address
+        # Router should NOT reply because it has unsubscribed the multicast address
         pkts.filter_wpan_src64(ROUTER).filter_ipv6_dst(HOST_BGUA).filter_ping_reply(
             identifier=ping.icmpv6.echo.identifier).must_not_next()
 

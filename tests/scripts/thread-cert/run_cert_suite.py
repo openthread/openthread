@@ -31,9 +31,10 @@ import multiprocessing
 import os
 import queue
 import subprocess
+import time
 import traceback
-from collections import Counter
-from typing import List
+from collections import Counter, defaultdict
+from typing import List, Dict
 
 import config
 
@@ -56,22 +57,34 @@ def bash(cmd: str, check=True, stdout=None):
     subprocess.run(cmd, shell=True, check=check, stdout=stdout)
 
 
-def run_cert(job_id: int, port_offset: int, script: str):
+def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: str, timeout: int):
+    if not os.access(script, os.X_OK):
+        logging.warning('Skip test %s, not executable', script)
+        return
+
     try:
-        test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(job_id)
-        logfile = f'{test_name}.log'
+        test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(iteration_id)
+        logfile = f'{run_directory}/{test_name}.log' if run_directory else f'{test_name}.log'
         env = os.environ.copy()
         env['PORT_OFFSET'] = str(port_offset)
         env['TEST_NAME'] = test_name
+        env['PYTHONPATH'] = os.path.dirname(os.path.abspath(__file__))
 
         try:
-            print(f'Running {test_name}')
+            print(f'Running PORT_OFFSET={port_offset} {test_name}')
             with open(logfile, 'wt') as output:
-                subprocess.check_call(["python3", script],
+                abs_script = os.path.abspath(script)
+                subprocess.check_call(abs_script,
                                       stdout=output,
                                       stderr=output,
                                       stdin=subprocess.DEVNULL,
-                                      env=env)
+                                      cwd=run_directory,
+                                      env=env,
+                                      timeout=None if timeout == 0 else timeout)
+        except subprocess.TimeoutExpired:
+            bash(f'cat {logfile} 1>&2')
+            logging.error("Run test %s timed out, please check the log file: %s", test_name, logfile)
+            raise
         except subprocess.CalledProcessError:
             bash(f'cat {logfile} 1>&2')
             logging.error("Run test %s failed, please check the log file: %s", test_name, logfile)
@@ -107,11 +120,15 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--multiply', type=int, default=1, help='run each test for multiple times')
+    parser.add_argument('--timeout', type=int, default=0, help='timeout in seconds per test, zero means no timeout')
+    parser.add_argument('--run-directory', type=str, default=None, help='run each test in the specified directory')
     parser.add_argument("scripts", nargs='+', type=str, help='specify Backbone test scripts')
 
     args = parser.parse_args()
     logging.info("Max jobs: %d", MAX_JOBS)
+    logging.info("Run directory: %s", args.run_directory or '.')
     logging.info("Multiply: %d", args.multiply)
+    logging.info("Timeout: %d", args.timeout)
     logging.info("Test scripts: %d", len(args.scripts))
     return args
 
@@ -141,41 +158,48 @@ class PortOffsetPool:
         self._pool.put_nowait(port_offset)
 
 
-def run_tests(scripts: List[str], multiply: int = 1):
-    script_fail_count = Counter()
-    script_succ_count = Counter()
+def print_summary(scripts: List[str], script_successes: Dict[str, List[int]], script_failures: Dict[str, List[int]]):
+    print("---------------------------------------")
+    print("Summary")
+    print("---------------------------------------")
+    for script in scripts:
+        success_count = len(script_successes[script])
+        failure_count = len(script_failures[script])
+        color = _COLOR_PASS if failure_count == 0 else _COLOR_FAIL
+        message = f'{color}PASS {success_count} FAIL {failure_count}{_COLOR_NONE} {script}'
+        if failure_count > 0:
+            message += f' {_COLOR_FAIL}Failed iterations: {script_failures[script]}{_COLOR_NONE}'
+        print(message)
+
+
+def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None, timeout: int = 0):
+    scripts = list(set(scripts))
 
     # Run each script for multiple times
     script_ids = [(script, i) for script in scripts for i in range(multiply)]
     port_offset_pool = PortOffsetPool(MAX_JOBS)
 
-    def error_callback(port_offset, script, err):
+    # From the test script path to the iteration IDs
+    script_failures: Dict[str, List[int]] = defaultdict(list)
+    script_successes: Dict[str, List[int]] = defaultdict(list)
+
+    def result_callback(iteration_id, script, dic, port_offset):
         port_offset_pool.release(port_offset)
-
-        script_fail_count[script] += 1
-        if script_succ_count[script] + script_fail_count[script] == multiply:
-            color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
-            print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
-
-    def pass_callback(port_offset, script):
-        port_offset_pool.release(port_offset)
-
-        script_succ_count[script] += 1
-        if script_succ_count[script] + script_fail_count[script] == multiply:
-            color = _COLOR_PASS if script_fail_count[script] == 0 else _COLOR_FAIL
-            print(f'{color}PASS {script_succ_count[script]} FAIL {script_fail_count[script]}{_COLOR_NONE} {script}')
+        dic[script].append(iteration_id)
 
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
-        pool.apply_async(
-            run_cert, [i, port_offset, script],
-            callback=lambda ret, port_offset=port_offset, script=script: pass_callback(port_offset, script),
-            error_callback=lambda err, port_offset=port_offset, script=script: error_callback(
-                port_offset, script, err))
+        pool.apply_async(run_cert, [i, port_offset, script, run_directory, timeout],
+                         callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
+                             id, script, script_successes, port_offset),
+                         error_callback=lambda ret, id=i, script=script, port_offset=port_offset: result_callback(
+                             id, script, script_failures, port_offset))
 
     pool.close()
     pool.join()
-    return sum(script_fail_count.values())
+
+    print_summary(scripts, script_successes, script_failures)
+    return sum(len(l) for l in script_failures.values())
 
 
 def main():
@@ -189,7 +213,7 @@ def main():
         setup_backbone_env()
 
     try:
-        fail_count = run_tests(args.scripts, args.multiply)
+        fail_count = run_tests(args.scripts, args.multiply, args.run_directory, args.timeout)
         exit(fail_count)
     finally:
         if has_backbone_tests:

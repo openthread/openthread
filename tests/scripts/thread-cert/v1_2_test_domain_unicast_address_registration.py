@@ -165,13 +165,13 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         '''
         return ''.join(ipaddress.ip_address(address).exploded.split(':')[4:])
 
-    def __check_dua_registration_tmf(self, node, occurences=1, ml_eid=None):
+    def __check_dua_registration_tmf(self, node, occurrences=1, ml_eid=None):
 
         messages = self.simulator.get_messages_sent_by(node)
-        for i in range(occurences):
+        for i in range(occurrences):
             msg = messages.next_coap_message('0.02', '/n/dr', False)
             assert msg, 'Expected {}, but {}th not found\n node: {}(extaddr: {})'.format(
-                occurences, i + 1, node, self.nodes[node].get_addr64())
+                occurrences, i + 1, node, self.nodes[node].get_addr64())
             if ml_eid:
                 ml_eid_tlv = msg.get_coap_message_tlv(network_layer.MlEid)
                 self.assertEqual(ml_eid, ml_eid_tlv.ml_eid.hex())
@@ -276,7 +276,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
 
         dua2 = self.nodes[ROUTER_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua2, 'Error: Expected DUA ({}) not found'.format(dua2)
-        assert dua2 != dua, 'Error: Expected Different DUA not found, same DUA {}'.format(dua2)
+        self.assertNotEqual(dua2, dua)
 
         # e) (repeated) Configure BBR_1 to respond with per remaining error status:
         #   - increase BBR seqno to trigger reregistration

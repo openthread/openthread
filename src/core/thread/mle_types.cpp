@@ -34,10 +34,18 @@
 #include "mle_types.hpp"
 
 #include "common/array.hpp"
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
+#include "common/enum_to_string.hpp"
+#include "common/message.hpp"
+#include "common/random.hpp"
+#include "utils/static_counter.hpp"
 
 namespace ot {
 namespace Mle {
+
+//---------------------------------------------------------------------------------------------------------------------
+// DeviceMode
 
 void DeviceMode::Get(ModeConfig &aModeConfig) const
 {
@@ -64,11 +72,86 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
     return string;
 }
 
-uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
+//---------------------------------------------------------------------------------------------------------------------
+// DeviceProperties
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+
+DeviceProperties::DeviceProperties(void)
+{
+    Clear();
+
+    mPowerSupply            = OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY;
+    mLeaderWeightAdjustment = kDefaultAdjustment;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    mIsBorderRouter = true;
+#endif
+}
+
+void DeviceProperties::ClampWeightAdjustment(void)
+{
+    mLeaderWeightAdjustment = Clamp(mLeaderWeightAdjustment, kMinAdjustment, kMaxAdjustment);
+}
+
+uint8_t DeviceProperties::CalculateLeaderWeight(void) const
+{
+    static const int8_t kPowerSupplyIncs[] = {
+        kPowerBatteryInc,          // (0) kPowerSupplyBattery
+        kPowerExternalInc,         // (1) kPowerSupplyExternal
+        kPowerExternalStableInc,   // (2) kPowerSupplyExternalStable
+        kPowerExternalUnstableInc, // (3) kPowerSupplyExternalUnstable
+    };
+
+    struct EnumCheck
+    {
+        InitEnumValidatorCounter();
+        ValidateNextEnum(kPowerSupplyBattery);
+        ValidateNextEnum(kPowerSupplyExternal);
+        ValidateNextEnum(kPowerSupplyExternalStable);
+        ValidateNextEnum(kPowerSupplyExternalUnstable);
+    };
+
+    uint8_t     weight      = kBaseWeight;
+    PowerSupply powerSupply = MapEnum(mPowerSupply);
+
+    if (mIsBorderRouter)
+    {
+        weight += (mSupportsCcm ? kCcmBorderRouterInc : kBorderRouterInc);
+    }
+
+    if (powerSupply < GetArrayLength(kPowerSupplyIncs))
+    {
+        weight += kPowerSupplyIncs[powerSupply];
+    }
+
+    if (mIsUnstable)
+    {
+        switch (powerSupply)
+        {
+        case kPowerSupplyBattery:
+        case kPowerSupplyExternalUnstable:
+            break;
+
+        default:
+            weight += kIsUnstableInc;
+        }
+    }
+
+    weight += mLeaderWeightAdjustment;
+
+    return weight;
+}
+
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// RouterIdMask
+
+uint8_t RouterIdMask::DetermineAllocatedCount(void) const
 {
     uint8_t count = 0;
 
-    for (uint8_t byte : mRouterIdSet)
+    for (uint8_t byte : mMask)
     {
         count += CountBitsInMask(byte);
     }
@@ -76,23 +159,79 @@ uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
     return count;
 }
 
+Error RouterIdMask::AppendMaskTo(Message &aMessage) const { return aMessage.AppendBytes(mMask, kMaskSize); }
+
+Error RouterIdMask::ReadMaskFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    return aMessage.Read(aOffsetRange, mMask, kMaskSize);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// TxChallenge
+
+void TxChallenge::GenerateRandom(void) { IgnoreError(Random::Crypto::Fill(*this)); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// RxChallenge
+
+Error RxChallenge::ReadFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    Error       error       = kErrorNone;
+    OffsetRange offsetRange = aOffsetRange;
+
+    Clear();
+
+    offsetRange.ShrinkLength(kMaxSize);
+
+    VerifyOrExit(offsetRange.Contains(kMinSize), error = kErrorParse);
+
+    SuccessOrExit(error = aMessage.Read(offsetRange, mArray.GetArrayBuffer(), offsetRange.GetLength()));
+    mArray.SetLength(static_cast<uint8_t>(offsetRange.GetLength()));
+
+exit:
+    return error;
+}
+
+bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
+{
+    return (mArray.GetLength() == kMaxSize) && (memcmp(mArray.GetArrayBuffer(), aTxChallenge.m8, kMaxSize) == 0);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Connectivity
+
+void Connectivity::IncrementNumForLinkQuality(uint8_t aLinkQuality)
+{
+    switch (aLinkQuality)
+    {
+    case kLinkQuality1:
+        mLinkQuality1++;
+        break;
+    case kLinkQuality2:
+        mLinkQuality2++;
+        break;
+    case kLinkQuality3:
+        mLinkQuality3++;
+        break;
+    default:
+        break;
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 const char *RoleToString(DeviceRole aRole)
 {
-    static const char *const kRoleStrings[] = {
-        "disabled", // (0) kRoleDisabled
-        "detached", // (1) kRoleDetached
-        "child",    // (2) kRoleChild
-        "router",   // (3) kRoleRouter
-        "leader",   // (4) kRoleLeader
-    };
+#define RoleMapList(_)           \
+    _(kRoleDisabled, "disabled") \
+    _(kRoleDetached, "detached") \
+    _(kRoleChild, "child")       \
+    _(kRoleRouter, "router")     \
+    _(kRoleLeader, "leader")
 
-    static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
-    static_assert(kRoleDetached == 1, "kRoleDetached value is incorrect");
-    static_assert(kRoleChild == 2, "kRoleChild value is incorrect");
-    static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
-    static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
+    DefineEnumStringArray(RoleMapList);
 
-    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
+    return (aRole < GetArrayLength(kStrings)) ? kStrings[aRole] : "invalid";
 }
 
 } // namespace Mle

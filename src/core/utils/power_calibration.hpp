@@ -30,10 +30,9 @@
  * @file
  * @brief
  *   This file includes definitions for the platform power calibration module.
- *
  */
-#ifndef POWER_CALIBRATION_HPP_
-#define POWER_CALIBRATION_HPP_
+#ifndef OT_CORE_UTILS_POWER_CALIBRATION_HPP_
+#define OT_CORE_UTILS_POWER_CALIBRATION_HPP_
 
 #include "openthread-core-config.h"
 
@@ -49,12 +48,11 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements power calibration module.
+ * Implements power calibration module.
  *
  * The power calibration module implements the radio platform power calibration APIs. It mainly stores the calibrated
  * power table and the target power table, provides an API for the platform to get the raw power setting of the
  * specified channel.
- *
  */
 class PowerCalibration : public InstanceLocator, private NonCopyable
 {
@@ -62,7 +60,7 @@ public:
     explicit PowerCalibration(Instance &aInstance);
 
     /**
-     * Add a calibrated power of the specificed channel to the power calibration table.
+     * Add a calibrated power of the specified channel to the power calibration table.
      *
      * @param[in] aChannel                The radio channel.
      * @param[in] aActualPower            The actual power in 0.01dBm.
@@ -73,7 +71,6 @@ public:
      * @retval kErrorNoBufs       No available entry in the power calibration table.
      * @retval kErrorInvalidArgs  The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid or the
      *                            @ aActualPower already exists in the power calibration table.
-     *
      */
     Error AddCalibratedPower(uint8_t        aChannel,
                              int16_t        aActualPower,
@@ -82,7 +79,6 @@ public:
 
     /**
      * Clear all calibrated powers from the power calibration table.
-     *
      */
     void ClearCalibratedPowers(void);
 
@@ -94,7 +90,6 @@ public:
      *
      * @retval  kErrorNone         Successfully set the target power.
      * @retval  kErrorInvalidArgs  The @p aChannel or @p aTargetPower is invalid.
-     *
      */
     Error SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
 
@@ -117,7 +112,6 @@ public:
      * @retval  kErrorInvalidArgs  The @p aChannel is invalid, @p aRawPowerSetting or @p aRawPowerSettingLength is
      *                             nullptr or @aRawPowerSettingLength is too short.
      * @retval  kErrorNotFound     The power settings for the @p aChannel was not found.
-     *
      */
     Error GetPowerSettings(uint8_t   aChannel,
                            int16_t  *aTargetPower,
@@ -174,4 +168,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#endif // POWER_CALIBRATION_HPP_
+#endif // OT_CORE_UTILS_POWER_CALIBRATION_HPP_

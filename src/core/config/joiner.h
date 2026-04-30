@@ -29,17 +29,24 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Joiner.
- *
  */
 
-#ifndef CONFIG_JOINER_H_
-#define CONFIG_JOINER_H_
+#ifndef OT_CORE_CONFIG_JOINER_H_
+#define OT_CORE_CONFIG_JOINER_H_
+
+/**
+ * @addtogroup config-joiner
+ *
+ * @brief
+ *   This module includes configuration variables for the Joiner.
+ *
+ * @{
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_JOINER_ENABLE
  *
  * Define to 1 to enable Joiner support.
- *
  */
 #ifndef OPENTHREAD_CONFIG_JOINER_ENABLE
 #define OPENTHREAD_CONFIG_JOINER_ENABLE 0
@@ -48,11 +55,49 @@
 /**
  * @def OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
  *
- * The maximum number of Joiner Router entries that can be queued by the Joiner.
- *
+ * The maximum number of Joiner Router candidates that can be tracked by the Joiner/Seeker.
  */
 #ifndef OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
-#define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 2
+#define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 16
 #endif
 
-#endif // CONFIG_JOINER_H_
+/**
+ * @def OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK
+ *
+ * The maximum number of Joiner Router candidates to track per network (Extended PAN ID) by the Joiner/Seeker.
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK
+#define OPENTHREAD_CONFIG_JOINER_CANDIDATES_PER_NETWORK 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+ *
+ * Define as 1 to enable including Joiner Advertisement TLV during discovery scan by the Joiner.
+ *
+ * This is an experimental feature. It is not part of the Thread specification. See `otThreadSetJoinerAdvertisement`
+ * for more details.
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+#define OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SEEKER_ENABLE
+ *
+ * Define as 1 to enable Seeker functionality and `otSeeker` APIs.
+ *
+ * The Seeker is a part of the Thread MeshCoP process. It is responsible for discovering nearby Joiner Router
+ * candidates, prioritizing them, and iterating through the list to select the best candidate for connection.
+ * It also operates as a sub-system of the `Joiner`, delegating control to the next layer to enable the
+ * implementation of alternative and custom joining protocols.
+ */
+#ifndef OPENTHREAD_CONFIG_SEEKER_ENABLE
+#define OPENTHREAD_CONFIG_SEEKER_ENABLE OPENTHREAD_CONFIG_JOINER_ENABLE
+#endif
+
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_JOINER_H_

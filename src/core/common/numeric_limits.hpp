@@ -31,18 +31,17 @@
  *   This file includes definitions for numeric limits.
  */
 
-#ifndef NUMERIC_LIMITS_HPP_
-#define NUMERIC_LIMITS_HPP_
+#ifndef OT_CORE_COMMON_NUMERIC_LIMITS_HPP_
+#define OT_CORE_COMMON_NUMERIC_LIMITS_HPP_
 
 #include <stdint.h>
 
 namespace ot {
 
 /**
- * This class template provides a way to query properties of arithmetic types.
+ * Provides a way to query properties of arithmetic types.
  *
  * There are no members if `Type` is not a supported arithmetic type.
- *
  */
 template <typename Type> struct NumericLimits
 {
@@ -100,4 +99,4 @@ template <> struct NumericLimits<uint64_t>
 
 } // namespace ot
 
-#endif // NUMERIC_LIMITS_HPP_
+#endif // OT_CORE_COMMON_NUMERIC_LIMITS_HPP_

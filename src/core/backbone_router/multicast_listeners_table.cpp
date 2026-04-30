@@ -35,15 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
-#include "thread/mle_types.hpp"
-#include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 
@@ -77,10 +69,10 @@ Error MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTim
 
     FixHeap(mNumValidListeners - 1);
 
-    mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED, &aAddress);
+    mCallback.InvokeIfSet(MapEnum(Listener::kEventAdded), &aAddress);
 
 exit:
-    LogMulticastListenersTable("Add", aAddress, aExpireTime, error);
+    Log(kAdd, aAddress, aExpireTime, error);
     CheckInvariants();
     return error;
 }
@@ -103,14 +95,14 @@ void MulticastListenersTable::Remove(const Ip6::Address &aAddress)
                 FixHeap(i);
             }
 
-            mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &aAddress);
+            mCallback.InvokeIfSet(MapEnum(Listener::kEventRemoved), &aAddress);
 
             ExitNow(error = kErrorNone);
         }
     }
 
 exit:
-    LogMulticastListenersTable("Remove", aAddress, TimeMilli(0), error);
+    Log(kRemove, aAddress, TimeMilli(0), error);
     CheckInvariants();
 }
 
@@ -121,7 +113,7 @@ void MulticastListenersTable::Expire(void)
 
     while (mNumValidListeners > 0 && now >= mListeners[0].GetExpireTime())
     {
-        LogMulticastListenersTable("Expire", mListeners[0].GetAddress(), mListeners[0].GetExpireTime(), kErrorNone);
+        Log(kExpire, mListeners[0].GetAddress(), mListeners[0].GetExpireTime(), kErrorNone);
         address = mListeners[0].GetAddress();
 
         mNumValidListeners--;
@@ -132,25 +124,48 @@ void MulticastListenersTable::Expire(void)
             FixHeap(0);
         }
 
-        mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &address);
+        mCallback.InvokeIfSet(MapEnum(Listener::kEventRemoved), &address);
     }
 
     CheckInvariants();
 }
 
-void MulticastListenersTable::LogMulticastListenersTable(const char         *aAction,
-                                                         const Ip6::Address &aAddress,
-                                                         TimeMilli           aExpireTime,
-                                                         Error               aError)
+bool MulticastListenersTable::Has(const Ip6::Address &aAddress) const
 {
-    OT_UNUSED_VARIABLE(aAction);
-    OT_UNUSED_VARIABLE(aAddress);
-    OT_UNUSED_VARIABLE(aExpireTime);
-    OT_UNUSED_VARIABLE(aError);
+    bool has = false;
 
-    LogDebg("%s %s expire %lu: %s", aAction, aAddress.ToString().AsCString(), ToUlong(aExpireTime.GetValue()),
+    for (uint16_t i = 0; i < mNumValidListeners; i++)
+    {
+        if (mListeners[i].GetAddress() == aAddress)
+        {
+            has = true;
+            ExitNow();
+        }
+    }
+
+exit:
+    return has;
+}
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
+void MulticastListenersTable::Log(Action              aAction,
+                                  const Ip6::Address &aAddress,
+                                  TimeMilli           aExpireTime,
+                                  Error               aError) const
+{
+#define ActionMapList(_) \
+    _(kAdd, "Add")       \
+    _(kRemove, "Remove") \
+    _(kExpire, "Expire")
+
+    DefineEnumStringArray(ActionMapList);
+
+    LogDebg("%s %s expire %lu: %s", kStrings[aAction], aAddress.ToString().AsCString(), ToUlong(aExpireTime.GetValue()),
             ErrorToString(aError));
 }
+#else
+void MulticastListenersTable::Log(Action, const Ip6::Address &, TimeMilli, Error) const {}
+#endif
 
 void MulticastListenersTable::FixHeap(uint16_t aIndex)
 {
@@ -258,7 +273,7 @@ void MulticastListenersTable::Clear(void)
     {
         for (uint16_t i = 0; i < mNumValidListeners; i++)
         {
-            mCallback.Invoke(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &mListeners[i].GetAddress());
+            mCallback.Invoke(MapEnum(Listener::kEventRemoved), &mListeners[i].GetAddress());
         }
     }
 
@@ -267,7 +282,7 @@ void MulticastListenersTable::Clear(void)
     CheckInvariants();
 }
 
-void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallback aCallback, void *aContext)
+void MulticastListenersTable::SetCallback(Listener::Callback aCallback, void *aContext)
 {
     mCallback.Set(aCallback, aContext);
 
@@ -275,13 +290,12 @@ void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallb
     {
         for (uint16_t i = 0; i < mNumValidListeners; i++)
         {
-            mCallback.Invoke(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED, &mListeners[i].GetAddress());
+            mCallback.Invoke(MapEnum(Listener::kEventAdded), &mListeners[i].GetAddress());
         }
     }
 }
 
-Error MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                                       otBackboneRouterMulticastListenerInfo     &aListenerInfo)
+Error MulticastListenersTable::GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo)
 {
     Error     error = kErrorNone;
     TimeMilli now;
@@ -290,8 +304,8 @@ Error MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator
 
     now = TimerMilli::GetNow();
 
-    aListenerInfo.mAddress = mListeners[aIterator].mAddress;
-    aListenerInfo.mTimeout =
+    aInfo.mAddress = mListeners[aIterator].mAddress;
+    aInfo.mTimeout =
         Time::MsecToSec(mListeners[aIterator].mExpireTime > now ? mListeners[aIterator].mExpireTime - now : 0);
 
     aIterator++;

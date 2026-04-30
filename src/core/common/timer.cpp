@@ -33,13 +33,36 @@
 
 #include "timer.hpp"
 
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
+
+//---------------------------------------------------------------------------------------------------------------------
+// `NextFireTime`
+
+NextFireTime::NextFireTime(void)
+    : NextFireTime(TimerMilli::GetNow())
+{
+}
+
+NextFireTime::NextFireTime(Time aNow)
+    : mNow(aNow)
+    , mNextTime(aNow.GetDistantFuture())
+{
+}
+
+void NextFireTime::UpdateIfEarlier(Time aTime) { mNextTime = Min(mNextTime, Max(mNow, aTime)); }
+
+void NextFireTime::UpdateIfEarlierAndInFuture(Time aTime)
+{
+    if (aTime > mNow)
+    {
+        mNextTime = Min(mNextTime, aTime);
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Timer`
 
 const Timer::Scheduler::AlarmApi TimerMilli::Scheduler::sAlarmMilliApi = {
     &otPlatAlarmMilliStartAt,
@@ -77,6 +100,9 @@ bool Timer::DoesFireBefore(const Timer &aSecondTimer, Time aNow) const
     return retval;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// `TimerMilli`
+
 void TimerMilli::Start(uint32_t aDelay) { StartAt(GetNow(), aDelay); }
 
 void TimerMilli::StartAt(TimeMilli aStartTime, uint32_t aDelay)
@@ -91,6 +117,18 @@ void TimerMilli::FireAt(TimeMilli aFireTime)
     Get<Scheduler>().Add(*this);
 }
 
+void TimerMilli::FireAt(const NextFireTime &aNextFireTime)
+{
+    if (aNextFireTime.IsSet())
+    {
+        FireAt(aNextFireTime.GetNextTime());
+    }
+    else
+    {
+        Stop();
+    }
+}
+
 void TimerMilli::FireAtIfEarlier(TimeMilli aFireTime)
 {
     if (!IsRunning() || (mFireTime > aFireTime))
@@ -99,9 +137,20 @@ void TimerMilli::FireAtIfEarlier(TimeMilli aFireTime)
     }
 }
 
+void TimerMilli::FireAtIfEarlier(const NextFireTime &aNextFireTime)
+{
+    if (aNextFireTime.IsSet())
+    {
+        FireAtIfEarlier(aNextFireTime.GetNextTime());
+    }
+}
+
 void TimerMilli::Stop(void) { Get<Scheduler>().Remove(*this); }
 
 void TimerMilli::RemoveAll(Instance &aInstance) { aInstance.Get<Scheduler>().RemoveAll(); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// `Timer::Scheduler`
 
 void Timer::Scheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 {
@@ -159,11 +208,10 @@ void Timer::Scheduler::SetAlarm(const AlarmApi &aAlarmApi)
     }
     else
     {
-        Timer   *timer = mTimerList.GetHead();
         Time     now(aAlarmApi.AlarmGetNow());
         uint32_t remaining;
 
-        remaining = (now < timer->mFireTime) ? (timer->mFireTime - now) : 0;
+        remaining = mTimerList.GetHead()->mFireTime.DetermineRemainingDurationFrom(now);
 
         aAlarmApi.AlarmStartAt(&GetInstance(), now.GetValue(), remaining);
     }
@@ -211,6 +259,9 @@ extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 exit:
     return;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// `TimerMicro`
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 const Timer::Scheduler::AlarmApi TimerMicro::Scheduler::sAlarmMicroApi = {

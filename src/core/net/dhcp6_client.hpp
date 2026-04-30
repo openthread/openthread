@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Client.
  */
 
-#ifndef DHCP6_CLIENT_HPP_
-#define DHCP6_CLIENT_HPP_
+#ifndef OT_CORE_NET_DHCP6_CLIENT_HPP_
+#define OT_CORE_NET_DHCP6_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,11 +41,12 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
-#include "net/dhcp6.hpp"
+#include "net/dhcp6_types.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
 
@@ -60,32 +61,25 @@ namespace Dhcp6 {
  *   This module includes definitions for DHCPv6 Client.
  *
  * @{
- *
  */
 
 /**
- * This class implements DHCPv6 Client.
- *
+ * Implements DHCPv6 Client.
  */
 class Client : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
      */
     explicit Client(Instance &aInstance);
 
-    /**
-     * This method update addresses that shall be automatically created using DHCP.
-     *
-     *
-     */
-    void UpdateAddresses(void);
-
 private:
+    static constexpr uint16_t kNumPrefixes      = OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES;
     static constexpr uint32_t kTrickleTimerImin = 1;
     static constexpr uint32_t kTrickleTimerImax = 120;
 
@@ -109,51 +103,42 @@ private:
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNetifAddress,
-                                            const Ip6::Prefix                &aIp6Prefix);
-
     void Solicit(uint16_t aRloc16);
-
-    void AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
-    void RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
 
     bool ProcessNextIdentityAssociation(void);
 
     Error AppendHeader(Message &aMessage);
-    Error AppendClientIdentifier(Message &aMessage);
-    Error AppendIaNa(Message &aMessage, uint16_t aRloc16);
-    Error AppendIaAddress(Message &aMessage, uint16_t aRloc16);
-    Error AppendElapsedTime(Message &aMessage);
-    Error AppendRapidCommit(Message &aMessage);
+    Error AppendClientIdOption(Message &aMessage);
+    Error AppendIaNaOption(Message &aMessage, uint16_t aRloc16);
+    Error AppendElapsedTimeOption(Message &aMessage);
+    Error AppendRapidCommitOption(Message &aMessage) { return RapidCommitOption::AppendTo(aMessage); }
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void     ProcessReply(Message &aMessage);
-    uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    Error    ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
-    Error    ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
-    Error    ProcessIaNa(Message &aMessage, uint16_t aOffset);
-    Error    ProcessStatusCode(Message &aMessage, uint16_t aOffset);
-    Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    void  ProcessReply(const Message &aMessage);
+    Error ProcessServerIdOption(const Message &aMessage);
+    Error ProcessClientIdOption(const Message &aMessage);
+    Error ProcessIaNaOption(const Message &aMessage);
+    Error ProcessIaAddressOption(const IaAddressOption &aOption);
+
+    void HandleNotifierEvents(Events aEvents);
+    void UpdateAddresses(void);
 
     static void HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     void        HandleTrickleTimer(void);
 
-    Ip6::Udp::Socket mSocket;
+    using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
-    TrickleTimer mTrickleTimer;
-
-    TransactionId mTransactionId;
-    TimeMilli     mStartTime;
-
-    IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
+    ClientSocket         mSocket;
+    TrickleTimer         mTrickleTimer;
+    TransactionId        mTransactionId;
+    TimeMilli            mStartTime;
+    IdentityAssociation  mIdentityAssociations[kNumPrefixes];
     IdentityAssociation *mIdentityAssociationCurrent;
 };
 
 /**
  * @}
- *
  */
 
 } // namespace Dhcp6
@@ -167,4 +152,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
-#endif // DHCP6_CLIENT_HPP_
+#endif // OT_CORE_NET_DHCP6_CLIENT_HPP_

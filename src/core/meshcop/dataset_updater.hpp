@@ -31,8 +31,8 @@
  *   This file includes definitions for Dataset Updater.
  */
 
-#ifndef DATASET_UPDATER_HPP_
-#define DATASET_UPDATER_HPP_
+#ifndef OT_CORE_MESHCOP_DATASET_UPDATER_HPP_
+#define OT_CORE_MESHCOP_DATASET_UPDATER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -53,8 +53,7 @@ namespace ot {
 namespace MeshCoP {
 
 /**
- * This class implements the Dataset Updater.
- *
+ * Implements the Dataset Updater.
  */
 class DatasetUpdater : public InstanceLocator, private NonCopyable
 {
@@ -62,24 +61,27 @@ class DatasetUpdater : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes a `DatasetUpdater` object.
+     * Default delay (in ms).
+     */
+    static constexpr uint32_t kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY;
+
+    /**
+     * Initializes a `DatasetUpdater` object.
      *
      * @param[in]   aInstance  A reference to the OpenThread instance.
-     *
      */
     explicit DatasetUpdater(Instance &aInstance);
 
     /**
-     * This type represents the callback function pointer which is called when a Dataset update request finishes,
+     * Represents the callback function pointer which is called when a Dataset update request finishes,
      * reporting success or failure status of the request.
      *
      * The function pointer has the syntax `void (*UpdaterCallback)(Error aError, void *aContext)`.
-     *
      */
     typedef otDatasetUpdaterCallback UpdaterCallback;
 
     /**
-     * This method requests an update to Operational Dataset.
+     * Requests an update to Operational Dataset.
      *
      * @p aDataset should contain the fields to be updated and their new value. It must not contain Active or Pending
      * Timestamp fields. The Delay field is optional, if not provided a default value (`kDefaultDelay`) would be used.
@@ -89,46 +91,35 @@ public:
      * @param[in]  aContext                An arbitrary context passed to callback.
      *
      * @retval kErrorNone           Dataset update started successfully (@p aCallback will be invoked on completion).
-     * @retval kErrorInvalidState   Device is disabled (MLE is disabled).
+     * @retval kErrorInvalidState   Device is disabled or not fully configured (missing or incomplete Active Dataset).
+     * @retval kErrorAlready        The @p aDataset fields already match the existing Active Dataset.
      * @retval kErrorInvalidArgs    The @p aDataset is not valid (contains Active or Pending Timestamp).
      * @retval kErrorBusy           Cannot start update, a previous one is ongoing.
      * @retval kErrorNoBufs         Could not allocated buffer to save Dataset.
-     *
      */
     Error RequestUpdate(const Dataset::Info &aDataset, UpdaterCallback aCallback, void *aContext);
 
     /**
-     * This method cancels an ongoing (if any) Operational Dataset update request.
-     *
+     * Cancels an ongoing (if any) Operational Dataset update request.
      */
     void CancelUpdate(void);
 
     /**
-     * This method indicates whether there is an ongoing Operation Dataset update request.
+     * Indicates whether there is an ongoing Operation Dataset update request.
      *
      * @retval TRUE    There is an ongoing update.
      * @retval FALSE   There is no ongoing update.
-     *
      */
-    bool IsUpdateOngoing(void) const { return mDataset != nullptr; }
+    bool IsUpdateOngoing(void) const { return (mDataset != nullptr); }
 
 private:
-    // Default delay (in ms) in Pending Dataset.
-    static constexpr uint32_t kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY;
+    Error RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback, void *aContext);
+    void  Finish(Error aError);
+    void  HandleNotifierEvents(Events aEvents);
+    void  HandleDatasetChanged(Dataset::Type aType);
 
-    // Retry interval (in ms) when preparing and/or sending Pending Dataset fails.
-    static constexpr uint32_t kRetryInterval = 1000;
-
-    void HandleTimer(void);
-    void PreparePendingDataset(void);
-    void Finish(Error aError);
-    void HandleNotifierEvents(Events aEvents);
-
-    using UpdaterTimer = TimerMilliIn<DatasetUpdater, &DatasetUpdater::HandleTimer>;
-
-    Callback<UpdaterCallback> mCallback;
-    UpdaterTimer              mTimer;
     Message                  *mDataset;
+    Callback<UpdaterCallback> mCallback;
 };
 
 } // namespace MeshCoP
@@ -136,4 +127,4 @@ private:
 
 #endif // (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
-#endif // DATASET_UPDATER_HPP_
+#endif // OT_CORE_MESHCOP_DATASET_UPDATER_HPP_

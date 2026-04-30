@@ -32,12 +32,12 @@
 
 #include "test_util.h"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "thread/topology.hpp"
+#include "instance/instance.hpp"
+#include "thread/child.hpp"
 
 namespace ot {
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 enum
 {
@@ -46,9 +46,8 @@ enum
 
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])
 {
-    Ip6::Address::TypeFilter filters[] = {Ip6::Address::kTypeUnicast, Ip6::Address::kTypeMulticast};
-    bool                     addressObserved[kMaxChildIp6Addresses];
-    bool                     hasMeshLocal = false;
+    bool addressObserved[kMaxChildIp6Addresses];
+    bool hasMeshLocal = false;
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
@@ -57,7 +56,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
     memset(addressObserved, 0, sizeof(addressObserved));
 
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    for (const Ip6::Address &address : aChild.GetIp6Addresses())
     {
         bool addressIsInList = false;
 
@@ -78,13 +77,15 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     {
         Ip6::Address address;
 
-        VerifyOrQuit(addressObserved[index], "Child::IterateIp6Addresses() missed an entry from the expected list");
-
-        if (sInstance->Get<Mle::MleRouter>().IsMeshLocalAddress(aAddressList[index]))
+        if (sInstance->Get<Mle::Mle>().IsMeshLocalAddress(aAddressList[index]))
         {
             SuccessOrQuit(aChild.GetMeshLocalIp6Address(address));
             VerifyOrQuit(address == aAddressList[index], "GetMeshLocalIp6Address() did not return expected address");
             hasMeshLocal = true;
+        }
+        else
+        {
+            VerifyOrQuit(addressObserved[index], "Child::IterateIp6Addresses() missed an entry from the expected list");
         }
     }
 
@@ -95,95 +96,6 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
         VerifyOrQuit(aChild.GetMeshLocalIp6Address(address) == kErrorNotFound,
                      "Child::GetMeshLocalIp6Address() returned an address not in the expected list");
     }
-
-    // Iterate over unicast and multicast addresses separately.
-
-    memset(addressObserved, 0, sizeof(addressObserved));
-
-    for (Ip6::Address::TypeFilter filter : filters)
-    {
-        for (const Ip6::Address &address : aChild.IterateIp6Addresses(filter))
-        {
-            bool addressIsInList = false;
-
-            switch (filter)
-            {
-            case Ip6::Address::kTypeMulticast:
-                VerifyOrQuit(address.IsMulticast(), "Address::TypeFilter failed");
-                break;
-
-            case Ip6::Address::kTypeUnicast:
-                VerifyOrQuit(!address.IsMulticast(), "Address::TypeFilter failed");
-                break;
-
-            default:
-                break;
-            }
-
-            VerifyOrQuit(address.MatchesFilter(filter));
-
-            for (uint8_t index = 0; index < aAddressListLength; index++)
-            {
-                if (address == aAddressList[index])
-                {
-                    VerifyOrQuit(addressObserved[index] == false,
-                                 "Child::IterateIp6Addresses() returned duplicate addr");
-                    addressObserved[index] = true;
-                    addressIsInList        = true;
-                    break;
-                }
-            }
-
-            VerifyOrQuit(addressIsInList, "Child::IterateIp6Addresses() returned an address not in the expected list");
-        }
-    }
-
-    for (uint8_t index = 0; index < aAddressListLength; index++)
-    {
-        VerifyOrQuit(addressObserved[index], "Child::IterateIp6Addresses() missed an entry from the expected list");
-    }
-
-    // Verify behavior of `Child::AddressIterator
-    {
-        Child::AddressIterator        iter1(aChild);
-        Child::AddressIterator        iter2(aChild);
-        Child::AddressIterator::Index iterIndex;
-
-        for (const Ip6::Address &address : aChild.IterateIp6Addresses())
-        {
-            VerifyOrQuit(iter1 == iter2);
-            VerifyOrQuit(!iter1.IsDone());
-            VerifyOrQuit(*iter1.GetAddress() == address);
-            VerifyOrQuit(*iter1.GetAddress() == *iter2.GetAddress());
-
-            iterIndex = iter1.GetAsIndex();
-            VerifyOrQuit(iter2.GetAsIndex() == iterIndex);
-
-            {
-                Child::AddressIterator iter3(aChild, iterIndex);
-                VerifyOrQuit(iter3 == iter1, "AddressIterator(iterIndex) failed");
-
-                iter3++;
-                VerifyOrQuit(iter3 != iter1, "AddressIterator(iterIndex) failed");
-            }
-
-            iter1++;
-            VerifyOrQuit(iter1 != iter2);
-            iter2++;
-        }
-
-        VerifyOrQuit(iter1.IsDone());
-        VerifyOrQuit(iter2.IsDone());
-        VerifyOrQuit(iter1 == iter2);
-
-        iterIndex = iter1.GetAsIndex();
-        VerifyOrQuit(iter2.GetAsIndex() == iterIndex);
-
-        {
-            Child::AddressIterator iter3(aChild, iterIndex);
-            VerifyOrQuit(iter3 == iter1, "AddressIterator(iterIndex) failed");
-        }
-    }
 }
 
 void TestChildIp6Address(void)
@@ -192,9 +104,9 @@ void TestChildIp6Address(void)
     Ip6::Address addresses[kMaxChildIp6Addresses];
     uint8_t      numAddresses;
     const char  *ip6Addresses[] = {
-         "fd00:1234::1234",
-         "ff6b:e251:52fb:0:12e6:b94c:1c28:c56a",
-         "fd00:1234::204c:3d7c:98f6:9a1b",
+        "fd00:1234::1234",
+        "ff6b:e251:52fb:0:12e6:b94c:1c28:c56a",
+        "fd00:1234::204c:3d7c:98f6:9a1b",
     };
 
     const uint8_t            meshLocalIidArray[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
@@ -214,7 +126,7 @@ void TestChildIp6Address(void)
     numAddresses = 0;
 
     // First addresses uses the mesh local prefix (mesh-local address).
-    addresses[numAddresses] = sInstance->Get<Mle::MleRouter>().GetMeshLocal64();
+    addresses[numAddresses] = sInstance->Get<Mle::Mle>().GetMeshLocalEid();
     addresses[numAddresses].SetIid(meshLocalIid);
 
     numAddresses++;

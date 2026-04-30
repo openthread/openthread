@@ -30,8 +30,8 @@
  *   This file contains definitions a spinel interface to the OpenThread stack.
  */
 
-#ifndef CHANGED_PROPS_SET_HPP_
-#define CHANGED_PROPS_SET_HPP_
+#ifndef OT_NCP_CHANGED_PROPS_SET_HPP_
+#define OT_NCP_CHANGED_PROPS_SET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -48,14 +48,12 @@ namespace Ncp {
  * Defines a class to track a set of property/status changes that require update to host. The properties that can
  * be added to this set must support sending unsolicited updates. This class also provides mechanism for user
  * to block certain filterable properties disallowing the unsolicited update from them.
- *
  */
 class ChangedPropsSet
 {
 public:
     /**
      * Defines an entry in the set/list.
-     *
      */
     struct Entry
     {
@@ -65,8 +63,7 @@ public:
     };
 
     /**
-     * This constructor initializes the set.
-     *
+     * Initializes the set.
      */
     ChangedPropsSet(void)
         : mChangedSet(0)
@@ -75,46 +72,41 @@ public:
     }
 
     /**
-     * This method clears the set.
-     *
+     * Clears the set.
      */
     void Clear(void) { mChangedSet = 0; }
 
     /**
-     * This method indicates if the set is empty or not.
+     * Indicates if the set is empty or not.
      *
      * @returns TRUE if the set if empty, FALSE otherwise.
-     *
      */
     bool IsEmpty(void) const { return (mChangedSet == 0); }
 
     /**
-     * This method adds a property to the set. The property added must be in the list of supported properties
+     * Adds a property to the set. The property added must be in the list of supported properties
      * capable of sending unsolicited update, otherwise the input is ignored.
      *
      * Note that if the property is already in the set, adding it again does not change the set.
      *
      * @param[in] aPropKey    The spinel property key to be added to the set
-     *
      */
     void AddProperty(spinel_prop_key_t aPropKey) { Add(aPropKey, SPINEL_STATUS_OK); }
 
     /**
-     * This method adds a `LAST_STATUS` update to the set. The update must be in list of supported entries.
+     * Adds a `LAST_STATUS` update to the set. The update must be in list of supported entries.
      *
      * @param[in] aStatus     The spinel status update to be added to set.
-     *
      */
     void AddLastStatus(spinel_status_t aStatus) { Add(SPINEL_PROP_LAST_STATUS, aStatus); }
 
     /**
-     * This method returns a pointer to array of entries of supported property/status updates. The list includes
+     * Returns a pointer to array of entries of supported property/status updates. The list includes
      * all properties that can generate unsolicited update.
      *
      * @param[out]  aNumEntries  A reference to output the number of entries in the list.
      *
      * @returns A pointer to the supported entries array.
-     *
      */
     const Entry *GetSupportedEntries(uint8_t &aNumEntries) const
     {
@@ -123,12 +115,11 @@ public:
     }
 
     /**
-     * This method returns a pointer to the entry associated with a given index.
+     * Returns a pointer to the entry associated with a given index.
      *
      * @param[in] aIndex     The index to an entry.
      *
      * @returns A pointer to the entry associated with @p aIndex, or nullptr if the index is beyond end of array.
-     *
      */
     const Entry *GetEntry(uint8_t aIndex) const
     {
@@ -136,62 +127,56 @@ public:
     }
 
     /**
-     * This method indicates if the entry associated with an index is in the set (i.e., it has been changed and
+     * Indicates if the entry associated with an index is in the set (i.e., it has been changed and
      * requires an unsolicited update).
      *
      * @param[in] aIndex     The index to an entry.
      *
      * @returns TRUE if the entry is in the set, FALSE otherwise.
-     *
      */
     bool IsEntryChanged(uint8_t aIndex) const { return IsBitSet(mChangedSet, aIndex); }
 
     /**
-     * This method removes an entry associated with an index in the set.
+     * Removes an entry associated with an index in the set.
      *
      * Note that if the property/entry is not in the set, removing it simply does nothing.
      *
      * @param[in] aIndex               Index of entry to be removed.
-     *
      */
     void RemoveEntry(uint8_t aIndex) { ClearBit(mChangedSet, aIndex); }
 
     /**
-     * This method enables/disables filtering of a given property.
+     * Enables/disables filtering of a given property.
      *
      * @param[in] aPropKey             The property key to filter.
      * @param[in] aEnable              TRUE to enable filtering, FALSE to disable.
      *
      * @retval OT_ERROR_NONE           Filter state for given property updated successfully.
      * @retval OT_ERROR_INVALID_ARGS   The given property is not valid (i.e., not capable of unsolicited update).
-     *
      */
     otError EnablePropertyFilter(spinel_prop_key_t aPropKey, bool aEnable);
 
     /**
-     * This method determines whether filtering is enabled for an entry associated with an index.
+     * Determines whether filtering is enabled for an entry associated with an index.
      *
      * @param[in] aIndex               Index of entry to be checked.
      *
      * @returns TRUE if the filter is enabled for the given entry, FALSE otherwise.
-     *
      */
     bool IsEntryFiltered(uint8_t aIndex) const { return IsBitSet(mFilterSet, aIndex); }
 
     /**
-     * This method determines whether filtering is enabled for a given property key.
+     * Determines whether filtering is enabled for a given property key.
      *
      * @param[in] aPropKey             The property key to check.
      *
      * @returns TRUE if the filter is enabled for the given property, FALSE if the property is not filtered or if
      *          it is not filterable.
-     *
      */
     bool IsPropertyFiltered(spinel_prop_key_t aPropKey) const;
 
     /**
-     * This method clears the filter.
-     *
+     * Clears the filter.
      */
     void ClearFilter(void) { mFilterSet = 0; }
 
@@ -212,4 +197,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // CHANGED_PROPS_SET_HPP
+#endif // OT_NCP_CHANGED_PROPS_SET_HPP_

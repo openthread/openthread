@@ -622,7 +622,7 @@ class FragmentHeader(ExtensionHeader):
     | Next Header | Reserved | Fragment Offset | Res | M | Identification |
     +-------------+----------+-----------------+-----+---+----------------+
 
-    Fragment extention header consists of:
+    Fragment extension header consists of:
         - next_header type (8 bit)
         - fragment offset which is multiple of 8 (13 bit)
         - more_flag to indicate further data (1 bit)
@@ -1010,7 +1010,7 @@ class HopByHopFactory(PacketFactory):
         hdr_ext_len = ord(data.read(1))
 
         # Note! Two bytes were read (next_header and hdr_ext_len) so they must
-        # be substracted from header length
+        # be subtracted from header length
         hop_by_hop_length = (self._calculate_extension_header_length(hdr_ext_len) - 2)
 
         hop_by_hop_data = data.read(hop_by_hop_length)

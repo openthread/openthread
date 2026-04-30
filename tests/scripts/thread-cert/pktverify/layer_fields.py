@@ -26,6 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import calendar
 import datetime
 import sys
 import time
@@ -71,9 +72,18 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     # there are integer seconds applied in the test cases
     try:
         time_str = datetime.datetime.strptime(dv, "%b  %d, %Y %H:%M:%S.%f000 %Z")
-        time_in_sec = time.mktime(time_str.utctimetuple())
+        time_in_sec = calendar.timegm(time_str.utctimetuple())
         return int(time_in_sec)
     except (ValueError, TypeError):
+        pass
+
+    try:
+        # ISO format: '1970-01-01T00:00:20.000000000+0000'
+        # we only care about the seconds part
+        time_str = dv.split('.')[0]
+        dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
+        return int(dt.replace(tzinfo=datetime.timezone.utc).timestamp())
+    except (ValueError, TypeError, IndexError):
         pass
 
     try:
@@ -82,7 +92,21 @@ def _auto(v: Union[LayerFieldsContainer, LayerField]):
     except Exception:
         pass
 
+    if dv == 'True':
+        return 1
+    if dv == 'False':
+        return 0
+
     raise ValueError((v, v.get_default_value(), v.raw_value))
+
+
+def _thread_timestamp(v: Union[LayerFieldsContainer, LayerField]) -> int:
+    """parse the layer field as a Thread timestamp (8 bytes)"""
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1
+    rv = v.raw_value
+    if rv and len(rv) == 16:
+        return int(rv, 16) >> 16
+    return _auto(v)
 
 
 def _payload(v: Union[LayerFieldsContainer, LayerField]) -> bytearray:
@@ -256,6 +280,8 @@ _LAYER_FIELDS = {
     'wpan.dst16': _auto,
     'wpan.src64': _ext_addr,
     'wpan.dst64': _ext_addr,
+    'wpan-tap.channel': _auto,
+    'wpan_tap.channel': _auto,
     'wpan.fcs': _raw_hex_rev,
     'wpan.fcs_ok': _auto,
     'wpan.frame_length': _dec,
@@ -292,8 +318,8 @@ _LAYER_FIELDS = {
     'mle.tlv.scan_mask.e': _auto,
     'mle.tlv.version': _auto,
     'mle.tlv.source_addr': _auto,
-    'mle.tlv.active_tstamp': _auto,
-    'mle.tlv.pending_tstamp': _auto,
+    'mle.tlv.active_tstamp': _thread_timestamp,
+    'mle.tlv.pending_tstamp': _thread_timestamp,
     'mle.tlv.leader_data.partition_id': _auto,
     'mle.tlv.leader_data.weighting': _auto,
     'mle.tlv.leader_data.data_version': _auto,
@@ -320,11 +346,13 @@ _LAYER_FIELDS = {
     'mle.tlv.timeout': _auto,
     'mle.tlv.addr16': _auto,
     'mle.tlv.channel': _auto,
+    'mle.tlv.addr_reg': _list(_ipv6_addr),
     'mle.tlv.addr_reg_iid': _list(_auto),
+    'mle.tlv.addr_reg_ipv6': _list(_ipv6_addr),
     'mle.tlv.link_enh_ack_flags': _auto,
     'mle.tlv.link_forward_series': _list(_auto),
     'mle.tlv.link_requested_type_id_flags': _list(_hex),
-    'mle.tlv.link_sub_tlv': _auto,
+    'mle.tlv.link_sub_tlv': _list(_auto),
     'mle.tlv.link_status_sub_tlv': _auto,
     'mle.tlv.query_id': _auto,
     'mle.tlv.metric_type_id_flags.type': _list(_hex),
@@ -478,6 +506,10 @@ _LAYER_FIELDS = {
     'icmpv6.opt.route_info.flag.route_preference': _auto,
     'icmpv6.opt.route_info.flag.reserved': _auto,
     'icmpv6.opt.prefix': _list(_ipv6_addr),
+    'icmpv6.opt.pio_flag.a': _list(_auto),
+    'icmpv6.opt.pio_flag.l': _list(_auto),
+    'icmpv6.opt.pio_preferred_lifetime': _list(_auto),
+    'icmpv6.opt.pio_valid_lifetime': _list(_auto),
     'icmpv6.opt.length': _list(_auto),
     'icmpv6.opt.reserved': _str,
     'icmpv6.nd.ra.router_lifetime': _auto,
@@ -523,12 +555,20 @@ _LAYER_FIELDS = {
     'coap.tlv.ext_mac_addr': _ext_addr,
     'coap.tlv.router_mask_assigned': _auto,
     'coap.tlv.router_mask_id_seq': _auto,
+    'coap.tlv.mac_addr': _ext_addr,
+    'coap.tlv.mode': _auto,
+    'coap.tlv.partition_id': _auto,
+    'coap.tlv.leader_router_id': _auto,
+    'coap.tlv.router_id_sequence': _auto,
+    'coap.tlv.router_id_mask': _str,
+    'coap.tlv.mac_counter': _list(_auto),
 
     # dtls
     'dtls.handshake.type': _list(_auto),
     'dtls.handshake.cookie': _auto,
     'dtls.record.content_type': _list(_auto),
     'dtls.alert_message.desc': _auto,
+    'dtls.alert_message.level': _auto,
 
     # thread beacon
     'thread_bcn.protocol': _auto,
@@ -595,8 +635,8 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
     'thread_meshcop.tlv.jr_locator': _auto,
-    'thread_meshcop.tlv.active_tstamp': _auto,
-    'thread_meshcop.tlv.pending_tstamp': _auto,
+    'thread_meshcop.tlv.active_tstamp': _thread_timestamp,
+    'thread_meshcop.tlv.pending_tstamp': _thread_timestamp,
     'thread_meshcop.tlv.delay_timer': _auto,
     'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
@@ -606,16 +646,22 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.stable': _list(_auto),
     'thread_nwd.tlv.service.t': _auto,
     'thread_nwd.tlv.service.s_id': _auto,
+    'thread_nwd.tlv.service.s_enterprise_number': _list(_auto),
+    'thread_nwd.tlv.service.srp_dataset_identifier': _list(_hex),
+    'thread_nwd.tlv.service.s_data_bin': _list(_bytes),
     'thread_nwd.tlv.service.s_data_len': _auto,
     'thread_nwd.tlv.service.s_data.seqno': _auto,
     'thread_nwd.tlv.service.s_data.rrdelay': _auto,
     'thread_nwd.tlv.service.s_data.mlrtimeout': _auto,
     'thread_nwd.tlv.server_16': _list(_auto),
     'thread_nwd.tlv.border_router_16': _list(_auto),
+    'thread_nwd.tlv.has_route.br_16': _list(_auto),
+    'thread_nwd.tlv.has_route.pref': _list(_auto),
+    'thread_nwd.tlv.has_route.np': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
     # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
     'thread_nwd.tlv.prefix': _list(_ipv6_addr),
-    'thread_nwd.tlv.border_router.pref': _auto,
+    'thread_nwd.tlv.border_router.pref': _list(_auto),
     'thread_nwd.tlv.border_router.flag.s': _list(_auto),
     'thread_nwd.tlv.border_router.flag.r': _list(_auto),
     'thread_nwd.tlv.border_router.flag.p': _list(_auto),
@@ -635,8 +681,46 @@ _LAYER_FIELDS = {
     'thread_diagnostic.tlv.general': _list(_str),
 
     # DNS
-    'dns.resp.ttl': _auto,
+    'dns.flags.opcode': _auto,
+    'dns.flags.rcode': _auto,
     'dns.flags.response': _auto,
+    'dns.count.answers': _auto,
+    'dns.qry.name': _list(_str),
+    'dns.qry.type': _list(_auto),
+    'dns.resp.ttl': _auto,
+    'dns.resp.name': _list(_str),
+    'dns.resp.type': _list(_auto),
+    'dns.aaaa': _list(_ipv6_addr),
+    'dns.txt': _list(_bytes),
+    'dns.srv.priority': _list(_auto),
+    'dns.srv.weight': _list(_auto),
+    'dns.srv.port': _list(_auto),
+    'dns.srv.target': _list(_str),
+    'dns.ptr.domain_name': _list(_str),
+
+    # MDNS
+    'mdns.flags.opcode': _auto,
+    'mdns.flags.rcode': _auto,
+    'mdns.flags.response': _auto,
+    'mdns.count.answers': _auto,
+    'mdns.qry.name': _list(_str),
+    'mdns.qry.type': _list(_auto),
+    'mdns.resp.ttl': _auto,
+    'mdns.resp.name': _list(_str),
+    'mdns.resp.type': _list(_auto),
+    'mdns.aaaa': _list(_ipv6_addr),
+    'mdns.txt': _list(_bytes),
+    'mdns.srv.priority': _list(_auto),
+    'mdns.srv.weight': _list(_auto),
+    'mdns.srv.port': _list(_auto),
+    'mdns.srv.target': _list(_str),
+    'mdns.ptr.domain_name': _list(_str),
+
+    # TREL
+    'trel.source_addr': _ext_addr,
+    'trel.destination_addr': _ext_addr,
+    'trel.wpan.src16': _hex,
+    'trel.wpan.dst16': _hex,
 }
 
 _layer_containers = set()
@@ -680,6 +764,7 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
     :return: The specified layer field.
     """
     assert isinstance(packet, RawPacket)
+    orig_field_uri = field_uri
     secs = field_uri.split('.')
     layer_depth = 0
     layer_name = secs[0]
@@ -687,21 +772,39 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
         layer_name = layer_name[:-len('inner')]
         field_uri = '.'.join([layer_name] + secs[1:])
         layer_depth = 1
+        orig_field_uri = field_uri
 
-    if is_layer_field(field_uri):
+    # Field aliases for tshark
+    if field_uri in ('icmpv6.opt.pio_flag.a', 'icmpv6.opt.prefix.flag.a'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.flag.a', 'icmpv6.opt.pio_flag.a'
+    elif field_uri in ('icmpv6.opt.pio_flag.l', 'icmpv6.opt.prefix.flag.l'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.flag.l', 'icmpv6.opt.pio_flag.l'
+    elif field_uri in ('icmpv6.opt.pio_preferred_lifetime', 'icmpv6.opt.prefix.preferred_lifetime'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.preferred_lifetime', 'icmpv6.opt.pio_preferred_lifetime'
+    elif field_uri in ('icmpv6.opt.pio_valid_lifetime', 'icmpv6.opt.prefix.valid_lifetime'):
+        field_uri, orig_field_uri = 'icmpv6.opt.prefix.valid_lifetime', 'icmpv6.opt.pio_valid_lifetime'
+    elif field_uri == 'mle.tlv.addr_reg':
+        field_uri = 'mle.tlv.addr_reg_ipv6'
+
+    if is_layer_field(field_uri) or field_uri in ('icmpv6.opt.prefix.flag.a', 'icmpv6.opt.prefix.flag.l',
+                                                  'icmpv6.opt.prefix.preferred_lifetime',
+                                                  'icmpv6.opt.prefix.valid_lifetime'):
         candidate_layers = _get_candidate_layers(packet, layer_name)
         for layers in candidate_layers:
             if layer_depth >= len(layers):
                 continue
             layer = layers[layer_depth]
             v = layer.get_field(field_uri)
+            if v is None and layer_name == 'mdns':
+                # Try dns prefix for mdns layer
+                v = layer.get_field('dns' + field_uri[4:])
             if v is not None:
                 try:
-                    v = _LAYER_FIELDS[field_uri](v)
-                    print("[%s = %r] " % (field_uri, v), file=sys.stderr)
+                    v = _LAYER_FIELDS[orig_field_uri](v)
+                    print("[%s = %r] " % (orig_field_uri, v), file=sys.stderr)
                     return v
                 except Exception as ex:
-                    raise ValueError('can not parse field %s = %r' % (field_uri,
+                    raise ValueError('can not parse field %s = %r' % (orig_field_uri,
                                                                       (v.get_default_value(), v.raw_value))) from ex
 
         print("[%s = %s] " % (field_uri, "null"), file=sys.stderr)

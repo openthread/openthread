@@ -28,8 +28,17 @@
 
 #include "test_platform.h"
 
+#include <map>
+#include <vector>
+
 #include <stdio.h>
 #include <sys/time.h>
+#include <openthread/platform/flash.h>
+
+#ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#include <openthread/tcat.h>
+#include <openthread/platform/ble.h>
+#endif
 
 enum
 {
@@ -37,11 +46,22 @@ enum
     FLASH_SWAP_NUM  = 2,
 };
 
+std::map<uint32_t, std::vector<std::vector<uint8_t>>> settings;
+
 ot::Instance *testInitInstance(void)
 {
     otInstance *instance = nullptr;
 
+    settings.clear();
+    for (uint8_t idx = 0; idx < FLASH_SWAP_NUM; idx++)
+    {
+        otPlatFlashErase(nullptr, idx);
+    }
+
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+    instance = otInstanceInitMultiple(0);
+#else
     size_t   instanceBufferLength = 0;
     uint8_t *instanceBuffer       = nullptr;
 
@@ -55,6 +75,7 @@ ot::Instance *testInitInstance(void)
 
     // Initialize OpenThread with the buffer
     instance = otInstanceInit(instanceBuffer, &instanceBufferLength);
+#endif
 #else
     instance = otInstanceInitSingle();
 #endif
@@ -62,16 +83,47 @@ ot::Instance *testInitInstance(void)
     return static_cast<ot::Instance *>(instance);
 }
 
-void testFreeInstance(otInstance *aInstance)
+ot::Instance *testResetInstance(ot::Instance *aInstance)
 {
     otInstanceFinalize(aInstance);
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    {
+        size_t instanceBufferLength = sizeof(ot::Instance);
+
+        aInstance = static_cast<ot::Instance *>(otInstanceInit(aInstance, &instanceBufferLength));
+    }
+#else
+    aInstance = static_cast<ot::Instance *>(otInstanceInitSingle());
+#endif
+
+    return aInstance;
+}
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+ot::Instance *testInitAdditionalInstance(uint8_t id)
+{
+    otInstance *instance = nullptr;
+
+    instance = otInstanceInitMultiple(id);
+
+    return static_cast<ot::Instance *>(instance);
+}
+#endif
+
+void testFreeInstance(otInstance *aInstance)
+{
+    otInstanceFinalize(aInstance);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
     free(aInstance);
 #endif
 }
 
 bool sDiagMode = false;
+
+static otPlatDiagOutputCallback sOutputCallback        = nullptr;
+static void                    *sOutputCallbackContext = nullptr;
 
 extern "C" {
 
@@ -79,6 +131,10 @@ extern "C" {
 OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 OT_TOOL_WEAK void otPlatFree(void *aPtr) { free(aPtr); }
+
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
+
+OT_TOOL_WEAK void otPlatCryptoFree(void *aPtr) { free(aPtr); }
 #endif
 
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}
@@ -109,6 +165,10 @@ OT_TOOL_WEAK uint32_t otPlatAlarmMicroGetNow(void)
     return (uint32_t)((tv.tv_sec * 1000000) + tv.tv_usec + 123456);
 }
 
+OT_TOOL_WEAK otError otPlatMultipanGetActiveInstance(otInstance **) { return OT_ERROR_NOT_IMPLEMENTED; }
+
+OT_TOOL_WEAK otError otPlatMultipanSetActiveInstance(otInstance *, bool) { return OT_ERROR_NOT_IMPLEMENTED; }
+
 OT_TOOL_WEAK void otPlatRadioGetIeeeEui64(otInstance *, uint8_t *) {}
 
 OT_TOOL_WEAK void otPlatRadioSetPanId(otInstance *, uint16_t) {}
@@ -118,6 +178,8 @@ OT_TOOL_WEAK void otPlatRadioSetExtendedAddress(otInstance *, const otExtAddress
 OT_TOOL_WEAK void otPlatRadioSetShortAddress(otInstance *, uint16_t) {}
 
 OT_TOOL_WEAK void otPlatRadioSetPromiscuous(otInstance *, bool) {}
+
+OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *, bool) {}
 
 OT_TOOL_WEAK bool otPlatRadioIsEnabled(otInstance *) { return true; }
 
@@ -193,9 +255,30 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK void otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static void DiagOutput(const char *aFormat, ...)
 {
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", aArgs[0]);
+    va_list args;
+
+    va_start(args, aFormat);
+
+    if (sOutputCallback != nullptr)
+    {
+        sOutputCallback(aFormat, args, sOutputCallbackContext);
+    }
+
+    va_end(args);
+}
+
+OT_TOOL_WEAK void otPlatDiagSetOutputCallback(otInstance *aInstance, otPlatDiagOutputCallback aCallback, void *aContext)
+{
+    sOutputCallback        = aCallback;
+    sOutputCallbackContext = aContext;
+}
+
+OT_TOOL_WEAK otError otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[])
+{
+    DiagOutput("diag feature '%s' is not supported\r\n", aArgs[0]);
+    return OT_ERROR_NONE;
 }
 
 OT_TOOL_WEAK void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
@@ -216,7 +299,13 @@ OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *, uint16_t) {}
 
 OT_TOOL_WEAK void otPlatReset(otInstance *) {}
 
+OT_TOOL_WEAK otError otPlatResetToBootloader(otInstance *) { return OT_ERROR_NOT_CAPABLE; }
+
 OT_TOOL_WEAK otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PLAT_RESET_REASON_POWER_ON; }
+
+OT_TOOL_WEAK void otPlatWakeHost(void) {}
+
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel, const char *) {}
 
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
@@ -224,18 +313,78 @@ OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {
 
 OT_TOOL_WEAK void otPlatSettingsDeinit(otInstance *) {}
 
-OT_TOOL_WEAK otError otPlatSettingsGet(otInstance *, uint16_t, int, uint8_t *, uint16_t *)
+OT_TOOL_WEAK otError otPlatSettingsGet(otInstance *, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
-    return OT_ERROR_NOT_FOUND;
+    auto setting = settings.find(aKey);
+
+    if (setting == settings.end())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+
+    if (aIndex > setting->second.size())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+
+    if (aValueLength == nullptr)
+    {
+        return OT_ERROR_NONE;
+    }
+
+    const auto &data = setting->second[aIndex];
+
+    if (aValue == nullptr)
+    {
+        *aValueLength = data.size();
+        return OT_ERROR_NONE;
+    }
+
+    if (*aValueLength >= data.size())
+    {
+        *aValueLength = data.size();
+    }
+
+    memcpy(aValue, &data[0], *aValueLength);
+
+    return OT_ERROR_NONE;
 }
 
-OT_TOOL_WEAK otError otPlatSettingsSet(otInstance *, uint16_t, const uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+OT_TOOL_WEAK otError otPlatSettingsSet(otInstance *, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+{
+    auto setting = std::vector<uint8_t>(aValue, aValue + aValueLength);
 
-OT_TOOL_WEAK otError otPlatSettingsAdd(otInstance *, uint16_t, const uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+    settings[aKey].clear();
+    settings[aKey].push_back(setting);
 
-OT_TOOL_WEAK otError otPlatSettingsDelete(otInstance *, uint16_t, int) { return OT_ERROR_NONE; }
+    return OT_ERROR_NONE;
+}
 
-OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *) {}
+OT_TOOL_WEAK otError otPlatSettingsAdd(otInstance *, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+{
+    auto setting = std::vector<uint8_t>(aValue, aValue + aValueLength);
+    settings[aKey].push_back(setting);
+
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatSettingsDelete(otInstance *, uint16_t aKey, int aIndex)
+{
+    auto setting = settings.find(aKey);
+    if (setting == settings.end())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+
+    if (aIndex >= setting->second.size())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+    setting->second.erase(setting->second.begin() + aIndex);
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *) { settings.clear(); }
 
 uint8_t *GetFlash(void)
 {
@@ -309,16 +458,14 @@ OT_TOOL_WEAK otError otPlatRadioEnableCsl(otInstance *, uint32_t, otShortAddress
     return OT_ERROR_NONE;
 }
 
+OT_TOOL_WEAK otError otPlatRadioResetCsl(otInstance *) { return OT_ERROR_NONE; }
+
 OT_TOOL_WEAK void otPlatRadioUpdateCslSampleTime(otInstance *, uint32_t) {}
 
 OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *)
 {
     return static_cast<uint8_t>(otPlatTimeGetXtalAccuracy() / 2);
 }
-#endif
-
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-OT_TOOL_WEAK void otPlatOtnsStatus(const char *) {}
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -328,7 +475,13 @@ OT_TOOL_WEAK void otPlatTrelDisable(otInstance *) {}
 
 OT_TOOL_WEAK void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
 
+OT_TOOL_WEAK void otPlatTrelNotifyPeerSocketAddressDifference(otInstance *, const otSockAddr *, const otSockAddr *) {}
+
 OT_TOOL_WEAK void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t) {}
+
+OT_TOOL_WEAK const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
+
+OT_TOOL_WEAK void otPlatTrelResetCounters(otInstance *) {}
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -351,15 +504,40 @@ OT_TOOL_WEAK otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *, cons
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
 
-OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+OT_TOOL_WEAK bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
+
+OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
 {
     return OT_ERROR_FAILED;
 }
 
-OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
-#endif
+OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+OT_TOOL_WEAK void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance,
+                                                                bool        aEnable,
+                                                                uint32_t    aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+OT_TOOL_WEAK void otPlatInfraIfDhcp6PdClientSend(otInstance   *aInstance,
+                                                 otMessage    *aMessage,
+                                                 otIp6Address *aDestAddress,
+                                                 uint32_t      aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aDestAddress);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    otMessageFree(aMessage);
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
@@ -407,6 +585,43 @@ bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
     return false;
 }
 
+otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatCryptoEcdsaExportPublicKey(otCryptoKeyRef aKeyRef, otPlatCryptoEcdsaPublicKey *aPublicKey)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aPublicKey);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatCryptoEcdsaSignUsingKeyRef(otCryptoKeyRef                aKeyRef,
+                                         const otPlatCryptoSha256Hash *aHash,
+                                         otPlatCryptoEcdsaSignature   *aSignature)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aHash);
+    OT_UNUSED_VARIABLE(aSignature);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKeyRef,
+                                           const otPlatCryptoSha256Hash     *aHash,
+                                           const otPlatCryptoEcdsaSignature *aSignature)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aHash);
+    OT_UNUSED_VARIABLE(aSignature);
+
+    return OT_ERROR_NONE;
+}
+
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
@@ -416,6 +631,35 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+
+OT_TOOL_WEAK otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
+                                        otMessage                   *aMessage,
+                                        const otPlatMdnsAddressInfo *aAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aAddress);
+}
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
@@ -505,4 +749,302 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+bool otPlatDnsIsUpstreamQueryAvailable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return true;
+}
+
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxn);
+    OT_UNUSED_VARIABLE(aQuery);
+}
+
+void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
+{
+    otPlatDnsUpstreamQueryDone(aInstance, aTxn, nullptr);
+}
+#endif
+
+OT_TOOL_WEAK otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *, int8_t *) { return OT_ERROR_NONE; }
+
+OT_TOOL_WEAK otError otPlatRadioGetCoexMetrics(otInstance *, otRadioCoexMetrics *) { return OT_ERROR_NONE; }
+
+OT_TOOL_WEAK otError otPlatRadioGetTransmitPower(otInstance *, int8_t *) { return OT_ERROR_NONE; }
+
+OT_TOOL_WEAK bool otPlatRadioIsCoexEnabled(otInstance *) { return true; }
+
+OT_TOOL_WEAK otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return OT_ERROR_NOT_IMPLEMENTED; }
+
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
+                                                   uint8_t        aChannel,
+                                                   int16_t        aActualPower,
+                                                   const uint8_t *aRawPowerSetting,
+                                                   uint16_t       aRawPowerSettingLength)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatRadioClearCalibratedPowers(otInstance *aInstance) { return OT_ERROR_NONE; }
+#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+OT_TOOL_WEAK otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance) { return OT_PLAT_MCU_POWER_STATE_ON; }
+
+OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState) { return OT_ERROR_NONE; }
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+#ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+otError otPlatBleEnable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleDisable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvertisementBuffer)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    static uint8_t sAdvertisementBuffer[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+
+    *aAdvertisementBuffer = sAdvertisementBuffer;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInterval);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGapAdvStop(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGapDisconnect(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMtu);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHandle);
+    OT_UNUSED_VARIABLE(aPacket);
+    return OT_ERROR_NONE;
+}
+
+void otPlatBleGetLinkCapabilities(otInstance *aInstance, otBleLinkCapabilities *aBleLinkCapabilities)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    aBleLinkCapabilities->mGattNotifications = true;
+    aBleLinkCapabilities->mL2CapDirect       = false;
+    aBleLinkCapabilities->mRsv               = 0;
+}
+
+bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return false;
+}
+
+otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NONE;
+}
+
+#endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+OT_TOOL_WEAK otPlatDnssdState otPlatDnssdGetState(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_PLAT_DNSSD_STOPPED;
+}
+
+OT_TOOL_WEAK void otPlatDnssdRegisterService(otInstance                 *aInstance,
+                                             const otPlatDnssdService   *aService,
+                                             otPlatDnssdRequestId        aRequestId,
+                                             otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aService);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdUnregisterService(otInstance                 *aInstance,
+                                               const otPlatDnssdService   *aService,
+                                               otPlatDnssdRequestId        aRequestId,
+                                               otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aService);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdRegisterHost(otInstance                 *aInstance,
+                                          const otPlatDnssdHost      *aHost,
+                                          otPlatDnssdRequestId        aRequestId,
+                                          otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHost);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdUnregisterHost(otInstance                 *aInstance,
+                                            const otPlatDnssdHost      *aHost,
+                                            otPlatDnssdRequestId        aRequestId,
+                                            otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHost);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdRegisterKey(otInstance                 *aInstance,
+                                         const otPlatDnssdKey       *aKey,
+                                         otPlatDnssdRequestId        aRequestId,
+                                         otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
+                                           const otPlatDnssdKey       *aKey,
+                                           otPlatDnssdRequestId        aRequestId,
+                                           otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStartBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aBrowser);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStopBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aBrowser);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStartSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStopSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStartTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStopTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStartIp6AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStopIp6AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aResolver);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStartRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aQuerier);
+}
+
+OT_TOOL_WEAK void otPlatDnssdStopRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aQuerier);
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+OT_TOOL_WEAK otError otPlatLogCrashDump(void) { return OT_ERROR_NONE; }
+#endif
+
+OT_TOOL_WEAK void otPlatAssertFail(const char *, int) {}
 } // extern "C"

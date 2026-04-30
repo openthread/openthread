@@ -29,50 +29,88 @@
 /**
  * @file
  *   This file implements Dataset Updater.
- *
  */
 
 #include "dataset_updater.hpp"
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
-#include "common/code_utils.hpp"
-#include "common/instance.hpp"
-#include "common/locator_getters.hpp"
-#include "common/log.hpp"
-#include "common/random.hpp"
-#include "meshcop/timestamp.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
 DatasetUpdater::DatasetUpdater(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance)
     , mDataset(nullptr)
 {
 }
 
 Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, UpdaterCallback aCallback, void *aContext)
 {
-    Error    error   = kErrorNone;
-    Message *message = nullptr;
+    Dataset dataset;
 
-    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
-    VerifyOrExit(mDataset == nullptr, error = kErrorBusy);
+    dataset.SetFrom(aDataset);
+    return RequestUpdate(dataset, aCallback, aContext);
+}
 
-    VerifyOrExit(!aDataset.IsActiveTimestampPresent() && !aDataset.IsPendingTimestampPresent(),
-                 error = kErrorInvalidArgs);
+Error DatasetUpdater::RequestUpdate(Dataset &aDataset, UpdaterCallback aCallback, void *aContext)
+{
+    Error     error;
+    Message  *message = nullptr;
+    Dataset   activeDataset;
+    Timestamp activeTimestamp;
+    Timestamp pendingTimestamp;
+
+    error = kErrorInvalidState;
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled());
+    SuccessOrExit(Get<ActiveDatasetManager>().Read(activeDataset));
+    SuccessOrExit(activeDataset.Read<ActiveTimestampTlv>(activeTimestamp));
+
+    error = kErrorInvalidArgs;
+    SuccessOrExit(aDataset.ValidateTlvs());
+    VerifyOrExit(!aDataset.ContainsTlv(Tlv::kActiveTimestamp));
+    VerifyOrExit(!aDataset.ContainsTlv(Tlv::kPendingTimestamp));
+
+    VerifyOrExit(!IsUpdateOngoing(), error = kErrorBusy);
+
+    VerifyOrExit(!aDataset.IsSubsetOf(activeDataset), error = kErrorAlready);
+
+    // Set the Active and Pending Timestamps for new requested Dataset
+    // by advancing ticks on the current timestamp values.
+
+    activeTimestamp.AdvanceRandomTicks();
+    SuccessOrExit(error = aDataset.Write<ActiveTimestampTlv>(activeTimestamp));
+
+    pendingTimestamp = Get<PendingDatasetManager>().GetTimestamp();
+
+    if (!pendingTimestamp.IsValid())
+    {
+        pendingTimestamp.Clear();
+    }
+
+    pendingTimestamp.AdvanceRandomTicks();
+    SuccessOrExit(error = aDataset.Write<PendingTimestampTlv>(pendingTimestamp));
+
+    if (!aDataset.ContainsTlv(Tlv::kDelayTimer))
+    {
+        SuccessOrExit(error = aDataset.Write<DelayTimerTlv>(kDefaultDelay));
+    }
+
+    SuccessOrExit(error = activeDataset.WriteTlvsFrom(aDataset));
+
+    // Store the dataset in an allocated message to track update
+    // status and report the outcome via the callback.
 
     message = Get<MessagePool>().Allocate(Message::kTypeOther);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->Append(aDataset));
+    SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
+
+    Get<PendingDatasetManager>().SaveLocal(activeDataset);
 
     mCallback.Set(aCallback, aContext);
     mDataset = message;
-
-    mTimer.Start(1);
 
 exit:
     FreeMessageOnError(message, error);
@@ -81,125 +119,87 @@ exit:
 
 void DatasetUpdater::CancelUpdate(void)
 {
-    VerifyOrExit(mDataset != nullptr);
+    VerifyOrExit(IsUpdateOngoing());
 
     FreeMessage(mDataset);
     mDataset = nullptr;
-    mTimer.Stop();
 
 exit:
     return;
 }
 
-void DatasetUpdater::HandleTimer(void) { PreparePendingDataset(); }
-
-void DatasetUpdater::PreparePendingDataset(void)
-{
-    Dataset       dataset;
-    Dataset::Info requestedDataset;
-    Error         error;
-
-    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
-
-    IgnoreError(mDataset->Read(0, requestedDataset));
-
-    error = Get<ActiveDatasetManager>().Read(dataset);
-
-    if (error != kErrorNone)
-    {
-        // If there is no valid Active Dataset but MLE is not disabled,
-        // set the timer to try again after the retry interval. This
-        // handles the situation where a dataset update request comes
-        // right after the network is formed but before the active
-        // dataset is created.
-
-        mTimer.Start(kRetryInterval);
-        ExitNow(error = kErrorNone);
-    }
-
-    IgnoreError(dataset.SetFrom(requestedDataset));
-
-    if (!requestedDataset.IsDelayPresent())
-    {
-        uint32_t delay = kDefaultDelay;
-
-        SuccessOrExit(error = dataset.SetTlv(Tlv::kDelayTimer, delay));
-    }
-
-    {
-        Timestamp timestamp;
-
-        if (Get<PendingDatasetManager>().GetTimestamp() != nullptr)
-        {
-            timestamp = *Get<PendingDatasetManager>().GetTimestamp();
-        }
-
-        timestamp.AdvanceRandomTicks();
-        dataset.SetTimestamp(Dataset::kPending, timestamp);
-    }
-
-    {
-        ActiveTimestampTlv *tlv = dataset.GetTlv<ActiveTimestampTlv>();
-
-        tlv->GetTimestamp().AdvanceRandomTicks();
-    }
-
-    SuccessOrExit(error = Get<PendingDatasetManager>().Save(dataset));
-
-exit:
-    if (error != kErrorNone)
-    {
-        Finish(error);
-    }
-}
-
 void DatasetUpdater::Finish(Error aError)
 {
-    OT_ASSERT(mDataset != nullptr);
+    VerifyOrExit(IsUpdateOngoing());
 
     FreeMessage(mDataset);
     mDataset = nullptr;
-
     mCallback.InvokeIfSet(aError);
+
+exit:
+    return;
 }
 
 void DatasetUpdater::HandleNotifierEvents(Events aEvents)
 {
-    Dataset::Info requestedDataset;
-    Dataset::Info dataset;
-
-    VerifyOrExit(mDataset != nullptr);
-
-    VerifyOrExit(aEvents.ContainsAny(kEventActiveDatasetChanged | kEventPendingDatasetChanged));
-
-    IgnoreError(mDataset->Read(0, requestedDataset));
-
-    if (aEvents.Contains(kEventActiveDatasetChanged) && Get<ActiveDatasetManager>().Read(dataset) == kErrorNone)
+    if (aEvents.Contains(kEventActiveDatasetChanged))
     {
-        if (requestedDataset.IsSubsetOf(dataset))
+        HandleDatasetChanged(Dataset::kActive);
+    }
+
+    if (aEvents.Contains(kEventPendingDatasetChanged))
+    {
+        HandleDatasetChanged(Dataset::kPending);
+    }
+}
+
+void DatasetUpdater::HandleDatasetChanged(Dataset::Type aType)
+{
+    Dataset     requestedDataset;
+    Dataset     newDataset;
+    Timestamp   newTimestamp;
+    Timestamp   requestedTimestamp;
+    OffsetRange offsetRange;
+
+    VerifyOrExit(IsUpdateOngoing());
+
+    offsetRange.InitFromMessageFullLength(*mDataset);
+    SuccessOrExit(requestedDataset.SetFrom(*mDataset, offsetRange));
+
+    if (aType == Dataset::kActive)
+    {
+        SuccessOrExit(Get<ActiveDatasetManager>().Read(newDataset));
+    }
+    else
+    {
+        SuccessOrExit(Get<PendingDatasetManager>().Read(newDataset));
+    }
+
+    // Check if the new dataset includes the requested changes. If
+    // found in the Active Dataset, report success and finish. If
+    // found in the Pending Dataset, wait for it to be applied as
+    // Active.
+
+    if (requestedDataset.IsSubsetOf(newDataset))
+    {
+        if (aType == Dataset::kActive)
         {
             Finish(kErrorNone);
         }
-        else
-        {
-            Timestamp requestedDatasetTimestamp;
-            Timestamp activeDatasetTimestamp;
 
-            requestedDataset.GetActiveTimestamp(requestedDatasetTimestamp);
-            dataset.GetActiveTimestamp(activeDatasetTimestamp);
-            if (Timestamp::Compare(requestedDatasetTimestamp, activeDatasetTimestamp) <= 0)
-            {
-                Finish(kErrorAlready);
-            }
-        }
+        ExitNow();
     }
 
-    if (aEvents.Contains(kEventPendingDatasetChanged) && Get<PendingDatasetManager>().Read(dataset) == kErrorNone)
+    // If the new timestamp is ahead of the requested timestamp, it
+    // means there was a conflicting update (possibly from another
+    // device). In this case, report the update as a failure.
+
+    SuccessOrExit(newDataset.ReadTimestamp(aType, newTimestamp));
+    SuccessOrExit(requestedDataset.ReadTimestamp(aType, requestedTimestamp));
+
+    if (newTimestamp >= requestedTimestamp)
     {
-        if (!requestedDataset.IsSubsetOf(dataset))
-        {
-            Finish(kErrorAlready);
-        }
+        Finish(kErrorAlready);
     }
 
 exit:

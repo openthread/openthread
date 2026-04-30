@@ -40,10 +40,15 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <openthread/openthread-system.h>
+
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
+static otSysCrashCallback sCrashCallback = nullptr;
+
+void otSysRegisterCrashCallback(otSysCrashCallback aCallback) { sCrashCallback = aCallback; }
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #include <log/log.h>
@@ -132,6 +137,17 @@ exit:
     return;
 }
 #endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
+static constexpr uint8_t kNumSignals           = 6;
+static constexpr int     kSignals[kNumSignals] = {SIGABRT, SIGILL, SIGSEGV, SIGBUS, SIGTRAP, SIGFPE};
+static struct sigaction  sSigActions[kNumSignals];
+
+static void resetSignalActions(void)
+{
+    for (uint8_t i = 0; i < kNumSignals; i++)
+    {
+        sigaction(kSignals[i], &sSigActions[i], (struct sigaction *)nullptr);
+    }
+}
 
 static void signalCritical(int sig, siginfo_t *info, void *ucontext)
 {
@@ -144,22 +160,29 @@ static void signalCritical(int sig, siginfo_t *info, void *ucontext)
     dumpStack();
 
     otLogCritPlat("------------------ END OF CRASH ------------------");
-    exit(EXIT_FAILURE);
+
+    if (sCrashCallback != nullptr)
+    {
+        sCrashCallback();
+    }
+
+    resetSignalActions();
+    raise(sig);
 }
 
 void platformBacktraceInit(void)
 {
     struct sigaction sigact;
 
+    memset(&sigact, 0, sizeof(struct sigaction));
+
     sigact.sa_sigaction = &signalCritical;
     sigact.sa_flags     = SA_RESTART | SA_SIGINFO | SA_NOCLDWAIT;
 
-    sigaction(SIGABRT, &sigact, (struct sigaction *)nullptr);
-    sigaction(SIGILL, &sigact, (struct sigaction *)nullptr);
-    sigaction(SIGSEGV, &sigact, (struct sigaction *)nullptr);
-    sigaction(SIGBUS, &sigact, (struct sigaction *)nullptr);
-    sigaction(SIGTRAP, &sigact, (struct sigaction *)nullptr);
-    sigaction(SIGFPE, &sigact, (struct sigaction *)nullptr);
+    for (uint8_t i = 0; i < kNumSignals; i++)
+    {
+        sigaction(kSignals[i], &sigact, &sSigActions[i]);
+    }
 }
 #else  // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 void platformBacktraceInit(void) {}

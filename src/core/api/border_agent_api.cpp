@@ -38,18 +38,92 @@
 #include <openthread/border_agent.h>
 
 #include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
-otBorderAgentState otBorderAgentGetState(otInstance *aInstance)
+void otBorderAgentSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    return MapEnum(AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetState());
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().SetEnabled(aEnabled);
 }
+
+bool otBorderAgentIsEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().IsEnabled();
+}
+
+bool otBorderAgentIsActive(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().IsRunning();
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+otError otBorderAgentSetMeshCoPServiceBaseName(otInstance *aInstance, const char *aBaseName)
+{
+    AssertPointerIsNotNull(aBaseName);
+
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().SetServiceBaseName(aBaseName);
+}
+
+void otBorderAgentSetVendorTxtData(otInstance *aInstance, const uint8_t *aVendorData, uint16_t aVendorDataLength)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::TxtData>().SetVendorData(aVendorData, aVendorDataLength);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().GetId(AsCoreType(aId));
+    return kErrorNone;
+}
+
+otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().SetId(AsCoreType(aId));
+    return kErrorNone;
+}
+#endif
 
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetUdpPort();
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().GetUdpPort();
 }
+
+void otBorderAgentInitSessionIterator(otInstance *aInstance, otBorderAgentSessionIterator *aIterator)
+{
+    AsCoreType(aIterator).Init(AsCoreType(aInstance));
+}
+
+otError otBorderAgentGetNextSessionInfo(otBorderAgentSessionIterator *aIterator, otBorderAgentSessionInfo *aSessionInfo)
+{
+    AssertPointerIsNotNull(aSessionInfo);
+
+    return AsCoreType(aIterator).GetNextSessionInfo(*aSessionInfo);
+}
+
+void otBorderAgentSetMeshCoPServiceChangedCallback(otInstance                                *aInstance,
+                                                   otBorderAgentMeshCoPServiceChangedCallback aCallback,
+                                                   void                                      *aContext)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent::TxtData>().SetChangedCallback(aCallback, aContext);
+}
+
+otError otBorderAgentGetMeshCoPServiceTxtData(otInstance *aInstance, otBorderAgentMeshCoPServiceTxtData *aTxtData)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::TxtData>().Prepare(*aTxtData);
+}
+
+const otBorderAgentCounters *otBorderAgentGetCounters(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().GetCounters();
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_COMMISSIONER_EVICTION_API_ENABLE
+otError otBorderAgentEvictActiveCommissioner(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent::Manager>().EvictActiveCommissioner();
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

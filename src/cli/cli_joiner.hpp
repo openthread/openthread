@@ -31,14 +31,14 @@
  *   This file contains definitions for a simple CLI to control the Joiner role.
  */
 
-#ifndef CLI_JOINER_HPP_
-#define CLI_JOINER_HPP_
+#ifndef OT_CLI_CLI_JOINER_HPP_
+#define OT_CLI_CLI_JOINER_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/joiner.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -46,31 +46,32 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Joiner CLI interpreter.
- *
+ * Implements the Joiner CLI interpreter.
  */
-class Joiner : private Output
+class Joiner : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
      * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
      */
     Joiner(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 
     /**
-     * This method interprets a list of CLI arguments.
+     * Processes a CLI sub-command.
      *
-     * @param[in]  aArgs        A pointer to an array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
      *
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
+     * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      */
     otError Process(Arg aArgs[]);
 
@@ -88,4 +89,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#endif // CLI_JOINER_HPP_
+#endif // OT_CLI_CLI_JOINER_HPP_

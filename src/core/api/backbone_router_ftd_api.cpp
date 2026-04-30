@@ -39,7 +39,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
@@ -50,7 +50,7 @@ void otBackboneRouterSetEnabled(otInstance *aInstance, bool aEnabled)
 
 otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().GetState();
+    return MapEnum(AsCoreType(aInstance).Get<BackboneRouter::Local>().GetState());
 }
 
 void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig)
@@ -69,7 +69,7 @@ otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterC
 
 otError otBackboneRouterRegister(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(true /* Force registration */);
+    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(BackboneRouter::Local::kForceRegistration);
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)
@@ -146,10 +146,10 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance               
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus)
 {
-    OT_ASSERT(aStatus <= ThreadStatusTlv::kMlrStatusMax);
+    OT_ASSERT(aStatus <= kMlrStatusMax);
 
     AsCoreType(aInstance).Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(
-        static_cast<ThreadStatusTlv::MlrStatus>(aStatus));
+        static_cast<MlrStatus>(aStatus));
 }
 
 void otBackboneRouterMulticastListenerClear(otInstance *aInstance)
@@ -161,12 +161,12 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
 {
     if (aTimeout == 0)
     {
-        BackboneRouter::BackboneRouterConfig config;
+        BackboneRouter::Config config;
         AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig(config);
         aTimeout = config.mMlrTimeout;
     }
 
-    aTimeout = Min(aTimeout, Mle::kMlrTimeoutMax);
+    aTimeout = Min(aTimeout, BackboneRouter::kMaxMlrTimeout);
     aTimeout = Time::SecToMsec(aTimeout);
 
     return AsCoreType(aInstance).Get<BackboneRouter::MulticastListenersTable>().Add(AsCoreType(aAddress),

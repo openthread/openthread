@@ -32,13 +32,9 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "diag start\n"
-expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag powersettings 11\n"
-expect "failed"
-expect "status 0x17"
 expect_line "Error 23: NotFound"
 
 send "diag powersettings\n"
@@ -53,8 +49,6 @@ send "region US\n"
 expect_line "Done"
 
 send "diag start\n"
-expect "start diagnostics mode"
-expect "status 0x00"
 expect_line "Done"
 
 send "diag powersettings 11\n"

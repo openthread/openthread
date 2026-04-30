@@ -26,11 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CRYPTO_CONTEXT_HPP_
-#define CRYPTO_CONTEXT_HPP_
+#ifndef OT_CORE_CRYPTO_CONTEXT_SIZE_HPP_
+#define OT_CORE_CRYPTO_CONTEXT_SIZE_HPP_
 
 #include "openthread-core-config.h"
-#include "openthread/crypto.h"
+
+#include <openthread/crypto.h>
 
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 #include <mbedtls/aes.h>
@@ -69,4 +70,4 @@ constexpr uint16_t kSha256ContextSize     = OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZ
 } // namespace Crypto
 } // namespace ot
 
-#endif // CRYPTO_CONTEXT_HPP_
+#endif // OT_CORE_CRYPTO_CONTEXT_SIZE_HPP_

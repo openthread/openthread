@@ -31,8 +31,8 @@
  *   This file includes definitions for `FrameData`.
  */
 
-#ifndef FRAME_DATA_HPP_
-#define FRAME_DATA_HPP_
+#ifndef OT_CORE_COMMON_FRAME_DATA_HPP_
+#define OT_CORE_COMMON_FRAME_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,29 +42,27 @@
 namespace ot {
 
 /**
- * This class represents a frame `Data` which is simply a wrapper over a pointer to a buffer with a given frame length.
+ * Represents a frame `Data` which is simply a wrapper over a pointer to a buffer with a given frame length.
  *
  * It provide helper method to parse the content. As data is parsed and read, the `FrameData` is updated to skip over
  * the read content.
- *
  */
 class FrameData : public Data<kWithUint16Length>
 {
 public:
     /**
-     * This method indicates whether or not there are enough bytes remaining in the `FrameData` to read a given number
+     * Indicates whether or not there are enough bytes remaining in the `FrameData` to read a given number
      * of bytes.
      *
      * @param[in] aLength   The read length to check.
      *
      * @retval TRUE   There are enough remaining bytes to read @p aLength bytes.
      * @retval FALSE  There are not enough remaining bytes to read @p aLength bytes.
-     *
      */
     bool CanRead(uint16_t aLength) const { return GetLength() >= aLength; }
 
     /**
-     * This method reads an `uint8_t` value from the `FrameData`.
+     * Reads an `uint8_t` value from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -72,12 +70,11 @@ public:
      *
      * @retval kErrorNone   Successfully read `uint8_t` value and skipped over it.
      * @retval kErrorParse  Not enough bytes remaining to read.
-     *
      */
     Error ReadUint8(uint8_t &aUint8);
 
     /**
-     * This method reads an `uint16_t` value assuming big endian encoding from the `FrameData`.
+     * Reads an `uint16_t` value assuming big endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -85,12 +82,11 @@ public:
      *
      * @retval kErrorNone   Successfully read `uint16_t` value and skipped over it.
      * @retval kErrorParse  Not enough bytes remaining to read.
-     *
      */
     Error ReadBigEndianUint16(uint16_t &aUint16);
 
     /**
-     * This method reads an `uint32_t` value assuming big endian encoding from the `FrameData`.
+     * Reads an `uint32_t` value assuming big endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -98,12 +94,11 @@ public:
      *
      * @retval kErrorNone   Successfully read `uint32_t` value and skipped over it.
      * @retval kErrorParse  Not enough bytes remaining to read.
-     *
      */
     Error ReadBigEndianUint32(uint32_t &aUint32);
 
     /**
-     * This method reads an `uint16_t` value assuming little endian encoding from the `FrameData`.
+     * Reads an `uint16_t` value assuming little endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -111,12 +106,11 @@ public:
      *
      * @retval kErrorNone   Successfully read `uint16_t` value and skipped over it.
      * @retval kErrorParse  Not enough bytes remaining to read.
-     *
      */
     Error ReadLittleEndianUint16(uint16_t &aUint16);
 
     /**
-     * This method reads an `uint32_t` value assuming little endian encoding from the `FrameData`.
+     * Reads an `uint32_t` value assuming little endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -124,12 +118,11 @@ public:
      *
      * @retval kErrorNone   Successfully read `uint32_t` value and skipped over it.
      * @retval kErrorParse  Not enough bytes remaining to read.
-     *
      */
     Error ReadLittleEndianUint32(uint32_t &aUint32);
 
     /**
-     * This method reads a given number of bytes from the `FrameData`.
+     * Reads a given number of bytes from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -138,12 +131,11 @@ public:
      *
      * @retval kErrorNone   Successfully read @p aLength bytes into @p aBuffer and skipped over them.
      * @retval kErrorParse  Not enough bytes remaining to read @p aLength.
-     *
      */
     Error ReadBytes(void *aBuffer, uint16_t aLength);
 
     /**
-     * This template method reads an object from the `FrameData`.
+     * Reads an object from the `FrameData`.
      *
      * @tparam     ObjectType   The object type to read from the message.
      *
@@ -151,7 +143,6 @@ public:
      *
      * @retval kErrorNone     Successfully read @p aObject and skipped over the read content.
      * @retval kErrorParse    Not enough bytes remaining to read the entire object.
-     *
      */
     template <typename ObjectType> Error Read(ObjectType &aObject)
     {
@@ -161,17 +152,16 @@ public:
     }
 
     /**
-     * This method skips over a given number of bytes from `FrameData`.
+     * Skips over a given number of bytes from `FrameData`.
      *
      * The caller MUST make sure that the @p aLength is smaller than current data length. Otherwise the behavior of
      * this method is undefined.
      *
      * @param[in] aLength   The length (number of bytes) to skip over.
-     *
      */
     void SkipOver(uint16_t aLength);
 };
 
 } // namespace ot
 
-#endif // FRAME_DATA_HPP_
+#endif // OT_CORE_COMMON_FRAME_DATA_HPP_

@@ -32,43 +32,88 @@ on:
   push:
     branches-ignore:
       - 'dependabot/**'
-  pull_request:
+  pull_request_target:
     branches:
       - 'main'
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
 jobs:
 
-  size-report:
-    runs-on: ubuntu-20.04
+  size-check:
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@18bf8ad2ca49c14cbb28b91346d626ccfb00c518 # v2.1.0
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-    - name: Bootstrap
-      if: "github.event_name == 'push'"
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Fetch Pull Request ref
+      if: ${{ github.event_name == 'pull_request_target' }}
       run: |
-        python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install git+https://github.com/axiros/terminal_markdown_viewer.git
+        git fetch --depth 2 origin pull/${{ github.event.pull_request.number }}/merge
+        echo "OT_SHA_NEW=$(git rev-parse FETCH_HEAD)" >> $GITHUB_ENV
     - name: Run
       env:
-        OT_BASE_BRANCH: "${{ github.base_ref }}"
-        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_BODY: "${{ github.event.pull_request.body }}"
+        PR_NUMBER: "${{ github.event.pull_request.number }}"
       run: |
-        export PATH=$PATH:$HOME/.local/bin
-        if [ ${{ github.event_name }} == pull_request ]; then
-          curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
-          chmod a+x size-report
-          export OT_SIZE_REPORTER=./size-report
-        fi
         ./script/check-size
+        cat /tmp/ot-size-report/report_pr >> $GITHUB_STEP_SUMMARY
+    - name: Upload report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: report_pr
+        path: /tmp/ot-size-report/report_pr
+
+
+  size-report:
+    needs:
+    - size-check
+    permissions:
+      pull-requests: write
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Download report
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        name: report_pr
+        path: /tmp/ot-size-report
+
+    - name: Post Report
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      id: post-report
+      with:
+        script: |
+          const fs = require('fs')
+
+          const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8');
+          const params = {
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report,
+          }
+
+          const response = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+
+          const kMagicHeader = '<!-- Size Report of **OpenThread** -->'
+          const comment = response.data.find(comment => comment.body.startsWith(kMagicHeader))
+
+          if (comment) {
+            params.comment_id = comment.id;
+            await github.rest.issues.updateComment(params)
+          } else {
+            await github.rest.issues.createComment(params)
+          }

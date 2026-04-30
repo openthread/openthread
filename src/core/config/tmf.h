@@ -29,20 +29,34 @@
 /**
  * @file
  *   This file includes compile-time configurations for the Thread Management Framework service.
- *
  */
 
-#ifndef CONFIG_TMF_H_
-#define CONFIG_TMF_H_
+#ifndef OT_CORE_CONFIG_TMF_H_
+#define OT_CORE_CONFIG_TMF_H_
+
+/**
+ * @addtogroup config-tmf
+ *
+ * @brief
+ *   This module includes configuration variables for the Thread Management
+ *   Framework service.
+ *
+ * @{
+ */
+
+#include "config/border_router.h"
 
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
  *
  * The number of EID-to-RLOC cache entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 256
+#else
 #define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 32
+#endif
 #endif
 
 /**
@@ -51,9 +65,10 @@
  * The maximum number of EID-to-RLOC cache entries that can be used for "snoop optimization" where an entry is created
  * by inspecting a received message.
  *
+ * By default a 1/16 fraction of `OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES` is used.
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES 2
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES (OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES / 16)
 #endif
 
 /**
@@ -64,7 +79,6 @@
  * a longer response delay for a received message giving more chance that a snooped entry will be used (avoiding
  * sending Address Query when a response message is sent to same destination from which the message was received
  * earlier).
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT
 #define OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT 3
@@ -76,7 +90,6 @@
  * The timeout value (in seconds) waiting for a address notification response after sending an address query.
  *
  * Default: 3 seconds
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT
 #define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT 3
@@ -88,7 +101,6 @@
  * Initial retry delay for address query (in seconds).
  *
  * Default: 15 seconds
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY
 #define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY 15
@@ -100,7 +112,6 @@
  * Maximum retry delay for address query (in seconds).
  *
  * Default: 120 seconds
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY
 #define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY 120
@@ -110,7 +121,6 @@
  * @def OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
  *
  * Define as 1 to allow address resolution of on-mesh addresses using Thread Network Data DNS/SRP Service entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
 #define OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES 1
@@ -123,7 +133,6 @@
  *
  * Thread specification defines this value as 30,000 ms. Changing from the specified value should be done for testing
  * only.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY
 #define OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY 30000
@@ -136,7 +145,6 @@
  *
  * Thread specification defines this value as 300,000 ms. Changing from the specified value should be done for testing
  * only.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY
 #define OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY 300000
@@ -146,7 +154,6 @@
  * @def OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS
  *
  * The maximum number of Energy List entries.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS
 #define OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS 64
@@ -156,7 +163,6 @@
  * @def OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
  *
  * Define to 1 to support injecting Service entries into the Thread Network Data.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 0
@@ -166,20 +172,21 @@
  * @def OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS
  *
  * The maximum number of supported Service ALOCs registrations for this device.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS 1
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+ * @def OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
  *
- * Define to 1 to enable TMF network diagnostics on MTDs.
+ * Define to 1 to enable TMF network diagnostics client.
  *
+ * The network diagnostic client add API to send diagnostic requests and queries to other node and process the response.
+ * It is enabled by default on Border Routers.
  */
-#ifndef OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-#define OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif
 
 /**
@@ -189,7 +196,6 @@
  *
  * This feature allows a device to determine the mesh local EID and RLOC16 of the closest destination of an anycast
  * address (if any) through sending `TMF_ANYCAST_LOCATE` requests.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 #define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 0
@@ -201,7 +207,6 @@
  * Define to 1 to require the device to listen and respond to `TMF_ANYCAST_LOCATE` requests.
  *
  * This config is used only when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled. It is enabled by default.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
 #define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE 1
@@ -212,7 +217,6 @@
  *
  * Define to 1 for Thread 1.2 FTD device to register DUA of its MTD children registered
  * even if it doesn't enable DUA feature itself.
- *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 #define OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -225,8 +229,7 @@
 /**
  * @def OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
  *
- * This setting configures the Multicast Listener Registration parent proxing in Thread 1.2.
- *
+ * This setting configures the Multicast Listener Registration parent proxying in Thread 1.2.
  */
 #ifndef OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 #define OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -236,4 +239,8 @@
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE"
 #endif
 
-#endif // CONFIG_TMF_H_
+/**
+ * @}
+ */
+
+#endif // OT_CORE_CONFIG_TMF_H_

@@ -33,21 +33,18 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/udp.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
 otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().NewMessage(0, Message::Settings::From(aSettings));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().NewMessage(Message::Settings::From(aSettings));
 }
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), aCallback, aContext);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), Ip6::kNetifThreadHost, aCallback, aContext);
 }
 
 bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket)
@@ -62,7 +59,9 @@ otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket)
 
 otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName, otNetifIdentifier aNetif)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().Bind(AsCoreType(aSocket), AsCoreType(aSockName), MapEnum(aNetif));
+    AsCoreType(aSocket).SetNetifId(MapEnum(aNetif));
+
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Bind(AsCoreType(aSocket), AsCoreType(aSockName));
 }
 
 otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName)
@@ -72,11 +71,20 @@ otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAd
 
 otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().SendTo(AsCoreType(aSocket), AsCoreType(aMessage),
-                                                        AsCoreType(aMessageInfo));
+    otError error;
+
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Ip6::Udp>().SendTo(AsCoreType(aSocket), AsCoreType(aMessage),
+                                                         AsCoreType(aMessageInfo));
+exit:
+    return error;
 }
 
-otUdpSocket *otUdpGetSockets(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets(); }
+otUdpSocket *otUdpGetSockets(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets().GetHead();
+}
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext)
@@ -92,7 +100,7 @@ void otUdpForwardReceive(otInstance         *aInstance,
 {
     Ip6::MessageInfo messageInfo;
 
-    messageInfo.SetSockAddr(AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetSockAddr(AsCoreType(aInstance).Get<Mle::Mle>().GetMeshLocalRloc());
     messageInfo.SetSockPort(aSockPort);
     messageInfo.SetPeerAddr(AsCoreType(aPeerAddr));
     messageInfo.SetPeerPort(aPeerPort);
@@ -116,8 +124,13 @@ otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
 
 otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().SendDatagram(AsCoreType(aMessage), AsCoreType(aMessageInfo),
-                                                              Ip6::kProtoUdp);
+    otError error;
+
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
+    return AsCoreType(aInstance).Get<Ip6::Udp>().SendDatagram(AsCoreType(aMessage), AsCoreType(aMessageInfo));
+exit:
+    return error;
 }
 
 bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port)

@@ -35,25 +35,26 @@
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-#include <openthread/diag.h>
-
-#include "common/as_core_type.hpp"
-#include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 
 using namespace ot;
 
-otError otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmdLine(otInstance *aInstance, const char *aString)
 {
     AssertPointerIsNotNull(aString);
 
-    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
+    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessLine(aString);
 }
 
-otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[])
 {
-    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessCmd(aArgsLength, aArgs, aOutput, aOutputMaxLen);
+    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessCmd(aArgsLength, aArgs);
 }
 
 bool otDiagIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<FactoryDiags::Diags>().IsEnabled(); }
 
+void otDiagSetOutputCallback(otInstance *aInstance, otDiagOutputCallback aCallback, void *aContext)
+{
+    AsCoreType(aInstance).Get<FactoryDiags::Diags>().SetOutputCallback(aCallback, aContext);
+}
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE

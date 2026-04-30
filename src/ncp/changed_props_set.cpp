@@ -27,12 +27,12 @@
 
 #include "changed_props_set.hpp"
 
-#include <limits.h>
-
 #include "common/code_utils.hpp"
 
 namespace ot {
 namespace Ncp {
+
+static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 
 // ----------------------------------------------------------------------------
 // MARK: ChangedPropsSet class
@@ -54,6 +54,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_IPV6_LL_ADDR, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_IPV6_ML_ADDR, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_IPV6_ADDRESS_TABLE, SPINEL_STATUS_OK, true},
+    {SPINEL_PROP_NET_IF_UP, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_NET_ROLE, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_NET_PARTITION_ID, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, SPINEL_STATUS_OK, true},
@@ -77,6 +78,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_NET_XPANID, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_NET_NETWORK_KEY, SPINEL_STATUS_OK, true},
     {SPINEL_PROP_NET_PSKC, SPINEL_STATUS_OK, true},
+    {SPINEL_PROP_NET_LEAVE_GRACEFULLY, SPINEL_STATUS_OK, false},
     {SPINEL_PROP_PHY_CHAN_SUPPORTED, SPINEL_STATUS_OK, true},
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     {SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_STATUS_OK, true},
@@ -91,11 +93,21 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_THREAD_NETWORK_TIME, SPINEL_STATUS_OK, false},
 #endif
     {SPINEL_PROP_PARENT_RESPONSE_INFO, SPINEL_STATUS_OK, true},
+    {SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS, SPINEL_STATUS_OK, false},
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    {SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE, SPINEL_STATUS_OK, false},
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    {SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE, SPINEL_STATUS_OK, false},
+#endif
+#endif
+#endif
+    {SPINEL_PROP_BACKBONE_ROUTER_STATE, SPINEL_STATUS_OK, false},
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
 {
-    static_assert(OT_ARRAY_LENGTH(mSupportedProps) <= sizeof(mChangedSet) * CHAR_BIT,
+    static_assert(OT_ARRAY_LENGTH(mSupportedProps) <= sizeof(mChangedSet) * kBitsPerByte,
                   "Changed set size is smaller than number of entries in `mSupportedProps[]` array");
 
     return OT_ARRAY_LENGTH(mSupportedProps);
