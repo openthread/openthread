@@ -45,6 +45,42 @@ namespace ot {
 namespace Mle {
 
 //---------------------------------------------------------------------------------------------------------------------
+// RouterUpgradeReasonFlags
+
+#if OPENTHREAD_FTD
+otError RouterUpgradeReasonFlags::AsStatusTlvReason(StatusTlvEnum &aStatusTlvReason) const
+{
+    otError error = kErrorNone;
+
+    // Select a single reason to report in the Status TLV prioritized in reverse bit order
+    if ((mRouterUpgradeReasonFlags & kUpgradeReasonBorderRouterRequestFlag) != 0)
+    {
+        aStatusTlvReason = RouterUpgradeReasonFlags::kReasonBorderRouterRequest;
+    }
+    else if ((mRouterUpgradeReasonFlags & kUpgradeReasonParentPartitionChangeFlag) != 0)
+    {
+        aStatusTlvReason = RouterUpgradeReasonFlags::kReasonParentPartitionChange;
+    }
+    else if ((mRouterUpgradeReasonFlags & kUpgradeReasonHaveChildIdRequestFlag) != 0)
+    {
+        aStatusTlvReason = RouterUpgradeReasonFlags::kReasonHaveChildIdRequest;
+    }
+    else if ((mRouterUpgradeReasonFlags & kUpgradeReasonTooFewRoutersFlag) != 0)
+    {
+        aStatusTlvReason = RouterUpgradeReasonFlags::kReasonTooFewRouters;
+    }
+    else
+    {
+        ExitNow(error = kErrorInvalidArgs);
+    }
+
+exit:
+    return error;
+}
+static_assert(sizeof(RouterUpgradeReasonFlags) == 1, "sizeof(RouterUpgradeReasonFlags) must be 1");
+#endif
+
+//---------------------------------------------------------------------------------------------------------------------
 // DeviceMode
 
 void DeviceMode::Get(ModeConfig &aModeConfig) const

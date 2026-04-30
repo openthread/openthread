@@ -53,8 +53,8 @@ void TestRouterDowngradeOnSecPolicyChange(void)
     Node &leader = nexus.CreateNode();
     Node &router = nexus.CreateNode();
 
-    leader.Get<Mle::Mle>().SetRouterSelectionJitter(10);
-    router.Get<Mle::Mle>().SetRouterSelectionJitter(10);
+    VerifyOrQuit(leader.Get<Mle::Mle>().SetRouterSelectionJitter(10) == kErrorNone);
+    VerifyOrQuit(router.Get<Mle::Mle>().SetRouterSelectionJitter(10) == kErrorNone);
 
     nexus.AdvanceTime(0);
 

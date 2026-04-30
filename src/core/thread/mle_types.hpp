@@ -173,18 +173,68 @@ enum Command : uint8_t
     kCommandP2pLinkTearDown               = 103, ///< P2P Link Tear Down command
 };
 
+#if OPENTHREAD_FTD
 /**
- * Represents the reason to attempt to upgrade to router role (used in `BecomeRouter()`).
+ * Bitmap of reasons to attempt to upgrade to router role (used in `BecomeRouter()`) and sent in the
+ * RouterUpgradeReasonDetailTlv of Address Solicit Requests.
  *
- * The enumeration values correspond to the status values in `ThreadStatusTlv` in a TMF Address Solicit Request message.
+ * @sa RouterUpgradeStatusTlvReason
+ * @sa RouterUpgradeReasonDetailTlv
  */
-enum RouterUpgradeReason : uint8_t
+OT_TOOL_PACKED_BEGIN
+class RouterUpgradeReasonFlags
 {
-    kReasonTooFewRouters         = 2, ///< Too few routers.
-    kReasonHaveChildIdRequest    = 3, ///< Have pending Child ID Request.
-    kReasonParentPartitionChange = 4, ///< Parent Partition change.
-    kReasonBorderRouterRequest   = 5, ///< Device is Border Router.
-};
+public:
+    enum ReasonBitmapEnum : uint8_t
+    {
+        kUpgradeReasonFlagsNone                 = 0x00,      ///< No Upgrade reasons are pending
+        kUpgradeReasonTooFewRoutersFlag         = (1U << 0), ///< Too few routers
+        kUpgradeReasonHaveChildIdRequestFlag    = (1U << 1), ///< Pending Child ID Request
+        kUpgradeReasonParentPartitionChangeFlag = (1U << 2), ///< Parent Partition change
+        kUpgradeReasonBorderRouterRequestFlag   = (1U << 3), ///< Border Router
+        // (1U << 4) Reserved for adding kUpgradeReasonManagedRouterFlag in future changes
+    };
+    enum StatusTlvEnum : uint8_t
+    {
+        kReasonTooFewRouters         = 2, ///< Too few routers.  Only used if no other bits are set.
+        kReasonHaveChildIdRequest    = 3, ///< Have pending Child ID Request.
+        kReasonParentPartitionChange = 4, ///< Parent Partition change.
+        kReasonBorderRouterRequest   = 5, ///< Device is Border Router.
+    };
+
+    RouterUpgradeReasonFlags() = default;
+    RouterUpgradeReasonFlags(ReasonBitmapEnum aReason)
+        : mRouterUpgradeReasonFlags(aReason)
+    {
+    }
+
+    /**
+     * Checks if the reason indicates an upgrade should occur
+     *
+     * @param[in] aUpgradeReasonValue  The `ReasonBitmapEnum` to compare with.
+     *
+     * @retval TRUE  The two values are equal.
+     * @retval FALSE The two values are not equal.
+     */
+    bool HasReason(void) const { return mRouterUpgradeReasonFlags != static_cast<uint8_t>(kUpgradeReasonFlagsNone); }
+
+    void operator|=(ReasonBitmapEnum other) { mRouterUpgradeReasonFlags |= static_cast<uint8_t>(other); }
+
+    /**
+     * Convert multiple flags into a single backwards-compatible reason to use in the Status TLV or logging.
+     *
+     * @param[out] aStatusTlvReason The reference to the status TLV reason to update.
+     *
+     * @retval kErrorNone        Successfully updated the reason.
+     * @retval kErrorInvalidArgs The current value of the flags was not valid.
+     */
+    otError AsStatusTlvReason(StatusTlvEnum &aStatusTlvReason) const;
+    uint8_t AsUint8(void) { return mRouterUpgradeReasonFlags; }
+
+private:
+    uint8_t mRouterUpgradeReasonFlags;
+} OT_TOOL_PACKED_END;
+#endif
 
 /**
  * Specifies the leader role start mode.

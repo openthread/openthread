@@ -159,7 +159,7 @@ void TestSrpScale(void)
     {
         routers[i] = &nexus.CreateNode();
         routers[i]->SetName("router", i + 1);
-        routers[i]->Get<Mle::Mle>().SetRouterSelectionJitter(1);
+        VerifyOrQuit(routers[i]->Get<Mle::Mle>().SetRouterSelectionJitter(1) == kErrorNone);
         routers[i]->Join(leader);
     }
 

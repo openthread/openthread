@@ -101,7 +101,7 @@ void Test5_1_5(void)
     nexus.AdvanceTime(kFormNetworkTime);
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
 
-    router1.Get<Mle::Mle>().SetRouterSelectionJitter(1);
+    VerifyOrQuit(router1.Get<Mle::Mle>().SetRouterSelectionJitter(1) == kErrorNone);
     router1.Join(leader);
     nexus.AdvanceTime(kAttachToRouterTime);
     VerifyOrQuit(router1.Get<Mle::Mle>().IsRouter());

@@ -319,10 +319,15 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
             // Wait for link establishment with neighboring routers.
             UpdateRegistrationDelay(kNewRouterRegistrationDelay);
         }
-        else if (Get<Mle::Mle>().WillBecomeRouterSoon())
+        else
         {
-            // Will check again in case the device decides to stay REED when jitter timeout expires.
-            UpdateRegistrationDelay(Get<Mle::Mle>().GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
+            int8_t routerTransitionTimeRemaining = Get<Mle::Mle>().GetTimeUntilBecomingRouterIfSoon();
+            if (routerTransitionTimeRemaining >= 0)
+            {
+                // Will check again in case the device decides to stay REED when jitter timeout expires.
+                UpdateRegistrationDelay(static_cast<uint8_t>(routerTransitionTimeRemaining) +
+                                        kNewRouterRegistrationDelay + 1);
+            }
         }
 #endif
     }
@@ -432,10 +437,16 @@ void DuaManager::PerformNextRegistration(void)
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 #if OPENTHREAD_FTD
-    if (!Get<Mle::Mle>().IsRouterOrLeader() && Get<Mle::Mle>().WillBecomeRouterSoon())
+    if (!Get<Mle::Mle>().IsRouterOrLeader())
     {
-        UpdateRegistrationDelay(Get<Mle::Mle>().GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
-        ExitNow();
+        int8_t routerTransitionTimeRemaining = Get<Mle::Mle>().GetTimeUntilBecomingRouterIfSoon();
+        if (routerTransitionTimeRemaining >= 0)
+        {
+            // Will check again in case the device decides to stay REED when jitter timeout expires.
+            UpdateRegistrationDelay(static_cast<uint8_t>(routerTransitionTimeRemaining) + kNewRouterRegistrationDelay +
+                                    1);
+            ExitNow();
+        }
     }
 #endif
     VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1());

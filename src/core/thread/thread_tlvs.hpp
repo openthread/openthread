@@ -57,20 +57,21 @@ public:
      */
     enum Type : uint8_t
     {
-        kTarget                = 0,  ///< Target EID TLV
-        kExtMacAddress         = 1,  ///< Extended MAC Address TLV
-        kRloc16                = 2,  ///< RLOC16 TLV
-        kMeshLocalEid          = 3,  ///< ML-EID TLV
-        kStatus                = 4,  ///< Status TLV
-        kLastTransactionTime   = 6,  ///< Time Since Last Transaction TLV
-        kRouterMask            = 7,  ///< Router Mask TLV
-        kNdOption              = 8,  ///< ND Option TLV
-        kNdData                = 9,  ///< ND Data TLV
-        kThreadNetworkData     = 10, ///< Thread Network Data TLV
-        kTimeout               = 11, ///< Timeout TLV
-        kNetworkName           = 12, ///< Network Name TLV
-        kIp6Addresses          = 14, ///< IPv6 Addresses TLV
-        kCommissionerSessionId = 15, ///< Commissioner Session ID TLV
+        kTarget                   = 0,  ///< Target EID TLV
+        kExtMacAddress            = 1,  ///< Extended MAC Address TLV
+        kRloc16                   = 2,  ///< RLOC16 TLV
+        kMeshLocalEid             = 3,  ///< ML-EID TLV
+        kStatus                   = 4,  ///< Status TLV
+        kLastTransactionTime      = 6,  ///< Time Since Last Transaction TLV
+        kRouterMask               = 7,  ///< Router Mask TLV
+        kNdOption                 = 8,  ///< ND Option TLV
+        kNdData                   = 9,  ///< ND Data TLV
+        kThreadNetworkData        = 10, ///< Thread Network Data TLV
+        kTimeout                  = 11, ///< Timeout TLV
+        kNetworkName              = 12, ///< Network Name TLV
+        kIp6Addresses             = 14, ///< IPv6 Addresses TLV
+        kCommissionerSessionId    = 15, ///< Commissioner Session ID TLV
+        kRouterUpgradeReasonFlags = 16, ///< Router Upgrade Reason Flags TLV
     };
 
     /**
@@ -154,6 +155,15 @@ typedef TlvInfo<ThreadTlv::kThreadNetworkData> ThreadNetworkDataTlv;
 typedef TlvInfo<ThreadTlv::kIp6Addresses> Ip6AddressesTlv;
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+#if OPENTHREAD_FTD
+/**
+ * Defines Router Upgrade Reason Flags TLV bitmap.
+ *
+ * Includes flags for possible router upgrade reasons.
+ */
+typedef SimpleTlvInfo<ThreadTlv::kRouterUpgradeReasonFlags, Mle::RouterUpgradeReasonFlags> RouterUpgradeReasonFlagsTlv;
+#endif
 
 } // namespace ot
 

@@ -179,7 +179,8 @@ void Test5_2_3(void)
     VerifyOrQuit(routers[kMaxRouters - 1]->Get<Mle::Mle>().IsChild());
 
     // Force Router 32 to try to become a router
-    SuccessOrQuit(routers[kMaxRouters - 1]->Get<Mle::Mle>().BecomeRouter(Mle::kReasonTooFewRouters));
+    SuccessOrQuit(routers[kMaxRouters - 1]->Get<Mle::Mle>().BecomeRouter(
+        Mle::RouterUpgradeReasonFlags::kUpgradeReasonTooFewRoutersFlag));
 
     Log("---------------------------------------------------------------------------------------");
     /**
