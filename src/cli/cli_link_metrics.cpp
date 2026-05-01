@@ -44,8 +44,8 @@
 namespace ot {
 namespace Cli {
 
-LinkMetrics::LinkMetrics(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Utils(aInstance, aOutputImplementer)
+LinkMetrics::LinkMetrics(OutputImplementer &aOutputImplementer)
+    : Utils(aOutputImplementer)
     , mQuerySync(false)
     , mConfigForwardTrackingSeriesSync(false)
     , mConfigEnhAckProbingSync(false)

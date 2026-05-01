@@ -68,11 +68,10 @@ public:
     /**
      * Constructor.
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    Dns(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Dns(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
     {
     }
 

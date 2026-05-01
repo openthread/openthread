@@ -54,11 +54,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    Joiner(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Joiner(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
     {
     }
 

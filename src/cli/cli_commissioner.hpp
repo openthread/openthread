@@ -54,11 +54,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    Commissioner(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Commissioner(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
     {
     }
 

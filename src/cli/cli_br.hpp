@@ -61,11 +61,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    Br(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Br(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
     {
     }
 

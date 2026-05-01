@@ -43,8 +43,8 @@
 namespace ot {
 namespace Cli {
 
-UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Utils(aInstance, aOutputImplementer)
+UdpExample::UdpExample(OutputImplementer &aOutputImplementer)
+    : Utils(aOutputImplementer)
     , mLinkSecurityEnabled(true)
 {
     ClearAllBytes(mSocket);

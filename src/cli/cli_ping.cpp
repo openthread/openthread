@@ -44,8 +44,8 @@
 namespace ot {
 namespace Cli {
 
-PingSender::PingSender(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Utils(aInstance, aOutputImplementer)
+PingSender::PingSender(OutputImplementer &aOutputImplementer)
+    : Utils(aOutputImplementer)
     , mPingIsAsync(false)
 {
 }

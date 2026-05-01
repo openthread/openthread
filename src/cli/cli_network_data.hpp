@@ -63,10 +63,9 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer);
+    explicit NetworkData(OutputImplementer &aOutputImplementer);
 
     /**
      * Processes a CLI sub-command.

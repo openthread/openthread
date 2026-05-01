@@ -50,11 +50,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    Tcat(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Tcat(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
         , mSelectedCert(0)
     {
     }

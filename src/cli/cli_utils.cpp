@@ -50,8 +50,9 @@ namespace Cli {
 
 const char Utils::kUnknownString[] = "unknown";
 
-OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext)
-    : mCallback(aCallback)
+OutputImplementer::OutputImplementer(otInstance *aInstance, otCliOutputCallback aCallback, void *aCallbackContext)
+    : mInstance(aInstance)
+    , mCallback(aCallback)
     , mCallbackContext(aCallbackContext)
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     , mOutputLength(0)

@@ -43,12 +43,12 @@
 namespace ot {
 namespace Cli {
 
-NetworkData::NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Utils(aInstance, aOutputImplementer)
+NetworkData::NetworkData(OutputImplementer &aOutputImplementer)
+    : Utils(aOutputImplementer)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     mFullCallbackWasCalled = false;
-    otBorderRouterSetNetDataFullCallback(aInstance, HandleNetdataFull, this);
+    otBorderRouterSetNetDataFullCallback(GetInstancePtr(), HandleNetdataFull, this);
 #endif
 }
 

@@ -51,8 +51,8 @@ namespace Cli {
 class Dataset : private Utils
 {
 public:
-    Dataset(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Dataset(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
     {
     }
 

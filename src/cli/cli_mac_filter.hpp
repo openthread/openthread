@@ -55,11 +55,10 @@ public:
     /**
      * Constructor.
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    MacFilter(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit MacFilter(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
     {
     }
 

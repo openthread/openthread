@@ -56,10 +56,9 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    SrpClient(otInstance *aInstance, OutputImplementer &aOutputImplementer);
+    explicit SrpClient(OutputImplementer &aOutputImplementer);
 
     /**
      * Processes a CLI sub-command.

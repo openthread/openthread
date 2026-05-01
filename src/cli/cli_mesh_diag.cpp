@@ -44,8 +44,8 @@
 namespace ot {
 namespace Cli {
 
-MeshDiag::MeshDiag(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Utils(aInstance, aOutputImplementer)
+MeshDiag::MeshDiag(OutputImplementer &aOutputImplementer)
+    : Utils(aOutputImplementer)
 {
 }
 

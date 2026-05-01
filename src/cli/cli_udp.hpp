@@ -52,10 +52,9 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
+    explicit UdpExample(OutputImplementer &aOutputImplementer);
 
     /**
      * Processes a CLI sub-command.

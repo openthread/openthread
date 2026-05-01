@@ -88,7 +88,7 @@ public:
      * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
      * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
      */
-    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
+    OutputImplementer(otInstance *aInstance, otCliOutputCallback aCallback, void *aCallbackContext);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
@@ -101,6 +101,7 @@ private:
 
     void OutputV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
+    otInstance         *mInstance;
     otCliOutputCallback mCallback;
     void               *mCallbackContext;
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
@@ -181,12 +182,10 @@ public:
     /**
      * Initializes the `Utils` object.
      *
-     * @param[in] aInstance           A pointer to OpenThread instance.
      * @param[in] aImplementer        An `OutputImplementer`.
      */
-    Utils(otInstance *aInstance, OutputImplementer &aImplementer)
-        : mInstance(aInstance)
-        , mImplementer(aImplementer)
+    explicit Utils(OutputImplementer &aImplementer)
+        : mImplementer(aImplementer)
     {
     }
 
@@ -195,7 +194,7 @@ public:
      *
      * @returns The pointer to the OpenThread instance.
      */
-    otInstance *GetInstancePtr(void) { return mInstance; }
+    otInstance *GetInstancePtr(void) { return mImplementer.mInstance; }
 
     /**
      * Converts a boolean to "yes" or "no" string.
@@ -759,6 +758,9 @@ protected:
 
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
+
+    Utils(const Utils &)            = delete;
+    Utils &operator=(const Utils &) = delete;
 
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
     void OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[]);

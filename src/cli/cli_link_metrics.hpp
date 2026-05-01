@@ -55,10 +55,9 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    LinkMetrics(otInstance *aInstance, OutputImplementer &aOutputImplementer);
+    explicit LinkMetrics(OutputImplementer &aOutputImplementer);
 
     /**
      * Processes a CLI sub-command.

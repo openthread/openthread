@@ -55,11 +55,10 @@ public:
     /**
      * Constructor.
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    Mdns(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Utils(aInstance, aOutputImplementer)
+    explicit Mdns(OutputImplementer &aOutputImplementer)
+        : Utils(aOutputImplementer)
         , mInfraIfIndex(0)
         , mRequestId(0)
         , mWaitingForCallback(false)

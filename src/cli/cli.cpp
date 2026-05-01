@@ -75,8 +75,8 @@ Interpreter *Interpreter::sInterpreter = nullptr;
 static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
-    : OutputImplementer(aCallback, aContext)
-    , Utils(aInstance, *this)
+    : OutputImplementer(aInstance, aCallback, aContext)
+    , Utils(static_cast<OutputImplementer &>(*this))
     , mCommandIsPending(false)
     , mInternalDebugCommand(false)
 #if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
@@ -87,62 +87,62 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
-    , mDataset(aInstance, *this)
-    , mNetworkData(aInstance, *this)
-    , mUdp(aInstance, *this)
+    , mDataset(*this)
+    , mNetworkData(*this)
+    , mUdp(*this)
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    , mMacFilter(aInstance, *this)
+    , mMacFilter(*this)
 #endif
 #if OPENTHREAD_CLI_DNS_ENABLE
-    , mDns(aInstance, *this)
+    , mDns(*this)
 #endif
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
-    , mMdns(aInstance, *this)
+    , mMdns(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    , mBa(aInstance, *this)
+    , mBa(*this)
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    , mBbr(aInstance, *this)
+    , mBbr(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    , mBr(aInstance, *this)
+    , mBr(*this)
 #endif
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
-    , mTcp(aInstance, *this)
+    , mTcp(*this)
 #endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    , mCoap(aInstance, *this)
+    , mCoap(*this)
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    , mCoapSecure(aInstance, *this)
+    , mCoapSecure(*this)
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    , mCommissioner(aInstance, *this)
+    , mCommissioner(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
-    , mJoiner(aInstance, *this)
+    , mJoiner(*this)
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-    , mSrpClient(aInstance, *this)
+    , mSrpClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    , mSrpServer(aInstance, *this)
+    , mSrpServer(*this)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    , mHistory(aInstance, *this)
+    , mHistory(*this)
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    , mLinkMetrics(aInstance, *this)
+    , mLinkMetrics(*this)
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
-    , mTcat(aInstance, *this)
+    , mTcat(*this)
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    , mPing(aInstance, *this)
+    , mPing(*this)
 #endif
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
-    , mMeshDiag(aInstance, *this)
+    , mMeshDiag(*this)
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     , mLocateInProgress(false)

@@ -46,8 +46,8 @@
 namespace ot {
 namespace Cli {
 
-CoapSecure::CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Utils(aInstance, aOutputImplementer)
+CoapSecure::CoapSecure(OutputImplementer &aOutputImplementer)
+    : Utils(aOutputImplementer)
     , mShutdownFlag(false)
     , mUseCertificate(false)
     , mPskLength(0)

@@ -60,10 +60,9 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance            The OpenThread Instance.
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      */
-    CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer);
+    explicit CoapSecure(OutputImplementer &aOutputImplementer);
 
     /**
      * Processes a CLI sub-command.
