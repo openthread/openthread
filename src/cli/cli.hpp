@@ -121,6 +121,8 @@ class Interpreter : public OutputImplementer, public Utils
     friend class SrpClient;
     friend class SrpServer;
 #endif
+    friend class Utils;
+
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
     friend void otCliAppendResult(otError aError);
     friend void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);

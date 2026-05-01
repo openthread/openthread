@@ -104,8 +104,6 @@ private:
     void HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
                                           uint16_t                   aChildRloc16,
                                           otMeshDiagIp6AddrIterator *aIp6AddrIterator);
-
-    void OutputResult(otError aError);
 };
 
 } // namespace Cli

@@ -64,6 +64,8 @@ Interpreter &Utils::GetInterpreter(void) { return static_cast<Interpreter &>(mIm
 
 const char *Utils::ToYesNo(bool aBool) { return aBool ? "yes" : "no"; }
 
+void Utils::OutputResult(otError aError) { GetInterpreter().OutputResult(aError); }
+
 void Utils::OutputFormat(const char *aFormat, ...)
 {
     va_list args;

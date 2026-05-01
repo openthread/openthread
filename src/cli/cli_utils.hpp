@@ -230,6 +230,16 @@ public:
     static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
 
     /**
+     * Outputs the command result.
+     *
+     * This is called to end the current command. `OT_ERROR_PENDING` can be used to indicate command execution is
+     * continuing asynchronously.
+     *
+     * @param[in]  aError Error code value.
+     */
+    void OutputResult(otError aError);
+
+    /**
      * Delivers a formatted output string to the CLI console.
      *
      * @param[in]  aFormat  A pointer to the format string.

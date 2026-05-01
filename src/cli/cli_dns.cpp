@@ -437,8 +437,6 @@ exit:
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void Dns::OutputResult(otError aError) { GetInterpreter().OutputResult(aError); }
-
 otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {
     // This method gets the optional DNS config from `aArgs[]`.

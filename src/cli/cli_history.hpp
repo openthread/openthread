@@ -101,7 +101,6 @@ private:
     void OutputNetInfoEntry(bool aIsList, const otHistoryTrackerNetworkInfo &aInfo, uint32_t aEntryAge);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
-    void    OutputResult(otError aError);
     otError ParseQueryArgs(Arg       aArgs[],
                            bool     &aIsList,
                            uint16_t &aRloc16,
