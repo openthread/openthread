@@ -59,10 +59,9 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y shellcheck iwyu
+        sudo apt-get --no-install-recommends install -y shellcheck iwyu shfmt
         sudo bash script/install-llvm.sh
         python3 -m pip install yapf==0.43.0
-        sudo snap install shfmt
         npm install prettier@2.0.4
     - name: Check
       run: |
