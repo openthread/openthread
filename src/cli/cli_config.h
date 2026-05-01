@@ -48,6 +48,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+ *
+ * Define as 1 to enable the static CLI interpreter.
+ *
+ * This configuration option enables the static CLI interpreter, allowing the CLI module to statically allocate and
+ * provide a single interpreter instance.
+ *
+ * This is intended to provide backward compatibility with the original `otCli*` APIs. It can be disabled to save RAM
+ * if the static CLI interpreter is not needed.
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+#define OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
  * The maximum size of the CLI line in bytes including the null terminator.

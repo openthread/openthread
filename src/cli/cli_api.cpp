@@ -38,16 +38,50 @@
 namespace ot {
 namespace Cli {
 
+extern "C" size_t otCliInterpreterGetSize(void) { return Interpreter::GetSize(); }
+
+extern "C" otCliInterpreter *otCliInterpreterInit(void               *aBuffer,
+                                                  size_t              aSize,
+                                                  otInstance         *aInstance,
+                                                  otCliOutputCallback aCallback,
+                                                  void               *aContext)
+{
+    return Interpreter::Init(aBuffer, aSize, aInstance, aCallback, aContext);
+}
+
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+extern "C" void otCliInterpreterSetPromptConfig(otCliInterpreter *aInterpreter, bool aEnable)
+{
+    static_cast<Interpreter *>(aInterpreter)->SetPromptConfig(aEnable);
+}
+#endif
+
+extern "C" void otCliInterpreterInputLine(otCliInterpreter *aInterpreter, char *aLine)
+{
+    static_cast<Interpreter *>(aInterpreter)->ProcessLine(aLine);
+}
+
+extern "C" void otCliInterpreterFinalize(otCliInterpreter *aInterpreter)
+{
+    static_cast<Interpreter *>(aInterpreter)->Finalize();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+
 extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
 {
-    Interpreter::Initialize(aInstance, aCallback, aContext);
+    Interpreter::Init(aInstance, aCallback, aContext);
 
 #if OPENTHREAD_CONFIG_CLI_VENDOR_COMMANDS_ENABLE && OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES > 1
     otCliVendorSetUserCommands();
 #endif
 }
 
-extern "C" void otCliInputLine(char *aBuf) { Interpreter::GetInterpreter().ProcessLine(aBuf); }
+extern "C" otCliInterpreter *otCliGetStaticInterpreter(void) { return &Interpreter::GetInterpreter(); }
+
+extern "C" void otCliInputLine(char *aLine) { Interpreter::GetInterpreter().ProcessLine(aLine); }
 
 extern "C" otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
@@ -87,6 +121,8 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
 exit:
     return;
 }
+
+#endif // OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
 
 } // namespace Cli
 } // namespace ot

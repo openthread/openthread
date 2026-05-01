@@ -71,9 +71,6 @@
 namespace ot {
 namespace Cli {
 
-Interpreter *Interpreter::sInterpreter = nullptr;
-static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
-
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : OutputImplementer(aCallback, aContext)
     , Utils(aInstance, *this)
@@ -8504,11 +8501,49 @@ void Interpreter::HandleWakeupResult(otError aError) { OutputResult(aError); }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
-void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
+size_t Interpreter::GetSize(void) { return sizeof(Interpreter); }
 
-    Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
+Interpreter *Interpreter::Init(void               *aBuffer,
+                               size_t              aSize,
+                               otInstance         *aInstance,
+                               otCliOutputCallback aCallback,
+                               void               *aContext)
+{
+    Interpreter *interpreter = nullptr;
+    Instance    *instance    = static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(aSize >= sizeof(Interpreter));
+    interpreter = new (aBuffer) Interpreter(instance, aCallback, aContext);
+
+exit:
+    return interpreter;
+}
+
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+
+Interpreter *Interpreter::sInterpreter = nullptr;
+
+static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
+
+void Interpreter::Init(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
+{
+    sInterpreter = Init(&sInterpreterRaw, sizeof(sInterpreterRaw), aInstance, aCallback, aContext);
+}
+
+#endif
+
+void Interpreter::Finalize(void)
+{
+    mTimer.Stop();
+
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+    otIp6SetReceiveCallback(GetInstancePtr(), nullptr, nullptr);
+#endif
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    otDiagSetOutputCallback(GetInstancePtr(), nullptr, nullptr);
+#endif
+
+    this->~Interpreter();
 }
 
 void Interpreter::OutputPrompt(void)

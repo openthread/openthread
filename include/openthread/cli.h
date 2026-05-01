@@ -36,6 +36,8 @@
 #define OPENTHREAD_CLI_H_
 
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
@@ -48,17 +50,6 @@ extern "C" {
 #endif
 
 /**
- * Represents a CLI command.
- */
-typedef struct otCliCommand
-{
-    const char *mName; ///< A pointer to the command string.
-    otError (*mCommand)(void   *aContext,
-                        uint8_t aArgsLength,
-                        char   *aArgs[]); ///< A function pointer to process the command.
-} otCliCommand;
-
-/**
  * @addtogroup api-cli
  *
  * @brief
@@ -68,7 +59,12 @@ typedef struct otCliCommand
  */
 
 /**
- * Pointer is called to notify about Console output.
+ * Opaque type for a CLI interpreter.
+ */
+typedef struct otCliInterpreter otCliInterpreter;
+
+/**
+ * Pointer is called to notify about CLI interpreter output.
  *
  * @param[out] aContext    A user context pointer.
  * @param[in]  aFormat     The format string.
@@ -80,7 +76,62 @@ typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list 
     OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 /**
- * Initialize the CLI module.
+ * Gets the size of the CLI interpreter object.
+ *
+ * @returns The size of the CLI interpreter object in bytes.
+ */
+size_t otCliInterpreterGetSize(void);
+
+/**
+ * Initializes a CLI interpreter.
+ *
+ * @param[in]  aBuffer    A pointer to a memory buffer for the CLI interpreter.
+ * @param[in]  aSize      The size of the memory buffer.
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aCallback  A callback method called to process CLI output.
+ * @param[in]  aContext   A user context pointer.
+ *
+ * @returns A pointer to the initialized CLI interpreter, or `NULL` if @p aSize is too small.
+ */
+otCliInterpreter *otCliInterpreterInit(void               *aBuffer,
+                                       size_t              aSize,
+                                       otInstance         *aInstance,
+                                       otCliOutputCallback aCallback,
+                                       void               *aContext);
+
+/**
+ * Configures whether or not the CLI interpreter outputs the prompt string.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE`.
+ *
+ * It is enabled by default.
+ *
+ * @param[in]  aInterpreter  A pointer to a CLI interpreter.
+ * @param[in]  aEnable       TRUE to enable outputting the prompt, FALSE to disable.
+ */
+void otCliInterpreterSetPromptConfig(otCliInterpreter *aInterpreter, bool aEnable);
+
+/**
+ * Feeds input to the CLI interpreter.
+ *
+ * @param[in]  aInterpreter  A pointer to a CLI interpreter.
+ * @param[in]  aLine         A pointer to a null-terminated string.
+ */
+void otCliInterpreterInputLine(otCliInterpreter *aInterpreter, char *aLine);
+
+/**
+ * Finalizes the CLI interpreter.
+ *
+ * @param[in]  aInterpreter  A pointer to a CLI interpreter.
+ */
+void otCliInterpreterFinalize(otCliInterpreter *aInterpreter);
+
+//--------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Initialize the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  * @param[in]  aCallback   A callback method called to process CLI output.
@@ -89,14 +140,36 @@ typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list 
 void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
 /**
- * Is called to feed in a console input line.
+ * Gets the pointer to the static CLI interpreter.
  *
- * @param[in]  aBuf        A pointer to a null-terminated string.
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * @returns A pointer to the static CLI interpreter.
  */
-void otCliInputLine(char *aBuf);
+otCliInterpreter *otCliGetStaticInterpreter(void);
 
 /**
- * Set a user command table.
+ * Feeds input to the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * @param[in]  aLine        A pointer to a null-terminated string.
+ */
+void otCliInputLine(char *aLine);
+
+/**
+ * Represents a user provided CLI command entry.
+ */
+typedef struct otCliCommand
+{
+    const char *mName;                                                       ///< The command string.
+    otError (*mCommand)(void *aContext, uint8_t aArgsLength, char *aArgs[]); ///< Command handler function pointer.
+} otCliCommand;
+
+/**
+ * Set a user command table on the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
  *
  * @param[in]  aUserCommands  A pointer to an array with user commands.
  * @param[in]  aLength        The @p aUserCommands length.
@@ -108,7 +181,11 @@ void otCliInputLine(char *aBuf);
 otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext);
 
 /**
- * Write a number of bytes to the CLI console as a hex string.
+ * Write a number of bytes to the static CLI interpreter output as a hex string.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * This is intended for use by user-provided CLI command handlers.
  *
  * @param[in]  aBytes   A pointer to data which should be printed.
  * @param[in]  aLength  @p aBytes length.
@@ -116,7 +193,11 @@ otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength,
 void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
 /**
- * Write formatted string to the CLI console
+ * Write formatted string to the static CLI interpreter output.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * This is intended for use by user-provided CLI command handlers.
  *
  * @param[in]  aFmt   A pointer to the format string.
  * @param[in]  ...    A matching list of arguments.
@@ -124,7 +205,11 @@ void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 void otCliOutputFormat(const char *aFmt, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
- * Write error code to the CLI console
+ * Write a given error code as the result of previous command to the static CLI interpreter output.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * This is intended for use by user-provided CLI command handlers.
  *
  * If the @p aError is `OT_ERROR_PENDING` nothing will be outputted.
  *
@@ -133,7 +218,7 @@ void otCliOutputFormat(const char *aFmt, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CH
 void otCliAppendResult(otError aError);
 
 /**
- * Callback to write the OpenThread Log to the CLI console
+ * Callback to write the OpenThread Log to the static CLI interpreter output.
  *
  * @param[in]  aLogLevel   The log level.
  * @param[in]  aLogRegion  The log region.
@@ -148,6 +233,8 @@ void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
  *
  * Available when `OPENTHREAD_CONFIG_CLI_VENDOR_COMMANDS_ENABLE` is enabled and
  * `OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES` is greater than 1.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
  */
 extern void otCliVendorSetUserCommands(void);
 

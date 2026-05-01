@@ -86,6 +86,10 @@
 #include "common/type_traits.hpp"
 #include "instance/instance.hpp"
 
+typedef struct otCliInterpreter
+{
+} otCliInterpreter;
+
 namespace ot {
 
 /**
@@ -103,7 +107,7 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 /**
  * Implements the CLI interpreter.
  */
-class Interpreter : public OutputImplementer, public Utils
+class Interpreter : public otCliInterpreter, public OutputImplementer, public Utils
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     friend class Ba;
@@ -138,33 +142,64 @@ public:
      */
     explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     /**
-     * Returns a reference to the interpreter object.
+     * Returns a reference to the static CLI interpreter.
      *
-     * @returns A reference to the interpreter object.
+     * @returns A reference to the static CLI interpreter.
      */
     static Interpreter &GetInterpreter(void)
     {
         OT_ASSERT(sInterpreter != nullptr);
-
         return *sInterpreter;
     }
 
     /**
-     * Initializes the Console interpreter.
+     * Initializes the static CLI interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aCallback  A pointer to a callback method.
      * @param[in]  aContext   A pointer to a user context.
      */
-    static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
+    static void Init(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * Returns whether the interpreter is initialized.
+     * Returns whether the static CLI interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
      */
     static bool IsInitialized(void) { return sInterpreter != nullptr; }
+
+#endif // OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+
+    /**
+     * Gets the size of the CLI interpreter object.
+     *
+     * @returns The size of the CLI interpreter object in bytes.
+     */
+    static size_t GetSize(void);
+
+    /**
+     * Initializes a CLI interpreter.
+     *
+     * @param[in]  aBuffer    A pointer to a memory buffer for the CLI interpreter.
+     * @param[in]  aSize      The size of the memory buffer.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aCallback  A callback method called to process CLI output.
+     * @param[in]  aContext   A user context pointer.
+     *
+     * @returns A pointer to the initialized CLI interpreter, or `nullptr` if @p aSize is too small.
+     */
+    static Interpreter *Init(void               *aBuffer,
+                             size_t              aSize,
+                             otInstance         *aInstance,
+                             otCliOutputCallback aCallback,
+                             void               *aContext);
+
+    /**
+     * Finalizes the CLI interpreter.
+     */
+    void Finalize(void);
 
     /**
      * Interprets a CLI command.
@@ -197,7 +232,9 @@ public:
 #endif
 
 protected:
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     static Interpreter *sInterpreter;
+#endif
 
 private:
     static constexpr uint8_t  kIndentSize            = 4;
