@@ -456,7 +456,7 @@ void Mdns::HandleRegisterationDone(otMdnsRequestId aRequestId, otError aError)
     if (mWaitingForCallback && (aRequestId == mRequestId))
     {
         mWaitingForCallback = false;
-        Interpreter::GetInterpreter().OutputResult(aError);
+        GetInterpreter().OutputResult(aError);
     }
     else
     {

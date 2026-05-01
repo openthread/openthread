@@ -594,7 +594,7 @@ const char *LinkMetrics::LinkMetricsStatusToStr(otLinkMetricsStatus aStatus)
     return str;
 }
 
-void LinkMetrics::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
+void LinkMetrics::OutputResult(otError aError) { GetInterpreter().OutputResult(aError); }
 
 } // namespace Cli
 } // namespace ot

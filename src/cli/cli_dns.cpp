@@ -437,7 +437,7 @@ exit:
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void Dns::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
+void Dns::OutputResult(otError aError) { GetInterpreter().OutputResult(aError); }
 
 otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {

@@ -73,28 +73,24 @@ constexpr static CommandId Cmd(const char *aString)
 }
 
 class Utils;
+class Interpreter;
 
 /**
- * Implements the basic output functions.
+ * Implements the basic output functions acting as a base class for `Interpreter`.
  */
 class OutputImplementer
 {
     friend class Utils;
 
 public:
-    /**
-     * Initializes the `OutputImplementer` object.
-     *
-     * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
-     * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
-     */
-    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
-
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
 #else
     void SetEmittingCommandOutput(bool) {}
 #endif
+
+protected:
+    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
 
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
@@ -196,6 +192,13 @@ public:
      * @returns The pointer to the OpenThread instance.
      */
     otInstance *GetInstancePtr(void) { return mInstance; }
+
+    /**
+     * Returns the associated CLI `Interpreter`.
+     *
+     * @returns A reference to the associated CLI `Interpreter`.
+     */
+    Interpreter &GetInterpreter(void);
 
     /**
      * Converts a boolean to "yes" or "no" string.

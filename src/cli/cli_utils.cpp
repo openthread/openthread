@@ -60,6 +60,8 @@ OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallb
 {
 }
 
+Interpreter &Utils::GetInterpreter(void) { return static_cast<Interpreter &>(mImplementer); }
+
 const char *Utils::ToYesNo(bool aBool) { return aBool ? "yes" : "no"; }
 
 void Utils::OutputFormat(const char *aFormat, ...)

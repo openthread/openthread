@@ -2026,7 +2026,7 @@ void History::HandleNetInfo(otError aError, const otHistoryTrackerNetworkInfo *a
     OutputResult(aError);
 }
 
-void History::OutputResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
+void History::OutputResult(otError aError) { GetInterpreter().OutputResult(aError); }
 
 #endif // #if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
 
