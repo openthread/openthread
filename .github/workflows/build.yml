@@ -283,11 +283,6 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get update
-        case ${{ matrix.gcc_ver }} in
-          11)
-            sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-            ;;
-        esac
         sudo apt-get --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
