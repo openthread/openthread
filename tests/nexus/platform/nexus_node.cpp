@@ -33,41 +33,14 @@
 namespace ot {
 namespace Nexus {
 
-const char *Node::GetExtendedRoleString(void) const
+//----------------------------------------------------------------------------------------------------------------------
+
+Node::Node(void)
+    : Platform(static_cast<Instance &>(*this))
+    , mX(0.0f)
+    , mY(0.0f)
+    , mLastParentId(0xffff)
 {
-    const char     *roleStr;
-    Mle::DeviceRole role = Get<Mle::Mle>().GetRole();
-
-    switch (role)
-    {
-    case Mle::kRoleDisabled:
-        roleStr = "Disabled";
-        break;
-    case Mle::kRoleDetached:
-        roleStr = "Detached";
-        break;
-    case Mle::kRoleLeader:
-        roleStr = "Leader";
-        break;
-    case Mle::kRoleRouter:
-        roleStr = "Router";
-        break;
-    case Mle::kRoleChild:
-        if (Get<Mle::Mle>().IsFullThreadDevice())
-        {
-            roleStr = Get<Mle::Mle>().IsRouterRoleAllowed() ? "REED" : "FED";
-        }
-        else
-        {
-            roleStr = Get<Mle::Mle>().IsRxOnWhenIdle() ? "MED" : "SED";
-        }
-        break;
-    default:
-        roleStr = "Unknown";
-        break;
-    }
-
-    return roleStr;
 }
 
 void Node::Reset(void)
@@ -287,6 +260,45 @@ bool Node::Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const
 
     return matches;
 }
+
+const char *Node::GetExtendedRoleString(void) const
+{
+    const char     *roleStr;
+    Mle::DeviceRole role = Get<Mle::Mle>().GetRole();
+
+    switch (role)
+    {
+    case Mle::kRoleDisabled:
+        roleStr = "Disabled";
+        break;
+    case Mle::kRoleDetached:
+        roleStr = "Detached";
+        break;
+    case Mle::kRoleLeader:
+        roleStr = "Leader";
+        break;
+    case Mle::kRoleRouter:
+        roleStr = "Router";
+        break;
+    case Mle::kRoleChild:
+        if (Get<Mle::Mle>().IsFullThreadDevice())
+        {
+            roleStr = Get<Mle::Mle>().IsRouterRoleAllowed() ? "REED" : "FED";
+        }
+        else
+        {
+            roleStr = Get<Mle::Mle>().IsRxOnWhenIdle() ? "MED" : "SED";
+        }
+        break;
+    default:
+        roleStr = "Unknown";
+        break;
+    }
+
+    return roleStr;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void AllowLinkBetween(Node &aFirstNode, Node &aSecondNode)
 {

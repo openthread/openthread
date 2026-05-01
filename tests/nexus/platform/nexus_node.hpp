@@ -78,19 +78,23 @@ class Node : public Platform, public Heap::Allocatable<Node>, public LinkedListE
     friend class Heap::Allocatable<Node>;
 
 public:
-    // Defines the device role and Network Data request behavior
-    // during joining:
-    //
-    // - `kAsFtd`, `kAsFed`, and `kAsMed` all request full netdata.
-    // - `kAsSed` requests only stable netdata (default for SED).
-    // - `kAsSedWithFullNetData` explicitly request full netdata.
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Helper methods - tests
+
     enum JoinMode : uint8_t
     {
         kAsFtd,
         kAsFed,
         kAsMed,
-        kAsSed,
-        kAsSedWithFullNetData,
+        kAsSed,                // Request stable netdata (default for SED)
+        kAsSedWithFullNetData, // Request full netdata as SED
+    };
+
+    enum AddressNetif : uint8_t // Used in `const Ip6::Address &aAddress, AddressNetif aNetif)`
+    {
+        kThreadNetifAddress,
+        kInfraNetifAddress,
+        kAnyNetifAddress,
     };
 
     void Reset(void);
@@ -104,53 +108,34 @@ public:
                          uint8_t             aHopLimit    = 64,
                          const Ip6::Address *aSrcAddress  = nullptr);
 
+    const Ip6::Address &FindMatchingAddress(const char *aPrefix);
+    const Ip6::Address &FindGlobalAddress(void);
+
+    bool Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const;
+    bool Matches(uint32_t aId) const { return GetInstance().GetId() == aId; }
+    bool Matches(const Mac::ExtAddress &aExtAddress) const { return Get<Mac::Mac>().GetExtAddress() == aExtAddress; }
+
+    const char *GetExtendedRoleString(void) const;
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     void GetTrelSockAddr(Ip6::SockAddr &aSockAddr) const;
 #endif
 
-    // Finds and returns the address on device matching the given `aPrefix`.
-    // It requires a matching prefix to be found, otherwise it is treated as
-    // a test failure (emits error message and exits the program.)
-    const Ip6::Address &FindMatchingAddress(const char *aPrefix);
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Node Properties
 
-    /**
-     * Finds and returns a global scope address on the device.
-     *
-     * It requires a global scope address to be found, otherwise it is treated as a test failure (emits error message
-     * and exits the program).
-     *
-     * @returns A reference to the global scope address.
-     */
-    const Ip6::Address &FindGlobalAddress(void);
-
-    enum AddressNetif : uint8_t
-    {
-        kThreadNetifAddress,
-        kInfraNetifAddress,
-        kAnyNetifAddress,
-    };
-
-    bool Matches(const Ip6::Address &aAddress, AddressNetif aNetif) const;
-
-    bool Matches(uint32_t aId) const { return GetInstance().GetId() == aId; }
-    bool Matches(const Mac::ExtAddress &aExtAddress) const { return Get<Mac::Mac>().GetExtAddress() == aExtAddress; }
-
+    uint32_t    GetId(void) const { return GetInstance().GetId(); }
     void        SetName(const char *aName) { mName.Clear().Append("%s", aName); }
     void        SetName(const char *aPrefix, uint16_t aIndex);
     const char *GetName(void) const { return mName.AsCString(); }
+    void        SetPosition(float aX, float aY) { mX = aX, mY = aY; }
+    float       GetPositionX(void) const { return mX; }
+    float       GetPositionY(void) const { return mY; }
+    uint32_t    GetLastParentId(void) const { return mLastParentId; }
+    void        SetLastParentId(uint32_t aId) { mLastParentId = aId; }
 
-    void SetPosition(float aX, float aY)
-    {
-        mX = aX;
-        mY = aY;
-    }
-    float GetPositionX(void) const { return mX; }
-    float GetPositionY(void) const { return mY; }
-
-    uint32_t GetLastParentId(void) const { return mLastParentId; }
-    void     SetLastParentId(uint32_t aId) { mLastParentId = aId; }
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Helper methods - Access OpenThread Core components
 
     template <typename Type> Type       &Get(void) { return Instance::Get<Type>(); }
     template <typename Type> const Type &Get(void) const { return AsConst(AsNonConst(this)->Get<Type>()); }
@@ -158,22 +143,19 @@ public:
     Instance       &GetInstance(void) { return *this; }
     const Instance &GetInstance(void) const { return *this; }
 
-    uint32_t GetId(void) const { return GetInstance().GetId(); }
-
-    /**
-     * Returns the extended role string of the node.
-     *
-     * @returns The role string (e.g., "Leader", "Router", "REED", "FED", "MED", "SED", "Disabled").
-     */
-    const char *GetExtendedRoleString(void) const;
-
     static Node &From(otInstance *aInstance)
     {
         Instance *instance = static_cast<Instance *>(aInstance);
         return *static_cast<Node *>(instance);
     }
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Helper methods - Callbacks
+
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Platform components
 
     using Platform::mAlarmMicro;
     using Platform::mAlarmMilli;
@@ -192,22 +174,13 @@ public:
     Node *mNext;
 
 private:
-    Node(void)
-        : Platform(static_cast<Instance &>(*this))
-        , mX(0.0f)
-        , mY(0.0f)
-        , mLastParentId(0xffff)
-    {
-    }
-
+    Node(void);
     void HandleIp6Receive(OwnedPtr<Message> aMessagePtr);
 
     String<32> mName;
     float      mX;
     float      mY;
     uint32_t   mLastParentId;
-
-public:
 };
 
 inline Node &AsNode(otInstance *aInstance) { return Node::From(aInstance); }
