@@ -1182,7 +1182,7 @@ static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *da
     otDumpInfoPlat("", data, static_cast<size_t>(length));
 #endif
 
-    raLength = length + (ra - data);
+    raLength = length - (ra - data);
     otPlatBorderRoutingProcessIcmp6Ra(aInstance, ra, raLength);
 
 exit:
