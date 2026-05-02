@@ -110,10 +110,6 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
 void Manager::HandleTimer(void)
 {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    mMulticastListenersTable.Expire();
-#endif
-
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     mNdProxyTable.HandleTimer();
 #endif

@@ -43,108 +43,95 @@ namespace BackboneRouter {
 
 RegisterLogModule("BbrMlt");
 
+MulticastListenersTable::MulticastListenersTable(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimer(aInstance)
+{
+}
+
 Error MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTime)
 {
-    Error error = kErrorNone;
+    Error     error = kErrorNone;
+    bool      isNew = false;
+    Listener *entry;
 
     VerifyOrExit(aAddress.IsMulticastLargerThanRealmLocal(), error = kErrorInvalidArgs);
 
-    for (uint16_t i = 0; i < mNumValidListeners; i++)
-    {
-        Listener &listener = mListeners[i];
+    entry = mListeners.FindMatching(aAddress);
 
-        if (listener.GetAddress() == aAddress)
-        {
-            listener.SetExpireTime(aExpireTime);
-            FixHeap(i);
-            ExitNow();
-        }
+    if (entry == nullptr)
+    {
+        entry = mListeners.PushBack();
+        isNew = true;
     }
 
-    VerifyOrExit(mNumValidListeners < GetArrayLength(mListeners), error = kErrorNoBufs);
+    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
-    mListeners[mNumValidListeners].SetAddress(aAddress);
-    mListeners[mNumValidListeners].SetExpireTime(aExpireTime);
-    mNumValidListeners++;
+    entry->mAddress    = aAddress;
+    entry->mExpireTime = aExpireTime;
 
-    FixHeap(mNumValidListeners - 1);
+    mTimer.FireAtIfEarlier(aExpireTime);
 
-    mCallback.InvokeIfSet(MapEnum(Listener::kEventAdded), &aAddress);
+    if (isNew)
+    {
+        InvokeCallback(kEventAdded, aAddress);
+    }
 
 exit:
     Log(kAdd, aAddress, aExpireTime, error);
-    CheckInvariants();
     return error;
 }
 
 void MulticastListenersTable::Remove(const Ip6::Address &aAddress)
 {
-    Error error = kErrorNotFound;
+    Error     error = kErrorNone;
+    Listener *entry;
 
-    for (uint16_t i = 0; i < mNumValidListeners; i++)
-    {
-        Listener &listener = mListeners[i];
+    entry = mListeners.FindMatching(aAddress);
+    VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
-        if (listener.GetAddress() == aAddress)
-        {
-            mNumValidListeners--;
+    mListeners.Remove(*entry);
 
-            if (i != mNumValidListeners)
-            {
-                listener = mListeners[mNumValidListeners];
-                FixHeap(i);
-            }
-
-            mCallback.InvokeIfSet(MapEnum(Listener::kEventRemoved), &aAddress);
-
-            ExitNow(error = kErrorNone);
-        }
-    }
+    InvokeCallback(kEventRemoved, aAddress);
 
 exit:
     Log(kRemove, aAddress, TimeMilli(0), error);
-    CheckInvariants();
 }
 
-void MulticastListenersTable::Expire(void)
+void MulticastListenersTable::HandleTimer(void)
 {
     TimeMilli    now = TimerMilli::GetNow();
-    Ip6::Address address;
+    NextFireTime nextTime(now);
 
-    while (mNumValidListeners > 0 && now >= mListeners[0].GetExpireTime())
+    for (uint16_t i = 0; i < mListeners.GetLength();)
     {
-        Log(kExpire, mListeners[0].GetAddress(), mListeners[0].GetExpireTime(), kErrorNone);
-        address = mListeners[0].GetAddress();
-
-        mNumValidListeners--;
-
-        if (mNumValidListeners > 0)
+        if (mListeners[i].mExpireTime <= now)
         {
-            mListeners[0] = mListeners[mNumValidListeners];
-            FixHeap(0);
-        }
+            Ip6::Address address = mListeners[i].mAddress;
 
-        mCallback.InvokeIfSet(MapEnum(Listener::kEventRemoved), &address);
+            Log(kExpire, address, mListeners[i].mExpireTime, kErrorNone);
+            mListeners.Remove(mListeners[i]);
+            InvokeCallback(kEventRemoved, address);
+
+            // When the entry is removed from the array it is replaced
+            // with the last element. In this case, we do not
+            // increment `i`.
+        }
+        else
+        {
+            nextTime.UpdateIfEarlier(mListeners[i].mExpireTime);
+            i++;
+        }
     }
 
-    CheckInvariants();
+    mTimer.FireAtIfEarlier(nextTime);
 }
 
-bool MulticastListenersTable::Has(const Ip6::Address &aAddress) const
+bool MulticastListenersTable::Has(const Ip6::Address &aAddress) const { return mListeners.ContainsMatching(aAddress); }
+
+void MulticastListenersTable::InvokeCallback(Event aEvent, const Ip6::Address &aAddress) const
 {
-    bool has = false;
-
-    for (uint16_t i = 0; i < mNumValidListeners; i++)
-    {
-        if (mListeners[i].GetAddress() == aAddress)
-        {
-            has = true;
-            ExitNow();
-        }
-    }
-
-exit:
-    return has;
+    mCallback.InvokeIfSet(aEvent, &aAddress);
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
@@ -167,146 +154,43 @@ void MulticastListenersTable::Log(Action              aAction,
 void MulticastListenersTable::Log(Action, const Ip6::Address &, TimeMilli, Error) const {}
 #endif
 
-void MulticastListenersTable::FixHeap(uint16_t aIndex)
-{
-    if (!SiftHeapElemDown(aIndex))
-    {
-        SiftHeapElemUp(aIndex);
-    }
-}
-
-void MulticastListenersTable::CheckInvariants(void) const
-{
-#if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_CONFIG_ASSERT_ENABLE
-    for (uint16_t child = 1; child < mNumValidListeners; ++child)
-    {
-        uint16_t parent = (child - 1) / 2;
-
-        OT_ASSERT(!(mListeners[child] < mListeners[parent]));
-    }
-#endif
-}
-
-bool MulticastListenersTable::SiftHeapElemDown(uint16_t aIndex)
-{
-    uint16_t index = aIndex;
-    Listener saveElem;
-
-    OT_ASSERT(aIndex < mNumValidListeners);
-
-    saveElem = mListeners[aIndex];
-
-    for (;;)
-    {
-        uint16_t child = 2 * index + 1;
-
-        if (child >= mNumValidListeners || child <= index) // child <= index after int overflow
-        {
-            break;
-        }
-
-        if (child + 1 < mNumValidListeners && mListeners[child + 1] < mListeners[child])
-        {
-            child++;
-        }
-
-        if (!(mListeners[child] < saveElem))
-        {
-            break;
-        }
-
-        mListeners[index] = mListeners[child];
-
-        index = child;
-    }
-
-    if (index > aIndex)
-    {
-        mListeners[index] = saveElem;
-    }
-
-    return index > aIndex;
-}
-
-void MulticastListenersTable::SiftHeapElemUp(uint16_t aIndex)
-{
-    uint16_t index = aIndex;
-    Listener saveElem;
-
-    OT_ASSERT(aIndex < mNumValidListeners);
-
-    saveElem = mListeners[aIndex];
-
-    for (;;)
-    {
-        uint16_t parent = (index - 1) / 2;
-
-        if (index == 0 || !(saveElem < mListeners[parent]))
-        {
-            break;
-        }
-
-        mListeners[index] = mListeners[parent];
-
-        index = parent;
-    }
-
-    if (index < aIndex)
-    {
-        mListeners[index] = saveElem;
-    }
-}
-
-MulticastListenersTable::Listener *MulticastListenersTable::IteratorBuilder::begin(void)
-{
-    return &Get<MulticastListenersTable>().mListeners[0];
-}
-
-MulticastListenersTable::Listener *MulticastListenersTable::IteratorBuilder::end(void)
-{
-    return &Get<MulticastListenersTable>().mListeners[Get<MulticastListenersTable>().mNumValidListeners];
-}
-
 void MulticastListenersTable::Clear(void)
 {
-    if (mCallback.IsSet())
+    while (!mListeners.IsEmpty())
     {
-        for (uint16_t i = 0; i < mNumValidListeners; i++)
-        {
-            mCallback.Invoke(MapEnum(Listener::kEventRemoved), &mListeners[i].GetAddress());
-        }
+        Ip6::Address address = mListeners.Back()->mAddress;
+
+        mListeners.PopBack();
+        InvokeCallback(kEventRemoved, address);
     }
 
-    mNumValidListeners = 0;
-
-    CheckInvariants();
+    mTimer.Stop();
 }
 
-void MulticastListenersTable::SetCallback(Listener::Callback aCallback, void *aContext)
+void MulticastListenersTable::SetCallback(ListenerCallback aCallback, void *aContext)
 {
     mCallback.Set(aCallback, aContext);
 
     if (mCallback.IsSet())
     {
-        for (uint16_t i = 0; i < mNumValidListeners; i++)
+        for (const Listener &listener : mListeners)
         {
-            mCallback.Invoke(MapEnum(Listener::kEventAdded), &mListeners[i].GetAddress());
+            InvokeCallback(kEventAdded, listener.mAddress);
         }
     }
 }
 
-Error MulticastListenersTable::GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo)
+Error MulticastListenersTable::GetNext(ListenerIterator &aIterator, ListenerInfo &aInfo)
 {
     Error     error = kErrorNone;
     TimeMilli now;
 
-    VerifyOrExit(aIterator < mNumValidListeners, error = kErrorNotFound);
+    VerifyOrExit(aIterator < mListeners.GetLength(), error = kErrorNotFound);
 
     now = TimerMilli::GetNow();
 
     aInfo.mAddress = mListeners[aIterator].mAddress;
-    aInfo.mTimeout =
-        Time::MsecToSec(mListeners[aIterator].mExpireTime > now ? mListeners[aIterator].mExpireTime - now : 0);
+    aInfo.mTimeout = Time::MsecToSec(mListeners[aIterator].mExpireTime.DetermineRemainingDurationFrom(now));
 
     aIterator++;
 
