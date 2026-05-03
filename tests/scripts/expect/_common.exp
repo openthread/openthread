@@ -307,6 +307,8 @@ proc spawn_tcat_client_for_node {id {cert_path "tools/tcat_ble_client/auth"}} {
 
     send "tcat start\n"
     expect_line "Done"
+    send "tcat active\n"
+    expect_line "Done"
 
     spawn python "tools/tcat_ble_client/bbtc.py" --simulation $id --cert_path $cert_path
     expect_line "Done"

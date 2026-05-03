@@ -193,6 +193,9 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     Get<Utils::LinkMetricsManager>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Get<MeshCoP::TcatAgent>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
