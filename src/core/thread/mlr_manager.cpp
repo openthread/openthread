@@ -272,8 +272,8 @@ void MlrManager::SendMlr(void)
 #endif
 
     VerifyOrExit(!addresses.IsEmpty(), error = kErrorNotFound);
-    SuccessOrExit(
-        error = SendMlrMessage(addresses.GetArrayBuffer(), addresses.GetLength(), nullptr, HandleMlrResponse, this));
+    SuccessOrExit(error =
+                      SendMlrMessage(addresses.GetArrayBuffer(), addresses.GetLength(), nullptr, HandleMlrResponse));
 
     mMlrPending = true;
 
@@ -324,7 +324,7 @@ Error MlrManager::RegisterMulticastListeners(const Ip6::Address *aAddresses,
     // Only allow one outstanding registration if callback is specified.
     VerifyOrExit(!mRegisterPending, error = kErrorBusy);
 
-    SuccessOrExit(error = SendMlrMessage(aAddresses, aAddressNum, aTimeout, HandleRegisterResponse, this));
+    SuccessOrExit(error = SendMlrMessage(aAddresses, aAddressNum, aTimeout, HandleRegisterResponse));
 
     mRegisterPending = true;
     mRegisterCallback.Set(aCallback, aContext);
@@ -351,8 +351,7 @@ void MlrManager::HandleRegisterResponse(Coap::Msg *aMsg, Error aResult)
 Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
                                  uint8_t                     aAddressNum,
                                  const uint32_t             *aTimeout,
-                                 const Coap::ResponseHandler aResponseHandler,
-                                 void                       *aContext)
+                                 const Coap::ResponseHandler aResponseHandler)
 {
     OT_UNUSED_VARIABLE(aTimeout);
 
@@ -397,7 +396,7 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
         destAddr.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, aResponseHandler, aContext);
+    error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, aResponseHandler, this);
 
     LogInfo("Sent MLR.req: addressNum=%d", aAddressNum);
 

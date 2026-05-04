@@ -155,8 +155,7 @@ private:
     Error SendMlrMessage(const Ip6::Address   *aAddresses,
                          uint8_t               aAddressNum,
                          const uint32_t       *aTimeout,
-                         Coap::ResponseHandler aResponseHandler,
-                         void                 *aContext);
+                         Coap::ResponseHandler aResponseHandler);
 
     DeclareTmfResponseHandlerIn(MlrManager, HandleMlrResponse);
 
