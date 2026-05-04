@@ -45,74 +45,6 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 
 jobs:
 
-  thread-1-4:
-    name: thread-1-4
-    runs-on: ubuntu-22.04
-    env:
-      COVERAGE: 1
-      THREAD_VERSION: 1.4
-      VIRTUAL_TIME: 1
-      TEST_TIMEOUT: 300
-      OT_VT_USE_UNIX_SOCKET: 1
-      INTER_OP: 1
-      INTER_OP_BBR: 1
-    strategy:
-      fail-fast: false
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: '3.12'
-        cache: pip
-    - name: Bootstrap
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build llvm lcov
-        sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        ./script/test build
-    - name: Run
-      run: |
-        ulimit -c unlimited
-        ./script/test prepare_coredump_upload
-        ./script/test unit
-        ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
-    - name: Check Crash
-      if: ${{ failure() }}
-      run: |
-          CRASHED=$(./script/test check_crash | tail -1)
-          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
-          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: ${{ failure() }}
-      with:
-        name: thread-1-4-pcaps
-        path: "*.pcap"
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: ${{ failure() && env.CRASHED == '1' }}
-      with:
-        name: core-packet-verification-thread-1-4
-        path: |
-          ./ot-core-dump/*
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: cov-thread-1-4
-        path: tmp/coverage.info
-        retention-days: 1
-
   channel-manager-csl:
     runs-on: ubuntu-24.04
     env:
@@ -214,7 +146,6 @@ jobs:
 
   upload-coverage:
     needs:
-    - thread-1-4
     - expects
     runs-on: ubuntu-22.04
     steps:
