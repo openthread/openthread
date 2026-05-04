@@ -65,6 +65,75 @@ exit:
     return isValid;
 }
 
+Error RouteTlv::AppendRouteDataEntry(Message    &aMessage,
+                                     LinkQuality aLqIn,
+                                     LinkQuality aLqOut,
+                                     uint8_t     aRouteCost
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+                                     ,
+                                     bool aIsEven
+#endif
+)
+{
+    Error     error;
+    EntryType entry = 0;
+
+    if (aRouteCost >= kMaxRouteCost)
+    {
+        aRouteCost = 0;
+    }
+
+    WriteBits<EntryType, kLinkQualityOutMask>(entry, aLqOut);
+    WriteBits<EntryType, kLinkQualityInMask>(entry, aLqIn);
+    WriteBits<EntryType, kRouteCostMask>(entry, aRouteCost);
+
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    ExitNow(error = aMessage.Append<uint8_t>(entry));
+#else
+    {
+        // Under `OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE`, each route
+        // data entry uses 1.5 bytes (12 bits). Two entries are packed
+        // into 3 bytes.
+        //
+        // For the even (first) entry, we grow the message by 2 bytes
+        // and write the 12 bits into the upper 12 bits of the new
+        // 16-bit word at the end of the message.
+        //
+        // For the odd (second) entry, we grow the message by 1 byte. We
+        // then read the last 16 bits (which overlap with the last byte
+        // of the even entry), write the new 12-bit entry into the
+        // lower 12 bits, and write the 16-bit word back. This
+        // perfectly packs the two 12-bit entries into 3 bytes.
+
+        uint16_t offset;
+        uint16_t data;
+
+        SuccessOrExit(error = aMessage.IncreaseLength(aIsEven ? sizeof(uint16_t) : sizeof(uint8_t)));
+
+        VerifyOrExit(aMessage.GetLength() >= sizeof(uint16_t), error = kErrorParse);
+        offset = aMessage.GetLength() - sizeof(uint16_t);
+
+        if (aIsEven)
+        {
+            data = 0;
+            WriteBits<uint16_t, kEvenEntryMask>(data, entry);
+        }
+        else
+        {
+            IgnoreError(aMessage.Read<uint16_t>(offset, data));
+            data = BigEndian::HostSwap16(data);
+
+            WriteBits<uint16_t, kOddEntryMask>(data, entry);
+        }
+
+        aMessage.Write<uint16_t>(offset, BigEndian::HostSwap16(data));
+    }
+#endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // ConnectivityTlvValue
 

@@ -3963,12 +3963,7 @@ Error Mle::TxMessage::AppendCompactRouteTlv(uint16_t aDestRloc16) { return Appen
 
 Error Mle::TxMessage::AppendFullOrCompactRouteTlv(uint16_t aDestRloc16)
 {
-    RouteTlv tlv;
-
-    tlv.Init();
-    Get<RouterTable>().FillRouteTlv(tlv, aDestRloc16);
-
-    return tlv.AppendTo(*this);
+    return Get<RouterTable>().AppendRouteTlv(*this, RouteTlv::kType, aDestRloc16);
 }
 
 Error Mle::TxMessage::AppendActiveDatasetTlv(void) { return AppendDatasetTlv(MeshCoP::Dataset::kActive); }

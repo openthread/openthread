@@ -303,20 +303,6 @@ public:
     }
 
     /**
-     * Sets the Route Data entry count.
-     *
-     * @param[in]  aCount  The number of Route Data entries in the Route TLV.
-     */
-    void SetRouteDataEntryCount(uint8_t aCount)
-    {
-#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-        SetLength(sizeof(mRouterIdMask) + aCount);
-#else
-        SetLength(sizeof(mRouterIdMask) + aCount + (aCount + 1) / 2);
-#endif
-    }
-
-    /**
      * Returns the Route Cost value for a given Router index.
      *
      * @param[in]  aRouterIndex  The Router index.
@@ -364,32 +350,42 @@ public:
 #endif
     }
 
-    /**
-     * Sets the Route Data (Link Quality In/Out and Route Cost) for a given Router index.
-     *
-     * @param[in]  aRouterIndex    The Router index.
-     * @param[in]  aLinkQualityIn  The Link Quality In value.
-     * @param[in]  aLinkQualityOut The Link Quality Out value.
-     * @param[in]  aRouteCost      The Route Cost value.
-     */
-    void SetRouteData(uint8_t aRouterIndex, LinkQuality aLinkQualityIn, LinkQuality aLinkQualityOut, uint8_t aRouteCost)
-    {
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-        mRouteData[aRouterIndex] = 0;
-
-        WriteBits<uint8_t, kLinkQualityInMask>(mRouteData[aRouterIndex], aLinkQualityIn);
-        WriteBits<uint8_t, kLinkQualityOutMask>(mRouteData[aRouterIndex], aLinkQualityOut);
-        WriteBits<uint8_t, kRouteCostMask>(mRouteData[aRouterIndex], aRouteCost);
+    /**
+     * Appends a Route Data entry (Link Quality In/Out and Route Cost) to a message.
+     *
+     * @param[in]  aMessage        The message to append to.
+     * @param[in]  aLqIn           The Link Quality In value.
+     * @param[in]  aLqOut          The Link Quality Out value.
+     * @param[in]  aRouteCost      The Route Cost value.
+     *
+     * @retval kErrorNone      Successfully appended the data.
+     * @retval kErrorNoBufs    Insufficient available buffers to grow the message.
+     */
+    static Error AppendRouteDataEntry(Message &aMessage, LinkQuality aLqIn, LinkQuality aLqOut, uint8_t aRouteCost);
 #else
-        uint16_t data = 0;
-
-        WriteBits<uint16_t, kLinkQualityOutMask>(data, aLinkQualityOut);
-        WriteBits<uint16_t, kLinkQualityInMask>(data, aLinkQualityIn);
-        WriteBits<uint16_t, kRouteCostMask>(data, aRouteCost);
-
-        WriteEntry(aRouterIndex, data);
+    /**
+     * Appends a Route Data entry (Link Quality In/Out and Route Cost) to a message.
+     *
+     * Under `OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE`, each route data entry uses 1.5 bytes (12 bits). Two entries
+     * are packed into 3 bytes. @p aIsEven is used to indicate whether this is an even (first) or an odd (second) entry.
+     *
+     * @param[in]  aMessage        The message to append to.
+     * @param[in]  aLqIn           The Link Quality In value.
+     * @param[in]  aLqOut          The Link Quality Out value.
+     * @param[in]  aRouteCost      The Route Cost value.
+     * @param[in]  aIsEven         Indicates whether this is an even (first) entry.
+     *
+     * @retval kErrorNone      Successfully appended the data.
+     * @retval kErrorNoBufs    Insufficient available buffers to grow the message.
+     * @retval kErrorParse     Message length is invalid for parsing route data.
+     */
+    static Error AppendRouteDataEntry(Message    &aMessage,
+                                      LinkQuality aLqIn,
+                                      LinkQuality aLqOut,
+                                      uint8_t     aRouteCost,
+                                      bool        aIsEven);
 #endif
-    }
 
 private:
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
@@ -397,6 +393,8 @@ private:
     // +---+---+---+---+---+---+---+---+
     // | LQOut | LQIn  |  Route Cost   |
     // +---+---+---+---+---+---+---+---+
+
+    typedef uint8_t EntryType;
 
     static constexpr uint8_t kLinkQualityOutMask = 0x03 << 6;
     static constexpr uint8_t kLinkQualityInMask  = 0x03 << 4;
@@ -408,6 +406,8 @@ private:
     // (1.5 bytes). The first 4 bits are link qualities (out/in),
     // remaining 8 bits are for the route cost. The even and odd
     // entries are staggered.
+
+    typedef uint16_t EntryType;
 
     static constexpr uint16_t kEvenEntryMask = 0xfff << 4;
     static constexpr uint16_t kOddEntryMask  = 0xfff << 0;
@@ -433,25 +433,6 @@ private:
         }
 
         return data;
-    }
-
-    void WriteEntry(uint8_t aRouterIndex, uint16_t aData)
-    {
-        uint16_t offset = (aRouterIndex + aRouterIndex / 2);
-        uint16_t existing;
-
-        existing = BigEndian::ReadUint16(&mRouteData[offset]);
-
-        if (aRouterIndex & 0x1)
-        {
-            WriteBits<uint16_t, kOddEntryMask>(existing, aData);
-        }
-        else
-        {
-            WriteBits<uint16_t, kEvenEntryMask>(existing, aData);
-        }
-
-        BigEndian::WriteUint16(existing, &mRouteData[offset]);
     }
 #endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 

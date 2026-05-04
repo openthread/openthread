@@ -371,17 +371,21 @@ public:
     void GetRouterIdMask(Mle::RouterIdMask &aRouterIdMask) const;
 
     /**
-     * Fills a Route TLV.
+     * Appends a Route TLV to a given message.
      *
      * If @p aDestRloc16 is not `Mle::kInvalidRloc16`, a compact format is used for the Route TLV by limiting the
      * number of router entries to `kMaxRoutersInRouteTlvForLinkAccept`. This is used for Link Accept messages. In this
-     * case, we ensure that entries for this device, the leader, and the @p aDestRloc16 (itself or its parent if it is
-     * child) are included.
+     * case, we ensure that entries for this device, the leader, and the destination router (itself or its parent if it
+     * is a child) are always included.
      *
-     * @param[out] aRouteTlv    A Route TLV to be filled.
-     * @param[in]  aDestRloc16  The destination RLOC16 (used for compact format when not `Mle::kInvalidRloc16)`
+     * @param[in,out] aMessage      The message to append the Route TLV to.
+     * @param[in]     aTlvType      The TLV type to use (e.g., `Tlv::kRoute`).
+     * @param[in]     aDestRloc16   The destination RLOC16. Used to determine whether to use the compact format.
+     *
+     * @retval kErrorNone     Successfully appended the Route TLV.
+     * @retval kErrorNoBufs   Insufficient available buffers to append the TLV.
      */
-    void FillRouteTlv(Mle::RouteTlv &aRouteTlv, uint16_t aDestRloc16 = Mle::kInvalidRloc16) const;
+    Error AppendRouteTlv(Message &aMessage, uint8_t aTlvType, uint16_t aDestRloc16 = Mle::kInvalidRloc16) const;
 
     /**
      * Updates the router table and must be called with a one second period.

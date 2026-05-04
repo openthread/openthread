@@ -763,11 +763,19 @@ void RouterTable::GetRouterIdMask(Mle::RouterIdMask &aRouterIdMask) const
     }
 }
 
-void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, uint16_t aDestRloc16) const
+Error RouterTable::AppendRouteTlv(Message &aMessage, uint8_t aTlvType, uint16_t aDestRloc16) const
 {
-    uint8_t routerIndex;
+    Error             error;
+    Tlv::Bookmark     tlvBookmark;
+    Mle::RouterIdMask routerIdMask;
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    bool isEven = true;
+#endif
 
-    GetRouterIdMask(aRouteTlv.GetRouterIdMask());
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Determine the Router ID mask to use.
+
+    GetRouterIdMask(routerIdMask);
 
     if (aDestRloc16 != Mle::kInvalidRloc16)
     {
@@ -795,26 +803,35 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, uint16_t aDestRloc16) c
                     continue;
                 }
 
-                if (aRouteTlv.GetRouterIdMask().IsAllocated(routerId))
+                if (routerIdMask.IsAllocated(routerId))
                 {
-                    aRouteTlv.GetRouterIdMask().Remove(routerId);
+                    routerIdMask.Remove(routerId);
                     routerCount--;
                 }
             }
 
             // Ensure that the neighbor will process the current
             // Route TLV in a subsequent message exchange
-            aRouteTlv.GetRouterIdMask().SetSequence(GetRouterIdSequence() - kLinkAcceptSequenceRollback);
+            routerIdMask.SetSequence(GetRouterIdSequence() - kLinkAcceptSequenceRollback);
         }
     }
 
-    routerIndex = 0;
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Append TLV: Router ID Mask followed by Route Data Entries per
+    // allocated router in the mask
+
+    SuccessOrExit(error = Tlv::StartTlv(aMessage, aTlvType, tlvBookmark));
+
+    SuccessOrExit(error = aMessage.Append(routerIdMask));
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        uint16_t routerRloc16;
+        uint16_t    routerRloc16;
+        LinkQuality lqIn;
+        LinkQuality lqOut;
+        uint8_t     routeCost;
 
-        if (!aRouteTlv.GetRouterIdMask().IsAllocated(routerId))
+        if (!routerIdMask.IsAllocated(routerId))
         {
             continue;
         }
@@ -823,29 +840,31 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, uint16_t aDestRloc16) c
 
         if (Get<Mle::Mle>().HasRloc16(routerRloc16))
         {
-            aRouteTlv.SetRouteData(routerIndex, kLinkQuality0, kLinkQuality0, 1);
+            lqIn      = kLinkQuality0;
+            lqOut     = kLinkQuality0;
+            routeCost = 1;
         }
         else
         {
             const Router *router = FindRouterById(routerId);
-            uint8_t       pathCost;
 
-            OT_ASSERT(router != nullptr);
-
-            pathCost = GetPathCost(routerRloc16);
-
-            if (pathCost >= Mle::kMaxRouteCost)
-            {
-                pathCost = 0;
-            }
-
-            aRouteTlv.SetRouteData(routerIndex, router->GetLinkQualityIn(), router->GetLinkQualityOut(), pathCost);
+            lqIn      = router->GetLinkQualityIn();
+            lqOut     = router->GetLinkQualityOut();
+            routeCost = GetPathCost(routerRloc16);
         }
 
-        routerIndex++;
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+        SuccessOrExit(error = Mle::RouteTlv::AppendRouteDataEntry(aMessage, lqIn, lqOut, routeCost));
+#else
+        SuccessOrExit(error = Mle::RouteTlv::AppendRouteDataEntry(aMessage, lqIn, lqOut, routeCost, isEven));
+        isEven = !isEven;
+#endif
     }
 
-    aRouteTlv.SetRouteDataEntryCount(routerIndex);
+    error = Tlv::EndTlv(aMessage, tlvBookmark);
+
+exit:
+    return error;
 }
 
 void RouterTable::HandleTimeTick(void)
