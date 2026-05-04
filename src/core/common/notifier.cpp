@@ -140,6 +140,10 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
     Get<MeshCoP::BorderAgent::Admitter>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Get<Ble::BleSecure>().HandleNotifierEvents(events);
+    Get<MeshCoP::TcatAgent>().HandleNotifierEvents(events);
+#endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Get<Mlr::Manager>().HandleNotifierEvents(events);
 #endif
@@ -189,9 +193,6 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     Get<Utils::LinkMetricsManager>().HandleNotifierEvents(events);
-#endif
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    Get<MeshCoP::TcatAgent>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
