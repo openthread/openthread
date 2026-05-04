@@ -56,7 +56,7 @@ BleSecure::BleSecure(Instance &aInstance)
     , mSendMessage(nullptr)
     , mTransmitTask(aInstance)
     , mBleState(kStopped)
-    , mBleAdvRequestedState(kStopped)
+    , mIsBleAdvRequested(false)
     , mMtuSize(kInitialMtuSize)
 {
 }
@@ -86,9 +86,9 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     mTls.SetConnectCallback(HandleTlsConnectEvent, this);
 
     // attempt to start BLE advertising only if everything else succeeded.
-    mBleState             = kNotAdvertising;
-    mBleAdvRequestedState = kAdvertising;
-    error                 = SetRequestedBleAdvertisementsState();
+    mBleState          = kNotAdvertising;
+    mIsBleAdvRequested = true;
+    error              = SetRequestedBleAdvertisementsState();
 
 exit:
     if (error != kErrorNone && error != kErrorAlready)
@@ -118,9 +118,9 @@ void BleSecure::Stop(void)
     // Even if stop-advertisements or disable BLE would fail, we continue closing TLS and stopping TCAT agent.
     IgnoreError(otPlatBleGapAdvStop(&GetInstance()));
     IgnoreError(otPlatBleDisable(&GetInstance()));
-    mBleState             = kStopped;
-    mBleAdvRequestedState = kStopped;
-    mMtuSize              = kInitialMtuSize;
+    mBleState          = kStopped;
+    mIsBleAdvRequested = false;
+    mMtuSize           = kInitialMtuSize;
 
     mTls.Close();
     Get<MeshCoP::TcatAgent>().Stop();
@@ -214,9 +214,17 @@ exit:
     return error;
 }
 
+void BleSecure::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.ContainsAny(kEventActiveDatasetChanged | kEventThreadRoleChanged))
+    {
+        IgnoreError(NotifyAdvertisementChanged());
+    }
+}
+
 void BleSecure::NotifySendAdvertisements(bool aSendAdvertisements)
 {
-    mBleAdvRequestedState = aSendAdvertisements ? kAdvertising : kNotAdvertising;
+    mIsBleAdvRequested = aSendAdvertisements;
     IgnoreError(SetRequestedBleAdvertisementsState());
 }
 
@@ -227,12 +235,12 @@ Error BleSecure::SetRequestedBleAdvertisementsState(void)
     Error error = kErrorNone;
 
     // Must not make GapAdv platform calls when kStopped, or kConnected.
-    if (mBleAdvRequestedState == kAdvertising && mBleState == kNotAdvertising)
+    if (mIsBleAdvRequested && mBleState == kNotAdvertising)
     {
         SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
         mBleState = kAdvertising;
     }
-    else if (mBleAdvRequestedState != kAdvertising && mBleState == kAdvertising)
+    else if (!mIsBleAdvRequested && mBleState == kAdvertising)
     {
         SuccessOrExit(error = otPlatBleGapAdvStop(&GetInstance()));
         mBleState = kNotAdvertising;
