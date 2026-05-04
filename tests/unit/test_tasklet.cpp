@@ -38,9 +38,12 @@ namespace ot {
 #define Log(aMessage) fprintf(stderr, aMessage "\n\r")
 
 static Instance *sInstance                = nullptr;
+static Tasklet  *sTask1                   = nullptr;
 static bool      sTask1Handled            = false;
 static bool      sTask2Handled            = false;
 static bool      sTask3Handled            = false;
+static bool      sTask4Handled            = false;
+static bool      sTask5Handled            = false;
 static bool      sSignalPendingCalled     = false;
 static bool      sShouldTask3RepostItself = false;
 
@@ -61,6 +64,8 @@ void ResetTestFlags(void)
     sTask1Handled        = false;
     sTask2Handled        = false;
     sTask3Handled        = false;
+    sTask4Handled        = false;
+    sTask5Handled        = false;
     sSignalPendingCalled = false;
 }
 
@@ -99,6 +104,26 @@ void HandleTask3(Tasklet &aTasklet)
     }
 }
 
+void HandleTask4(Tasklet &aTasklet)
+{
+    Log("   HandleTask4() - will post task1");
+    CheckTaskeltFromHandler(aTasklet);
+    VerifyOrQuit(!sTask4Handled);
+    sTask4Handled = true;
+
+    sTask1->Post();
+}
+
+void HandleTask5(Tasklet &aTasklet)
+{
+    Log("   HandleTask5() - will un-post task1");
+    CheckTaskeltFromHandler(aTasklet);
+    VerifyOrQuit(!sTask5Handled);
+    sTask5Handled = true;
+
+    sTask1->Unpost();
+}
+
 void TestTasklet(void)
 {
     Log("TestTasklet");
@@ -111,6 +136,10 @@ void TestTasklet(void)
         Tasklet             task1(*sInstance, HandleTask1);
         Tasklet             task2(*sInstance, HandleTask2);
         Tasklet             task3(*sInstance, HandleTask3);
+        Tasklet             task4(*sInstance, HandleTask4);
+        Tasklet             task5(*sInstance, HandleTask5);
+
+        sTask1 = &task1;
 
         Log("Process all initially posted tasks after `Instance` initialization");
 
@@ -560,6 +589,214 @@ void TestTasklet(void)
         VerifyOrQuit(!sTask1Handled);
         VerifyOrQuit(sTask2Handled);
         VerifyOrQuit(sTask3Handled);
+
+        VerifyOrQuit(!sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task4 (which posts task1 from its handler) and then task1");
+        Log("We expect the posting of task1 (from task4 handler) to be ignored since it is already posted");
+
+        ResetTestFlags();
+
+        task4.Post();
+        task1.Post();
+
+        VerifyOrQuit(task4.IsPosted());
+        VerifyOrQuit(task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask4Handled);
+        VerifyOrQuit(sTask1Handled);
+
+        VerifyOrQuit(!task4.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(!sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task1 first and then task4 (which posts task1 from its handler) now");
+        Log("Since task1 is first, it should be handled before task4's handler and task4's handler should post task1");
+
+        ResetTestFlags();
+
+        task1.Post();
+        task4.Post();
+
+        VerifyOrQuit(task4.IsPosted());
+        VerifyOrQuit(task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask4Handled);
+        VerifyOrQuit(sTask1Handled);
+
+        VerifyOrQuit(!task4.IsPosted());
+        VerifyOrQuit(task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        VerifyOrQuit(scheduler.AreTaskletsPending());
+
+        ResetTestFlags();
+
+        scheduler.ProcessQueuedTasklets();
+        VerifyOrQuit(!sTask4Handled);
+        VerifyOrQuit(sTask1Handled);
+
+        VerifyOrQuit(!task4.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(!sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task5 (which un-posts task1 from its handler) and then task1");
+        Log("Since task5 is first, we expect task1 to be removed and its handler never called");
+
+        ResetTestFlags();
+
+        task5.Post();
+        task1.Post();
+
+        VerifyOrQuit(task5.IsPosted());
+        VerifyOrQuit(task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask5Handled);
+        VerifyOrQuit(!sTask1Handled);
+
+        VerifyOrQuit(!task5.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(!sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task1 first, then task5 (which un-posts task1 from its handler)");
+        Log("Both tasks should be handled");
+
+        ResetTestFlags();
+
+        task1.Post();
+        task5.Post();
+
+        VerifyOrQuit(task1.IsPosted());
+        VerifyOrQuit(task5.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask1Handled);
+        VerifyOrQuit(sTask5Handled);
+
+        VerifyOrQuit(!task5.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(!sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task5 on its own, which un-posts task1 from its handler - it should do nothing to task1");
+
+        ResetTestFlags();
+
+        task5.Post();
+
+        VerifyOrQuit(task5.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask5Handled);
+
+        VerifyOrQuit(!task5.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(!sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task4 (which posts task1 from its handler), then task5 (which un-posts task1 from its handler)");
+        Log("The two should cancel each other and at the end task1 should not be posted");
+
+        ResetTestFlags();
+
+        task4.Post();
+        task5.Post();
+
+        VerifyOrQuit(task4.IsPosted());
+        VerifyOrQuit(task5.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask4Handled);
+        VerifyOrQuit(sTask5Handled);
+        VerifyOrQuit(!sTask1Handled);
+
+        VerifyOrQuit(!task5.IsPosted());
+        VerifyOrQuit(!task4.IsPosted());
+        VerifyOrQuit(!task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        VerifyOrQuit(!scheduler.AreTaskletsPending());
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Post task5 (which un-posts task1 from its handler), then task1, and then task4 (which posts task1)");
+        Log("The task1 should be removed while processing task5, but then posted again from task4");
+
+        ResetTestFlags();
+
+        task5.Post();
+        task1.Post();
+        task4.Post();
+
+        VerifyOrQuit(task4.IsPosted());
+        VerifyOrQuit(task5.IsPosted());
+        VerifyOrQuit(task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        sSignalPendingCalled = false;
+
+        scheduler.ProcessQueuedTasklets();
+
+        VerifyOrQuit(sTask5Handled);
+        VerifyOrQuit(sTask4Handled);
+        VerifyOrQuit(!sTask1Handled);
+
+        VerifyOrQuit(!task5.IsPosted());
+        VerifyOrQuit(!task4.IsPosted());
+        VerifyOrQuit(task1.IsPosted());
+
+        VerifyOrQuit(sSignalPendingCalled);
+        VerifyOrQuit(scheduler.AreTaskletsPending());
+
+        // Handle the posted task1
+        ResetTestFlags();
+
+        scheduler.ProcessQueuedTasklets();
+        VerifyOrQuit(sTask1Handled);
+
+        VerifyOrQuit(!task1.IsPosted());
 
         VerifyOrQuit(!sSignalPendingCalled);
         VerifyOrQuit(!scheduler.AreTaskletsPending());
