@@ -801,6 +801,10 @@ OT_TOOL_WEAK otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance) {
 OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState) { return OT_ERROR_NONE; }
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
 #ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+
+uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+uint16_t sPlatBleLastAdvSetDataLen = 0;
+
 otError otPlatBleEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -875,17 +879,19 @@ bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
 otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aAdvertisementData);
-    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    if (aAdvertisementData == nullptr || aAdvertisementLen > OT_TCAT_ADVERTISEMENT_MAX_LEN)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+    memcpy(sPlatBleLastAdvSetData, aAdvertisementData, aAdvertisementLen);
+    sPlatBleLastAdvSetDataLen = aAdvertisementLen;
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aAdvertisementData);
-    OT_UNUSED_VARIABLE(aAdvertisementLen);
-    return OT_ERROR_NONE;
+    return otPlatBleGapAdvSetData(aInstance, aAdvertisementData, aAdvertisementLen);
 }
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE

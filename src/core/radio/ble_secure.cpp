@@ -196,10 +196,19 @@ Error BleSecure::NotifyAdvertisementChanged(void)
     uint16_t advertisementLen  = 0;
     uint8_t *advertisementData = nullptr;
 
-    VerifyOrExit(mBleState == kAdvertising);
+    VerifyOrExit(mBleState != kStopped);
     SuccessOrExit(error = otPlatBleGetAdvertisementBuffer(&GetInstance(), &advertisementData));
     SuccessOrExit(error = Get<MeshCoP::TcatAgent>().GetAdvertisementData(advertisementLen, advertisementData));
-    SuccessOrExit(error = otPlatBleGapAdvUpdateData(&GetInstance(), advertisementData, advertisementLen));
+
+    if (mBleState == kAdvertising)
+    {
+        SuccessOrExit(error = otPlatBleGapAdvUpdateData(&GetInstance(), advertisementData, advertisementLen));
+    }
+    else
+    {
+        // Any other state: update buffered data for when advertising resumes.
+        SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
+    }
 
 exit:
     return error;
