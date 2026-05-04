@@ -53,6 +53,9 @@ send "thread start\n"
 expect_line "\tTYPE:\tRESPONSE_W_STATUS"
 expect_line "\tVALUE:\t0x00"
 
+send "disconnect\n"
+expect_line "Done"
+
 dispose_tcat_client 1
 
 switch_node 1

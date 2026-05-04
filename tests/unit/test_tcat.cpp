@@ -36,6 +36,7 @@
 #include <openthread/ble_secure.h>
 
 #include "cli/cli_dataset.hpp"
+#include "radio/ble_secure.hpp"
 
 #define OT_TCAT_X509_CERT                                                \
     "-----BEGIN CERTIFICATE-----\n"                                      \
@@ -267,6 +268,8 @@ static Instance *TestInitInstanceTcat(void)
     memcpy(&sCommExtPanId, &kExtPanId, sizeof(sCommExtPanId));
     memcpy(&sCommAuth, &kCommCert1AuthField, sizeof(sCommAuth));
     memcpy(&sDeviceAuth, &kDeviceCert1AuthField, sizeof(sDeviceAuth));
+    sPlatBleLastAdvSetDataLen = 0;
+    memset(sPlatBleLastAdvSetData, 0, OT_TCAT_ADVERTISEMENT_MAX_LEN);
 
     return instance;
 }
@@ -332,6 +335,46 @@ void TestTcatConnectionAndCertAttributes(void)
     VerifyOrQuit(otBleSecureIsTcatAgentStarted(instance));
     otBleSecureStop(instance);
     VerifyOrQuit(!otBleSecureIsTcatAgentStarted(instance));
+
+    testFreeInstance(instance);
+}
+
+void TestTcatAdvertisementUpdates(void)
+{
+    TestBleSecure ble;
+    Instance     *instance = TestInitInstanceTcat();
+    uint8_t       advDataSnapshot[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+    uint16_t      advDataSnapshotLen;
+
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == 0, "Adv data should be unset before BleSecure start");
+
+    SuccessOrQuit(otBleSecureStart(instance, HandleBleSecureConnect, nullptr, true, &ble));
+    SuccessOrQuit(otBleSecureTcatStart(instance, nullptr));
+
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen > 0, "Adv data should be set after BleSecure start");
+    advDataSnapshotLen = sPlatBleLastAdvSetDataLen;
+    memcpy(advDataSnapshot, sPlatBleLastAdvSetData, advDataSnapshotLen);
+
+    otPlatBleGapOnConnected(instance, kConnectionId);
+    SuccessOrQuit(otBleSecureConnect(instance));
+
+    // BLE connect and initiating TLS does not change the adv data.
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == advDataSnapshotLen &&
+                     memcmp(sPlatBleLastAdvSetData, advDataSnapshot, advDataSnapshotLen) == 0,
+                 "Adv data changed unexpectedly after BLE connect");
+    advDataSnapshotLen = sPlatBleLastAdvSetDataLen;
+    memcpy(advDataSnapshot, sPlatBleLastAdvSetData, advDataSnapshotLen);
+
+    // Commissioner sets dataset, then disconnects
+    instance->Get<ActiveDatasetManager>().SaveLocal(sPartialDataset);
+    otBleSecureDisconnect(instance);
+
+    // Adv is changed due to the partial dataset now being advertised in the S flag.
+    VerifyOrQuit(sPlatBleLastAdvSetDataLen == advDataSnapshotLen, "Adv data length changed unexpectedly");
+    VerifyOrQuit(memcmp(sPlatBleLastAdvSetData, advDataSnapshot, advDataSnapshotLen) != 0,
+                 "Adv data did not change after disconnect, which it should due to S flag");
+
+    otBleSecureStop(instance);
 
     testFreeInstance(instance);
 }
@@ -834,6 +877,7 @@ int main(void)
     ot::MeshCoP::UnitTester::TestTcatCommissioner1AuthWithDeviceRequirements();
     ot::MeshCoP::UnitTester::TestTcatCommissioner2AuthWithDeviceRequirements();
     ot::MeshCoP::UnitTester::TestTcatCommissioner4AuthWithExistingPartialDataset();
+    ot::MeshCoP::TestTcatAdvertisementUpdates();
     printf("All tests passed\n");
 #else
     printf("TCAT feature is not enabled\n");
