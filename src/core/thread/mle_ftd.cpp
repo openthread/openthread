@@ -1872,8 +1872,6 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     if (aChild.HasAnyMlrRegisteredAddress())
     {
-        OT_ASSERT(aChild.IsStateValid());
-
         for (const Child::Ip6AddrEntry &addrEntry : aChild.GetIp6Addresses())
         {
             if (!addrEntry.IsMulticastLargerThanRealmLocal())
