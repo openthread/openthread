@@ -347,6 +347,17 @@ public:
     Type *PopBack(void) { return IsEmpty() ? nullptr : &mElements[--mLength]; }
 
     /**
+     * Adds an entry to the array if it is not already present.
+     *
+     * @param[in]  aEntry  The entry to add.
+     *
+     * @retval kErrorNone     Successfully added the entry to the array.
+     * @retval kErrorAlready  The entry is already present in the array.
+     * @retval kErrorNoBufs   The array is full.
+     */
+    Error Add(const Type &aEntry) { return Contains(aEntry) ? kErrorAlready : PushBack(aEntry); }
+
+    /**
      * Returns the index of an element in the array.
      *
      * The @p aElement MUST be from the array, otherwise the behavior of this method is undefined.

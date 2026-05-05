@@ -88,7 +88,7 @@ public:
      * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
      * @retval kErrorNoBufs       The unsecure port list is full.
      */
-    Error AddUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kAdd, aPort); }
+    Error AddUnsecurePort(uint16_t aPort);
 
     /**
      * Removes a port from the allowed unsecure port list.
@@ -99,7 +99,7 @@ public:
      * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
      * @retval kErrorNotFound     The port was not found in the unsecure port list.
      */
-    Error RemoveUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kRemove, aPort); }
+    Error RemoveUnsecurePort(uint16_t aPort);
 
     /**
      * Checks whether a port is in the unsecure port list.
@@ -133,14 +133,6 @@ public:
 
 private:
     static constexpr uint16_t kMaxUnsecurePorts = 2;
-
-    enum Action : uint8_t
-    {
-        kAdd,
-        kRemove,
-    };
-
-    Error UpdateUnsecurePorts(Action aAction, uint16_t aPort);
 
     Array<uint16_t, kMaxUnsecurePorts> mUnsecurePorts;
 };

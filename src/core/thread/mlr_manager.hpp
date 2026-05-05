@@ -146,7 +146,7 @@ private:
     {
     public:
         bool IsEmptyOrContains(const Ip6::Address &aAddress) const { return IsEmpty() || Contains(aAddress); }
-        void AddUnique(const Ip6::Address &aAddress);
+        void AddUnique(const Ip6::Address &aAddress) { IgnoreError(Add(aAddress)); }
     };
 
     void HandleNotifierEvents(Events aEvents);

@@ -176,29 +176,20 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, otShortAddress aShortAddress)
 {
-    Error  error = kErrorNone;
-    Radio &radio = AsNode(aInstance).mRadio;
+    Error error = AsNode(aInstance).mRadio.mSrcMatchShortEntries.Add(aShortAddress);
 
-    VerifyOrExit(!radio.mSrcMatchShortEntries.Contains(aShortAddress));
-    error = radio.mSrcMatchShortEntries.PushBack(aShortAddress);
-
-exit:
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Error           error = kErrorNone;
-    Radio          &radio = AsNode(aInstance).mRadio;
+    Error           error;
     Mac::ExtAddress extAddress;
 
     extAddress.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    error = AsNode(aInstance).mRadio.mSrcMatchExtEntries.Add(extAddress);
 
-    VerifyOrExit(!radio.mSrcMatchExtEntries.Contains(extAddress));
-    error = radio.mSrcMatchExtEntries.PushBack(extAddress);
-
-exit:
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, otShortAddress aShortAddress)

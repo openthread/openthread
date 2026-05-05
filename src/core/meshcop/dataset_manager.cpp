@@ -723,14 +723,6 @@ exit:
     return error;
 }
 
-void DatasetManager::TlvList::Add(uint8_t aTlvType)
-{
-    if (!Contains(aTlvType))
-    {
-        IgnoreError(PushBack(aTlvType));
-    }
-}
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 const DatasetManager::SecurelyStoredTlv DatasetManager::kSecurelyStoredTlvs[] = {

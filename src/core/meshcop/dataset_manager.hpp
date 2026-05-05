@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/callback.hpp"
+#include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -234,7 +235,7 @@ private:
     {
     public:
         TlvList(void) = default;
-        void Add(uint8_t aTlvType);
+        void Add(uint8_t aTlvType) { IgnoreError(Array::Add(aTlvType)); }
     };
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE

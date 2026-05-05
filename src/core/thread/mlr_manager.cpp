@@ -649,14 +649,6 @@ void MlrManager::LogMulticastAddresses(void)
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 }
 
-void MlrManager::AddressArray::AddUnique(const Ip6::Address &aAddress)
-{
-    if (!Contains(aAddress))
-    {
-        IgnoreError(PushBack(aAddress));
-    }
-}
-
 void MlrManager::LogMlrResponse(Error aResult, Error aError, uint8_t aStatus, const AddressArray &aFailedAddresses)
 {
     OT_UNUSED_VARIABLE(aResult);

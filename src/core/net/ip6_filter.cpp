@@ -101,7 +101,31 @@ exit:
     return error;
 }
 
-Error Filter::UpdateUnsecurePorts(Action aAction, uint16_t aPort)
+Error Filter::AddUnsecurePort(uint16_t aPort)
+{
+    Error error;
+
+    VerifyOrExit(aPort != 0, error = kErrorInvalidArgs);
+
+    error = mUnsecurePorts.Add(aPort);
+
+    switch (error)
+    {
+    case kErrorNone:
+        LogInfo("Added unsecure port %u", aPort);
+        break;
+    case kErrorAlready:
+        error = kErrorNone;
+        break;
+    default:
+        break;
+    }
+
+exit:
+    return error;
+}
+
+Error Filter::RemoveUnsecurePort(uint16_t aPort)
 {
     Error     error = kErrorNone;
     uint16_t *entry;
@@ -110,18 +134,10 @@ Error Filter::UpdateUnsecurePorts(Action aAction, uint16_t aPort)
 
     entry = mUnsecurePorts.Find(aPort);
 
-    if (aAction == kAdd)
-    {
-        VerifyOrExit(entry == nullptr);
-        SuccessOrExit(error = mUnsecurePorts.PushBack(aPort));
-    }
-    else
-    {
-        VerifyOrExit(entry != nullptr, error = kErrorNotFound);
-        mUnsecurePorts.Remove(*entry);
-    }
+    VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+    mUnsecurePorts.Remove(*entry);
 
-    LogInfo("%s unsecure port %d", (aAction == kAdd) ? "Added" : "Removed", aPort);
+    LogInfo("Removed unsecure port %u", aPort);
 
 exit:
     return error;

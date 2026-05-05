@@ -1782,18 +1782,21 @@ exit:
 
 void Client::RecordServerAsLimitedToSingleQuestion(const Ip6::Address &aServerAddress)
 {
+    uint8_t randomIndex;
+
     VerifyOrExit(!aServerAddress.IsUnspecified());
 
-    VerifyOrExit(!mLimitedQueryServers.Contains(aServerAddress));
-
-    if (mLimitedQueryServers.IsFull())
+    switch (mLimitedQueryServers.Add(aServerAddress))
     {
-        uint8_t randomIndex = Random::NonCrypto::GetUint8InRange(0, mLimitedQueryServers.GetMaxSize());
-
+    case kErrorNone:
+    case kErrorAlready:
+        break;
+    default:
+        randomIndex = Random::NonCrypto::GetUint8InRange(0, mLimitedQueryServers.GetLength());
         mLimitedQueryServers.Remove(mLimitedQueryServers[randomIndex]);
+        IgnoreError(mLimitedQueryServers.PushBack(aServerAddress));
+        break;
     }
-
-    IgnoreError(mLimitedQueryServers.PushBack(aServerAddress));
 
 exit:
     return;

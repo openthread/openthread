@@ -47,15 +47,11 @@ Notifier::Notifier(Instance &aInstance)
 
 Error Notifier::RegisterCallback(StateChangedCallback aCallback, void *aContext)
 {
-    Error            error = kErrorNone;
     ExternalCallback newCallback;
 
     newCallback.Set(aCallback, aContext);
-    VerifyOrExit(!mExternalCallbacks.Contains(newCallback), error = kErrorAlready);
-    error = mExternalCallbacks.PushBack(newCallback);
 
-exit:
-    return error;
+    return mExternalCallbacks.Add(newCallback);
 }
 
 void Notifier::RemoveCallback(StateChangedCallback aCallback, void *aContext)

@@ -3153,15 +3153,14 @@ void Mle::HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo)
 
 void Mle::TlvList::Add(uint8_t aTlvType)
 {
-    VerifyOrExit(!Contains(aTlvType));
-
-    if (PushBack(aTlvType) != kErrorNone)
+    switch (Array::Add(aTlvType))
     {
-        LogWarn("Failed to include TLV %d", aTlvType);
+    case kErrorNone:
+    case kErrorAlready:
+        break;
+    default:
+        LogWarn("Failed to include TLV %u", aTlvType);
     }
-
-exit:
-    return;
 }
 
 void Mle::TlvList::AddElementsFrom(const TlvList &aTlvList)
