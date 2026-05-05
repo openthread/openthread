@@ -775,6 +775,7 @@ openthread_core_files = [
   "thread/thread_link_info.hpp",
   "thread/thread_netif.cpp",
   "thread/thread_netif.hpp",
+  "thread/thread_tlvs.cpp",
   "thread/thread_tlvs.hpp",
   "thread/time_sync_service.cpp",
   "thread/time_sync_service.hpp",

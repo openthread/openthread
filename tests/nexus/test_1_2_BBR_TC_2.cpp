@@ -295,7 +295,6 @@ void Test_1_2_BBR_TC_2(void)
     {
         Ip6::Address   ma1;
         Coap::Message *message;
-        Tlv::Bookmark  tlvBookmark;
         Ip6::Address   destAddr;
 
         SuccessOrQuit(ma1.FromString(kMa1Address));
@@ -303,9 +302,7 @@ void Test_1_2_BBR_TC_2(void)
         message = router1.Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriMlr);
         VerifyOrQuit(message != nullptr);
 
-        SuccessOrQuit(Tlv::StartTlv(*message, Ip6AddressesTlv::kType, tlvBookmark));
-        SuccessOrQuit(message->Append(ma1));
-        SuccessOrQuit(Tlv::EndTlv(*message, tlvBookmark));
+        SuccessOrQuit(Ip6AddressesTlv::AppendTo(*message, &ma1, 1));
 
         destAddr = br1.Get<Mle::Mle>().GetMeshLocalEid();
         SuccessOrQuit(router1.Get<Tmf::Agent>().SendMessageTo(*message, destAddr, nullptr, nullptr));

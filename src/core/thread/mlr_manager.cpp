@@ -358,16 +358,13 @@ Error MlrManager::SendMlrMessage(const Ip6::Address         *aAddresses,
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
     Ip6::Address   destAddr;
-    Tlv::Bookmark  tlvBookmark;
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
     message = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = Tlv::StartTlv(*message, Ip6AddressesTlv::kType, tlvBookmark));
-    SuccessOrExit(error = message->AppendBytes(aAddresses, sizeof(Ip6::Address) * aAddressNum));
-    SuccessOrExit(error = Tlv::EndTlv(*message, tlvBookmark));
+    SuccessOrExit(error = Ip6AddressesTlv::AppendTo(*message, aAddresses, aAddressNum));
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     if (Get<MeshCoP::Commissioner>().IsActive())
