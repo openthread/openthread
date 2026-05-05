@@ -446,9 +446,13 @@ exit:
 
 void Mdns::HandleRegisterationDone(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleRegisterationDone(aRequestId, aError);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleRegisterationDone(aRequestId, aError);
+        }
+    }
 }
 
 void Mdns::HandleRegisterationDone(otMdnsRequestId aRequestId, otError aError)
@@ -733,9 +737,13 @@ exit:
 
 void Mdns::HandleBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleBrowseResult(*aResult);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleBrowseResult(*aResult);
+        }
+    }
 }
 
 void Mdns::HandleBrowseResult(const otMdnsBrowseResult &aResult)
@@ -789,9 +797,13 @@ exit:
 
 void Mdns::HandleSrvResult(otInstance *aInstance, const otMdnsSrvResult *aResult)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleSrvResult(*aResult);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleSrvResult(*aResult);
+        }
+    }
 }
 
 void Mdns::HandleSrvResult(const otMdnsSrvResult &aResult)
@@ -843,9 +855,13 @@ exit:
 
 void Mdns::HandleTxtResult(otInstance *aInstance, const otMdnsTxtResult *aResult)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleTxtResult(*aResult);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleTxtResult(*aResult);
+        }
+    }
 }
 
 void Mdns::HandleTxtResult(const otMdnsTxtResult &aResult)
@@ -893,9 +909,13 @@ exit:
 
 void Mdns::HandleIp6AddressResult(otInstance *aInstance, const otMdnsAddressResult *aResult)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleAddressResult(*aResult, kIp6Address);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleAddressResult(*aResult, kIp6Address);
+        }
+    }
 }
 
 void Mdns::HandleAddressResult(const otMdnsAddressResult &aResult, IpAddressType aType)
@@ -946,9 +966,13 @@ exit:
 
 void Mdns::HandleIp4AddressResult(otInstance *aInstance, const otMdnsAddressResult *aResult)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleAddressResult(*aResult, kIp4Address);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleAddressResult(*aResult, kIp4Address);
+        }
+    }
 }
 
 template <> otError Mdns::Process<Cmd("recordquerier")>(Arg aArgs[])
@@ -992,9 +1016,13 @@ exit:
 
 void Mdns::HandleRecordResult(otInstance *aInstance, const otMdnsRecordResult *aResult)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    Interpreter::GetInterpreter().mMdns.HandleRecordResult(*aResult);
+    for (Interpreter *intprtr = Interpreter::GetInterpreterList(); intprtr != nullptr; intprtr = intprtr->mNext)
+    {
+        if (intprtr->GetInstancePtr() == aInstance)
+        {
+            intprtr->mMdns.HandleRecordResult(*aResult);
+        }
+    }
 }
 
 void Mdns::HandleRecordResult(const otMdnsRecordResult &aResult)

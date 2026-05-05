@@ -71,6 +71,8 @@
 namespace ot {
 namespace Cli {
 
+Interpreter *Interpreter::sInterpreterList = nullptr;
+
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : OutputImplementer(aCallback, aContext)
     , Utils(aInstance, *this)
@@ -146,6 +148,18 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 {
+    if (!DoesInterpreterListContain(*this))
+    {
+        // Add it to the list if not already present. We check if it
+        // is already present to support cases where the same
+        // interpreter instance is re-initialized without being
+        // finalized first. While such usage is not recommended, we
+        // still want to support it.
+
+        mNext            = sInterpreterList;
+        sInterpreterList = this;
+    }
+
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
 #endif
@@ -156,6 +170,50 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     ClearAllBytes(mUserCommands);
 
     OutputPrompt();
+}
+
+bool Interpreter::DoesInterpreterListContain(Interpreter &aInterpreter)
+{
+    bool contains = false;
+
+    for (Interpreter *cur = sInterpreterList; cur != nullptr; cur = cur->mNext)
+    {
+        if (cur == &aInterpreter)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
+}
+
+Interpreter::~Interpreter(void)
+{
+    if (sInterpreterList == this)
+    {
+        sInterpreterList = mNext;
+    }
+    else
+    {
+        for (Interpreter *cur = sInterpreterList; cur != nullptr; cur = cur->mNext)
+        {
+            if (cur->mNext == this)
+            {
+                cur->mNext = mNext;
+                break;
+            }
+        }
+    }
+
+    mNext = nullptr;
+
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+    if (sInterpreter == this)
+    {
+        sInterpreter = nullptr;
+    }
+#endif
 }
 
 void Interpreter::OutputResult(otError aError)
