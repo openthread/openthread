@@ -436,6 +436,7 @@ ot_nexus_test(srp_scale "core;nexus")
 ot_nexus_test(srp_server_anycast_mode "core;nexus")
 ot_nexus_test(srp_server_reboot_port "core;nexus")
 ot_nexus_test(srp_ttl "core;nexus")
+ot_nexus_test(tmf_origin "core;nexus")
 ot_nexus_test(zero_len_external_route "core;nexus")
 
 # Trel
