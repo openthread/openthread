@@ -606,6 +606,29 @@ void otIp6RemoveAllUnsecurePorts(otInstance *aInstance);
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries);
 
 /**
+ * Sets whether to allow link-local unsecure IPv6 datagrams when the Thread role is disabled.
+ *
+ * Available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled. This is intended for testing. By default,
+ * this is disabled (i.e., unsecure traffic is always dropped regardless of the device's role).
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aAllow     TRUE to allow, FALSE otherwise.
+ */
+void otIp6SetAllowUnsecureWhenDisabled(otInstance *aInstance, bool aAllow);
+
+/**
+ * Indicates whether allowing link-local unsecure IPv6 datagrams when the Thread role is disabled is enabled.
+ *
+ * Available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   Does allow unsecure IPv6 datagrams when the Thread role is disabled.
+ * @retval FALSE  Does not allow unsecure IPv6 datagrams when the Thread role is disabled.
+ */
+bool otIp6IsUnsecureAllowedWhenDisabled(otInstance *aInstance);
+
+/**
  * Test if two IPv6 addresses are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv6 address to compare.

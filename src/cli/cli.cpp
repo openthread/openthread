@@ -7085,6 +7085,32 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 
         OutputNewLine();
     }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * @cli unsecureport allwhendisabled
+     * @code
+     * unsecureport allwhendisabled
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otIp6IsUnsecureAllowedWhenDisabled
+     */
+    else if (aArgs[0] == "allwhendisabled")
+    {
+        /**
+         * @cli unsecureport allwhendisabled (enable, disable)
+         * @code
+         * unsecureport allwhendisabled enable
+         * Done
+         * @endcode
+         * @cparam unsecureport allwhendisabled @ca{enable|disable}
+         * @par api_copy
+         * #otIp6SetAllowUnsecureWhenDisabled
+         */
+        error = ProcessEnableDisable(aArgs + 1, otIp6IsUnsecureAllowedWhenDisabled, otIp6SetAllowUnsecureWhenDisabled);
+    }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else
     {
         error = OT_ERROR_INVALID_COMMAND;

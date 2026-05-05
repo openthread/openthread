@@ -312,3 +312,15 @@ void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
     AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
 }
 #endif
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otIp6SetAllowUnsecureWhenDisabled(otInstance *aInstance, bool aAllow)
+{
+    AsCoreType(aInstance).Get<Ip6::Filter>().SetAllowUnsecureWhenDisabled(aAllow);
+}
+
+bool otIp6IsUnsecureAllowedWhenDisabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Filter>().IsUnsecureAllowedWhenDisabled();
+}
+#endif
