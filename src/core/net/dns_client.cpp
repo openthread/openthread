@@ -1497,6 +1497,7 @@ Error Client::ParseResponse(const Message &aResponseMessage, Query *&aQuery, Err
     VerifyOrExit(aQuery != nullptr, error = kErrorNotFound);
 
     info.ReadFrom(*aQuery);
+    VerifyOrExit(info.mSavedResponse == nullptr, error = kErrorDrop);
 
     queryName.SetFromMessage(*aQuery, kNameOffsetInQuery);
 
@@ -1872,6 +1873,7 @@ void Client::ResolveHostAddressIfNeeded(Query &aQuery, const Message &aResponseM
         info.mMessageId         = 0;
         info.mTransmissionCount = 0;
         info.mMainQuery         = &FindMainQuery(aQuery);
+        info.mSavedResponse     = nullptr;
 
         SuccessOrExit(AllocateQuery(info, nullptr, hostName, newQuery));
         IgnoreError(SendQuery(*newQuery, info, /* aUpdateTimer */ true));
