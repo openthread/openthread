@@ -179,7 +179,7 @@ public:
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      */
-    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false);
+    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false, uint8_t aRecursionDepth = 0);
 
     /**
      * Sets the callback to provide received raw IPv6 datagrams.
@@ -318,6 +318,7 @@ public:
 #endif
 
 private:
+    static constexpr uint8_t kMaxRecursionDepth = 4;
     static constexpr uint8_t kReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
     static constexpr uint16_t kMinimalMtu = 1280;

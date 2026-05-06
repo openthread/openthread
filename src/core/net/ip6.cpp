@@ -1273,10 +1273,12 @@ exit:
     return;
 }
 
-Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
+Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, uint8_t aRecursionDepth)
 {
-    Error   error;
-    Header  header;
+    Error  error;
+    Header header;
+
+    VerifyOrExit(aRecursionDepth <= kMaxRecursionDepth, error = kErrorDrop);
     bool    receive;
     bool    forwardThread;
     bool    forwardHost;
@@ -1315,7 +1317,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, *messagePtr);
 
-        IgnoreError(HandleDatagram(messagePtr.PassOwnership(), aIsReassembled));
+        SuccessOrExit(error = HandleDatagram(messagePtr.PassOwnership(), aIsReassembled, aRecursionDepth + 1));
 
         receive     = false;
         forwardHost = false;

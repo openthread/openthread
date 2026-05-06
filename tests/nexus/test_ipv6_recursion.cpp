@@ -43,8 +43,9 @@ void TestIPv6Recursion(void)
      * - Leader
      *
      * Description:
-     * The purpose of this test case is to validate that lowpan compression enforces
-     * the kMaxRecursionDepth limit to prevent excessive recursive stack usage.
+     * The purpose of this test case is to validate that both Ip6::HandleDatagram
+     * and lowpan compression enforce their respective kMaxRecursionDepth limit
+     * to prevent unbounded stack recursion/excessive recursive stack usage.
      */
 
     Core  nexus;
@@ -94,9 +95,42 @@ void TestIPv6Recursion(void)
         Log("Test Case 1: Passed successfully!");
     }
 
-    // Test Case 2: Direct call to Lowpan::Compress with depth 6 nested packet
+    // Test Case 2: Recursion depth 6 (exceeds limit of 4 in Ip6::HandleDatagram)
     {
-        Log("Test Case 2: Call Lowpan::Compress with depth 6 nested packet (should cap and fall back gracefully)");
+        Log("Test Case 2: Send nested IPv6 packet with depth 6 (exceeds limit)");
+        Message *message = leader.Get<Ip6::Ip6>().NewMessage();
+        VerifyOrQuit(message != nullptr);
+
+        // Construct 6 nested headers:
+        // - i = 5 (innermost): NH = kProtoNone, PayloadLen = 0
+        // - i = 0 to 4: NH = kProtoIp6, PayloadLen = (5 - i) * 40
+        for (int i = 0; i < 6; i++)
+        {
+            Ip6::Header header;
+            header.InitVersionTrafficClassFlow();
+            header.SetSource(selfAddress);
+            header.SetDestination(selfAddress);
+            if (i == 5)
+            {
+                header.SetNextHeader(Ip6::kProtoNone);
+                header.SetPayloadLength(0);
+            }
+            else
+            {
+                header.SetNextHeader(Ip6::kProtoIp6);
+                header.SetPayloadLength((5 - i) * sizeof(Ip6::Header));
+            }
+            SuccessOrQuit(message->Append(header));
+        }
+
+        Error error = leader.Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(message));
+        VerifyOrQuit(error == kErrorDrop);
+        Log("Test Case 2: Passed successfully (packet with depth 6 was dropped with kErrorDrop)!");
+    }
+
+    // Test Case 3: Direct call to Lowpan::Compress with depth 6 nested packet
+    {
+        Log("Test Case 3: Call Lowpan::Compress with depth 6 nested packet (should cap and fall back gracefully)");
         Message *message = leader.Get<Ip6::Ip6>().NewMessage();
         VerifyOrQuit(message != nullptr);
 
@@ -132,7 +166,7 @@ void TestIPv6Recursion(void)
         // and emit the remaining nested headers inline as opaque payload.
         Error error = leader.Get<Lowpan::Lowpan>().Compress(*message, macAddrs, frameBuilder);
         VerifyOrQuit(error == kErrorNone);
-        Log("Test Case 2: Passed successfully (returned kErrorNone without excessive stack usage)!");
+        Log("Test Case 3: Passed successfully (returned kErrorNone without excessive stack usage)!");
         message->Free();
     }
 
