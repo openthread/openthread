@@ -146,6 +146,7 @@ void TestHistoryTracker(void)
                          Mle::DeviceMode::kModeFullNetworkData);
 
     SuccessOrQuit(child.Get<Mle::Mle>().SetDeviceMode(mode));
+    SuccessOrQuit(child.Get<Mle::Mle>().SetRouterEligible(false));
     nexus.AdvanceTime(kJoinChildTimeMsec);
 
     iter.Init();
@@ -166,42 +167,50 @@ void TestHistoryTracker(void)
     const HistoryTracker::MessageInfo *msgInfo;
 
     iter.Init();
-    for (int i = 2; i >= 0; --i)
+    uint8_t txRequestsFound = 0;
+    while ((msgInfo = leader.Get<HistoryTracker::Local>().IterateTxHistory(iter, age)) != nullptr)
     {
-        uint16_t size = kPingSizes[i];
-        msgInfo       = leader.Get<HistoryTracker::Local>().IterateTxHistory(iter, age);
-        VerifyOrQuit(msgInfo != nullptr);
-        VerifyOrQuit(msgInfo->mIcmp6Type == OT_ICMP6_TYPE_ECHO_REQUEST);
-        VerifyOrQuit(msgInfo->mIpProto == OT_IP6_PROTO_ICMP6);
-        VerifyOrQuit(msgInfo->mPayloadLength == size + sizeof(Ip6::Icmp::Header));
-        VerifyOrQuit(AsCoreType(&msgInfo->mSource.mAddress) == leader.Get<Mle::Mle>().GetMeshLocalEid());
-        VerifyOrQuit(AsCoreType(&msgInfo->mDestination.mAddress) == child.Get<Mle::Mle>().GetMeshLocalEid());
-        VerifyOrQuit(msgInfo->mLinkSecurity);
-        VerifyOrQuit(msgInfo->mRadioIeee802154);
-        VerifyOrQuit(msgInfo->mPriority == OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL);
-        VerifyOrQuit(msgInfo->mNeighborRloc16 == child.Get<Mle::Mle>().GetRloc16());
-        VerifyOrQuit(msgInfo->mChecksum != 0);
-        VerifyOrQuit(msgInfo->mTxSuccess);
+        if (msgInfo->mIcmp6Type == OT_ICMP6_TYPE_ECHO_REQUEST)
+        {
+            VerifyOrQuit(txRequestsFound < 3);
+            uint16_t expectedSize = kPingSizes[2 - txRequestsFound];
+            VerifyOrQuit(msgInfo->mIpProto == OT_IP6_PROTO_ICMP6);
+            VerifyOrQuit(msgInfo->mPayloadLength == expectedSize + sizeof(Ip6::Icmp::Header));
+            VerifyOrQuit(AsCoreType(&msgInfo->mSource.mAddress) == leader.Get<Mle::Mle>().GetMeshLocalEid());
+            VerifyOrQuit(AsCoreType(&msgInfo->mDestination.mAddress) == child.Get<Mle::Mle>().GetMeshLocalEid());
+            VerifyOrQuit(msgInfo->mLinkSecurity);
+            VerifyOrQuit(msgInfo->mRadioIeee802154);
+            VerifyOrQuit(msgInfo->mPriority == OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL);
+            VerifyOrQuit(msgInfo->mNeighborRloc16 == child.Get<Mle::Mle>().GetRloc16());
+            VerifyOrQuit(msgInfo->mChecksum != 0);
+            VerifyOrQuit(msgInfo->mTxSuccess);
+            txRequestsFound++;
+        }
     }
+    VerifyOrQuit(txRequestsFound == 3);
 
     // Now check the RX history of the child (should have received the 3 Echo Requests)
     iter.Init();
-    for (int i = 2; i >= 0; --i)
+    uint8_t rxRequestsFound = 0;
+    while ((msgInfo = child.Get<HistoryTracker::Local>().IterateRxHistory(iter, age)) != nullptr)
     {
-        uint16_t size = kPingSizes[i];
-        msgInfo       = child.Get<HistoryTracker::Local>().IterateRxHistory(iter, age);
-        VerifyOrQuit(msgInfo != nullptr);
-        VerifyOrQuit(msgInfo->mIcmp6Type == OT_ICMP6_TYPE_ECHO_REQUEST);
-        VerifyOrQuit(msgInfo->mIpProto == OT_IP6_PROTO_ICMP6);
-        VerifyOrQuit(msgInfo->mPayloadLength == size + sizeof(Ip6::Icmp::Header));
-        VerifyOrQuit(AsCoreType(&msgInfo->mSource.mAddress) == leader.Get<Mle::Mle>().GetMeshLocalEid());
-        VerifyOrQuit(AsCoreType(&msgInfo->mDestination.mAddress) == child.Get<Mle::Mle>().GetMeshLocalEid());
-        VerifyOrQuit(msgInfo->mLinkSecurity);
-        VerifyOrQuit(msgInfo->mRadioIeee802154);
-        VerifyOrQuit(msgInfo->mPriority == OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL);
-        VerifyOrQuit(msgInfo->mNeighborRloc16 == leader.Get<Mle::Mle>().GetRloc16());
-        VerifyOrQuit(msgInfo->mChecksum != 0);
+        if (msgInfo->mIcmp6Type == OT_ICMP6_TYPE_ECHO_REQUEST)
+        {
+            VerifyOrQuit(rxRequestsFound < 3);
+            uint16_t expectedSize = kPingSizes[2 - rxRequestsFound];
+            VerifyOrQuit(msgInfo->mIpProto == OT_IP6_PROTO_ICMP6);
+            VerifyOrQuit(msgInfo->mPayloadLength == expectedSize + sizeof(Ip6::Icmp::Header));
+            VerifyOrQuit(AsCoreType(&msgInfo->mSource.mAddress) == leader.Get<Mle::Mle>().GetMeshLocalEid());
+            VerifyOrQuit(AsCoreType(&msgInfo->mDestination.mAddress) == child.Get<Mle::Mle>().GetMeshLocalEid());
+            VerifyOrQuit(msgInfo->mLinkSecurity);
+            VerifyOrQuit(msgInfo->mRadioIeee802154);
+            VerifyOrQuit(msgInfo->mPriority == OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL);
+            VerifyOrQuit(msgInfo->mNeighborRloc16 == leader.Get<Mle::Mle>().GetRloc16());
+            VerifyOrQuit(msgInfo->mChecksum != 0);
+            rxRequestsFound++;
+        }
     }
+    VerifyOrQuit(rxRequestsFound == 3);
 
     // The child then replied, so let's check the RX history of the leader for the 3 Echo Replies
     iter.Init();
