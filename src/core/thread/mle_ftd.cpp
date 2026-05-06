@@ -3363,6 +3363,7 @@ void Mle::HandleAddressSolicitResponse(Coap::Msg *aMsg, Error aResult)
 
     SuccessOrExit(Tlv::Find<ThreadRouterMaskTlv>(aMsg->mMessage, routerIdMask));
     VerifyOrExit(routerIdMask.IsValid());
+    VerifyOrExit(routerIdMask.IsAllocated(GetLeaderId()));
 
     SetAlternateRloc16(GetRloc16());
 
