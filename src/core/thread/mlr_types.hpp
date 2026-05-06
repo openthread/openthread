@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 namespace ot {
+namespace Mlr {
 
 /**
  * @addtogroup core-mlr
@@ -44,19 +45,19 @@ namespace ot {
  * @{
  */
 
-constexpr uint8_t kMlrMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
-constexpr uint8_t kMlrMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
+constexpr uint8_t kMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
+constexpr uint8_t kMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
 /**
- * Multicast Listener Registration state for multicast addresses.
+ * MLR registration state for a multicast address.
  */
-enum MlrState : uint8_t
+enum State : uint8_t
 {
-    kMlrStateToRegister,  ///< The multicast address is to be registered.
-    kMlrStateRegistering, ///< The multicast address is being registered.
-    kMlrStateRegistered,  ///< The multicast address is registered.
+    kStateToRegister,  ///< The multicast address is to be registered.
+    kStateRegistering, ///< The multicast address is being registered.
+    kStateRegistered,  ///< The multicast address is registered.
 };
 
 #endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
@@ -64,17 +65,19 @@ enum MlrState : uint8_t
 /**
  * Multicast Listener Registration (MLR) Status values.
  */
-enum MlrStatus
+enum Status : uint8_t
 {
-    kMlrSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
-    kMlrInvalid        = 2, ///< Invalid IPv6 address(es) in request.
-    kMlrNoPersistent   = 3, ///< This device does not support persistent registrations.
-    kMlrNoResources    = 4, ///< BBR resource shortage.
-    kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
-    kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
-    kMlrStatusMax      = 6, ///< Max MLR status.
+    kStatusSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
+    kStatusInvalid        = 2, ///< Invalid IPv6 address(es) in request.
+    kStatusNoPersistent   = 3, ///< This device does not support persistent registrations.
+    kStatusNoResources    = 4, ///< BBR resource shortage.
+    kStatusBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
+    kStatusGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
 };
 
+constexpr uint8_t kMaxStatusValue = kStatusGeneralFailure;
+
+} // namespace Mlr
 } // namespace ot
 
 #endif // OT_CORE_THREAD_MLR_TYPES_HPP_

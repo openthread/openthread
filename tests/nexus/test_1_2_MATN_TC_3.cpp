@@ -194,7 +194,7 @@ void TestMatnTc3(void)
      * - Pass Criteria:
      *   - N/A
      */
-    SuccessOrQuit(router.Get<MlrManager>().RegisterMulticastListeners(&ma1, 1, &kTimeoutZero, nullptr, nullptr));
+    SuccessOrQuit(router.Get<Mlr::Manager>().RegisterMulticastListeners(&ma1, 1, &kTimeoutZero, nullptr, nullptr));
     nexus.AdvanceTime(kMlrRegistrationTime);
 
     Log("---------------------------------------------------------------------------------------");

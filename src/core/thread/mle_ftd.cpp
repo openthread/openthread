@@ -1855,7 +1855,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     Ip6::Address oldDua;
 #endif
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    MlrManager::MlrAddressArray oldMlrRegisteredAddresses;
+    Mlr::Manager::ChildAddressArray oldMlrRegisteredAddresses;
 #endif
 
     OT_UNUSED_VARIABLE(storedCount);
@@ -1881,7 +1881,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
                 continue;
             }
 
-            if (addrEntry.GetMlrState(aChild) == kMlrStateRegistered)
+            if (addrEntry.GetMlrState(aChild) == Mlr::kStateRegistered)
             {
                 IgnoreError(oldMlrRegisteredAddresses.PushBack(addrEntry));
             }
@@ -1995,7 +1995,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses);
+    Get<Mlr::Manager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses);
 #endif
 
     if (count == 0)
@@ -3857,7 +3857,7 @@ void Mle::SetChildStateToValid(Child &aChild)
     IgnoreError(mChildTable.StoreChild(aChild));
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    Get<MlrManager>().UpdateProxiedSubscriptions(aChild, MlrManager::MlrAddressArray());
+    Get<Mlr::Manager>().UpdateProxiedSubscriptions(aChild, Mlr::Manager::ChildAddressArray());
 #endif
 
     mNeighborTable.Signal(NeighborTable::kChildAdded, aChild);

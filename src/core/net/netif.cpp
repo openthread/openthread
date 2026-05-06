@@ -615,8 +615,8 @@ void Netif::MulticastAddress::InitAsManualOrigin(void)
     mAddressOrigin = kOriginManual;
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    // Make sure `Clear()` sets the "MlrState" to `kMlrStateToRegister` value.
-    static_assert(kMlrStateToRegister == 0, "kMlrStateToRegister is not correct.");
+    // Make sure `Clear()` sets the "MlrState" to `Mlr::kStateToRegister` value.
+    static_assert(Mlr::kStateToRegister == 0, "Mlr::kStateToRegister is not correct.");
 #endif
 }
 
@@ -627,7 +627,7 @@ bool Netif::MulticastAddress::IsMlrCandidate(void) const
     return (GetOrigin() == kOriginManual) && GetAddress().IsMulticastLargerThanRealmLocal();
 }
 
-bool Netif::MulticastAddress::Matches(MlrState aMlrState) const
+bool Netif::MulticastAddress::Matches(Mlr::State aMlrState) const
 {
     return IsMlrCandidate() && (GetMlrState() == aMlrState);
 }

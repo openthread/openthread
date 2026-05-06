@@ -108,7 +108,7 @@ public:
          *
          * @returns The MLR state of IPv6 address entry.
          */
-        MlrState GetMlrState(const Child &aChild) const;
+        Mlr::State GetMlrState(const Child &aChild) const;
 
         /**
          * Sets the MLR state of the IPv6 address entry.
@@ -116,7 +116,7 @@ public:
          * @param[in] aState    The MLR state.
          * @param[in] aChild    The child owning this address entry.
          */
-        void SetMlrState(MlrState aState, Child &aChild);
+        void SetMlrState(Mlr::State aState, Child &aChild);
 #endif
     };
 
@@ -353,28 +353,28 @@ public:
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * Returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * Returns if the Child has IPv6 address @p aAddress of MLR state `Mlr::kStateRegistered`.
      *
      * @param[in] aAddress  The IPv6 address.
      *
-     * @retval true   If the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval true   If the Child has IPv6 address @p aAddress of MLR state `Mlr::kStateRegistered`.
+     * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `Mlr::kStateRegistered`.
      */
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * Returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
+     * Returns if the Child has any IPv6 address of MLR state `Mlr::kStateRegistered`.
      *
-     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
+     * @retval true   If the Child has any IPv6 address of MLR state `Mlr::kStateRegistered`.
+     * @retval false  If the Child does not have any IPv6 address of MLR state `Mlr::kStateRegistered`.
      */
     bool HasAnyMlrRegisteredAddress(void) const { return !mMlrRegisteredSet.IsEmpty(); }
 
     /**
-     * Returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
+     * Returns if the Child has any IPv6 address of MLR state `Mlr::kStateToRegister`.
      *
-     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
-     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
+     * @retval true   If the Child has any IPv6 address of MLR state `Mlr::kStateToRegister`.
+     * @retval false  If the Child does not have any IPv6 address of MLR state `Mlr::kStateToRegister`.
      */
     bool HasAnyMlrToRegisterAddress(void) const { return !mMlrToRegisterSet.IsEmpty(); }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE

@@ -146,10 +146,10 @@ void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance               
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus)
 {
-    OT_ASSERT(aStatus <= kMlrStatusMax);
+    OT_ASSERT(aStatus <= Mlr::kMaxStatusValue);
 
     AsCoreType(aInstance).Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(
-        static_cast<MlrStatus>(aStatus));
+        static_cast<Mlr::Status>(aStatus));
 }
 
 void otBackboneRouterMulticastListenerClear(otInstance *aInstance)

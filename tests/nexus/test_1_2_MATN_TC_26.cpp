@@ -150,7 +150,7 @@ void TestMatnTc26(void)
      * - Pass Criteria:
      * - N/A
      */
-    br1.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(kMlrNoResources);
+    br1.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(Mlr::kStatusNoResources);
 
     Log("Step 2: The DUT must be configured to request registration of Multicast address MA1.");
 
@@ -214,7 +214,7 @@ void TestMatnTc26(void)
      * - Pass Criteria:
      * - N/A
      */
-    br1.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(kMlrGeneralFailure);
+    br1.Get<BackboneRouter::Manager>().ConfigNextMulticastListenerRegistrationResponse(Mlr::kStatusGeneralFailure);
 
     Log("Step 4 (cont.): Harness instructs the device to updates the network data (BBR Dataset).");
 

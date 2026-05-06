@@ -138,7 +138,7 @@ void Notifier::EmitEvents(void)
     Get<MeshCoP::BorderAgent::Admitter>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    Get<MlrManager>().HandleNotifierEvents(events);
+    Get<Mlr::Manager>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     Get<DuaManager>().HandleNotifierEvents(events);

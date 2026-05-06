@@ -105,7 +105,7 @@ public:
      *
      * @param[in] aStatus  The status to respond.
      */
-    void ConfigNextMulticastListenerRegistrationResponse(MlrStatus aStatus);
+    void ConfigNextMulticastListenerRegistrationResponse(Mlr::Status aStatus);
 #endif
 #endif
 
@@ -173,7 +173,7 @@ private:
     void HandleMulticastListenerRegistration(const Coap::Msg &aMsg);
 
     void SendMulticastListenerRegistrationResponse(const Coap::Msg &aMsg,
-                                                   MlrStatus        aStatus,
+                                                   Mlr::Status      aStatus,
                                                    Ip6::Address    *aFailedAddresses,
                                                    uint8_t          aFailedAddressNum);
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
@@ -227,7 +227,7 @@ private:
     uint8_t                  mDuaResponseStatus;
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    MlrStatus mMlrResponseStatus;
+    Mlr::Status mMlrResponseStatus;
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     bool mDuaResponseIsSpecified : 1;
