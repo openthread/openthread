@@ -669,6 +669,7 @@ void MeshForwarder::UpdateEidRlocCacheAndStaleChild(RxInfo &aRxInfo)
 {
     Neighbor *neighbor;
 
+    VerifyOrExit(aRxInfo.IsLinkSecurityEnabled());
     VerifyOrExit(!aRxInfo.GetDstAddr().IsBroadcast() && aRxInfo.GetSrcAddr().IsShort());
 
     SuccessOrExit(aRxInfo.ParseIp6Headers());
