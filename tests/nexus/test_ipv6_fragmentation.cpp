@@ -43,6 +43,97 @@ static constexpr uint32_t kAttachToRouterTime = 200 * 1000;
 /** Time to wait for ICMPv6 Echo response, in milliseconds. */
 static constexpr uint32_t kEchoTimeout = 10 * 1000;
 
+static bool     gForwardedPacketReceived = false;
+static uint16_t gForwardedPacketLen      = 0;
+
+static void MyCustomIp6ReceiveCallback(otMessage *aMessage, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    Message    &message = *AsCoreTypePtr(aMessage);
+    Ip6::Header header;
+    if (header.ParseFrom(message) == kErrorNone)
+    {
+        if (header.GetNextHeader() == Ip6::kProtoUdp && message.GetLength() == 640)
+        {
+            gForwardedPacketReceived = true;
+            gForwardedPacketLen      = message.GetLength();
+            Log("MyCustomIp6ReceiveCallback: Received forwarded packet of length %u", gForwardedPacketLen);
+        }
+    }
+}
+
+static void SendGapFragment1(Node &aRouter, const Ip6::Address &aLeaderEid, uint32_t aIdentification)
+{
+    Message *message = aRouter.Get<MessagePool>().Allocate(Message::kTypeIp6);
+    VerifyOrQuit(message != nullptr);
+
+    // 1. Outer IPv6 Header
+    Ip6::Header outerHeader;
+    outerHeader.InitVersionTrafficClassFlow();
+    outerHeader.SetPayloadLength(48); // 8 bytes (Fragment Header) + 40 bytes (Inner IPv6 Header)
+    outerHeader.SetNextHeader(Ip6::kProtoFragment);
+    outerHeader.SetHopLimit(64);
+    outerHeader.SetSource(aRouter.Get<Mle::Mle>().GetMeshLocalEid());
+    outerHeader.SetDestination(aLeaderEid);
+    SuccessOrQuit(message->Append(outerHeader));
+
+    // 2. Fragment Header
+    Ip6::FragmentHeader fragmentHeader;
+    fragmentHeader.Init();
+    fragmentHeader.SetNextHeader(Ip6::kProtoIp6);
+    fragmentHeader.SetOffset(0);
+    fragmentHeader.SetMoreFlag();
+    fragmentHeader.SetIdentification(aIdentification);
+    SuccessOrQuit(message->Append(fragmentHeader));
+
+    // 3. Inner IPv6 Header (Payload of Fragment 1)
+    Ip6::Header innerHeader;
+    innerHeader.InitVersionTrafficClassFlow();
+    innerHeader.SetPayloadLength(600); // 600 bytes inner payload to stay under MTU limit
+    innerHeader.SetNextHeader(Ip6::kProtoUdp);
+    innerHeader.SetHopLimit(64);
+    innerHeader.SetSource(aLeaderEid);
+    innerHeader.SetDestination(aRouter.Get<Mle::Mle>().GetMeshLocalEid());
+    SuccessOrQuit(message->Append(innerHeader));
+
+    // Set message priority/etc
+    SuccessOrQuit(message->SetPriority(Message::kPriorityNormal));
+
+    // Send it
+    SuccessOrQuit(aRouter.Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(message)));
+}
+
+static void SendGapFragment2(Node &aRouter, const Ip6::Address &aLeaderEid, uint32_t aIdentification)
+{
+    Message *message = aRouter.Get<MessagePool>().Allocate(Message::kTypeIp6);
+    VerifyOrQuit(message != nullptr);
+
+    // 1. Outer IPv6 Header
+    Ip6::Header outerHeader;
+    outerHeader.InitVersionTrafficClassFlow();
+    outerHeader.SetPayloadLength(8); // 8 bytes (Fragment Header)
+    outerHeader.SetNextHeader(Ip6::kProtoFragment);
+    outerHeader.SetHopLimit(64);
+    outerHeader.SetSource(aRouter.Get<Mle::Mle>().GetMeshLocalEid());
+    outerHeader.SetDestination(aLeaderEid);
+    SuccessOrQuit(message->Append(outerHeader));
+
+    // 2. Fragment Header
+    Ip6::FragmentHeader fragmentHeader;
+    fragmentHeader.Init();
+    fragmentHeader.SetNextHeader(Ip6::kProtoIp6);
+    fragmentHeader.SetOffset(80);   // 80 * 8 = 640 bytes (under MTU limit)
+    fragmentHeader.ClearMoreFlag(); // M = 0
+    fragmentHeader.SetIdentification(aIdentification);
+    SuccessOrQuit(message->Append(fragmentHeader));
+
+    // Set message priority/etc
+    SuccessOrQuit(message->SetPriority(Message::kPriorityNormal));
+
+    // Send it
+    SuccessOrQuit(aRouter.Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(message)));
+}
+
 void TestIPv6Fragmentation(void)
 {
     /**
@@ -88,6 +179,31 @@ void TestIPv6Fragmentation(void)
     // 1831 bytes payload + 8 bytes ICMP header + 40 bytes IPv6 header = 1879 bytes.
     // This exceeds the 1280 bytes MTU and triggers IPv6 fragmentation.
     nexus.SendAndVerifyEchoRequest(router, leader.Get<Mle::Mle>().GetMeshLocalEid(), 1831, 64, kEchoTimeout);
+
+    Log("Step 4: Fragment Reassembly Gap Check Test");
+    gForwardedPacketReceived = false;
+    gForwardedPacketLen      = 0;
+
+    // Register the custom receive callback on Router to intercept the forwarded packet.
+    router.Get<Ip6::Ip6>().SetReceiveCallback(MyCustomIp6ReceiveCallback, nullptr);
+
+    {
+        uint32_t identification = 0x12345678;
+        Log("Sending Fragment 1 (offset=0, M=1)");
+        SendGapFragment1(router, leader.Get<Mle::Mle>().GetMeshLocalEid(), identification);
+        nexus.AdvanceTime(100); // Short wait
+
+        Log("Sending Fragment 2 (offset=640, M=0)");
+        SendGapFragment2(router, leader.Get<Mle::Mle>().GetMeshLocalEid(), identification);
+        nexus.AdvanceTime(1000); // Wait for reassembly and forwarding
+    }
+
+    // Check if the packet was received (Expect no packet received in patched version!)
+    VerifyOrQuit(!gForwardedPacketReceived, "Reassembly gap check failed: forwarded packet was received!");
+    Log("Success: No forwarded packet was received. Reassembly gap is properly handled!");
+
+    // Restore default receive callback on Router
+    router.Get<Ip6::Ip6>().SetReceiveCallback(Node::HandleIp6Receive, &router);
 
     nexus.SaveTestInfo("test_ipv6_fragmentation.json");
 }

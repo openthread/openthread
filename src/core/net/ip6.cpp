@@ -666,6 +666,7 @@ Error Ip6::HandleFragment(Message &aMessage)
     if (message == nullptr)
     {
         LogDebg("start reassembly");
+        VerifyOrExit(offset == 0, error = kErrorDrop);
         VerifyOrExit((message = NewMessage()) != nullptr, error = kErrorNoBufs);
         mReassemblyList.Enqueue(*message);
 
@@ -678,6 +679,10 @@ Error Ip6::HandleFragment(Message &aMessage)
 
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kIp6FragmentReassembler);
     }
+    else
+    {
+        VerifyOrExit(offset == message->GetOffset(), error = kErrorDrop);
+    }
 
     // increase message buffer if necessary
     if (message->GetLength() < offset + payloadFragment + aMessage.GetOffset())
@@ -689,6 +694,8 @@ Error Ip6::HandleFragment(Message &aMessage)
     message->WriteBytesFromMessage(
         /* aWriteOffset */ aMessage.GetOffset() + offset, aMessage,
         /* aReadOffset */ aMessage.GetOffset() + sizeof(fragmentHeader), /* aLength */ payloadFragment);
+
+    message->SetOffset(offset + payloadFragment);
 
     // check if it is the last frame
     if (!fragmentHeader.IsMoreFlagSet())
