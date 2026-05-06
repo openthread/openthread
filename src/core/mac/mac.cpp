@@ -2491,12 +2491,8 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     CslNeighbor *neighbor = nullptr;
     const CslIe *csl;
 
-    uint8_t keyIdMode;
-
-    VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
-
-    IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+    VerifyOrExit(aFrame.IsVersion2015());
+    VerifyOrExit(aFrame.IsSecuredWith(RxFrame::kAllowKeyIdMode1));
 
     csl = aFrame.GetCslIe();
     VerifyOrExit(csl != nullptr);

@@ -1561,6 +1561,32 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
+bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
+{
+    bool    isSecure = false;
+    uint8_t keyIdMode;
+
+    VerifyOrExit(GetSecurityEnabled());
+    SuccessOrExit(GetKeyIdMode(keyIdMode));
+
+    switch (keyIdMode)
+    {
+    case kKeyIdMode0:
+        VerifyOrExit(aFlags & kAllowKeyIdMode0);
+        break;
+    case kKeyIdMode1:
+        VerifyOrExit(aFlags & kAllowKeyIdMode1);
+        break;
+    default:
+        ExitNow();
+    }
+
+    isSecure = true;
+
+exit:
+    return isSecure;
+}
+
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD

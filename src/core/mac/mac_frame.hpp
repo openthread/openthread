@@ -934,6 +934,30 @@ public:
     friend class TxFrame;
 
     /**
+     * Defines flags to indicate allowed Key ID Modes, used in `IsSecuredWith()`.
+     */
+    enum KeyIdModeFlag : uint8_t
+    {
+        kAllowKeyIdMode0 = (1 << 0), ///< Allow Key ID Mode 0.
+        kAllowKeyIdMode1 = (1 << 1), ///< Allow Key ID Mode 1.
+    };
+
+    /**
+     * Represents a set of `KeyIdModeFlag`s.
+     */
+    typedef uint8_t KeyIdModeFlags;
+
+    /**
+     * Indicates whether the frame is secured with a given set of allowed Key ID Modes.
+     *
+     * @param[in] aFlags  A bitmask of `KeyIdModeFlags` specifying the allowed modes.
+     *
+     * @retval TRUE   The frame has security enabled and uses one of the allowed Key ID Modes.
+     * @retval FALSE  The frame does not have security enabled, or its Key ID Mode is not allowed.
+     */
+    bool IsSecuredWith(KeyIdModeFlags aFlags) const;
+
+    /**
      * Returns the RSSI in dBm used for reception.
      *
      * @returns The RSSI in dBm used for reception.
