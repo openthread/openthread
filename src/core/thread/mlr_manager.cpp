@@ -209,16 +209,28 @@ void Manager::UpdateTimeTickerRegistration(void)
     }
 }
 
+bool Manager::ShouldRegister(void) const
+{
+    bool shouldRegister = false;
+
+    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1());
+    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary());
+
+    shouldRegister = true;
+
+exit:
+    return shouldRegister;
+}
+
 void Manager::Send(void)
 {
     Error        error;
     AddressArray addresses;
 
     VerifyOrExit(!mPending, error = kErrorBusy);
+
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1(),
-                 error = kErrorInvalidState);
-    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
+    VerifyOrExit(ShouldRegister(), error = kErrorInvalidState);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     // Append Netif multicast addresses
@@ -568,8 +580,7 @@ void Manager::Reregister(void)
 
 void Manager::UpdateReregistrationDelay(bool aRereg)
 {
-    bool needSend = (Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1()) &&
-                    Get<BackboneRouter::Leader>().HasPrimary();
+    bool needSend = ShouldRegister();
 
     if (!needSend)
     {

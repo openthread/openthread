@@ -150,8 +150,8 @@ private:
         void AddUnique(const Ip6::Address &aAddress);
     };
 
-    void HandleNotifierEvents(Events aEvents);
-
+    void  HandleNotifierEvents(Events aEvents);
+    bool  ShouldRegister(void) const;
     void  Send(void);
     Error SendMessage(const Ip6::Address   *aAddresses,
                       uint8_t               aAddressNum,
