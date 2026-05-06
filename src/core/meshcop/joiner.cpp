@@ -184,6 +184,7 @@ void Joiner::Finish(Error aError)
     case kStateJoined:
         Get<Tmf::SecureAgent>().Disconnect();
         mTimer.Stop();
+        Get<KeyManager>().ClearKek();
 
         OT_FALL_THROUGH;
 

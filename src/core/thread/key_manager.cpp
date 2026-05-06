@@ -516,6 +516,12 @@ void KeyManager::SetKek(const Kek &aKek)
     mIsKekSet        = true;
 }
 
+void KeyManager::ClearKek(void)
+{
+    mKek.Clear();
+    mIsKekSet = false;
+}
+
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
     SecurityPolicy newPolicy = aSecurityPolicy;

@@ -486,6 +486,11 @@ public:
     void SetKek(const uint8_t *aKekBytes) { SetKek(*reinterpret_cast<const Kek *>(aKekBytes)); }
 
     /**
+     * Clears the KEK.
+     */
+    void ClearKek(void);
+
+    /**
      * Returns the current KEK Frame Counter value.
      *
      * @returns The current KEK Frame Counter value.
