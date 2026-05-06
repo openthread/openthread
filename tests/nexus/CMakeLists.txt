@@ -394,6 +394,7 @@ ot_nexus_test(1_4_PIC_TC_3 "cert;nexus")
 ot_nexus_test(1_4_PIC_TC_4 "cert;nexus")
 ot_nexus_test(1_4_CS_TC_3 "cert;nexus")
 ot_nexus_test(inform_previous_parent_on_reattach "cert;nexus")
+ot_nexus_test(retransmission_security "core;nexus")
 
 # Misc tests
 ot_nexus_test(anycast "core;nexus")
