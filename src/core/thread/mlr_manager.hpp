@@ -146,7 +146,6 @@ private:
     class AddressArray : public Array<Ip6::Address, kMaxIp6Addresses>
     {
     public:
-        bool IsEmptyOrContains(const Ip6::Address &aAddress) const { return IsEmpty() || Contains(aAddress); }
         void AddUnique(const Ip6::Address &aAddress);
     };
 
@@ -161,6 +160,9 @@ private:
     DeclareTmfResponseHandlerIn(Manager, HandleResponse);
 
     static Error ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
+    static bool  DidRegisterSuccessfully(const Ip6::Address &aAddress,
+                                         bool                aSuccess,
+                                         const AddressArray &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     DeclareTmfResponseHandlerIn(Manager, HandleRegisterResponse);

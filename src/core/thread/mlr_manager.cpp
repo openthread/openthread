@@ -509,6 +509,35 @@ void Manager::SetMulticastAddressState(State aFromState, State aToState)
 #endif
 }
 
+bool Manager::DidRegisterSuccessfully(const Ip6::Address &aAddress, bool aSuccess, const AddressArray &aFailedAddresses)
+{
+    // If the operation succeeded, all address registrations were successful.
+    //
+    // If it failed and the failed address list is empty, all registrations
+    // failed.
+    //
+    // If it failed and a non-empty failed address list is provided, only the
+    // addresses in the list failed (if an address is not in the list, its
+    // registration was successful).
+
+    bool didRegister;
+
+    if (aSuccess)
+    {
+        didRegister = true;
+    }
+    else if (aFailedAddresses.IsEmpty())
+    {
+        didRegister = false;
+    }
+    else
+    {
+        didRegister = !aFailedAddresses.Contains(aAddress);
+    }
+
+    return didRegister;
+}
+
 void Manager::Finish(bool aSuccess, const AddressArray &aFailedAddresses)
 {
     OT_ASSERT(mPending);
@@ -520,9 +549,9 @@ void Manager::Finish(bool aSuccess, const AddressArray &aFailedAddresses)
     {
         if (addr.Matches(kStateRegistering))
         {
-            bool success = aSuccess || !aFailedAddresses.IsEmptyOrContains(addr.GetAddress());
+            bool didRegister = DidRegisterSuccessfully(addr.GetAddress(), aSuccess, aFailedAddresses);
 
-            addr.SetMlrState(success ? kStateRegistered : kStateToRegister);
+            addr.SetMlrState(didRegister ? kStateRegistered : kStateToRegister);
         }
     }
 #endif
@@ -538,9 +567,9 @@ void Manager::Finish(bool aSuccess, const AddressArray &aFailedAddresses)
 
             if (addrEntry.GetMlrState(child) == kStateRegistering)
             {
-                bool success = aSuccess || !aFailedAddresses.IsEmptyOrContains(addrEntry);
+                bool didRegister = DidRegisterSuccessfully(addrEntry, aSuccess, aFailedAddresses);
 
-                addrEntry.SetMlrState(success ? kStateRegistered : kStateToRegister, child);
+                addrEntry.SetMlrState(didRegister ? kStateRegistered : kStateToRegister, child);
             }
         }
     }
