@@ -362,7 +362,7 @@ private:
     Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
     Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
-    Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive);
+    Error HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive, bool aIsHopByHop);
     Error Receive(Header            &aIp6Header,
                   OwnedPtr<Message> &aMessagePtr,
                   uint8_t            aIpProto,

@@ -489,7 +489,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive)
+Error Ip6::HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceive, bool aIsHopByHop)
 {
     Error          error        = kErrorNone;
     bool           hasMplOption = false;
@@ -516,7 +516,7 @@ Error Ip6::HandleOptions(Message &aMessage, const Header &aHeader, bool &aReceiv
             continue;
         }
 
-        if (option.GetType() == MplOption::kType)
+        if (aIsHopByHop && (option.GetType() == MplOption::kType))
         {
             VerifyOrExit(!hasMplOption, error = kErrorDrop);
             hasMplOption = true;
@@ -817,10 +817,11 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
         {
         case kProtoHopOpts:
             VerifyOrExit(first, error = kErrorDrop);
-            OT_FALL_THROUGH;
+            SuccessOrExit(error = HandleOptions(*aMessagePtr, aHeader, aReceive, /* aIsHopByHop */ true));
+            break;
 
         case kProtoDstOpts:
-            SuccessOrExit(error = HandleOptions(*aMessagePtr, aHeader, aReceive));
+            SuccessOrExit(error = HandleOptions(*aMessagePtr, aHeader, aReceive, /* aIsHopByHop */ false));
             break;
 
         case kProtoFragment:
