@@ -175,6 +175,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
+    , mIsKekSet(false)
 {
     otPlatCryptoInit();
 
@@ -512,6 +513,7 @@ void KeyManager::SetKek(const Kek &aKek)
 {
     mKek.SetFrom(aKek, /* aIsExportable */ true);
     mKekFrameCounter = 0;
+    mIsKekSet        = true;
 }
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
@@ -695,6 +697,7 @@ void KeyManager::DestroyTemporaryKeys(void)
 {
     mMleKey.Clear();
     mKek.Clear();
+    mIsKekSet = false;
     Get<Mac::SubMac>().ClearMacKeys();
 }
 
