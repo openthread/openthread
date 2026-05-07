@@ -75,16 +75,16 @@ void TestMleRouterRoleAllowed(void)
     Node &leader       = nexus.CreateNode();
     Node &router       = nexus.CreateNode();
     Node &reed         = nexus.CreateNode();
-    Node &fed_only     = nexus.CreateNode();
-    Node &med_only     = nexus.CreateNode();
+    Node &fedOnly      = nexus.CreateNode();
+    Node &medOnly      = nexus.CreateNode();
     Node &fedAndRouter = nexus.CreateNode();
     Node &medAndRouter = nexus.CreateNode();
 
     leader.SetName("Leader");
     router.SetName("Router");
     reed.SetName("REED");
-    fed_only.SetName("FED_ONLY");
-    med_only.SetName("MED_ONLY");
+    fedOnly.SetName("FED_ONLY");
+    medOnly.SetName("MED_ONLY");
     fedAndRouter.SetName("FED_Router");
     medAndRouter.SetName("MED_Router");
 
@@ -97,14 +97,14 @@ void TestMleRouterRoleAllowed(void)
 
     AllowLinkBetween(leader, router);
     AllowLinkBetween(leader, reed);
-    AllowLinkBetween(leader, fed_only);
-    AllowLinkBetween(leader, med_only);
+    AllowLinkBetween(leader, fedOnly);
+    AllowLinkBetween(leader, medOnly);
     AllowLinkBetween(leader, fedAndRouter);
     AllowLinkBetween(leader, medAndRouter);
 
     AllowLinkBetween(router, reed);
-    AllowLinkBetween(router, fed_only);
-    AllowLinkBetween(router, med_only);
+    AllowLinkBetween(router, fedOnly);
+    AllowLinkBetween(router, medOnly);
     AllowLinkBetween(router, fedAndRouter);
     AllowLinkBetween(router, medAndRouter);
 
@@ -136,20 +136,20 @@ void TestMleRouterRoleAllowed(void)
     // Router role is allowed for the REED, but should not upgrade due to the updated threshold
     VerifyOrQuit(reed.Get<Mle::Mle>().IsRouterRoleAllowed());
 
-    fed_only.Join(leader);
+    fedOnly.Join(leader);
     // Attach as an FTD, but not configured as router-eligible
-    SuccessOrQuit(fed_only.Get<Mle::Mle>().SetRouterEligible(false));
-    VerifyOrQuit(!fed_only.Get<Mle::Mle>().IsRouterRoleAllowed());
+    SuccessOrQuit(fedOnly.Get<Mle::Mle>().SetRouterEligible(false));
+    VerifyOrQuit(!fedOnly.Get<Mle::Mle>().IsRouterRoleAllowed());
 
-    med_only.Join(leader, Node::kAsMed);
-    VerifyOrQuit(!med_only.Get<Mle::Mle>().IsRouterRoleAllowed());
+    medOnly.Join(leader, Node::kAsMed);
+    VerifyOrQuit(!medOnly.Get<Mle::Mle>().IsRouterRoleAllowed());
 
     nexus.AdvanceTime(kAttachToRouterTime);
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(reed.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(fed_only.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(med_only.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fedOnly.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(medOnly.Get<Mle::Mle>().IsChild());
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 1.4: Join end devices that will have router role allowed - fed & med");
@@ -172,8 +172,8 @@ void TestMleRouterRoleAllowed(void)
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(reed.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(fed_only.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(med_only.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fedOnly.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(medOnly.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(fedAndRouter.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(medAndRouter.Get<Mle::Mle>().IsChild());
 
@@ -195,8 +195,8 @@ void TestMleRouterRoleAllowed(void)
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(reed.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(fed_only.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(med_only.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fedOnly.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(medOnly.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(fedAndRouter.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(medAndRouter.Get<Mle::Mle>().IsRouter());
 
@@ -219,8 +219,8 @@ void TestMleRouterRoleAllowed(void)
     VerifyOrQuit(leader.Get<Mle::Mle>().IsLeader());
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
     VerifyOrQuit(reed.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(fed_only.Get<Mle::Mle>().IsChild());
-    VerifyOrQuit(med_only.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(fedOnly.Get<Mle::Mle>().IsChild());
+    VerifyOrQuit(medOnly.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(fedAndRouter.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(medAndRouter.Get<Mle::Mle>().IsChild());
 
