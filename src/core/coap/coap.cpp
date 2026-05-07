@@ -978,10 +978,18 @@ Error CoapBase::ProcessBlockwiseRequest(Msg &aRxMsg, const Message::UriPathStrin
             case 2:
                 if (resource.mTransmitHook != nullptr)
                 {
-                    if ((error = ProcessBlock2Request(aRxMsg, resource)) != kErrorNone)
+                    switch (ProcessBlock2Request(aRxMsg, resource))
                     {
+                    case kErrorNone:
+                        break;
+                    case kErrorNoFrameReceived:
+                        IgnoreError(SendResponse(kCodeRequestIncomplete, aRxMsg));
+                        error = kErrorDrop;
+                        break;
+                    default:
                         IgnoreError(SendResponse(kCodeInternalError, aRxMsg));
                         error = kErrorDrop;
+                        break;
                     }
                 }
                 break;
@@ -1267,6 +1275,8 @@ Error CoapBase::ProcessBlock2Request(Msg &aRxMsg, const ResourceBlockWise &aReso
         aResource.HandleRequest(aRxMsg);
         ExitNow();
     }
+
+    VerifyOrExit(mLastResponse != nullptr, error = kErrorNoFrameReceived);
 
     VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorNoBufs);
 

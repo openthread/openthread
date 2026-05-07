@@ -38,9 +38,27 @@ namespace Nexus {
 
 static otError TransmitHook(void *aContext, uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore);
 
-static bool sRequestHandlerCalled = false;
-static bool sReceiveHookCalled    = false;
-static bool sTransmitHookCalled   = false;
+static bool       sRequestHandlerCalled         = false;
+static bool       sReceiveHookCalled            = false;
+static bool       sTransmitHookCalled           = false;
+static bool       sReproductionResponseReceived = false;
+static otCoapCode sReproductionResponseCode     = OT_COAP_CODE_EMPTY;
+
+static void HandleReproductionResponse(void                *aContext,
+                                       otMessage           *aMessage,
+                                       const otMessageInfo *aMessageInfo,
+                                       otError              aResult)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aResult);
+
+    sReproductionResponseReceived = true;
+    if (aMessage != nullptr)
+    {
+        sReproductionResponseCode = otCoapMessageGetCode(aMessage);
+    }
+}
 
 static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
@@ -211,6 +229,29 @@ void TestCoapBlock(void)
     VerifyOrQuit(sRequestHandlerCalled);
     VerifyOrQuit(sTransmitHookCalled); // Router should transmit blocks
     VerifyOrQuit(sReceiveHookCalled);  // Leader should receive blocks
+
+    // Reproduction test case:
+    // Router sends GET request with Block2 number 1 (NUM > 0) but without active transfer
+    message = router.Get<Coap::ApplicationCoap>().NewMessage();
+    VerifyOrQuit(message != nullptr);
+    SuccessOrQuit(message->Init(Coap::kTypeConfirmable, Coap::kCodeGet));
+    SuccessOrQuit(message->AppendUriPathOptions("test"));
+
+    blockInfo.mBlockNumber = 1;
+    blockInfo.mBlockSzx    = Coap::kBlockSzx16;
+    blockInfo.mMoreBlocks  = false;
+    SuccessOrQuit(message->AppendBlockOption(Coap::kOptionBlock2, blockInfo));
+
+    sReproductionResponseReceived = false;
+    sReproductionResponseCode     = OT_COAP_CODE_EMPTY;
+
+    SuccessOrQuit(router.Get<Coap::ApplicationCoap>().SendMessageWithResponseHandlerSeparateParams(
+        *message, messageInfo, nullptr, &HandleReproductionResponse, nullptr, nullptr, nullptr));
+
+    nexus.AdvanceTime(5 * 1000);
+
+    VerifyOrQuit(sReproductionResponseReceived);
+    VerifyOrQuit(sReproductionResponseCode == OT_COAP_CODE_REQUEST_INCOMPLETE);
 
     leader.Get<Coap::ApplicationCoap>().RemoveBlockWiseResource(resource);
     IgnoreError(leader.Get<Coap::ApplicationCoap>().Stop());
