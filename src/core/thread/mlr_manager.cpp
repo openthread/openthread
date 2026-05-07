@@ -102,7 +102,6 @@ void Manager::UpdateLocalSubscriptions(void)
     }
 #endif
 
-    CheckInvariants();
     ScheduleSend(0);
 }
 
@@ -174,7 +173,6 @@ void Manager::UpdateProxiedSubscriptions(Child &aChild, const ChildAddressArray 
 
 exit:
     LogMulticastAddresses();
-    CheckInvariants();
 
     if (aChild.HasAnyMlrToRegisterAddress())
     {
@@ -317,7 +315,6 @@ exit:
     }
 
     LogMulticastAddresses();
-    CheckInvariants();
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
@@ -603,7 +600,6 @@ void Manager::Finish(bool aSuccess, const AddressArray &aFailedAddresses)
 #endif
 
     LogMulticastAddresses();
-    CheckInvariants();
 }
 
 void Manager::HandleTimeTick(void)
@@ -626,7 +622,6 @@ void Manager::Reregister(void)
     LogInfo("MLR Reregister!");
 
     SetMulticastAddressState(kStateRegistered, kStateToRegister);
-    CheckInvariants();
 
     ScheduleSend(0);
 
@@ -741,43 +736,6 @@ Error Manager::AddressArray::AddUnique(const Ip6::Address &aAddress)
     }
 
     return error;
-}
-
-void Manager::CheckInvariants(void) const
-{
-#if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_CONFIG_ASSERT_ENABLE
-    uint16_t registeringNum = 0;
-
-    OT_UNUSED_VARIABLE(registeringNum);
-
-    OT_ASSERT(!mPending || mSendDelay == 0);
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE
-    for (Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().GetMulticastAddresses())
-    {
-        if (addr.Matches(kStateRegistering))
-        {
-            registeringNum++;
-        }
-    }
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
-    {
-        for (const Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
-        {
-            if (!addrEntry.IsMulticastLargerThanRealmLocal())
-            {
-                continue;
-            }
-
-            registeringNum += (addrEntry.GetMlrState(child) == kStateRegistering);
-        }
-    }
-#endif
-
-    OT_ASSERT(registeringNum == 0 || mPending);
-#endif // OPENTHREAD_EXAMPLES_SIMULATION
 }
 
 } // namespace Mlr

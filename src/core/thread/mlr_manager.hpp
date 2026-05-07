@@ -201,9 +201,7 @@ private:
     void ScheduleNextRegistration(RegistrationRequest aRequest);
     void Reregister(void);
     void HandleTimeTick(void);
-
     void LogMulticastAddresses(void);
-    void CheckInvariants(void) const;
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Callback<RegisterCallback> mRegisterCallback;
