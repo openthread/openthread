@@ -127,7 +127,7 @@ def verify(pv):
         filter_wpan_src64(ROUTER_2).\
         must_next()
     router2_id_reattached = (router2_rejoin_pkt.mle.tlv.source_addr >> 10)
-    router2_child_id_reattached = router2_id_reattached.mle.tlv.source_addr & 0x1FF
+    router2_child_id_reattached = router2_rejoin_pkt.mle.tlv.source_addr & 0x1FF
     # Router 2 should only advertise as a router
     assert router2_child_id_reattached == 0
 
