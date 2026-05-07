@@ -572,6 +572,23 @@ public:
     Error SendMessage(OwnedPtr<Message> aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
+     * Gets a copy of the request message currently being dispatched (`ResponseHandler` callback is invoked).
+     *
+     * This method can only be used from a `ResponseHandler` callback. It returns a copy of the original request
+     * message if the request was confirmable.
+     *
+     * @param[out] aMessage    A reference to an `OwnedPtr` to return a copy of original request message.
+     *
+     * @retval kErrorNone      Successfully retrieved and cloned the request message.
+     * @retval kErrorNotFound  Not currently dispatching a confirmable request.
+     * @retval kErrorNoBufs    Failed to allocate a message for the clone.
+     */
+    Error GetDispatchingRequest(OwnedPtr<Message> &aMessage) const
+    {
+        return mPendingRequests.GetDispatchingRequest(aMessage);
+    }
+
+    /**
      * Sends an empty CoAP message (using `kCodeEmpty` Code 0.00).
      *
      * An empty CoAP message has no options and no payload (only a 4-byte header). This is typically used for sending
@@ -824,10 +841,6 @@ private:
         bool ShouldRetransmit(void) const;
         void UpdateRetxCounterAndTimeout(TimeMilli aNow);
         bool HasResponseHandler(void) const { return GetCallbacks().HasResponseHandler(); }
-        void InvokeResponseHandler(Msg *aMsg, Error aResult) const
-        {
-            GetCallbacks().InvokeResponseHandler(aMsg, aResult);
-        }
 
         const Message       &GetMessage(void) const { return *mMessage; }
         const Ip6::Address  &GetSourceAddress(void) const { return mMetadata.mSourceAddress; }
@@ -896,6 +909,9 @@ private:
         void  AbortAllRequests(void);
         void  AbortRequestsMatching(const Ip6::Address &aAddress);
         Error AbortRequestsMatching(ResponseHandler aHandler, void *aContext);
+        void  DispatchResponse(Request &aRequest, Error aResult, Msg *aResponse);
+        void  DispatchResponse(Request &aRequest, Error aResult);
+        Error GetDispatchingRequest(OwnedPtr<Message> &aMessage) const;
         void  GetInfo(MessageQueue::Info &aInfo) const { mRequestMessages.GetInfo(aInfo); }
 
     private:
@@ -935,6 +951,7 @@ private:
 
         CoapBase         &mCoapBase;
         MessageQueue      mRequestMessages;
+        const Request    *mDispatchingRequest;
         TimerMilliContext mTimer;
     };
 

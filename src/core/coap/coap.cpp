@@ -618,7 +618,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
             if (shouldObserve)
             {
                 // This is a RFC7641 notification.  The request is *not* done!
-                request.InvokeResponseHandler(&aRxMsg, kErrorNone);
+                mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
 
                 request.MarkAsAcknowledged();
                 ExitNow();
@@ -648,7 +648,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (shouldObserve)
         {
-            request.InvokeResponseHandler(&aRxMsg, kErrorNone);
+            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
 
             // When any Observe response is seen, consider a NON observe
             // request "acknowledged" at this point. This will keep the
@@ -669,7 +669,7 @@ void CoapBase::ProcessReceivedResponse(Msg &aRxMsg)
 
         if (request.HasResponseHandler() && request.GetDestinationAddress().IsMulticast())
         {
-            request.InvokeResponseHandler(&aRxMsg, kErrorNone);
+            mPendingRequests.DispatchResponse(request, kErrorNone, &aRxMsg);
         }
         else
         {
@@ -1535,6 +1535,7 @@ bool CoapBase::Request::IsObserveSubscription(void) const
 
 CoapBase::PendingRequests::PendingRequests(Instance &aInstance, CoapBase &aCoapBase)
     : mCoapBase(aCoapBase)
+    , mDispatchingRequest(nullptr)
     , mTimer(aInstance, HandleTimer, this)
 {
 }
@@ -1632,11 +1633,46 @@ void CoapBase::PendingRequests::FinalizeRequest(Request &aRequest, Error aResult
 {
     VerifyOrExit(aRequest.HasMessage());
 
-    Remove(aRequest);
-    aRequest.InvokeResponseHandler(aResponse, aResult);
+    mRequestMessages.Dequeue(*aRequest.mMessage);
+
+    DispatchResponse(aRequest, aResult, aResponse);
+
+    aRequest.mMessage->Free();
+    aRequest.Clear();
 
 exit:
     return;
+}
+
+void CoapBase::PendingRequests::DispatchResponse(Request &aRequest, Error aResult)
+{
+    DispatchResponse(aRequest, aResult, /* aResponse */ nullptr);
+}
+
+void CoapBase::PendingRequests::DispatchResponse(Request &aRequest, Error aResult, Msg *aResponse)
+{
+    const Request *prev = mDispatchingRequest;
+
+    mDispatchingRequest = &aRequest;
+    aRequest.GetCallbacks().InvokeResponseHandler(aResponse, aResult);
+    mDispatchingRequest = prev;
+}
+
+Error CoapBase::PendingRequests::GetDispatchingRequest(OwnedPtr<Message> &aMessage) const
+{
+    Error error = kErrorNotFound;
+
+    VerifyOrExit(mDispatchingRequest != nullptr);
+    VerifyOrExit(mDispatchingRequest->IsConfirmable());
+    VerifyOrExit(mDispatchingRequest->HasMessage());
+
+    aMessage.Reset(mCoapBase.CloneMessageWithout<Request::Metadata>(mDispatchingRequest->GetMessage()));
+    VerifyOrExit(aMessage != nullptr, error = kErrorNoBufs);
+
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 void CoapBase::PendingRequests::AbortAllRequests(void)
@@ -1686,7 +1722,7 @@ void CoapBase::PendingRequests::FinalizeRemovedRequestsIn(MessageQueue &aQueue, 
         Request request;
 
         request.InitFrom(message);
-        request.InvokeResponseHandler(/* aResponse */ nullptr, aResult);
+        DispatchResponse(request, aResult);
     }
 
     aQueue.DequeueAndFreeAll();
