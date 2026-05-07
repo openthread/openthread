@@ -264,6 +264,8 @@ public:
 private:
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+    static constexpr uint32_t kHandshakeTimeout = 15 * 1000; // Handshake timeout (in msec)
+    static constexpr uint32_t kMaxSessions      = 16;        // Max concurrent secure sessions
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     static constexpr uint16_t kDummyUdpPort          = 49152;
