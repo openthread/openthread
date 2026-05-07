@@ -146,7 +146,7 @@ private:
     class AddressArray : public Array<Ip6::Address, kMaxIp6Addresses>
     {
     public:
-        void AddUnique(const Ip6::Address &aAddress);
+        Error AddUnique(const Ip6::Address &aAddress);
     };
 
     void  HandleNotifierEvents(Events aEvents);
@@ -191,9 +191,8 @@ private:
     void Reregister(void);
     void HandleTimeTick(void);
 
-    void        LogMulticastAddresses(void);
-    void        CheckInvariants(void) const;
-    static void LogResponse(Error aResult, Error aError, uint8_t aStatus, const AddressArray &aFailedAddresses);
+    void LogMulticastAddresses(void);
+    void CheckInvariants(void) const;
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Callback<RegisterCallback> mRegisterCallback;

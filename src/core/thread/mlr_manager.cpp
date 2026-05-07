@@ -243,7 +243,7 @@ void Manager::Send(void)
 
         if (addr.Matches(kStateToRegister))
         {
-            addresses.AddUnique(addr.GetAddress());
+            IgnoreError(addresses.AddUnique(addr.GetAddress()));
             addr.SetMlrState(kStateRegistering);
         }
     }
@@ -277,7 +277,7 @@ void Manager::Send(void)
 
             if (addrEntry.GetMlrState(child) == kStateToRegister)
             {
-                addresses.AddUnique(addrEntry);
+                IgnoreError(addresses.AddUnique(addrEntry));
                 addrEntry.SetMlrState(kStateRegistering, child);
             }
         }
@@ -450,33 +450,56 @@ void Manager::HandleResponse(Coap::Msg *aMsg, Error aResult)
 
 Error Manager::ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses)
 {
-    Error       error;
+    Error       error = aResult;
     OffsetRange offsetRange;
 
     aStatus = kStatusGeneralFailure;
+    aFailedAddresses.Clear();
 
-    VerifyOrExit(aResult == kErrorNone && aMsg != nullptr, error = kErrorParse);
+    SuccessOrExit(error);
+    VerifyOrExit(aMsg != nullptr, error = kErrorParse);
     VerifyOrExit(aMsg->GetCode() == Coap::kCodeChanged, error = kErrorParse);
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMsg->mMessage, aStatus));
 
     if (Tlv::FindTlvValueOffsetRange(aMsg->mMessage, Ip6AddressesTlv::kType, offsetRange) == kErrorNone)
     {
-        VerifyOrExit(offsetRange.GetLength() % sizeof(Ip6::Address) == 0, error = kErrorParse);
-        VerifyOrExit(offsetRange.GetLength() / sizeof(Ip6::Address) <= kMaxIp6Addresses, error = kErrorParse);
-
         while (!offsetRange.IsEmpty())
         {
-            IgnoreError(aMsg->mMessage.Read(offsetRange, *aFailedAddresses.PushBack()));
+            Ip6::Address address;
+
+            SuccessOrExit(error = aMsg->mMessage.Read(offsetRange, address));
             offsetRange.AdvanceOffset(sizeof(Ip6::Address));
+
+            SuccessOrExit(error = aFailedAddresses.AddUnique(address));
         }
     }
 
-    VerifyOrExit(aFailedAddresses.IsEmpty() || aStatus != kStatusSuccess, error = kErrorParse);
+    if (aStatus == kStatusSuccess)
+    {
+        VerifyOrExit(aFailedAddresses.IsEmpty(), error = kErrorParse);
+
+        LogInfo("Receive MLR.rsp OK");
+        ExitNow();
+    }
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+    LogWarn("Receive MLR.rsp: status=%u, failedAddressNum=%u", aStatus, aFailedAddresses.GetLength());
+
+    for (const Ip6::Address &address : aFailedAddresses)
+    {
+        LogWarn("   %s", address.ToString().AsCString());
+    }
+#endif
 
 exit:
-    LogResponse(aResult, error, aStatus, aFailedAddresses);
-    return aResult != kErrorNone ? aResult : error;
+    if (error != kErrorNone)
+    {
+        aFailedAddresses.Clear();
+    }
+
+    LogWarnOnError(error, "parse MLR.rsp");
+    return error;
 }
 
 void Manager::SetMulticastAddressState(State aFromState, State aToState)
@@ -685,37 +708,16 @@ void Manager::LogMulticastAddresses(void)
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 }
 
-void Manager::AddressArray::AddUnique(const Ip6::Address &aAddress)
+Error Manager::AddressArray::AddUnique(const Ip6::Address &aAddress)
 {
+    Error error = kErrorNone;
+
     if (!Contains(aAddress))
     {
-        IgnoreError(PushBack(aAddress));
+        error = PushBack(aAddress);
     }
-}
 
-void Manager::LogResponse(Error aResult, Error aError, uint8_t aStatus, const AddressArray &aFailedAddresses)
-{
-    OT_UNUSED_VARIABLE(aResult);
-    OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aStatus);
-    OT_UNUSED_VARIABLE(aFailedAddresses);
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-    if (aResult == kErrorNone && aError == kErrorNone && aStatus == kStatusSuccess)
-    {
-        LogInfo("Receive MLR.rsp OK");
-    }
-    else
-    {
-        LogWarn("Receive MLR.rsp: result=%s, error=%s, status=%d, failedAddressNum=%d", ErrorToString(aResult),
-                ErrorToString(aError), aStatus, aFailedAddresses.GetLength());
-
-        for (const Ip6::Address &address : aFailedAddresses)
-        {
-            LogWarn("MA failed: %s", address.ToString().AsCString());
-        }
-    }
-#endif
+    return error;
 }
 
 void Manager::CheckInvariants(void) const
