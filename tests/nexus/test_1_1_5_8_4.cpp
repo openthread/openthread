@@ -131,7 +131,7 @@ void Test5_8_4(void)
     VerifyOrQuit(commr1.Get<MeshCoP::Commissioner>().IsActive());
 
     /** Add a joiner on commr1 to enable joining on the Leader. */
-    SuccessOrQuit(commr1.Get<MeshCoP::Commissioner>().AddJoinerAny("123456", 100));
+    SuccessOrQuit(commr1.Get<MeshCoP::Commissioner>().AddJoinerAny("123456", 1000));
     nexus.AdvanceTime(kStabilizationTime);
 
     Log("---------------------------------------------------------------------------------------");

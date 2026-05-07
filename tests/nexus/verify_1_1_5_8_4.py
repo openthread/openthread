@@ -98,9 +98,6 @@ def verify(pv):
         must_next()
     pkts.filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).must_next()
 
-    # Save index for out-of-order search
-    idx10 = pv.pkts.index
-
     # Step 11: Commissioner_2
     # - Description: Harness instructs device to try to join the network as a Native Commissioner.
     # - Pass Criteria: N/A.
@@ -108,11 +105,14 @@ def verify(pv):
     # Step 12: Leader (DUT)
     # - Description: Automatically rejects Commissioner_2's attempt to join.
     # - Pass Criteria: The DUT MUST send a Discovery Response with Native Commissioning bit set to "Not Allowed".
-    print("Step 11-12: Native Commissioner rejection (RELAXED)")
+    print("Step 11-12: Native Commissioner rejection")
     pkts.filter_wpan_src64(COMMISSIONER_2).\
         filter(lambda p: p.mle.cmd == consts.MLE_DISCOVERY_REQUEST).\
         must_next()
-    # Step 12 might be missing
+    pkts.filter_wpan_src64(LEADER).\
+        filter(lambda p: p.mle.cmd == consts.MLE_DISCOVERY_RESPONSE).\
+        must_next().\
+        must_verify('thread_meshcop.tlv.discovery_rsp_n == False')
 
     # Step 13: Commissioner_1
     # - Description: Harness instructs device to send MGMT_ACTIVE_SET.req to the DUT ("B" bit = 0).
@@ -133,7 +133,6 @@ def verify(pv):
         filter(lambda p: p.coap.tlv.sec_policy_o == 0 and p.coap.tlv.sec_policy_n == 0 and p.coap.tlv.sec_policy_b == 0).\
         must_next()
     pkts.filter_coap_ack(consts.MGMT_ACTIVE_SET_URI).must_next()
-    idx14 = pkts.index
 
     # Step 15: Test Harness Device
     # - Description: Harness instructs device to discover network using beacons.
@@ -145,18 +144,13 @@ def verify(pv):
     #   format MUST be different from the Thread Beacon payload. The Protocol ID and Version field values MUST be
     #   different from the values specified for the Thread beacon (Protocol ID= 3, Version = 2).
     print("Step 15-16: Discovery Request/Response (verifying bits)")
-    pkts.range(idx10).\
-        filter_wpan_src64(COMMISSIONER_2).\
+    pkts.filter_wpan_src64(COMMISSIONER_2).\
         filter(lambda p: p.mle.cmd == consts.MLE_DISCOVERY_REQUEST).\
         must_next()
-    pkts.range(idx10).\
-        filter_wpan_src64(LEADER).\
+    pkts.filter_wpan_src64(LEADER).\
         filter(lambda p: p.mle.cmd == consts.MLE_DISCOVERY_RESPONSE).\
         must_next().\
         must_verify('thread_meshcop.tlv.discovery_rsp_n == False')
-
-    # Continue from idx14
-    pkts.index = idx14
 
     # Step 17: Commissioner_1
     # - Description: Harness instructs device to send MGMT_ACTIVE_SET.req to the DUT (disable "R" bit).
