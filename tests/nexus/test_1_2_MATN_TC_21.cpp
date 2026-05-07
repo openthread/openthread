@@ -111,7 +111,7 @@ void SendMlrRequest(Node &aSource, const Ip6::Address &aDestination, const void 
     Coap::Message *message = aSource.Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriMlr);
     VerifyOrQuit(message != nullptr);
 
-    SuccessOrQuit(Tlv::Append<Ip6AddressesTlv>(*message, static_cast<const uint8_t *>(aAddressesData), aDataLength));
+    SuccessOrQuit(Tlv::Append<Ip6AddressesTlv>(*message, aAddressesData, aDataLength));
 
     SuccessOrQuit(aSource.Get<Tmf::Agent>().SendMessageTo(*message, aDestination));
 }
