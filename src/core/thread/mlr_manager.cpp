@@ -64,8 +64,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadRoleChanged) && Get<Mle::Mle>().IsChild())
     {
-        // Reregistration after re-attach
-        UpdateReregistrationDelay(true);
+        ScheduleNextRegistration(kReregister);
     }
 }
 
@@ -74,10 +73,19 @@ void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aS
 {
     OT_UNUSED_VARIABLE(aConfig);
 
-    bool needRereg =
-        aState == BackboneRouter::Leader::kStateAdded || aState == BackboneRouter::Leader::kStateToTriggerRereg;
+    RegistrationRequest request = kRenew;
 
-    UpdateReregistrationDelay(needRereg);
+    switch (aState)
+    {
+    case BackboneRouter::Leader::kStateAdded:
+    case BackboneRouter::Leader::kStateToTriggerRereg:
+        request = kReregister;
+        break;
+    default:
+        break;
+    }
+
+    ScheduleNextRegistration(request);
 }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
@@ -433,17 +441,13 @@ void Manager::HandleResponse(Coap::Msg *aMsg, Error aResult)
     else
     {
         BackboneRouter::Config config;
-        uint16_t               reregDelay;
 
-        // The Device has just attempted a Multicast Listener Registration which failed, and it retries the same
-        // registration with a random time delay chosen in the interval [0, Reregistration Delay].
-        // This is required by Thread 1.2 Specification 5.24.2.3
+        // If a registration attempt fails, retry it after a random
+        // delay (same as re-registration delay).
+
         if (Get<BackboneRouter::Leader>().GetConfig(config) == kErrorNone)
         {
-            reregDelay = config.mReregistrationDelay > 1
-                             ? Random::NonCrypto::GetUint16InRange(1, config.mReregistrationDelay)
-                             : 1;
-            ScheduleSend(reregDelay);
+            ScheduleSend(DetermineReregistrationDelay(config));
         }
     }
 }
@@ -574,50 +578,69 @@ void Manager::Reregister(void)
 
     ScheduleSend(0);
 
-    // Schedule for the next renewing.
-    UpdateReregistrationDelay(false);
+    ScheduleNextRegistration(kRenew);
 }
 
-void Manager::UpdateReregistrationDelay(bool aRereg)
+uint16_t Manager::DetermineReregistrationDelay(const BackboneRouter::Config &aConfig)
 {
-    bool needSend = ShouldRegister();
+    uint16_t delay = 1;
 
-    if (!needSend)
+    VerifyOrExit(aConfig.mReregistrationDelay > 1);
+    delay = Random::NonCrypto::GetUint16InRange(1, aConfig.mReregistrationDelay);
+
+exit:
+    return delay;
+}
+
+uint32_t Manager::DetermineRenewDelay(const BackboneRouter::Config &aConfig)
+{
+    // As per Thread spec, the renew delay is randomly chosen
+    // between (0.5 * MLR-Timeout) and (MLR-Timeout - 9 seconds).
+    // The `kRenewGuardTime`(9 sec) allows time for transmission,
+    // potential retransmissions, and acknowledgment before the
+    // actual timeout.
+
+    uint32_t timeout = Clamp<uint32_t>(aConfig.mMlrTimeout, BackboneRouter::kMinMlrTimeout, kLongRenewTimeout);
+
+    return Random::NonCrypto::GetUint32InRange((timeout / 2) + 1, timeout - kRenewGuardTime);
+}
+
+void Manager::ScheduleNextRegistration(RegistrationRequest aRequest)
+{
+    uint32_t               delay;
+    BackboneRouter::Config config;
+
+    if (!ShouldRegister())
     {
         mReregistrationDelay = 0;
+        ExitNow();
     }
-    else
+
+    IgnoreError(Get<BackboneRouter::Leader>().GetConfig(config));
+
+    switch (aRequest)
     {
-        BackboneRouter::Config config;
-        uint32_t               reregDelay;
-        uint32_t               effectiveTimeout;
+    case kReregister:
+        delay = DetermineReregistrationDelay(config);
+        break;
 
-        IgnoreError(Get<BackboneRouter::Leader>().GetConfig(config));
+    case kRenew:
+        delay = DetermineRenewDelay(config);
+        break;
 
-        if (aRereg)
-        {
-            reregDelay = config.mReregistrationDelay > 1
-                             ? Random::NonCrypto::GetUint16InRange(1, config.mReregistrationDelay)
-                             : 1;
-        }
-        else
-        {
-            // Calculate renewing period according to Thread Spec. 5.24.2.3.2
-            // The random time t SHOULD be chosen such that (0.5* MLR-Timeout) < t < (MLR-Timeout – 9 seconds).
-            effectiveTimeout = Max(config.mMlrTimeout, BackboneRouter::kMinMlrTimeout);
-            reregDelay       = Random::NonCrypto::GetUint32InRange((effectiveTimeout >> 1u) + 1, effectiveTimeout - 9);
-        }
-
-        if (mReregistrationDelay == 0 || mReregistrationDelay > reregDelay)
-        {
-            mReregistrationDelay = reregDelay;
-        }
+    default:
+        ExitNow();
     }
 
-    UpdateTimeTickerRegistration();
+    if (mReregistrationDelay == 0 || mReregistrationDelay > delay)
+    {
+        mReregistrationDelay = delay;
 
-    LogDebg("Manager::UpdateReregistrationDelay: rereg=%d, needSend=%d, ReregDelay=%lu", aRereg, needSend,
-            ToUlong(mReregistrationDelay));
+        LogDebg("ScheduleNextRegistration() delay:%lu", ToUlong(delay));
+    }
+
+exit:
+    UpdateTimeTickerRegistration();
 }
 
 void Manager::LogMulticastAddresses(void)
