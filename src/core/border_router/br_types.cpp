@@ -72,6 +72,18 @@ void OnLinkPrefix::SetFrom(const PrefixTableEntry &aPrefixTableEntry)
     mLastUpdateTime    = TimerMilli::GetNow();
 }
 
+void OnLinkPrefix::Deprecate(void)
+{
+    TimeMilli twoHoursFromNow = TimerMilli::GetNow() + Time::SecToMsec(kTwoHoursLifetime);
+
+    mPreferredLifetime = 0;
+
+    if (GetExpireTime() > twoHoursFromNow)
+    {
+        mValidLifetime = Time::MsecToSec(twoHoursFromNow.DetermineRemainingDurationFrom(mLastUpdateTime));
+    }
+}
+
 bool OnLinkPrefix::IsDeprecated(void) const { return GetDeprecationTime() <= TimerMilli::GetNow(); }
 
 TimeMilli OnLinkPrefix::GetDeprecationTime(void) const { return CalculateExpirationTime(mPreferredLifetime); }
@@ -83,8 +95,6 @@ TimeMilli OnLinkPrefix::GetStaleTime(void) const
 
 void OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix)
 {
-    constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
-
     // Per RFC 4862 section 5.5.3.e:
     //
     // 1.  If the received Valid Lifetime is greater than 2 hours or
@@ -96,13 +106,13 @@ void OnLinkPrefix::AdoptFlagsAndValidAndPreferredLifetimesFrom(const OnLinkPrefi
     // 3.  Otherwise, reset the valid lifetime of the corresponding
     //     address to 2 hours.
 
-    if (aPrefix.mValidLifetime > kTwoHoursInSeconds || aPrefix.GetExpireTime() > GetExpireTime())
+    if (aPrefix.mValidLifetime > kTwoHoursLifetime || aPrefix.GetExpireTime() > GetExpireTime())
     {
         mValidLifetime = aPrefix.mValidLifetime;
     }
-    else if (GetExpireTime() > TimerMilli::GetNow() + TimeMilli::SecToMsec(kTwoHoursInSeconds))
+    else if (GetExpireTime() > TimerMilli::GetNow() + Time::SecToMsec(kTwoHoursLifetime))
     {
-        mValidLifetime = kTwoHoursInSeconds;
+        mValidLifetime = kTwoHoursLifetime;
     }
 
     mPreferredLifetime    = aPrefix.GetPreferredLifetime();

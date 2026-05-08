@@ -227,9 +227,11 @@ public:
     uint32_t GetPreferredLifetime(void) const { return mPreferredLifetime; }
 
     /**
-     * Clears (sets to zero) the preferred lifetime of the prefix.
+     * Deprecates the prefix.
+     *
+     * Sets the preferred lifetime to zero and bounds the remaining valid lifetime to at most two hours from now.
      */
-    void ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
+    void Deprecate(void);
 
     /**
      * Indicates whether the on-link prefix is deprecated.
@@ -279,7 +281,8 @@ public:
     bool IsFavoredOver(const Ip6::Prefix &aPrefix) const;
 
 private:
-    static constexpr uint32_t kFavoredMinPreferredLifetime = 1800; // In sec.
+    static constexpr uint32_t kTwoHoursLifetime            = 2 * Time::kOneHourInSec;
+    static constexpr uint32_t kFavoredMinPreferredLifetime = 30 * Time::kOneMinuteInSec;
     static constexpr uint8_t  kExpectedFavoredPrefixLength = 64;
 
     uint32_t mPreferredLifetime;
