@@ -743,6 +743,18 @@ public:
     bool MatchesPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const;
 
     /**
+     * Indicates whether the address matches a given other address.
+     *
+     * This method is intended to be used with `FindMatching()` in collections.
+     *
+     * @param[in] aAddress  The IPv6 address to match against.
+     *
+     * @retval TRUE   If the address matches @p aAddress.
+     * @retval FALSE  If the address does not match @p aAddress.
+     */
+    bool Matches(const Ip6::Address &aAddress) const { return (*this == aAddress); }
+
+    /**
      * Sets the IPv6 address prefix.
      *
      * Only changes the first @p aPrefixLength bits of the address and keeps the rest of the bits in the

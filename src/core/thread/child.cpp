@@ -76,38 +76,15 @@ void Child::Info::SetFrom(const Child &aChild)
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
-Mlr::State Child::Ip6AddrEntry::GetMlrState(const Child &aChild) const
+bool Child::Ip6AddrEntry::IsMlrRegistered(const Child &aChild) const
 {
-    Mlr::State                 state = Mlr::kStateRegistering;
-    Ip6AddressArray::IndexType index;
-
-    OT_ASSERT(aChild.mIp6Addresses.IsInArrayBuffer(this));
-
-    index = aChild.mIp6Addresses.IndexOf(*this);
-
-    if (aChild.mMlrToRegisterSet.Has(index))
-    {
-        state = Mlr::kStateToRegister;
-    }
-    else if (aChild.mMlrRegisteredSet.Has(index))
-    {
-        state = Mlr::kStateRegistered;
-    }
-
-    return state;
+    return aChild.mMlrRegisteredSet.Has(aChild.mIp6Addresses.IndexOf(*this));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Child::Ip6AddrEntry::SetMlrState(Mlr::State aState, Child &aChild)
+void Child::Ip6AddrEntry::SetMlrRegistered(bool aRegistered, Child &aChild)
 {
-    Ip6AddressArray::IndexType index;
-
-    OT_ASSERT(aChild.mIp6Addresses.IsInArrayBuffer(this));
-
-    index = aChild.mIp6Addresses.IndexOf(*this);
-
-    aChild.mMlrToRegisterSet.Update(index, aState == Mlr::kStateToRegister);
-    aChild.mMlrRegisteredSet.Update(index, aState == Mlr::kStateRegistered);
+    aChild.mMlrRegisteredSet.Update(aChild.mIp6Addresses.IndexOf(*this), aRegistered);
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
@@ -128,7 +105,6 @@ void Child::ClearIp6Addresses(void)
     mMeshLocalIid.Clear();
     mIp6Addresses.Clear();
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    mMlrToRegisterSet.Clear();
     mMlrRegisteredSet.Clear();
 #endif
 }
@@ -230,9 +206,6 @@ Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
         uint16_t entryIndex = mIp6Addresses.IndexOf(*entry);
         uint16_t lastIndex  = mIp6Addresses.GetLength() - 1;
 
-        mMlrToRegisterSet.Update(entryIndex, mMlrToRegisterSet.Has(lastIndex));
-        mMlrToRegisterSet.Remove(lastIndex);
-
         mMlrRegisteredSet.Update(entryIndex, mMlrRegisteredSet.Has(lastIndex));
         mMlrRegisteredSet.Remove(lastIndex);
     }
@@ -292,7 +265,8 @@ bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 
     entry = mIp6Addresses.FindMatching(aAddress);
     VerifyOrExit(entry != nullptr);
-    hasAddress = entry->GetMlrState(*this) == Mlr::kStateRegistered;
+
+    hasAddress = entry->IsMlrRegistered(*this);
 
 exit:
     return hasAddress;

@@ -154,6 +154,7 @@ private:
 
     void  HandleNotifierEvents(Events aEvents);
     bool  ShouldRegister(void) const;
+    void  DetermineAddressesToRegister(AddressArray &aAddresses) const;
     void  Send(void);
     Error SendMessage(const Ip6::Address   *aAddresses,
                       uint8_t               aAddressNum,
@@ -164,18 +165,14 @@ private:
 
     static uint16_t DetermineReregistrationDelay(const BackboneRouter::Config &aConfig);
     static uint32_t DetermineRenewDelay(const BackboneRouter::Config &aConfig);
-
-    static Error ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
-    static bool  DidRegisterSuccessfully(const Ip6::Address &aAddress,
-                                         bool                aSuccess,
-                                         const AddressArray &aFailedAddresses);
+    static Error    ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     DeclareTmfResponseHandlerIn(Manager, HandleRegisterResponse);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    void UpdateLocalSubscriptions(void);
+    void HandleEventIp6MulticastSubscribed(void);
     bool IsAddressRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
@@ -188,14 +185,11 @@ private:
     bool IsAddressRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
 #endif
 
-    void SetMulticastAddressState(State aFromState, State aToState);
-    void Finish(bool aSuccess, const AddressArray &aFailedAddresses);
     void ScheduleSend(uint16_t aDelay);
     void UpdateTimeTickerRegistration(void);
     void ScheduleNextRegistration(RegistrationRequest aRequest);
     void Reregister(void);
     void HandleTimeTick(void);
-    void LogMulticastAddresses(void);
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Callback<RegisterCallback> mRegisterCallback;

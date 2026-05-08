@@ -613,11 +613,6 @@ void Netif::MulticastAddress::InitAsManualOrigin(void)
 {
     Clear();
     mAddressOrigin = kOriginManual;
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE
-    // Make sure `Clear()` sets the "MlrState" to `Mlr::kStateToRegister` value.
-    static_assert(Mlr::kStateToRegister == 0, "Mlr::kStateToRegister is not correct.");
-#endif
 }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
@@ -625,11 +620,6 @@ void Netif::MulticastAddress::InitAsManualOrigin(void)
 bool Netif::MulticastAddress::IsMlrCandidate(void) const
 {
     return (GetOrigin() == kOriginManual) && GetAddress().IsMulticastLargerThanRealmLocal();
-}
-
-bool Netif::MulticastAddress::Matches(Mlr::State aMlrState) const
-{
-    return IsMlrCandidate() && (GetMlrState() == aMlrState);
 }
 
 #endif

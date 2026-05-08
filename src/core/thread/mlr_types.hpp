@@ -52,20 +52,6 @@ namespace Mlr {
 constexpr uint8_t kMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
 constexpr uint8_t kMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-
-/**
- * MLR registration state for a multicast address.
- */
-enum State : uint8_t
-{
-    kStateToRegister,  ///< The multicast address is to be registered.
-    kStateRegistering, ///< The multicast address is being registered.
-    kStateRegistered,  ///< The multicast address is registered.
-};
-
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-
 /**
  * Multicast Listener Registration (MLR) Status values.
  */

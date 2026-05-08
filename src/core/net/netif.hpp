@@ -290,28 +290,19 @@ public:
         bool IsMlrCandidate(void) const;
 
         /**
-         * Returns the current Multicast Listener Registration (MLR) state.
+         * Indicates whether the multicast address is registered via Multicast Listener Registration (MLR).
          *
-         * @returns The current Multicast Listener Registration state.
+         * @retval TRUE   If the multicast address is MLR registered.
+         * @retval FALSE  If the multicast address is not MLR registered.
          */
-        Mlr::State GetMlrState(void) const { return static_cast<Mlr::State>(mData); }
+        bool IsMlrRegistered(void) const { return (mData != 0); }
 
         /**
-         * Sets the Multicast Listener Registration (MLR) state.
+         * Sets whether the multicast address is registered via Multicast Listener Registration (MLR).
          *
-         * @param[in] aState  The new Multicast Listener Registration state.
+         * @param[in] aRegistered  TRUE if MLR registered, FALSE otherwise.
          */
-        void SetMlrState(Mlr::State aState) { mData = aState; }
-
-        /**
-         * Indicates whether or not the address is an MLR candidate and matches a given MLR state.
-         *
-         * @param[in] aMlrState  The MLR state to match against.
-         *
-         * @retval TRUE  If the address is an MLR candidate and its state matches @p aMlrState.
-         * @retval FALSE If the address is not an MLR candidate or its state does not match @p aMlrState.
-         */
-        bool Matches(Mlr::State aMlrState) const;
+        void SetMlrRegistered(bool aRegistered) { mData = aRegistered ? 1 : 0; }
 #endif
 
     private:
