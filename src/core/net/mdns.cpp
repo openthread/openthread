@@ -4963,6 +4963,8 @@ void Core::MultiPacketRxMessages::AddNew(OwnedPtr<RxMessage> &aRxMessagePtr)
 
     mRxMsgEntries.RemoveMatching(aRxMessagePtr->GetSenderAddress());
 
+    VerifyOrExit(mRxMsgEntries.CountAllEntries() < kMaxRxMsgEntries);
+
     newEntry = RxMsgEntry::Allocate(GetInstance());
     VerifyOrExit(newEntry != nullptr);
 
@@ -5022,20 +5024,12 @@ exit:
 
 void Core::MultiPacketRxMessages::RxMsgEntry::Add(OwnedPtr<RxMessage> &aRxMessagePtr)
 {
-    uint16_t numMsgs = 0;
+    // If a subsequent received `RxMessage` is also marked as
+    // truncated, we again delay the process time. To avoid
+    // continuous delay and piling up of messages in the list,
+    // we limit the number of messages.
 
-    for (const RxMessage &rxMsg : mRxMessages)
-    {
-        // If a subsequent received `RxMessage` is also marked as
-        // truncated, we again delay the process time. To avoid
-        // continuous delay and piling up of messages in the list,
-        // we limit the number of messages.
-
-        numMsgs++;
-        VerifyOrExit(numMsgs < kMaxNumMessages);
-
-        OT_UNUSED_VARIABLE(rxMsg);
-    }
+    VerifyOrExit(mRxMessages.CountAllEntries() < kMaxNumMessagesPerEntry);
 
     mProcessTime = TimerMilli::GetNow();
 
