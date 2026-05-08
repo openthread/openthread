@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2026, The OpenThread Authors.
+ *  Copyright (c) 2020-2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,25 @@
 
 /**
  * @file
- *   This file implements methods for generating and processing Thread Network Layer TLVs.
+ *   This file implements MLR types.
  */
 
-#include "thread_tlvs.hpp"
+#include "mlr_types.hpp"
 
 namespace ot {
+namespace Mlr {
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-
-Error Ip6AddressesTlv::AppendTo(Message &aMessage, const Ip6::Address *aAddresses, uint16_t aNumAddresses)
+Error AddressArray::AddUnique(const Ip6::Address &aAddress)
 {
-    Error         error;
-    Tlv::Bookmark tlvBookmark;
+    Error error = kErrorNone;
 
-    SuccessOrExit(error = Tlv::StartTlv(aMessage, kType, tlvBookmark));
-    SuccessOrExit(error = aMessage.AppendBytes(aAddresses, aNumAddresses * sizeof(Ip6::Address)));
-    error = Tlv::EndTlv(aMessage, tlvBookmark);
-
-exit:
-    return error;
-}
-
-Error Ip6AddressesTlv::FindIn(const Message &aMessage, Mlr::AddressArray &aAddresses)
-{
-    Error       error;
-    OffsetRange offsetRange;
-
-    aAddresses.Clear();
-
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, kType, offsetRange));
-
-    while (!offsetRange.IsEmpty())
+    if (!Contains(aAddress))
     {
-        Ip6::Address address;
-
-        SuccessOrExit(error = aMessage.Read(offsetRange, address));
-        offsetRange.AdvanceOffset(sizeof(Ip6::Address));
-
-        SuccessOrExit(error = aAddresses.AddUnique(address));
+        error = PushBack(aAddress);
     }
 
-exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-
+} // namespace Mlr
 } // namespace ot

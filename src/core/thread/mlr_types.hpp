@@ -36,6 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#include "common/array.hpp"
+#include "common/error.hpp"
+#include "net/ip6_address.hpp"
+
 namespace ot {
 namespace Mlr {
 
@@ -76,6 +80,23 @@ enum Status : uint8_t
 };
 
 constexpr uint8_t kMaxStatusValue = kStatusGeneralFailure;
+
+/**
+ * Represents an array of IPv6 addresses.
+ */
+class AddressArray : public Array<Ip6::Address, kMaxIp6Addresses>
+{
+public:
+    /**
+     * Adds an IPv6 address to the array if it is not already present.
+     *
+     * @param[in] aAddress  The IPv6 address to add.
+     *
+     * @retval kErrorNone    Successfully added the address or it was already present.
+     * @retval kErrorNoBufs  The array is full.
+     */
+    Error AddUnique(const Ip6::Address &aAddress);
+};
 
 } // namespace Mlr
 } // namespace ot

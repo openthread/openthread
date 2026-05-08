@@ -42,6 +42,7 @@
 #include "meshcop/network_name.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/mlr_types.hpp"
 
 namespace ot {
 
@@ -165,6 +166,19 @@ public:
      * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
      */
     static Error AppendTo(Message &aMessage, const Ip6::Address *aAddresses, uint16_t aNumAddresses);
+
+    /**
+     * Finds and parses the IPv6 Addresses TLV from a given message.
+     *
+     * @param[in]  aMessage    The message to parse.
+     * @param[out] aAddresses  An `AddressArray` to output the parsed IPv6 addresses.
+     *
+     * @retval kErrorNone       Successfully found and parsed the TLV.
+     * @retval kErrorNotFound   Could not find the TLV in the message.
+     * @retval kErrorParse      Failed to parse the TLV.
+     * @retval kErrorNoBufs     There are more addresses in the TLV than can fit in `aAddresses`.
+     */
+    static Error FindIn(const Message &aMessage, Mlr::AddressArray &aAddresses);
 
     Ip6AddressesTlv(void) = delete;
 };

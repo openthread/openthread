@@ -451,8 +451,7 @@ void Manager::HandleResponse(Coap::Msg *aMsg, Error aResult)
 
 Error Manager::ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses)
 {
-    Error       error = aResult;
-    OffsetRange offsetRange;
+    Error error = aResult;
 
     aStatus = kStatusGeneralFailure;
     aFailedAddresses.Clear();
@@ -463,17 +462,16 @@ Error Manager::ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, A
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMsg->mMessage, aStatus));
 
-    if (Tlv::FindTlvValueOffsetRange(aMsg->mMessage, Ip6AddressesTlv::kType, offsetRange) == kErrorNone)
+    switch (error = Ip6AddressesTlv::FindIn(aMsg->mMessage, aFailedAddresses))
     {
-        while (!offsetRange.IsEmpty())
-        {
-            Ip6::Address address;
-
-            SuccessOrExit(error = aMsg->mMessage.Read(offsetRange, address));
-            offsetRange.AdvanceOffset(sizeof(Ip6::Address));
-
-            SuccessOrExit(error = aFailedAddresses.AddUnique(address));
-        }
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        error = kErrorNone;
+        aFailedAddresses.Clear();
+        break;
+    default:
+        ExitNow();
     }
 
     if (aStatus == kStatusSuccess)
@@ -724,18 +722,6 @@ void Manager::LogMulticastAddresses(void)
 #endif
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
-}
-
-Error Manager::AddressArray::AddUnique(const Ip6::Address &aAddress)
-{
-    Error error = kErrorNone;
-
-    if (!Contains(aAddress))
-    {
-        error = PushBack(aAddress);
-    }
-
-    return error;
 }
 
 } // namespace Mlr

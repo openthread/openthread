@@ -152,12 +152,6 @@ private:
         kRenew,
     };
 
-    class AddressArray : public Array<Ip6::Address, kMaxIp6Addresses>
-    {
-    public:
-        Error AddUnique(const Ip6::Address &aAddress);
-    };
-
     void  HandleNotifierEvents(Events aEvents);
     bool  ShouldRegister(void) const;
     void  Send(void);
