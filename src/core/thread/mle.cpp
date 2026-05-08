@@ -3294,7 +3294,14 @@ void Mle::DelayedSender::ScheduleDiscoveryResponse(const Ip6::Address          &
                                                    const DiscoveryResponseInfo &aInfo,
                                                    uint32_t                     aDelay)
 {
+    RemoveMatchingSchedules(kTypeDiscoveryResponse, aDestination);
+
+    VerifyOrExit(CountMatchingSchedules(kTypeDiscoveryResponse) < kMaxScheduledDiscoveryResponse);
+
     AddSchedule(kTypeDiscoveryResponse, aDestination, aDelay, &aInfo, sizeof(aInfo));
+
+exit:
+    return;
 }
 
 #endif // OPENTHREAD_FTD
@@ -3488,6 +3495,24 @@ void Mle::DelayedSender::RemoveMatchingSchedules(MessageType aMessageType, const
             mSchedules.DequeueAndFree(schedule);
         }
     }
+}
+
+uint32_t Mle::DelayedSender::CountMatchingSchedules(MessageType aMessageType) const
+{
+    uint32_t     count = 0;
+    Ip6::Address unspecifiedAddr;
+
+    unspecifiedAddr.Clear();
+
+    for (const Schedule &schedule : mSchedules)
+    {
+        if (Match(schedule, aMessageType, unspecifiedAddr))
+        {
+            count++;
+        }
+    }
+
+    return count;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

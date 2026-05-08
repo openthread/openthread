@@ -1347,6 +1347,7 @@ private:
     static constexpr uint8_t  kRouterDowngradeThreshold      = 23;
     static constexpr uint8_t  kRouterUpgradeThreshold        = 16;
     static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
+    static constexpr uint32_t kMaxScheduledDiscoveryResponse = 16;  // Rate-limit Discovery response.
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
     static constexpr uint8_t  kLeaderDowngradeExtraDelay     = 10;  // Extra delay to downgrade leader (in sec).
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
@@ -1776,15 +1777,16 @@ private:
             MessageType  mMessageType;
         };
 
-        void AddSchedule(MessageType         aMessageType,
-                         const Ip6::Address &aDestination,
-                         uint32_t            aDelay,
-                         const void         *aInfo,
-                         uint16_t            aInfoSize);
-        void Execute(const Schedule &aSchedule);
-        bool HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
-        void RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
-        void LogRemove(const Schedule &aSchedule);
+        void     AddSchedule(MessageType         aMessageType,
+                             const Ip6::Address &aDestination,
+                             uint32_t            aDelay,
+                             const void         *aInfo,
+                             uint16_t            aInfoSize);
+        void     Execute(const Schedule &aSchedule);
+        bool     HasMatchingSchedule(MessageType aMessageType, const Ip6::Address &aDestination) const;
+        void     RemoveMatchingSchedules(MessageType aMessageType, const Ip6::Address &aDestination);
+        uint32_t CountMatchingSchedules(MessageType aMessageType) const;
+        void     LogRemove(const Schedule &aSchedule);
 
         static bool Match(const Schedule &aSchedule, MessageType aMessageType, const Ip6::Address &aDestination);
 
