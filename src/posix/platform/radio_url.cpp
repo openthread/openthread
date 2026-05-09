@@ -149,8 +149,10 @@ void RadioUrl::Init(const char *aUrl)
 {
     if (aUrl != nullptr)
     {
-        VerifyOrDie(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
-        strncpy(mUrl, aUrl, sizeof(mUrl) - 1);
+        size_t len = strlen(aUrl);
+
+        VerifyOrDie(len + 1 < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
+        strcpy(mUrl, aUrl);
         SuccessOrDie(Url::Url::Init(mUrl));
     }
 }

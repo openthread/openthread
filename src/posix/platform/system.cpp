@@ -59,6 +59,7 @@
 #include "posix/platform/mdns_socket.hpp"
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/spinel_driver_getter.hpp"
+#include "posix/platform/spinel_manager.hpp"
 #include "posix/platform/udp.hpp"
 
 otInstance *gInstance = nullptr;
@@ -274,6 +275,16 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     OT_ASSERT(gInstance == nullptr);
 
     platformInit(aPlatformConfig);
+
+    {
+        const char *unusedParam = nullptr;
+
+        if (ot::Posix::SpinelManager::GetSpinelManager().GetRadioUrl().Validate(&unusedParam) != OT_ERROR_NONE)
+        {
+            otLogCritPlat("Radio URL contains unused parameter: \"%s\"", unusedParam);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+        }
+    }
 
     gDryRun = aPlatformConfig->mDryRun;
     if (sCoprocessorType == OT_COPROCESSOR_RCP)

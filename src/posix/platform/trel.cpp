@@ -658,6 +658,15 @@ void platformTrelInit(const char *aTrelUrl)
         ot::Posix::RadioUrl url(aTrelUrl);
 
         otSysTrelInit(url.GetPath());
+        {
+            const char *unusedParam = nullptr;
+
+            if (url.Validate(&unusedParam) != OT_ERROR_NONE)
+            {
+                otLogCritPlat("TREL radio URL contains unused parameter: \"%s\"", unusedParam);
+                DieNow(OT_EXIT_INVALID_ARGUMENTS);
+            }
+        }
     }
 }
 

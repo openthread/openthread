@@ -685,9 +685,29 @@ exit:
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
 {
-    int fd   = -1;
-    int pid  = -1;
-    int rval = -1;
+    int           fd            = -1;
+    int           pid           = -1;
+    int           rval          = -1;
+    constexpr int kMaxArguments = 32;
+    char         *argv[kMaxArguments + 1];
+    size_t        index = 0;
+
+    argv[index++] = const_cast<char *>(aRadioUrl.GetPath());
+
+    for (const char *arg = nullptr;
+         index < OT_ARRAY_LENGTH(argv) && (arg = aRadioUrl.GetValue("forkpty-arg", arg)) != nullptr;
+         argv[index++] = const_cast<char *>(arg))
+    {
+    }
+
+    if (index < OT_ARRAY_LENGTH(argv))
+    {
+        argv[index] = nullptr;
+    }
+    else
+    {
+        DieNowWithMessage("Too many arguments!", OT_EXIT_INVALID_ARGUMENTS);
+    }
 
     {
         struct termios tios;
@@ -701,27 +721,6 @@ int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
 
     if (0 == pid)
     {
-        constexpr int kMaxArguments = 32;
-        char         *argv[kMaxArguments + 1];
-        size_t        index = 0;
-
-        argv[index++] = const_cast<char *>(aRadioUrl.GetPath());
-
-        for (const char *arg = nullptr;
-             index < OT_ARRAY_LENGTH(argv) && (arg = aRadioUrl.GetValue("forkpty-arg", arg)) != nullptr;
-             argv[index++] = const_cast<char *>(arg))
-        {
-        }
-
-        if (index < OT_ARRAY_LENGTH(argv))
-        {
-            argv[index] = nullptr;
-        }
-        else
-        {
-            DieNowWithMessage("Too many arguments!", OT_EXIT_INVALID_ARGUMENTS);
-        }
-
         VerifyOrDie((rval = execvp(argv[0], argv)) != -1, OT_EXIT_ERROR_ERRNO);
     }
     else
