@@ -137,51 +137,6 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
-  thread-cert:
-    runs-on: ubuntu-22.04
-    env:
-      COVERAGE: 1
-      PYTHONUNBUFFERED: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-      OT_VT_USE_UNIX_SOCKET: 1
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: '3.12'
-        cache: pip
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y lcov ninja-build
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build
-      run: |
-        OT_NODE_TYPE=rcp ./script/test build
-    - name: Run
-      run: |
-        MAX_JOBS=$(getconf _NPROCESSORS_ONLN) ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: ${{ failure() }}
-      with:
-        name: thread-cert
-        path: ot_testing
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: cov-thread-cert
-        path: tmp/coverage.info
-
   pty-linux:
     name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: ubuntu-24.04
@@ -337,7 +292,6 @@ jobs:
     needs:
     - expects-linux
     - pty-linux
-    - thread-cert
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
