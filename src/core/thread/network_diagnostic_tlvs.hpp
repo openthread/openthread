@@ -296,21 +296,23 @@ typedef TlvInfo<Tlv::kConnectivity> ConnectivityTlv;
 /**
  * Implements Route TLV generation and parsing.
  */
-OT_TOOL_PACKED_BEGIN
 class RouteTlv : public Mle::RouteTlv
 {
 public:
     static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kRoute; ///< The TLV Type value.
 
     /**
-     * Initializes the TLV.
+     * Finds and parses a Route TLV in a given message.
+     *
+     * @param[in]  aMessage  The message to search within.
+     * @param[out] aData     A reference to a `Data` to populate upon success.
+     *
+     * @retval kErrorNone       Successfully found and parsed the Route TLV.
+     * @retval kErrorNotFound   Could not find a Route TLV in @p aMessage.
+     * @retval kErrorParse      Found the Route TLV but failed to parse it.
      */
-    void Init(void)
-    {
-        Mle::RouteTlv::Init();
-        ot::Tlv::SetType(kType);
-    }
-} OT_TOOL_PACKED_END;
+    static Error FindIn(const Message &aMessage, Data &aData);
+};
 
 /**
  * Represents a Leader Data TLV value.

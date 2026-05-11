@@ -263,6 +263,7 @@ private:
     typedef otNetworkDiagData        DiagData;
     typedef otNetworkDiagChildTable  ChildTable;
     typedef otNetworkDiagIp6AddrList Ip6AddrList;
+    typedef otNetworkDiagRoute       RouteInfo;
 
     Error SendCommand(Uri                   aUri,
                       Message::Priority     aPriority,
@@ -285,6 +286,7 @@ private:
     static void  ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo);
     static Error ParseChildTable(ChildTable &aChildTable, const Message &aMessage, OffsetRange aOffsetRange);
     static void  ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
+    static void  GetRouteInfo(const RouteTlv::Data &aRouteTlvData, RouteInfo &aNetDiagRouteInfo);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *UriToString(Uri aUri);

@@ -312,12 +312,12 @@ public:
      * Determines whether the Router ID Sequence in a received Route TLV is more recent than the current
      * Router ID Sequence being used by `RouterTable`.
      *
-     * @param[in] aRouteTlv   The Route TLV to compare.
+     * @param[in] aRouteTlvData   The Route TLV Data to compare.
      *
-     * @retval TRUE    The Router ID Sequence in @p aRouteTlv is more recent.
-     * @retval FALSE   The Router ID Sequence in @p aRouteTlv is not more recent.
+     * @retval TRUE    The Router ID Sequence in @p aRouteTlvData is more recent.
+     * @retval FALSE   The Router ID Sequence in @p aRouteTlvData is not more recent.
      */
-    bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const;
+    bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv::Data &aRouteTlvData) const;
 
     /**
      * Gets the number of router neighbors with `GetLinkQualityIn()` better than or equal to a given threshold.
@@ -346,22 +346,29 @@ public:
     void UpdateRouterIdMask(const Mle::RouterIdMask &aRouterIdMask);
 
     /**
-     * Updates the routes based on a received `RouteTlv` from a neighboring router.
+     * Updates the allocated Router ID mask from a received `RouteTlv::Data`.
      *
-     * @param[in]  aRouteTlv    The received `RouteTlv`
-     * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlv is received.
+     * @param[in]  aRouteTlvData      The received `RouteTlv::Data`.
      */
-    void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
+    void UpdateRouterIdMask(const Mle::RouteTlv::Data &aRouteTlvData);
 
     /**
-     * Updates the routes on an FTD child based on a received `RouteTlv` from the parent.
+     * Updates the routes based on a received `RouteTlv::Data` from a neighboring router.
      *
-     * MUST be called when device is an FTD child and @p aRouteTlv is received from its current parent.
+     * @param[in]  aRouteTlvData    The received `RouteTlv::Data`
+     * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlvData is received.
+     */
+    void UpdateRoutes(const Mle::RouteTlv::Data &aRouteTlvData, uint8_t aNeighborId);
+
+    /**
+     * Updates the routes on an FTD child based on a received `RouteTlv::Data` from the parent.
      *
-     * @param[in]  aRouteTlv    The received `RouteTlv` from parent.
+     * MUST be called when device is an FTD child and @p aRouteTlvData is received from its current parent.
+     *
+     * @param[in]  aRouteTlvData    The received `RouteTlvData` from parent.
      * @param[in]  aParentId    The Router ID of parent.
      */
-    void UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
+    void UpdateRouterOnFtdChild(const Mle::RouteTlv::Data &aRouteTlvData, uint8_t aParentId);
 
     /**
      * Gets the allocated Router ID Mask.

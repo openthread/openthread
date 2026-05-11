@@ -467,15 +467,15 @@ void MeshDiag::HandleTimer(void) { Finalize(kErrorResponseTimeout); }
 
 Error MeshDiag::RouterInfo::ParseFrom(const Message &aMessage)
 {
-    Error     error = kErrorNone;
-    Mle::Mle &mle   = aMessage.Get<Mle::Mle>();
-    RouteTlv  routeTlv;
+    Error          error = kErrorNone;
+    Mle::Mle      &mle   = aMessage.Get<Mle::Mle>();
+    RouteTlv::Data routeTlvData;
 
     Clear();
 
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aMessage, mRloc16));
     SuccessOrExit(error = Tlv::Find<ExtMacAddressTlv>(aMessage, AsCoreType(&mExtAddress)));
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, routeTlv));
+    SuccessOrExit(error = RouteTlv::FindIn(aMessage, routeTlvData));
 
     switch (error = Tlv::Find<VersionTlv>(aMessage, mVersion))
     {
@@ -495,13 +495,9 @@ Error MeshDiag::RouterInfo::ParseFrom(const Message &aMessage)
     mIsLeader           = (mRouterId == mle.GetLeaderId());
     mIsBorderRouter     = aMessage.Get<NetworkData::Leader>().ContainsBorderRouterWithRloc(mRloc16);
 
-    for (uint8_t id = 0, index = 0; id <= Mle::kMaxRouterId; id++)
+    for (const RouteTlv::Data::Entry &entry : routeTlvData.GetEntries())
     {
-        if (routeTlv.IsRouterIdSet(id))
-        {
-            mLinkQualities[id] = routeTlv.GetLinkQualityIn(index);
-            index++;
-        }
+        mLinkQualities[entry.GetRouterId()] = entry.GetLinkQualityIn();
     }
 
 exit:

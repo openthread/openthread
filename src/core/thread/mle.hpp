@@ -1642,7 +1642,7 @@ private:
         Error ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const;
 #endif
 #if OPENTHREAD_FTD
-        Error ReadRouteTlv(RouteTlv &aRouteTlv) const;
+        Error ReadRouteTlv(RouteTlv::Data &aRouteTlvData) const;
 #endif
 
     private:
@@ -2243,7 +2243,7 @@ private:
         bool    IsRouterCountBelowUpgradeThreshold(void) const;
         void    HandleTimeTick(void);
         void    DecideWhetherToUpgrade(void);
-        void    DecideWhetherToDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv);
+        void    DecideWhetherToDowngrade(uint8_t aNeighborId, const RouteTlv::Data &aRouteTlvData);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         void SetCcmEnabled(bool aEnabled);
         void SetThreadVersionCheckEnabled(bool aEnabled);
@@ -2251,7 +2251,7 @@ private:
 
     private:
         bool DetermineIfRouterRoleAllowed(void) const;
-        bool NeighborHasComparableConnectivity(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
+        bool NeighborHasComparableConnectivity(uint8_t aNeighborId, const RouteTlv::Data &aRouteTlvData) const;
 
         bool mRouterEligible : 1;
         bool mRouterRoleAllowed : 1;
@@ -2466,7 +2466,7 @@ private:
     void     HandleNetworkDataUpdateRouter(void);
     void     HandleDiscoveryRequest(RxInfo &aRxInfo);
     void     EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_t aLinkMargin);
-    Error    ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
+    Error    ProcessRouteTlv(const RouteTlv::Data &aRouteTlvData, RxInfo &aRxInfo);
     Error    ReadAndProcessRouteTlvOnFtdChild(RxInfo &aRxInfo, uint8_t aParentId);
     void     StopAdvertiseTrickleTimer(void);
     uint32_t DetermineAdvertiseIntervalMax(void) const;

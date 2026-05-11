@@ -61,10 +61,10 @@ void RouterTable::Clear(void)
     SignalTableChanged(events);
 }
 
-bool RouterTable::IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const
+bool RouterTable::IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv::Data &aRouteTlvData) const
 {
     return (GetActiveRouterCount() == 0) ||
-           SerialNumber::IsGreater(aRouteTlv.GetRouterIdSequence(), GetRouterIdSequence());
+           SerialNumber::IsGreater(aRouteTlvData.GetRouterIdSequence(), GetRouterIdSequence());
 }
 
 void RouterTable::ClearNeighbors(void)
@@ -525,6 +525,14 @@ uint16_t RouterTable::GetNextHop(uint16_t aDestRloc16) const
     return nextHopRloc16;
 }
 
+void RouterTable::UpdateRouterIdMask(const Mle::RouteTlv::Data &aRouteTlvData)
+{
+    Mle::RouterIdMask routerIdMask;
+
+    aRouteTlvData.DetermineRouterIdMask(routerIdMask);
+    UpdateRouterIdMask(routerIdMask);
+}
+
 void RouterTable::UpdateRouterIdMask(const Mle::RouterIdMask &aRouterIdMask)
 {
     bool shouldAdd = false;
@@ -575,11 +583,12 @@ exit:
     return;
 }
 
-void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId)
+void RouterTable::UpdateRoutes(const Mle::RouteTlv::Data &aRouteTlvData, uint8_t aNeighborId)
 {
-    Router           *neighbor;
-    Mle::RouterIdMask finitePathCostIds;
-    uint8_t           linkCostToNeighbor;
+    Router                           *neighbor;
+    Mle::RouterIdMask                 finitePathCostIds;
+    uint8_t                           linkCostToNeighbor;
+    const Mle::RouteTlv::Data::Entry *matchingEntry;
 
     neighbor = FindRouterById(aNeighborId);
     VerifyOrExit(neighbor != nullptr);
@@ -600,66 +609,51 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
     }
 
     // Find the entry corresponding to our Router ID in the received
-    // `aRouteTlv` to get the `LinkQualityIn` from the perspective of
-    // neighbor. We use this to update our `LinkQualityOut` to the
+    // `aRouteTlvData` to get the `LinkQualityIn` from the perspective
+    // of neighbor. We use this to update our `LinkQualityOut` to the
     // neighbor.
 
-    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
-         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    matchingEntry = aRouteTlvData.GetEntries().FindMatching(Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16()));
+
+    if (matchingEntry != nullptr)
     {
-        if (!Get<Mle::Mle>().MatchesRouterId(routerId))
+        LinkQuality linkQuality = matchingEntry->GetLinkQualityIn();
+
+        if (neighbor->GetLinkQualityOut() != linkQuality)
         {
-            continue;
+            neighbor->SetLinkQualityOut(linkQuality);
+            SignalTableChanged(kEventLinkQualityOutChanged);
         }
 
-        if (aRouteTlv.IsRouterIdSet(routerId))
+        // If the `aRouteTlvData` indicates that the neighboring
+        // router claims to have no link to us (by setting its
+        // `GetLinkQualityOut()` towards us as `kLinkQuality0`),
+        // and we have previously established a link with it, and
+        // our two-way link quality to this router is at least
+        // `kLinkQuality2`, we schedule a unicast Advertisement to
+        // be sent to this neighbor. This helps expedite recovery
+        // from any temporary router link quality mismatch.
+        // Otherwise, the neighboring router will continue to
+        // advertise that it has no link to us until our next
+        // trickle timer-triggered Advertisement transmission
+        // (which can be up to 32 seconds later).
+
+        if (neighbor->IsStateValid() && (matchingEntry->GetLinkQualityOut() == kLinkQuality0) &&
+            (neighbor->GetTwoWayLinkQuality() >= kLinkQuality2))
         {
-            LinkQuality linkQuality = aRouteTlv.GetLinkQualityIn(index);
-
-            if (neighbor->GetLinkQualityOut() != linkQuality)
-            {
-                neighbor->SetLinkQualityOut(linkQuality);
-                SignalTableChanged(kEventLinkQualityOutChanged);
-            }
-
-            // If the `aRouteTlv` indicates that the neighboring
-            // router claims to have no link to us (by setting its
-            // `GetLinkQualityOut()` towards us as `kLinkQuality0`),
-            // and we have previously established a link with it, and
-            // our two-way link quality to this router is at least
-            // `kLinkQuality2`, we schedule a unicast Advertisement to
-            // be sent to this neighbor. This helps expedite recovery
-            // from any temporary router link quality mismatch.
-            // Otherwise, the neighboring router will continue to
-            // advertise that it has no link to us until our next
-            // trickle timer-triggered Advertisement transmission
-            // (which can be up to 32 seconds later).
-
-            if (neighbor->IsStateValid() && (aRouteTlv.GetLinkQualityOut(index) == kLinkQuality0) &&
-                (neighbor->GetTwoWayLinkQuality() >= kLinkQuality2))
-            {
-                Get<Mle::Mle>().ScheduleUnicastAdvertisementTo(*neighbor);
-            }
+            Get<Mle::Mle>().ScheduleUnicastAdvertisementTo(*neighbor);
         }
-
-        break;
     }
 
     linkCostToNeighbor = GetLinkCost(*neighbor);
 
-    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
-         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    for (const Mle::RouteTlv::Data::Entry &entry : aRouteTlvData.GetEntries())
     {
         Router *router;
         Router *nextHop;
         uint8_t cost;
 
-        if (!aRouteTlv.IsRouterIdSet(routerId))
-        {
-            continue;
-        }
-
-        router = FindRouterById(routerId);
+        router = FindRouterById(entry.GetRouterId());
 
         if (router == nullptr || Get<Mle::Mle>().HasRloc16(router->GetRloc16()) || router == neighbor)
         {
@@ -668,7 +662,7 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighbor
 
         nextHop = FindNextHopTowards(*router);
 
-        cost = aRouteTlv.GetRouteCost(index);
+        cost = entry.GetRouteCost();
         cost = (cost == 0) ? Mle::kMaxRouteCost : cost;
 
         if ((nextHop == nullptr) || (nextHop == neighbor))
@@ -718,28 +712,27 @@ exit:
     return;
 }
 
-void RouterTable::UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
+void RouterTable::UpdateRouterOnFtdChild(const Mle::RouteTlv::Data &aRouteTlvData, uint8_t aParentId)
 {
-    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
-         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    for (const Mle::RouteTlv::Data::Entry &entry : aRouteTlvData.GetEntries())
     {
         Router *router;
         uint8_t cost;
         uint8_t nextHopId;
 
-        if (!aRouteTlv.IsRouterIdSet(routerId) || (routerId == aParentId))
+        if (entry.GetRouterId() == aParentId)
         {
             continue;
         }
 
-        router = FindRouterById(routerId);
+        router = FindRouterById(entry.GetRouterId());
 
         if (router == nullptr)
         {
             continue;
         }
 
-        cost      = aRouteTlv.GetRouteCost(index);
+        cost      = entry.GetRouteCost();
         nextHopId = (cost == 0) ? Mle::kInvalidRouterId : aParentId;
 
         if (router->SetNextHopAndCost(nextHopId, cost))

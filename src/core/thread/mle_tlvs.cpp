@@ -44,25 +44,82 @@ namespace Mle {
 //---------------------------------------------------------------------------------------------------------------------
 // RouteTlv
 
-void RouteTlv::Init(void)
+Error RouteTlv::Data::ParseFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
 {
-    SetType(kRoute);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-    mRouterIdMask.Clear();
-    ClearAllBytes(mRouteData);
-}
+    Error        error;
+    RouterIdMask routerIdMask;
+    OffsetRange  offsetRange = aOffsetRange;
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    bool isEven = true;
+#endif
 
-bool RouteTlv::IsValid(void) const
-{
-    bool isValid = false;
+    SuccessOrExit(error = aMessage.Read(offsetRange, routerIdMask));
+    offsetRange.AdvanceOffset(sizeof(routerIdMask));
 
-    VerifyOrExit(GetLength() >= sizeof(mRouterIdMask));
+    mIdSequence = routerIdMask.GetSequence();
 
-    VerifyOrExit(mRouterIdMask.IsValid());
-    isValid = (GetRouteDataEntryCount() >= mRouterIdMask.DetermineAllocatedCount());
+    mEntries.Clear();
+
+    for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
+    {
+        Entry *entry;
+
+        if (!routerIdMask.IsAllocated(routerId))
+        {
+            continue;
+        }
+
+        entry = mEntries.PushBack();
+
+        // If `mEntries` is full, it indicates that there are more than
+        // `kMaxRouters` allocated IDs in the mask, which makes it invalid.
+
+        VerifyOrExit(entry != nullptr, error = kErrorParse);
+
+        entry->mRouterId = routerId;
+
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+        SuccessOrExit(error = aMessage.Read<uint8_t>(offsetRange, entry->mRouteData));
+        offsetRange.AdvanceOffset(sizeof(uint8_t));
+#else
+        {
+            EntryType value;
+
+            SuccessOrExit(error = aMessage.Read<EntryType>(offsetRange, value));
+            value = BigEndian::HostSwap16(value);
+
+            if (isEven)
+            {
+                entry->mRouteData = ReadBits<uint16_t, kEvenEntryMask>(value);
+                offsetRange.AdvanceOffset(sizeof(uint8_t));
+            }
+            else
+            {
+                entry->mRouteData = ReadBits<uint16_t, kOddEntryMask>(value);
+                offsetRange.AdvanceOffset(sizeof(uint16_t));
+            }
+
+            isEven = !isEven;
+        }
+#endif
+    }
 
 exit:
-    return isValid;
+    return error;
+}
+
+bool RouteTlv::Data::IsAllocated(uint8_t aRouterId) const { return mEntries.FindMatching(aRouterId); }
+
+void RouteTlv::Data::DetermineRouterIdMask(RouterIdMask &aRouterIdMask) const
+{
+    aRouterIdMask.Clear();
+
+    aRouterIdMask.SetSequence(mIdSequence);
+
+    for (const Entry &entry : mEntries)
+    {
+        aRouterIdMask.Add(entry.mRouterId);
+    }
 }
 
 Error RouteTlv::AppendRouteDataEntry(Message    &aMessage,

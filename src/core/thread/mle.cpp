@@ -4252,16 +4252,19 @@ exit:
 #endif
 
 #if OPENTHREAD_FTD
-Error Mle::RxMessage::ReadRouteTlv(RouteTlv &aRouteTlv) const
-{
-    Error error;
 
-    SuccessOrExit(error = Tlv::FindTlv(*this, aRouteTlv));
-    VerifyOrExit(aRouteTlv.IsValid(), error = kErrorParse);
+Error Mle::RxMessage::ReadRouteTlv(RouteTlv::Data &aRouteTlvData) const
+{
+    Error       error;
+    OffsetRange offsetRange;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, RouteTlv::kType, offsetRange));
+    error = aRouteTlvData.ParseFrom(*this, offsetRange);
 
 exit:
     return error;
 }
+
 #endif
 
 //---------------------------------------------------------------------------------------------------------------------
