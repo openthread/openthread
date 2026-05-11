@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Simulation 1.1
+name: Simulation
 
 on:
   push:
@@ -45,60 +45,8 @@ permissions:
 
 jobs:
 
-  expects:
-    runs-on: ubuntu-24.04
-    env:
-      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
-      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
-      THREAD_VERSION: 1.1
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: '3.12'
-        cache: pip
-    - name: Bootstrap
-      run: |
-        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
-        sudo bash script/install_socat
-        pip install bleak 'cryptography==43.0.0'
-    - name: Run
-      run: |
-        ulimit -c unlimited
-        ./script/test prepare_coredump_upload
-        OT_OPTIONS='-DOT_TIME_SYNC=ON -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 ./script/test build expect
-    - name: Check Crash
-      if: ${{ failure() }}
-      run: |
-          CRASHED=$(./script/test check_crash | tail -1)
-          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
-          echo "CRASHED_CLI=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: ${{ failure() && env.CRASHED_CLI == '1' }}
-      with:
-        name: core-expect-cli
-        path: |
-          ./ot-core-dump/*
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: cov-expects
-        path: tmp/coverage.info
-        retention-days: 1
-
   ot-commissioner:
     runs-on: ubuntu-24.04
-    env:
-      THREAD_VERSION: 1.1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
@@ -177,10 +125,109 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
+  channel-manager-csl:
+    runs-on: ubuntu-24.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      VIRTUAL_TIME: 1
+      OT_VT_USE_UNIX_SOCKET: 1
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: '3.12'
+        cache: pip
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        OT_OPTIONS="-DOT_CHANNEL_MANAGER_CSL=ON" ./script/test build
+    - name: Run
+      run: |
+        ulimit -c unlimited
+        ./script/test cert_suite ./tests/scripts/thread-cert/addon_test_channel_manager_autocsl*.py
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: ${{ failure() }}
+      with:
+        name: channel-manager-csl
+        path: ot_testing
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: cov-channel-manager-csl
+        path: tmp/coverage.info
+        retention-days: 1
+
+  expects:
+    runs-on: ubuntu-24.04
+    env:
+      COVERAGE: 1
+      VIRTUAL_TIME: 0
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: '3.12'
+        cache: pip
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+        sudo bash script/install_socat
+        pip install bleak 'cryptography==43.0.0'
+    - name: Run RCP Mode
+      run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NODE_TYPE=rcp ./script/test build expect
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-expect
+        path: |
+          ./ot-core-dump/*
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: cov-expects
+        path: tmp/coverage.info
+        retention-days: 1
+
   upload-coverage:
     needs:
-    - expects
     - ot-commissioner
+    - simulation-local-host
+    - channel-manager-csl
+    - expects
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
