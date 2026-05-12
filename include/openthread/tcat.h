@@ -35,15 +35,14 @@
  *   The functions in this module require the build-time feature `OPENTHREAD_CONFIG_BLE_TCAT_ENABLE=1`.
  *
  *  @note
- *   To enable cipher suite DTLS_PSK_WITH_AES_128_CCM_8, MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
- *    must be enabled in mbedtls-config.h
- *   To enable cipher suite DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+ *   To enable the required cipher suite TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
  *    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED must be enabled in mbedtls-config.h.
  */
 
 #ifndef OPENTHREAD_TCAT_H_
 #define OPENTHREAD_TCAT_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <openthread/error.h>
@@ -66,13 +65,15 @@ extern "C" {
  * @{
  */
 
-#define OT_TCAT_MAX_SERVICE_NAME_LENGTH \
+#define OT_TCAT_SERVICE_NAME_MAX_LENGTH \
     15 ///< Maximum string length of a UDP or TCP service name (does not include null char).
+#define OT_TCAT_APPLICATION_LAYER_MAX_COUNT 4 ///< Maximum number of application layer service names supported
 
 #define OT_TCAT_ADVERTISEMENT_MAX_LEN 29       ///< Maximum length of TCAT advertisement.
 #define OT_TCAT_OPCODE 0x2                     ///< TCAT Advertisement Operation Code.
 #define OT_TCAT_MAX_ADVERTISED_DEVICEID_SIZE 5 ///< TCAT max size of any type of advertised Device ID.
 #define OT_TCAT_MAX_DEVICEID_SIZE 64           ///< TCAT max size of device ID.
+#define OT_TCAT_ENABLE_MAX 600                 ///< TCAT_ENABLE_MAX, default max TMF TCAT enable time,  in seconds.
 
 /**
  * Represents TCAT status code.
@@ -85,20 +86,28 @@ typedef enum otTcatStatusCode
     OT_TCAT_STATUS_VALUE_ERROR   = 3, ///< The value of the transmitted TLV has an error
     OT_TCAT_STATUS_GENERAL_ERROR = 4, ///< An error not matching any other category occurred
     OT_TCAT_STATUS_BUSY          = 5, ///< Command cannot be executed because the resource is busy
-    OT_TCAT_STATUS_UNDEFINED    = 6, ///< The requested value, data or service is not defined (currently) or not present
-    OT_TCAT_STATUS_HASH_ERROR   = 7, ///< The hash value presented by the commissioner was incorrect
-    OT_TCAT_STATUS_UNAUTHORIZED = 16, ///< Sender does not have sufficient authorization for the given command
+    OT_TCAT_STATUS_UNDEFINED  = 6, ///< The requested value, data or service is not defined (currently) or not present
+    OT_TCAT_STATUS_HASH_ERROR = 7, ///< The hash value presented by the commissioner was incorrect
+    OT_TCAT_STATUS_INVALID_STATE = 8,  ///< The TCAT device is not in a correct state for the given command
+    OT_TCAT_STATUS_UNAUTHORIZED  = 16, ///< Sender does not have sufficient authorization for the given command
 
 } otTcatStatusCode;
 
 /**
- * Represents TCAT application protocol.
+ * Represents TCAT application protocol options.
  */
 typedef enum otTcatApplicationProtocol
 {
-    OT_TCAT_APPLICATION_PROTOCOL_NONE   = 0, ///< Message which has been sent without activating the TCAT agent
-    OT_TCAT_APPLICATION_PROTOCOL_STATUS = 1, ///< Message directed to a UDP service
-    OT_TCAT_APPLICATION_PROTOCOL_TCP    = 2, ///< Message directed to a TCP service
+    OT_TCAT_APPLICATION_PROTOCOL_NONE   = 0,    ///< Message which has been sent without activating the TCAT agent
+    OT_TCAT_APPLICATION_PROTOCOL_STATUS = 0x01, /** Message directed to any application protocol indicating a
+                                                    response with status value (one byte otTcatStatusCode) */
+    OT_TCAT_APPLICATION_PROTOCOL_RESPONSE =
+        0x02, ///< Message directed to any application protocol indicating a response with payload
+    OT_TCAT_APPLICATION_PROTOCOL_1      = 0x81, ///< Message directed to application protocol 1
+    OT_TCAT_APPLICATION_PROTOCOL_2      = 0x82, ///< Message directed to application protocol 2
+    OT_TCAT_APPLICATION_PROTOCOL_3      = 0x83, ///< Message directed to application protocol 3
+    OT_TCAT_APPLICATION_PROTOCOL_4      = 0x84, ///< Message directed to application protocol 4
+    OT_TCAT_APPLICATION_PROTOCOL_VENDOR = 0x9F, ///< Message directed to a vendor specific application protocol
 
 } otTcatApplicationProtocol;
 
@@ -116,16 +125,16 @@ typedef enum otTcatCommandClass
 } otTcatCommandClass;
 
 /**
- * Represents Advertised Device ID type. (used during TCAT advertisement)
+ * Represents Advertised Device ID type. Used during TCAT advertisement.
  */
 typedef enum otTcatAdvertisedDeviceIdType
 {
-    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Vendor device ID type not set
-    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Vendor device ID type IEEE OUI-24
-    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Vendor device ID type IEEE OUI-36
-    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Vendor device ID type Device Discriminator
-    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Vendor device ID type IANA PEN
-    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Vendor device ID type size
+    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Advertised device ID type not set
+    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Advertised device ID type IEEE OUI-24
+    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Advertised device ID type IEEE OUI-36
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Advertised device ID type Device Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Advertised device ID type IANA PEN
+    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Advertised device ID max number of types
 } otTcatAdvertisedDeviceIdType;
 
 typedef struct otTcatAdvertisedDeviceId
@@ -151,42 +160,57 @@ typedef struct otTcatGeneralDeviceId
  */
 typedef struct otTcatVendorInfo
 {
-    const char                     *mProvisioningUrl;     ///< Provisioning URL path string
-    const char                     *mVendorName;          ///< Vendor name string
-    const char                     *mVendorModel;         ///< Vendor model string
-    const char                     *mVendorSwVersion;     ///< Vendor software version string
-    const char                     *mVendorData;          ///< Vendor specific data string
-    const char                     *mPskdString;          ///< Vendor managed pre-shared key for device
-    const char                     *mInstallCode;         ///< Vendor managed install code string
-    const otTcatAdvertisedDeviceId *mAdvertisedDeviceIds; /** Vendor managed advertised device ID array.
-                                         Array is terminated like C string with OT_TCAT_DEVICE_ID_EMPTY */
-    const otTcatGeneralDeviceId *mGeneralDeviceId;        /** Vendor managed general device ID array.
-                                               (if NULL: device ID is set to EUI-64 in binary format)*/
+    const char *mProvisioningUrl; ///< Provisioning URL path string
+    const char *mVendorName;      ///< Vendor name string
+    const char *mVendorModel;     ///< Vendor model string
+    const char *mVendorSwVersion; ///< Vendor software version string
+    const char *mVendorData;      ///< Vendor specific data string
+    const char *mPskdString;      ///< Vendor managed pre-shared key for device
+    const char *mInstallCode;     ///< Vendor managed install code string
+    const otTcatAdvertisedDeviceId
+        *mAdvertisedDeviceIds;                     /** Vendor managed advertised device ID array.
+                                                       Array is terminated like C string with OT_TCAT_DEVICE_ID_EMPTY */
+    const otTcatGeneralDeviceId *mGeneralDeviceId; /** Vendor managed general device ID array.
+                                                       (if NULL: device ID is set to EUI-64 in binary format) */
+    const char *mApplicationServiceName[OT_TCAT_APPLICATION_LAYER_MAX_COUNT]; /** Array with application service names
+                                                                                  as C string with maximum length
+                                                                                  OT_TCAT_SERVICE_NAME_MAX_LENGTH or
+                                                                                  NULL if not supported */
+    bool mApplicationServiceIsTcp[OT_TCAT_APPLICATION_LAYER_MAX_COUNT];       /** Array with boolean values indicating
+                                                                                  if the service is of TCP type (otherwise
+                                                                                  UDP) */
 
 } otTcatVendorInfo;
 
 /**
- * Pointer to call when application data was received over a TCAT TLS connection.
+ * Pointer to call when application data or vendor-specific data was received over a TCAT TLS connection.
+ * The application may generate a response to an incoming TCAT application data packet. The TCAT agent
+ * automatically responds with status OT_TCAT_STATUS_UNSUPPORTED if no response has been generated or
+ * no handler is defined.
  *
  * @param[in]  aInstance                 A pointer to an OpenThread instance.
  * @param[in]  aMessage                  A pointer to the message.
  * @param[in]  aOffset                   The offset where the application data begins.
- * @param[in]  aTcatApplicationProtocol  The protocol type of the message received.
- * @param[in]  aServiceName              The name of the service the message is direced to.
+ * @param[in]  aTcatApplicationProtocol  The application protocol the message is targeted to.
  * @param[in]  aContext                  A pointer to arbitrary context information.
  */
 typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aInstance,
                                                    const otMessage          *aMessage,
                                                    int32_t                   aOffset,
                                                    otTcatApplicationProtocol aTcatApplicationProtocol,
-                                                   const char               *aServiceName,
                                                    void                     *aContext);
 
 /**
- * Pointer to call to notify the completion of a join operation.
+ * Pointer to call to notify the completion of a network join/leave operation performed under
+ * guidance of a TCAT Commissioner.
  *
- * @param[in]  aError           OT_ERROR_NONE if the join process succeeded.
- *                              OT_ERROR_SECURITY if the join process failed due to security credentials.
+ * @param[in]  aError           OT_ERROR_NONE if the network join/leave operation was successfully started.
+ *                              OT_ERROR_INVALID_STATE if network join was requested but network credentials
+ *                                                     were missing or incomplete.
+ *                              OT_ERROR_REJECTED if a network join/leave operation was requested, but the
+ *                                                TCAT Commissioner is not authorized to make such a request.
+ *                              OT_ERROR_SECURITY is reserved for future use for a failed join due to
+ *                                                credential mismatch.
  * @param[in]  aContext         A pointer to arbitrary context information.
  */
 typedef void (*otHandleTcatJoin)(otError aError, void *aContext);
@@ -199,4 +223,4 @@ typedef void (*otHandleTcatJoin)(otError aError, void *aContext);
 } // extern "C"
 #endif
 
-#endif /* OPENTHREAD_TCAT_H_ */
+#endif // OPENTHREAD_TCAT_H_

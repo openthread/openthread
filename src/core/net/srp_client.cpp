@@ -241,27 +241,17 @@ uint32_t Client::TxJitter::DetermineDelay(void)
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *Client::TxJitter::ReasonToString(Reason aReason)
 {
-    static const char *const kReasonStrings[] = {
-        "OnDeviceReboot",    // (0) kOnDeviceReboot
-        "OnServerStart",     // (1) kOnServerStart
-        "OnServerRestart",   // (2) kOnServerRestart
-        "OnServerSwitch",    // (3) kOnServerSwitch
-        "OnSlaacAddrAdd",    // (4) kOnSlaacAddrAdd
-        "OnSlaacAddrRemove", // (5) kOnSlaacAddrRemove
-    };
+#define ReasonMapList(_)                   \
+    _(kOnDeviceReboot, "OnDeviceReboot")   \
+    _(kOnServerStart, "OnServerStart")     \
+    _(kOnServerRestart, "OnServerRestart") \
+    _(kOnServerSwitch, "OnServerSwitch")   \
+    _(kOnSlaacAddrAdd, "OnSlaacAddrAdd")   \
+    _(kOnSlaacAddrRemove, "OnSlaacAddrRemove")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kOnDeviceReboot);
-        ValidateNextEnum(kOnServerStart);
-        ValidateNextEnum(kOnServerRestart);
-        ValidateNextEnum(kOnServerSwitch);
-        ValidateNextEnum(kOnSlaacAddrAdd);
-        ValidateNextEnum(kOnSlaacAddrRemove);
-    };
+    DefineEnumStringArray(ReasonMapList);
 
-    return kReasonStrings[aReason];
+    return kStrings[aReason];
 }
 #endif
 
@@ -314,27 +304,17 @@ void Client::AutoStart::InvokeCallback(const Ip6::SockAddr *aServerSockAddr) con
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *Client::AutoStart::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled",      // (0) kDisabled
-        "1stTimeSelect", // (1) kFirstTimeSelecting
-        "Reselect",      // (2) kReselecting
-        "Unicast-prf",   // (3) kSelectedUnicastPreferred
-        "Anycast",       // (4) kSelectedAnycast
-        "Unicast",       // (5) kSelectedUnicast
-    };
+#define AutoStartStateMapList(_)                \
+    _(kDisabled, "Disabled")                    \
+    _(kFirstTimeSelecting, "1stTimeSelect")     \
+    _(kReselecting, "Reselect")                 \
+    _(kSelectedUnicastPreferred, "Unicast-prf") \
+    _(kSelectedAnycast, "Anycast")              \
+    _(kSelectedUnicast, "Unicast")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDisabled);
-        ValidateNextEnum(kFirstTimeSelecting);
-        ValidateNextEnum(kReselecting);
-        ValidateNextEnum(kSelectedUnicastPreferred);
-        ValidateNextEnum(kSelectedAnycast);
-        ValidateNextEnum(kSelectedUnicast);
-    };
+    DefineEnumStringArray(AutoStartStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 #endif
 
@@ -352,6 +332,7 @@ Client::Client(Instance &aInstance)
     , mShouldRemoveKeyLease(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
+    , mHostKeyRecordEnabled(true)
     , mUseShortLeaseOption(false)
 #endif
     , mCurMessageId(0)
@@ -404,8 +385,7 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 
     if (error != kErrorNone)
     {
-        LogInfo("Failed to connect to server %s: %s", aServerSockAddr.GetAddress().ToString().AsCString(),
-                ErrorToString(error));
+        LogInfoOnError(error, "connect to server %s", aServerSockAddr.GetAddress().ToString().AsCString());
         IgnoreError(mSocket.Close());
         ExitNow();
     }
@@ -948,11 +928,11 @@ bool Client::ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStat
         case AutoStart::kSelectedUnicast:
             info.SetServerAddress(GetServerAddress().GetAddress());
             info.SetServerPort(GetServerAddress().GetPort());
-            IgnoreError(Get<Settings>().Save(info));
+            Get<Settings>().Save(info);
             break;
 
         case AutoStart::kSelectedAnycast:
-            IgnoreError(Get<Settings>().Delete<Settings::SrpClientInfo>());
+            Get<Settings>().Delete<Settings::SrpClientInfo>();
             break;
         }
     }
@@ -1069,7 +1049,7 @@ exit:
         // continue to retry using the `mRetryWaitInterval` (which keeps
         // growing on each failure).
 
-        LogInfo("Failed to send update: %s", ErrorToString(error));
+        LogInfoOnError(error, "send update");
 
         SetState(kStateToRetry);
 
@@ -1088,8 +1068,15 @@ exit:
         }
         else
         {
+            uint16_t retryJitter;
+
             LogRetryWaitInterval();
-            mTimer.Start(Random::NonCrypto::AddJitter(GetRetryWaitInterval(), kRetryIntervalJitter));
+
+            // Use a divisor of current retry interval for jitter
+            retryJitter = ClampToUint16(GetRetryWaitInterval() / kRetryJitterDivisor);
+            retryJitter = Max(retryJitter, kRetryIntervalJitter);
+            mTimer.Start(Random::NonCrypto::AddJitter(GetRetryWaitInterval(), retryJitter));
+
             GrowRetryWaitInterval();
             InvokeCallback(error);
         }
@@ -1187,7 +1174,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
         {
             SuccessOrExit(error = aKeyInfo.Generate());
         }
-        IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
+        Get<Settings>().Delete<Settings::SrpEcdsaKey>();
     }
     else
     {
@@ -1214,7 +1201,7 @@ Error Client::ReadOrGenerateKey(KeyInfo &aKeyInfo)
     }
 
     SuccessOrExit(error = aKeyInfo.Generate());
-    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyInfo));
+    Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyInfo);
 
 exit:
     return error;
@@ -1559,7 +1546,12 @@ Error Client::AppendHostDescriptionInstruction(MsgInfo &aInfo)
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aInfo));
-    SuccessOrExit(error = AppendKeyRecord(aInfo));
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mHostKeyRecordEnabled)
+#endif
+    {
+        SuccessOrExit(error = AppendKeyRecord(aInfo));
+    }
 
 exit:
     return error;
@@ -1941,10 +1933,7 @@ void Client::ProcessResponse(Message &aMessage)
     UpdateState();
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to process response %s", ErrorToString(error));
-    }
+    LogInfoOnError(error, "process response");
 }
 
 void Client::SelectNewMessageId(void)
@@ -2058,7 +2047,7 @@ void Client::UpdateState(void)
 
         mHostInfo.SetState(kToRefresh);
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kToAdd:
     case kToRefresh:
@@ -2068,7 +2057,7 @@ void Client::UpdateState(void)
         // for empty service list.
         VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.IsAutoAddressEnabled() || (mHostInfo.GetNumAddresses() > 0)));
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kToRemove:
         shouldUpdate = true;
@@ -2569,45 +2558,36 @@ exit:
 
 const char *Client::ItemStateToString(ItemState aState)
 {
-    static const char *const kItemStateStrings[] = {
-        "ToAdd",      // kToAdd      (0)
-        "Adding",     // kAdding     (1)
-        "ToRefresh",  // kToRefresh  (2)
-        "Refreshing", // kRefreshing (3)
-        "ToRemove",   // kToRemove   (4)
-        "Removing",   // kRemoving   (5)
-        "Registered", // kRegistered (6)
-        "Removed",    // kRemoved    (7)
-    };
+#define ItemStateMapList(_)      \
+    _(kToAdd, "ToAdd")           \
+    _(kAdding, "Adding")         \
+    _(kToRefresh, "ToRefresh")   \
+    _(kRefreshing, "Refreshing") \
+    _(kToRemove, "ToRemove")     \
+    _(kRemoving, "Removing")     \
+    _(kRegistered, "Registered") \
+    _(kRemoved, "Removed")
 
-    return kItemStateStrings[aState];
+    DefineEnumStringArray(ItemStateMapList);
+
+    return kStrings[aState];
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Client::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Stopped",  // kStateStopped  (0)
-        "Paused",   // kStatePaused   (1)
-        "ToUpdate", // kStateToUpdate (2)
-        "Updating", // kStateUpdating (3)
-        "Updated",  // kStateUpdated  (4)
-        "ToRetry",  // kStateToRetry  (5)
-    };
+#define StateMapList(_)           \
+    _(kStateStopped, "Stopped")   \
+    _(kStatePaused, "Paused")     \
+    _(kStateToUpdate, "ToUpdate") \
+    _(kStateUpdating, "Updating") \
+    _(kStateUpdated, "Updated")   \
+    _(kStateToRetry, "ToRetry")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateStopped);
-        ValidateNextEnum(kStatePaused);
-        ValidateNextEnum(kStateToUpdate);
-        ValidateNextEnum(kStateUpdating);
-        ValidateNextEnum(kStateUpdated);
-        ValidateNextEnum(kStateToRetry);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 void Client::LogRetryWaitInterval(void) const

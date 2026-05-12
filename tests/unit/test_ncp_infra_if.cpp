@@ -94,14 +94,14 @@ void TestNcpInfraIfSetUp(void)
                                                   recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
     VerifyOrQuit(otBorderRoutingGetState(instance) == OT_BORDER_ROUTING_STATE_STOPPED);
-    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex, &infraIfAddresses[0]));
-    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex + 100, &infraIfAddresses[0]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(instance, kInfraIfIndex, &infraIfAddresses[0]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(instance, kInfraIfIndex + 100, &infraIfAddresses[0]));
 
     SuccessOrQuit(
         GenerateSpinelInfraIfStateFrame(kInfraIfIndex, true /* IsRunning */, infraIfAddresses, 0, recvBuf, recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
     VerifyOrQuit(otBorderRoutingGetState(instance) == OT_BORDER_ROUTING_STATE_STOPPED);
-    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex, &infraIfAddresses[0]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(instance, kInfraIfIndex, &infraIfAddresses[0]));
 
     printf("Test Ncp Infra If SetUp passed.\n");
 }
@@ -124,22 +124,22 @@ void TestNcpInfraIfUpdate(void)
     SuccessOrQuit(
         GenerateSpinelInfraIfStateFrame(kInfraIfIndex1, true /* IsRunning */, infraIfAddresses, 1, recvBuf, recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
-    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[0]));
-    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[1]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(instance, kInfraIfIndex1, &infraIfAddresses[0]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(instance, kInfraIfIndex1, &infraIfAddresses[1]));
 
     SuccessOrQuit(
         GenerateSpinelInfraIfStateFrame(kInfraIfIndex1, true /* IsRunning */, infraIfAddresses, 2, recvBuf, recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
-    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[0]));
-    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[1]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(instance, kInfraIfIndex1, &infraIfAddresses[0]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(instance, kInfraIfIndex1, &infraIfAddresses[1]));
 
     SuccessOrQuit(
         GenerateSpinelInfraIfStateFrame(kInfraIfIndex2, true /* IsRunning */, infraIfAddresses, 2, recvBuf, recvLen));
     ncpBase.HandleReceive(recvBuf, recvLen);
-    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[0]));
-    VerifyOrQuit(!otPlatInfraIfHasAddress(kInfraIfIndex1, &infraIfAddresses[1]));
-    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex2, &infraIfAddresses[0]));
-    VerifyOrQuit(otPlatInfraIfHasAddress(kInfraIfIndex2, &infraIfAddresses[1]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(instance, kInfraIfIndex1, &infraIfAddresses[0]));
+    VerifyOrQuit(!otPlatInfraIfHasAddress(instance, kInfraIfIndex1, &infraIfAddresses[1]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(instance, kInfraIfIndex2, &infraIfAddresses[0]));
+    VerifyOrQuit(otPlatInfraIfHasAddress(instance, kInfraIfIndex2, &infraIfAddresses[1]));
 }
 
 } // namespace ot

@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Network Diagnostics.
  */
 
-#ifndef CONFIG_NETWORK_DIAGNOSTIC_H_
-#define CONFIG_NETWORK_DIAGNOSTIC_H_
+#ifndef OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_
+#define OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_
 
 /**
  * @addtogroup config-network-diagnostic
@@ -43,13 +43,22 @@
  * @{
  */
 
+#include "config/misc.h"
+
 /**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
  *
  * Specifies the default Vendor Name string.
+ *
+ * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, the Vendor Name string MUST start with the "RD:" prefix
+ * to ensure reference devices are identifiable. This is checked and enforced at build-time (`static_assert`).
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "RD:"
+#else
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME ""
+#endif
 #endif
 
 /**
@@ -80,6 +89,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI
+ *
+ * Specifies the default Vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66  is represented as
+ * `0x641666`).
+ *
+ * The value of `0xffffffff` (UINT32_MAX) is used to indicate OUI is not specified.
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI (0xffffffff)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
  *
  * Define as 1 to add APIs to allow Vendor Name, Model, SW Version to change at run-time.
@@ -101,4 +122,4 @@
  * @}
  */
 
-#endif // CONFIG_NETWORK_DIAGNOSTIC_H_
+#endif // OT_CORE_CONFIG_NETWORK_DIAGNOSTIC_H_

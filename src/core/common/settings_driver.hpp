@@ -31,13 +31,14 @@
  *   This file includes definitions for settings driver.
  */
 
-#ifndef SETTINGS_DRIVER_HPP_
-#define SETTINGS_DRIVER_HPP_
+#ifndef OT_CORE_COMMON_SETTINGS_DRIVER_HPP_
+#define OT_CORE_COMMON_SETTINGS_DRIVER_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/platform/settings.h>
 
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -111,6 +112,8 @@ public:
 #else
         error = otPlatSettingsAdd(GetInstancePtr(), aKey, value, aValueLength);
 #endif
+        OT_ASSERT(error != kErrorNotImplemented);
+
         return error;
     }
 
@@ -133,6 +136,8 @@ public:
 #else
         error = otPlatSettingsDelete(GetInstancePtr(), aKey, aIndex);
 #endif
+        OT_ASSERT(error != kErrorNotImplemented);
+
         return error;
     }
 
@@ -162,6 +167,8 @@ public:
 #else
         error = otPlatSettingsGet(GetInstancePtr(), aKey, aIndex, value, aValueLength);
 #endif
+        OT_ASSERT(error != kErrorNotImplemented);
+
         return error;
     }
 
@@ -206,6 +213,8 @@ public:
 #else
         error = otPlatSettingsSet(GetInstancePtr(), aKey, value, aValueLength);
 #endif
+        OT_ASSERT(error != kErrorNotImplemented);
+
         return error;
     }
 
@@ -231,4 +240,4 @@ private:
 
 } // namespace ot
 
-#endif // SETTINGS_DRIVER_HPP_
+#endif // OT_CORE_COMMON_SETTINGS_DRIVER_HPP_

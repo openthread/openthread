@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing IEEE 802.15.4 MAC frames.
  */
 
-#ifndef MAC_FRAME_HPP_
-#define MAC_FRAME_HPP_
+#ifndef OT_CORE_MAC_MAC_FRAME_HPP_
+#define OT_CORE_MAC_MAC_FRAME_HPP_
 
 #include "openthread-core-config.h"
 
@@ -177,6 +177,14 @@ public:
      * @retval FALSE  If this is not an Ack.
      */
     bool IsAck(void) const { return GetType() == kTypeAck; }
+
+    /**
+     * Returns whether the frame is a MAC Command frame.
+     *
+     * @retval TRUE   If this is a MAC Command frame.
+     * @retval FALSE  If this is not a MAC Command Frame.
+     */
+    bool IsMacCommand(void) const { return GetType() == kTypeMacCmd; }
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
     /**
@@ -926,6 +934,30 @@ public:
     friend class TxFrame;
 
     /**
+     * Defines flags to indicate allowed Key ID Modes, used in `IsSecuredWith()`.
+     */
+    enum KeyIdModeFlag : uint8_t
+    {
+        kAllowKeyIdMode0 = (1 << 0), ///< Allow Key ID Mode 0.
+        kAllowKeyIdMode1 = (1 << 1), ///< Allow Key ID Mode 1.
+    };
+
+    /**
+     * Represents a set of `KeyIdModeFlag`s.
+     */
+    typedef uint8_t KeyIdModeFlags;
+
+    /**
+     * Indicates whether the frame is secured with a given set of allowed Key ID Modes.
+     *
+     * @param[in] aFlags  A bitmask of `KeyIdModeFlags` specifying the allowed modes.
+     *
+     * @retval TRUE   The frame has security enabled and uses one of the allowed Key ID Modes.
+     * @retval FALSE  The frame does not have security enabled, or its Key ID Mode is not allowed.
+     */
+    bool IsSecuredWith(KeyIdModeFlags aFlags) const;
+
+    /**
      * Returns the RSSI in dBm used for reception.
      *
      * @returns The RSSI in dBm used for reception.
@@ -1314,14 +1346,14 @@ public:
     /**
      * Generate IEE 802.15.4 Wake-up frame.
      *
-     * @param[in]    aPanId     A destination PAN identifier
-     * @param[in]    aDest      A destination address (short or extended)
-     * @param[in]    aSource    A source address (short or extended)
+     * @param[in]    aPanId          A destination PAN identifier
+     * @param[in]    aWakeupRequest  A const reference to the wake-up request.
+     * @param[in]    aSource         A source address (short or extended)
      *
      * @retval  kErrorNone        Successfully generated Wake-up frame.
      * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
      */
-    Error GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource);
+    Error GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource);
 #endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1520,4 +1552,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_FRAME_HPP_
+#endif // OT_CORE_MAC_MAC_FRAME_HPP_

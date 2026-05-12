@@ -97,55 +97,37 @@ void Leader::LogBackboneRouterPrimary(State aState, const Config &aConfig) const
 
 const char *Leader::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "None",            //  (0) kStateNone
-        "Added",           //  (1) kStateAdded
-        "Removed",         //  (2) kStateRemoved
-        "Rereg triggered", //  (3) kStateToTriggerRereg
-        "Refreshed",       //  (4) kStateRefreshed
-        "Unchanged",       //  (5) kStateUnchanged
-    };
+#define StateMapList(_)                        \
+    _(kStateNone, "None")                      \
+    _(kStateAdded, "Added")                    \
+    _(kStateRemoved, "Removed")                \
+    _(kStateToTriggerRereg, "Rereg triggered") \
+    _(kStateRefreshed, "Refreshed")            \
+    _(kStateUnchanged, "Unchanged")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateNone);
-        ValidateNextEnum(kStateAdded);
-        ValidateNextEnum(kStateRemoved);
-        ValidateNextEnum(kStateToTriggerRereg);
-        ValidateNextEnum(kStateRefreshed);
-        ValidateNextEnum(kStateUnchanged);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
 {
-    static const char *const kEventStrings[] = {
-        "Added",     // (0) kDomainPrefixAdded
-        "Removed",   // (1) kDomainPrefixRemoved
-        "Refreshed", // (2) kDomainPrefixRefreshed
-        "Unchanged", // (3) kDomainPrefixUnchanged
-    };
+#define DomainPrefixEventMapList(_)        \
+    _(kDomainPrefixAdded, "Added")         \
+    _(kDomainPrefixRemoved, "Removed")     \
+    _(kDomainPrefixRefreshed, "Refreshed") \
+    _(kDomainPrefixUnchanged, "Unchanged")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kDomainPrefixAdded);
-        ValidateNextEnum(kDomainPrefixRemoved);
-        ValidateNextEnum(kDomainPrefixRefreshed);
-        ValidateNextEnum(kDomainPrefixUnchanged);
-    };
+    DefineEnumStringArray(DomainPrefixEventMapList);
 
-    return kEventStrings[aEvent];
+    return kStrings[aEvent];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::HandleNotifierEvents(Events aEvents)
 {
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged))
     {
         UpdateBackboneRouterPrimary();
         UpdateDomainPrefixConfig();
@@ -215,7 +197,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    Get<MlrManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+    Get<Mlr::Manager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
@@ -226,13 +208,13 @@ void Leader::UpdateBackboneRouterPrimary(void)
 void Leader::UpdateDomainPrefixConfig(void)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig config;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
     DomainPrefixEvent               event;
     bool                            found = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
-        if (config.mDp)
+        if (prefixConfig.mDp)
         {
             found = true;
             break;
@@ -247,14 +229,14 @@ void Leader::UpdateDomainPrefixConfig(void)
         mDomainPrefix.Clear();
         event = kDomainPrefixRemoved;
     }
-    else if (config.GetPrefix() == mDomainPrefix)
+    else if (prefixConfig.GetPrefix() == mDomainPrefix)
     {
         event = kDomainPrefixUnchanged;
     }
     else
     {
         event         = HasDomainPrefix() ? kDomainPrefixRefreshed : kDomainPrefixAdded;
-        mDomainPrefix = config.GetPrefix();
+        mDomainPrefix = prefixConfig.GetPrefix();
     }
 
     LogInfo("%s domain Prefix: %s", DomainPrefixEventToString(event), mDomainPrefix.ToString().AsCString());

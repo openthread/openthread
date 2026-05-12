@@ -258,20 +258,15 @@ Error SubMac::RadioSleep(void)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(ShouldHandleTransitionToSleep());
+    if (ShouldHandleTransitionToSleep())
+    {
+        SuccessOrExit(error = Get<Radio>().Sleep());
+    }
 
-    error = Get<Radio>().Sleep();
+    SetState(kStateSleep);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("RadioSleep() failed, error: %s", ErrorToString(error));
-    }
-    else
-    {
-        SetState(kStateSleep);
-    }
-
+    LogWarnOnError(error, "RadioSleep()");
     return error;
 }
 
@@ -290,15 +285,12 @@ Error SubMac::Receive(uint8_t aChannel)
         error = Get<Radio>().Receive(aChannel);
     }
 
-    if (error != kErrorNone)
-    {
-        LogWarn("RadioReceive() failed, error: %s", ErrorToString(error));
-        ExitNow();
-    }
+    SuccessOrExit(error);
 
     SetState(kStateReceive);
 
 exit:
+    LogWarnOnError(error, "RadioReceive()");
     return error;
 }
 
@@ -1126,46 +1118,36 @@ exit:
 
 const char *SubMac::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disabled",    // (0) kStateDisabled
-        "Sleep",       // (1) kStateSleep
-        "Receive",     // (2) kStateReceive
-        "CsmaBackoff", // (3) kStateCsmaBackoff
-        "Transmit",    // (4) kStateTransmit
-        "EnergyScan",  // (5) kStateEnergyScan
+#define StateMapList(_)                 \
+    _(kStateDisabled, "Disabled")       \
+    _(kStateSleep, "Sleep")             \
+    _(kStateReceive, "Receive")         \
+    _(kStateCsmaBackoff, "CsmaBackoff") \
+    _(kStateTransmit, "Transmit")       \
+    _(kStateEnergyScan, "EnergyScan")   \
+    DelayBeforeRetxStateMapList(_) ClsTxStateMapList(_) RadioSampleMapList(_)
+
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-        "DelayBeforeRetx", // (6) kStateDelayBeforeRetx
+#define DelayBeforeRetxStateMapList(_) _(kStateDelayBeforeRetx, "DelayBeforeRetx")
+#else
+#define DelayBeforeRetxStateMapList(_)
 #endif
+
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "CslTransmit", // (7) kStateCslTransmit
+#define ClsTxStateMapList(_) _(kStateCslTransmit, "CslTransmit")
+#else
+#define ClsTxStateMapList(_)
 #endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        "RadioSample", // (8) kStateRadioSample
+#define RadioSampleMapList(_) _(kStateRadioSample, "RadioSample")
+#else
+#define RadioSampleMapList(_)
 #endif
-    };
 
-    struct StateValueChecker
-    {
-        InitEnumValidatorCounter();
+    DefineEnumStringArray(StateMapList);
 
-        ValidateNextEnum(kStateDisabled);
-        ValidateNextEnum(kStateSleep);
-        ValidateNextEnum(kStateReceive);
-        ValidateNextEnum(kStateCsmaBackoff);
-        ValidateNextEnum(kStateTransmit);
-        ValidateNextEnum(kStateEnergyScan);
-#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
-        ValidateNextEnum(kStateDelayBeforeRetx);
-#endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        ValidateNextEnum(kStateCslTransmit);
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        ValidateNextEnum(kStateRadioSample);
-#endif
-    };
-
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 // LCOV_EXCL_STOP

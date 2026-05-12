@@ -656,10 +656,7 @@ template <> otError Commissioner::Process<Cmd("state")>(Arg aArgs[])
 
 otError Commissioner::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                    \
-    {                                                               \
-        aCommandString, &Commissioner::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Commissioner::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("announce"),  CmdEntry("energy"),  CmdEntry("id"),    CmdEntry("joiner"),

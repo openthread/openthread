@@ -141,7 +141,7 @@ class TestMlr(thread_cert.TestCase):
         self.simulator.go(WAIT_REDUNDANCE)
 
         self.collect_ipaddrs()
-        self.collect_rloc16s()
+        self.collect_rlocs()
 
         # ping MA1 from Host could generate a reply from R1 and R2
         self.assertTrue(self.nodes[HOST].ping(MA1, backbone=True, ttl=5))
@@ -180,7 +180,7 @@ class TestMlr(thread_cert.TestCase):
         ROUTER1_DUA = pv.vars['ROUTER1_DUA']
         ROUTER2_DUA = pv.vars['ROUTER2_DUA']
 
-        ROUTER1_RLOC16 = pv.vars['ROUTER1_RLOC16']
+        ROUTER1_RLOC = pv.vars['ROUTER1_RLOC']
 
         #
         # Verify Host ping MA1 to R1 and R2
@@ -204,7 +204,7 @@ class TestMlr(thread_cert.TestCase):
 
         # ROUTER1 should send the multicast ping request
         ping_ma2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(
-            mpl_seed_id=ROUTER1_RLOC16).filter_ping_request().must_next()
+            mpl_seed_id=ROUTER1_RLOC).filter_ping_request().must_next()
 
         # PBBR1 should forward the multicast ping request to the Backbone link
         pkts.filter_eth_src(PBBR1_ETH).filter_ipv6_src_dst(
@@ -228,7 +228,7 @@ class TestMlr(thread_cert.TestCase):
         #
 
         # ROUTER1 should send the multicast ping request
-        ping_ma2_2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC16).filter_ping_request(
+        ping_ma2_2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC).filter_ping_request(
             identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
 
         # PBBR1 shouldn't forward the multicast ping request to the Backbone link
@@ -239,7 +239,7 @@ class TestMlr(thread_cert.TestCase):
         #
 
         # ROUTER1 should send the multicast ping request
-        ping_ma2_3 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC16).filter_ping_request(
+        ping_ma2_3 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC).filter_ping_request(
             identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
 
         # PBBR1 shouldn't forward the multicast ping request to the Backbone link

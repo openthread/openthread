@@ -43,7 +43,7 @@ using namespace ot;
 
 void otTrelSetEnabled(otInstance *aInstance, bool aEnable)
 {
-    AsCoreType(aInstance).Get<Trel::Interface>().SetEnabled(aEnable);
+    AsCoreType(aInstance).Get<Trel::Interface>().SetEnabled(aEnable, Trel::Interface::kRequesterUser);
 }
 
 bool otTrelIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().IsEnabled(); }

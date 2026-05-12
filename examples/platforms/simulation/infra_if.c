@@ -172,18 +172,22 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatInfraIf
 
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aInfraIfIndex);
 
     return addressesMatch(aAddress, &sIp6Address);
 }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
+                                 uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError  error = OT_ERROR_FAILED;
     Message *message;
 
@@ -207,8 +211,9 @@ exit:
     return error;
 }
 
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *aInstance, uint32_t aInfraIfIndex)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aInfraIfIndex);
 
     return OT_ERROR_NONE;

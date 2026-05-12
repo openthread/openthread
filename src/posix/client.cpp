@@ -70,10 +70,7 @@ struct Config
     const char *mNetifName;
 };
 
-enum
-{
-    kLineBufferSize = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
-};
+static constexpr uint16_t kLineBufferSize = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH;
 
 static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Done\r\n"), "kLineBufferSize is too small");
@@ -208,11 +205,8 @@ exit:
     return ok;
 }
 
-enum
-{
-    kOptInterfaceName = 'I',
-    kOptHelp          = 'h',
-};
+constexpr char kOptInterfaceName = 'I';
+constexpr char kOptHelp          = 'h';
 
 const struct option kOptions[] = {
     {"interface-name", required_argument, NULL, kOptInterfaceName},

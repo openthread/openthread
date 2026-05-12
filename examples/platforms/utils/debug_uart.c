@@ -120,6 +120,15 @@ otError otPlatDebugUart_logfile(const char *filename)
 }
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
+
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "%s", aLogLine);
+}
+#endif
+
 /* this should not be a WEAK function */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {

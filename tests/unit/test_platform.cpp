@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Disable OpenThread's own new implementation to avoid duplicate definition
-#define OT_INCLUDE_COMMON_NEW_HPP_
 #include "test_platform.h"
 
 #include <map>
@@ -35,6 +33,8 @@
 
 #include <stdio.h>
 #include <sys/time.h>
+#include <openthread/platform/flash.h>
+
 #ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
@@ -51,6 +51,12 @@ std::map<uint32_t, std::vector<std::vector<uint8_t>>> settings;
 ot::Instance *testInitInstance(void)
 {
     otInstance *instance = nullptr;
+
+    settings.clear();
+    for (uint8_t idx = 0; idx < FLASH_SWAP_NUM; idx++)
+    {
+        otPlatFlashErase(nullptr, idx);
+    }
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -75,6 +81,23 @@ ot::Instance *testInitInstance(void)
 #endif
 
     return static_cast<ot::Instance *>(instance);
+}
+
+ot::Instance *testResetInstance(ot::Instance *aInstance)
+{
+    otInstanceFinalize(aInstance);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    {
+        size_t instanceBufferLength = sizeof(ot::Instance);
+
+        aInstance = static_cast<ot::Instance *>(otInstanceInit(aInstance, &instanceBufferLength));
+    }
+#else
+    aInstance = static_cast<ot::Instance *>(otInstanceInitSingle());
+#endif
+
+    return aInstance;
 }
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -108,6 +131,10 @@ extern "C" {
 OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 OT_TOOL_WEAK void otPlatFree(void *aPtr) { free(aPtr); }
+
+OT_TOOL_WEAK void *otPlatCryptoCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
+
+OT_TOOL_WEAK void otPlatCryptoFree(void *aPtr) { free(aPtr); }
 #endif
 
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}
@@ -278,6 +305,8 @@ OT_TOOL_WEAK otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PL
 
 OT_TOOL_WEAK void otPlatWakeHost(void) {}
 
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel, const char *) {}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}
@@ -439,10 +468,6 @@ OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-OT_TOOL_WEAK void otPlatOtnsStatus(const char *) {}
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 OT_TOOL_WEAK void otPlatTrelEnable(otInstance *, uint16_t *) {}
 
@@ -480,14 +505,14 @@ OT_TOOL_WEAK otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *, cons
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+OT_TOOL_WEAK bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
 
-OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
 {
     return OT_ERROR_FAILED;
 }
 
-OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
+OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
@@ -851,6 +876,14 @@ bool otPlatBleSupportsMultiRadio(otInstance *aInstance)
 }
 
 otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAdvertisementData);

@@ -31,8 +31,8 @@
  *   This file includes definitions for managing MeshCoP Datasets.
  */
 
-#ifndef MESHCOP_DATASET_HPP_
-#define MESHCOP_DATASET_HPP_
+#ifndef OT_CORE_MESHCOP_DATASET_HPP_
+#define OT_CORE_MESHCOP_DATASET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -627,6 +627,22 @@ public:
     const Tlv *GetTlvsEnd(void) const { return reinterpret_cast<const Tlv *>(mTlvs + mLength); }
 
     /**
+     * Determines whether this Dataset equals another Dataset.
+     *
+     * Two datasets are considered matching if they contain the exact same set of TLVs (same types and values).
+     * The order of TLVs within the datasets does not matter.
+     *
+     * This method assumes that both `this` and `aOther` datasets are valid and do not contain duplicate TLVs of
+     * the same type. The behavior is undefined if a dataset contains duplicates.
+     *
+     * @param[in] aOther   The other Dataset to check against.
+     *
+     * @retval TRUE   The current Dataset equals @p aOther.
+     * @retval FALSE  The current Dataset does not match @p aOther.
+     */
+    bool Equals(const Dataset &aOther) const;
+
+    /**
      * Determines whether this Dataset is a subset of another Dataset.
      *
      * The Dataset is considered a subset if all of its TLVs, excluding Active/Pending Timestamp and Delay Timer TLVs,
@@ -785,4 +801,4 @@ DefineCoreType(otOperationalDataset, MeshCoP::Dataset::Info);
 
 } // namespace ot
 
-#endif // MESHCOP_DATASET_HPP_
+#endif // OT_CORE_MESHCOP_DATASET_HPP_

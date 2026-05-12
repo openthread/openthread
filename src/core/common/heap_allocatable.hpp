@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap::Allocatable`.
  */
 
-#ifndef HEAP_ALLOCATABLE_HPP_
-#define HEAP_ALLOCATABLE_HPP_
+#ifndef OT_CORE_COMMON_HEAP_ALLOCATABLE_HPP_
+#define OT_CORE_COMMON_HEAP_ALLOCATABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -127,4 +127,4 @@ protected:
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_ALLOCATABLE_HPP_
+#endif // OT_CORE_COMMON_HEAP_ALLOCATABLE_HPP_

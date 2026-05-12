@@ -41,6 +41,9 @@ namespace Nexus {
 static constexpr uint32_t kInfraIfIndex   = 1;
 static constexpr uint16_t kMaxTxtDataSize = 128;
 
+static constexpr ot::Trel::Peer::DnssdState kDnssdResolved = ot::Trel::Peer::kDnssdResolved;
+static constexpr ot::Trel::Peer::DnssdState kDnssdRemoved  = ot::Trel::Peer::kDnssdRemoved;
+
 void TestTrelBasic(void)
 {
     // Validate basic operations, forming a network and
@@ -60,9 +63,10 @@ void TestTrelBasic(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
     }
 
@@ -120,8 +124,8 @@ void TestTrelBasic(void)
         {
             bool found = false;
 
-            VerifyOrQuit(peer.IsStateValid());
-            VerifyOrQuit(peer.GetExtPanId() == node.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+            VerifyOrQuit(peer.GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
+            VerifyOrQuit(peer.GetExtPanId() == node.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
 
             for (Node &otherNode : nexus.GetNodes())
             {
@@ -163,21 +167,87 @@ void TestTrelBasic(void)
     }
 }
 
+void TestTrelUserDisableReenable(void)
+{
+    // Validates user disabling of TREL interface persists after
+    // OpenThread state changes such as Thread netif down and up.
+
+    Core  nexus;
+    Node &node = nexus.CreateNode();
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("TestTrelUserDisableReenable()");
+
+    nexus.AdvanceTime(0);
+
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+    SuccessOrQuit(node.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form network");
+
+    node.Form();
+    nexus.AdvanceTime(13 * 1000);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    VerifyOrQuit(node.Get<ot::Trel::Interface>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable TREL interface by `kRequesterUser`");
+
+    node.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+    VerifyOrQuit(!node.Get<ot::Trel::Interface>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Bring down Thread netif and stop MAC and all radio links");
+
+    node.Get<ThreadNetif>().Down();
+    node.Get<Mac::Mac>().SetEnabled(false);
+
+    VerifyOrQuit(node.Get<Mle::Mle>().IsDisabled());
+    VerifyOrQuit(!node.Get<ot::Trel::Interface>().IsEnabled());
+
+    nexus.AdvanceTime(1000);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Bring up the Thread netif down and restart MLE and Thread operation");
+
+    node.Get<ThreadNetif>().Up();
+    SuccessOrQuit(node.Get<Mle::Mle>().Start());
+
+    nexus.AdvanceTime(60 * 1000);
+    VerifyOrQuit(node.Get<Mle::Mle>().IsLeader());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Ensure TREL interface remains disabled since it was explicitly disabled by `kRequesterUser`");
+
+    VerifyOrQuit(!node.Get<ot::Trel::Interface>().IsEnabled());
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable TREL interface by `kRequesterUser` ");
+
+    node.Get<ot::Trel::Interface>().SetEnabled(true, ot::Trel::Interface::kRequesterUser);
+
+    VerifyOrQuit(node.Get<ot::Trel::Interface>().IsEnabled());
+}
+
 void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
 {
     Core                  nexus;
     Node                 &node1 = nexus.CreateNode();
     Node                 &node2 = nexus.CreateNode();
     const ot::Trel::Peer *peer;
+    uint32_t              inactiveDuration;
 
     Log("---------------------------------------------------------------------------------------");
     Log("TestTrelDelayedMdnsStartAndPeerRemovalDelay()");
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
@@ -213,8 +283,8 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node2.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -222,17 +292,17 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node2.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node2.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetNext() == nullptr);
 
     // Check peer on `node2` to match `node1` info.
     peer = node2.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
+    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node1.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -240,14 +310,14 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node1.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node1.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mInfraIf.GetLinkLocalAddress());
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2`");
 
-    node2.Get<ot::Trel::Interface>().Disable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     nexus.AdvanceTime(2 * 1000);
 
     VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 0);
@@ -255,12 +325,11 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that `PeerTable` is properly updated on `node1`");
 
-    // Check peer on `node1` is still present but not longer `IsStateValid()`.
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(!peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == kDnssdRemoved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node2.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -271,7 +340,7 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Re-enable TREL Interface (and `PeerDiscoverer`) on `node2`");
 
-    node2.Get<ot::Trel::Interface>().Enable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(true, ot::Trel::Interface::kRequesterUser);
     nexus.AdvanceTime(15 * 1000);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -284,8 +353,8 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node2.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -293,17 +362,17 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node2.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node2.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetNext() == nullptr);
 
     // Check peer on `node2` to match `node1` info.
     peer = node2.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == ot::Trel::Peer::kDnssdResolved);
+    VerifyOrQuit(peer->GetExtPanId() == node1.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
     VerifyOrQuit(peer->GetServiceName() != nullptr);
     VerifyOrQuit(StringMatch(peer->GetServiceName(), node1.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -311,21 +380,52 @@ void TestTrelDelayedMdnsStartAndPeerRemovalDelay(void)
     VerifyOrQuit(StringStartsWith(peer->GetHostName(), "ot"));
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node1.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == node1.mTrel.mUdpPort);
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node1.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node1.mInfraIf.GetLinkLocalAddress());
+
+    peer = node1.Get<ot::Trel::PeerTable>().GetHead();
+    VerifyOrQuit(peer != nullptr);
+
+    inactiveDuration = peer->DetermineSecondsSinceLastInteraction();
+    VerifyOrQuit(inactiveDuration > 0);
+    Log("- peer has been inactive for %lu seconds", ToUlong(inactiveDuration));
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2` again");
+    Log("Disable TREL Interface (and `PeerDiscoverer`) on `node2` again and signal its removal on mDNS");
 
-    node2.Get<ot::Trel::Interface>().Disable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
+    VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().IsEmpty());
 
-    Log("Wait for long enough for the `node2` peer to be fully deleted on `node1`");
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Check that peer entry for `node2` is properly switched to `kDnssdRemoved` state");
 
-    nexus.AdvanceTime(15 * 1000);
+    nexus.AdvanceTime(10 * 1000 + 500);
+
+    peer = node1.Get<ot::Trel::PeerTable>().GetHead();
+    VerifyOrQuit(peer != nullptr);
+
+    VerifyOrQuit(peer->GetDnssdState() == kDnssdRemoved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
+    VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
+
+    Log("Validate the `DetermineSecondsSinceLastInteraction()` is properly tracked");
+
+    VerifyOrQuit(peer->DetermineSecondsSinceLastInteraction() - inactiveDuration >= 10);
+
+    inactiveDuration = peer->DetermineSecondsSinceLastInteraction();
+    VerifyOrQuit(inactiveDuration > 0);
+    Log("- peer has been inactive for %lu seconds", ToUlong(inactiveDuration));
+
+    Log("Validate that peer is deleted from list after 450 second inactivity");
+
+    nexus.AdvanceTime((451 - inactiveDuration) * 1000);
 
     VerifyOrQuit(node1.Get<ot::Trel::PeerTable>().IsEmpty());
-    VerifyOrQuit(node2.Get<ot::Trel::PeerTable>().IsEmpty());
+
+    peer = node1.Get<ot::Trel::PeerTable>().GetHead();
+    VerifyOrQuit(peer == nullptr);
 }
 
 void TestServiceNameConflict(void)
@@ -343,9 +443,10 @@ void TestServiceNameConflict(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
@@ -353,7 +454,7 @@ void TestServiceNameConflict(void)
 
     Log("Disable TREL interface but enable mDNS on `conflictNode`");
 
-    conflictNode.Get<ot::Trel::Interface>().Disable();
+    conflictNode.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     SuccessOrQuit(conflictNode.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     Log("Register a service on `conflictNode` with same name that `node1` would use");
@@ -395,9 +496,9 @@ void TestServiceNameConflict(void)
 
     for (const ot::Trel::Peer &peer : node2.Get<ot::Trel::PeerTable>())
     {
-        if (peer.IsStateValid())
+        if (peer.GetDnssdState() == ot::Trel::Peer::kDnssdResolved)
         {
-            VerifyOrQuit(peer.GetExtPanId() == node1.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+            VerifyOrQuit(peer.GetExtPanId() == node1.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
             VerifyOrQuit(peer.GetExtAddress() == node1.Get<Mac::Mac>().GetExtAddress());
             VerifyOrQuit(peer.GetServiceName() != nullptr);
             VerifyOrQuit(StringMatch(peer.GetServiceName(), node1.Get<ot::Trel::PeerDiscoverer>().GetServiceName()));
@@ -427,9 +528,10 @@ void TestHostAddressChange(void)
 
     nexus.AdvanceTime(0);
 
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelWarn));
+
     for (Node &node : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelWarn);
         VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
@@ -437,13 +539,13 @@ void TestHostAddressChange(void)
 
     Log("Disable TREL interface but enable mDNS on `node2`");
 
-    node2.Get<ot::Trel::Interface>().Disable();
+    node2.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     SuccessOrQuit(node2.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     Log("Manually register a TREL service on `node2` with proper TXT data");
 
     SuccessOrQuit(encoder.AppendEntry("xa", node2.Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrQuit(encoder.AppendEntry("xp", node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrQuit(encoder.AppendEntry("xp", node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     ClearAllBytes(service);
     service.mServiceType     = "_trel._udp";
@@ -470,8 +572,8 @@ void TestHostAddressChange(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == kDnssdResolved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
 
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -481,27 +583,25 @@ void TestHostAddressChange(void)
     VerifyOrQuit(StringEndsWith(peer->GetHostName(), node2.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
     VerifyOrQuit(peer->GetSockAddr().GetPort() == service.mPort);
 
-    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetSockAddr().GetAddress() == node2.mInfraIf.GetLinkLocalAddress());
     VerifyOrQuit(peer->GetHostAddresses().GetLength() == 1);
-    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mMdns.mIfAddresses[0]);
+    VerifyOrQuit(peer->GetHostAddresses()[0] == node2.mInfraIf.GetLinkLocalAddress());
 
     VerifyOrQuit(peer->GetNext() == nullptr);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Update the advertised local host addresses on `node2`");
 
-    node2.mMdns.mIfAddresses.Clear();
+    node2.mInfraIf.RemoveAllAddresses();
 
     SuccessOrQuit(guaAddr.FromString("2001:cafe::4567"));
-    SuccessOrQuit(node2.mMdns.mIfAddresses.PushBack(guaAddr));
+    node2.mInfraIf.AddAddress(guaAddr);
 
     SuccessOrQuit(ulaAddr.FromString("fd00:abba::1234"));
-    SuccessOrQuit(node2.mMdns.mIfAddresses.PushBack(ulaAddr));
+    node2.mInfraIf.AddAddress(ulaAddr);
 
     SuccessOrQuit(linkLocalAddr.FromString("fe80::bd2c:a124"));
-    SuccessOrQuit(node2.mMdns.mIfAddresses.PushBack(linkLocalAddr));
-
-    node2.mMdns.SignalIfAddresses(node2.GetInstance());
+    node2.mInfraIf.AddAddress(linkLocalAddr);
 
     nexus.AdvanceTime(3 * 1000);
 
@@ -511,8 +611,8 @@ void TestHostAddressChange(void)
     peer = node1.Get<ot::Trel::PeerTable>().GetHead();
     VerifyOrQuit(peer != nullptr);
 
-    VerifyOrQuit(peer->IsStateValid());
-    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    VerifyOrQuit(peer->GetDnssdState() == kDnssdResolved);
+    VerifyOrQuit(peer->GetExtPanId() == node2.Get<MeshCoP::NetworkIdentity>().GetExtPanId());
     VerifyOrQuit(peer->GetExtAddress() == node2.Get<Mac::Mac>().GetExtAddress());
 
     VerifyOrQuit(peer->GetServiceName() != nullptr);
@@ -527,10 +627,10 @@ void TestHostAddressChange(void)
 
     for (const Ip6::Address &hostAddress : peer->GetHostAddresses())
     {
-        VerifyOrQuit(node2.mMdns.mIfAddresses.Contains(hostAddress));
+        VerifyOrQuit(node2.mInfraIf.HasAddress(hostAddress));
     }
 
-    for (const Ip6::Address &ifAddress : node2.mMdns.mIfAddresses)
+    for (const Ip6::Address &ifAddress : node2.mInfraIf.GetAddresses())
     {
         VerifyOrQuit(peer->GetHostAddresses().Contains(ifAddress));
     }
@@ -554,7 +654,6 @@ void TestMultiServiceSameHost(void)
     Core                          nexus;
     Node                         &node             = nexus.CreateNode();
     Node                         &multiServiceNode = nexus.CreateNode();
-    const ot::Trel::Peer         *peer;
     Dns::Multicast::Core::Service services[3];
     uint8_t                       txtData[kMaxTxtDataSize];
     Ip6::Address                  address;
@@ -564,17 +663,18 @@ void TestMultiServiceSameHost(void)
 
     nexus.AdvanceTime(0);
 
-    for (Node &node : nexus.GetNodes())
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelInfo));
+
+    for (Node &nodeEntry : nexus.GetNodes())
     {
-        node.GetInstance().SetLogLevel(kLogLevelInfo);
-        VerifyOrQuit(!node.Get<Dns::Multicast::Core>().IsEnabled());
+        VerifyOrQuit(!nodeEntry.Get<Dns::Multicast::Core>().IsEnabled());
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     Log("Disable TREL interface but enable mDNS on `multiServiceNode`");
 
-    multiServiceNode.Get<ot::Trel::Interface>().Disable();
+    multiServiceNode.Get<ot::Trel::Interface>().SetEnabled(false, ot::Trel::Interface::kRequesterUser);
     SuccessOrQuit(multiServiceNode.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
 
     Log("Manually register three TREL services on the `multiServiceNode`");
@@ -641,24 +741,24 @@ void TestMultiServiceSameHost(void)
 
     VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 3);
 
-    for (const ot::Trel::Peer &peer : node.Get<ot::Trel::PeerTable>())
+    for (const ot::Trel::Peer &peerEntry : node.Get<ot::Trel::PeerTable>())
     {
         bool found = false;
 
-        VerifyOrQuit(peer.IsStateValid());
-        VerifyOrQuit(peer.GetServiceName() != nullptr);
-        VerifyOrQuit(peer.GetHostName() != nullptr);
-        VerifyOrQuit(StringStartsWith(peer.GetHostName(), "ot"));
-        VerifyOrQuit(StringEndsWith(peer.GetHostName(),
+        VerifyOrQuit(peerEntry.GetDnssdState() == kDnssdResolved);
+        VerifyOrQuit(peerEntry.GetServiceName() != nullptr);
+        VerifyOrQuit(peerEntry.GetHostName() != nullptr);
+        VerifyOrQuit(StringStartsWith(peerEntry.GetHostName(), "ot"));
+        VerifyOrQuit(StringEndsWith(peerEntry.GetHostName(),
                                     multiServiceNode.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
 
-        VerifyOrQuit(peer.GetSockAddr().GetAddress() == multiServiceNode.mMdns.mIfAddresses[0]);
-        VerifyOrQuit(peer.GetHostAddresses().GetLength() == 1);
-        VerifyOrQuit(peer.GetHostAddresses()[0] == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mInfraIf.GetLinkLocalAddress());
+        VerifyOrQuit(peerEntry.GetHostAddresses().GetLength() == 1);
+        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mInfraIf.GetLinkLocalAddress());
 
         for (const Dns::Multicast::Core::Service &service : services)
         {
-            if (StringMatch(peer.GetServiceName(), service.mServiceInstance))
+            if (StringMatch(peerEntry.GetServiceName(), service.mServiceInstance))
             {
                 found = true;
             }
@@ -677,30 +777,30 @@ void TestMultiServiceSameHost(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate peer table on `node`");
 
-    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 2);
+    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 3);
 
-    for (const ot::Trel::Peer &peer : node.Get<ot::Trel::PeerTable>())
+    for (const ot::Trel::Peer &peerEntry : node.Get<ot::Trel::PeerTable>())
     {
         bool found = false;
 
-        if (!peer.IsStateValid())
+        if (peerEntry.GetDnssdState() != kDnssdResolved)
         {
             continue;
         }
 
-        VerifyOrQuit(peer.GetServiceName() != nullptr);
-        VerifyOrQuit(peer.GetHostName() != nullptr);
-        VerifyOrQuit(StringStartsWith(peer.GetHostName(), "ot"));
-        VerifyOrQuit(StringEndsWith(peer.GetHostName(),
+        VerifyOrQuit(peerEntry.GetServiceName() != nullptr);
+        VerifyOrQuit(peerEntry.GetHostName() != nullptr);
+        VerifyOrQuit(StringStartsWith(peerEntry.GetHostName(), "ot"));
+        VerifyOrQuit(StringEndsWith(peerEntry.GetHostName(),
                                     multiServiceNode.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
 
-        VerifyOrQuit(peer.GetSockAddr().GetAddress() == multiServiceNode.mMdns.mIfAddresses[0]);
-        VerifyOrQuit(peer.GetHostAddresses().GetLength() == 1);
-        VerifyOrQuit(peer.GetHostAddresses()[0] == multiServiceNode.mMdns.mIfAddresses[0]);
+        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mInfraIf.GetLinkLocalAddress());
+        VerifyOrQuit(peerEntry.GetHostAddresses().GetLength() == 1);
+        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mInfraIf.GetLinkLocalAddress());
 
         for (uint16_t index = 0; index < 2; index++)
         {
-            if (StringMatch(peer.GetServiceName(), services[index].mServiceInstance))
+            if (StringMatch(peerEntry.GetServiceName(), services[index].mServiceInstance))
             {
                 found = true;
             }
@@ -713,40 +813,38 @@ void TestMultiServiceSameHost(void)
     Log("Update the local host addresses on `multiServiceNode`");
 
     SuccessOrQuit(address.FromString("fd00:abba::1234"));
-    SuccessOrQuit(multiServiceNode.mMdns.mIfAddresses.PushBack(address));
-
-    multiServiceNode.mMdns.SignalIfAddresses(multiServiceNode.GetInstance());
+    multiServiceNode.mInfraIf.AddAddress(address);
 
     nexus.AdvanceTime(5 * 1000);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate all peers get the updated list");
 
-    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 2);
+    VerifyOrQuit(node.Get<ot::Trel::PeerTable>().GetNumberOfPeers() == 3);
 
-    for (const ot::Trel::Peer &peer : node.Get<ot::Trel::PeerTable>())
+    for (const ot::Trel::Peer &peerEntry : node.Get<ot::Trel::PeerTable>())
     {
         bool found = false;
 
-        if (!peer.IsStateValid())
+        if (peerEntry.GetDnssdState() != kDnssdResolved)
         {
             continue;
         }
 
-        VerifyOrQuit(peer.GetServiceName() != nullptr);
-        VerifyOrQuit(peer.GetHostName() != nullptr);
-        VerifyOrQuit(StringStartsWith(peer.GetHostName(), "ot"));
-        VerifyOrQuit(StringEndsWith(peer.GetHostName(),
+        VerifyOrQuit(peerEntry.GetServiceName() != nullptr);
+        VerifyOrQuit(peerEntry.GetHostName() != nullptr);
+        VerifyOrQuit(StringStartsWith(peerEntry.GetHostName(), "ot"));
+        VerifyOrQuit(StringEndsWith(peerEntry.GetHostName(),
                                     multiServiceNode.Get<Mac::Mac>().GetExtAddress().ToString().AsCString()));
 
-        VerifyOrQuit(peer.GetSockAddr().GetAddress() == multiServiceNode.mMdns.mIfAddresses[0]);
-        VerifyOrQuit(peer.GetHostAddresses().GetLength() == 2);
-        VerifyOrQuit(peer.GetHostAddresses()[0] == multiServiceNode.mMdns.mIfAddresses[0]);
-        VerifyOrQuit(peer.GetHostAddresses()[1] == multiServiceNode.mMdns.mIfAddresses[1]);
+        VerifyOrQuit(peerEntry.GetSockAddr().GetAddress() == multiServiceNode.mInfraIf.GetLinkLocalAddress());
+        VerifyOrQuit(peerEntry.GetHostAddresses().GetLength() == 2);
+        VerifyOrQuit(peerEntry.GetHostAddresses()[0] == multiServiceNode.mInfraIf.GetLinkLocalAddress());
+        VerifyOrQuit(peerEntry.GetHostAddresses()[1] == multiServiceNode.mInfraIf.GetAddresses()[1]);
 
         for (uint16_t index = 0; index < 2; index++)
         {
-            if (StringMatch(peer.GetServiceName(), services[index].mServiceInstance))
+            if (StringMatch(peerEntry.GetServiceName(), services[index].mServiceInstance))
             {
                 found = true;
             }
@@ -765,6 +863,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     ot::Nexus::TestTrelBasic();
+    ot::Nexus::TestTrelUserDisableReenable();
     ot::Nexus::TestTrelDelayedMdnsStartAndPeerRemovalDelay();
     ot::Nexus::TestServiceNameConflict();
     ot::Nexus::TestHostAddressChange();

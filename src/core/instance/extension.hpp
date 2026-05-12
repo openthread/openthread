@@ -31,8 +31,8 @@
  *   This file includes definitions for OpenThread vendor extension hooks.
  */
 
-#ifndef EXTENSION_HPP_
-#define EXTENSION_HPP_
+#ifndef OT_CORE_INSTANCE_EXTENSION_HPP_
+#define OT_CORE_INSTANCE_EXTENSION_HPP_
 
 #include "openthread-core-config.h"
 
@@ -123,4 +123,4 @@ protected:
 
 #endif // #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
-#endif // EXTENSION_HPP_
+#endif // OT_CORE_INSTANCE_EXTENSION_HPP_

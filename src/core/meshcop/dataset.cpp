@@ -71,10 +71,10 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
 
     SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());
     SuccessOrExit(error = AsCoreType(&mPskc).GenerateRandom());
-    SuccessOrExit(error = Random::Crypto::Fill(mExtendedPanId));
+    SuccessOrExit(error = AsCoreType(&mExtendedPanId).GenerateRandom());
     SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
-    nameWriter.Append("%s-%04x", NetworkName::kNetworkNameInit, mPanId);
+    nameWriter.Append("%s-%04x", NetworkIdentity::kDefaultNetworkName, mPanId);
 
     mComponents.mIsActiveTimestampPresent = true;
     mComponents.mIsNetworkKeyPresent      = true;
@@ -564,6 +564,27 @@ Error Dataset::WriteTimestamp(Type aType, const Timestamp &aTimestamp)
 }
 
 void Dataset::RemoveTimestamp(Type aType) { RemoveTlv(TimestampTlvFor(aType)); }
+
+bool Dataset::Equals(const Dataset &aOther) const
+{
+    bool equals = false;
+
+    VerifyOrExit(mLength == aOther.mLength);
+
+    // Ensure every TLV in this dataset is present in `aOther` with the same type and value.
+    for (const Tlv *tlv = GetTlvsStart(); tlv < GetTlvsEnd(); tlv = tlv->GetNext())
+    {
+        const Tlv *otherTlv = aOther.FindTlv(tlv->GetType());
+
+        VerifyOrExit(otherTlv != nullptr);
+        VerifyOrExit(memcmp(tlv, otherTlv, tlv->GetSize()) == 0);
+    }
+
+    equals = true;
+
+exit:
+    return equals;
+}
 
 bool Dataset::IsSubsetOf(const Dataset &aOther) const
 {

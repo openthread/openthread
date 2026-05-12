@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter.
  */
 
-#ifndef CLI_HPP_
-#define CLI_HPP_
+#ifndef OT_CLI_CLI_HPP_
+#define OT_CLI_CLI_HPP_
 
 #include "openthread-core-config.h"
 
@@ -56,6 +56,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_ba.hpp"
 #include "cli/cli_bbr.hpp"
 #include "cli/cli_br.hpp"
 #include "cli/cli_coap.hpp"
@@ -85,10 +86,13 @@
 #include "common/type_traits.hpp"
 #include "instance/instance.hpp"
 
+typedef struct otCliInterpreter
+{
+} otCliInterpreter;
+
 namespace ot {
 
 /**
- * @namespace ot::Cli
  *
  * @brief
  *   This namespace contains definitions for the CLI interpreter.
@@ -103,14 +107,16 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 /**
  * Implements the CLI interpreter.
  */
-class Interpreter : public OutputImplementer, public Utils
+class Interpreter : public otCliInterpreter, public OutputImplementer, public Utils
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+    friend class Ba;
     friend class Br;
     friend class Bbr;
     friend class Commissioner;
     friend class Dns;
     friend class Joiner;
+    friend class History;
     friend class LinkMetrics;
     friend class Mdns;
     friend class MeshDiag;
@@ -119,6 +125,8 @@ class Interpreter : public OutputImplementer, public Utils
     friend class SrpClient;
     friend class SrpServer;
 #endif
+    friend class Utils;
+
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
     friend void otCliAppendResult(otError aError);
     friend void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
@@ -134,33 +142,64 @@ public:
      */
     explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     /**
-     * Returns a reference to the interpreter object.
+     * Returns a reference to the static CLI interpreter.
      *
-     * @returns A reference to the interpreter object.
+     * @returns A reference to the static CLI interpreter.
      */
     static Interpreter &GetInterpreter(void)
     {
         OT_ASSERT(sInterpreter != nullptr);
-
         return *sInterpreter;
     }
 
     /**
-     * Initializes the Console interpreter.
+     * Initializes the static CLI interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aCallback  A pointer to a callback method.
      * @param[in]  aContext   A pointer to a user context.
      */
-    static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
+    static void Init(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * Returns whether the interpreter is initialized.
+     * Returns whether the static CLI interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
      */
     static bool IsInitialized(void) { return sInterpreter != nullptr; }
+
+#endif // OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
+
+    /**
+     * Gets the size of the CLI interpreter object.
+     *
+     * @returns The size of the CLI interpreter object in bytes.
+     */
+    static size_t GetSize(void);
+
+    /**
+     * Initializes a CLI interpreter.
+     *
+     * @param[in]  aBuffer    A pointer to a memory buffer for the CLI interpreter.
+     * @param[in]  aSize      The size of the memory buffer.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aCallback  A callback method called to process CLI output.
+     * @param[in]  aContext   A user context pointer.
+     *
+     * @returns A pointer to the initialized CLI interpreter, or `nullptr` if @p aSize is too small.
+     */
+    static Interpreter *Init(void               *aBuffer,
+                             size_t              aSize,
+                             otInstance         *aInstance,
+                             otCliOutputCallback aCallback,
+                             void               *aContext);
+
+    /**
+     * Finalizes the CLI interpreter.
+     */
+    void Finalize(void);
 
     /**
      * Interprets a CLI command.
@@ -174,15 +213,28 @@ public:
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
-     * @param[in]  aContext   @p aUserCommands length.
+     * @param[in]  aContext   Context to use when invoking the command handler.
      *
-     * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aCommands.
-     * @retval OT_ERROR_FAILED  No available UserCommandsEntry to register requested user commands.
+     * @retval OT_ERROR_NONE     Successfully updated command table with commands from @p aCommands.
+     * @retval OT_ERROR_NO_BUFS  No available `UserCommandsEntry` to register the requested user commands.
      */
     otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    /**
+     * Configures whether or not the CLI interpreter outputs prompt string.
+     *
+     * It is enabled by default.
+     *
+     * @param[in] aEnabled  TRUE to enable outputting prompt, FALSE to disable.
+     */
+    void SetPromptConfig(bool aEnabled);
+#endif
+
 protected:
+#if OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE
     static Interpreter *sInterpreter;
+#endif
 
 private:
     static constexpr uint8_t  kIndentSize            = 4;
@@ -225,6 +277,11 @@ private:
 #if OPENTHREAD_FTD
     void OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
 #endif
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+    otError ProcessIfconfigInit(Arg aArgs[]);
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     static void HandleLocateResult(void               *aContext,
                                    otError             aError,
@@ -252,7 +309,7 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *aMessageInfo);
+    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
     static void HandleDiagnosticGetResponse(otError              aError,
                                             otMessage           *aMessage,
                                             const otMessageInfo *aMessageInfo,
@@ -264,9 +321,14 @@ private:
     void OutputRouteData(uint8_t aIndentSize, const otNetworkDiagRouteData &aRouteData);
     void OutputEnhRoute(uint8_t aIndentSize, const otNetworkDiagEnhRoute &aEnhRoute);
     void OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLeaderData);
+    void OutputIp6AddrList(uint8_t aIndentSize, const otNetworkDiagIp6AddrList &aIp6Addrs);
     void OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters);
     void OutputNetworkDiagMleCounters(uint8_t aIndentSize, const otNetworkDiagMleCounters &aMleCounters);
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+    void OutputBorderAgentTxtDataInfo(uint8_t aIndentSize, const otBorderAgentTxtDataInfo &aInfo);
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -290,24 +352,26 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    void OutputBorderAgentCounters(const otBorderAgentCounters &aCounters);
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    static void HandleBorderAgentEphemeralKeyStateChange(void *aContext);
-    void        HandleBorderAgentEphemeralKeyStateChange(void);
-#endif
-#endif
-
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext);
     void        HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 #endif
 
 #if OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
+#endif
+
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    static void HandleP2pLinkDone(void *aContext);
+    void        HandleP2pLinkDone(void);
+#endif
+
+    static void HandleP2pUnlinkDone(void *aContext);
+    void        HandleP2pUnlinkDone(void);
 #endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
@@ -318,8 +382,9 @@ private:
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext);
-    void        HandleDiagOutput(const char *aFormat, va_list aArguments);
+    static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 0);
+    void HandleDiagOutput(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 #endif
 
     void SetCommandTimeout(uint32_t aTimeoutMilli);
@@ -337,6 +402,9 @@ private:
     UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
     bool              mCommandIsPending;
     bool              mInternalDebugCommand;
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    bool mPromptEnabled;
+#endif
 
     TimerMilliContext mTimer;
 
@@ -359,6 +427,10 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
     Mdns mMdns;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Ba mBa;
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -422,4 +494,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_HPP_
+#endif // OT_CLI_CLI_HPP_

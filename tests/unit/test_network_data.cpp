@@ -179,12 +179,12 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            SuccessOrQuit(netData.GetNext(iter, rconfig));
             PrintExternalRouteConfig(rconfig);
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
 
-        VerifyOrQuit(netData.GetNextExternalRoute(iter, rconfig) == kErrorNotFound);
+        VerifyOrQuit(netData.GetNext(iter, rconfig) == kErrorNotFound);
 
         netData.FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
         VerifyRlocsArray(rlocs, kRlocs);
@@ -303,7 +303,7 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            SuccessOrQuit(netData.GetNext(iter, rconfig));
             PrintExternalRouteConfig(rconfig);
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
@@ -471,7 +471,7 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            SuccessOrQuit(netData.GetNext(iter, rconfig));
             PrintExternalRouteConfig(rconfig);
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
@@ -480,7 +480,7 @@ void TestNetworkDataIterator(void)
 
         for (const auto &prefix : prefixes)
         {
-            SuccessOrQuit(netData.GetNextOnMeshPrefix(iter, pconfig));
+            SuccessOrQuit(netData.GetNext(iter, pconfig));
             PrintOnMeshPrefixConfig(pconfig);
             VerifyOrQuit(CompareOnMeshPrefixConfig(pconfig, prefix));
         }
@@ -768,7 +768,7 @@ void TestNetworkDataDsnSrpServices(void)
         {
             SuccessOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo));
 
-            printf("\nanycastInfo { %s, seq:%d, rlco16:%04x, version:%u }",
+            printf("\nanycastInfo { %s, seq:%d, rloc16:%04x, version:%u }",
                    anycastInfo.mAnycastAddress.ToString().AsCString(), anycastInfo.mSequenceNumber, anycastInfo.mRloc16,
                    anycastInfo.mVersion);
 
@@ -1019,11 +1019,9 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
     const uint8_t kPreferredSeqNum15 = 3;
     const uint8_t kPreferredVer15    = 0;
 
-#define TEST_CASE(Num)                                                                            \
-    {                                                                                             \
-        kNetworkData##Num, sizeof(kNetworkData##Num), kSeqNumbers##Num, sizeof(kSeqNumbers##Num), \
-            kPreferredSeqNum##Num, kPreferredVer##Num                                             \
-    }
+#define TEST_CASE(Num)                                                      \
+    {kNetworkData##Num,        sizeof(kNetworkData##Num), kSeqNumbers##Num, \
+     sizeof(kSeqNumbers##Num), kPreferredSeqNum##Num,     kPreferredVer##Num}
 
     const TestInfo kTests[] = {
         TEST_CASE(1),  TEST_CASE(2),  TEST_CASE(3),  TEST_CASE(4),  TEST_CASE(5),
@@ -1048,7 +1046,7 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
         {
             SuccessOrQuit(iterator.GetNextDnsSrpAnycastInfo(anycastInfo));
 
-            printf("\n { %s, seq:%u, version:%u, rlco16:%04x }", anycastInfo.mAnycastAddress.ToString().AsCString(),
+            printf("\n { %s, seq:%u, version:%u, rloc16:%04x }", anycastInfo.mAnycastAddress.ToString().AsCString(),
 
                    anycastInfo.mSequenceNumber, anycastInfo.mVersion, anycastInfo.mRloc16);
 

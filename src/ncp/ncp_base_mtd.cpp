@@ -329,7 +329,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
-        VerifyOrExit(addressesCount < Ip6AddressesTlv::kMaxAddresses, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(addressesCount < OT_IP6_MAX_MLR_ADDRESSES, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
         ++addressesCount;
     }
@@ -4749,6 +4749,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},
         {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},
+        {OT_CHANGED_THREAD_NETIF_STATE, SPINEL_PROP_NET_IF_UP},
         {OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE, SPINEL_PROP_BACKBONE_ROUTER_STATE},
     };
 

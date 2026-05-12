@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the DNS-SD Server.
  */
 
-#ifndef CONFIG_DNSSD_SERVER_H_
-#define CONFIG_DNSSD_SERVER_H_
+#ifndef OT_CORE_CONFIG_DNSSD_SERVER_H_
+#define OT_CORE_CONFIG_DNSSD_SERVER_H_
 
 /**
  * @addtogroup config-dnssd-server
@@ -113,4 +113,4 @@
  * @}
  */
 
-#endif // CONFIG_DNSSD_SERVER_H_
+#endif // OT_CORE_CONFIG_DNSSD_SERVER_H_

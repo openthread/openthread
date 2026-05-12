@@ -31,8 +31,8 @@
  *   This file includes helper functions to convert between public OT C structs and corresponding core C++ classes.
  */
 
-#ifndef AS_CORE_TYPE_HPP_
-#define AS_CORE_TYPE_HPP_
+#ifndef OT_CORE_COMMON_AS_CORE_TYPE_HPP_
+#define OT_CORE_COMMON_AS_CORE_TYPE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -157,4 +157,4 @@ template <typename EnumType> const typename MappedEnum<EnumType>::Type MapEnum(E
 
 } // namespace ot
 
-#endif // AS_CORE_TYPE_HPP_
+#endif // OT_CORE_COMMON_AS_CORE_TYPE_HPP_

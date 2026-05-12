@@ -32,8 +32,8 @@
  *   This file defines the platform-specific functions needed by OpenThread's example applications.
  */
 
-#ifndef OPENTHREAD_SYSTEM_H_
-#define OPENTHREAD_SYSTEM_H_
+#ifndef OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_
+#define OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_
 
 #include <setjmp.h>
 #include <stdbool.h>
@@ -61,7 +61,7 @@ enum
     OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE           = 0,       ///< Default SPI Mode: CPOL=0, CPHA=0.
     OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ       = 1000000, ///< Default SPI speed in hertz.
     OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US    = 20,      ///< Default delay after SPI C̅S̅ assertion, in µsec.
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS = 0, ///< Default delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS = 0,       ///< Default delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.
     OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE =
         16, ///< Default maximum number of 0xFF bytes to clip from start of MISO frame.
     OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE =
@@ -83,6 +83,8 @@ typedef struct otPlatformCoprocessorUrls
  */
 typedef struct otPlatformConfig
 {
+    const char *mTunDevice;                           ///< The POSIX TUN device path.
+                                                      ///< Used if `OT_PLATFORM_NETIF` is enabled.
     const char               *mBackboneInterfaceName; ///< Backbone network interface name.
     const char               *mInterfaceName;         ///< Thread network interface name.
     otPlatformCoprocessorUrls mCoprocessorUrls;       ///< Coprocessor URLs.
@@ -93,6 +95,9 @@ typedef struct otPlatformConfig
                                                       ///< directly after initialization.
     CoprocessorType mCoprocessorType;                 ///< The co-processor type. This field is used to pass
                                                       ///< the type to the app layer.
+    const char *mDataPath;                            ///< Data path.
+    const char *mSettingsFile;                        ///< Fixed settings file base name. When set, this
+                                                      ///< overrides the default EUI64-based file naming.
 } otPlatformConfig;
 
 /**
@@ -327,8 +332,25 @@ void otSysTrelDeinit(void);
  */
 void otSysSetRcpRestorationEnabled(bool aEnabled);
 
+/**
+ * Represents a callback function to be called when openthread crashes.
+ *
+ * @note This callback is invoked from a signal handler context. The callback implementation must only use
+ *       async-signal-safe functions.
+ */
+typedef void (*otSysCrashCallback)(void);
+
+/**
+ * Registers the callback function to be called when openthread crashes.
+ *
+ * Requires `OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE`.
+ *
+ * @param[in] aCallback  The callback function.
+ */
+void otSysRegisterCrashCallback(otSysCrashCallback aCallback);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
 
-#endif // OPENTHREAD_SYSTEM_H_
+#endif // OT_POSIX_PLATFORM_INCLUDE_OPENTHREAD_OPENTHREAD_SYSTEM_H_

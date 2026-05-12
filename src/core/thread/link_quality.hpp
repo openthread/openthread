@@ -31,8 +31,8 @@
  *   This file includes definitions for storing and processing link quality information.
  */
 
-#ifndef LINK_QUALITY_HPP_
-#define LINK_QUALITY_HPP_
+#ifndef OT_CORE_THREAD_LINK_QUALITY_HPP_
+#define OT_CORE_THREAD_LINK_QUALITY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -456,4 +456,4 @@ private:
 
 } // namespace ot
 
-#endif // LINK_QUALITY_HPP_
+#endif // OT_CORE_THREAD_LINK_QUALITY_HPP_

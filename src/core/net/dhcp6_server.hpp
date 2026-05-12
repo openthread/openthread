@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Server.
  */
 
-#ifndef DHCP6_SERVER_HPP_
-#define DHCP6_SERVER_HPP_
+#ifndef OT_CORE_NET_DHCP6_SERVER_HPP_
+#define OT_CORE_NET_DHCP6_SERVER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -167,7 +167,7 @@ private:
     void  UpdateService(void);
     void  Start(void);
     void  Stop(void);
-    void  AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
+    void  AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, uint8_t aContextId);
     Error AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
     Error AppendClientIdOption(Message &aMessage, const Mac::ExtAddress &aClientAddress);
     Error AppendServerIdOption(Message &aMessage);
@@ -206,4 +206,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
-#endif // DHCP6_SERVER_HPP_
+#endif // OT_CORE_NET_DHCP6_SERVER_HPP_

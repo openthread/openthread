@@ -52,29 +52,24 @@ void AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, ui
     AnnounceSenderBase::SendAnnounce(aCount);
 }
 
-template <>
-void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Msg &aMsg)
 {
+    Error    error;
     uint32_t mask;
     uint8_t  count;
     uint16_t period;
 
-    VerifyOrExit(aMessage.IsPostRequest());
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
+    VerifyOrExit(!IsRunning(), error = kErrorBusy);
 
-    SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMessage, count));
-    SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::FindIn(aMsg.mMessage, mask));
+
+    SuccessOrExit(error = Tlv::Find<MeshCoP::CountTlv>(aMsg.mMessage, count));
+    SuccessOrExit(error = Tlv::Find<MeshCoP::PeriodTlv>(aMsg.mMessage, period));
 
     SendAnnounce(mask, count, period);
 
-    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
-    {
-        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
-        LogInfo("Sent %s response", UriToString<kUriAnnounceBegin>());
-    }
-
 exit:
-    return;
+    IgnoreError(Get<Tmf::Agent>().SendAckResponseIfUnicastRequest(aMsg, error));
 }
 
 void AnnounceBeginServer::HandleTimer(Timer &aTimer)

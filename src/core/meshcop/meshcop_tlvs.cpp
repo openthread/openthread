@@ -60,10 +60,22 @@ void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
 
 bool NetworkNameTlv::IsValid(void) const { return IsValidUtf8String(mNetworkName, GetLength()); }
 
-void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
+Error SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 {
-    aSteeringData.Init(GetSteeringDataLength());
-    memcpy(aSteeringData.GetData(), mSteeringData, GetSteeringDataLength());
+    return aSteeringData.Init(GetSteeringDataLength(), mSteeringData);
+}
+
+Error SteeringDataTlv::FindIn(const Message &aMessage, SteeringData &aSteeringData)
+{
+    Error       error;
+    OffsetRange offsetRange;
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMessage, Tlv::kSteeringData, offsetRange));
+    SuccessOrExit(error = aSteeringData.Init(ClampToUint8(offsetRange.GetLength())));
+    error = aMessage.Read(offsetRange, aSteeringData.GetData(), aSteeringData.GetLength());
+
+exit:
+    return error;
 }
 
 bool SecurityPolicyTlv::IsValid(void) const

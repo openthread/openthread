@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread child table.
  */
 
-#ifndef CHILD_TABLE_HPP_
-#define CHILD_TABLE_HPP_
+#ifndef OT_CORE_THREAD_CHILD_TABLE_HPP_
+#define OT_CORE_THREAD_CHILD_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -135,6 +135,13 @@ public:
      * @returns A pointer to a new `Child` entry, or `nullptr` if all `Child` entries are in use.
      */
     Child *GetNewChild(void);
+
+    /**
+     * Allocates a new child ID and returns the corresponding RLOC16.
+     *
+     * @returns The allocated child RLOC16.
+     */
+    uint16_t AllocateNewChildRloc16(void);
 
     /**
      * Searches the child table for a `Child` with a given RLOC16 also matching a given state filter.
@@ -301,7 +308,7 @@ public:
      */
     bool Contains(const Neighbor &aNeighbor) const
     {
-        const Child *child = static_cast<const Child *>(&aNeighbor);
+        const void *child = &aNeighbor;
 
         return (mChildren <= child) && (child < GetArrayEnd(mChildren));
     }
@@ -330,6 +337,7 @@ private:
     const Child *FindChild(const Child::AddressMatcher &aMatcher) const;
     void         RefreshStoredChildren(void);
 
+    uint16_t mNextChildId;
     uint16_t mMaxChildrenAllowed;
     Child    mChildren[kMaxChildren];
 };
@@ -338,4 +346,4 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-#endif // CHILD_TABLE_HPP_
+#endif // OT_CORE_THREAD_CHILD_TABLE_HPP_

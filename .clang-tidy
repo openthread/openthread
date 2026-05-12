@@ -5,7 +5,6 @@ Checks: >
   bugprone-too-small-loop-variable,
   google-explicit-constructor,
   google-readability-casting,
-  misc-include-cleaner,
   misc-unused-using-decls,
   modernize-loop-convert,
   modernize-use-bool-literals,

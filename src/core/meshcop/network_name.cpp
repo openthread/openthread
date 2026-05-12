@@ -33,8 +33,6 @@
 
 #include "network_name.hpp"
 
-#include "instance/instance.hpp"
-
 namespace ot {
 namespace MeshCoP {
 
@@ -89,80 +87,19 @@ Error NetworkName::Set(const NameData &aNameData)
     data.SetLength(newLen);
 
     // Ensure the new name does not match the current one.
-    if (data.MatchesBytesIn(m8) && m8[newLen] == '\0')
+    if (data.MatchesBytesIn(m8) && m8[newLen] == kNullChar)
     {
         ExitNow(error = kErrorAlready);
     }
 
     data.CopyBytesTo(m8);
-    m8[newLen] = '\0';
+    m8[newLen] = kNullChar;
 
 exit:
     return error;
 }
 
 bool NetworkName::operator==(const NetworkName &aOther) const { return GetAsData() == aOther.GetAsData(); }
-
-NetworkNameManager::NetworkNameManager(Instance &aInstance)
-    : InstanceLocator(aInstance)
-{
-    IgnoreError(SetNetworkName(NetworkName::kNetworkNameInit));
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    IgnoreError(SetDomainName(NetworkName::kDomainNameInit));
-#endif
-}
-
-Error NetworkNameManager::SetNetworkName(const char *aNameString)
-{
-    return SignalNetworkNameChange(mNetworkName.Set(aNameString));
-}
-
-Error NetworkNameManager::SetNetworkName(const NameData &aNameData)
-{
-    return SignalNetworkNameChange(mNetworkName.Set(aNameData));
-}
-
-Error NetworkNameManager::SignalNetworkNameChange(Error aError)
-{
-    switch (aError)
-    {
-    case kErrorNone:
-        Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
-        break;
-
-    case kErrorAlready:
-        Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
-        aError = kErrorNone;
-        break;
-
-    default:
-        break;
-    }
-
-    return aError;
-}
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-Error NetworkNameManager::SetDomainName(const char *aNameString)
-{
-    Error error = mDomainName.Set(aNameString);
-
-    return (error == kErrorAlready) ? kErrorNone : error;
-}
-
-Error NetworkNameManager::SetDomainName(const NameData &aNameData)
-{
-    Error error = mDomainName.Set(aNameData);
-
-    return (error == kErrorAlready) ? kErrorNone : error;
-}
-
-bool NetworkNameManager::IsDefaultDomainNameSet(void) const
-{
-    return StringMatch(mDomainName.GetAsCString(), NetworkName::kDomainNameInit);
-}
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 } // namespace MeshCoP
 } // namespace ot

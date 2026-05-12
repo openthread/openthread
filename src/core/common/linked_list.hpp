@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic singly linked list.
  */
 
-#ifndef LINKED_LIST_HPP_
-#define LINKED_LIST_HPP_
+#ifndef OT_CORE_COMMON_LINKED_LIST_HPP_
+#define OT_CORE_COMMON_LINKED_LIST_HPP_
 
 #include "openthread-core-config.h"
 
@@ -546,6 +546,23 @@ public:
      */
     Type *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
 
+    /**
+     * Counts and returns the number of entries in the linked list.
+     *
+     * @returns The number of entries in the linked list.
+     */
+    uint32_t CountAllEntries(void) const
+    {
+        uint32_t count = 0;
+
+        for (const Type *entry = mHead; entry != nullptr; entry = entry->GetNext())
+        {
+            count++;
+        }
+
+        return count;
+    }
+
     // The following methods are intended to support range-based `for`
     // loop iteration over the linked-list entries and should not be
     // used directly.
@@ -596,4 +613,4 @@ private:
 
 } // namespace ot
 
-#endif // LINKED_LIST_HPP_
+#endif // OT_CORE_COMMON_LINKED_LIST_HPP_

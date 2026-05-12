@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -25,30 +25,40 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 """
+
+from argparse import Namespace
+import logging
 import readline
 import shlex
-from argparse import ArgumentParser
-from ble.ble_stream_secure import BleStreamSecure
+from typing import Optional
+
 from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, CommissionCommand, DecommissionCommand,
-                               ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand, GetPskdHash,
+                               ExtractDatasetCommand, GetCommissionerCertificate, GetDeviceIdCommand,
                                GetExtPanIDCommand, GetNetworkNameCommand, GetProvisioningUrlCommand, PingCommand,
                                GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash,
-                               DiagnosticTlvsCommand)
+                               DiagnosticTlvsCommand, GetApplicationLayersCommand, SendVendorData,
+                               SendApplicationData1, SendApplicationData2, SendApplicationData3, SendApplicationData4,
+                               SimulationCommand, connect_helper, disconnect_helper)
+from .command import CommandResultNone, CommandResult
 from .tlv_commands import TlvCommand
 from cli.dataset_commands import (DatasetCommand)
 from dataset.dataset import ThreadDataset
-from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class CLI:
 
-    def __init__(self,
-                 dataset: ThreadDataset,
-                 cmd_args: Optional[ArgumentParser] = None,
-                 ble_sstream: Optional[BleStreamSecure] = None):
+    def __init__(self, dataset: ThreadDataset, cmd_args: Optional[Namespace] = None):
         self._commands = {
             'help': HelpCommand(),
             'hello': HelloCommand(),
+            'get_apps': GetApplicationLayersCommand(),
+            'appdata1': SendApplicationData1(),
+            'appdata2': SendApplicationData2(),
+            'appdata3': SendApplicationData3(),
+            'appdata4': SendApplicationData4(),
+            'vendor_data': SendVendorData(),
             'commission': CommissionCommand(),
             'decommission': DecommissionCommand(),
             'disconnect': DisconnectCommand(),
@@ -61,15 +71,16 @@ class CLI:
             'get_dataset': ExtractDatasetCommand(),
             'thread': ThreadStateCommand(),
             'scan': ScanCommand(),
+            'simulation': SimulationCommand(),
             'random_challenge': GetRandomNumberChallenge(),
             'present_hash': PresentHash(),
-            'peer_pskd_hash': GetPskdHash(),
             'tlv': TlvCommand(),
             'get_comm_cert': GetCommissionerCertificate(),
             'diagnostic_tlvs': DiagnosticTlvsCommand()
         }
-        self._context = {
-            'ble_sstream': ble_sstream,
+        self.context = {
+            'ble_sstream': None,  # BleStreamSecure | None
+            'ble_stream': None,  # BleStream | None
             'dataset': dataset,
             'commands': self._commands,
             'cmd_args': cmd_args
@@ -109,10 +120,10 @@ class CLI:
         else:
             return None
 
-    async def evaluate_input(self, user_input):
+    async def evaluate_input(self, user_input) -> CommandResult:
         # do not parse empty commands
         if not user_input.strip():
-            return
+            return CommandResultNone()
 
         command_parts = shlex.split(user_input)
         command = command_parts[0]
@@ -121,4 +132,16 @@ class CLI:
         if command not in self._commands.keys():
             raise Exception('Invalid command: {}'.format(command))
 
-        return await self._commands[command].execute(args, self._context)
+        return await self._commands[command].execute(args, self.context)
+
+    async def connect(self, device) -> bool:
+        """
+        Connect with TLS to the BLE/simulation device.
+        :param device: the BLE device object or simulation UdpStream object
+        :return: True if connection was successful, False otherwise
+        """
+        return await connect_helper(device, self.context)
+
+    async def disconnect(self):
+        """ Disconnect from the BLE/simulation device. """
+        await disconnect_helper(self.context)

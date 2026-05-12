@@ -31,8 +31,8 @@
  *   This file includes definitions for Backbone Router management.
  */
 
-#ifndef BACKBONE_ROUTER_MANAGER_HPP_
-#define BACKBONE_ROUTER_MANAGER_HPP_
+#ifndef OT_CORE_BACKBONE_ROUTER_BBR_MANAGER_HPP_
+#define OT_CORE_BACKBONE_ROUTER_BBR_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -48,6 +48,8 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/netif.hpp"
+#include "thread/dua_manager.hpp"
+#include "thread/mlr_types.hpp"
 #include "thread/network_data.hpp"
 #include "thread/tmf.hpp"
 
@@ -103,7 +105,7 @@ public:
      *
      * @param[in] aStatus  The status to respond.
      */
-    void ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::MlrStatus aStatus);
+    void ConfigNextMulticastListenerRegistrationResponse(Mlr::Status aStatus);
 #endif
 #endif
 
@@ -165,23 +167,22 @@ private:
     static constexpr uint8_t  kDefaultHoplimit = 1;
     static constexpr uint32_t kTimerInterval   = 1000;
 
-    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleMulticastListenerRegistration(const Coap::Msg &aMsg);
 
-    void SendMulticastListenerRegistrationResponse(const Coap::Message       &aMessage,
-                                                   const Ip6::MessageInfo    &aMessageInfo,
-                                                   ThreadStatusTlv::MlrStatus aStatus,
-                                                   Ip6::Address              *aFailedAddresses,
-                                                   uint8_t                    aFailedAddressNum);
+    void SendMulticastListenerRegistrationResponse(const Coap::Msg &aMsg,
+                                                   Mlr::Status      aStatus,
+                                                   Ip6::Address    *aFailedAddresses,
+                                                   uint8_t          aFailedAddressNum);
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
                                                    uint8_t             aAddressNum,
                                                    uint32_t            aTimeout);
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    void  HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleDuaRegistration(const Coap::Msg &aMsg);
     Error SendBackboneAnswer(const Ip6::MessageInfo      &aQueryMessageInfo,
                              const Ip6::Address          &aDua,
                              uint16_t                     aSrcRloc16,
@@ -199,10 +200,7 @@ private:
     void  HandleProactiveBackboneNotification(const Ip6::Address             &aDua,
                                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                               uint32_t                        aTimeSinceLastTransaction);
-    void  SendDuaRegistrationResponse(const Coap::Message       &aMessage,
-                                      const Ip6::MessageInfo    &aMessageInfo,
-                                      const Ip6::Address        &aTarget,
-                                      ThreadStatusTlv::DuaStatus aStatus);
+    void  SendDuaRegistrationResponse(const Coap::Msg &aMsg, const Ip6::Address &aTarget, DuaStatus aStatus);
 #endif
     void HandleNotifierEvents(Events aEvents);
 
@@ -229,7 +227,7 @@ private:
     uint8_t                  mDuaResponseStatus;
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    ThreadStatusTlv::MlrStatus mMlrResponseStatus;
+    Mlr::Status mMlrResponseStatus;
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     bool mDuaResponseIsSpecified : 1;
@@ -259,4 +257,4 @@ DeclareTmfHandler(Manager, kUriBackboneAnswer);
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#endif // BACKBONE_ROUTER_MANAGER_HPP_
+#endif // OT_CORE_BACKBONE_ROUTER_BBR_MANAGER_HPP_

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROUTER_TABLE_HPP_
-#define ROUTER_TABLE_HPP_
+#ifndef OT_CORE_THREAD_ROUTER_TABLE_HPP_
+#define OT_CORE_THREAD_ROUTER_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -54,6 +54,26 @@ class RouterTable : public InstanceLocator, private NonCopyable
     friend class NeighborTable;
 
 public:
+    /**
+     * Represents the events emitted by `RouterTable` to signal changes.
+     */
+    enum Event : uint16_t
+    {
+        kEventRouterAdded           = 1 << 0, ///< A router entry is added to the table (router ID is allocated).
+        kEventRouterRemoved         = 1 << 1, ///< A router entry is removed from the table (router ID released).
+        kEventSelfRouterAdded       = 1 << 2, ///< Same as `kEventRouterAdded` but the new entry is this device.
+        kEventSelfRouterRemoved     = 1 << 3, ///< Same as `kEventRouterRemoved` but the removed entry is this device.
+        kEventNextHopOrCostChanged  = 1 << 4, ///< Next hop or cost changed for an existing router entry.
+        kEventLinkQualityOutChanged = 1 << 5, ///< Link Quality Out changed for an existing router entry.
+        kEventNeighborAdded         = 1 << 6, ///< A router neighbor is added (link established to a router).
+        kEventNeighborRemoved       = 1 << 7, ///< A router neighbor is removed (router is no longer a neighbor).
+    };
+
+    /**
+     * Represents a bit-field of `Event` values.
+     */
+    typedef uint16_t Events;
+
     /**
      * Constructor.
      *
@@ -222,22 +242,22 @@ public:
     const Router *FindRouterByRloc16(uint16_t aRloc16) const;
 
     /**
-     * Finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop towards a given router.
      *
-     * @param[in]  aRouter  The router to find next hop of.
+     * @param[in]  aRouter  The destination router.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    Router *FindNextHopOf(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopOf(aRouter)); }
+    Router *FindNextHopTowards(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopTowards(aRouter)); }
 
     /**
-     * Finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop towards a given router.
      *
-     * @param[in]  aRouter  The router to find next hop of.
+     * @param[in]  aRouter  The destination router.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      */
-    const Router *FindNextHopOf(const Router &aRouter) const;
+    const Router *FindNextHopTowards(const Router &aRouter) const;
 
     /**
      * Find the router for a given MAC Extended Address.
@@ -319,12 +339,11 @@ public:
     bool IsAllocated(uint8_t aRouterId) const { return mRouterIdMap.IsAllocated(aRouterId); }
 
     /**
-     * Updates the Router ID allocation set.
+     * Updates the allocated Router ID mask.
      *
-     * @param[in]  aRouterIdSequence  The Router ID Sequence.
-     * @param[in]  aRouterIdSet       The Router ID Set.
+     * @param[in]  aRouterIdMask      The Router ID Mask.
      */
-    void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
+    void UpdateRouterIdMask(const Mle::RouterIdMask &aRouterIdMask);
 
     /**
      * Updates the routes based on a received `RouteTlv` from a neighboring router.
@@ -345,23 +364,28 @@ public:
     void UpdateRouterOnFtdChild(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
 
     /**
-     * Gets the allocated Router ID set.
+     * Gets the allocated Router ID Mask.
      *
-     * @param[out]  aRouterIdSet   A reference to output the allocated Router ID set.
+     * @param[out]  aRouterIdMask   A reference to output the allocated Router ID Mask.
      */
-    void GetRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const { return mRouterIdMap.GetAsRouterIdSet(aRouterIdSet); }
+    void GetRouterIdMask(Mle::RouterIdMask &aRouterIdMask) const;
 
     /**
-     * Fills a Route TLV.
+     * Appends a Route TLV to a given message.
      *
-     * When @p aNeighbor is not `nullptr`, we limit the number of router entries to `kMaxRoutersInRouteTlvForLinkAccept`
-     * when populating `aRouteTlv`, so that the TLV can be appended in a Link Accept message. In this case, we ensure
-     * to include router entries associated with @p aNeighbor, leader, and this device itself.
+     * If @p aDestRloc16 is not `Mle::kInvalidRloc16`, a compact format is used for the Route TLV by limiting the
+     * number of router entries to `kMaxRoutersInRouteTlvForLinkAccept`. This is used for Link Accept messages. In this
+     * case, we ensure that entries for this device, the leader, and the destination router (itself or its parent if it
+     * is a child) are always included.
      *
-     * @param[out] aRouteTlv    A Route TLV to be filled.
-     * @param[in]  aNeighbor    A pointer to the receiver (in case TLV is for a Link Accept message).
+     * @param[in,out] aMessage      The message to append the Route TLV to.
+     * @param[in]     aTlvType      The TLV type to use (e.g., `Tlv::kRoute`).
+     * @param[in]     aDestRloc16   The destination RLOC16. Used to determine whether to use the compact format.
+     *
+     * @retval kErrorNone     Successfully appended the Route TLV.
+     * @retval kErrorNoBufs   Insufficient available buffers to append the TLV.
      */
-    void FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor = nullptr) const;
+    Error AppendRouteTlv(Message &aMessage, uint8_t aTlvType, uint16_t aDestRloc16 = Mle::kInvalidRloc16) const;
 
     /**
      * Updates the router table and must be called with a one second period.
@@ -422,8 +446,10 @@ private:
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
 
-    void SignalTableChanged(void);
+    bool IsSelfRouterId(uint8_t aRouterId) const;
+    void SignalTableChanged(Events aEvents);
     void HandleTableChanged(void);
+    void LogEvents(void) const;
     void LogRouteTable(void) const;
 
     class RouterIdMap : public Clearable<RouterIdMap>
@@ -440,7 +466,6 @@ private:
         void    SetIndex(uint8_t aRouterId, uint8_t aIndex) { mIndexes[aRouterId] = kAllocatedFlag | aIndex; }
         bool    CanAllocate(uint8_t aRouterId) const { return (mIndexes[aRouterId] == 0); }
         void    Release(uint8_t aRouterId) { mIndexes[aRouterId] = kReuseDelay; }
-        void    GetAsRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const;
         void    HandleTimeTick(void);
 
     private:
@@ -464,6 +489,7 @@ private:
     RouterIdMap                     mRouterIdMap;
     TimeMilli                       mRouterIdSequenceLastUpdated;
     uint8_t                         mRouterIdSequence;
+    Events                          mEvents;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t mMinRouterId;
     uint8_t mMaxRouterId;
@@ -474,4 +500,4 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-#endif // ROUTER_TABLE_HPP_
+#endif // OT_CORE_THREAD_ROUTER_TABLE_HPP_

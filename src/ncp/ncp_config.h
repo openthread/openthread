@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the NCP.
  */
 
-#ifndef CONFIG_NCP_H_
-#define CONFIG_NCP_H_
+#ifndef OT_NCP_NCP_CONFIG_H_
+#define OT_NCP_NCP_CONFIG_H_
 
 #ifndef OPENTHREAD_RADIO
 #define OPENTHREAD_RADIO 0
@@ -216,4 +216,4 @@
 #define OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER 0
 #endif
 
-#endif // CONFIG_NCP_H_
+#endif // OT_NCP_NCP_CONFIG_H_

@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI util functions.
  */
 
-#ifndef CLI_UTILS_HPP_
-#define CLI_UTILS_HPP_
+#ifndef OT_CLI_CLI_UTILS_HPP_
+#define OT_CLI_CLI_UTILS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -73,33 +73,29 @@ constexpr static CommandId Cmd(const char *aString)
 }
 
 class Utils;
+class Interpreter;
 
 /**
- * Implements the basic output functions.
+ * Implements the basic output functions acting as a base class for `Interpreter`.
  */
 class OutputImplementer
 {
     friend class Utils;
 
 public:
-    /**
-     * Initializes the `OutputImplementer` object.
-     *
-     * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
-     * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
-     */
-    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
-
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
 #else
     void SetEmittingCommandOutput(bool) {}
 #endif
 
+protected:
+    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
+
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
 
-    void OutputV(const char *aFormat, va_list aArguments);
+    void OutputV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
     otCliOutputCallback mCallback;
     void               *mCallbackContext;
@@ -198,6 +194,22 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * Returns the associated CLI `Interpreter`.
+     *
+     * @returns A reference to the associated CLI `Interpreter`.
+     */
+    Interpreter &GetInterpreter(void);
+
+    /**
+     * Converts a boolean to "yes" or "no" string.
+     *
+     * @param[in] aBool  A boolean value to convert.
+     *
+     * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
+     */
+    static const char *ToYesNo(bool aBool);
+
+    /**
      * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
      */
     struct Uint64StringBuffer
@@ -216,6 +228,16 @@ public:
      * @returns A pointer to the start of the string (null-terminated) representation of @p aUint64.
      */
     static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
+
+    /**
+     * Outputs the command result.
+     *
+     * This is called to end the current command. `OT_ERROR_PENDING` can be used to indicate command execution is
+     * continuing asynchronously.
+     *
+     * @param[in]  aError Error code value.
+     */
+    void OutputResult(otError aError);
 
     /**
      * Delivers a formatted output string to the CLI console.
@@ -342,6 +364,15 @@ public:
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
 
+    /**
+     * Outputs a given duration interval in seconds including the msec remainder.
+     *
+     * The duration is outputted in seconds with msec remainder, e.g., 12.047.
+     *
+     * @param[in] aMsecDuration   A duration interval in msec.
+     */
+    void OutputMsecDurationInSec(uint32_t aMsecDuration);
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
@@ -403,10 +434,23 @@ public:
     /**
      * Outputs DNS TXT data to the CLI console.
      *
+     * All key-value pairs are output on a single line in the format: "[key1=value1, key2=value2, ...]".
+     *
      * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
      * @param[in] aTxtDataLength  The length of @p aTxtData (in bytes).
      */
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
+
+    /**
+     * Outputs DNS TXT data to the CLI console, one key per line and applying an indentation.
+     *
+     * Each key-value pair is output on its own line, preceded by the specified indentation.
+     *
+     * @param[in] aIndentSize     The number of space characters to prepend as indentation to each output line.
+     * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
+     * @param[in] aTxtDataLength  The length of @p aTxtData (in bytes).
+     */
+    void OutputDnsTxtData(uint8_t aIndentSize, const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
     /**
      * Represents a buffer which is used when converting an encoded rate value to percentage string.
@@ -540,7 +584,10 @@ public:
         otError error = OT_ERROR_NONE;
 
         VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
         OutputLine(FormatStringFor<ValueType>(), aGetHandler(GetInstancePtr()));
+#pragma GCC diagnostic pop
 
     exit:
         return error;
@@ -705,8 +752,17 @@ public:
      */
     static const char *AddressOriginToString(uint8_t aOrigin);
 
+    /**
+     * Converts a given `otBorderRoutingState` value (`OT_BORDER_ROUTING_STATE_*`) to human-readable string.
+     *
+     * @param[in] aState   The BR state to convert.
+     *
+     * @returns A human-readable string representation of @p aState.
+     */
+    static const char *BorderRoutingStateToString(otBorderRoutingState aState);
+
 protected:
-    void OutputFormatV(const char *aFormat, va_list aArguments);
+    void OutputFormatV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void LogInput(const Arg *aArgs);
@@ -719,6 +775,9 @@ private:
 
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
     void OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[]);
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    void OutputDnsTxtData(bool aKeyValuePerLine, uint8_t aIndentSize, const uint8_t *aTxtData, uint16_t aTxtDataLength);
+#endif
 
     otInstance        *mInstance;
     OutputImplementer &mImplementer;
@@ -730,13 +789,9 @@ template <> inline constexpr const char *Utils::FormatStringFor<uint8_t>(void) {
 
 template <> inline constexpr const char *Utils::FormatStringFor<uint16_t>(void) { return "%u"; }
 
-template <> inline constexpr const char *Utils::FormatStringFor<uint32_t>(void) { return "%lu"; }
-
 template <> inline constexpr const char *Utils::FormatStringFor<int8_t>(void) { return "%d"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<int16_t>(void) { return "%d"; }
-
-template <> inline constexpr const char *Utils::FormatStringFor<int32_t>(void) { return "%ld"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<const char *>(void) { return "%s"; }
 
@@ -747,7 +802,8 @@ template <> inline otError Utils::ProcessGet<uint32_t>(Arg aArgs[], GetHandler<u
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<uint32_t>(), ToUlong(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(unsigned long) >= sizeof(uint32_t), "OpenThread assumes unsigned long is at least 32bit");
+    OutputLine("%lu", ToUlong(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -758,7 +814,8 @@ template <> inline otError Utils::ProcessGet<int32_t>(Arg aArgs[], GetHandler<in
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<int32_t>(), static_cast<long int>(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(long) >= sizeof(int32_t), "OpenThread assumes long is at least 32bit");
+    OutputLine("%ld", static_cast<long int>(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -767,4 +824,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UTILS_HPP_
+#endif // OT_CLI_CLI_UTILS_HPP_

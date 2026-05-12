@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2025, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ from enum import Enum
 class TcatTLVType(Enum):
     RESPONSE_W_STATUS = 0x01
     RESPONSE_W_PAYLOAD = 0x02
+    RESPONSE_EVENT = 0x03
     GET_NETWORK_NAME = 0x08
     DISCONNECT = 0x09
     PING = 0x0A
@@ -41,13 +42,19 @@ class TcatTLVType(Enum):
     PRESENT_PSKC_HASH = 0x11
     PRESENT_INSTALL_CODE_HASH = 0x12
     GET_RANDOM_NUMBER_CHALLENGE = 0x13
-    GET_PSKD_HASH = 0x14
     ACTIVE_DATASET = 0x20
     GET_COMMISSIONER_CERTIFICATE = 0x25
     GET_ACTIVE_DATASET = 0x40
     GET_DIAGNOSTIC_TLVS = 0x26
     DECOMMISSION = 0x60
-    APPLICATION = 0x82
+    GET_APPLICATION_LAYERS = 0x80
+    APPLICATION_DATA_1 = 0x81
+    APPLICATION_DATA_2 = 0x82
+    APPLICATION_DATA_3 = 0x83
+    APPLICATION_DATA_4 = 0x84
+    SERVICE_NAME_UDP = 0x89
+    SERVICE_NAME_TCP = 0x8A
+    VENDOR_APPLICATION = 0x9F
     THREAD_START = 0x27
     THREAD_STOP = 0x28
 

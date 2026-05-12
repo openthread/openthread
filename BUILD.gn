@@ -101,6 +101,11 @@ group("libopenthread-spinel-rcp") {
   deps = [ "src/lib/spinel:libopenthread-spinel-rcp" ]
 }
 
+group("libopenthread-radio-spinel") {
+  public_deps = [ "src/lib/spinel:spinel-api" ]
+  deps = [ "src/lib/spinel:libopenthread-radio-spinel" ]
+}
+
 if (current_os == "fuchsia") {
   group("lib-ot-core") {
     public_deps = [

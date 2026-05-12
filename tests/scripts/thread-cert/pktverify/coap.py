@@ -26,7 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 from pktverify.consts import COAP_CODE_POST, COAP_CODE_ACK
 from pktverify.layers import Layer
@@ -35,7 +35,7 @@ from pktverify.layers import Layer
 class CoapTlvParser(object):
 
     @staticmethod
-    def parse(t, v: bytearray) -> List[Tuple[str, str]]:
+    def parse(t, v: bytearray, layer: 'CoapLayer' = None) -> List[Tuple[str, str]]:
         assert isinstance(v, bytearray)
         return []
 
@@ -62,6 +62,16 @@ class CoapLayer(Layer):
         """
         return self.code == COAP_CODE_ACK
 
+    @property
+    def uri_path(self) -> Optional[str]:
+        """
+        Returns the COAP URI path.
+        """
+        try:
+            return self.opt.uri_path_recon
+        except AttributeError:
+            return None
+
     def __getattr__(self, name):
         super_attr = super().__getattr__(name)
         if name == 'tlv':
@@ -74,18 +84,20 @@ class CoapLayer(Layer):
 
         r = 0
         while True:
-            t, tvs, r = self._parse_next_tlv(payload, r)
+            t, tvs, r = self._parse_next_tlv(payload, r, layer=self)
             if t is None:
                 break
 
             self._add_field('coap.tlv.type', hex(t))
             for k, v in tvs:
                 assert isinstance(k, str), (t, k, v)
-                assert isinstance(v, str), (t, k, v)
-                self._add_field('coap.tlv.' + k, v)
+                if isinstance(v, (bytes, bytearray)):
+                    v = v.hex()
+                assert isinstance(v, (str, int)), (t, k, v)
+                self._add_field('coap.tlv.' + k, str(v))
 
     @staticmethod
-    def _parse_next_tlv(payload, read_pos) -> tuple:
+    def _parse_next_tlv(payload, read_pos, layer=None) -> tuple:
         assert read_pos <= len(payload)
         if read_pos == len(payload):
             return None, None, read_pos
@@ -93,5 +105,5 @@ class CoapLayer(Layer):
         t = payload[read_pos]
         len_ = payload[read_pos + 1]
         assert (len(payload) - read_pos - 2 >= len_)
-        kvs = CoapTlvParser.parse(t, payload[read_pos + 2:read_pos + 2 + len_])
+        kvs = CoapTlvParser.parse(t, payload[read_pos + 2:read_pos + 2 + len_], layer=layer)
         return t, kvs, read_pos + len_ + 2

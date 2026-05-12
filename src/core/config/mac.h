@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the MAC.
  */
 
-#ifndef CONFIG_MAC_H_
-#define CONFIG_MAC_H_
+#ifndef OT_CORE_CONFIG_MAC_H_
+#define OT_CORE_CONFIG_MAC_H_
 
 /**
  * @addtogroup config-mac
@@ -562,4 +562,4 @@
  * @}
  */
 
-#endif // CONFIG_MAC_H_
+#endif // OT_CORE_CONFIG_MAC_H_

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_TREL_HPP_
-#define OT_NEXUS_TREL_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_TREL_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_TREL_HPP_
 
 #include "instance/instance.hpp"
 
@@ -36,13 +36,16 @@
 namespace ot {
 namespace Nexus {
 
+class Node;
+
 struct Trel
 {
-    static constexpr uint16_t kUdpPortStart = 49152;
+    static constexpr uint16_t kUdpPortStart = 19152;
 
     typedef otPlatTrelCounters Counters;
 
     Trel(void);
+    void Init(Node &aNode);
     void Reset(void);
     void Enable(uint16_t &aUdpPort);
     void Disable(void);
@@ -50,19 +53,12 @@ struct Trel
     void ResetCounters(void) { ClearAllBytes(mCounters); }
     void Receive(Instance &aInstance, Heap::Data &aPayloadData, const Ip6::SockAddr &aSenderAddr);
 
-    struct PendingTx : public Heap::Allocatable<PendingTx>, public LinkedListEntry<PendingTx>
-    {
-        PendingTx    *mNext;
-        Heap::Data    mPayloadData;
-        Ip6::SockAddr mDestSockAddr;
-    };
-
     static uint16_t sLastUsedUdpPort;
 
-    bool                  mEnabled;
-    uint16_t              mUdpPort;
-    OwningList<PendingTx> mPendingTxList;
-    Counters              mCounters;
+    Node    *mNode;
+    bool     mEnabled;
+    uint16_t mUdpPort;
+    Counters mCounters;
 };
 
 } // namespace Nexus
@@ -70,4 +66,4 @@ struct Trel
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // OT_NEXUS_TREL_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_TREL_HPP_

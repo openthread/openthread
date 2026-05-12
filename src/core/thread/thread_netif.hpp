@@ -31,8 +31,8 @@
  *   This file includes definitions for the Thread network interface.
  */
 
-#ifndef THREAD_NETIF_HPP_
-#define THREAD_NETIF_HPP_
+#ifndef OT_CORE_THREAD_THREAD_NETIF_HPP_
+#define OT_CORE_THREAD_THREAD_NETIF_HPP_
 
 #include "openthread-core-config.h"
 
@@ -88,4 +88,4 @@ private:
 
 } // namespace ot
 
-#endif // THREAD_NETIF_HPP_
+#endif // OT_CORE_THREAD_THREAD_NETIF_HPP_

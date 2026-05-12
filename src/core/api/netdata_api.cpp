@@ -67,7 +67,7 @@ otError otNetDataGetNextOnMeshPrefix(otInstance            *aInstance,
 {
     AssertPointerIsNotNull(aIterator);
 
-    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNext(*aIterator, AsCoreType(aConfig));
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -81,14 +81,14 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
 {
     AssertPointerIsNotNull(aIterator);
 
-    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextExternalRoute(*aIterator, AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNext(*aIterator, AsCoreType(aConfig));
 }
 
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
     AssertPointerIsNotNull(aIterator);
 
-    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextService(*aIterator, AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNext(*aIterator, AsCoreType(aConfig));
 }
 
 otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
@@ -97,8 +97,7 @@ otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
 {
     AssertPointerIsNotNull(aIterator);
 
-    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextLowpanContextInfo(*aIterator,
-                                                                                     AsCoreType(aContextInfo));
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNext(*aIterator, AsCoreType(aContextInfo));
 }
 
 void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningDataset *aDataset)

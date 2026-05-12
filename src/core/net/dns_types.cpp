@@ -285,7 +285,7 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
     uint16_t value;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (!Instance::IsDnsNameCompressionEnabled())
+    if (!aMessage.GetInstance().IsDnsNameCompressionEnabled())
     {
         // If "DNS name compression" mode is disabled, instead of
         // appending the pointer label, read the name from the message
@@ -741,6 +741,78 @@ Error Name::ExtractLabels(const char *aName, const char *aSuffixName, char *aLab
 
     aLabels[nameLength] = kNullChar;
     error               = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Name::ValidateLabel(const char *aLabel)
+{
+    Error    error = kErrorInvalidArgs;
+    uint16_t length;
+
+    VerifyOrExit(aLabel != nullptr);
+
+    length = StringLength(aLabel, kMaxLabelSize);
+    VerifyOrExit((0 < length) && (length <= kMaxLabelLength));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Name::ValidateName(const char *aName)
+{
+    Error    error           = kErrorNone;
+    uint16_t index           = 0;
+    uint16_t labelStartIndex = 0;
+    char     ch;
+    uint16_t length;
+
+    VerifyOrExit(aName != nullptr, error = kErrorInvalidArgs);
+    length = StringLength(aName, kMaxNameSize);
+
+    VerifyOrExit(length > 0, error = kErrorInvalidArgs);
+    VerifyOrExit(length <= kMaxNameLength, error = kErrorInvalidArgs);
+
+    if (length == kMaxNameLength)
+    {
+        // Allow `kMaxNameLength` only if the `aName` ends with a dot.
+        // This ensures that the encoded name always fits within the
+        // `kMaxEncodedLength = 255` octets.
+
+        VerifyOrExit(aName[length - 1] == kLabelSeparatorChar, error = kErrorInvalidArgs);
+    }
+
+    do
+    {
+        ch = aName[index];
+
+        if ((ch == kNullChar) || (ch == kLabelSeparatorChar))
+        {
+            length = index - labelStartIndex;
+
+            VerifyOrExit(length <= kMaxLabelLength, error = kErrorInvalidArgs);
+
+            if (length == 0)
+            {
+                // Empty label (e.g., consecutive dots) is invalid, but we
+                // allow for two cases: (1) where `aName` ends with a dot
+                // (`length` is zero but we are at end of `aName` string
+                // and `ch` is null char. (2) if `aName` is just "." (we
+                // see a dot at index 0, and index 1 is null char).
+
+                VerifyOrExit((ch == kNullChar) || ((index == 0) && (aName[1] == kNullChar)), error = kErrorInvalidArgs);
+                error = kErrorNone;
+                ExitNow();
+            }
+
+            labelStartIndex = index + 1;
+        }
+
+        index++;
+
+    } while (ch != kNullChar);
 
 exit:
     return error;
@@ -1308,6 +1380,11 @@ exit:
     return error;
 }
 
+bool TxtEntry::MatchesKey(const char *aKey) const
+{
+    return (mKey != nullptr) && StringMatch(mKey, aKey, kStringCaseInsensitiveMatch);
+}
+
 Error TxtEntry::AppendTo(Message &aMessage) const
 {
     Appender appender(aMessage);
@@ -1390,7 +1467,7 @@ exit:
     return error;
 }
 
-Error TxtDataEncoder::AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength)
+Error TxtDataEncoder::AppendBytesEntry(const char *aKey, const void *aBuffer, uint8_t aLength)
 {
     return TxtEntry(aKey, reinterpret_cast<const uint8_t *>(aBuffer), aLength).AppendTo(mAppender);
 }
@@ -1402,7 +1479,7 @@ Error TxtDataEncoder::AppendStringEntry(const char *aKey, const char *aStringVal
 
     VerifyOrExit(length <= kMaxStringEntryLength, error = kErrorInvalidArgs);
 
-    error = AppendBytesEntry(aKey, aStringValue, length);
+    error = AppendBytesEntry(aKey, aStringValue, static_cast<uint8_t>(length));
 
 exit:
     return error;

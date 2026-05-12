@@ -31,8 +31,8 @@
  *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
  */
 
-#ifndef MAC_FILTER_HPP_
-#define MAC_FILTER_HPP_
+#ifndef OT_CORE_MAC_MAC_FILTER_HPP_
+#define OT_CORE_MAC_MAC_FILTER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -256,4 +256,4 @@ DefineMapEnum(otMacFilterAddressMode, Mac::Filter::Mode);
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-#endif // MAC_FILTER_HPP_
+#endif // OT_CORE_MAC_MAC_FILTER_HPP_

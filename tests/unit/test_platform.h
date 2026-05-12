@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_PLATFORM_H
-#define TEST_PLATFORM_H
+#ifndef OT_UNIT_TEST_PLATFORM_H_
+#define OT_UNIT_TEST_PLATFORM_H_
 
 #include <string.h>
 
@@ -51,9 +51,10 @@
 #include "test_util.h"
 
 ot::Instance *testInitInstance(void);
+ot::Instance *testResetInstance(ot::Instance *aInstance);
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 ot::Instance *testInitAdditionalInstance(uint8_t id);
 #endif
 void testFreeInstance(otInstance *aInstance);
 
-#endif // TEST_PLATFORM_H
+#endif // OT_UNIT_TEST_PLATFORM_H_

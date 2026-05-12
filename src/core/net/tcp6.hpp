@@ -31,8 +31,8 @@
  *   This file includes definitions for TCP/IPv6 sockets.
  */
 
-#ifndef TCP6_HPP_
-#define TCP6_HPP_
+#ifndef OT_CORE_NET_TCP6_HPP_
+#define OT_CORE_NET_TCP6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -86,6 +86,8 @@ namespace Ip6 {
 class Tcp : public InstanceLocator, private NonCopyable
 {
 public:
+    typedef TcpHeader Header; ///< TCP Header.
+
     /**
      * Represents an endpoint of a TCP/IPv6 connection.
      */
@@ -508,96 +510,6 @@ public:
     };
 
     /**
-     * Implements TCP header parsing.
-     */
-    OT_TOOL_PACKED_BEGIN
-    class Header : public Clearable<Header>
-    {
-    public:
-        static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
-
-        /**
-         * Returns the TCP Source Port.
-         *
-         * @returns The TCP Source Port.
-         */
-        uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSource); }
-
-        /**
-         * Returns the TCP Destination Port.
-         *
-         * @returns The TCP Destination Port.
-         */
-        uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestination); }
-
-        /**
-         * Sets the TCP Source Port.
-         *
-         * @param[in]  aPort  The TCP Source Port.
-         */
-        void SetSourcePort(uint16_t aPort) { mSource = BigEndian::HostSwap16(aPort); }
-
-        /**
-         * Sets the TCP Destination Port.
-         *
-         * @param[in]  aPort  The TCP Destination Port.
-         */
-        void SetDestinationPort(uint16_t aPort) { mDestination = BigEndian::HostSwap16(aPort); }
-
-        /**
-         * Returns the TCP Sequence Number.
-         *
-         * @returns The TCP Sequence Number.
-         */
-        uint32_t GetSequenceNumber(void) const { return BigEndian::HostSwap32(mSequenceNumber); }
-
-        /**
-         * Returns the TCP Acknowledgment Sequence Number.
-         *
-         * @returns The TCP Acknowledgment Sequence Number.
-         */
-        uint32_t GetAcknowledgmentNumber(void) const { return BigEndian::HostSwap32(mAckNumber); }
-
-        /**
-         * Returns the TCP Flags.
-         *
-         * @returns The TCP Flags.
-         */
-        uint16_t GetFlags(void) const { return BigEndian::HostSwap16(mFlags); }
-
-        /**
-         * Returns the TCP Window.
-         *
-         * @returns The TCP Window.
-         */
-        uint16_t GetWindow(void) const { return BigEndian::HostSwap16(mWindow); }
-
-        /**
-         * Returns the TCP Checksum.
-         *
-         * @returns The TCP Checksum.
-         */
-        uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
-
-        /**
-         * Returns the TCP Urgent Pointer.
-         *
-         * @returns The TCP Urgent Pointer.
-         */
-        uint16_t GetUrgentPointer(void) const { return BigEndian::HostSwap16(mUrgentPointer); }
-
-    private:
-        uint16_t mSource;
-        uint16_t mDestination;
-        uint32_t mSequenceNumber;
-        uint32_t mAckNumber;
-        uint16_t mFlags;
-        uint16_t mWindow;
-        uint16_t mChecksum;
-        uint16_t mUrgentPointer;
-    } OT_TOOL_PACKED_END;
-
-    /**
      * Initializes the object.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
@@ -641,11 +553,8 @@ public:
     bool IsInitialized(const Listener &aListener) const { return mListeners.Contains(aListener); }
 
 private:
-    enum
-    {
-        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
-        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
-    };
+    static constexpr uint16_t kDynamicPortMin = 49152;
+    static constexpr uint16_t kDynamicPortMax = 65535;
 
     static constexpr uint8_t kEstablishedCallbackFlag      = (1 << 0);
     static constexpr uint8_t kSendDoneCallbackFlag         = (1 << 1);
@@ -683,4 +592,4 @@ DefineCoreType(otTcpListener, Ip6::Tcp::Listener);
 
 } // namespace ot
 
-#endif // TCP6_HPP_
+#endif // OT_CORE_NET_TCP6_HPP_

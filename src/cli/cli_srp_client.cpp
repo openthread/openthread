@@ -976,10 +976,7 @@ void SrpClient::HandleCallback(otError                    aError,
 
 otError SrpClient::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                 \
-    {                                                            \
-        aCommandString, &SrpClient::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &SrpClient::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("autostart"),     CmdEntry("callback"), CmdEntry("host"),    CmdEntry("keyleaseinterval"),

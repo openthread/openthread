@@ -64,8 +64,10 @@
 #include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
 
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     bool            ret     = false;
     struct ifaddrs *ifAddrs = nullptr;
 
@@ -94,19 +96,24 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
+                                 uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     return ot::Posix::InfraNetif::Get().SendIcmp6Nd(aInfraIfIndex, *aDestAddress, aBuffer, aBufferLength);
 }
 #endif
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *aInstance, uint32_t aInfraIfIndex)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aInfraIfIndex);
+
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 #endif
@@ -275,7 +282,19 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
 
     if (rval < 0)
     {
-        LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
+        switch (errno)
+        {
+        case EADDRNOTAVAIL:
+        case ENODEV:
+            LogWarn("failed to send ICMPv6 message: %s, suggests infra link might be down, checking status.",
+                    strerror(errno));
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+            break;
+        default:
+            LogWarn("failed to send ICMPv6 message: %s", strerror(errno));
+            break;
+        }
+
         ExitNow(error = OT_ERROR_FAILED);
     }
 
@@ -292,7 +311,9 @@ exit:
 
 bool InfraNetif::IsRunning(void) const
 {
-    return mInfraIfIndex ? ((GetFlags() & IFF_RUNNING) && HasLinkLocalAddress()) : false;
+    return mInfraIfIndex
+               ? (if_nametoindex(mInfraIfName) == mInfraIfIndex && HasLinkLocalAddress() && (GetFlags() & IFF_RUNNING))
+               : false;
 }
 
 uint32_t InfraNetif::GetFlags(void) const
@@ -414,6 +435,10 @@ void InfraNetif::Init(void)
 #ifdef __linux__
     mNetLinkSocket = CreateNetLinkSocket();
 #endif
+
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Init();
+#endif
 }
 
 void InfraNetif::SetInfraNetif(const char *aIfName, int aIcmp6Socket)
@@ -465,12 +490,16 @@ void InfraNetif::SetUp(void)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
+    SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, IsRunning()));
     SuccessOrDie(otBorderRoutingSetEnabled(gInstance, /* aEnabled */ true));
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     mMulticastRoutingManager.SetUp();
+#endif
+
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.SetUp();
 #endif
 
     Mainloop::Manager::Get().Add(*this);
@@ -487,6 +516,10 @@ void InfraNetif::TearDown(void)
     IgnoreError(otBorderRoutingSetEnabled(gInstance, false));
 #endif
 
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.TearDown();
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     mMulticastRoutingManager.TearDown();
 #endif
@@ -496,6 +529,10 @@ void InfraNetif::TearDown(void)
 
 void InfraNetif::Deinit(void)
 {
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Deinit();
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     if (mInfraIfIcmp6Socket != -1)
     {
@@ -518,6 +555,10 @@ void InfraNetif::Deinit(void)
 
 void InfraNetif::Update(Mainloop::Context &aContext)
 {
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Update(aContext);
+#endif
+
 #ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
 #endif
@@ -537,6 +578,74 @@ exit:
 }
 
 #ifdef __linux__
+
+void InfraNetif::ProcessNetLinkMessage(const struct nlmsghdr *aNetlinkMessage)
+{
+    switch (aNetlinkMessage->nlmsg_type)
+    {
+    case RTM_DELADDR:
+    case RTM_NEWADDR:
+    {
+        const struct ifaddrmsg *ifaddr = reinterpret_cast<const struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
+
+        VerifyOrExit(ifaddr->ifa_index == mInfraIfIndex);
+
+        // Address added/removed on current interface. This might indicate link local address is added/removed. We
+        // need to check and update its running state.
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+#endif
+        break;
+    }
+    case RTM_DELLINK:
+    {
+        const struct ifinfomsg *ifinfo = reinterpret_cast<const struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
+
+        VerifyOrExit(ifinfo->ifi_index == static_cast<int>(mInfraIfIndex));
+
+        // The current interface is deleted. We must update its running state to false.
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, /* aIsRunning */ false));
+#endif
+
+        mInfraIfIndex = 0;
+        break;
+    }
+    case RTM_NEWLINK:
+    {
+        const struct ifinfomsg *ifinfo = reinterpret_cast<const struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
+
+        // The interface is re-created:
+        // 1. If the interface index stays the same, we simply check and update the running state.
+        // 2. If the interface is re-created with a different index, we need to re-initialize the Border Routing state
+        //    with the new index.
+        char ifname[IF_NAMESIZE] = {};
+
+        VerifyOrExit(if_indextoname(ifinfo->ifi_index, ifname) != nullptr && strcmp(ifname, mInfraIfName) == 0);
+
+        if (ifinfo->ifi_index != static_cast<int>(mInfraIfIndex))
+        {
+            LogInfo("The infra interface index changed from %u to %d", mInfraIfIndex, ifinfo->ifi_index);
+            mInfraIfIndex = static_cast<uint32_t>(ifinfo->ifi_index);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+            SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, IsRunning()));
+#endif
+        }
+        else
+        {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, IsRunning()));
+#endif
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+exit:
+    return;
+}
 
 void InfraNetif::ReceiveNetLinkMessage(void)
 {
@@ -558,29 +667,15 @@ void InfraNetif::ReceiveNetLinkMessage(void)
     for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, static_cast<size_t>(len));
          header                  = NLMSG_NEXT(header, len))
     {
-        switch (header->nlmsg_type)
+        if (header->nlmsg_type == NLMSG_ERROR)
         {
-        // There are no effective netlink message types to get us notified
-        // of interface RUNNING state changes. But addresses events are
-        // usually associated with interface state changes.
-        case RTM_NEWADDR:
-        case RTM_DELADDR:
-        case RTM_NEWLINK:
-        case RTM_DELLINK:
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
-#endif
-            break;
-        case NLMSG_ERROR:
-        {
-            struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(header));
+            const struct nlmsgerr *errMsg = reinterpret_cast<const struct nlmsgerr *>(NLMSG_DATA(header));
 
-            OT_UNUSED_VARIABLE(errMsg);
             LogWarn("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
-            break;
         }
-        default:
-            break;
+        else
+        {
+            ProcessNetLinkMessage(header);
         }
     }
 
@@ -682,6 +777,10 @@ void InfraNetif::SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket)
 
 void InfraNetif::Process(const Mainloop::Context &aContext)
 {
+#if OT_POSIX_CONFIG_DHCP6_PD_SOCKET_ENABLE
+    mDhcp6PdSocket.Process(aContext);
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
 #endif

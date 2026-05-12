@@ -31,14 +31,17 @@
  *   This file includes definitions for Multicast Listener Registration states of multicast addresses.
  */
 
-#ifndef MLR_TYPES_HPP_
-#define MLR_TYPES_HPP_
+#ifndef OT_CORE_THREAD_MLR_TYPES_HPP_
+#define OT_CORE_THREAD_MLR_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+#include "common/array.hpp"
+#include "common/error.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
+namespace Mlr {
 
 /**
  * @addtogroup core-mlr
@@ -46,17 +49,42 @@ namespace ot {
  * @{
  */
 
+constexpr uint8_t kMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
+constexpr uint8_t kMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
+
 /**
- * Multicast Listener Registration state for multicast addresses.
+ * Multicast Listener Registration (MLR) Status values.
  */
-enum MlrState : uint8_t
+enum Status : uint8_t
 {
-    kMlrStateToRegister,  ///< The multicast address is to be registered.
-    kMlrStateRegistering, ///< The multicast address is being registered.
-    kMlrStateRegistered,  ///< The multicast address is registered.
+    kStatusSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
+    kStatusInvalid        = 2, ///< Invalid IPv6 address(es) in request.
+    kStatusNoPersistent   = 3, ///< This device does not support persistent registrations.
+    kStatusNoResources    = 4, ///< BBR resource shortage.
+    kStatusBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
+    kStatusGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
 };
 
+constexpr uint8_t kMaxStatusValue = kStatusGeneralFailure;
+
+/**
+ * Represents an array of IPv6 addresses.
+ */
+class AddressArray : public Array<Ip6::Address, kMaxIp6Addresses>
+{
+public:
+    /**
+     * Adds an IPv6 address to the array if it is not already present.
+     *
+     * @param[in] aAddress  The IPv6 address to add.
+     *
+     * @retval kErrorNone    Successfully added the address or it was already present.
+     * @retval kErrorNoBufs  The array is full.
+     */
+    Error AddUnique(const Ip6::Address &aAddress);
+};
+
+} // namespace Mlr
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-#endif // MLR_TYPES_HPP_
+#endif // OT_CORE_THREAD_MLR_TYPES_HPP_

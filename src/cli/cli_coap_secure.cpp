@@ -336,7 +336,7 @@ otError CoapSecure::ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine("%s", IsChecker(GetInstancePtr()) ? "yes" : "no");
+    OutputLine("%s", ToYesNo(IsChecker(GetInstancePtr())));
 
 exit:
     return error;
@@ -525,7 +525,7 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     message = otCoapNewMessage(GetInstancePtr(), nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-    otCoapMessageInit(message, coapType, aCoapCode);
+    SuccessOrExit(error = otCoapMessageInit(message, coapType, aCoapCode));
     otCoapMessageGenerateToken(message, OT_COAP_DEFAULT_TOKEN_LENGTH);
     SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
 
@@ -733,10 +733,7 @@ template <> otError CoapSecure::Process<Cmd("x509")>(Arg aArgs[])
 
 otError CoapSecure::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                  \
-    {                                                             \
-        aCommandString, &CoapSecure::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &CoapSecure::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("connect"),  CmdEntry("delete"),       CmdEntry("disconnect"),  CmdEntry("get"),
@@ -1004,7 +1001,7 @@ otError CoapSecure::BlockwiseReceiveHook(const uint8_t *aBlock,
     OT_UNUSED_VARIABLE(aMore);
     OT_UNUSED_VARIABLE(aTotalLength);
 
-    OutputLine("received block: Num %i Len %i", aPosition / aBlockLength, aBlockLength);
+    OutputLine("received block: Num %lu Len %u", ToUlong(aPosition / aBlockLength), aBlockLength);
 
     for (uint16_t i = 0; i < aBlockLength / 16; i++)
     {
@@ -1031,7 +1028,7 @@ otError CoapSecure::BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, u
     // Send a random payload
     otRandomNonCryptoFillBuffer(aBlock, *aBlockLength);
 
-    OutputLine("send block: Num %i Len %i", blockCount, *aBlockLength);
+    OutputLine("send block: Num %lu Len %u", ToUlong(blockCount), *aBlockLength);
 
     for (uint16_t i = 0; i < *aBlockLength / 16; i++)
     {

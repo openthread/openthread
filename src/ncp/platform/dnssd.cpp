@@ -108,25 +108,29 @@ void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
 void otPlatDnssdStartBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aBrowser);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdStartBrowser(aBrowser);
 }
 
 void otPlatDnssdStopBrowser(otInstance *aInstance, const otPlatDnssdBrowser *aBrowser)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aBrowser);
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    ncp->DnssdStopBrowser(aBrowser);
 }
 
 void otPlatDnssdStartSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aResolver);
+    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStartSrvResolver(aResolver);
 }
 
 void otPlatDnssdStopSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResolver *aResolver)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aResolver);
+    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStopSrvResolver(aResolver);
 }
 
 void otPlatDnssdStartTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver)

@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Service.
  */
 
-#ifndef DHCP6_TYPES_HPP_
-#define DHCP6_TYPES_HPP_
+#ifndef OT_CORE_NET_DHCP6_TYPES_HPP_
+#define OT_CORE_NET_DHCP6_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -725,14 +725,14 @@ public:
      *
      * @returns The preference value. Higher value is preferred.
      */
-    uint16_t GetPreference(void) const { return mPreference; }
+    uint8_t GetPreference(void) const { return mPreference; }
 
     /**
      * Sets the preference.
      *
      * @param[in] aPreference  The preference value.
      */
-    void SetPreference(uint16_t aPreference) { mPreference = aPreference; }
+    void SetPreference(uint8_t aPreference) { mPreference = aPreference; }
 
 private:
     uint8_t mPreference;
@@ -1069,7 +1069,7 @@ public:
      *
      * @returns The SOL_MAX_RT value (in seconds).
      */
-    uint16_t GetSolMaxRt(void) const { return BigEndian::HostSwap32(mSolMaxRt); }
+    uint32_t GetSolMaxRt(void) const { return BigEndian::HostSwap32(mSolMaxRt); }
 
     /**
      * Sets the SOL_MAX_RT.
@@ -1089,4 +1089,4 @@ private:
 } // namespace Dhcp6
 } // namespace ot
 
-#endif // DHCP6_TYPES_HPP_
+#endif // OT_CORE_NET_DHCP6_TYPES_HPP_

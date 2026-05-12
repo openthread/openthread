@@ -30,8 +30,8 @@
  *   This file contains definitions for a HDLC based NCP interface to the OpenThread stack.
  */
 
-#ifndef NCP_HDLC_HPP_
-#define NCP_HDLC_HPP_
+#ifndef OT_NCP_NCP_HDLC_HPP_
+#define OT_NCP_NCP_HDLC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -81,12 +81,11 @@ public:
     void HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
-    enum
-    {
-        kHdlcTxBufferSize = OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE,   // HDLC tx buffer size.
-        kRxBufferSize     = OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE + // Rx buffer size (should be large enough to fit
-                        OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE, // one whole (decoded) received frame).
-    };
+    static constexpr uint16_t kHdlcTxBufferSize = OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE; // HDLC tx buffer size.
+
+    // Rx buffer size (should be large enough to fit one whole (decoded) received frame).
+    static constexpr uint16_t kRxBufferSize =
+        OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE + OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE;
 
     enum HdlcTxState
     {
@@ -155,4 +154,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_HDLC_HPP_
+#endif // OT_NCP_NCP_HDLC_HPP_

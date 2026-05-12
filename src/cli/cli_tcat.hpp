@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CLI_TCAT_HPP_
-#define CLI_TCAT_HPP_
+#ifndef OT_CLI_CLI_TCAT_HPP_
+#define OT_CLI_CLI_TCAT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -55,6 +55,7 @@ public:
      */
     Tcat(otInstance *aInstance, OutputImplementer &aOutputImplementer)
         : Utils(aInstance, aOutputImplementer)
+        , mSelectedCert(0)
     {
     }
 
@@ -77,6 +78,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otTcatVendorInfo mVendorInfo;
+    uint8_t          mSelectedCert;
 };
 
 } // namespace Cli
@@ -85,4 +87,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
 
-#endif // CLI_TCAT_HPP_
+#endif // OT_CLI_CLI_TCAT_HPP_

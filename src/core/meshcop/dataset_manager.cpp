@@ -183,12 +183,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<ChannelTlv>().GetChannel());
 
             error = Get<Mac::Mac>().SetPanChannel(channel);
-
-            if (error != kErrorNone)
-            {
-                LogCrit("Failed to set PAN channel to %u when applying dataset: %s", channel, ErrorToString(error));
-            }
-
+            LogCritOnError(error, "set PAN channel to %u when applying dataset", channel);
             break;
         }
 
@@ -198,10 +193,7 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
             error           = Get<Mac::Mac>().SetWakeupChannel(channel);
 
-            if (error != kErrorNone)
-            {
-                LogCrit("Failed to set wake-up channel to %u when applying dataset: %s", channel, ErrorToString(error));
-            }
+            LogCritOnError(error, "set wake-up channel to %u when applying dataset", channel);
 #endif
             break;
         }
@@ -211,11 +203,11 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
             break;
 
         case Tlv::kExtendedPanId:
-            Get<ExtendedPanIdManager>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
+            Get<NetworkIdentity>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
             break;
 
         case Tlv::kNetworkName:
-            IgnoreError(Get<NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
+            IgnoreError(Get<NetworkIdentity>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kNetworkKey:
@@ -473,19 +465,18 @@ exit:
 
 Error DatasetManager::SendSetRequest(const Dataset &aDataset)
 {
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error   = kErrorNone;
+    Coap::Message *message = nullptr;
 
     VerifyOrExit(!mMgmtPending, error = kErrorAlready);
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet : kUriPendingSet);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet
+                                                                                                : kUriPendingSet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleMgmtSetResponse, this));
     mMgmtPending = true;
 
     LogInfo("Sent dataset set request to leader");
@@ -495,24 +486,13 @@ exit:
     return error;
 }
 
-void DatasetManager::HandleMgmtSetResponse(void                *aContext,
-                                           otMessage           *aMessage,
-                                           const otMessageInfo *aMessageInfo,
-                                           otError              aError)
+void DatasetManager::HandleMgmtSetResponse(Coap::Msg *aMsg, Error aError)
 {
-    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
-                                                                   AsCoreTypePtr(aMessageInfo), aError);
-}
-
-void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
-{
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error   error;
     uint8_t state = StateTlv::kPending;
 
     SuccessOrExit(error = aError);
-    VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending,
+    VerifyOrExit(Tlv::Find<StateTlv>(aMsg->mMessage, state) == kErrorNone && state != StateTlv::kPending,
                  error = kErrorParse);
 
     if (state == StateTlv::kReject)
@@ -530,16 +510,16 @@ exit:
     mTimer.Start(kSendSetDelay);
 }
 
-void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void DatasetManager::HandleGet(const Coap::Msg &aMsg) const
 {
     Error          error    = kErrorNone;
-    Coap::Message *response = ProcessGetRequest(aMessage, kCheckSecurityPolicyFlags);
+    Coap::Message *response = ProcessGetRequest(aMsg.mMessage, kCheckSecurityPolicyFlags);
 
     VerifyOrExit(response != nullptr);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, aMsg.mMessageInfo));
 
     LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
-            aMessageInfo.GetPeerAddr().ToString().AsCString());
+            aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(response, error);
@@ -582,7 +562,7 @@ Coap::Message *DatasetManager::ProcessGetRequest(const Coap::Message    &aReques
 
     IgnoreError(Read(dataset));
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    response = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aRequest);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     for (const Tlv *tlv = dataset.GetTlvsStart(); tlv < dataset.GetTlvsEnd(); tlv = tlv->GetNext())
@@ -640,12 +620,11 @@ exit:
 Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponents,
                                      const uint8_t             *aTlvTypes,
                                      uint8_t                    aLength,
-                                     const otIp6Address        *aAddress) const
+                                     const Ip6::Address        *aAddress) const
 {
-    Error            error = kErrorNone;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    TlvList          tlvList;
+    Error          error = kErrorNone;
+    Coap::Message *message;
+    TlvList        tlvList;
 
     if (aDatasetComponents.IsPresent<Dataset::kActiveTimestamp>())
     {
@@ -717,7 +696,8 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         tlvList.Add(aTlvTypes[index]);
     }
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveGet : kUriPendingGet);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveGet
+                                                                                                : kUriPendingGet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (!tlvList.IsEmpty())
@@ -725,15 +705,16 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kGet, tlvList.GetArrayBuffer(), tlvList.GetLength()));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-
     if (aAddress != nullptr)
     {
-        // Use leader ALOC if `aAddress` is `nullptr`.
-        messageInfo.SetPeerAddr(AsCoreType(aAddress));
+        error = Get<Tmf::Agent>().SendMessageTo(*message, *aAddress);
+    }
+    else
+    {
+        error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message);
     }
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error);
 
     LogInfo("sent dataset get request");
 
@@ -878,11 +859,7 @@ exit:
     return isValid;
 }
 
-template <>
-void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
-}
+template <> void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Msg &aMsg) { DatasetManager::HandleGet(aMsg); }
 
 void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
 
@@ -892,6 +869,9 @@ void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDataset
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
     , mDelayTimer(aInstance)
+#if OPENTHREAD_FTD
+    , mDelayTimerMinimal(DelayTimerTlv::kMinDelay)
+#endif
 {
 }
 
@@ -999,11 +979,7 @@ exit:
     Clear();
 }
 
-template <>
-void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::HandleGet(aMessage, aMessageInfo);
-}
+template <> void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Msg &aMsg) { DatasetManager::HandleGet(aMsg); }
 
 void PendingDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<PendingDatasetManager>().HandleTimer(); }
 

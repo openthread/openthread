@@ -26,13 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_NEXUS_MDNS_HPP_
-#define OT_NEXUS_MDNS_HPP_
+#ifndef OT_NEXUS_PLATFORM_NEXUS_MDNS_HPP_
+#define OT_NEXUS_PLATFORM_NEXUS_MDNS_HPP_
 
 #include "instance/instance.hpp"
 
 namespace ot {
 namespace Nexus {
+
+class Node;
 
 class Mdns
 {
@@ -42,30 +44,26 @@ public:
 
     using AddressInfo = otPlatMdnsAddressInfo;
 
-    struct PendingTx : public Heap::Allocatable<PendingTx>, public LinkedListEntry<PendingTx>
-    {
-        PendingTx        *mNext;
-        OwnedPtr<Message> mMessage;
-        bool              mIsUnicast;
-        AddressInfo       mAddress;
-    };
-
     Mdns(void);
+    void  Init(Node &aNode);
     void  Reset(void);
     Error SetListeningEnabled(Instance &aInstance, bool aEnable, uint32_t aInfraIfIndex);
     void  SendMulticast(Message &aMessage, uint32_t aInfraIfIndex);
     void  SendUnicast(Message &aMessage, const AddressInfo &aAddress);
 
     void SignalIfAddresses(Instance &aInstance);
-    void Receive(Instance &aInstance, const PendingTx &aPendingTx, const AddressInfo &aSenderAddress);
+    void Receive(Instance &aInstance, Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress);
     void GetAddress(AddressInfo &aAddress) const;
+    void HandleHostAddressEvent(const Ip6::Address &aAddress, bool aAdded);
+    void HandleHostAddressRemoveAll(void);
 
-    bool                      mEnabled;
-    Heap::Array<Ip6::Address> mIfAddresses;
-    OwningList<PendingTx>     mPendingTxList;
+    static void GetMulticastAddress(Ip6::Address &aAddress);
+
+    Node *mNode;
+    bool  mEnabled;
 };
 
 } // namespace Nexus
 } // namespace ot
 
-#endif // OT_NEXUS_MDNS_HPP_
+#endif // OT_NEXUS_PLATFORM_NEXUS_MDNS_HPP_

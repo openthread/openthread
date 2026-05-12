@@ -416,4 +416,4 @@ otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, con
 } // extern "C"
 #endif
 
-#endif /* OPENTHREAD_COAP_SECURE_H_ */
+#endif // OPENTHREAD_COAP_SECURE_H_

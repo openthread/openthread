@@ -44,20 +44,25 @@ namespace ot {
 #error "Exactly one of {OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO} MUST be set"
 #endif
 
+// Size of `ot::Instance` in `uint64_t` unit (aligned).
+constexpr size_t kInstanceSizeInUint64s = DivideAndRoundUp<size_t>(sizeof(Instance), sizeof(uint64_t));
+
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-// Define the raw storage used for OpenThread instance (in single-instance case).
-OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
-
+// The raw storage used for OpenThread instance (in single-instance case)
+uint64_t gInstanceRaw[kInstanceSizeInUint64s];
 #endif
 
-#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+// The currently active instance
+Instance *gActiveInstance = nullptr;
+#endif
 
-#define INSTANCE_SIZE_ALIGNED OT_ALIGNED_VAR_SIZE(sizeof(ot::Instance), uint64_t)
-#define MULTI_INSTANCE_SIZE (OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM * INSTANCE_SIZE_ALIGNED)
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+
+constexpr size_t kMultiInstanceSizeInUint64s = (Instance::kNumStaticInstances * kInstanceSizeInUint64s);
 
 // Define the raw storage used for OpenThread instance (in multi-instance case).
-static uint64_t gMultiInstanceRaw[MULTI_INSTANCE_SIZE];
+static uint64_t gMultiInstanceRaw[kMultiInstanceSizeInUint64s];
 
 #endif
 
@@ -66,23 +71,24 @@ static uint64_t gMultiInstanceRaw[MULTI_INSTANCE_SIZE];
 OT_DEFINE_ALIGNED_VAR(sHeapRaw, sizeof(Utils::Heap), uint64_t);
 Utils::Heap *Instance::sHeap{nullptr};
 #endif
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-bool Instance::sDnsNameCompressionEnabled = true;
-#endif
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-LogLevel Instance::sLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+LogLevel Instance::sGlobalLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
 #endif
 
 Instance::Instance(void)
-    : mTimerMilliScheduler(*this)
+    : mActiveInstanceTracker(*this)
+    , mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    , mUptime(*this)
+    , mUptimeTracker(*this)
+#endif
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    , mOtns(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
@@ -139,12 +145,12 @@ Instance::Instance(void)
 #endif
     , mActiveDataset(*this)
     , mPendingDataset(*this)
-    , mExtendedPanIdManager(*this)
-    , mNetworkNameManager(*this)
+    , mNetworkIdentity(*this)
     , mIp6Filter(*this)
     , mKeyManager(*this)
     , mLowpan(*this)
     , mMac(*this)
+    , mMessageFramer(*this)
     , mMeshForwarder(*this)
     , mMle(*this)
     , mDiscoverScanner(*this)
@@ -163,18 +169,32 @@ Instance::Instance(void)
     , mNetworkDataPublisher(*this)
 #endif
     , mNetworkDataServiceManager(*this)
+    , mVendorInfo(*this)
     , mNetworkDiagnosticServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
     , mNetworkDiagnosticClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    , mBorderAgent(*this)
+    , mBorderAgentTxtData(*this)
+    , mBorderAgentManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ADMITTER_ENABLE
+    , mBorderAgentAdmitter(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    , mBorderAgentEphemeralKeyManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TRACKER_ENABLE
+    , mBorderAgentTracker(*this)
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
 #endif
 #if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
     , mTmfSecureAgent(*this)
+#endif
+#if OPENTHREAD_CONFIG_SEEKER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
+    , mSeeker(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
@@ -231,7 +251,8 @@ Instance::Instance(void)
     , mApplicationCoapSecure(*this, kWithLinkSecurity)
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    , mApplicationBleSecure(*this)
+    , mBleSecure(*this)
+    , mTcatAgent(*this)
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     , mPingSender(*this)
@@ -247,7 +268,13 @@ Instance::Instance(void)
     , mMeshDiag(*this)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    , mHistoryTracker(*this)
+    , mHistoryTrackerLocal(*this)
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    , mHistoryTrackerServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+    , mHistoryTrackerClient(*this)
+#endif
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     , mLinkMetricsManager(*this)
@@ -258,17 +285,25 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
 #endif
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    , mOtns(*this)
-#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mInfraIf(*this)
+    , mRxRaTracker(*this)
     , mRoutingManager(*this)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_TRACK_PEER_BR_INFO_ENABLE
+    , mNetDataBrTracker(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    , mMultiAilDetector(*this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     , mDhcp6PdClient(*this)
 #endif
 #endif
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     , mNat64Translator(*this)
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mDnsNameCompressionEnabled(true)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -283,6 +318,18 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     , mPowerCalibration(*this)
 #endif
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    , mLogLevel(static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    , mOriginalLogLevel(kLogLevelNone)
+    , mOverrideLogLevel(kLogLevelNone)
+    , mIsLogLevelOverriden(false)
+#endif
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    , mIsLogLevelSet(false)
+#else
+#endif
+#endif
     , mIsInitialized(false)
     , mId(Random::NonCrypto::GetUint32())
 {
@@ -295,6 +342,10 @@ Instance::Instance(void)
 #endif
 #endif
 }
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+Instance::~Instance(void) { gActiveInstance = this; }
+#endif
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 Utils::Heap &Instance::GetHeap(void)
@@ -332,18 +383,19 @@ Instance &Instance::Get(void)
 }
 
 #else // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 
 Instance *Instance::InitMultiple(uint8_t aIdx)
 {
     size_t    bufferSize;
-    uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * kInstanceSizeInUint64s;
     Instance *instance       = reinterpret_cast<Instance *>(instanceBuffer);
 
-    VerifyOrExit(aIdx < OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM);
+    VerifyOrExit(aIdx < kNumStaticInstances);
     VerifyOrExit(!instance->mIsInitialized);
 
-    bufferSize = (&gMultiInstanceRaw[MULTI_INSTANCE_SIZE] - instanceBuffer) * sizeof(uint64_t);
+    bufferSize = (&gMultiInstanceRaw[kMultiInstanceSizeInUint64s] - instanceBuffer) * sizeof(uint64_t);
     instance   = Instance::Init(instanceBuffer, &bufferSize);
 
 exit:
@@ -352,13 +404,13 @@ exit:
 
 Instance &Instance::Get(uint8_t aIdx)
 {
-    void *instance = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    void *instance = gMultiInstanceRaw + aIdx * kInstanceSizeInUint64s;
     return *static_cast<Instance *>(instance);
 }
 
 uint8_t Instance::GetIdx(Instance *aInstance)
 {
-    return static_cast<uint8_t>((reinterpret_cast<uint64_t *>(aInstance) - gMultiInstanceRaw) / INSTANCE_SIZE_ALIGNED);
+    return static_cast<uint8_t>((reinterpret_cast<uint64_t *>(aInstance) - gMultiInstanceRaw) / kInstanceSizeInUint64s);
 }
 
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
@@ -369,8 +421,11 @@ Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 
     VerifyOrExit(aBufferSize != nullptr);
 
-    // Make sure the input buffer is big enough
-    VerifyOrExit(sizeof(Instance) <= *aBufferSize, *aBufferSize = sizeof(Instance));
+    if (sizeof(Instance) > *aBufferSize)
+    {
+        *aBufferSize = kInstanceSizeInUint64s * sizeof(uint64_t);
+        ExitNow();
+    }
 
     VerifyOrExit(aBuffer != nullptr);
 
@@ -381,6 +436,10 @@ Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 exit:
     return instance;
 }
+
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+Instance *Instance::GetActiveInstance(void) { return gActiveInstance; }
+#endif
 
 #endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
@@ -402,6 +461,9 @@ void Instance::AfterInit(void)
 {
     mIsInitialized = true;
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+    Get<KeyManager>().Init();
+    Get<Mac::Mac>().Init();
 
     // Restore datasets and network information
 
@@ -430,10 +492,9 @@ void Instance::Finalize(void)
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    IgnoreError(otThreadSetEnabled(this, false));
-    IgnoreError(otIp6SetEnabled(this, false));
-    IgnoreError(otLinkSetEnabled(this, false));
-
+    Get<Mle::Mle>().Stop();
+    Get<ThreadNetif>().Down();
+    Get<Mac::Mac>().SetEnabled(false);
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     Get<KeyManager>().DestroyTemporaryKeys();
 #endif
@@ -443,15 +504,7 @@ void Instance::Finalize(void)
 
     IgnoreError(Get<Mac::SubMac>().Disable());
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-    /**
-     * Object was created on buffer, so instead of deleting
-     * the object we call destructor explicitly.
-     */
     this->~Instance();
-
-#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 exit:
     return;
@@ -483,6 +536,26 @@ Error Instance::ErasePersistentInfo(void)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+Error Instance::SetDnsNameCompressionEnabled(bool aEnabled)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    if (Get<Dns::Multicast::Core>().IsEnabled())
+    {
+        VerifyOrExit(aEnabled, error = kErrorNotCapable);
+    }
+#endif
+
+    mDnsNameCompressionEnabled = aEnabled;
+    ExitNow();
+
+exit:
+    return error;
+}
+#endif
 
 void Instance::GetBufferInfo(BufferInfo &aInfo)
 {
@@ -518,17 +591,99 @@ void Instance::ResetBufferInfo(void) { Get<MessagePool>().ResetMaxUsedBufferCoun
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
-void Instance::SetLogLevel(LogLevel aLogLevel)
+Error Instance::SetLogLevel(LogLevel aLogLevel)
 {
-    if (aLogLevel != sLogLevel)
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLogLevel <= kLogLevelDebg, error = kErrorInvalidArgs);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    ExitNow(error = kErrorNotCapable);
+#else
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+    if (mIsLogLevelOverriden)
     {
-        sLogLevel = aLogLevel;
-        otPlatLogHandleLevelChanged(sLogLevel);
+        mOriginalLogLevel = aLogLevel;
+        aLogLevel         = Max(aLogLevel, mOverrideLogLevel);
     }
+#endif
+    VerifyOrExit(mLogLevel != aLogLevel);
+    mLogLevel = aLogLevel;
+    SignalLogLevelChange();
+#endif
+
+exit:
+    return error;
 }
+
+void Instance::SignalLogLevelChange(void)
+{
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    mIsLogLevelSet = true;
+#else
+    otPlatLogHandleLevelChanged(mLogLevel);
+#endif
+
+    otPlatLogHandleLogLevelChanged(this, mLogLevel);
+}
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+void Instance::OverrideLogLevel(LogLevel aLogLevel)
+{
+    LogLevel logLevel;
+
+    if (!mIsLogLevelOverriden)
+    {
+        mOriginalLogLevel    = GetLogLevel();
+        mIsLogLevelOverriden = true;
+    }
+
+    mOverrideLogLevel = aLogLevel;
+
+    logLevel = Max(mOverrideLogLevel, mOriginalLogLevel);
+
+    VerifyOrExit(mLogLevel != logLevel);
+    mLogLevel = logLevel;
+    SignalLogLevelChange();
+
+exit:
+    return;
+}
+
+void Instance::RestoreLogLevel(void)
+{
+    VerifyOrExit(mIsLogLevelOverriden);
+    mIsLogLevelOverriden = false;
+    IgnoreError(SetLogLevel(mOriginalLogLevel));
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+Error Instance::SetGlobalLogLevel(LogLevel aLogLevel)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLogLevel <= kLogLevelDebg, error = kErrorInvalidArgs);
+    VerifyOrExit(sGlobalLogLevel != aLogLevel);
+    sGlobalLogLevel = aLogLevel;
+    otPlatLogHandleLevelChanged(sGlobalLogLevel);
+
+exit:
+    return error;
+}
+#endif
 
 extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel) { OT_UNUSED_VARIABLE(aLogLevel); }
 
-#endif
+extern "C" OT_TOOL_WEAK void otPlatLogHandleLogLevelChanged(otInstance *aInstance, otLogLevel aLogLevel)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLogLevel);
+}
+
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 } // namespace ot

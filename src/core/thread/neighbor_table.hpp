@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread neighbor table.
  */
 
-#ifndef NEIGHBOR_TABLE_HPP_
-#define NEIGHBOR_TABLE_HPP_
+#ifndef OT_CORE_THREAD_NEIGHBOR_TABLE_HPP_
+#define OT_CORE_THREAD_NEIGHBOR_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -62,6 +62,16 @@ public:
      * table callback.
      */
     typedef otNeighborTableEntryInfo EntryInfo;
+
+    /**
+     * Iterator used to iterate through neighbor table.
+     */
+    typedef otNeighborInfoIterator Iterator;
+
+    /**
+     * Initializer value for `Iterator`.
+     */
+    static constexpr Iterator kIteratorInit = OT_NEIGHBOR_INFO_ITERATOR_INIT;
 
     /**
      * Defines the constants used in `NeighborTable::Callback` to indicate whether a child or router
@@ -152,6 +162,10 @@ public:
     Neighbor *FindNeighbor(const Mac::Address   &aMacAddress,
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+    Neighbor *FindPeer(const Neighbor::AddressMatcher &aMatcher);
+#endif
+
 #if OPENTHREAD_FTD
 
     /**
@@ -192,13 +206,13 @@ public:
      * the neighbor table.
      *
      * @param[in,out]  aIterator  A reference to the iterator context. To get the first neighbor entry
-                                  it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+                                  it should be set to `kIteratorInit`.
      * @param[out]     aNeighInfo The neighbor information.
      *
      * @retval kErrorNone         Successfully found the next neighbor entry in table.
      * @retval kErrorNotFound     No subsequent neighbor entry exists in the table.
      */
-    Error GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
+    Error GetNextNeighborInfo(Iterator &aIterator, Neighbor::Info &aNeighInfo);
 
     /**
      * Registers the "neighbor table changed" callback function.
@@ -230,6 +244,8 @@ private:
     Callback mCallback;
 };
 
+DefineMapEnum(otNeighborTableEvent, NeighborTable::Event);
+
 } // namespace ot
 
-#endif // NEIGHBOR_TABLE_HPP_
+#endif // OT_CORE_THREAD_NEIGHBOR_TABLE_HPP_

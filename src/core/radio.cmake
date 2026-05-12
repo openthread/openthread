@@ -40,6 +40,10 @@ target_compile_options(openthread-radio PRIVATE
     -Wundef
 )
 
+if(APPLE)
+    target_compile_options(openthread-radio PRIVATE -Wimplicit-int-conversion)
+endif()
+
 target_include_directories(openthread-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-radio PRIVATE

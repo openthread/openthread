@@ -31,14 +31,14 @@
  *   This file includes definitions for a time ticker.
  */
 
-#ifndef TIME_TICKER_HPP_
-#define TIME_TICKER_HPP_
+#ifndef OT_CORE_COMMON_TIME_TICKER_HPP_
+#define OT_CORE_COMMON_TIME_TICKER_HPP_
 
 #include "openthread-core-config.h"
 
+#include "common/bit_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
 
@@ -122,4 +122,4 @@ private:
 
 } // namespace ot
 
-#endif // TIMER_HPP_
+#endif // OT_CORE_COMMON_TIME_TICKER_HPP_

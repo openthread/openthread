@@ -31,8 +31,8 @@
  *   This file includes definitions for performing AES-ECB computations.
  */
 
-#ifndef AES_ECB_HPP_
-#define AES_ECB_HPP_
+#ifndef OT_CORE_CRYPTO_AES_ECB_HPP_
+#define OT_CORE_CRYPTO_AES_ECB_HPP_
 
 #include "openthread-core-config.h"
 
@@ -85,8 +85,7 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kAesContextSize, uint64_t);
+    ContextWith<kAesContextSize> mContext;
 };
 
 /**
@@ -96,4 +95,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // AES_ECB_HPP_
+#endif // OT_CORE_CRYPTO_AES_ECB_HPP_

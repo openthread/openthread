@@ -34,6 +34,7 @@
 #include "ip4_types.hpp"
 
 #include "common/numeric_limits.hpp"
+#include "common/offset_range.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -125,7 +126,7 @@ void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
 
 void Address::ToString(StringWriter &aWriter) const
 {
-    aWriter.Append("%d.%d.%d.%d", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
+    aWriter.Append("%u.%u.%u.%u", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
 }
 
 void Address::ToString(char *aBuffer, uint16_t aSize) const
@@ -169,7 +170,8 @@ exit:
 
 void Cidr::ToString(StringWriter &aWriter) const
 {
-    aWriter.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
+    AsCoreType(&mAddress).ToString(aWriter);
+    aWriter.Append("/%u", mLength);
 }
 
 void Cidr::ToString(char *aBuffer, uint16_t aSize) const
@@ -190,8 +192,7 @@ Cidr::InfoString Cidr::ToString(void) const
 
 bool Cidr::operator==(const Cidr &aOther) const
 {
-    return (mLength == aOther.mLength) &&
-           (Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), Ip4::Address::kSize) >= mLength);
+    return (mLength == aOther.mLength) && (CountMatchingBits(GetBytes(), aOther.GetBytes(), mLength) >= mLength);
 }
 
 void Cidr::Set(const uint8_t *aAddress, uint8_t aLength)
@@ -208,10 +209,58 @@ Error Header::ParseFrom(const Message &aMessage)
     VerifyOrExit(IsValid());
     VerifyOrExit(GetTotalLength() == aMessage.GetLength());
 
+    if (GetIhl() > kMinIhl)
+    {
+        VerifyOrExit(!HasSourceRouteOption(aMessage));
+    }
+
     error = kErrorNone;
 
 exit:
     return error;
+}
+
+bool Header::HasSourceRouteOption(const Message &aMessage) const
+{
+    bool        hasSourceRoute = false;
+    uint16_t    headerLen      = GetHeaderLength();
+    OffsetRange range;
+
+    VerifyOrExit(headerLen <= aMessage.GetLength());
+    range.InitFromRange(sizeof(Header), headerLen);
+
+    while (!range.IsEmpty())
+    {
+        uint8_t optionType;
+        uint8_t optionLen;
+
+        SuccessOrExit(aMessage.Read(range, optionType));
+        range.AdvanceOffset(sizeof(uint8_t));
+
+        if (optionType == kOptionEnd)
+        {
+            break;
+        }
+
+        if (optionType == kOptionNop)
+        {
+            continue;
+        }
+
+        SuccessOrExit(aMessage.Read(range, optionLen));
+        VerifyOrExit(optionLen >= 2 && range.Contains(optionLen - 1));
+
+        if (optionType == kOptionLsrr || optionType == kOptionSsrr)
+        {
+            hasSourceRoute = true;
+            ExitNow();
+        }
+
+        range.AdvanceOffset(optionLen - 1);
+    }
+
+exit:
+    return hasSourceRoute;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -219,22 +268,25 @@ exit:
 
 Error Headers::ParseFrom(const Message &aMessage)
 {
-    Error error = kErrorParse;
+    Error    error = kErrorParse;
+    uint16_t headerLen;
 
     Clear();
 
     SuccessOrExit(mIp4Header.ParseFrom(aMessage));
 
+    headerLen = mIp4Header.GetHeaderLength();
+
     switch (mIp4Header.GetProtocol())
     {
     case kProtoUdp:
-        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mUdp));
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mUdp));
         break;
     case kProtoTcp:
-        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mTcp));
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mTcp));
         break;
     case kProtoIcmp:
-        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mIcmp));
+        SuccessOrExit(aMessage.Read(headerLen, mHeader.mIcmp));
         break;
     default:
         break;

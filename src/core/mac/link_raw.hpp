@@ -31,8 +31,8 @@
  *   This file includes definitions for the Raw Link-Layer class.
  */
 
-#ifndef LINK_RAW_HPP_
-#define LINK_RAW_HPP_
+#ifndef OT_CORE_MAC_LINK_RAW_HPP_
+#define OT_CORE_MAC_LINK_RAW_HPP_
 
 #include "openthread-core-config.h"
 
@@ -286,7 +286,7 @@ public:
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
+    void RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
 #endif
 
 private:
@@ -308,4 +308,4 @@ private:
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#endif // LINK_RAW_HPP_
+#endif // OT_CORE_MAC_LINK_RAW_HPP_

@@ -77,6 +77,17 @@
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+
+#if !OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && \
+    (OPENTHREAD_POSIX_CONFIG_NETIF_LINK_LOCAL_ROUTE_METRIC || OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC)
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 18, 0)
+#error "Cannot set route metric on kernel < 4.18. " \
+    "Consider using OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE "\
+    "to install OMR routes with higher priority on kernel < 4.18"
+#endif // LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
+#endif
+
 #endif // __linux__
 #include <math.h>
 #include <net/if.h>
@@ -161,9 +172,6 @@ extern int
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static otIp4Cidr sActiveNat64Cidr;
-#endif
 
 const char *otSysGetThreadNetifName(void) { return gNetifName; }
 
@@ -212,10 +220,6 @@ static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTE
 static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
 static uint8_t            sAddedExternalRoutesNum = 0;
 static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -291,6 +295,12 @@ static bool sIsSyncingState = false;
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
 static const char kLogModuleName[] = "Netif";
+
+static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 static void LogCrit(const char *aFormat, ...)
 {
@@ -976,6 +986,11 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
 }
 
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+static otIp4Cidr sActiveNat64Cidr;
+
+static constexpr uint32_t kNat64RoutePriority = 100; // Priority for route to NAT64 CIDR, 100 means a high priority.
+
 static bool isSameIp4Cidr(const otIp4Cidr &aCidr1, const otIp4Cidr &aCidr2)
 {
     bool res = true;
@@ -1109,8 +1124,9 @@ exit:
     }
 }
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || \
-    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE ||                                                    \
+    (OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+     !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE)
 static constexpr uint8_t kIpVersion4 = 4;
 static constexpr uint8_t kIpVersion6 = 6;
 
@@ -1126,7 +1142,8 @@ static uint8_t getIpVersion(const uint8_t *data)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+    !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
 
 /**
  * Returns nullptr if data does not point to a valid ICMPv6 RA message.
@@ -1165,13 +1182,13 @@ static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *da
     otDumpInfoPlat("", data, static_cast<size_t>(length));
 #endif
 
-    raLength = length + (ra - data);
+    raLength = length - (ra - data);
     otPlatBorderRoutingProcessIcmp6Ra(aInstance, ra, raLength);
 
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && ...
 
 #ifdef __linux__
 /**
@@ -1237,7 +1254,8 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && \
+    !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
     if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
     {
         ExitNow();
@@ -1473,17 +1491,17 @@ exit:
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #if defined(__FreeBSD__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #endif
 
 #if defined(__APPLE__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #define DARWIN_SA_SIZE(sa) ROUNDUP(sa->sa_len)
 #define SA_SIZE(sa) DARWIN_SA_SIZE(sa)
 #endif
 
 #if defined(__NetBSD__)
-#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a)-1U) | ((n)-1))) : (n))
+#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a) - 1U) | ((n) - 1))) : (n))
 #define RT_ROUNDUP(a) RT_ROUNDUP2((a), sizeof(uint64_t))
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif
@@ -2032,7 +2050,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     struct ifreq ifr;
     const char  *interfaceName;
 
-    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+    sTunFd = open(aPlatformConfig->mTunDevice, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
@@ -2133,9 +2151,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     const char *last_slash;
     const char *path;
 
-    (void)aPlatformConfig;
-
-    path = OPENTHREAD_POSIX_TUN_DEVICE;
+    path = aPlatformConfig->mTunDevice;
 
     sTunFd = open(path, O_RDWR | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -2149,7 +2165,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     err   = ioctl(sTunFd, TUNSIFHEAD, &flags);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    last_slash = strrchr(OPENTHREAD_POSIX_TUN_DEVICE, '/');
+    last_slash = strrchr(path, '/');
     VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 
@@ -2232,6 +2248,15 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     (void)LogInfo;
     (void)LogNote;
     (void)LogDebg;
+
+#if defined(__linux__) || defined(__NetBSD__) ||                                                       \
+    (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
+    defined(__FreeBSD__)
+    if (aPlatformConfig->mTunDevice == nullptr)
+    {
+        aPlatformConfig->mTunDevice = OPENTHREAD_POSIX_TUN_DEVICE;
+    }
+#endif
 
     sIpFd = ot::Posix::SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, ot::Posix::kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);

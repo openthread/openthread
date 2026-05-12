@@ -31,8 +31,8 @@
  *   This file includes definitions for an offset range.
  */
 
-#ifndef OFFSET_RANGE_HPP_
-#define OFFSET_RANGE_HPP_
+#ifndef OT_CORE_COMMON_OFFSET_RANGE_HPP_
+#define OT_CORE_COMMON_OFFSET_RANGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -157,4 +157,4 @@ private:
 
 } // namespace ot
 
-#endif // OFFSET_RANGE_HPP_
+#endif // OT_CORE_COMMON_OFFSET_RANGE_HPP_

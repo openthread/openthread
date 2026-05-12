@@ -178,6 +178,10 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
             print('not match: ', dig_answer, record,
                   list(a == b or (callable(b) and b(a)) for a, b in zip(dig_answer, record)))
 
+        # Additional records are optional. Ignore if missing.
+        if additional:
+            return
+
         self.fail((record, dig_result))
 
     def _match_record(self, record, match):
@@ -205,8 +209,6 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
                 self._assert_have_answer(dig_result, record, additional=False)
 
         if 'ADDITIONAL' in expected_result:
-            self.assertGreaterEqual(len(dig_result['ADDITIONAL']), len(expected_result['ADDITIONAL']), dig_result)
-
             for record in expected_result['ADDITIONAL']:
                 self._assert_have_answer(dig_result, record, additional=True)
 

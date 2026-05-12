@@ -31,8 +31,8 @@
  *   This file includes definitions for Crypto Internal Trusted Storage (ITS) APIs.
  */
 
-#ifndef STORAGE_HPP_
-#define STORAGE_HPP_
+#ifndef OT_CORE_CRYPTO_STORAGE_HPP_
+#define OT_CORE_CRYPTO_STORAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -44,6 +44,7 @@
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -57,10 +58,11 @@ namespace Storage {
  */
 enum KeyType : uint8_t
 {
-    kKeyTypeRaw   = OT_CRYPTO_KEY_TYPE_RAW,   ///< Key Type: Raw Data.
-    kKeyTypeAes   = OT_CRYPTO_KEY_TYPE_AES,   ///< Key Type: AES.
-    kKeyTypeHmac  = OT_CRYPTO_KEY_TYPE_HMAC,  ///< Key Type: HMAC.
-    kKeyTypeEcdsa = OT_CRYPTO_KEY_TYPE_ECDSA, ///< Key Type: ECDSA.
+    kKeyTypeRaw    = OT_CRYPTO_KEY_TYPE_RAW,    ///< Key Type: Raw Data.
+    kKeyTypeAes    = OT_CRYPTO_KEY_TYPE_AES,    ///< Key Type: AES.
+    kKeyTypeHmac   = OT_CRYPTO_KEY_TYPE_HMAC,   ///< Key Type: HMAC.
+    kKeyTypeEcdsa  = OT_CRYPTO_KEY_TYPE_ECDSA,  ///< Key Type: ECDSA.
+    kKeyTypeDerive = OT_CRYPTO_KEY_TYPE_DERIVE, ///< Key Type: Derive.
 };
 
 /**
@@ -72,6 +74,7 @@ enum KeyAlgorithm : uint8_t
     kKeyAlgorithmAesEcb     = OT_CRYPTO_KEY_ALG_AES_ECB,      ///< Key Algorithm: AES ECB.
     kKeyAlgorithmHmacSha256 = OT_CRYPTO_KEY_ALG_HMAC_SHA_256, ///< Key Algorithm: HMAC SHA-256.
     kKeyAlgorithmEcdsa      = OT_CRYPTO_KEY_ALG_ECDSA,        ///< Key Algorithm: ECDSA.
+    kKeyAlgorithmHkdfSha256 = OT_CRYPTO_KEY_ALG_HKDF_SHA256,  ///< Key Algorithm: HKDF SHA-256.
 };
 
 constexpr uint8_t kUsageNone       = OT_CRYPTO_KEY_USAGE_NONE;        ///< Key Usage: Key Usage is empty.
@@ -80,6 +83,7 @@ constexpr uint8_t kUsageEncrypt    = OT_CRYPTO_KEY_USAGE_ENCRYPT;     ///< Key U
 constexpr uint8_t kUsageDecrypt    = OT_CRYPTO_KEY_USAGE_DECRYPT;     ///< Key Usage: AES ECB.
 constexpr uint8_t kUsageSignHash   = OT_CRYPTO_KEY_USAGE_SIGN_HASH;   ///< Key Usage: Sign Hash.
 constexpr uint8_t kUsageVerifyHash = OT_CRYPTO_KEY_USAGE_VERIFY_HASH; ///< Key Usage: Verify Hash.
+constexpr uint8_t kUsageDerive     = OT_CRYPTO_KEY_USAGE_DERIVE;      ///< Key Usage: Derive.
 
 /**
  * Defines the key storage types.
@@ -261,6 +265,60 @@ inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 /**
+ * Represents a crypto context.
+ */
+class Context : public otCryptoContext
+{
+public:
+    /**
+     * Gets the pointer to the context buffer.
+     *
+     * @returns A pointer to the context buffer.
+     */
+    void *GetContext(void) { return mContext; }
+
+    /**
+     * Gets the size of the context buffer.
+     *
+     * @returns The size of the context buffer in bytes.
+     */
+    uint16_t GetSize(void) const { return mContextSize; }
+
+    /**
+     * Sets the context buffer.
+     *
+     * @param[in] aContext A pointer to the context buffer.
+     * @param[in] aSize    The size of the context buffer in bytes.
+     */
+    void SetContext(void *aContext, uint16_t aSize) { mContext = aContext, mContextSize = aSize; }
+};
+
+/**
+ * Represents a crypto context with a locally allocated buffer.
+ *
+ * @tparam kContextSize The size of the context buffer in bytes.
+ */
+template <uint16_t kContextSize> class ContextWith : public Context
+{
+public:
+    /**
+     * Initializes the context and the locally allocated buffer.
+     */
+    ContextWith(void)
+    {
+        ClearAllBytes(*this);
+#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+        SetContext(mStorage, kContextSize);
+#endif
+    }
+
+private:
+#if !OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+    uint64_t mStorage[DivideAndRoundUp<uint16_t>(kContextSize, sizeof(uint64_t))];
+#endif
+};
+
+/**
  * Represents a crypto key.
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
@@ -390,8 +448,9 @@ private:
 
 } // namespace Crypto
 
+DefineCoreType(otCryptoContext, Crypto::Context);
 DefineCoreType(otCryptoKey, Crypto::Key);
 
 } // namespace ot
 
-#endif // STORAGE_HPP_
+#endif // OT_CORE_CRYPTO_STORAGE_HPP_

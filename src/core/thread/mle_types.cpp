@@ -34,7 +34,9 @@
 #include "mle_types.hpp"
 
 #include "common/array.hpp"
+#include "common/bit_utils.hpp"
 #include "common/code_utils.hpp"
+#include "common/enum_to_string.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "utils/static_counter.hpp"
@@ -143,18 +145,25 @@ uint8_t DeviceProperties::CalculateLeaderWeight(void) const
 #endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
-// RouterIdSet
+// RouterIdMask
 
-uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
+uint8_t RouterIdMask::DetermineAllocatedCount(void) const
 {
     uint8_t count = 0;
 
-    for (uint8_t byte : mRouterIdSet)
+    for (uint8_t byte : mMask)
     {
         count += CountBitsInMask(byte);
     }
 
     return count;
+}
+
+Error RouterIdMask::AppendMaskTo(Message &aMessage) const { return aMessage.AppendBytes(mMask, kMaskSize); }
+
+Error RouterIdMask::ReadMaskFrom(const Message &aMessage, const OffsetRange &aOffsetRange)
+{
+    return aMessage.Read(aOffsetRange, mMask, kMaskSize);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -189,28 +198,40 @@ bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// Connectivity
+
+void Connectivity::IncrementNumForLinkQuality(uint8_t aLinkQuality)
+{
+    switch (aLinkQuality)
+    {
+    case kLinkQuality1:
+        mLinkQuality1++;
+        break;
+    case kLinkQuality2:
+        mLinkQuality2++;
+        break;
+    case kLinkQuality3:
+        mLinkQuality3++;
+        break;
+    default:
+        break;
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 
 const char *RoleToString(DeviceRole aRole)
 {
-    static const char *const kRoleStrings[] = {
-        "disabled", // (0) kRoleDisabled
-        "detached", // (1) kRoleDetached
-        "child",    // (2) kRoleChild
-        "router",   // (3) kRoleRouter
-        "leader",   // (4) kRoleLeader
-    };
+#define RoleMapList(_)           \
+    _(kRoleDisabled, "disabled") \
+    _(kRoleDetached, "detached") \
+    _(kRoleChild, "child")       \
+    _(kRoleRouter, "router")     \
+    _(kRoleLeader, "leader")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kRoleDisabled);
-        ValidateNextEnum(kRoleDetached);
-        ValidateNextEnum(kRoleChild);
-        ValidateNextEnum(kRoleRouter);
-        ValidateNextEnum(kRoleLeader);
-    };
+    DefineEnumStringArray(RoleMapList);
 
-    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
+    return (aRole < GetArrayLength(kStrings)) ? kStrings[aRole] : "invalid";
 }
 
 } // namespace Mle

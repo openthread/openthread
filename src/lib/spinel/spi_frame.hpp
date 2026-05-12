@@ -30,8 +30,8 @@
  *   This file contains definitions of the SPI frame.
  */
 
-#ifndef SPINEL_SPI_FRAME_HPP_
-#define SPINEL_SPI_FRAME_HPP_
+#ifndef OT_LIB_SPINEL_SPI_FRAME_HPP_
+#define OT_LIB_SPINEL_SPI_FRAME_HPP_
 
 #include <stdint.h>
 
@@ -235,4 +235,4 @@ private:
 
 } // namespace Spinel
 } // namespace ot
-#endif // SPINEL_SPI_FRAME_HPP_
+#endif // OT_LIB_SPINEL_SPI_FRAME_HPP_

@@ -46,15 +46,14 @@ NeighborTable::NeighborTable(Instance &aInstance)
 Neighbor *NeighborTable::FindParent(const Neighbor::AddressMatcher &aMatcher)
 {
     Neighbor *neighbor = nullptr;
-    Mle::Mle &mle      = Get<Mle::Mle>();
 
-    if (mle.GetParent().Matches(aMatcher))
+    if (Get<Mle::Mle>().GetParent().Matches(aMatcher))
     {
-        neighbor = &mle.GetParent();
+        neighbor = &Get<Mle::Mle>().GetParent();
     }
-    else if (mle.GetParentCandidate().Matches(aMatcher))
+    else if (Get<Mle::Mle>().GetParentCandidate().Matches(aMatcher))
     {
-        neighbor = &mle.GetParentCandidate();
+        neighbor = &Get<Mle::Mle>().GetParentCandidate();
     }
 
     return neighbor;
@@ -91,6 +90,13 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
         neighbor = FindParent(aMatcher);
     }
 
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = FindPeer(aMatcher);
+    }
+#endif
+
     return neighbor;
 }
 
@@ -114,6 +120,13 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
 {
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
+
+#if OPENTHREAD_CONFIG_P2P_ENABLE
+Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
+{
+    return Get<PeerTable>().FindPeer(aMatcher);
+}
+#endif
 
 #if OPENTHREAD_FTD
 
@@ -184,7 +197,7 @@ exit:
     return neighbor;
 }
 
-Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(Iterator &aIterator, Neighbor::Info &aNeighInfo)
 {
     Error   error = kErrorNone;
     int16_t index;
@@ -217,7 +230,7 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
 
     // Negative iterator value gives the current index into mRouters array
 
-    for (index = -aIterator; index <= Mle::kMaxRouterId; index++)
+    for (index = static_cast<int16_t>(-aIterator); index <= Mle::kMaxRouterId; index++)
     {
         Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
 
@@ -226,12 +239,12 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
             aNeighInfo.SetFrom(*router);
             aNeighInfo.mIsChild = false;
             index++;
-            aIterator = -index;
+            aIterator = static_cast<Iterator>(-index);
             ExitNow();
         }
     }
 
-    aIterator = -index;
+    aIterator = static_cast<Iterator>(-index);
     error     = kErrorNotFound;
 
 exit:
@@ -242,11 +255,11 @@ exit:
 
 #if OPENTHREAD_MTD
 
-Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(Iterator &aIterator, Neighbor::Info &aNeighInfo)
 {
     Error error = kErrorNotFound;
 
-    VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT);
+    VerifyOrExit(aIterator == kIteratorInit);
 
     aIterator++;
     VerifyOrExit(Get<Mle::Mle>().GetParent().IsStateValid());
@@ -289,7 +302,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordNeighborEvent(aEvent, info);
+        Get<HistoryTracker::Local>().RecordNeighborEvent(aEvent, info);
 
         if (mCallback != nullptr)
 #endif
@@ -318,8 +331,11 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 
 #if OPENTHREAD_FTD
     case kRouterAdded:
+        Get<RouterTable>().SignalTableChanged(RouterTable::kEventNeighborAdded);
+        break;
+
     case kRouterRemoved:
-        Get<RouterTable>().SignalTableChanged();
+        Get<RouterTable>().SignalTableChanged(RouterTable::kEventNeighborRemoved);
         break;
 #endif
 

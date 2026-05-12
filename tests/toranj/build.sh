@@ -52,6 +52,7 @@ display_usage()
     echo "Options:"
     echo "        -c/--enable-coverage      Enable code coverage"
     echo "        -k/--enable-plat-key-ref  Enable OT_PLATFORM_KEY_REF"
+    echo "        -l/--log-level            Set specific log level (NONE, CRIT, WARN, NOTE, INFO, DEBG)"
     echo ""
 }
 
@@ -66,6 +67,7 @@ cd ../.. || die "cd failed"
 
 ot_coverage=OFF
 ot_plat_key_ref=OFF
+ot_log_level=INFO
 
 while [ $# -ge 2 ]; do
     case $1 in
@@ -80,6 +82,22 @@ while [ $# -ge 2 ]; do
             ot_plat_key_ref=ON
             shift
             ;;
+
+        -l | --log-level)
+            # Check if the provided log level is valid
+            case "$2" in
+                NONE | CRIT | WARN | NOTE | INFO | DEBG)
+                    ot_log_level="$2"
+                    ;;
+                *)
+                    echo "Invalid log level \"$2\". Choose from NONE, CRIT, WARN, NOTE, INFO, DEBG."
+                    exit 1
+                    ;;
+            esac
+
+            shift 2
+            ;;
+
         "")
             shift
             ;;
@@ -116,6 +134,7 @@ case ${build_config} in
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_BORDER_ROUTING=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
@@ -130,6 +149,7 @@ case ${build_config} in
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_15_4=ON -DOT_TREL=OFF -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON \
             -DOT_BORDER_ROUTING=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -146,6 +166,7 @@ case ${build_config} in
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_15_4=OFF -DOT_TREL=ON -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON \
             -DOT_BORDER_ROUTING=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -162,6 +183,7 @@ case ${build_config} in
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_15_4=ON -DOT_TREL=ON -DOT_OPERATIONAL_DATASET_AUTO_INIT=ON \
             -DOT_BORDER_ROUTING=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -176,6 +198,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -190,6 +213,7 @@ case ${build_config} in
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
             -DOT_15_4=ON -DOT_TREL=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -205,6 +229,7 @@ case ${build_config} in
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
             -DOT_15_4=OFF -DOT_TREL=ON \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -220,6 +245,7 @@ case ${build_config} in
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
             -DOT_15_4=ON -DOT_TREL=ON \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -234,6 +260,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=ON \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
@@ -247,6 +274,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h \
             "${top_srcdir}" || die
@@ -261,6 +289,7 @@ case ${build_config} in
         cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_15_4=ON -DOT_TREL=OFF \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h \
             "${top_srcdir}" || die
@@ -275,6 +304,7 @@ case ${build_config} in
         cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_15_4=OFF -DOT_TREL=ON \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h \
             "${top_srcdir}" || die
@@ -289,6 +319,7 @@ case ${build_config} in
         cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=OFF \
             -DOT_15_4=ON -DOT_TREL=ON \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h \
             "${top_srcdir}" || die
@@ -302,6 +333,7 @@ case ${build_config} in
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
             -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=ON \
+            -DOT_LOG_LEVEL="${ot_log_level}" \
             -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
             -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die

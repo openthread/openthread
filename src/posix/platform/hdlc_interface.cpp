@@ -49,6 +49,7 @@
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
@@ -201,7 +202,11 @@ void HdlcInterface::Read(void)
     {
         Decode(buffer, static_cast<uint16_t>(rval));
     }
-    else if ((rval < 0) && (errno != EAGAIN) && (errno != EINTR))
+    else if (rval == 0)
+    {
+        DieNowWithMessage("RCP device disconnected (EOF)", OT_EXIT_FAILURE);
+    }
+    else if ((errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
     {
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
@@ -304,12 +309,12 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
-    timeout.tv_sec = static_cast<time_t>(aTimeoutUs / OT_US_PER_S);
+    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / OT_US_PER_S);
     timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % OT_US_PER_S);
 
     fd_set read_fds;
     fd_set error_fds;
-    int rval;
+    int    rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&error_fds);
@@ -457,6 +462,26 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
     {
         perror("open uart failed");
         ExitNow();
+    }
+
+    if (aRadioUrl.HasParam("uart-exclusive"))
+    {
+        // Lock the device early to prevent concurrent access
+        if (flock(fd, LOCK_EX | LOCK_NB) == -1)
+        {
+            perror("flock uart failed, device already in use");
+            close(fd);
+            fd = -1;
+            ExitNow();
+        }
+
+#ifdef TIOCEXCL
+        // Set exclusive access mode if supported by the platform
+        if (ioctl(fd, TIOCEXCL) == -1)
+        {
+            LogWarn("ioctl(TIOCEXCL) failed: %s", strerror(errno));
+        }
+#endif
     }
 
     if (isatty(fd))
@@ -660,9 +685,29 @@ exit:
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
 {
-    int fd   = -1;
-    int pid  = -1;
-    int rval = -1;
+    int           fd            = -1;
+    int           pid           = -1;
+    int           rval          = -1;
+    constexpr int kMaxArguments = 32;
+    char         *argv[kMaxArguments + 1];
+    size_t        index = 0;
+
+    argv[index++] = const_cast<char *>(aRadioUrl.GetPath());
+
+    for (const char *arg = nullptr;
+         index < OT_ARRAY_LENGTH(argv) && (arg = aRadioUrl.GetValue("forkpty-arg", arg)) != nullptr;
+         argv[index++] = const_cast<char *>(arg))
+    {
+    }
+
+    if (index < OT_ARRAY_LENGTH(argv))
+    {
+        argv[index] = nullptr;
+    }
+    else
+    {
+        DieNowWithMessage("Too many arguments!", OT_EXIT_INVALID_ARGUMENTS);
+    }
 
     {
         struct termios tios;
@@ -676,27 +721,6 @@ int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
 
     if (0 == pid)
     {
-        constexpr int kMaxArguments = 32;
-        char         *argv[kMaxArguments + 1];
-        size_t        index = 0;
-
-        argv[index++] = const_cast<char *>(aRadioUrl.GetPath());
-
-        for (const char *arg = nullptr;
-             index < OT_ARRAY_LENGTH(argv) && (arg = aRadioUrl.GetValue("forkpty-arg", arg)) != nullptr;
-             argv[index++] = const_cast<char *>(arg))
-        {
-        }
-
-        if (index < OT_ARRAY_LENGTH(argv))
-        {
-            argv[index] = nullptr;
-        }
-        else
-        {
-            DieNowWithMessage("Too many arguments!", OT_EXIT_INVALID_ARGUMENTS);
-        }
-
         VerifyOrDie((rval = execvp(argv[0], argv)) != -1, OT_EXIT_ERROR_ERRNO);
     }
     else

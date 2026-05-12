@@ -41,6 +41,7 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/message.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -162,10 +163,10 @@ typedef struct otIp6Prefix otIp6Prefix;
  */
 enum
 {
-    OT_ADDRESS_ORIGIN_THREAD = 0, ///< Thread assigned address (ALOC, RLOC, MLEID, etc)
-    OT_ADDRESS_ORIGIN_SLAAC  = 1, ///< SLAAC assigned address
-    OT_ADDRESS_ORIGIN_DHCPV6 = 2, ///< DHCPv6 assigned address
-    OT_ADDRESS_ORIGIN_MANUAL = 3, ///< Manually assigned address
+    OT_ADDRESS_ORIGIN_THREAD = 0, ///< Thread assigned (ALOC, RLOC, MLEID, etc.)
+    OT_ADDRESS_ORIGIN_SLAAC  = 1, ///< SLAAC assigned (used in `otNetifAddress` and not in `otNetifMulticastAddress`).
+    OT_ADDRESS_ORIGIN_DHCPV6 = 2, ///< DHCPv6 assigned (used in `otNetifAddress` and not in `otNetifMulticastAddress`).
+    OT_ADDRESS_ORIGIN_MANUAL = 3, ///< Manually assigned address.
 };
 
 /**
@@ -175,7 +176,7 @@ typedef struct otNetifAddress
 {
     otIp6Address mAddress;                ///< The IPv6 unicast address.
     uint8_t      mPrefixLength;           ///< The Prefix length (in bits).
-    uint8_t      mAddressOrigin;          ///< The IPv6 address origin.
+    uint8_t      mAddressOrigin;          ///< The IPv6 address origin (OT_ADDRESS_ORIGIN_* values).
     bool         mPreferred : 1;          ///< TRUE if the address is preferred, FALSE otherwise.
     bool         mValid : 1;              ///< TRUE if the address is valid, FALSE otherwise.
     bool         mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
@@ -188,11 +189,25 @@ typedef struct otNetifAddress
 
 /**
  * Represents an IPv6 network interface multicast address.
+ *
+ * The `mAddressOrigin` field is set to either `OT_ADDRESS_ORIGIN_THREAD` if the multicast address is subscribed by
+ * OpenThread core or `OT_ADDRESS_ORIGIN_MANUAL` if it is subscribed manually using `otIp6SubscribeMulticastAddress()`.
+ *
+ * The multicast addresses subscribed by OpenThread core include addresses such as
+ * - link-local all nodes (`ff02::01`),
+ * - realm-local all nodes (`ff03::01`),
+ * - link-local all routers (`ff02::02`),
+ * - realm-local all routers (`ff03::02`),
+ * - realm-local all MPL forwarders (`ff03::fc`),
+ * - link-local all Thread nodes,
+ * - realm-local all Thread nodes.
  */
 typedef struct otNetifMulticastAddress
 {
-    otIp6Address                          mAddress; ///< The IPv6 multicast address.
-    const struct otNetifMulticastAddress *mNext;    ///< A pointer to the next network interface multicast address.
+    otIp6Address                          mAddress;       ///< The IPv6 multicast address.
+    const struct otNetifMulticastAddress *mNext;          ///< A pointer to the next multicast address.
+    uint8_t                               mAddressOrigin; ///< The multicast address origin.
+    uint8_t                               mData;          ///< Opaque data used by OpenThread core.
 } otNetifMulticastAddress;
 
 /**
@@ -250,16 +265,58 @@ enum
 };
 
 /**
+ * Initializes the IPv6 interface and its external address pools.
+ *
+ * Requires `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE`.
+ *
+ * It provides the memory buffers for the external unicast and multicast address pools and must be called before
+ * enabling the IPv6 interface.
+ *
+ * The provided memory buffers MUST persist and remain valid as long as the OpenThread instance is initialized.
+ * OpenThread will use these provided buffers to manage the pools of externally added unicast and multicast
+ * addresses (i.e., those added via `otIp6AddUnicastAddress()` and `otIp6SubscribeMulticastAddress()`).
+ *
+ * This function can only be called once. Subsequent calls will return `OT_ERROR_ALREADY`.
+ *
+ * The `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` feature and this function allow the external unicast/multicast
+ * address pools to be configured at run-time after OpenThread instance initialization, rather than build-time.
+ * When this feature is disabled, the build-time configs `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS` and
+ * `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS` specify the pool sizes used by the OpenThread stack.
+ *
+ * This feature allows the OpenThread stack to be compiled as a library without specifying the address pool sizes.
+ * It delegates the configuration of the pools to the next layer, allowing the OpenThread stack to be integrated into
+ * various projects without requiring a new OpenThread stack configuration to be built.
+ *
+ * @param[in] aInstance               A pointer to an OpenThread instance.
+ * @param[in] aUnicastAddrPool        A pointer to an array of `otNetifAddress`.
+ * @param[in] aUnicastAddrPoolSize    The number of entries in @p aUnicastAddrPool.
+ * @param[in] aMulticastAddrPool      A pointer to an array of `otNetifMulticastAddress`.
+ * @param[in] aMulticastAddrPoolSize  The number of entries in @p aMulticastAddrPool.
+ *
+ * @retval OT_ERROR_NONE     Successfully initialized the IPv6 interface.
+ * @retval OT_ERROR_ALREADY  The IPv6 interface is already initialized.
+ */
+otError otIp6Init(otInstance              *aInstance,
+                  otNetifAddress          *aUnicastAddrPool,
+                  uint16_t                 aUnicastAddrPoolSize,
+                  otNetifMulticastAddress *aMulticastAddrPool,
+                  uint16_t                 aMulticastAddrPoolSize);
+
+/**
  * Brings the IPv6 interface up or down.
  *
  * Call this to enable or disable IPv6 communication.
+ *
+ * When `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE` is enabled, `otIp6Init()` MUST be called prior to calling
+ * this function. If it is not, this function will return `OT_ERROR_INVALID_STATE`.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  TRUE to enable IPv6, FALSE otherwise.
  *
  * @retval OT_ERROR_NONE            Successfully brought the IPv6 interface up/down.
  * @retval OT_ERROR_INVALID_STATE   IPv6 interface is not available since device is operating in raw-link mode
- *                                  (applicable only when `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` feature is enabled).
+ *                                  (applicable only when `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` feature is enabled),
+ *                                  or not initialized under `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE`.
  */
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
 
@@ -277,7 +334,8 @@ bool otIp6IsEnabled(otInstance *aInstance);
  * Adds a Network Interface Address to the Thread interface.
  *
  * The passed-in instance @p aAddress is copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added unicast addresses. See `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS`.
+ * supports a fixed number of externally added unicast addresses. See `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS`
+ * and `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE`.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to a Network Interface Address.
@@ -324,7 +382,9 @@ bool otIp6HasUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
  * Subscribes the Thread interface to a Network Interface Multicast Address.
  *
  * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added multicast addresses. See `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS`.
+ * supports a fixed number of externally added multicast addresses. See `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS`
+ * and `OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE`.
+ *
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
@@ -546,6 +606,29 @@ void otIp6RemoveAllUnsecurePorts(otInstance *aInstance);
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries);
 
 /**
+ * Sets whether to allow link-local unsecure IPv6 datagrams when the Thread role is disabled.
+ *
+ * Available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled. This is intended for testing. By default,
+ * this is disabled (i.e., unsecure traffic is always dropped regardless of the device's role).
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aAllow     TRUE to allow, FALSE otherwise.
+ */
+void otIp6SetAllowUnsecureWhenDisabled(otInstance *aInstance, bool aAllow);
+
+/**
+ * Indicates whether allowing link-local unsecure IPv6 datagrams when the Thread role is disabled is enabled.
+ *
+ * Available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   Does allow unsecure IPv6 datagrams when the Thread role is disabled.
+ * @retval FALSE  Does not allow unsecure IPv6 datagrams when the Thread role is disabled.
+ */
+bool otIp6IsUnsecureAllowedWhenDisabled(otInstance *aInstance);
+
+/**
  * Test if two IPv6 addresses are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv6 address to compare.
@@ -555,6 +638,33 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
  * @retval FALSE  The two IPv6 addresses are not the same.
  */
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
+
+/**
+ * Test whether or not the IPv6 address is a link-local unicast address.
+ *
+ * @param[in]  aAddress   A pointer to the IPv6 address to test.
+ *
+ * @retval TRUE   If the IPv6 address is a link-local unicast address.
+ * @retval FALSE  If the IPv6 address is not a link-local unicast address.
+ */
+bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress);
+
+/**
+ * Forms a link-local unicast IPv6 address from the Interface Identifier generated from the given
+ * MAC Extended Address with the universal/local bit inverted.
+ *
+ * @param[in]  aExtAddress  A pointer to the MAC Extended Address (used to generate the IID).
+ * @param[out] aAddress     A pointer to output the IPv6 link-local unicast address.
+ */
+void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress);
+
+/**
+ * Extracts the MAC Extended Address from the Interface Identifier of the given IPv6 address.
+ *
+ * @param[in]  aAddress     A pointer to the IPv6 address.
+ * @param[out] aExtAddress  A pointer to output the MAC Extended Address (generated from the IID).
+ */
+void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress);
 
 /**
  * Test if two IPv6 prefixes are the same.

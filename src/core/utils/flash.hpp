@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FLASH_HPP_
-#define FLASH_HPP_
+#ifndef OT_CORE_UTILS_FLASH_HPP_
+#define OT_CORE_UTILS_FLASH_HPP_
 
 #include "openthread-core-config.h"
 
@@ -223,4 +223,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
-#endif // FLASH_HPP_
+#endif // OT_CORE_UTILS_FLASH_HPP_

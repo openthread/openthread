@@ -31,8 +31,8 @@
  *   This file includes functions for debugging.
  */
 
-#ifndef DEBUG_HPP_
-#define DEBUG_HPP_
+#ifndef OT_CORE_COMMON_DEBUG_HPP_
+#define OT_CORE_COMMON_DEBUG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -55,7 +55,10 @@
 #define OT_ASSERT(cond)                            \
     do                                             \
     {                                              \
-        if (!(cond))                               \
+        if (cond)                                  \
+        {                                          \
+        }                                          \
+        else                                       \
         {                                          \
             otPlatAssertFail(FILE_NAME, __LINE__); \
             while (1)                              \
@@ -66,6 +69,11 @@
 
 #elif defined(__APPLE__) || defined(__linux__)
 
+#ifdef NDEBUG
+#error \
+    "OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT is not defined, OT_ASSERT requires assert() to work, but NDEBUG is defined!"
+#endif
+
 #include <assert.h>
 
 #define OT_ASSERT(cond) assert(cond)
@@ -75,7 +83,10 @@
 #define OT_ASSERT(cond) \
     do                  \
     {                   \
-        if (!(cond))    \
+        if (cond)       \
+        {               \
+        }               \
+        else            \
         {               \
             while (1)   \
             {           \
@@ -120,4 +131,4 @@
 #define AssertPointerIsNotNull(aPointer)
 #endif
 
-#endif // DEBUG_HPP_
+#endif // OT_CORE_COMMON_DEBUG_HPP_

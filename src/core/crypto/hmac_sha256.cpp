@@ -39,13 +39,7 @@
 namespace ot {
 namespace Crypto {
 
-HmacSha256::HmacSha256(void)
-{
-    mContext.mContext     = mContextStorage;
-    mContext.mContextSize = sizeof(mContextStorage);
-
-    SuccessOrAssert(otPlatCryptoHmacSha256Init(&mContext));
-}
+HmacSha256::HmacSha256(void) { SuccessOrAssert(otPlatCryptoHmacSha256Init(&mContext)); }
 
 HmacSha256::~HmacSha256(void) { SuccessOrAssert(otPlatCryptoHmacSha256Deinit(&mContext)); }
 

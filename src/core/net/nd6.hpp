@@ -33,8 +33,8 @@
  * See RFC 4861 (https://tools.ietf.org/html/rfc4861) and RFC 4191 (https://tools.ietf.org/html/rfc4191).
  */
 
-#ifndef ND6_HPP_
-#define ND6_HPP_
+#ifndef OT_CORE_NET_ND6_HPP_
+#define OT_CORE_NET_ND6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -84,6 +84,7 @@ public:
         kTypeRouteInfo          = 24, ///< Route Information Option.
         kTypeRecursiveDnsServer = 25, ///< Recursive DNS Server (RDNSS) Option.
         kTypeRaFlagsExtension   = 26, ///< RA Flags Extension Option.
+        kTypeNat64Prefix        = 38, ///< NAT64 Prefix Option (aka PREF64 Option).
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -178,10 +179,30 @@ class PrefixInfoOption : public Option, private Clearable<PrefixInfoOption>
 public:
     static constexpr Type kType = kTypePrefixInfo; ///< Prefix Information Option Type.
 
+    static constexpr uint8_t kOnLinkFlag           = 0x80; ///< On-link - L flag.
+    static constexpr uint8_t kAutoConfigFlag       = 0x40; ///< Autonomous address-configuration - A flag.
+    static constexpr uint8_t kDhcp6PdPreferredFlag = 0x10; ///< DHCPv6-PD preferred - P flag.
+
+    typedef uint8_t Flags; ///< Represents the flags as a bitmap.
+
     /**
      * Initializes the Prefix Info option with proper type and length and sets all other fields to zero.
      */
     void Init(void);
+
+    /**
+     * Gets the raw flag bitmap.
+     *
+     * @return The flags bitmap.
+     */
+    Flags GetFlags(void) const { return mFlags; }
+
+    /**
+     * Sets the raw flag bitmap.
+     *
+     * @param[in] aFlags  The flags bitmap.
+     */
+    void SetFlags(Flags aFlags) { mFlags = aFlags; }
 
     /**
      * Indicates whether or not the on-link flag is set.
@@ -189,17 +210,17 @@ public:
      * @retval TRUE  The on-link flag is set.
      * @retval FALSE The on-link flag is not set.
      */
-    bool IsOnLinkFlagSet(void) const { return (mFlags & kOnLinkFlagMask) != 0; }
+    bool IsOnLinkFlagSet(void) const { return (mFlags & kOnLinkFlag) != 0; }
 
     /**
      * Sets the on-link (L) flag.
      */
-    void SetOnLinkFlag(void) { mFlags |= kOnLinkFlagMask; }
+    void SetOnLinkFlag(void) { mFlags |= kOnLinkFlag; }
 
     /**
      * Clears the on-link (L) flag.
      */
-    void ClearOnLinkFlag(void) { mFlags &= ~kOnLinkFlagMask; }
+    void ClearOnLinkFlag(void) { mFlags &= ~kOnLinkFlag; }
 
     /**
      * Indicates whether or not the autonomous address-configuration (A) flag is set.
@@ -207,17 +228,17 @@ public:
      * @retval TRUE  The auto address-config flag is set.
      * @retval FALSE The auto address-config flag is not set.
      */
-    bool IsAutoAddrConfigFlagSet(void) const { return (mFlags & kAutoConfigFlagMask) != 0; }
+    bool IsAutoAddrConfigFlagSet(void) const { return (mFlags & kAutoConfigFlag) != 0; }
 
     /**
      * Sets the autonomous address-configuration (A) flag.
      */
-    void SetAutoAddrConfigFlag(void) { mFlags |= kAutoConfigFlagMask; }
+    void SetAutoAddrConfigFlag(void) { mFlags |= kAutoConfigFlag; }
 
     /**
      * Clears the autonomous address-configuration (A) flag.
      */
-    void ClearAutoAddrConfigFlag(void) { mFlags &= ~kAutoConfigFlagMask; }
+    void ClearAutoAddrConfigFlag(void) { mFlags &= ~kAutoConfigFlag; }
 
     /**
      * Indicates whether or not the DhCPv6-PD Preferred (P) flag is set.
@@ -225,7 +246,7 @@ public:
      * @retval TRUE  The DHCPv6-PD Preferred (P) flag is set.
      * @retval FALSE The DHCPv6-PD Preferred (P) flag is not set.
      */
-    bool IsDhcp6PdPreferredFlagSet(void) const { return (mFlags & kDhcp6PdPreferredFlagMask) != 0; }
+    bool IsDhcp6PdPreferredFlagSet(void) const { return (mFlags & kDhcp6PdPreferredFlag) != 0; }
 
     /**
      * Sets the valid lifetime of the prefix in seconds.
@@ -257,6 +278,20 @@ public:
      * @returns  The preferred lifetime in seconds.
      */
     uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
+
+    /**
+     * Returns the prefix length (in bits).
+     *
+     * @returns The prefix length (in bits).
+     */
+    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
+
+    /**
+     * Sets the prefix length (in bits).
+     *
+     * @param[in] aPrefixLength  The prefix length (in bits).
+     */
+    void SetPrefixLength(uint8_t aPrefixLength) { mPrefixLength = aPrefixLength; }
 
     /**
      * Sets the prefix.
@@ -307,10 +342,6 @@ private:
     //
     //  Reference for P Flag (DHCPv6-PD preferred flag):
     //  https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-6man-pio-pflag.xml
-
-    static constexpr uint8_t kOnLinkFlagMask           = 0x80; // On-link - L flag.
-    static constexpr uint8_t kAutoConfigFlagMask       = 0x40; // Autonomous address-configuration - A flag.
-    static constexpr uint8_t kDhcp6PdPreferredFlagMask = 0x10; // DHCPv6-PD preferred - P flag.
 
     uint8_t  mPrefixLength;      // The prefix length in bits.
     uint8_t  mFlags;             // The flags field.
@@ -490,6 +521,119 @@ private:
 static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
 
 /**
+ * Represents the NAT64 Prefix Option (aka PREF64 Option).
+ *
+ * See section 4 of RFC 8781 for definition of this option [https://tools.ietf.org/html/rfc8781#section-4]
+ */
+OT_TOOL_PACKED_BEGIN
+class Nat64PrefixOption : public Option, private Clearable<Nat64PrefixOption>
+{
+    friend class Clearable<Nat64PrefixOption>;
+
+public:
+    static constexpr Type kType = kTypeNat64Prefix; ///< NAT64 Prefix Option Type.
+
+    /**
+     * Initializes the NAT64 Prefix option with proper type and length and sets all other fields to zero.
+     */
+    void Init(void);
+
+    /**
+     * Sets the NAT64 prefix lifetime.
+     *
+     * @param[in] aLifetime   The prefix lifetime in seconds.
+     */
+    void SetLifetime(uint32_t aLifetime);
+
+    /**
+     * Returns the NAT64 prefix lifetime in seconds.
+     *
+     * The NAT64 prefix lifetime is encoded by scaled lifetime in units of 8 seconds.
+     *
+     * @returns The prefix lifetime in seconds.
+     */
+    uint32_t GetLifetime(void) const
+    {
+        return (BigEndian::HostSwap16(mPrefixAttr) >> kScaledLifetimeOffset) * kLifetimeScalingUnit;
+    }
+
+    /**
+     * Sets the prefix.
+     *
+     * @param[in]  aPrefix  The prefix contained in this option.
+     *
+     * @retval kErrorNone         Successfully set the prefix.
+     * @retval kErrorInvalidArgs  The prefix length in @p aPrefix is not a valid NAT64 prefix length (must be one of
+     *                            32, 40, 48, 56, 64, or 96).
+     */
+    Error SetPrefix(const Prefix &aPrefix);
+
+    /**
+     * Gets the prefix in this option.
+     *
+     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
+     *
+     * @retval kErrorNone   Successfully retrieved the prefix.
+     * @retval kErrorParse  The Prefix Length Code is not valid.
+     */
+    Error GetPrefix(Prefix &aPrefix) const;
+
+    /**
+     * Indicates whether or not the option is valid.
+     *
+     * @retval TRUE  The option is valid
+     * @retval FALSE The option is not valid.
+     */
+    bool IsValid(void) const;
+
+    Nat64PrefixOption(void) = delete;
+
+private:
+    // NAT64 Prefix Option
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |    Length     |     Scaled Lifetime     | PLC |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  +                                                               +
+    //  |              Highest 96 bits of the Prefix                    |
+    //  +                                                               +
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    static constexpr uint32_t kLifetimeScalingUnit  = 8;    // Lifetime is scaled in units of 8 seconds.
+    static constexpr uint16_t kScaledLifetimeOffset = 3;    // Scaled Lifetime offset in `mPrefixAttr`.
+    static constexpr uint16_t kPrefixLengthCodeMask = 0x07; // Prefix Length Code mask in `mPrefixAttr`.
+
+    static const uint8_t kPrefixLengths[]; // Map from prefix length code to prefix length in bits.
+
+    /**
+     * Returns the NAT64 prefix length code.
+     *
+     * The prefix length code values 0, 1, 2, 3, 4, and 5 indicate the NAT64 prefix length of 96, 64, 56, 48, 40, and 32
+     * bits, respectively.
+     *
+     * @returns The prefix length code.
+     */
+    uint8_t GetPrefixLengthCode(void) const { return BigEndian::HostSwap16(mPrefixAttr) & kPrefixLengthCodeMask; }
+
+    /**
+     * Sets the NAT64 prefix length code.
+     *
+     * @param[in] aPrefixLengthCode   The prefix length code.
+     */
+    void SetPrefixLengthCode(const uint8_t aPrefixLengthCode);
+
+    uint16_t mPrefixAttr; // The prefix attributes (Scaled Lifetime and Prefix Length Code).
+    uint8_t  mPrefixMsb[12];
+
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(Nat64PrefixOption) == 16, "invalid Nat64PrefixOption structure");
+
+/**
  * Represents the Recursive DNS Server (RDNSS) Option.
  *
  * See section 5.1 of RFC 8106 [https://datatracker.ietf.org/doc/html/rfc8106#section-5.1].
@@ -534,7 +678,7 @@ public:
      *
      * @returns Number of IPv6 addresses.
      */
-    uint8_t GetNumAddresses(void) const { return IsValid() ? (GetLength() - 1) / 2 : 0; }
+    uint16_t GetNumAddresses(void) const { return IsValid() ? (GetLength() - 1) / 2 : 0; }
 
     /**
      * Returns a pointer to array of IPv6 addresses of DNS server.
@@ -563,7 +707,7 @@ public:
      *
      * @returns The IPv6 address at @p aIndex.
      */
-    const Address &GetAddressAt(uint8_t aIndex) const { return GetAddresses()[aIndex]; }
+    const Address &GetAddressAt(uint16_t aIndex) const { return GetAddresses()[aIndex]; }
 
     /**
      * Calculates the option length for a given number of IPv6 addresses.
@@ -898,17 +1042,18 @@ public:
         /**
          * Appends a Prefix Info Option to the RA message.
          *
-         * The appended Prefix Info Option will have both on-link (L) and autonomous address-configuration (A) flags
-         * set.
-         *
          * @param[in] aPrefix             The prefix.
          * @param[in] aValidLifetime      The valid lifetime in seconds.
          * @param[in] aPreferredLifetime  The preferred lifetime in seconds.
+         * @param[in] aFlags              The PIO flags to use.
          *
          * @retval kErrorNone    Option is appended successfully.
          * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
          */
-        Error AppendPrefixInfoOption(const Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
+        Error AppendPrefixInfoOption(const Prefix           &aPrefix,
+                                     uint32_t                aValidLifetime,
+                                     uint32_t                aPreferredLifetime,
+                                     PrefixInfoOption::Flags aFlags);
 
         /**
          * Appends a Route Info Option to the RA message.
@@ -923,7 +1068,25 @@ public:
         Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
 
         /**
+         * Appends a NAT64 Prefix Option to the RA message.
+         *
+         * @note This is intended for testing only. An OTBR should not advertise a NAT64 prefix option; it should only
+         * process received ones.
+         *
+         * @param[in] aPrefix         The prefix.
+         * @param[in] aLifetime       The lifetime in seconds.
+         *
+         * @retval kErrorNone         Option is appended successfully.
+         * @retval kErrorInvalidArgs  Unsupported length for NAT64 prefix.
+         * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
+         */
+        Error AppendNat64PrefixOption(const Prefix &aPrefix, uint32_t aLifetime);
+
+        /**
          * Append a Recursive DNS Server Option to the RA message.
+         *
+         * @note This is intended for testing only. An OTBR should not advertise an RDNSS option; it should only
+         * process received ones.
          *
          * @param[in] aAddresses     A pointer to an array of IPv6 addresses.
          * @param[in] aNumAddresses  Number of addresses in @p aAddresses array.
@@ -1141,4 +1304,4 @@ static_assert(sizeof(NeighborAdvertMessage) == 24, "Invalid NeighborAdvertMessag
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // ND6_HPP_
+#endif // OT_CORE_NET_ND6_HPP_

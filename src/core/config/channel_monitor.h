@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Channel Monitor.
  */
 
-#ifndef CONFIG_CHANNEL_MONITOR_H_
-#define CONFIG_CHANNEL_MONITOR_H_
+#ifndef OT_CORE_CONFIG_CHANNEL_MONITOR_H_
+#define OT_CORE_CONFIG_CHANNEL_MONITOR_H_
 
 /**
  * @addtogroup config-channel-monitor
@@ -114,4 +114,4 @@
  * @}
  */
 
-#endif // CONFIG_CHANNEL_MONITOR_H_
+#endif // OT_CORE_CONFIG_CHANNEL_MONITOR_H_

@@ -164,6 +164,8 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2_service = self.check_meshcop_service(br2, host)
         self.assertNotEqual(br1_service['host'], br2_service['host'])
 
+        br1.disable_border_agent()
+        self.simulator.go(5)
         br1.stop_otbr_service()
         self.simulator.go(5)
         br2.enable_backbone_router()
@@ -171,10 +173,14 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 1)
         br1.start_otbr_service()
         self.simulator.go(10)
+        br1.enable_border_agent()
+        self.simulator.go(5)
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
         self.check_meshcop_service(br1, host)
         self.check_meshcop_service(br2, host)
 
+        br1.disable_border_agent()
+        self.simulator.go(5)
         br1.factory_reset()
 
         dataset = {

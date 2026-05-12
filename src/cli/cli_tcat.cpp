@@ -28,46 +28,74 @@
 
 #include "openthread-core-config.h"
 
-#include "cli/cli_utils.hpp"
-
 #include "cli/cli_tcat.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/code_utils.hpp"
-#include "common/error.hpp"
+#include "common/debug.hpp"
+#include "common/string.hpp"
 
 #include <openthread/ble_secure.h>
-
-#include <mbedtls/oid.h>
 #include <openthread/error.h>
+#include <openthread/netdiag.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
 
+#define CERT_SET_COUNT 2
+#define CERT_MAX_SIZE 1024
+#define KEY_MAX_SIZE 512
+
 // DeviceCert1 default identity for TCAT certification testing.
+// DeviceCert2 extra example.
 // WARNING: storage of private keys in code or program memory MUST NOT be used in production.
 // The below code is for testing purposes only. For production, secure key storage must be
 // used to store private keys.
-#define OT_CLI_TCAT_X509_CERT                                            \
-    "-----BEGIN CERTIFICATE-----\n"                                      \
-    "MIIB6TCCAZCgAwIBAgICNekwCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk\n" \
-    "IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ\n" \
-    "bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT\n" \
-    "MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU\n" \
-    "Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDExFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAx\n" \
-    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE11h/4vKZXVXv+1GDZo066spItloT\n" \
-    "dpCi0bux0jvpQSHLdQBIc+40zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdqNLMEkw\n" \
-    "HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC\n" \
-    "AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIHWu+Rd1\n" \
-    "VRlzrD8KbuyJcJFTXh2sQ9UIrFIA7+4e/GVcAiAVBdGqTxbt3TGkBBllpafAUB2/\n" \
-    "s0GJj7E33oblqy5eHQ==\n"                                             \
-    "-----END CERTIFICATE-----\n"
+static const char *const OT_CLI_TCAT_X509_CERT[CERT_SET_COUNT] = {R"(
+-----BEGIN CERTIFICATE-----
+MIIB6TCCAZCgAwIBAgICNekwCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk
+IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ
+bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT
+MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU
+Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDExFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAx
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE11h/4vKZXVXv+1GDZo066spItloT
+dpCi0bux0jvpQSHLdQBIc+40zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdqNLMEkw
+HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC
+AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIHWu+Rd1
+VRlzrD8KbuyJcJFTXh2sQ9UIrFIA7+4e/GVcAiAVBdGqTxbt3TGkBBllpafAUB2/
+s0GJj7E33oblqy5eHQ==
+-----END CERTIFICATE-----
+)",
+                                                                  R"(
+-----BEGIN CERTIFICATE-----
+MIIB6TCCAZCgAwIBAgICNeowCgYIKoZIzj0EAwIwcTEmMCQGA1UEAwwdVGhyZWFk
+IENlcnRpZmljYXRpb24gRGV2aWNlQ0ExGTAXBgNVBAoMEFRocmVhZCBHcm91cCBJ
+bmMxEjAQBgNVBAcMCVNhbiBSYW1vbjELMAkGA1UECAwCQ0ExCzAJBgNVBAYTAlVT
+MCAXDTI0MDUwNzA5Mzk0NVoYDzI5OTkxMjMxMDkzOTQ1WjA8MSEwHwYDVQQDDBhU
+Q0FUIEV4YW1wbGUgRGV2aWNlQ2VydDIxFzAVBgNVBAUTDjQ3MjMtOTgzMy0wMDAy
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE30GMkqSBj3049NtK6G/MRTqcDxpm
+i1LxTpSxFIB7P9HVoVM7Cd9X6bBUp5FrSZI+KHtX2HKtXzmzsdJ3gxAmi6NLMEkw
+HwYDVR0jBBgwFoAUX6sbKWiIodS0MaiGYefnZlnt+BkwEAYJKwYBBAGC3yoCBAMC
+AQUwFAYJKwYBBAGC3yoDBAcEBSABAQEBMAoGCCqGSM49BAMCA0cAMEQCIAbZzVbC
+toNYgSWSgxRGzLRo1YJANqRC7yRtJNKTdQ1ZAiAlgGxEW2lkxCAGPUK1m9Wbb4kl
+7AhBhYlK6vZz/omTsQ==
+-----END CERTIFICATE-----
+)"};
 
-#define OT_CLI_TCAT_PRIV_KEY                                             \
-    "-----BEGIN EC PRIVATE KEY-----\n"                                   \
-    "MHcCAQEEIIqKM1QTlNaquV74W6Viz/ggXoLqlPOP6LagSyaFO3oUoAoGCCqGSM49\n" \
-    "AwEHoUQDQgAE11h/4vKZXVXv+1GDZo066spItloTdpCi0bux0jvpQSHLdQBIc+40\n" \
-    "zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdg==\n"                             \
-    "-----END EC PRIVATE KEY-----\n"
+static const char *const OT_CLI_TCAT_PRIV_KEY[CERT_SET_COUNT] = {R"(
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIIqKM1QTlNaquV74W6Viz/ggXoLqlPOP6LagSyaFO3oUoAoGCCqGSM49
+AwEHoUQDQgAE11h/4vKZXVXv+1GDZo066spItloTdpCi0bux0jvpQSHLdQBIc+40
+zVCxMDRUvbX//vJKGsSJKOVUlCojQ2wIdg==
+-----END EC PRIVATE KEY----- 
+)",
+                                                                 R"(
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIP7Al8tJA3QgwD3yIuOSEmJkT3GlWmcHQ59JfhZOjSdUoAoGCCqGSM49
+AwEHoUQDQgAE30GMkqSBj3049NtK6G/MRTqcDxpmi1LxTpSxFIB7P9HVoVM7Cd9X
+6bBUp5FrSZI+KHtX2HKtXzmzsdJ3gxAmiw==
+-----END EC PRIVATE KEY----- 
+)"};
 
 #define OT_CLI_TCAT_TRUSTED_ROOT_CERTIFICATE                             \
     "-----BEGIN CERTIFICATE-----\n"                                      \
@@ -86,15 +114,15 @@
     "-----END CERTIFICATE-----\n"
 
 namespace ot {
-
 namespace Cli {
 
 otTcatAdvertisedDeviceId sAdvertisedDeviceIds[OT_TCAT_DEVICE_ID_MAX];
 otTcatGeneralDeviceId    sGeneralDeviceId;
 
-const char kPskdVendor[]    = "JJJJJJ";
-const char kInstallVendor[] = "InstallCode";
-const char kUrl[]           = "dummy_url";
+const char kPskdVendor[]              = "JJJJJJ";
+const char kInstallVendor[]           = "InstallCode";
+const char kApplicationServiceName1[] = "echo";
+const char kApplicationServiceName2[] = "discard";
 
 static bool IsDeviceIdSet(void)
 {
@@ -114,28 +142,24 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
                                    const otMessage          *aMessage,
                                    int32_t                   aOffset,
                                    otTcatApplicationProtocol aTcatApplicationProtocol,
-                                   const char               *aServiceName,
                                    void                     *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aTcatApplicationProtocol);
-    OT_UNUSED_VARIABLE(aServiceName);
 
-    static constexpr int     kTextMaxLen   = 100;
-    static constexpr uint8_t kBufPrefixLen = 5;
+    static constexpr int kTextMaxLen = 100;
 
-    uint16_t nLen;
-    uint8_t  buf[kTextMaxLen];
-
-    nLen =
-        otMessageRead(aMessage, static_cast<uint16_t>(aOffset), buf + kBufPrefixLen, sizeof(buf) - kBufPrefixLen - 1);
-
-    memcpy(buf, "RECV:", kBufPrefixLen);
-
-    buf[nLen + kBufPrefixLen] = 0;
-
-    IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, buf, (uint16_t)strlen((char *)buf)));
-    IgnoreReturnValue(otBleSecureFlush(aInstance));
+    if (aTcatApplicationProtocol == OT_TCAT_APPLICATION_PROTOCOL_1 ||
+        aTcatApplicationProtocol == OT_TCAT_APPLICATION_PROTOCOL_VENDOR)
+    {
+        uint8_t  buf[kTextMaxLen];
+        uint16_t nLen = otMessageRead(aMessage, static_cast<uint16_t>(aOffset), buf, sizeof(buf));
+        IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, OT_TCAT_APPLICATION_PROTOCOL_RESPONSE, buf, nLen));
+    }
+    else if (aTcatApplicationProtocol == OT_TCAT_APPLICATION_PROTOCOL_2)
+    {
+        uint8_t status = OT_TCAT_STATUS_SUCCESS;
+        IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, OT_TCAT_APPLICATION_PROTOCOL_STATUS, &status, 1));
+    }
 }
 
 /**
@@ -231,13 +255,50 @@ exit:
 }
 
 /**
+ * @cli tcat certid
+ * @code
+ * tcat certid 0
+ * Done
+ * @endcode
+ * @cparam tcat certid [@ca{value}]
+ * * The `value` int value of the ID.
+ * @par
+ * Selects a predefined certificate.
+ */
+template <> otError Tcat::Process<Cmd("certid")>(Arg aArgs[])
+{
+    otError error         = OT_ERROR_NONE;
+    uint8_t certCandidate = 0;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%d", mSelectedCert);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint8(certCandidate));
+
+    VerifyOrExit(certCandidate < CERT_SET_COUNT, error = OT_ERROR_INVALID_ARGS);
+
+    mSelectedCert = certCandidate;
+
+exit:
+    return error;
+}
+
+/**
  * @cli tcat devid
  * @code
- * tcat devid ianapen f378aabb
+ * tcat devid f378aabb
+ * Done
+ * @endcode
+ * @code
+ * tcat devid
+ * f378aabb
  * Done
  * @endcode
  * @cparam tcat devid [@ca{value}|clear]
- * * The `value` hexstring value of the ID. `clear` is a special value removing previously set ID.
+ * * The `value` hexstring value of the ID. `clear` is a special value to remove the previously set ID.
  * @par
  * Sets/clears vendor specific device ID.
  */
@@ -249,7 +310,6 @@ template <> otError Tcat::Process<Cmd("devid")>(Arg aArgs[])
     {
         if (sGeneralDeviceId.mDeviceIdLen != 0)
         {
-            OutputLine("TCAT DeviceId:");
             OutputBytesLine(sGeneralDeviceId.mDeviceId, sGeneralDeviceId.mDeviceIdLen);
         }
         ExitNow();
@@ -277,7 +337,7 @@ exit:
  * Done
  * @endcode
  * @par
- * Starts TCAT operation.
+ * Starts TCAT agent and enables TCAT operation.
  * @sa otBleSecureSetCertificate
  * @sa otBleSecureSetCaCertificateChain
  * @sa otBleSecureSetSslAuthMode
@@ -287,14 +347,17 @@ exit:
  */
 template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
-
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
     ClearAllBytes(mVendorInfo);
-    mVendorInfo.mPskdString      = kPskdVendor;
-    mVendorInfo.mProvisioningUrl = kUrl;
-    mVendorInfo.mInstallCode     = kInstallVendor;
+    mVendorInfo.mPskdString                 = kPskdVendor;
+    mVendorInfo.mProvisioningUrl            = otThreadGetVendorAppUrl(GetInstancePtr());
+    mVendorInfo.mInstallCode                = kInstallVendor;
+    mVendorInfo.mApplicationServiceName[0]  = kApplicationServiceName1;
+    mVendorInfo.mApplicationServiceName[1]  = kApplicationServiceName2;
+    mVendorInfo.mApplicationServiceIsTcp[1] = true;
 
     if (IsDeviceIdSet())
     {
@@ -306,9 +369,10 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
         mVendorInfo.mGeneralDeviceId = &sGeneralDeviceId;
     }
 
-    otBleSecureSetCertificate(GetInstancePtr(), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_X509_CERT),
-                              sizeof(OT_CLI_TCAT_X509_CERT), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_PRIV_KEY),
-                              sizeof(OT_CLI_TCAT_PRIV_KEY));
+    otBleSecureSetCertificate(GetInstancePtr(), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_X509_CERT[mSelectedCert]),
+                              StringLength(OT_CLI_TCAT_X509_CERT[mSelectedCert], CERT_MAX_SIZE) + 1,
+                              reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_PRIV_KEY[mSelectedCert]),
+                              StringLength(OT_CLI_TCAT_PRIV_KEY[mSelectedCert], KEY_MAX_SIZE) + 1);
 
     otBleSecureSetCaCertificateChain(GetInstancePtr(),
                                      reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_TRUSTED_ROOT_CERTIFICATE),
@@ -331,38 +395,104 @@ exit:
  * Done
  * @endcode
  * @par
- * Stops TCAT operation.
+ * Stops TCAT agent and stops TCAT operation.
  * @sa otBleSecureStop
  */
 template <> otError Tcat::Process<Cmd("stop")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     otBleSecureStop(GetInstancePtr());
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
+}
+
+/**
+ * @cli tcat standby
+ * @code
+ * tcat standby
+ * Done
+ * @endcode
+ * @par
+ * Sets TCAT operation to standby, keeping the agent enabled.
+ * @sa otBleSecureSetTcatAgentState
+ */
+template <> otError Tcat::Process<Cmd("standby")>(Arg aArgs[])
+{
+    otError error;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    error = otBleSecureSetTcatAgentState(GetInstancePtr(), false, 0, 0);
+
+exit:
+    return error;
+}
+
+/**
+ * @cli tcat active
+ * @code
+ * tcat active
+ * Done
+ * @endcode
+ * @code
+ * tcat active 5000
+ * Done
+ * @endcode
+ * @code
+ * tcat active 5000 10000
+ * Done
+ * @endcode
+ * @cparam tcat active [@ca{delay}] [@ca{duration}]
+ * *   The optional `delay` argument specifies the delay in milliseconds before activation.
+ * *   The optional `duration` argument specifies the duration in milliseconds to remain active.
+ *     A duration of 0 (default) means the TCAT agent remains active indefinitely.
+ * @par
+ * Sets TCAT operation to active.
+ * @sa otBleSecureSetTcatAgentState
+ */
+template <> otError Tcat::Process<Cmd("active")>(Arg aArgs[])
+{
+    otError  error;
+    uint32_t delay    = 0;
+    uint32_t duration = 0;
+
+    if (!aArgs[0].IsEmpty())
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(delay));
+        if (!aArgs[1].IsEmpty())
+        {
+            SuccessOrExit(error = aArgs[1].ParseAsUint32(duration));
+            VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+    error = otBleSecureSetTcatAgentState(GetInstancePtr(), true, delay, duration);
+
+exit:
+    return error;
 }
 
 otError Tcat::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                            \
-    {                                                       \
-        aCommandString, &Tcat::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &Tcat::Process<Cmd(aCommandString)>}
 
-    static constexpr Command kCommands[] = {CmdEntry("advid"), CmdEntry("devid"), CmdEntry("start"), CmdEntry("stop")};
+    static constexpr Command kCommands[] = {CmdEntry("active"), CmdEntry("advid"),   CmdEntry("certid"),
+                                            CmdEntry("devid"),  CmdEntry("standby"), CmdEntry("start"),
+                                            CmdEntry("stop")};
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
 
 #undef CmdEntry
 
-    otError        error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
     if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
     {
         OutputCommandTable(kCommands);
-        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
+        ExitNow(error = OT_ERROR_NONE);
     }
 
     command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);

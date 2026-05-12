@@ -62,6 +62,7 @@ def make_filter_func(func: Union[str, Callable], **vars) -> Callable:
                     'eth': p.eth,
                     'icmpv6': p.icmpv6,
                     'udp': p.udp,
+                    'frame': p,
                     'thread_bl': p.thread_bl,
                     'thread_meshcop': p.thread_meshcop,
                     'Bytes': Bytes,

@@ -38,12 +38,7 @@
 namespace ot {
 namespace Crypto {
 
-AesEcb::AesEcb(void)
-{
-    mContext.mContext     = mContextStorage;
-    mContext.mContextSize = sizeof(mContextStorage);
-    SuccessOrAssert(otPlatCryptoAesInit(&mContext));
-}
+AesEcb::AesEcb(void) { SuccessOrAssert(otPlatCryptoAesInit(&mContext)); }
 
 void AesEcb::SetKey(const Key &aKey) { SuccessOrAssert(otPlatCryptoAesSetKey(&mContext, &aKey)); }
 

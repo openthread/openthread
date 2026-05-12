@@ -203,6 +203,18 @@ verify(len(services) == len(nodes_non_br))
 for host in hosts:
     verify(host['addresses'][0].startswith(br2_local_omr[:-4]))
 
+# Check the history tracker `ailrouters` command
+
+hist_table = br2.cli('history ailrouters')
+verify(len(hist_table) == 10)
+
+hist_list = br2.cli('history ailrouters list')
+verify(len(hist_list) == 6)
+
+verify(hist_list[0].strip().split(' -> ')[1].startswith('event:Changed '))
+verify(hist_list[2].strip().split(' -> ')[1].startswith('event:Changed '))
+verify(hist_list[4].strip().split(' -> ')[1].startswith('event:Added '))
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 

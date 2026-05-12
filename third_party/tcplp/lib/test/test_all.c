@@ -206,10 +206,37 @@ void test_cbuf_2() {
     bmp_test("cbuf_reass_merge (bitmap)", bitmap, 4, "00000000");
 }
 
+void test_cbuf_reass_boundary() {
+    uint8_t buffer[32];
+    uint8_t bitmap[4];
+    struct cbufhead chdr;
+    char data[32];
+    memset(data, 'A', 32);
+
+    cbuf_init(&chdr, buffer, 32);
+    
+    // Set w_index to 10 by writing 10 bytes and then popping them
+    cbuf_write(&chdr, "0123456789", 0, 10, cbuf_copy_into_buffer);
+    cbuf_pop(&chdr, 10);
+    
+    bmp_init(bitmap, 4);
+
+    // Write 32 bytes (full buffer size) out-of-order at offset 0
+    // This should trigger the wrap-around logic safely instead of overflowing
+    cbuf_reass_write(&chdr, 0, data, 0, 32, bitmap, NULL, cbuf_copy_from_buffer);
+    
+    // If it didn't crash, it's already a good sign.
+    // Let's verify we can merge it and see the result.
+    cbuf_reass_merge(&chdr, 32, bitmap);
+    cbuf_test("test_cbuf_reass_boundary", &chdr, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    bmp_test("test_cbuf_reass_boundary (bitmap)", bitmap, 4, "00000000");
+}
+
 int main(int argc, char** argv) {
     test_bmp();
     test_cbuf();
     test_cbuf_2();
+    test_cbuf_reass_boundary();
 
     printf("%" PRIu32 " tests passed (out of %" PRIu32 ")\n", num_tests_passed, num_tests_passed + num_tests_failed);
     if (num_tests_failed != 0) {

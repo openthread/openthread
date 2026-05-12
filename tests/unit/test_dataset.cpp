@@ -259,6 +259,65 @@ void TestDataset(void)
 
     VerifyOrQuit(!dataset2.IsSubsetOf(dataset));
     VerifyOrQuit(!dataset.IsSubsetOf(dataset2));
+
+    // Validate `Equals()`
+
+    SuccessOrQuit(dataset.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+    SuccessOrQuit(dataset2.SetFrom(kTlvBytes, sizeof(kTlvBytes)));
+
+    VerifyOrQuit(dataset.Equals(dataset2));
+    VerifyOrQuit(dataset2.Equals(dataset));
+
+    // Order of TLVs should not matter for `Equals()`
+    ChannelTlvValue channel;
+    channel.SetChannelAndPage(11);
+
+    dataset.Clear();
+    SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+    SuccessOrQuit(dataset.Write<ChannelTlv>(channel));
+
+    dataset2.Clear();
+    SuccessOrQuit(dataset2.Write<ChannelTlv>(channel));
+    SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+
+    VerifyOrQuit(dataset.Equals(dataset2));
+    VerifyOrQuit(dataset2.Equals(dataset));
+
+    // Different TLVs
+
+    dataset.Clear();
+    SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+
+    dataset2.Clear();
+    SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+    SuccessOrQuit(dataset2.Write<ChannelTlv>(channel));
+
+    VerifyOrQuit(!dataset.Equals(dataset2));
+    VerifyOrQuit(!dataset2.Equals(dataset));
+
+    // Validate `Equals()` with unknown TLVs
+
+    {
+        const uint8_t   kUnknownTlvValue[]  = {0x01, 0x02, 0x03, 0x04};
+        const uint8_t   kUnknownTlvValue2[] = {0x01, 0x02, 0x03, 0x05};
+        const Tlv::Type kUnknownTlvType     = static_cast<Tlv::Type>(222);
+
+        dataset.Clear();
+        SuccessOrQuit(dataset.Write<PanIdTlv>(0xface));
+        SuccessOrQuit(dataset.WriteTlv(kUnknownTlvType, kUnknownTlvValue, sizeof(kUnknownTlvValue)));
+
+        dataset2.Clear();
+        SuccessOrQuit(dataset2.WriteTlv(kUnknownTlvType, kUnknownTlvValue, sizeof(kUnknownTlvValue)));
+        SuccessOrQuit(dataset2.Write<PanIdTlv>(0xface));
+
+        VerifyOrQuit(dataset.Equals(dataset2));
+        VerifyOrQuit(dataset2.Equals(dataset));
+
+        // Different values for the same unknown TLV type
+        SuccessOrQuit(dataset2.WriteTlv(kUnknownTlvType, kUnknownTlvValue2, sizeof(kUnknownTlvValue2)));
+        VerifyOrQuit(!dataset.Equals(dataset2));
+        VerifyOrQuit(!dataset2.Equals(dataset));
+    }
 }
 
 } // namespace MeshCoP

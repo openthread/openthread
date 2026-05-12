@@ -30,8 +30,8 @@
  *   This file includes definitions for the multiple frame buffer.
  */
 
-#ifndef SPINEL_MULTI_FRAME_BUFFER_HPP_
-#define SPINEL_MULTI_FRAME_BUFFER_HPP_
+#ifndef OT_LIB_SPINEL_MULTI_FRAME_BUFFER_HPP_
+#define OT_LIB_SPINEL_MULTI_FRAME_BUFFER_HPP_
 
 #include <assert.h>
 #include <stdint.h>
@@ -447,4 +447,4 @@ private:
 
 } // namespace Spinel
 } // namespace ot
-#endif // SPINEL_MULTI_FRAME_BUFFER_HPP_
+#endif // OT_LIB_SPINEL_MULTI_FRAME_BUFFER_HPP_

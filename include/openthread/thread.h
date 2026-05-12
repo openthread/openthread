@@ -303,17 +303,24 @@ otError otThreadDiscover(otInstance              *aInstance,
 bool otThreadIsDiscoverInProgress(otInstance *aInstance);
 
 /**
- * Sets the Thread Joiner Advertisement when discovering Thread network.
+ * Sets the Thread Joiner Advertisement used when discovering a Thread network.
  *
- * Thread Joiner Advertisement is used to allow a Joiner to advertise its own application-specific information
- * (such as Vendor ID, Product ID, Discriminator, etc.) via a newly-proposed Joiner Advertisement TLV,
- * and to make this information available to Commissioners or Commissioner Candidates without human interaction.
+ * Requires `OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE`.
+ *
+ * @note This is an experimental feature and is not part of the Thread specification. OpenThread's implementation is
+ *       partial: it provides the mechanism for a Joiner to include a new Joiner Adv TLV in its emitted Discovery Scan
+ *       Request messages, but does not include the corresponding logic for the receiver of Scan Request to read or
+ *       parse this TLV.
+ *
+ * A Joiner can use this to advertise its own application-specific information (such as Vendor ID, Product ID,
+ * Discriminator, etc.) using a newly proposed Joiner Advertisement TLV (`OT_MESHCOP_TLV_JOINERADVERTISEMENT`).
+ * This TLV is appended as a sub-TLV within the MLE Discovery TLV in an MLE Discovery Scan Request message.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aOui             The Vendor IEEE OUI value that will be included in the Joiner Advertisement. Only the
  *                              least significant 3 bytes will be used, and the most significant byte will be ignored.
  * @param[in]  aAdvData         A pointer to the AdvData that will be included in the Joiner Advertisement.
- * @param[in]  aAdvDataLength   The length of AdvData in bytes.
+ * @param[in]  aAdvDataLength   The length of AdvData in bytes. Must not exceed `OT_JOINER_ADVDATA_MAX_LENGTH`.
  *
  * @retval OT_ERROR_NONE         Successfully set Joiner Advertisement.
  * @retval OT_ERROR_INVALID_ARGS Invalid AdvData.
@@ -990,6 +997,8 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
 
 /**
  * Sets a callback to receive MLE Discovery Request data.
+ *
+ * Requires `OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE`.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Discovery Request message.

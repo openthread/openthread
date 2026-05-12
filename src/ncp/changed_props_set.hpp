@@ -30,8 +30,8 @@
  *   This file contains definitions a spinel interface to the OpenThread stack.
  */
 
-#ifndef CHANGED_PROPS_SET_HPP_
-#define CHANGED_PROPS_SET_HPP_
+#ifndef OT_NCP_CHANGED_PROPS_SET_HPP_
+#define OT_NCP_CHANGED_PROPS_SET_HPP_
 
 #include "openthread-core-config.h"
 
@@ -197,4 +197,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // CHANGED_PROPS_SET_HPP
+#endif // OT_NCP_CHANGED_PROPS_SET_HPP_

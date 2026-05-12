@@ -36,22 +36,33 @@ die()
 cd "$(dirname "$0")" || die "cd failed"
 cd ../.. || die "cd failed"
 
+top_srcdir=$(pwd)
+
 if [ -n "${top_builddir}" ]; then
-    top_srcdir=$(pwd)
     mkdir -p "${top_builddir}"
 else
-    top_srcdir=.
     top_builddir=.
 fi
 
+long_routes=OFF
+
 case $1 in
     trel)
-        trel=ON
         fifteenfour=OFF
+        wasm=OFF
+        ;;
+    wasm)
+        fifteenfour=ON
+        wasm=ON
+        ;;
+    long_routes)
+        fifteenfour=ON
+        wasm=OFF
+        long_routes=ON
         ;;
     *)
-        trel=OFF
         fifteenfour=ON
+        wasm=OFF
         ;;
 esac
 
@@ -59,12 +70,26 @@ echo "==========================================================================
 echo "Building OpenThread Nexus test platform"
 echo "===================================================================================================="
 cd "${top_builddir}" || die "cd failed"
-cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON \
-    -DOT_MULTIPLE_INSTANCE=ON \
-    -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
-    -DOT_15_4=${fifteenfour} -DOT_TREL=${trel} \
-    -DOT_PROJECT_CONFIG=../tests/nexus/openthread-core-nexus-config.h \
-    "${top_srcdir}" || die
+
+CMAKE_ARGS=(
+    -GNinja
+    -DOT_PLATFORM=nexus
+    -DOT_COMPILE_WARNING_AS_ERROR=ON
+    -DOT_THREAD_VERSION=1.4
+    -DOT_APP_CLI=OFF
+    -DOT_APP_NCP=OFF
+    -DOT_APP_RCP=OFF
+    -DOT_15_4="${fifteenfour}"
+    -DOT_MLE_LONG_ROUTES="${long_routes}"
+    -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h"
+)
+
+if [ "${wasm}" = "ON" ]; then
+    emcmake cmake "${CMAKE_ARGS[@]}" "${top_srcdir}" || die
+else
+    cmake "${CMAKE_ARGS[@]}" -DOT_NEXUS_GRPC="${OT_NEXUS_GRPC:-OFF}" "${top_srcdir}" || die
+fi
+
 ninja || die
 
 exit 0

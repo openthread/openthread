@@ -199,7 +199,9 @@ Error SecureSession::Setup(void)
     }
 #endif
 
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
     mbedtls_ssl_conf_rng(&mConf, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#endif
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
     mbedtls_ssl_conf_min_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
     mbedtls_ssl_conf_max_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
@@ -278,7 +280,11 @@ Error SecureSession::Setup(void)
 
         if (mIsServer)
         {
+#if (MBEDTLS_VERSION_NUMBER < 0x04000000)
             rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#else
+            rval = mbedtls_ssl_cookie_setup(&mCookieCtx);
+#endif
             VerifyOrExit(rval == 0);
 
             mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
@@ -301,7 +307,7 @@ Error SecureSession::Setup(void)
         mbedtls_ssl_set_timer_cb(&mSsl, this, HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
     }
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
     mbedtls_ssl_set_export_keys_cb(&mSsl, SecureTransport::HandleMbedtlsExportKeys, &mTransport);
 #endif
 
@@ -611,25 +617,16 @@ void SecureSession::Process(void)
 
 const char *SecureSession::StateToString(State aState)
 {
-    static const char *const kStateStrings[] = {
-        "Disconnected",  // (0) kStateDisconnected
-        "Initializing",  // (1) kStateInitializing
-        "Connecting",    // (2) kStateConnecting
-        "Connected",     // (3) kStateConnected
-        "Disconnecting", // (4) kStateDisconnecting
-    };
+#define StateMapList(_)                   \
+    _(kStateDisconnected, "Disconnected") \
+    _(kStateInitializing, "Initializing") \
+    _(kStateConnecting, "Connecting")     \
+    _(kStateConnected, "Connected")       \
+    _(kStateDisconnecting, "Disconnecting")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateDisconnected);
-        ValidateNextEnum(kStateInitializing);
-        ValidateNextEnum(kStateConnecting);
-        ValidateNextEnum(kStateConnected);
-        ValidateNextEnum(kStateDisconnecting);
-    };
+    DefineEnumStringArray(StateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 #endif
@@ -683,14 +680,41 @@ SecureTransport::SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwo
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 }
 
-Error SecureTransport::Open(Ip6::NetifIdentifier aNetifIdentifier)
+Error SecureTransport::Open(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 {
     Error error;
 
     VerifyOrExit(!mIsOpen, error = kErrorAlready);
 
     SuccessOrExit(error = mSocket.Open(aNetifIdentifier));
-    mIsOpen                      = true;
+
+    error = mSocket.Bind(aPort);
+
+    if (error != kErrorNone)
+    {
+        IgnoreError(mSocket.Close());
+        ExitNow();
+    }
+
+    mIsOpen = true;
+    mTransportCallback.Clear();
+
+    mRemainingConnectionAttempts = mMaxConnectionAttempts;
+
+exit:
+    return error;
+}
+
+Error SecureTransport::Open(TransportCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mIsOpen, error = kErrorAlready);
+    VerifyOrExit(aCallback != nullptr, error = kErrorInvalidArgs);
+
+    mIsOpen = true;
+    mTransportCallback.Set(aCallback, aContext);
+
     mRemainingConnectionAttempts = mMaxConnectionAttempts;
 
 exit:
@@ -740,37 +764,6 @@ exit:
     return;
 }
 
-Error SecureTransport::Bind(uint16_t aPort)
-{
-    Error error;
-
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
-
-    error = mSocket.Bind(aPort);
-
-exit:
-    return error;
-}
-
-Error SecureTransport::Bind(TransportCallback aCallback, void *aContext)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIsOpen, error = kErrorInvalidState);
-    VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
-    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
-
-    VerifyOrExit(mSessions.IsEmpty(), error = kErrorInvalidState);
-
-    mTransportCallback.Set(aCallback, aContext);
-
-exit:
-    return error;
-}
-
 void SecureTransport::Close(void)
 {
     VerifyOrExit(mIsOpen);
@@ -792,10 +785,15 @@ void SecureTransport::Close(void)
 
     RemoveDisconnectedSessions();
 
+    if (UsesSocket())
+    {
+        IgnoreError(mSocket.Close());
+    }
+
+    mTransportCallback.Clear();
+
     mIsOpen    = false;
     mIsClosing = false;
-    mTransportCallback.Clear();
-    IgnoreError(mSocket.Close());
     mTimer.Stop();
 
 exit:
@@ -867,13 +865,13 @@ int SecureTransport::Transmit(const unsigned char    *aBuf,
 
     SuccessOrExit(error = message->AppendBytes(aBuf, static_cast<uint16_t>(aLength)));
 
-    if (mTransportCallback.IsSet())
+    if (UsesSocket())
     {
-        error = mTransportCallback.Invoke(*message, aMessageInfo);
+        error = mSocket.SendTo(*message, aMessageInfo);
     }
     else
     {
-        error = mSocket.SendTo(*message, aMessageInfo);
+        error = mTransportCallback.Invoke(*message, aMessageInfo);
     }
 
 exit:
@@ -898,8 +896,7 @@ exit:
     return rval;
 }
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 void SecureTransport::HandleMbedtlsExportKeys(void                       *aContext,
                                               mbedtls_ssl_key_export_type aType,
                                               const unsigned char        *aMasterSecret,
@@ -924,6 +921,8 @@ void SecureTransport::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     unsigned char        keyBlock[kSecureTransportKeyBlockSize];
     unsigned char        randBytes[2 * kSecureTransportRandomBufferSize];
 
+    mKeylogCallback.InvokeIfSet(aType, aMasterSecret, aMasterSecretLen, aClientRandom, aServerRandom, aTlsPrfType);
+
     VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
     VerifyOrExit(aType == MBEDTLS_SSL_KEY_EXPORT_TLS12_MASTER_SECRET);
 
@@ -946,12 +945,12 @@ exit:
 
 #else
 
-int SecureTransport::HandleMbedtlsExportKeys(void *aContext,
+int SecureTransport::HandleMbedtlsExportKeys(void                *aContext,
                                              const unsigned char *aMasterSecret,
                                              const unsigned char *aKeyBlock,
-                                             size_t aMacLength,
-                                             size_t aKeyLength,
-                                             size_t aIvLength)
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength)
 {
     return static_cast<SecureTransport *>(aContext)->HandleMbedtlsExportKeys(aMasterSecret, aKeyBlock, aMacLength,
                                                                              aKeyLength, aIvLength);
@@ -959,14 +958,14 @@ int SecureTransport::HandleMbedtlsExportKeys(void *aContext,
 
 int SecureTransport::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
                                              const unsigned char *aKeyBlock,
-                                             size_t aMacLength,
-                                             size_t aKeyLength,
-                                             size_t aIvLength)
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength)
 {
     OT_UNUSED_VARIABLE(aMasterSecret);
 
     Crypto::Sha256::Hash kek;
-    Crypto::Sha256 sha256;
+    Crypto::Sha256       sha256;
 
     VerifyOrExit(mCipherSuite == kEcjpakeWithAes128Ccm8);
 
@@ -980,7 +979,7 @@ exit:
     return 0;
 }
 
-#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#endif // OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
 void SecureTransport::HandleUpdateTask(Tasklet &aTasklet)
 {
@@ -1046,7 +1045,7 @@ void SecureTransport::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLin
         break;
     }
 
-    LogAt(logLevel, "[%u] %s", mSocket.GetSockName().mPort, aStr);
+    LogAt(logLevel, "[%u] %s", UsesSocket() ? mSocket.GetSockName().mPort : 0, aStr);
 
     OT_UNUSED_VARIABLE(aStr);
     OT_UNUSED_VARIABLE(aFile);
@@ -1209,27 +1208,20 @@ Error SecureTransport::Extension::GetPeerCertificateBase64(unsigned char *aPeerC
                                                            size_t        *aCertLength,
                                                            size_t         aCertBufferSize)
 {
-    Error          error   = kErrorNone;
-    SecureSession *session = mSecureTransport.mSessions.GetHead();
+    Error                   error = kErrorNone;
+    SecureSession          *session;
+    const mbedtls_x509_crt *peerCert;
 
+    session = mSecureTransport.mSessions.GetHead();
     VerifyOrExit(session != nullptr, error = kErrorInvalidState);
     VerifyOrExit(session->IsConnected(), error = kErrorInvalidState);
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
-                                       session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p,
-                                       session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len) ==
+    peerCert = mbedtls_ssl_get_peer_cert(&session->mSsl);
+    VerifyOrExit(peerCert != nullptr, error = kErrorInvalidState);
+
+    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength, peerCert->raw.p, peerCert->raw.len) ==
                      0,
                  error = kErrorNoBufs);
-#else
-    VerifyOrExit(
-        mbedtls_base64_encode(
-            aPeerCert, aCertBufferSize, aCertLength,
-            session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-            session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(
-                len)) == 0,
-        error = kErrorNoBufs);
-#endif
 
 exit:
     return error;
@@ -1239,30 +1231,21 @@ exit:
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 Error SecureTransport::Extension::GetPeerCertificateDer(uint8_t *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
-    Error          error   = kErrorNone;
-    SecureSession *session = mSecureTransport.mSessions.GetHead();
+    Error                   error = kErrorNone;
+    SecureSession          *session;
+    const mbedtls_x509_crt *peerCert;
 
+    session = mSecureTransport.mSessions.GetHead();
+    VerifyOrExit(session != nullptr, error = kErrorInvalidState);
     VerifyOrExit(session->IsConnected(), error = kErrorInvalidState);
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
-    VerifyOrExit(session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len < aCertBufferSize,
-                 error = kErrorNoBufs);
+    peerCert = mbedtls_ssl_get_peer_cert(&session->mSsl);
+    VerifyOrExit(peerCert != nullptr, error = kErrorInvalidState);
 
-    *aCertLength = session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len;
-    memcpy(aPeerCert, session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p, *aCertLength);
+    VerifyOrExit(peerCert->raw.len <= aCertBufferSize, error = kErrorNoBufs);
 
-#else
-    VerifyOrExit(
-        session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len) <
-            aCertBufferSize,
-        error = kErrorNoBufs);
-
-    *aCertLength =
-        session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len);
-    memcpy(aPeerCert,
-           session->mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
-           *aCertLength);
-#endif
+    *aCertLength = peerCert->raw.len;
+    memcpy(aPeerCert, peerCert->raw.p, *aCertLength);
 
 exit:
     return error;

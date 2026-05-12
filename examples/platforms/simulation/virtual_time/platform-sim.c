@@ -50,6 +50,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
+#include "../simul_utils.h"
 #include "lib/platform/exit_code.h"
 #include "utils/uart.h"
 
@@ -148,14 +149,7 @@ static void platformSendSleepEvent(void)
     otSimSendEvent(&event);
 }
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
-void platformUartRestore(void) {}
-
-otError otPlatUartEnable(void) { return OT_ERROR_NONE; }
-
-otError otPlatUartDisable(void) { return OT_ERROR_NONE; }
-
-otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
+otError platformUartSendVirtual(const uint8_t *aData, uint16_t aLength)
 {
     otError      error = OT_ERROR_NONE;
     struct Event event;
@@ -172,9 +166,6 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
 
     return error;
 }
-
-otError otPlatUartFlush(void) { return OT_ERROR_NONE; }
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
 
 static void socket_init(void)
 {
@@ -247,16 +238,12 @@ static void socket_init(void)
 void otSysInit(int argc, char *argv[])
 {
     char *endptr;
+    int   argi = 1;
 
     if (gPlatformPseudoResetWasRequested)
     {
         gPlatformPseudoResetWasRequested = false;
         return;
-    }
-
-    if (argc != 2)
-    {
-        DieNow(OT_EXIT_FAILURE);
     }
 
     openlog(basename(argv[0]), LOG_PID, LOG_USER);
@@ -265,11 +252,24 @@ void otSysInit(int argc, char *argv[])
     gArgumentsCount = argc;
     gArguments      = argv;
 
-    gNodeId = (uint32_t)strtol(argv[1], &endptr, 0);
+    if (!strcmp(argv[argi], "-U"))
+    {
+        gVirtualUart = true;
+        ++argi;
+    }
+
+    gNodeId = (uint32_t)strtol(argv[argi], &endptr, 0);
 
     if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
     {
-        fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
+        fprintf(stderr, "Invalid NodeId: %s\n", argv[argi]);
+        DieNow(OT_EXIT_FAILURE);
+    }
+
+    ++argi;
+
+    if (argi != argc)
+    {
         DieNow(OT_EXIT_FAILURE);
     }
 
@@ -307,9 +307,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     FD_SET(sSockFd, &read_fds);
     max_fd = sSockFd;
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-#endif
 
     if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && !platformRadioIsTransmitPending())
     {
@@ -331,9 +329,7 @@ void otSysProcessDrivers(otInstance *aInstance)
 
     platformAlarmProcess(aInstance);
     platformRadioProcess(aInstance, &read_fds, &write_fds);
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
     platformUartProcess();
-#endif
 }
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE

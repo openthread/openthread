@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter for Mesh Diagnostics function.
  */
 
-#ifndef CLI_MESH_DIAG_HPP_
-#define CLI_MESH_DIAG_HPP_
+#ifndef OT_CLI_CLI_MESH_DIAG_HPP_
+#define OT_CLI_CLI_MESH_DIAG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -104,8 +104,6 @@ private:
     void HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
                                           uint16_t                   aChildRloc16,
                                           otMeshDiagIp6AddrIterator *aIp6AddrIterator);
-
-    void OutputResult(otError aError);
 };
 
 } // namespace Cli
@@ -113,4 +111,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
-#endif // CLI_MESH_DIAG_HPP_
+#endif // OT_CLI_CLI_MESH_DIAG_HPP_

@@ -67,7 +67,7 @@ int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption
  * @retval OT_ERROR_NONE    The command was executed successfully.
  * @retval OT_ERROR_FAILED  It failed to execute the command.
  */
-otError ExecuteCommand(const char *aFormat, ...);
+otError ExecuteCommand(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 } // namespace Posix
 } // namespace ot

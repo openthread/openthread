@@ -109,7 +109,10 @@ exit:
     return error;
 }
 
-Instance &Tcp::Endpoint::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcb().instance)); }
+Instance &Tcp::Endpoint::GetInstance(void) const
+{
+    return *UpdateActiveInstance(&AsNonConst(AsCoreType(GetTcb().instance)));
+}
 
 const SockAddr &Tcp::Endpoint::GetLocalAddress(void) const
 {
@@ -547,7 +550,10 @@ exit:
     return error;
 }
 
-Instance &Tcp::Listener::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcbListen().instance)); }
+Instance &Tcp::Listener::GetInstance(void) const
+{
+    return *UpdateActiveInstance(&AsNonConst(AsCoreType(GetTcbListen().instance)));
+}
 
 Error Tcp::Listener::Listen(const SockAddr &aSockName)
 {
@@ -633,14 +639,16 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     struct tcplp_signals sig;
     int                  nextAction;
 
-    VerifyOrExit(length == aMessage.GetLength() - aMessage.GetOffset(), error = kErrorParse);
+    VerifyOrExit(length == aMessage.DetermineLengthAfterOffset(), error = kErrorParse);
     VerifyOrExit(length >= sizeof(Tcp::Header), error = kErrorParse);
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + offsetof(struct tcphdr, th_off_x2), headerSize));
     headerSize = static_cast<uint8_t>((headerSize >> TH_OFF_SHIFT) << 2);
     VerifyOrExit(headerSize >= sizeof(struct tcphdr) && headerSize <= sizeof(header) &&
                      static_cast<uint16_t>(headerSize) <= length,
                  error = kErrorParse);
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     SuccessOrExit(error = Checksum::VerifyMessageChecksum(aMessage, aMessageInfo, kProtoTcp));
+#endif
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), &header[0], headerSize));
 
     ip6Header = reinterpret_cast<struct ip6_hdr *>(&aIp6Header);
@@ -944,7 +952,7 @@ extern "C" {
 otMessage *tcplp_sys_new_message(otInstance *aInstance)
 {
     Instance &instance = AsCoreType(aInstance);
-    Message  *message  = instance.Get<ot::Ip6::Ip6>().NewMessage(0);
+    Message  *message  = instance.Get<ot::Ip6::Ip6>().NewMessage();
 
     if (message)
     {

@@ -206,7 +206,7 @@ void AnnounceSender::HandleRoleChanged(void)
 
     case Mle::kRoleChild:
 #if OPENTHREAD_FTD
-        if (Get<Mle::Mle>().IsRouterEligible() && Get<Mle::Mle>().IsRxOnWhenIdle())
+        if (Get<Mle::Mle>().IsRouterRoleAllowed() && Get<Mle::Mle>().IsRxOnWhenIdle())
         {
             break;
         }

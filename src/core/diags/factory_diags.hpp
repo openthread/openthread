@@ -31,8 +31,8 @@
  *   This file contains definitions for the diagnostics module.
  */
 
-#ifndef FACTORY_DIAGS_HPP_
-#define FACTORY_DIAGS_HPP_
+#ifndef OT_CORE_DIAGS_FACTORY_DIAGS_HPP_
+#define OT_CORE_DIAGS_FACTORY_DIAGS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -244,6 +244,7 @@ private:
     void UpdateTxStats(Error aError);
 
     static bool IsChannelValid(uint8_t aChannel);
+    static bool IsFrameLengthValid(uint16_t aLength);
 
     static const struct Command sCommands[];
 
@@ -263,7 +264,7 @@ private:
     uint32_t      mTxPackets;
     uint8_t       mChannel;
     int8_t        mTxPower;
-    uint8_t       mTxLen;
+    uint16_t      mTxLen;
     TxCmd         mCurTxCmd;
     bool          mIsHeaderUpdated : 1;
     bool          mIsSecurityProcessed : 1;
@@ -284,4 +285,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-#endif // FACTORY_DIAGS_HPP_
+#endif // OT_CORE_DIAGS_FACTORY_DIAGS_HPP_

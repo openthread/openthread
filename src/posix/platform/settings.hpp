@@ -29,6 +29,8 @@
 #ifndef OT_POSIX_PLATFORM_SETTINGS_HPP_
 #define OT_POSIX_PLATFORM_SETTINGS_HPP_
 
+#include <openthread/instance.h>
+
 namespace ot {
 namespace Posix {
 

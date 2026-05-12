@@ -256,7 +256,7 @@ void Client::Response::InitServiceInfo(ServiceInfo &aServiceInfo) const
 
     if ((aServiceInfo.mHostNameBuffer != nullptr) && (aServiceInfo.mHostNameBufferSize > 0))
     {
-        aServiceInfo.mHostNameBuffer[0] = '\0';
+        aServiceInfo.mHostNameBuffer[0] = kNullChar;
     }
 }
 
@@ -491,7 +491,7 @@ Error Client::AddressResponse::GetAddress(uint16_t aIndex, Ip6::Address &aAddres
         ARecord                          aRecord;
         NetworkData::ExternalRouteConfig nat64Prefix;
 
-        VerifyOrExit(mInstance->Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == kErrorNone,
+        VerifyOrExit(mInstance->Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) == kErrorNone,
                      error = kErrorInvalidState);
 
         section = (info.mQueryType == kIp4AddressQuery) ? kAnswerSection : kAdditionalDataSection;
@@ -792,7 +792,12 @@ Error Client::Start(void)
 {
     Error error;
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF
+    SuccessOrExit(error = mSocket.Open(Ip6::kNetifThreadInternal));
+#else
     SuccessOrExit(error = mSocket.Open(Ip6::kNetifUnspecified));
+#endif
+
     SuccessOrExit(error = mSocket.Bind(0));
 
 exit:
@@ -1039,7 +1044,7 @@ Error Client::StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName
         NetworkData::ExternalRouteConfig nat64Prefix;
 
         VerifyOrExit(aInfo.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow, error = kErrorInvalidArgs);
-        VerifyOrExit(Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == kErrorNone,
+        VerifyOrExit(Get<NetworkData::Leader>().FindPreferredNat64Prefix(nat64Prefix) == kErrorNone,
                      error = kErrorInvalidState);
     }
 #endif
@@ -1194,7 +1199,7 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     }
 #endif
 
-    length = message->GetLength() - message->GetOffset();
+    length = message->DetermineLengthAfterOffset();
 
     if (aInfo.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
@@ -1271,7 +1276,7 @@ uint16_t Client::DetermineQuestionRecordType(const QueryInfo &aInfo) const
     // Determine the first record type to include in Question
     // section based on the `mQueryType`.
 
-    uint8_t recordType = 0;
+    uint16_t recordType = 0;
 
     switch (aInfo.mQueryType)
     {
@@ -1492,6 +1497,7 @@ Error Client::ParseResponse(const Message &aResponseMessage, Query *&aQuery, Err
     VerifyOrExit(aQuery != nullptr, error = kErrorNotFound);
 
     info.ReadFrom(*aQuery);
+    VerifyOrExit(info.mSavedResponse == nullptr, error = kErrorDrop);
 
     queryName.SetFromMessage(*aQuery, kNameOffsetInQuery);
 
@@ -1579,8 +1585,8 @@ void Client::SaveQueryResponse(Query &aQuery, const Message &aResponseMessage)
     info.ReadFrom(aQuery);
     VerifyOrExit(info.mSavedResponse == nullptr);
 
-    // If `Clone()` fails we let retry or timeout handle the error.
-    info.mSavedResponse = aResponseMessage.Clone();
+    // If clone fails we let retry or timeout handle the error.
+    info.mSavedResponse = aResponseMessage.Clone<kNoReservedHeader>();
 
     UpdateQuery(aQuery, info);
 
@@ -1818,7 +1824,7 @@ Error Client::ReplaceWithSeparateSrvTxtQueries(Query &aQuery)
 
     RecordServerAsLimitedToSingleQuestion(info.mConfig.GetServerSockAddr().GetAddress());
 
-    secondQuery = aQuery.Clone();
+    secondQuery = mSocket.CloneMessage(aQuery);
     VerifyOrExit(secondQuery != nullptr);
 
     info.mQueryType         = kServiceQueryTxt;
@@ -1867,6 +1873,7 @@ void Client::ResolveHostAddressIfNeeded(Query &aQuery, const Message &aResponseM
         info.mMessageId         = 0;
         info.mTransmissionCount = 0;
         info.mMainQuery         = &FindMainQuery(aQuery);
+        info.mSavedResponse     = nullptr;
 
         SuccessOrExit(AllocateQuery(info, nullptr, hostName, newQuery));
         IgnoreError(SendQuery(*newQuery, info, /* aUpdateTimer */ true));
@@ -1888,7 +1895,7 @@ exit:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 void Client::PrepareTcpMessage(Message &aMessage)
 {
-    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t length = aMessage.DetermineLengthAfterOffset();
 
     // Prepending the DNS query with length of the packet according to RFC1035.
     BigEndian::WriteUint16(length, mSendBufferBytes + mSendLink.mLength);

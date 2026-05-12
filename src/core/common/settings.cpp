@@ -117,90 +117,59 @@ void SettingsBase::BorderAgentId::Log(Action aAction, const MeshCoP::BorderAgent
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *SettingsBase::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Read",     // (0) kActionRead
-        "Saved",    // (1) kActionSave
-        "Re-saved", // (2) kActionResave
-        "Deleted",  // (3) kActionDelete
-#if OPENTHREAD_FTD
-        "Added",      // (4) kActionAdd,
-        "Removed",    // (5) kActionRemove,
-        "Deleted all" // (6) kActionDeleteAll
-#endif
-    };
+#define ActionMapList(_)         \
+    _(kActionRead, "Read")       \
+    _(kActionSave, "Saved")      \
+    _(kActionResave, "Re-saved") \
+    _(kActionDelete, "Deleted")  \
+    FtdActionMapList(_)
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kActionRead);
-        ValidateNextEnum(kActionSave);
-        ValidateNextEnum(kActionResave);
-        ValidateNextEnum(kActionDelete);
 #if OPENTHREAD_FTD
-        ValidateNextEnum(kActionAdd);
-        ValidateNextEnum(kActionRemove);
-        ValidateNextEnum(kActionDeleteAll);
+#define FtdActionMapList(_)     \
+    _(kActionAdd, "Added")      \
+    _(kActionRemove, "Removed") \
+    _(kActionDeleteAll, "Deleted all")
+#else
+#define FtdActionMapList(_)
 #endif
-    };
 
-    return kActionStrings[aAction];
+    DefineEnumStringArray(ActionMapList);
+
+    return kStrings[aAction];
 }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 const char *SettingsBase::KeyToString(Key aKey)
 {
-    static const char *const kKeyStrings[] = {
-        "",                  // (0)  (Unused)
-        "ActiveDataset",     // (1)  kKeyActiveDataset
-        "PendingDataset",    // (2)  kKeyPendingDataset
-        "NetworkInfo",       // (3)  kKeyNetworkInfo
-        "ParentInfo",        // (4)  kKeyParentInfo
-        "ChildInfo",         // (5)  kKeyChildInfo
-        "",                  // (6)  Removed (previously auto-start).
-        "SlaacIidSecretKey", // (7)  kKeySlaacIidSecretKey
-        "DadInfo",           // (8)  kKeyDadInfo
-        "",                  // (9)  Removed (previously OMR prefix).
-        "",                  // (10) Removed (previously on-link prefix).
-        "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
-        "SrpClientInfo",     // (12) kKeySrpClientInfo
-        "SrpServerInfo",     // (13) kKeySrpServerInfo
-        "",                  // (14) Removed (previously NAT64 prefix)
-        "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
-        "BrOnLinkPrefixes",  // (16) kKeyBrOnLinkPrefixes
-        "BorderAgentId",     // (17) kKeyBorderAgentId
-        "TcatCommrCert"      // (18) kKeyTcatCommrCert
-    };
+#define KeyMapList(_)                             \
+    _(0, "")                                      \
+    _(kKeyActiveDataset, "ActiveDataset")         \
+    _(kKeyPendingDataset, "PendingDataset")       \
+    _(kKeyNetworkInfo, "NetworkInfo")             \
+    _(kKeyParentInfo, "ParentInfo")               \
+    _(kKeyChildInfo, "ChildInfo")                 \
+    _(6, "")                                      \
+    _(kKeySlaacIidSecretKey, "SlaacIidSecretKey") \
+    _(kKeyDadInfo, "DadInfo")                     \
+    _(9, "")                                      \
+    _(10, "")                                     \
+    _(kKeySrpEcdsaKey, "SrpEcdsaKey")             \
+    _(kKeySrpClientInfo, "SrpClientInfo")         \
+    _(kKeySrpServerInfo, "SrpServerInfo")         \
+    _(14, "")                                     \
+    _(kKeyBrUlaPrefix, "BrUlaPrefix")             \
+    _(kKeyBrOnLinkPrefixes, "BrOnLinkPrefixes")   \
+    _(kKeyBorderAgentId, "BorderAgentId")         \
+    _(kKeyTcatCommrCert, "TcatCommrCert")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        SkipNextEnum();
-        ValidateNextEnum(kKeyActiveDataset);
-        ValidateNextEnum(kKeyPendingDataset);
-        ValidateNextEnum(kKeyNetworkInfo);
-        ValidateNextEnum(kKeyParentInfo);
-        ValidateNextEnum(kKeyChildInfo);
-        SkipNextEnum();
-        ValidateNextEnum(kKeySlaacIidSecretKey);
-        ValidateNextEnum(kKeyDadInfo);
-        SkipNextEnum();
-        SkipNextEnum();
-        ValidateNextEnum(kKeySrpEcdsaKey);
-        ValidateNextEnum(kKeySrpClientInfo);
-        ValidateNextEnum(kKeySrpServerInfo);
-        SkipNextEnum();
-        ValidateNextEnum(kKeyBrUlaPrefix);
-        ValidateNextEnum(kKeyBrOnLinkPrefixes);
-        ValidateNextEnum(kKeyBorderAgentId);
-        ValidateNextEnum(kKeyTcatCommrCert);
-    };
+    DefineEnumStringArray(KeyMapList);
 
     static_assert(kLastKey == kKeyTcatCommrCert, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
-    return kKeyStrings[aKey];
+    return kStrings[aKey];
 }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
@@ -252,7 +221,6 @@ Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Da
     aDataset.SetLength(static_cast<uint8_t>(length));
 
 exit:
-    OT_ASSERT(error != kErrorNotImplemented);
     return error;
 }
 
@@ -262,7 +230,6 @@ void Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);
-    OT_ASSERT(error != kErrorNotImplemented);
 }
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
@@ -286,13 +253,11 @@ Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
     return error;
 }
 
-Error Settings::DeleteAllChildInfo(void)
+void Settings::DeleteAllChildInfo(void)
 {
     Error error = Get<SettingsDriver>().Delete(kKeyChildInfo);
 
     Log(kActionDeleteAll, error, kKeyChildInfo);
-
-    return error;
 }
 
 Settings::ChildInfoIterator::ChildInfoIterator(Instance &aInstance)
@@ -373,26 +338,22 @@ exit:
     return error;
 }
 
-Error Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
+void Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
 {
-    Error          error = kErrorNotFound;
     BrOnLinkPrefix brPrefix;
 
     for (int index = 0; ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone; index++)
     {
         if (brPrefix.GetPrefix() == aPrefix)
         {
-            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            IgnoreError(Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
             brPrefix.Log("Removed");
             break;
         }
     }
-
-exit:
-    return error;
 }
 
-Error Settings::DeleteAllBrOnLinkPrefixes(void) { return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes); }
+void Settings::DeleteAllBrOnLinkPrefixes(void) { IgnoreError(Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes)); }
 
 Error Settings::ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix)
 {
@@ -424,7 +385,7 @@ Error Settings::ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const
     return error;
 }
 
-Error Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength)
+void Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength)
 {
     Error    error      = kErrorNone;
     uint16_t readLength = aLength;
@@ -442,16 +403,14 @@ Error Settings::SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aL
 
     Log(action, error, aKey, aValue);
 
-    return error;
+    SuccessOrAssert(error);
 }
 
-Error Settings::DeleteEntry(Key aKey)
+void Settings::DeleteEntry(Key aKey)
 {
     Error error = Get<SettingsDriver>().Delete(aKey);
 
     Log(kActionDelete, error, aKey);
-
-    return error;
 }
 
 void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)

@@ -31,18 +31,20 @@
  *   This file includes definitions for generating and processing Network Diagnostics TLVs.
  */
 
-#ifndef NETWORK_DIAGNOSTIC_TLVS_HPP_
-#define NETWORK_DIAGNOSTIC_TLVS_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
+#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/netdiag.h>
 #include <openthread/thread.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
+#include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/child.hpp"
@@ -66,37 +68,43 @@ public:
      */
     enum Type : uint8_t
     {
-        kExtMacAddress        = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
-        kAddress16            = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
-        kMode                 = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kTimeout              = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
-        kConnectivity         = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
-        kRoute                = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
-        kLeaderData           = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
-        kNetworkData          = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
-        kIp6AddressList       = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
-        kMacCounters          = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
-        kBatteryLevel         = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
-        kSupplyVoltage        = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
-        kChildTable           = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
-        kChannelPages         = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
-        kTypeList             = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
-        kMaxChildTimeout      = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
-        kEui64                = OT_NETWORK_DIAGNOSTIC_TLV_EUI64,
-        kVersion              = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
-        kVendorName           = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
-        kVendorModel          = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
-        kVendorSwVersion      = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
-        kThreadStackVersion   = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
-        kChild                = OT_NETWORK_DIAGNOSTIC_TLV_CHILD,
-        kChildIp6AddressList  = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST,
-        kRouterNeighbor       = OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR,
-        kAnswer               = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
-        kQueryId              = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
-        kMleCounters          = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
-        kVendorAppUrl         = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL,
-        kNonPreferredChannels = OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS,
-        kEnhancedRoute        = OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE,
+        kExtMacAddress         = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
+        kAddress16             = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
+        kMode                  = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
+        kTimeout               = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kConnectivity          = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
+        kRoute                 = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
+        kLeaderData            = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
+        kNetworkData           = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
+        kIp6AddressList        = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
+        kMacCounters           = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
+        kBatteryLevel          = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
+        kSupplyVoltage         = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
+        kChildTable            = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
+        kChannelPages          = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
+        kTypeList              = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
+        kMaxChildTimeout       = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kEui64                 = OT_NETWORK_DIAGNOSTIC_TLV_EUI64,
+        kVersion               = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
+        kVendorName            = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
+        kVendorModel           = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
+        kVendorSwVersion       = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
+        kThreadStackVersion    = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
+        kChild                 = OT_NETWORK_DIAGNOSTIC_TLV_CHILD,
+        kChildIp6AddressList   = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST,
+        kRouterNeighbor        = OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR,
+        kAnswer                = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
+        kQueryId               = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
+        kMleCounters           = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
+        kVendorAppUrl          = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL,
+        kNonPreferredChannels  = OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS,
+        kEnhancedRoute         = OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE,
+        kBrState               = OT_NETWORK_DIAGNOSTIC_TLV_BR_STATE,
+        kBrIfAddrs             = OT_NETWORK_DIAGNOSTIC_TLV_BR_IF_ADDRS,
+        kBrLocalOmrPrefix      = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OMR_PREFIX,
+        kBrDhcp6PdOmrPrefix    = OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX,
+        kBrLocalOnlinkPrefix   = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX,
+        kBrFavoredOnLinkPrefix = OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX,
     };
 
     /**
@@ -235,45 +243,55 @@ typedef TlvInfo<Tlv::kChildIp6AddressList> ChildIp6AddressListTlv;
  */
 typedef UintTlvInfo<Tlv::kQueryId, uint16_t> QueryIdTlv;
 
-typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
+/**
+ * Defines BR State TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kBrState, uint8_t> BrStateTlv;
 
 /**
- * Implements Connectivity TLV generation and parsing.
+ * Represents a BR State TLV value.
  */
-OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv : public Mle::ConnectivityTlv
-{
-public:
-    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kConnectivity; ///< The TLV Type value.
+typedef otNetworkDiagBrState BrState;
 
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        Mle::ConnectivityTlv::Init();
-        ot::Tlv::SetType(kType);
-    }
+/**
+ * Defines BR Infra-if Address List TLV constants and types.
+ */
+typedef TlvInfo<Tlv::kBrIfAddrs> BrIfAddrsTlv;
 
-    /**
-     * Retrieves the `Connectivity` value.
-     *
-     * @param[out] aConnectivity   A reference to `Connectivity` to populate.
-     */
-    void GetConnectivity(Connectivity &aConnectivity) const
-    {
-        aConnectivity.mParentPriority   = GetParentPriority();
-        aConnectivity.mLinkQuality3     = GetLinkQuality3();
-        aConnectivity.mLinkQuality2     = GetLinkQuality2();
-        aConnectivity.mLinkQuality1     = GetLinkQuality1();
-        aConnectivity.mLeaderCost       = GetLeaderCost();
-        aConnectivity.mIdSequence       = GetIdSequence();
-        aConnectivity.mActiveRouters    = GetActiveRouters();
-        aConnectivity.mSedBufferSize    = GetSedBufferSize();
-        aConnectivity.mSedDatagramCount = GetSedDatagramCount();
-    }
+/**
+ * Defines BR Local OMR Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrLocalOmrPrefix, Ip6::NetworkPrefix> BrLocalOmrPrefixTlv;
 
-} OT_TOOL_PACKED_END;
+/**
+ * Defines BR DHCPv6-PD Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrDhcp6PdOmrPrefix, Ip6::NetworkPrefix> BrDhcp6PdOmrPrefixTlv;
+
+/**
+ * Defines BR Local On-link Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrLocalOnlinkPrefix, Ip6::NetworkPrefix> BrLocalOnlinkPrefixTlv;
+
+/**
+ * Defines BR Favored On-link Prefix TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kBrFavoredOnLinkPrefix, Ip6::NetworkPrefix> BrFavoredOnLinkPrefixTlv;
+
+/**
+ * Represents information parsed from Connectivity TLV.
+ */
+typedef Mle::Connectivity Connectivity;
+
+/**
+ * Represents a Connectivity TLV value.
+ */
+typedef Mle::ConnectivityTlvValue ConnectivityTlvValue;
+
+/**
+ * Defines Connectivity TLV constants.
+ */
+typedef TlvInfo<Tlv::kConnectivity> ConnectivityTlv;
 
 /**
  * Implements Route TLV generation and parsing.
@@ -295,23 +313,19 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Leader Data TLV generation and parsing.
+ * Represents a Leader Data TLV value.
  */
-OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv : public Mle::LeaderDataTlv
-{
-public:
-    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kLeaderData; ///< The TLV Type value.
+typedef Mle::LeaderDataTlvValue LeaderDataTlvValue;
 
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        Mle::LeaderDataTlv::Init();
-        ot::Tlv::SetType(kType);
-    }
-} OT_TOOL_PACKED_END;
+/**
+ * Defines Leader Data TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
+
+/**
+ * Represents the Mac Counters.
+ */
+typedef otNetworkDiagMacCounters MacCounters;
 
 /**
  * Implements Mac Counters TLV generation and parsing.
@@ -322,12 +336,10 @@ class MacCountersTlv : public Tlv, public TlvInfo<Tlv::kMacCounters>
 public:
     /**
      * Initializes the TLV.
+     *
+     * @param[in] aMacCounters    The MAC counters to initialize the TLV with.
      */
-    void Init(void)
-    {
-        SetType(kMacCounters);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+    void Init(const Mac::Counters &aMacCounters);
 
     /**
      * Indicates whether or not the TLV appears to be well-formed.
@@ -338,138 +350,11 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * Returns the IfInUnknownProtos counter.
+     * Reads the counters from TLV.
      *
-     * @returns The IfInUnknownProtos counter
+     * @param[out] aDiagMacCounters   A reference to `NetworkDiagnostic::MacCounters` to populate.
      */
-    uint32_t GetIfInUnknownProtos(void) const { return BigEndian::HostSwap32(mIfInUnknownProtos); }
-
-    /**
-     * Sets the IfInUnknownProtos counter.
-     *
-     * @param[in]  aIfInUnknownProtos The IfInUnknownProtos counter
-     */
-    void SetIfInUnknownProtos(const uint32_t aIfInUnknownProtos)
-    {
-        mIfInUnknownProtos = BigEndian::HostSwap32(aIfInUnknownProtos);
-    }
-
-    /**
-     * Returns the IfInErrors counter.
-     *
-     * @returns The IfInErrors counter
-     */
-    uint32_t GetIfInErrors(void) const { return BigEndian::HostSwap32(mIfInErrors); }
-
-    /**
-     * Sets the IfInErrors counter.
-     *
-     * @param[in]  aIfInErrors The IfInErrors counter
-     */
-    void SetIfInErrors(const uint32_t aIfInErrors) { mIfInErrors = BigEndian::HostSwap32(aIfInErrors); }
-
-    /**
-     * Returns the IfOutErrors counter.
-     *
-     * @returns The IfOutErrors counter
-     */
-    uint32_t GetIfOutErrors(void) const { return BigEndian::HostSwap32(mIfOutErrors); }
-
-    /**
-     * Sets the IfOutErrors counter.
-     *
-     * @param[in]  aIfOutErrors The IfOutErrors counter.
-     */
-    void SetIfOutErrors(const uint32_t aIfOutErrors) { mIfOutErrors = BigEndian::HostSwap32(aIfOutErrors); }
-
-    /**
-     * Returns the IfInUcastPkts counter.
-     *
-     * @returns The IfInUcastPkts counter
-     */
-    uint32_t GetIfInUcastPkts(void) const { return BigEndian::HostSwap32(mIfInUcastPkts); }
-
-    /**
-     * Sets the IfInUcastPkts counter.
-     *
-     * @param[in]  aIfInUcastPkts The IfInUcastPkts counter.
-     */
-    void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) { mIfInUcastPkts = BigEndian::HostSwap32(aIfInUcastPkts); }
-    /**
-     * Returns the IfInBroadcastPkts counter.
-     *
-     * @returns The IfInBroadcastPkts counter
-     */
-    uint32_t GetIfInBroadcastPkts(void) const { return BigEndian::HostSwap32(mIfInBroadcastPkts); }
-
-    /**
-     * Sets the IfInBroadcastPkts counter.
-     *
-     * @param[in]  aIfInBroadcastPkts The IfInBroadcastPkts counter.
-     */
-    void SetIfInBroadcastPkts(const uint32_t aIfInBroadcastPkts)
-    {
-        mIfInBroadcastPkts = BigEndian::HostSwap32(aIfInBroadcastPkts);
-    }
-
-    /**
-     * Returns the IfInDiscards counter.
-     *
-     * @returns The IfInDiscards counter
-     */
-    uint32_t GetIfInDiscards(void) const { return BigEndian::HostSwap32(mIfInDiscards); }
-
-    /**
-     * Sets the IfInDiscards counter.
-     *
-     * @param[in]  aIfInDiscards The IfInDiscards counter.
-     */
-    void SetIfInDiscards(const uint32_t aIfInDiscards) { mIfInDiscards = BigEndian::HostSwap32(aIfInDiscards); }
-
-    /**
-     * Returns the IfOutUcastPkts counter.
-     *
-     * @returns The IfOutUcastPkts counter
-     */
-    uint32_t GetIfOutUcastPkts(void) const { return BigEndian::HostSwap32(mIfOutUcastPkts); }
-
-    /**
-     * Sets the IfOutUcastPkts counter.
-     *
-     * @param[in]  aIfOutUcastPkts The IfOutUcastPkts counter.
-     */
-    void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) { mIfOutUcastPkts = BigEndian::HostSwap32(aIfOutUcastPkts); }
-
-    /**
-     * Returns the IfOutBroadcastPkts counter.
-     *
-     * @returns The IfOutBroadcastPkts counter
-     */
-    uint32_t GetIfOutBroadcastPkts(void) const { return BigEndian::HostSwap32(mIfOutBroadcastPkts); }
-
-    /**
-     * Sets the IfOutBroadcastPkts counter.
-     *
-     * @param[in]  aIfOutBroadcastPkts The IfOutBroadcastPkts counter.
-     */
-    void SetIfOutBroadcastPkts(const uint32_t aIfOutBroadcastPkts)
-    {
-        mIfOutBroadcastPkts = BigEndian::HostSwap32(aIfOutBroadcastPkts);
-    }
-
-    /**
-     * Returns the IfOutDiscards counter.
-     *
-     * @returns The IfOutDiscards counter
-     */
-    uint32_t GetIfOutDiscards(void) const { return BigEndian::HostSwap32(mIfOutDiscards); }
-
-    /**
-     * Sets the IfOutDiscards counter.
-     *
-     * @param[in]  aIfOutDiscards The IfOutDiscards counter.
-     */
-    void SetIfOutDiscards(const uint32_t aIfOutDiscards) { mIfOutDiscards = BigEndian::HostSwap32(aIfOutDiscards); }
+    void Read(MacCounters &aDiagMacCounters) const;
 
 private:
     uint32_t mIfInUnknownProtos;
@@ -484,156 +369,81 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Child Table Entry generation and parsing.
+ * Implements Child Table TLV Entry generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTableEntry : public Clearable<ChildTableEntry>
+class ChildTableTlvEntry : public Clearable<ChildTableTlvEntry>
 {
 public:
+    typedef otNetworkDiagChildEntry ParseInfo; ///< Parse entry info
+
+#if OPENTHREAD_FTD
     /**
-     * Returns the Timeout value.
+     * Initializes the `ChildTableTlvEntry` from a given `Child` object.
      *
-     * @returns The Timeout value.
+     * @param[in] aChild  The `Child` to initialize from.
      */
-    uint8_t GetTimeout(void) const { return ReadBits<uint16_t, kTimeoutMask>(GetTimeoutChildId()); }
+    void InitFrom(const Child &aChild);
+#endif
 
     /**
-     * Sets the Timeout value.
+     * Parses the TLV entry and populates the information in a given `ParseInfo` struct.
      *
-     * @param[in]  aTimeout  The Timeout value.
+     * @param[out] aParseInfo   The `ParseInfo` structure to populate.
      */
-    void SetTimeout(uint8_t aTimeout)
-    {
-        SetTimeoutChildId(UpdateBits<uint16_t, kTimeoutMask>(GetTimeoutChildId(), aTimeout));
-    }
+    void Parse(ParseInfo &aParseInfo) const;
 
     /**
-     * The Link Quality value.
+     * Determines the timeout value (in seconds) from a given exponent.
      *
-     * @returns The Link Quality value.
+     * The timeout is expressed as `2^(exponent - 4)` seconds.
+     *
+     * @param[in] aExponent  The exponent value.
+     *
+     * @returns The timeout value (in seconds).
      */
-    LinkQuality GetLinkQuality(void) const
-    {
-        return static_cast<LinkQuality>(ReadBits<uint16_t, kLqiMask>(GetTimeoutChildId()));
-    }
+    static uint32_t DetermineTimeoutFromExponent(uint8_t aExponent);
 
+#if OPENTHREAD_FTD
     /**
-     * Set the Link Quality value.
+     * Determines the exponent to use for a given timeout value (in seconds).
      *
-     * @param[in] aLinkQuality  The Link Quality value.
-     */
-    void SetLinkQuality(LinkQuality aLinkQuality)
-    {
-        SetTimeoutChildId(UpdateBits<uint16_t, kLqiMask>(GetTimeoutChildId(), aLinkQuality));
-    }
-
-    /**
-     * Returns the Child ID value.
+     * @param[in] aTimeout  The timeout value (in seconds).
      *
-     * @returns The Child ID value.
+     * @returns The corresponding exponent.
      */
-    uint16_t GetChildId(void) const { return ReadBits<uint16_t, kChildIdMask>(GetTimeoutChildId()); }
-
-    /**
-     * Sets the Child ID value.
-     *
-     * @param[in]  aChildId  The Child ID value.
-     */
-    void SetChildId(uint16_t aChildId)
-    {
-        SetTimeoutChildId(UpdateBits<uint16_t, kChildIdMask>(GetTimeoutChildId(), aChildId));
-    }
-
-    /**
-     * Returns the Device Mode
-     *
-     * @returns The Device Mode
-     */
-    Mle::DeviceMode GetMode(void) const { return Mle::DeviceMode(mMode); }
-
-    /**
-     * Sets the Device Mode.
-     *
-     * @param[in]  aMode  The Device Mode.
-     */
-    void SetMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
+    static uint8_t DetermineExponentFromTimeout(uint32_t aTimeout);
+#endif
 
 private:
     //             1                   0
     //   5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  | Timeout |LQI|     Child ID    |
+    //  |TmoutExp |ILQ|     Child ID    |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    static constexpr uint8_t  kTimeoutOffset = 11;
-    static constexpr uint8_t  kLqiOffset     = 9;
-    static constexpr uint8_t  kChildIdOffset = 0;
-    static constexpr uint16_t kTimeoutMask   = 0x1f << kTimeoutOffset;
-    static constexpr uint16_t kLqiMask       = 0x3 << kLqiOffset;
-    static constexpr uint16_t kChildIdMask   = 0x1ff << kChildIdOffset;
+    static constexpr uint8_t  kTimeoutOffset      = 11;
+    static constexpr uint8_t  kIlqOffset          = 9;
+    static constexpr uint8_t  kChildIdOffset      = 0;
+    static constexpr uint16_t kTimeoutMask        = 0x1f << kTimeoutOffset;
+    static constexpr uint16_t kIlqMask            = 0x3 << kIlqOffset;
+    static constexpr uint16_t kChildIdMask        = 0x1ff << kChildIdOffset;
+    static constexpr uint8_t  kTimeoutExponentMin = 4;
+    static constexpr uint8_t  kTimeoutExponentMax = 0x1f;
 
-    uint16_t GetTimeoutChildId(void) const { return BigEndian::HostSwap16(mTimeoutChildId); }
-    void     SetTimeoutChildId(uint16_t aTimeoutChildIf) { mTimeoutChildId = BigEndian::HostSwap16(aTimeoutChildIf); }
-
-    uint16_t mTimeoutChildId;
+    uint16_t mTimeoutIlqChildId;
     uint8_t  mMode;
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Channel Pages TLV generation and parsing.
+ * Defines Channel Pages TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class ChannelPagesTlv : public Tlv, public TlvInfo<Tlv::kChannelPages>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kChannelPages);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const
-    {
-        // At least one channel page must be included.
-        return GetLength() >= 1;
-    }
-
-    /**
-     * Returns a pointer to the list of Channel Pages.
-     *
-     * @returns A pointer to the list of Channel Pages.
-     */
-    uint8_t *GetChannelPages(void) { return mChannelPages; }
-
-private:
-    uint8_t mChannelPages[Radio::kNumChannelPages];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kChannelPages> ChannelPagesTlv;
 
 /**
- * Implements IPv6 Address List TLV generation and parsing.
+ * Defines Type List TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class TypeListTlv : public Tlv, public TlvInfo<Tlv::kTypeList>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kTypeList);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kTypeList> TypeListTlv;
 
 #if OPENTHREAD_FTD
 
@@ -641,7 +451,7 @@ public:
  * Implements Child TLV generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTlv : public Tlv, public TlvInfo<Tlv::kChild>, public Clearable<ChildTlv>
+class ChildTlvValue : public Clearable<ChildTlvValue>
 {
 public:
     static constexpr uint8_t kFlagsRxOnWhenIdle = 1 << 7; ///< Device mode - Rx-on when idle.
@@ -656,15 +466,6 @@ public:
      * @param[in] aChild   The child to initialize the TLV from.
      */
     void InitFrom(const Child &aChild);
-
-    /**
-     * Initializes the TLV as empty (zero length).
-     */
-    void InitAsEmpty(void)
-    {
-        SetType(kChild);
-        SetLength(0);
-    }
 
     /**
      * Returns the Flags field (`kFlags*` constants define bits in flags).
@@ -812,6 +613,11 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * Defines Child TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kChild, ChildTlvValue> ChildTlv;
+
+/**
  * Implements Child IPv6 Address List Value generation and parsing.
  *
  * This TLV can use extended or normal format depending on the number of IPv6 addresses.
@@ -841,10 +647,10 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Router Neighbor TLV generation and parsing.
+ * Implements Router Neighbor TLV Value generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class RouterNeighborTlv : public Tlv, public TlvInfo<Tlv::kRouterNeighbor>, public Clearable<RouterNeighborTlv>
+class RouterNeighborTlvValue : public Clearable<RouterNeighborTlvValue>
 {
 public:
     static constexpr uint8_t kFlagsTrackErrRate = 1 << 7; ///< Supports tracking error rates.
@@ -855,15 +661,6 @@ public:
      * @param[in] aRouter   The router to initialize the TLV from.
      */
     void InitFrom(const Router &aRouter);
-
-    /**
-     * Initializes the TLV as empty (zero length).
-     */
-    void InitAsEmpty(void)
-    {
-        SetType(kRouterNeighbor);
-        SetLength(0);
-    }
 
     /**
      * Returns the Flags field (`kFlags*` constants define bits in flags).
@@ -954,6 +751,11 @@ private:
     uint16_t        mMessageErrorRate; // (IPv6) msg error rate (0x0000->0%, 0xffff->100%)
 } OT_TOOL_PACKED_END;
 
+/**
+ * Defines Router Neighbor TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kRouterNeighbor, RouterNeighborTlvValue> RouterNeighborTlv;
+
 #endif // OPENTHREAD_FTD
 
 /**
@@ -1010,24 +812,30 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Answer TLV generation and parsing.
+ * Represents an Answer TLV value.
  */
 OT_TOOL_PACKED_BEGIN
-class AnswerTlv : public Tlv, public TlvInfo<Tlv::kAnswer>
+class AnswerTlvValue
 {
 public:
+    enum IsLastFlag : uint8_t
+    {
+        kMoreToFollow, ///< More answer messages to follow.
+        kIsLast,       ///< This is the last answer for this query.
+    };
+
     /**
-     * Initializes the TLV.
+     * Initializes the TLV value.
      *
-     * @param[in] aIndex   The index value.
-     * @param[in] aIsLast  The "IsLast" flag value.
+     * @param[in] aIndex       The index value.
+     * @param[in] aIsLastFlag  Indicates the `IsLastFlag` value.
      */
-    void Init(uint16_t aIndex, bool aIsLast);
+    void Init(uint16_t aIndex, IsLastFlag aIsLastFlag);
 
     /**
      * Indicates whether or not the "IsLast" flag is set
      *
-     * @retval TRUE   "IsLast" flag si set (this is the last answer for this query).
+     * @retval TRUE   "IsLast" flag is set (this is the last answer for this query).
      * @retval FALSE  "IsLast" flag is not set (more answer messages are expected for this query).
      */
     bool IsLast(void) const { return GetFlagsIndex() & kIsLastFlag; }
@@ -1041,13 +849,18 @@ public:
 
 private:
     static constexpr uint16_t kIsLastFlag = 1 << 15;
-    static constexpr uint16_t kIndexMask  = 0x7f;
+    static constexpr uint16_t kIndexMask  = 0x7fff;
 
     uint16_t GetFlagsIndex(void) const { return BigEndian::HostSwap16(mFlagsIndex); }
     void     SetFlagsIndex(uint16_t aFlagsIndex) { mFlagsIndex = BigEndian::HostSwap16(aFlagsIndex); }
 
     uint16_t mFlagsIndex;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Answer TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kAnswer, AnswerTlvValue> AnswerTlv;
 
 /**
  * Represents the MLE Counters.
@@ -1103,6 +916,9 @@ private:
 } OT_TOOL_PACKED_END;
 
 } // namespace NetworkDiagnostic
+
+DefineCoreType(otNetworkDiagConnectivity, NetworkDiagnostic::Connectivity);
+
 } // namespace ot
 
-#endif // NETWORK_DIAGNOSTIC_TLVS_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_

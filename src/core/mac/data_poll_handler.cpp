@@ -89,7 +89,8 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     Child       *child;
     uint16_t     indirectMsgCount;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrame.IsSecuredWith(Mac::RxFrame::kAllowKeyIdMode1));
+
     VerifyOrExit(!Get<Mle::Mle>().IsDetached());
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));

@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI CoAP server and client.
  */
 
-#ifndef CLI_COAP_HPP_
-#define CLI_COAP_HPP_
+#ifndef OT_CLI_CLI_COAP_HPP_
+#define OT_CLI_CLI_COAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -79,7 +79,8 @@ private:
     using Command = CommandEntry<Coap>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum BlockType : uint8_t{
+    enum BlockType : uint8_t
+    {
         kBlockType1,
         kBlockType2,
     };
@@ -88,7 +89,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError CancelResourceSubscription(void);
+    otError CancelResourceSubscription(bool aSendCancelMessage);
     void    CancelSubscriber(void);
 #endif
 
@@ -97,18 +98,23 @@ private:
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode, bool aCoapObserve = false);
 #else
-    otError        ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
+    otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
 #endif
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    static void HandleNotificationResponse(void                *aContext,
-                                           otMessage           *aMessage,
-                                           const otMessageInfo *aMessageInfo,
-                                           otError              aError);
-    void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    // Maximum number of non-confirmable (NON) notifications that are sent, before sending a confirmable notification
+    // for validating that the client is still there and still interested. The value (5) matches libcoap's
+    // implementation. The mechanism satisfies RFC 7641 requirements for interspersing confirmable (CON) notifications
+    // among non-confirmable (NON) notifications to validate the client.
+    static constexpr uint8_t kMaxNonNotificationsBeforeValidation = 5;
+    static void              HandleNotificationAck(void                *aContext,
+                                                   otMessage           *aMessage,
+                                                   const otMessageInfo *aMessageInfo,
+                                                   otError              aError);
+    void HandleNotificationAck(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 #endif
 
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
@@ -160,16 +166,16 @@ private:
     otIp6Address mRequestAddr;
     otSockAddr   mSubscriberSock;
     char         mRequestUri[kMaxUriLength];
-    uint8_t      mRequestToken[OT_COAP_MAX_TOKEN_LENGTH];
-    uint8_t      mSubscriberToken[OT_COAP_MAX_TOKEN_LENGTH];
+    otCoapToken  mRequestToken;
+    otCoapToken  mSubscriberToken;
 #endif
     char mUriPath[kMaxUriLength];
     char mResourceContent[kMaxBufferSize];
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     uint32_t mObserveSerial;
-    uint8_t  mRequestTokenLength;
-    uint8_t  mSubscriberTokenLength;
     bool     mSubscriberConfirmableNotifications;
+    bool     mValidateObserveClient;
+    uint8_t  mNotificationSeriesCount;
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     uint32_t mBlockCount;
@@ -181,4 +187,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-#endif // CLI_COAP_HPP_
+#endif // OT_CLI_CLI_COAP_HPP_

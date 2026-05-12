@@ -39,41 +39,6 @@ namespace ot {
 namespace Tmf {
 
 //----------------------------------------------------------------------------------------------------------------------
-// MessageInfo
-
-void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::Mle>().GetMeshLocalRloc()); }
-
-void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
-{
-    SetSockAddrToRloc();
-    Get<Mle::Mle>().GetLeaderAloc(GetPeerAddr());
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrToLeaderRloc(void)
-{
-    SetSockAddrToRloc();
-    Get<Mle::Mle>().GetLeaderRloc(GetPeerAddr());
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
-{
-    SetSockAddrToRloc();
-    GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16)
-{
-    SetSockAddrToRloc();
-    GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
-}
-
-void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
-{
-    SetSockAddrToRloc();
-    SetPeerAddr(aPeerAddress);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 // Agent
 
 Agent::Agent(Instance &aInstance)
@@ -85,35 +50,37 @@ Agent::Agent(Instance &aInstance)
 
 Error Agent::Start(void) { return Coap::Start(kUdpPort, Ip6::kNetifThreadInternal); }
 
-template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Agent::HandleTmf<kUriRelayRx>(Msg &aMsg)
 {
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aMsg);
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
-    Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+    Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMsg);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+    Get<MeshCoP::BorderAgent::Manager>().HandleTmf<kUriRelayRx>(aMsg);
 #endif
 }
 
-bool Agent::HandleResource(CoapBase               &aCoapBase,
-                           const char             *aUriPath,
-                           Message                &aMessage,
-                           const Ip6::MessageInfo &aMessageInfo)
+bool Agent::HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg)
 {
-    return static_cast<Agent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<Agent &>(aCoapBase).HandleResource(aUriPath, aMsg);
 }
 
-bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
 {
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
-#define Case(kUri, Type)                                     \
-    case kUri:                                               \
-        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+    if ((uri != kUriUnknown) && !aMsg.IsPostRequest())
+    {
+        IgnoreError(SendAckResponse(aMsg, ot::Coap::kCodeMethodNotAllowed));
+        ExitNow();
+    }
+
+#define Case(kUri, Type)                   \
+    case kUri:                             \
+        Get<Type>().HandleTmf<kUri>(aMsg); \
         break
 
     switch (uri)
@@ -146,8 +113,8 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-        Case(kUriPanIdConflict, PanIdQueryClient);
-        Case(kUriEnergyReport, EnergyScanClient);
+        Case(kUriPanIdConflict, MeshCoP::Commissioner);
+        Case(kUriEnergyReport, MeshCoP::Commissioner);
         Case(kUriDatasetChanged, MeshCoP::Commissioner);
         // kUriRelayRx is handled below
 #endif
@@ -172,6 +139,13 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+        Case(kUriHistoryQuery, HistoryTracker::Server);
+#endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+        Case(kUriHistoryAnswer, HistoryTracker::Client);
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
         Case(kUriMlr, BackboneRouter::Manager);
@@ -179,6 +153,9 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
         Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
 #endif
+#endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+        Case(kUriTcatEnable, MeshCoP::TcatAgent);
 #endif
 
     default:
@@ -188,17 +165,24 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
 
 #undef Case
 
+exit:
     return didHandle;
 }
 
-Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
-{
-    OT_UNUSED_VARIABLE(aMessage);
+Error Agent::Filter(void *aContext, const Msg &aRxMsg) { return static_cast<Agent *>(aContext)->Filter(aRxMsg); }
 
-    return static_cast<Agent *>(aContext)->IsTmfMessage(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
-                                                        aMessageInfo.GetSockPort())
-               ? kErrorNone
-               : kErrorNotTmf;
+Error Agent::Filter(const Msg &aRxMsg) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsTmfMessage(aRxMsg.mMessageInfo.GetPeerAddr(), aRxMsg.mMessageInfo.GetSockAddr(),
+                              aRxMsg.mMessageInfo.GetSockPort()),
+                 error = kErrorNotTmf);
+
+    VerifyOrExit(aRxMsg.mMessage.IsLinkSecurityEnabled(), error = kErrorSecurity);
+
+exit:
+    return error;
 }
 
 bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const
@@ -221,6 +205,81 @@ bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address 
 
 exit:
     return isTmf;
+}
+
+Error Agent::SendMessageTo(Message &aMessage, const Ip6::Address &aDest)
+{
+    return SendMessageTo(aMessage, aDest, nullptr, nullptr);
+}
+
+Error Agent::SendMessageTo(Message &aMessage, const Ip6::Address &aDest, ResponseHandler aHandler, void *aContext)
+{
+    return Send(aMessage, aDest, /* aAllowMulticastLoop */ false, aHandler, aContext);
+}
+
+Error Agent::SendMessageAllowMulticastLoop(Message &aMessage, const Ip6::Address &aDest)
+{
+    return SendMessageAllowMulticastLoop(aMessage, aDest, nullptr, nullptr);
+}
+
+Error Agent::SendMessageAllowMulticastLoop(Message            &aMessage,
+                                           const Ip6::Address &aDest,
+                                           ResponseHandler     aHandler,
+                                           void               *aContext)
+{
+    return Send(aMessage, aDest, /* aAllowMulticastLoop */ true, aHandler, aContext);
+}
+
+Error Agent::Send(Message            &aMessage,
+                  const Ip6::Address &aDest,
+                  bool                aAllowMulticastLoop,
+                  ResponseHandler     aHandler,
+                  void               *aContext)
+{
+    Ip6::MessageInfo messageInfo;
+
+    messageInfo.SetPeerAddr(aDest);
+    PrepareMessageInfo(messageInfo);
+    messageInfo.SetMulticastLoop(aAllowMulticastLoop);
+
+    return SendMessage(aMessage, messageInfo, aHandler, aContext);
+}
+
+Error Agent::SendMessageToRloc(Message &aMessage, uint16_t aRloc16)
+{
+    return SendMessageToRloc(aMessage, aRloc16, nullptr, nullptr);
+}
+
+Error Agent::SendMessageToRloc(Message &aMessage, uint16_t aRloc16, ResponseHandler aHandler, void *aContext)
+{
+    Ip6::MessageInfo messageInfo;
+
+    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    PrepareMessageInfo(messageInfo);
+
+    return SendMessage(aMessage, messageInfo, aHandler, aContext);
+}
+
+Error Agent::SendMessageToLeaderAloc(Message &aMessage) { return SendMessageToLeaderAloc(aMessage, nullptr, nullptr); }
+
+Error Agent::SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler, void *aContext)
+{
+    Ip6::MessageInfo messageInfo;
+
+    Get<Mle::Mle>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    PrepareMessageInfo(messageInfo);
+
+    return SendMessage(aMessage, messageInfo, aHandler, aContext);
+}
+
+void Agent::PrepareMessageInfo(Ip6::MessageInfo &aMessageInfo) const
+{
+    // `GetPeerAddr()` must be already set.
+
+    aMessageInfo.SetPeerPort(kUdpPort);
+    aMessageInfo.SetSockAddr(aMessageInfo.GetPeerAddr().IsLinkLocalUnicastOrMulticast()
+                                 ? Get<Mle::Mle>().GetLinkLocalAddress()
+                                 : Get<Mle::Mle>().GetMeshLocalRloc());
 }
 
 uint8_t Agent::PriorityToDscp(Message::Priority aPriority)
@@ -278,7 +337,7 @@ SecureAgent::SecureAgent(Instance &aInstance)
 {
     SetAcceptCallback(&HandleDtlsAccept, this);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
     SetResourceHandler(&HandleResource);
 #endif
 }
@@ -295,31 +354,37 @@ Coap::SecureSession *SecureAgent::HandleDtlsAccept(void)
     return IsSessionInUse() ? nullptr : static_cast<Coap::SecureSession *>(this);
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
 
-bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
-                                 const char             *aUriPath,
-                                 Message                &aMessage,
-                                 const Ip6::MessageInfo &aMessageInfo)
+bool SecureAgent::HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg)
 {
-    return static_cast<SecureAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+    return static_cast<SecureAgent &>(aCoapBase).HandleResource(aUriPath, aMsg);
 }
 
-bool SecureAgent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+bool SecureAgent::HandleResource(const char *aUriPath, Msg &aMsg)
 {
     bool didHandle = false;
     Uri  uri       = UriFromPath(aUriPath);
 
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
     if (uri == kUriJoinerFinalize)
     {
-        Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMessage, aMessageInfo);
+        Get<MeshCoP::Commissioner>().HandleTmf<kUriJoinerFinalize>(aMsg);
         didHandle = true;
     }
+#endif
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    if (mResourceHandler.IsSet())
+    {
+        didHandle = mResourceHandler.Invoke(uri, aMsg);
+    }
+#endif
 
     return didHandle;
 }
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
 
 #endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 

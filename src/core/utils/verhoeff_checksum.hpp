@@ -31,8 +31,8 @@
  *   This file includes definitions for Verhoeff checksum calculation and validation.
  */
 
-#ifndef VERHOEFF_CHECKSUM_HPP_
-#define VERHOEFF_CHECKSUM_HPP_
+#ifndef OT_CORE_UTILS_VERHOEFF_CHECKSUM_HPP_
+#define OT_CORE_UTILS_VERHOEFF_CHECKSUM_HPP_
 
 #include "openthread-core-config.h"
 
@@ -93,4 +93,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
-#endif // VERHOEFF_CHECKSUM_HPP_
+#endif // OT_CORE_UTILS_VERHOEFF_CHECKSUM_HPP_

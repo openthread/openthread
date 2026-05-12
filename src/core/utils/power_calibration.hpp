@@ -31,8 +31,8 @@
  * @brief
  *   This file includes definitions for the platform power calibration module.
  */
-#ifndef POWER_CALIBRATION_HPP_
-#define POWER_CALIBRATION_HPP_
+#ifndef OT_CORE_UTILS_POWER_CALIBRATION_HPP_
+#define OT_CORE_UTILS_POWER_CALIBRATION_HPP_
 
 #include "openthread-core-config.h"
 
@@ -168,4 +168,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#endif // POWER_CALIBRATION_HPP_
+#endif // OT_CORE_UTILS_POWER_CALIBRATION_HPP_

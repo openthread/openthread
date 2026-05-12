@@ -51,96 +51,79 @@ struct Entry
     int Compare(const char *aPath) const { return strcmp(aPath, mPath); }
 };
 
-// The list of URI paths (MUST be sorted alphabetically)
-static constexpr Entry kEntries[] = {
-    {"a/ae"},  // (0) kUriAddressError
-    {"a/an"},  // (1) kUriAddressNotify
-    {"a/aq"},  // (2) kUriAddressQuery
-    {"a/ar"},  // (3) kUriAddressRelease
-    {"a/as"},  // (4) kUriAddressSolicit
-    {"a/sd"},  // (5) kUriServerData
-    {"a/yl"},  // (6) kUriAnycastLocate
-    {"b/ba"},  // (7) kUriBackboneAnswer
-    {"b/bmr"}, // (8) kUriBackboneMlr
-    {"b/bq"},  // (9) kUriBackboneQuery
-    {"c/ab"},  // (10) kUriAnnounceBegin
-    {"c/ag"},  // (11) kUriActiveGet
-    {"c/ar"},  // (12) kUriActiveReplace
-    {"c/as"},  // (13) kUriActiveSet
-    {"c/ca"},  // (14) kUriCommissionerKeepAlive
-    {"c/cg"},  // (15) kUriCommissionerGet
-    {"c/cp"},  // (16) kUriCommissionerPetition
-    {"c/cs"},  // (17) kUriCommissionerSet
-    {"c/dc"},  // (18) kUriDatasetChanged
-    {"c/er"},  // (19) kUriEnergyReport
-    {"c/es"},  // (20) kUriEnergyScan
-    {"c/je"},  // (21) kUriJoinerEntrust
-    {"c/jf"},  // (22) kUriJoinerFinalize
-    {"c/la"},  // (23) kUriLeaderKeepAlive
-    {"c/lp"},  // (24) kUriLeaderPetition
-    {"c/pc"},  // (25) kUriPanIdConflict
-    {"c/pg"},  // (26) kUriPendingGet
-    {"c/pq"},  // (27) kUriPanIdQuery
-    {"c/ps"},  // (28) kUriPendingSet
-    {"c/rx"},  // (29) kUriRelayRx
-    {"c/tx"},  // (30) kUriRelayTx
-    {"c/ur"},  // (31) kUriProxyRx
-    {"c/ut"},  // (32) kUriProxyTx
-    {"d/da"},  // (33) kUriDiagnosticGetAnswer
-    {"d/dg"},  // (34) kUriDiagnosticGetRequest
-    {"d/dq"},  // (35) kUriDiagnosticGetQuery
-    {"d/dr"},  // (36) kUriDiagnosticReset
-    {"n/dn"},  // (37) kUriDuaRegistrationNotify
-    {"n/dr"},  // (38) kUriDuaRegistrationRequest
-    {"n/mr"},  // (39) kUriMlr
-};
+#define UriEntryMapList(_)                                        \
+    _("a/ae", kUriAddressError, "AddrError")                      \
+    _("a/an", kUriAddressNotify, "AddrNotify")                    \
+    _("a/aq", kUriAddressQuery, "AddrQuery")                      \
+    _("a/ar", kUriAddressRelease, "AddrRelease")                  \
+    _("a/as", kUriAddressSolicit, "AddrSolicit")                  \
+    _("a/sd", kUriServerData, "ServerData")                       \
+    _("a/yl", kUriAnycastLocate, "AnycastLocate")                 \
+    _("b/ba", kUriBackboneAnswer, "BbAnswer")                     \
+    _("b/bmr", kUriBackboneMlr, "BbMlr")                          \
+    _("b/bq", kUriBackboneQuery, "BbQuery")                       \
+    _("c/ab", kUriAnnounceBegin, "AnnounceBegin")                 \
+    _("c/ag", kUriActiveGet, "ActiveGet")                         \
+    _("c/ar", kUriActiveReplace, "ActiveReplace")                 \
+    _("c/as", kUriActiveSet, "ActiveSet")                         \
+    _("c/ca", kUriCommissionerKeepAlive, "CommrKeepAlive")        \
+    _("c/cg", kUriCommissionerGet, "CommrGet")                    \
+    _("c/cp", kUriCommissionerPetition, "CommrPetition")          \
+    _("c/cs", kUriCommissionerSet, "CommrSet")                    \
+    _("c/dc", kUriDatasetChanged, "DatasetChanged")               \
+    _("c/er", kUriEnergyReport, "EnergyReport")                   \
+    _("c/es", kUriEnergyScan, "EnergyScan")                       \
+    _("c/je", kUriJoinerEntrust, "JoinerEntrust")                 \
+    _("c/jf", kUriJoinerFinalize, "JoinerFinalize")               \
+    _("c/la", kUriLeaderKeepAlive, "LeaderKeepAlive")             \
+    _("c/lp", kUriLeaderPetition, "LeaderPetition")               \
+    _("c/nj", kUriEnrollerJoinerAccept, "EnrollerJoinerAccept")   \
+    _("c/nk", kUriEnrollerKeepAlive, "EnrollerKeepAlive")         \
+    _("c/nl", kUriEnrollerJoinerRelease, "EnrollerJoinerRelease") \
+    _("c/nr", kUriEnrollerRegister, "EnrollerRegister")           \
+    _("c/ns", kUriEnrollerReportState, "EnrollerReportState")     \
+    _("c/pc", kUriPanIdConflict, "PanIdConflict")                 \
+    _("c/pg", kUriPendingGet, "PendingGet")                       \
+    _("c/pq", kUriPanIdQuery, "PanIdQuery")                       \
+    _("c/ps", kUriPendingSet, "PendingSet")                       \
+    _("c/rx", kUriRelayRx, "RelayRx")                             \
+    _("c/te", kUriTcatEnable, "TcatEnable")                       \
+    _("c/tx", kUriRelayTx, "RelayTx")                             \
+    _("c/ur", kUriProxyRx, "ProxyRx")                             \
+    _("c/ut", kUriProxyTx, "ProxyTx")                             \
+    _("d/da", kUriDiagnosticGetAnswer, "DiagGetAnswer")           \
+    _("d/dg", kUriDiagnosticGetRequest, "DiagGetRequest")         \
+    _("d/dq", kUriDiagnosticGetQuery, "DiagGetQuery")             \
+    _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
+    _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
+    _("h/qy", kUriHistoryQuery, "HistQuery")                      \
+    _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \
+    _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")        \
+    _("n/mr", kUriMlr, "Mlr")
 
+// We use the X-Macro pattern here. The `UriEntryMapList` macro defines the
+// mapping between URI path string, its `kUri*` enum and its name string (for
+// `UriToString`).
+//
+// The `UriEntryMapList` macro accepts a single parameter, which is a "visitor"
+// macro (`_`). The visitor macro is called for each entry in the list. We define
+// different visitor macros: one to define the `kEntries[]` array, another to
+// validate the entries in the array (ensuring the URI paths match the enum
+// values and are sorted properly), and a third to define the `UriToString()`
+// template specializations.
+
+#define _EntryArrayElement(kPathString, kUri, kName) {kPathString},
+
+static constexpr const Entry kEntries[] = {UriEntryMapList(_EntryArrayElement)};
+
+// The URI entries MUST be sorted based on their path string (e.g. `c/ut`)
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
 
-struct UriEnumCheck
-{
-    InitEnumValidatorCounter();
-    ValidateNextEnum(kUriAddressError);
-    ValidateNextEnum(kUriAddressNotify);
-    ValidateNextEnum(kUriAddressQuery);
-    ValidateNextEnum(kUriAddressRelease);
-    ValidateNextEnum(kUriAddressSolicit);
-    ValidateNextEnum(kUriServerData);
-    ValidateNextEnum(kUriAnycastLocate);
-    ValidateNextEnum(kUriBackboneAnswer);
-    ValidateNextEnum(kUriBackboneMlr);
-    ValidateNextEnum(kUriBackboneQuery);
-    ValidateNextEnum(kUriAnnounceBegin);
-    ValidateNextEnum(kUriActiveGet);
-    ValidateNextEnum(kUriActiveReplace);
-    ValidateNextEnum(kUriActiveSet);
-    ValidateNextEnum(kUriCommissionerKeepAlive);
-    ValidateNextEnum(kUriCommissionerGet);
-    ValidateNextEnum(kUriCommissionerPetition);
-    ValidateNextEnum(kUriCommissionerSet);
-    ValidateNextEnum(kUriDatasetChanged);
-    ValidateNextEnum(kUriEnergyReport);
-    ValidateNextEnum(kUriEnergyScan);
-    ValidateNextEnum(kUriJoinerEntrust);
-    ValidateNextEnum(kUriJoinerFinalize);
-    ValidateNextEnum(kUriLeaderKeepAlive);
-    ValidateNextEnum(kUriLeaderPetition);
-    ValidateNextEnum(kUriPanIdConflict);
-    ValidateNextEnum(kUriPendingGet);
-    ValidateNextEnum(kUriPanIdQuery);
-    ValidateNextEnum(kUriPendingSet);
-    ValidateNextEnum(kUriRelayRx);
-    ValidateNextEnum(kUriRelayTx);
-    ValidateNextEnum(kUriProxyRx);
-    ValidateNextEnum(kUriProxyTx);
-    ValidateNextEnum(kUriDiagnosticGetAnswer);
-    ValidateNextEnum(kUriDiagnosticGetRequest);
-    ValidateNextEnum(kUriDiagnosticGetQuery);
-    ValidateNextEnum(kUriDiagnosticReset);
-    ValidateNextEnum(kUriDuaRegistrationNotify);
-    ValidateNextEnum(kUriDuaRegistrationRequest);
-    ValidateNextEnum(kUriMlr);
-};
+#define _ValidateEntryElement(kPathString, kUri, kName)                    \
+    static_assert(AreConstStringsEqual(kEntries[kUri].mPath, kPathString), \
+                  #kUri " value is incorrect. list is not sorted");
+
+UriEntryMapList(_ValidateEntryElement)
 
 } // namespace UriList
 
@@ -163,45 +146,9 @@ exit:
     return uri;
 }
 
-template <> const char *UriToString<kUriAddressError>(void) { return "AddressError"; }
-template <> const char *UriToString<kUriAddressNotify>(void) { return "AddressNotify"; }
-template <> const char *UriToString<kUriAddressQuery>(void) { return "AddressQuery"; }
-template <> const char *UriToString<kUriAddressRelease>(void) { return "AddressRelease"; }
-template <> const char *UriToString<kUriAddressSolicit>(void) { return "AddressSolicit"; }
-template <> const char *UriToString<kUriServerData>(void) { return "ServerData"; }
-template <> const char *UriToString<kUriAnycastLocate>(void) { return "AnycastLocate"; }
-template <> const char *UriToString<kUriBackboneAnswer>(void) { return "BackboneAnswer"; }
-template <> const char *UriToString<kUriBackboneMlr>(void) { return "BackboneMlr"; }
-template <> const char *UriToString<kUriBackboneQuery>(void) { return "BackboneQuery"; }
-template <> const char *UriToString<kUriAnnounceBegin>(void) { return "AnnounceBegin"; }
-template <> const char *UriToString<kUriActiveGet>(void) { return "ActiveGet"; }
-template <> const char *UriToString<kUriActiveReplace>(void) { return "ActiveReplace"; }
-template <> const char *UriToString<kUriActiveSet>(void) { return "ActiveSet"; }
-template <> const char *UriToString<kUriCommissionerKeepAlive>(void) { return "CommissionerKeepAlive"; }
-template <> const char *UriToString<kUriCommissionerGet>(void) { return "CommissionerGet"; }
-template <> const char *UriToString<kUriCommissionerPetition>(void) { return "CommissionerPetition"; }
-template <> const char *UriToString<kUriCommissionerSet>(void) { return "CommissionerSet"; }
-template <> const char *UriToString<kUriDatasetChanged>(void) { return "DatasetChanged"; }
-template <> const char *UriToString<kUriEnergyReport>(void) { return "EnergyReport"; }
-template <> const char *UriToString<kUriEnergyScan>(void) { return "EnergyScan"; }
-template <> const char *UriToString<kUriJoinerEntrust>(void) { return "JoinerEntrust"; }
-template <> const char *UriToString<kUriJoinerFinalize>(void) { return "JoinerFinalize"; }
-template <> const char *UriToString<kUriLeaderKeepAlive>(void) { return "LeaderKeepAlive"; }
-template <> const char *UriToString<kUriLeaderPetition>(void) { return "LeaderPetition"; }
-template <> const char *UriToString<kUriPanIdConflict>(void) { return "PanIdConflict"; }
-template <> const char *UriToString<kUriPendingGet>(void) { return "PendingGet"; }
-template <> const char *UriToString<kUriPanIdQuery>(void) { return "PanIdQuery"; }
-template <> const char *UriToString<kUriPendingSet>(void) { return "PendingSet"; }
-template <> const char *UriToString<kUriRelayRx>(void) { return "RelayRx"; }
-template <> const char *UriToString<kUriRelayTx>(void) { return "RelayTx"; }
-template <> const char *UriToString<kUriProxyRx>(void) { return "ProxyRx"; }
-template <> const char *UriToString<kUriProxyTx>(void) { return "ProxyTx"; }
-template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "DiagGetAnswer"; }
-template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
-template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
-template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
-template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
-template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
-template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }
+#define _DefineUriToString(kPathString, kUri, kName) \
+    template <> const char *UriToString<kUri>(void) { return kName; }
+
+UriEntryMapList(_DefineUriToString)
 
 } // namespace ot

@@ -31,8 +31,8 @@
  *   This file includes macros for validating runtime conditions.
  */
 
-#ifndef OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
-#define OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
+#ifndef OT_INCLUDE_COMMON_CODE_UTILS_HPP_
+#define OT_INCLUDE_COMMON_CODE_UTILS_HPP_
 
 #include <openthread/error.h>
 
@@ -68,7 +68,7 @@
  * @returns The aligned pointer.
  */
 #define OT_ALIGN(aPointer, aAlignment) \
-    ((void *)(((uintptr_t)(aPointer) + (aAlignment)-1UL) & ~((uintptr_t)(aAlignment)-1UL)))
+    ((void *)(((uintptr_t)(aPointer) + (aAlignment) - 1UL) & ~((uintptr_t)(aAlignment) - 1UL)))
 
 // Calculates the aligned variable size.
 #define OT_ALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
@@ -163,4 +163,4 @@
  */
 static inline void IgnoreError(otError aError) { OT_UNUSED_VARIABLE(aError); }
 
-#endif // OT_INCLUDE_COMMON_UTILS_CODE_UTILS_HPP_
+#endif // OT_INCLUDE_COMMON_CODE_UTILS_HPP_

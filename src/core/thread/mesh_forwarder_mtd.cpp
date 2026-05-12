@@ -54,8 +54,10 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 #endif
 }
 
-Error MeshForwarder::EvictMessage(Message::Priority aPriority)
+Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
 {
+    OT_UNUSED_VARIABLE(aEvictReason);
+
     Error    error = kErrorNotFound;
     Message *message;
 
@@ -65,6 +67,8 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 #endif
 
     VerifyOrExit((message = mSendQueue.GetTail()) != nullptr);
+
+    VerifyOrExit(!message->GetDoNotEvict());
 
     if (message->GetPriority() < static_cast<uint8_t>(aPriority))
     {

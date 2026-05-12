@@ -31,8 +31,8 @@
  *  This file defines OpenThread String class.
  */
 
-#ifndef STRING_HPP_
-#define STRING_HPP_
+#ifndef OT_CORE_COMMON_STRING_HPP_
+#define OT_CORE_COMMON_STRING_HPP_
 
 #include "openthread-core-config.h"
 
@@ -170,6 +170,8 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
 /**
  * Copies a string into a given target buffer with a given size if it fits.
  *
+ * Guarantees that @p aTargetBuffer remains unmodified if an error is returned.
+ *
  * @param[out] aTargetBuffer  A pointer to the target buffer to copy into.
  * @param[out] aTargetSize    The size (number of characters) in @p aTargetBuffer array.
  * @param[in]  aSource        A pointer to null-terminated string to copy from. Can be `nullptr` which treated as "".
@@ -179,12 +181,14 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
  * @retval kErrorInvalidArgs  The @p aSource does not fit in the given buffer.
  * @retval kErrorParse        The @p aSource does not follow the encoding format specified by @p aEncodingCheck.
  */
-Error StringCopy(char *TargetBuffer, uint16_t aTargetSize, const char *aSource, StringEncodingCheck aEncodingCheck);
+Error StringCopy(char *aTargetBuffer, uint16_t aTargetSize, const char *aSource, StringEncodingCheck aEncodingCheck);
 
 /**
  * Copies a string into a given target buffer with a given size if it fits.
  *
  * @tparam kSize  The size of buffer.
+ *
+ * Guarantees that @p aTargetBuffer remains unmodified if an error is returned.
  *
  * @param[out] aTargetBuffer  A reference to the target buffer array to copy into.
  * @param[in]  aSource        A pointer to null-terminated string to copy from. Can be `nullptr` which treated as "".
@@ -375,7 +379,44 @@ inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 {
     return (*aFirst < *aSecond)
                ? true
-               : ((*aFirst > *aSecond) || (*aFirst == '\0') ? false : AreStringsInOrder(aFirst + 1, aSecond + 1));
+               : ((*aFirst > *aSecond) || (*aFirst == kNullChar) ? false : AreStringsInOrder(aFirst + 1, aSecond + 1));
+}
+
+/**
+ * This `constexpr` function checks whether two given C strings are equal.
+ *
+ * This is intended for use from `static_assert`, e.g., checking if a lookup table entries are correct. It is not
+ * recommended to use this function in other situations as it uses recursion so that it can be `constexpr`.
+ *
+ * @param[in] aFirst    The first string.
+ * @param[in] aSecond   The second string.
+ *
+ * @retval TRUE  If @p aFirst is equal to @p aSecond.
+ * @retval FALSE If @p aFirst is not equal to @p aSecond.
+ */
+inline constexpr bool AreConstStringsEqual(const char *aFirst, const char *aSecond)
+{
+    return (*aFirst == *aSecond) ? (*aFirst == kNullChar ? true : AreConstStringsEqual(aFirst + 1, aSecond + 1))
+                                 : false;
+}
+
+/**
+ * This `constexpr` function checks whether a given C string starts with a given prefix string.
+ *
+ * This is intended for use in `static_assert`, e.g., checking the hardcoded vendor name on a reference device. It is
+ * not recommended to use this function in other situations as it uses recursion so that it can be `constexpr`.
+ *
+ * @param[in] aString   The string to check.
+ * @param[in] aPrefix   The prefix string.
+ *
+ * @retval TRUE   If @p aString starts with @p aPrefix.
+ * @retval FALSE  If @p aString does not start with @p aPrefix.
+ */
+inline constexpr bool CheckConstStringPrefix(const char *aString, const char *aPrefix)
+{
+    return (*aPrefix == kNullChar)
+               ? true
+               : ((*aString == *aPrefix) ? CheckConstStringPrefix(aString + 1, aPrefix + 1) : false);
 }
 
 /**
@@ -443,17 +484,27 @@ public:
      *
      * @returns The string writer.
      */
-    StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
+    StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
     /**
-     * Appends an array of bytes in hex representation (using "%02x" style) to the buffer.
+     * Appends an array of bytes in hex representation (using lowercase "%02x" style) to the buffer.
      *
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
      *
-     * @returns The string writer.
+     * @returns A reference to this string writer.
      */
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
+
+    /**
+     * Appends an array of bytes in hex representation (using uppercase "%02X" style) to the buffer.
+     *
+     * @param[in] aBytes    A pointer to buffer containing the bytes to append.
+     * @param[in] aLength   The length of @p aBytes buffer (in bytes).
+     *
+     * @returns A reference to this string writer.
+     */
+    StringWriter &AppendHexBytesUppercase(const uint8_t *aBytes, uint16_t aLength);
 
     /**
      * Appends a given character a given number of times.
@@ -564,4 +615,4 @@ public:
 
 } // namespace ot
 
-#endif // STRING_HPP_
+#endif // OT_CORE_COMMON_STRING_HPP_

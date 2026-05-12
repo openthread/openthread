@@ -31,8 +31,8 @@
  *   This file includes definitions for handling indirect transmission.
  */
 
-#ifndef INDIRECT_SENDER_HPP_
-#define INDIRECT_SENDER_HPP_
+#ifndef OT_CORE_THREAD_INDIRECT_SENDER_HPP_
+#define OT_CORE_THREAD_INDIRECT_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -273,11 +273,9 @@ private:
     void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
     void  HandleFrameChangeDone(Child &aChild);
 
-    void     UpdateIndirectMessage(Child &aChild);
-    void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
-    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
-    void     ClearMessagesForRemovedChildren(void);
+    void UpdateIndirectMessage(Child &aChild);
+    void RequestMessageUpdate(Child &aChild);
+    void ClearMessagesForRemovedChildren(void);
 
     static bool AcceptAnyMessage(const Message &aMessage);
     static bool AcceptSupervisionMessage(const Message &aMessage);
@@ -301,4 +299,4 @@ private:
 
 } // namespace ot
 
-#endif // INDIRECT_SENDER_HPP_
+#endif // OT_CORE_THREAD_INDIRECT_SENDER_HPP_

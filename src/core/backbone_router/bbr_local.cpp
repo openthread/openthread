@@ -57,7 +57,7 @@ Local::Local(Instance &aInstance)
 
     // Primary Backbone Router Aloc
     mBbrPrimaryAloc.InitAsThreadOriginMeshLocal();
-    mBbrPrimaryAloc.GetAddress().GetIid().SetToLocator(Mle::kAloc16BackboneRouterPrimary);
+    mBbrPrimaryAloc.GetAddress().GetIid().SetToLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
 
     // All Network Backbone Routers Multicast Address.
     mAllNetworkBackboneRouters.Clear();
@@ -246,15 +246,18 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mle::kInvalidRloc16)
     {
-        mRegistrationTimeout = 1;
-
-        if (!Get<Mle::Mle>().IsLeader())
+        if (Get<Mle::Mle>().IsLeader())
         {
-            mRegistrationTimeout +=
-                Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter) + 1);
+            mRegistrationTimeout = 0;
+            Get<TimeTicker>().UnregisterReceiver(TimeTicker::kBbrLocal);
+            IgnoreError(AddService(kDecideBasedOnState));
         }
-
-        Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
+        else
+        {
+            mRegistrationTimeout =
+                1 + Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter));
+            Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
+        }
     }
     else if (aConfig.mServer16 != Get<Mle::Mle>().GetRloc16())
     {
@@ -443,21 +446,14 @@ void Local::AddDomainPrefixToNetworkData(void)
 
 const char *Local::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Set",    // (0) kActionSet
-        "Add",    // (1) kActionAdd
-        "Remove", // (2) kActionRemove
-    };
+#define ActionMapList(_) \
+    _(kActionSet, "Set") \
+    _(kActionAdd, "Add") \
+    _(kActionRemove, "Remove")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kActionSet);
-        ValidateNextEnum(kActionAdd);
-        ValidateNextEnum(kActionRemove);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    return kActionStrings[aAction];
+    return kStrings[aAction];
 }
 
 void Local::LogDomainPrefix(Action aAction, Error aError)

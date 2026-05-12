@@ -31,8 +31,8 @@
  *   This file includes definitions for MAC radio links.
  */
 
-#ifndef MAC_LINKS_HPP_
-#define MAC_LINKS_HPP_
+#ifndef OT_CORE_MAC_MAC_LINKS_HPP_
+#define OT_CORE_MAC_MAC_LINKS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -696,4 +696,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_LINKS_HPP_
+#endif // OT_CORE_MAC_MAC_LINKS_HPP_

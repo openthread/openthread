@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv4 packet processing.
  */
 
-#ifndef IP4_TYPES_HPP_
-#define IP4_TYPES_HPP_
+#ifndef OT_CORE_NET_IP4_TYPES_HPP_
+#define OT_CORE_NET_IP4_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -91,14 +91,16 @@ class Cidr;
 OT_TOOL_PACKED_BEGIN
 class Address : public otIp4Address, public Equatable<Address>, public Clearable<Address>
 {
+    friend class Cidr;
+
 public:
-    static constexpr uint16_t kSize              = 4;  ///< Size of an IPv4 Address (in bytes).
-    static constexpr uint16_t kAddressStringSize = 17; ///< String size used by `ToString()`.
+    static constexpr uint16_t kSize           = OT_IP4_ADDRESS_SIZE;        ///< Size of an IPv4 Address (in bytes).
+    static constexpr uint16_t kInfoStringSize = OT_IP4_ADDRESS_STRING_SIZE; ///< String size used by `ToString()`.
 
     /**
      * Defines the fixed-length `String` object returned from `ToString()`.
      */
-    typedef String<kAddressStringSize> InfoString;
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * Gets the IPv4 address as a pointer to a byte array.
@@ -187,17 +189,17 @@ private:
 /**
  * Represents an IPv4 CIDR block.
  */
-class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
+class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Cidr>
 {
     friend class Address;
 
 public:
-    static constexpr uint16_t kCidrSuffixSize = 3; ///< Suffix to represent CIDR (/dd).
+    static constexpr uint16_t kInfoStringSize = OT_IP4_CIDR_STRING_SIZE; ///< String size used by `ToString()`.
 
     /**
      * Defines the fixed-length `String` object returned from `ToString()`.
      */
-    typedef String<Address::kAddressStringSize + kCidrSuffixSize> InfoString;
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * Converts the IPv4 CIDR string to binary.
@@ -235,6 +237,13 @@ public:
      * @returns An `InfoString` representing the IPv4 cidr.
      */
     InfoString ToString(void) const;
+
+    /**
+     * Gets the CIDR length (in bits).
+     *
+     * @returns The CIDR length.
+     */
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
      * Gets the prefix as a pointer to a byte array.
@@ -281,24 +290,30 @@ OT_TOOL_PACKED_BEGIN
 class Header : public Clearable<Header>
 {
 public:
-    static constexpr uint8_t kVersionIhlOffset         = 0;
-    static constexpr uint8_t kTrafficClassOffset       = 1;
-    static constexpr uint8_t kTotalLengthOffset        = 2;
-    static constexpr uint8_t kIdentificationOffset     = 4;
-    static constexpr uint8_t kFlagsFragmentOffset      = 6;
-    static constexpr uint8_t kTtlOffset                = 8;
-    static constexpr uint8_t kProtocolOffset           = 9;
-    static constexpr uint8_t kHeaderChecksumOffset     = 10;
-    static constexpr uint8_t kSourceAddressOffset      = 12;
-    static constexpr uint8_t kDestinationAddressOffset = 16;
-
     /**
      * Indicates whether or not the header appears to be well-formed.
      *
      * @retval TRUE    If the header appears to be well-formed.
      * @retval FALSE   If the header does not appear to be well-formed.
      */
-    bool IsValid(void) const { return IsVersion4(); }
+    bool IsValid(void) const
+    {
+        return IsVersion4() && (GetIhl() >= kMinIhl) && (GetHeaderLength() <= GetTotalLength());
+    }
+
+    /**
+     * Returns the IPv4 Internet Header Length (IHL) value.
+     *
+     * @returns The IPv4 IHL value.
+     */
+    uint8_t GetIhl(void) const { return mVersIhl & kIhlMask; }
+
+    /**
+     * Returns the IPv4 Header Length value.
+     *
+     * @returns The IPv4 Header Length value.
+     */
+    uint16_t GetHeaderLength(void) const { return static_cast<uint16_t>(GetIhl()) * 4; }
 
     /**
      * Initializes the Version to 4 and sets Traffic Class and Flow fields to zero.
@@ -518,6 +533,7 @@ private:
     static constexpr uint8_t  kVersion4           = 0x40;   // Use with `mVersIhl`
     static constexpr uint8_t  kVersionMask        = 0xf0;   // Use with `mVersIhl`
     static constexpr uint8_t  kIhlMask            = 0x0f;   // Use with `mVersIhl`
+    static constexpr uint8_t  kMinIhl             = 5;      ///< Minimum IPv4 Internet Header Length (in 32-bit words).
     static constexpr uint8_t  kDscpOffset         = 2;      // Use with `mDscpEcn`
     static constexpr uint16_t kDscpMask           = 0xfc;   // Use with `mDscpEcn`
     static constexpr uint8_t  kEcnOffset          = 0;      // Use with `mDscpEcn`
@@ -526,7 +542,13 @@ private:
     static constexpr uint16_t kFlagsDf            = 0x4000; // Use with `mFlagsFragmentOffset`
     static constexpr uint16_t kFlagsMf            = 0x2000; // Use with `mFlagsFragmentOffset`
     static constexpr uint16_t kFragmentOffsetMask = 0x1fff; // Use with `mFlagsFragmentOffset`
-    static constexpr uint32_t kVersIhlInit        = 0x45;   // Version 4, Header length = 5x8 bytes.
+    static constexpr uint32_t kVersIhlInit        = 0x45;   // Version 4, Header length = 5x4 bytes.
+    static constexpr uint8_t  kOptionEnd          = 0;      ///< End of Options List
+    static constexpr uint8_t  kOptionNop          = 1;      ///< No Operation
+    static constexpr uint8_t  kOptionLsrr         = 131;    ///< Loose Source and Record Route
+    static constexpr uint8_t  kOptionSsrr         = 137;    ///< Strict Source and Record Route
+
+    bool HasSourceRouteOption(const Message &aMessage) const;
 
     uint8_t  mVersIhl;
     uint8_t  mDscpEcn;
@@ -705,7 +727,7 @@ public:
      *
      * @returns The IPv4 header Total length value.
      */
-    uint8_t GetIpLength(void) const { return mIp4Header.GetTotalLength(); }
+    uint16_t GetIpLength(void) const { return mIp4Header.GetTotalLength(); }
 
     /**
      * Returns the IPv4 TTL value.
@@ -828,4 +850,4 @@ DefineCoreType(otIp4Cidr, Ip4::Cidr);
 
 } // namespace ot
 
-#endif // IP4_TYPES_HPP_
+#endif // OT_CORE_NET_IP4_TYPES_HPP_

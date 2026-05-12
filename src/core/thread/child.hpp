@@ -31,8 +31,8 @@
  *   This file includes definitions for a Thread `Child`.
  */
 
-#ifndef CHILD_HPP_
-#define CHILD_HPP_
+#ifndef OT_CORE_THREAD_CHILD_HPP_
+#define OT_CORE_THREAD_CHILD_HPP_
 
 #include "openthread-core-config.h"
 
@@ -102,21 +102,22 @@ public:
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
         /**
-         * Gets the MLR state of the IPv6 address entry.
+         * Indicates whether the IPv6 address is registered via Multicast Listener Registration (MLR) on a given child.
          *
-         * @param[in] aChild  The child owning this address entry.
+         * @param[in] aChild  The child associated with the address.
          *
-         * @returns The MLR state of IPv6 address entry.
+         * @retval TRUE   If the address is MLR registered on @p aChild.
+         * @retval FALSE  If the address is not MLR registered on @p aChild.
          */
-        MlrState GetMlrState(const Child &aChild) const;
+        bool IsMlrRegistered(const Child &aChild) const;
 
         /**
-         * Sets the MLR state of the IPv6 address entry.
+         * Sets whether the IPv6 address is registered via Multicast Listener Registration (MLR) on a given child.
          *
-         * @param[in] aState    The MLR state.
-         * @param[in] aChild    The child owning this address entry.
+         * @param[in] aRegistered  TRUE if MLR registered, FALSE otherwise.
+         * @param[in] aChild       The child associated with the address.
          */
-        void SetMlrState(MlrState aState, Child &aChild);
+        void SetMlrRegistered(bool aRegistered, Child &aChild);
 #endif
     };
 
@@ -231,7 +232,7 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
      * Retrieves the Domain Unicast Address registered by the child.
      *
@@ -336,32 +337,44 @@ public:
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
+    /**
+     * Indicates whether the child is blocking the parent from downgrading its router role.
+     *
+     * @retval TRUE   The child is blocking the parent from downgrading.
+     * @retval FALSE  The child is not blocking the parent from downgrading.
+     */
+    bool IsBlockingParentDowngrade(void) const { return mBlockParentDowngrade; }
+
+    /**
+     * Sets whether the child is blocking the parent from downgrading its router role.
+     *
+     * @param[in] aBlock  TRUE to block parent downgrade, FALSE otherwise.
+     */
+    void SetBlockParentDowngrade(bool aBlock) { mBlockParentDowngrade = aBlock; }
+
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * Returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * Clears the Multicast Listener Registration (MLR) registered state on all IPv6 addresses of the child.
+     */
+    void ClearMlrRegisteredStateOnAllIp6Addresses(void) { mMlrRegisteredSet.Clear(); }
+
+    /**
+     * Indicates whether the child has a given IPv6 address that is MLR registered.
      *
      * @param[in] aAddress  The IPv6 address.
      *
-     * @retval true   If the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval TRUE   If the child has the IPv6 address @p aAddress and it is MLR registered.
+     * @retval FALSE  If the child does not have the IPv6 address @p aAddress or it is not MLR registered.
      */
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * Returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
+     * Indicates whether the child has any IPv6 address that is MLR registered.
      *
-     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
+     * @retval TRUE   If the child has any MLR registered IPv6 address.
+     * @retval FALSE  If the child does not have any MLR registered IPv6 address.
      */
     bool HasAnyMlrRegisteredAddress(void) const { return !mMlrRegisteredSet.IsEmpty(); }
-
-    /**
-     * Returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
-     *
-     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
-     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
-     */
-    bool HasAnyMlrToRegisterAddress(void) const { return !mMlrToRegisterSet.IsEmpty(); }
 #endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
@@ -372,10 +385,10 @@ private:
     Ip6::InterfaceIdentifier mMeshLocalIid;
     Ip6AddressArray          mIp6Addresses;
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    ChildIp6AddressSet mMlrToRegisterSet;
     ChildIp6AddressSet mMlrRegisteredSet;
 #endif
 
+    bool    mBlockParentDowngrade;
     uint8_t mNetworkDataVersion;
 
     union
@@ -394,4 +407,4 @@ DefineCoreType(otChildInfo, Child::Info);
 
 } // namespace ot
 
-#endif // CHILD_HPP_
+#endif // OT_CORE_THREAD_CHILD_HPP_

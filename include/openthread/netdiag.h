@@ -38,6 +38,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openthread/border_routing.h>
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
@@ -87,6 +88,12 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL 35         ///< Vendor App URL TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_NON_PREFERRED_CHANNELS 36 ///< Non-Preferred Channels Mask TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_ENHANCED_ROUTE 37         ///< Enhanced Route TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_STATE 38               ///< Border Router State TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_IF_ADDRS 39            ///< Border Router Infra Interface Addresses TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OMR_PREFIX 40    ///< Border Router Local OMR Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX 41 ///< Border Router DHCPv6-PD OMR Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
@@ -97,6 +104,24 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT 0 ///<  Initializer for `otNetworkDiagIterator`.
 
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
+
+/**
+ * Represents a Network Diagnostics IPv6 Address List TLV value.
+ */
+typedef struct otNetworkDiagIp6AddrList
+{
+    uint8_t      mCount;                                                       ///< Number of IPv6 addresses.
+    otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otIp6Address)]; ///< Array of IPv6 addresses.
+} otNetworkDiagIp6AddrList;
+
+/**
+ * Represents a Network Diagnostic TLV Data.
+ */
+typedef struct otNetworkDiagData
+{
+    uint8_t mCount;                             ///< Number of bytes in the data.
+    uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH]; ///< Array containing the data bytes.
+} otNetworkDiagData;
 
 /**
  * Represents a Network Diagnostic Connectivity value.
@@ -235,6 +260,20 @@ typedef struct otNetworkDiagChildEntry
 } otNetworkDiagChildEntry;
 
 /**
+ * Represents a Network Diagnostic Child Table TLV value.
+ */
+typedef struct otNetworkDiagChildTable
+{
+    uint8_t                 mCount; ///< Number of child entries in the table.
+    otNetworkDiagChildEntry mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otNetworkDiagChildEntry)]; ///< Child table.
+} otNetworkDiagChildTable;
+
+/**
+ * Represents a Border Router State TLV value.
+ */
+typedef otBorderRoutingState otNetworkDiagBrState;
+
+/**
  * Represents a Network Diagnostic TLV.
  */
 typedef struct otNetworkDiagTlv
@@ -252,6 +291,8 @@ typedef struct otNetworkDiagTlv
         otNetworkDiagRoute        mRoute;
         otNetworkDiagEnhRoute     mEnhRoute;
         otLeaderData              mLeaderData;
+        otNetworkDiagData         mNetworkData;
+        otNetworkDiagIp6AddrList  mIp6AddrList;
         otNetworkDiagMacCounters  mMacCounters;
         otNetworkDiagMleCounters  mMleCounters;
         uint8_t                   mBatteryLevel;
@@ -264,26 +305,11 @@ typedef struct otNetworkDiagTlv
         char                      mThreadStackVersion[OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH + 1];
         char                      mVendorAppUrl[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH + 1];
         otChannelMask             mNonPreferredChannels;
-        struct
-        {
-            uint8_t mCount;
-            uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
-        } mNetworkData;
-        struct
-        {
-            uint8_t      mCount;
-            otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otIp6Address)];
-        } mIp6AddrList;
-        struct
-        {
-            uint8_t                 mCount;
-            otNetworkDiagChildEntry mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otNetworkDiagChildEntry)];
-        } mChildTable;
-        struct
-        {
-            uint8_t mCount;
-            uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
-        } mChannelPages;
+        otNetworkDiagData         mChannelPages;
+        otNetworkDiagChildTable   mChildTable;
+        otNetworkDiagBrState      mBrState;
+        otNetworkDiagIp6AddrList  mBrIfAddrList;
+        otIp6NetworkPrefix        mBrPrefix; // This field is shared for various BR prefix TLV (OMR, on-link).
     } mData;
 } otNetworkDiagTlv;
 
@@ -400,6 +426,20 @@ const char *otThreadGetVendorSwVersion(otInstance *aInstance);
 const char *otThreadGetVendorAppUrl(otInstance *aInstance);
 
 /**
+ * Represents an unspecified Vendor OUI.
+ */
+#define OT_THREAD_UNSPECIFIED_VENDOR_OUI (0xffffffff)
+
+/**
+ * Get the vendor OUI-24
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The vendor OUI-24 value in hex format, or `OT_THREAD_UNSPECIFIED_VENDOR_OUI` is not specified.
+ */
+uint32_t otThreadGetVendorOui(otInstance *aInstance);
+
+/**
  * Set the vendor name string.
  *
  * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
@@ -407,11 +447,16 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance);
  * @p aVendorName should be UTF8 with max length of 32 chars (`MAX_VENDOR_NAME_TLV_LENGTH`). Maximum length does not
  * include the null `\0` character.
  *
+ * If `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled, @p aVendorName must start with the "RD:" prefix.
+ * This is enforced to ensure reference devices are identifiable. If @p aVendorName does not follow this pattern,
+ * the name is rejected, and `OT_ERROR_INVALID_ARGS` is returned.
+ *
  * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aVendorName     The vendor name string.
  *
  * @retval OT_ERROR_NONE          Successfully set the vendor name.
- * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid (too long or not UTF8).
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorName is not valid. It is too long, is not UTF-8, or does not start with
+ *                                the "RD:" prefix when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
  */
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName);
 
@@ -462,6 +507,20 @@ otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwV
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorAppUrl is not valid (too long or not UTF8).
  */
 otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl);
+
+/**
+ * Set the vendor OUI-24.
+ *
+ * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aVendorOui   The vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66 is represented as
+ *                         `0x641666`). Must be a 24-bit value.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the vendor OUI.
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorOui is not a valid 24-bit value.
+ */
+otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui);
 
 /**
  * Callback function pointer to notify when a Network Diagnostic Reset request message is received for the

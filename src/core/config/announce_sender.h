@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Announce Sender.
  */
 
-#ifndef CONFIG_ANNOUNCE_SENDER_H_
-#define CONFIG_ANNOUNCE_SENDER_H_
+#ifndef OT_CORE_CONFIG_ANNOUNCE_SENDER_H_
+#define OT_CORE_CONFIG_ANNOUNCE_SENDER_H_
 
 /**
  * @addtogroup config-announce-sender
@@ -98,4 +98,4 @@
  * @}
  */
 
-#endif // CONFIG_ANNOUNCE_SENDER_H_
+#endif // OT_CORE_CONFIG_ANNOUNCE_SENDER_H_

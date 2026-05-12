@@ -154,7 +154,7 @@ Error Notifier::UpdateInconsistentData(void)
     // Don't send this Server Data Notification if the device is going
     // to upgrade to Router.
 
-    if (Get<Mle::Mle>().IsExpectedToBecomeRouterSoon())
+    if (Get<Mle::Mle>().WillBecomeRouterSoon())
     {
         ExitNow(error = kErrorInvalidState);
     }
@@ -183,21 +183,16 @@ exit:
 
 Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkData *aNetworkData)
 {
-    Error            error = kErrorNone;
-    Coap::Message   *message;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error          error = kErrorNone;
+    Coap::Message *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriServerData);
+    message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriServerData);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aNetworkData != nullptr)
     {
-        ThreadTlv tlv;
-
-        tlv.SetType(ThreadTlv::kThreadNetworkData);
-        tlv.SetLength(aNetworkData->GetLength());
-        SuccessOrExit(error = message->Append(tlv));
-        SuccessOrExit(error = message->AppendBytes(aNetworkData->GetBytes(), aNetworkData->GetLength()));
+        SuccessOrExit(
+            error = Tlv::Append<ThreadNetworkDataTlv>(*message, aNetworkData->GetBytes(), aNetworkData->GetLength()));
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
         Get<Leader>().CheckForNetDataGettingFull(*aNetworkData, aOldRloc16);
@@ -209,8 +204,7 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aOldRloc16));
     }
 
-    messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc();
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToLeaderAloc(*message, HandleCoapResponse, this));
 
     LogInfo("Sent %s", UriToString<kUriServerData>());
 
@@ -246,19 +240,10 @@ void Notifier::HandleNotifierEvents(Events aEvents)
 
 void Notifier::HandleTimer(void) { SynchronizeServerData(); }
 
-void Notifier::HandleCoapResponse(void                *aContext,
-                                  otMessage           *aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult)
+void Notifier::HandleCoapResponse(Coap::Msg *aMsg, Error aResult)
 {
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aMsg);
 
-    static_cast<Notifier *>(aContext)->HandleCoapResponse(aResult);
-}
-
-void Notifier::HandleCoapResponse(Error aResult)
-{
     mWaitingForResponse = false;
 
     switch (aResult)
@@ -294,7 +279,7 @@ bool Notifier::IsEligibleForRouterRoleUpgradeAsBorderRouter(void) const
     uint16_t rloc16     = Get<Mle::Mle>().GetRloc16();
     uint8_t  activeRouterCount;
 
-    VerifyOrExit(Get<Mle::Mle>().IsRouterEligible());
+    VerifyOrExit(Get<Mle::Mle>().IsRouterRoleAllowed());
 
     // RouterUpgradeThreshold can be explicitly set to zero in some of
     // cert tests to disallow device to become router.
@@ -361,7 +346,7 @@ void Notifier::HandleTimeTick(void)
         {
             LogInfo("Requesting router role as BR");
             mDidRequestRouterRoleUpgrade = true;
-            IgnoreError(Get<Mle::Mle>().BecomeRouter(ThreadStatusTlv::kBorderRouterRequest));
+            IgnoreError(Get<Mle::Mle>().BecomeRouter(Mle::kReasonBorderRouterRequest));
         }
     }
 exit:

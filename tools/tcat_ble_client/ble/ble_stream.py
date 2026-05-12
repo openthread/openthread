@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,10 @@
   POSSIBILITY OF SUCH DAMAGE.
 """
 
+import asyncio
 from itertools import count, takewhile
-from typing import Iterator, Union
 import logging
-import time
-from asyncio import sleep
+from typing import Iterator, Union
 
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
@@ -49,6 +48,9 @@ class BleStream:
         self.tx_char_uuid = tx_char_uuid
         self.rx_char_uuid = rx_char_uuid
 
+    def __str__(self):
+        return f"BleStream[{self.client}]"
+
     async def __aenter__(self):
         return self
 
@@ -57,9 +59,9 @@ class BleStream:
             await self.client.disconnect()
 
     def __handle_rx(self, _: BleakGATTCharacteristic, data: bytearray):
-        logger.debug(f'received {len(data)} bytes')
+        logger.debug(f'rx {len(data)} bytes')
         self.__receive_buffer += data
-        self.__last_recv_time = time.time()
+        self.__last_recv_time = asyncio.get_running_loop().time()
 
     @staticmethod
     def __sliced(data: bytes, n: int) -> Iterator[bytes]:
@@ -74,24 +76,24 @@ class BleStream:
         return self
 
     async def send(self, data):
-        logger.debug(f'sending {data}')
+        logger.debug(f'tx {len(data)} bytes')
         services = self.client.services.get_service(self.service_uuid)
         rx_char = services.get_characteristic(self.rx_char_uuid)
         for s in BleStream.__sliced(data, rx_char.max_write_without_response_size):
             await self.client.write_gatt_char(rx_char, s)
         return len(data)
 
-    async def recv(self, bufsize, recv_timeout=0.2):
+    async def recv(self, bufsize, recv_timeout=0.200):
         if not self.__receive_buffer:
             return b''
 
-        while time.time() - self.__last_recv_time <= recv_timeout:
-            await sleep(0.1)
+        while asyncio.get_running_loop().time() - self.__last_recv_time <= recv_timeout:
+            await asyncio.sleep(0.020)
 
-        message = self.__receive_buffer[:bufsize]
+        data = self.__receive_buffer[:bufsize]
         self.__receive_buffer = self.__receive_buffer[bufsize:]
-        logger.debug(f'retrieved {message}')
-        return message
+        logger.debug(f'rx {len(data)} bytes')
+        return data
 
     async def disconnect(self):
         if self.client.is_connected:

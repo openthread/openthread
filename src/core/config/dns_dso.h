@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the DNS Stateful Operations (DSO).
  */
 
-#ifndef CONFIG_DNS_DSO_H_
-#define CONFIG_DNS_DSO_H_
+#ifndef OT_CORE_CONFIG_DNS_DSO_H_
+#define OT_CORE_CONFIG_DNS_DSO_H_
 
 /**
  * @addtogroup config-dns-dso
@@ -94,4 +94,4 @@
  * @}
  */
 
-#endif // CONFIG_DNS_DSO_H_
+#endif // OT_CORE_CONFIG_DNS_DSO_H_

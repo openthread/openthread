@@ -51,6 +51,7 @@ void Peer::Init(Instance &aInstance)
     AsCoreType(&mExtAddress).Clear();
     AsCoreType(&mExtPanId).Clear();
     AsCoreType(&mSockAddr).Clear();
+    UpdateLastInteractionTime();
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     mPort                     = 0;
@@ -59,9 +60,9 @@ void Peer::Init(Instance &aInstance)
     mResolvingHost            = false;
     mTxtDataValidated         = false;
     mSockAddrUpdatedBasedOnRx = false;
-    mState                    = kStateResolving;
+    mDnssdState               = kDnssdResolving;
 #else
-    mState = kStateValid;
+    mDnssdState = kDnssdResolved;
 #endif
 }
 
@@ -79,6 +80,25 @@ void Peer::Free(void)
 #endif
 }
 
+void Peer::SetDnssdState(DnssdState aState)
+{
+    VerifyOrExit(mDnssdState != aState);
+
+    mDnssdState = aState;
+
+    if (mDnssdState == kDnssdRemoved)
+    {
+        uint32_t delay = DetermineExpirationDelay(Get<UptimeTracker>().GetUptimeInSeconds());
+
+        Get<PeerTable>().mTimer.FireAtIfEarlier(TimerMilli::GetNow() + Time::SecToMsec(delay));
+
+        SignalPeerRemoval();
+    }
+
+exit:
+    return;
+}
+
 void Peer::UpdateSockAddrBasedOnRx(const Ip6::SockAddr &aSockAddr)
 {
     VerifyOrExit(GetSockAddr() != aSockAddr);
@@ -93,23 +113,42 @@ exit:
     return;
 }
 
-void Peer::ScheduleToRemoveAfter(uint32_t aDelay)
+void Peer::UpdateLastInteractionTime(void) { mLastInteractionTime = Get<UptimeTracker>().GetUptimeInSeconds(); }
+
+uint32_t Peer::DetermineSecondsSinceLastInteraction(void) const
 {
-    VerifyOrExit(!IsStateRemoving());
+    return Get<UptimeTracker>().GetUptimeInSeconds() - mLastInteractionTime;
+}
 
-    mRemoveTime = TimerMilli::GetNow() + aDelay;
+uint32_t Peer::DetermineExpirationDelay(UptimeSec aUptimeNow) const
+{
+    // Determines the remaining expiration delay (in seconds) relative
+    // to the current time of `aUptimeNow`.
+    //
+    // If the peer is in the `kDnssdRemoved` state, expiration is
+    // calculated as `kExpirationDelay` seconds after
+    // `mLastInteractionTime`. Returns the seconds remaining until
+    // this expiration time or zero if already expired.
+    //
+    // If the peer is not in the `kDnssdRemoved` state, returns
+    // `uint32_t` max value, indicating that the peer is not
+    // considered as expired.
 
-    Log(kRemoving);
-    LogInfo("    after %lu msec", ToUlong(aDelay));
+    uint32_t  delay;
+    UptimeSec expireTime;
 
-    SetState(kStateRemoving);
+    SetToUintMax(delay);
 
-    Get<PeerTable>().mTimer.FireAtIfEarlier(mRemoveTime);
+    VerifyOrExit(mDnssdState == kDnssdRemoved);
 
-    SignalPeerRemoval();
+    expireTime = mLastInteractionTime + kExpirationDelay;
+
+    VerifyOrExit(expireTime > aUptimeNow, delay = 0);
+
+    delay = expireTime - aUptimeNow;
 
 exit:
-    return;
+    return delay;
 }
 
 void Peer::SetExtAddress(const Mac::ExtAddress &aExtAddress)
@@ -154,6 +193,11 @@ exit:
     return matches;
 }
 
+bool Peer::Matches(const ExpireChecker &aChecker) const
+{
+    return (mDnssdState == kDnssdRemoved) && (aChecker.mUptimeNow >= mLastInteractionTime + kExpirationDelay);
+}
+
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 
 void Peer::SignalPeerRemoval(void)
@@ -180,11 +224,24 @@ exit:
     return;
 }
 
-bool Peer::Matches(const ServiceNameMatcher &aMatcher) const { return NameMatch(mServiceName, aMatcher.mServiceName); }
-
-bool Peer::Matches(const HostNameMatcher &aMatcher) const
+bool Peer::Matches(NameMatchType aType, const char *aName) const
 {
-    return mResolvingHost && NameMatch(mHostName, aMatcher.mHostName);
+    bool matches = false;
+
+    switch (aType)
+    {
+    case kMatchServiceName:
+        matches = NameMatch(mServiceName, aName);
+        break;
+
+    case kMatchHostName:
+        VerifyOrExit(mResolvingHost);
+        matches = NameMatch(mHostName, aName);
+        break;
+    }
+
+exit:
+    return matches;
 }
 
 bool Peer::NameMatch(const Heap::String &aHeapString, const char *aName)
@@ -194,35 +251,28 @@ bool Peer::NameMatch(const Heap::String &aHeapString, const char *aName)
     return !aHeapString.IsNull() && StringMatch(aHeapString.AsCString(), aName, kStringCaseInsensitiveMatch);
 }
 
-#endif
+#endif // OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
 
-const char *Peer::StateToString(State aState)
+const char *Peer::DnssdStateToString(DnssdState aState)
 {
-    static const char *const kStateStrings[] = {
-        "valid",     // (0) kStateValid
-        "removing",  // (1) kStateRemoving
-        "resolving", // (2) kStateResolving
-    };
+#define DnssdStateMapList(_)      \
+    _(kDnssdResolved, "resolved") \
+    _(kDnssdRemoved, "removed")   \
+    _(kDnssdResolving, "resolving")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kStateValid);
-        ValidateNextEnum(kStateRemoving);
-        ValidateNextEnum(kStateResolving);
-    };
+    DefineEnumStringArray(DnssdStateMapList);
 
-    return kStateStrings[aState];
+    return kStrings[aState];
 }
 
 void Peer::Log(Action aAction) const
 {
-    LogInfo("%s peer %s, state:%s", ActionToString(aAction),
-            mServiceName.IsNull() ? "(null)" : mServiceName.AsCString(), StateToString(mState));
+    LogInfo("%s peer %s, dnssd-state:%s", ActionToString(aAction),
+            mServiceName.IsNull() ? "(null)" : mServiceName.AsCString(), DnssdStateToString(mDnssdState));
 
     if (!mHostName.IsNull())
     {
@@ -259,27 +309,16 @@ void Peer::Log(Action aAction) const
 
 const char *Peer::ActionToString(Action aAction)
 {
-    static const char *const kActionStrings[] = {
-        "Added",    // (0) kAdded
-        "Re-added", // (1) kReAdded,
-        "Updated",  // (2) kUpdated
-        "Removing", // (3) kRemoving
-        "Deleted",  // (4) kDeleted
-        "Evicting", // (5) kEvicting
-    };
+#define ActionMapList(_)    \
+    _(kAdded, "Added")      \
+    _(kReAdded, "Re-added") \
+    _(kUpdated, "Updated")  \
+    _(kDeleted, "Deleted")  \
+    _(kEvicting, "Evicting")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAdded);
-        ValidateNextEnum(kReAdded);
-        ValidateNextEnum(kUpdated);
-        ValidateNextEnum(kRemoving);
-        ValidateNextEnum(kDeleted);
-        ValidateNextEnum(kEvicting);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    return kActionStrings[aAction];
+    return kStrings[aAction];
 }
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -357,20 +396,44 @@ Error PeerTable::EvictPeer(void)
     Error          error = kErrorNotFound;
     OwnedPtr<Peer> peerToEvict;
 
-    // We first try to evict a peer already scheduled to be removed.
-    // Then try to evict a peer belonging to a different PAN. If not
-    // found, we evict a non-neighbor peer.
-
-    peerToEvict = RemoveMatching(Peer::kStateRemoving);
-
-    if (peerToEvict == nullptr)
-    {
-        peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
-    }
+    peerToEvict = RemoveMatching(Peer::OtherExtPanIdMatcher(Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     if (peerToEvict == nullptr)
     {
         peerToEvict = RemoveMatching(Peer::NonNeighborMatcher(Get<NeighborTable>()));
+    }
+
+    if (peerToEvict == nullptr)
+    {
+        // Find the peer in the 'kDnssdRemoved' state that has been
+        // inactive (no send/receive interaction) for the longest duration.
+
+        UptimeSec   uptimeNow           = Get<UptimeTracker>().GetUptimeInSeconds();
+        uint32_t    longestInactiveTime = 0;
+        const Peer *selectedPeer        = nullptr;
+
+        for (const Peer &peer : *this)
+        {
+            uint32_t inactiveTime;
+
+            if (peer.GetDnssdState() != Peer::kDnssdRemoved)
+            {
+                continue;
+            }
+
+            inactiveTime = uptimeNow - peer.mLastInteractionTime;
+
+            if (inactiveTime > longestInactiveTime)
+            {
+                longestInactiveTime = inactiveTime;
+                selectedPeer        = &peer;
+            }
+        }
+
+        if (selectedPeer != nullptr)
+        {
+            peerToEvict = RemoveMatching(*selectedPeer);
+        }
     }
 
     VerifyOrExit(peerToEvict != nullptr);
@@ -384,20 +447,22 @@ exit:
 
 void PeerTable::HandleTimer(void)
 {
-    TimeMilli    now = TimerMilli::GetNow();
-    NextFireTime nextFireTime(now);
+    UptimeSec uptimeNow = Get<UptimeTracker>().GetUptimeInSeconds();
+    uint32_t  delay;
 
-    RemoveAndFreeAllMatching(Peer::ExpireChecker(now));
+    SetToUintMax(delay);
+
+    RemoveAndFreeAllMatching(Peer::ExpireChecker(uptimeNow));
 
     for (const Peer &peer : *this)
     {
-        if (peer.IsStateRemoving())
-        {
-            nextFireTime.UpdateIfEarlier(peer.mRemoveTime);
-        }
+        delay = Min(delay, peer.DetermineExpirationDelay(uptimeNow));
     }
 
-    mTimer.FireAtIfEarlier(nextFireTime);
+    if (delay < NumericLimits<uint32_t>::kMax)
+    {
+        mTimer.Start(Time::SecToMsec(delay));
+    }
 }
 
 const Peer *PeerTable::GetNextPeer(PeerIterator &aIterator) const
@@ -406,7 +471,7 @@ const Peer *PeerTable::GetNextPeer(PeerIterator &aIterator) const
 
     VerifyOrExit(entry != nullptr);
 
-    while (!entry->IsStateValid())
+    while (entry->GetDnssdState() == Peer::kDnssdResolving)
     {
         entry = entry->GetNext();
         VerifyOrExit(entry != nullptr);
@@ -424,7 +489,7 @@ uint16_t PeerTable::GetNumberOfPeers(void) const
 
     for (const Peer &peer : *this)
     {
-        if (peer.IsStateValid())
+        if (peer.GetDnssdState() != Peer::kDnssdResolving)
         {
             count++;
         }

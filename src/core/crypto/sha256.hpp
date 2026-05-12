@@ -31,8 +31,8 @@
  *   This file includes definitions for performing SHA-256 computations.
  */
 
-#ifndef SHA256_HPP_
-#define SHA256_HPP_
+#ifndef OT_CORE_CRYPTO_SHA256_HPP_
+#define OT_CORE_CRYPTO_SHA256_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,6 +47,7 @@
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
 #include "crypto/context_size.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 
@@ -135,8 +136,7 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kSha256ContextSize, uint64_t);
+    ContextWith<kSha256ContextSize> mContext;
 };
 
 /**
@@ -149,4 +149,4 @@ DefineCoreType(otCryptoSha256Hash, Crypto::Sha256::Hash);
 
 } // namespace ot
 
-#endif // SHA256_HPP_
+#endif // OT_CORE_CRYPTO_SHA256_HPP_

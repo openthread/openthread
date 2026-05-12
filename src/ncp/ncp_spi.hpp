@@ -30,8 +30,8 @@
  *   This file contains definitions for a SPI interface to the OpenThread stack.
  */
 
-#ifndef NCP_SPI_HPP_
-#define NCP_SPI_HPP_
+#ifndef OT_NCP_NCP_SPI_HPP_
+#define OT_NCP_NCP_SPI_HPP_
 
 #include "openthread-core-config.h"
 
@@ -52,18 +52,15 @@ public:
     explicit NcpSpi(Instance *aInstance);
 
 private:
-    enum
-    {
-        /**
-         * SPI tx and rx buffer size (should fit a max length frame + SPI header).
-         */
-        kSpiBufferSize = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
+    /**
+     * SPI tx and rx buffer size (should fit a max length frame + SPI header).
+     */
+    static constexpr uint16_t kSpiBufferSize = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE;
 
-        /**
-         * Size of the SPI header (in bytes).
-         */
-        kSpiHeaderSize = Spinel::SpiFrame::kHeaderSize,
-    };
+    /**
+     * Size of the SPI header (in bytes).
+     */
+    static constexpr uint16_t kSpiHeaderSize = Spinel::SpiFrame::kHeaderSize;
 
     enum TxState
     {
@@ -118,4 +115,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_SPI_HPP_
+#endif // OT_NCP_NCP_SPI_HPP_

@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file includes definitions for managing the Extended PAN ID.
+ *   This file includes definitions for Extended PAN ID.
  */
 
-#ifndef MESHCOP_EXTENDED_PANID_HPP_
-#define MESHCOP_EXTENDED_PANID_HPP_
+#ifndef OT_CORE_MESHCOP_EXTENDED_PANID_HPP_
+#define OT_CORE_MESHCOP_EXTENDED_PANID_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,8 +41,6 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
-#include "common/locator.hpp"
-#include "common/non_copyable.hpp"
 #include "common/string.hpp"
 
 namespace ot {
@@ -69,37 +67,15 @@ public:
      */
     InfoString ToString(void) const;
 
+    /**
+     * Generates a cryptographically secure random sequence to populate the Extended PAN Identifier.
+     *
+     * @retval kErrorNone     Successfully generated a random Extended PAN ID.
+     * @retval kErrorFailed   Failed to generate random sequence.
+     */
+    Error GenerateRandom(void);
+
 } OT_TOOL_PACKED_END;
-
-class ExtendedPanIdManager : public InstanceLocator, private NonCopyable
-{
-public:
-    /**
-     * Constructor.
-     *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
-     */
-    explicit ExtendedPanIdManager(Instance &aInstance);
-
-    /**
-     * Returns the Extended PAN Identifier.
-     *
-     * @returns The Extended PAN Identifier.
-     */
-    const ExtendedPanId &GetExtPanId(void) const { return mExtendedPanId; }
-
-    /**
-     * Sets the Extended PAN Identifier.
-     *
-     * @param[in]  aExtendedPanId  The Extended PAN Identifier.
-     */
-    void SetExtPanId(const ExtendedPanId &aExtendedPanId);
-
-private:
-    static const otExtendedPanId sExtendedPanidInit;
-
-    ExtendedPanId mExtendedPanId;
-};
 
 } // namespace MeshCoP
 
@@ -107,4 +83,4 @@ DefineCoreType(otExtendedPanId, MeshCoP::ExtendedPanId);
 
 } // namespace ot
 
-#endif // MESHCOP_EXTENDED_PANID_HPP_
+#endif // OT_CORE_MESHCOP_EXTENDED_PANID_HPP_

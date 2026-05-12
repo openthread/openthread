@@ -31,8 +31,8 @@
  *   This file includes definitions for data poll (mac data request command) sender.
  */
 
-#ifndef DATA_POLL_MANAGER_HPP_
-#define DATA_POLL_MANAGER_HPP_
+#ifndef OT_CORE_MAC_DATA_POLL_SENDER_HPP_
+#define OT_CORE_MAC_DATA_POLL_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -287,4 +287,4 @@ private:
 
 } // namespace ot
 
-#endif // DATA_POLL_MANAGER_HPP_
+#endif // OT_CORE_MAC_DATA_POLL_SENDER_HPP_

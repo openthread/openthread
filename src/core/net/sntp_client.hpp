@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SNTP_CLIENT_HPP_
-#define SNTP_CLIENT_HPP_
+#ifndef OT_CORE_NET_SNTP_CLIENT_HPP_
+#define OT_CORE_NET_SNTP_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -247,7 +247,6 @@ private:
         uint8_t                   mRetransmissionCount; // Number of retransmissions
     };
 
-    Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
     void     DequeueMessage(Message &aMessage);
     Error    SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -274,4 +273,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
-#endif // SNTP_CLIENT_HPP_
+#endif // OT_CORE_NET_SNTP_CLIENT_HPP_

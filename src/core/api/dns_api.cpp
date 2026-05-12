@@ -69,9 +69,15 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-void otDnsSetNameCompressionEnabled(bool aEnabled) { Instance::SetDnsNameCompressionEnabled(aEnabled); }
+otError otDnsSetNameCompressionEnabled(otInstance *aInstance, bool aEnabled)
+{
+    return AsCoreType(aInstance).SetDnsNameCompressionEnabled(aEnabled);
+}
 
-bool otDnsIsNameCompressionEnabled(void) { return Instance::IsDnsNameCompressionEnabled(); }
+bool otDnsIsNameCompressionEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).IsDnsNameCompressionEnabled();
+}
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

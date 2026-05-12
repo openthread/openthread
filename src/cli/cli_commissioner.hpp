@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI to control the Commissioner role.
  */
 
-#ifndef CLI_COMMISSIONER_HPP_
-#define CLI_COMMISSIONER_HPP_
+#ifndef OT_CLI_CLI_COMMISSIONER_HPP_
+#define OT_CLI_CLI_COMMISSIONER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -110,4 +110,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
-#endif // CLI_COMMISSIONER_HPP_
+#endif // OT_CLI_CLI_COMMISSIONER_HPP_

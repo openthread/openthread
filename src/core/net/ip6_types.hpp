@@ -31,8 +31,8 @@
  *   This file includes types and constants for IPv6 processing.
  */
 
-#ifndef IP6_TYPES_HPP_
-#define IP6_TYPES_HPP_
+#ifndef OT_CORE_NET_IP6_TYPES_HPP_
+#define OT_CORE_NET_IP6_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -61,6 +61,11 @@ static constexpr uint8_t kProtoFragment = OT_IP6_PROTO_FRAGMENT; ///< Fragment H
 static constexpr uint8_t kProtoIcmp6    = OT_IP6_PROTO_ICMP6;    ///< ICMP for IPv6
 static constexpr uint8_t kProtoNone     = OT_IP6_PROTO_NONE;     ///< No Next Header for IPv6
 static constexpr uint8_t kProtoDstOpts  = OT_IP6_PROTO_DST_OPTS; ///< Destination Options for IPv6
+
+/**
+ * The default hop limit value.
+ */
+static constexpr uint8_t kDefaultHopLimit = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
 
 /**
  * The max datagram length (in bytes) of an IPv6 message.
@@ -112,4 +117,4 @@ enum Ecn : uint8_t
 } // namespace Ip6
 } // namespace ot
 
-#endif // IP6_TYPES_HPP_
+#endif // OT_CORE_NET_IP6_TYPES_HPP_

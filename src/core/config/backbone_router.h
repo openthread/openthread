@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for Backbone Router services.
  */
 
-#ifndef CONFIG_BACKBONE_ROUTER_H_
-#define CONFIG_BACKBONE_ROUTER_H_
+#ifndef OT_CORE_CONFIG_BACKBONE_ROUTER_H_
+#define OT_CORE_CONFIG_BACKBONE_ROUTER_H_
 
 /**
  * @addtogroup config-backbone-router
@@ -120,4 +120,4 @@
  * @}
  */
 
-#endif // CONFIG_BACKBONE_ROUTER_H_
+#endif // OT_CORE_CONFIG_BACKBONE_ROUTER_H_

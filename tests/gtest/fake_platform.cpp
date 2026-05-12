@@ -41,6 +41,7 @@
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/dnssd.h>
 #include <openthread/platform/dso_transport.h>
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
@@ -65,6 +66,7 @@ FakePlatform::FakePlatform()
     assert(sPlatform == nullptr);
     sPlatform = this;
 
+    fprintf(stderr, "fake platform start\r\n");
     mTransmitFrame.mPsdu = mTransmitBuffer;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -494,17 +496,22 @@ void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError) {}
 
 void otPlatDiagAlarmCallback(otInstance *) {}
 
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *, otLogLevel, const char *) {}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
 void otPlatFree(void *aPtr) { free(aPtr); }
 
-bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t) { return OT_ERROR_FAILED; }
+otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_FAILED;
+}
 
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
+otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
 
 void otPlatDsoEnableListening(otInstance *, bool) {}
 
@@ -535,6 +542,8 @@ void otPlatBleGetLinkCapabilities(otInstance *, otBleLinkCapabilities *) {}
 bool otPlatBleSupportsMultiRadio(otInstance *) { return false; }
 
 otError otPlatBleGapAdvSetData(otInstance *, uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+
+otError otPlatBleGapAdvUpdateData(otInstance *, uint8_t *, uint16_t) { return OT_ERROR_NONE; }
 
 OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance *, uint8_t, int16_t, const uint8_t *, uint16_t)
 {
@@ -608,9 +617,59 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket *, otNetifIdentifier, const otI
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-void otPlatOtnsStatus(const char *aStatus) { OT_UNUSED_VARIABLE(aStatus); }
-#endif
+otPlatDnssdState otPlatDnssdGetState(otInstance *) { return OT_PLAT_DNSSD_STOPPED; }
+
+void otPlatDnssdRegisterService(otInstance *,
+                                const otPlatDnssdService *,
+                                otPlatDnssdRequestId,
+                                otPlatDnssdRegisterCallback)
+{
+}
+
+void otPlatDnssdUnregisterService(otInstance *,
+                                  const otPlatDnssdService *,
+                                  otPlatDnssdRequestId,
+                                  otPlatDnssdRegisterCallback)
+{
+}
+
+void otPlatDnssdRegisterHost(otInstance *, const otPlatDnssdHost *, otPlatDnssdRequestId, otPlatDnssdRegisterCallback)
+{
+}
+
+void otPlatDnssdUnregisterHost(otInstance *, const otPlatDnssdHost *, otPlatDnssdRequestId, otPlatDnssdRegisterCallback)
+{
+}
+
+void otPlatDnssdRegisterKey(otInstance *, const otPlatDnssdKey *, otPlatDnssdRequestId, otPlatDnssdRegisterCallback) {}
+
+void otPlatDnssdUnregisterKey(otInstance *, const otPlatDnssdKey *, otPlatDnssdRequestId, otPlatDnssdRegisterCallback)
+{
+}
+
+void otPlatDnssdStartBrowser(otInstance *, const otPlatDnssdBrowser *) {}
+
+void otPlatDnssdStopBrowser(otInstance *, const otPlatDnssdBrowser *) {}
+
+void otPlatDnssdStartSrvResolver(otInstance *, const otPlatDnssdSrvResolver *) {}
+
+void otPlatDnssdStopSrvResolver(otInstance *, const otPlatDnssdSrvResolver *) {}
+
+void otPlatDnssdStartTxtResolver(otInstance *, const otPlatDnssdTxtResolver *) {}
+
+void otPlatDnssdStopTxtResolver(otInstance *, const otPlatDnssdTxtResolver *) {}
+
+void otPlatDnssdStartIp6AddressResolver(otInstance *, const otPlatDnssdAddressResolver *) {}
+
+void otPlatDnssdStopIp6AddressResolver(otInstance *, const otPlatDnssdAddressResolver *) {}
+
+void otPlatDnssdStartIp4AddressResolver(otInstance *, const otPlatDnssdAddressResolver *) {}
+
+void otPlatDnssdStopIp4AddressResolver(otInstance *, const otPlatDnssdAddressResolver *) {}
+
+void otPlatDnssdStartRecordQuerier(otInstance *, const otPlatDnssdRecordQuerier *) {}
+
+void otPlatDnssdStopRecordQuerier(otInstance *, const otPlatDnssdRecordQuerier *) {}
 
 void otPlatAssertFail(const char *, int) {}
 } // extern "C"

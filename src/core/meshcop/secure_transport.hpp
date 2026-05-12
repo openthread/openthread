@@ -31,8 +31,8 @@
  *   This file includes definitions for using mbedTLS.
  */
 
-#ifndef SECURE_TRANSPORT_HPP_
-#define SECURE_TRANSPORT_HPP_
+#ifndef OT_CORE_MESHCOP_SECURE_TRANSPORT_HPP_
+#define OT_CORE_MESHCOP_SECURE_TRANSPORT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -52,6 +52,18 @@
 #include <mbedtls/ssl_cookie.h>
 #endif
 #include <mbedtls/version.h>
+
+#ifdef OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+#error \
+    "OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT MUST NOT be defined directly. It is derived from other configs."
+#endif
+
+#if ((defined(MBEDTLS_SSL_EXPORT_KEYS) && (MBEDTLS_VERSION_NUMBER >= 0x03000000)) || \
+     (MBEDTLS_VERSION_NUMBER >= 0x03010000))
+#define OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT 1
+#else
+#define OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT 0
+#endif
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -238,7 +250,7 @@ private:
 #if !OPENTHREAD_CONFIG_TLS_API_ENABLE
     static constexpr uint16_t kApplicationDataMaxLength = 1152;
 #else
-    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+    static constexpr uint16_t kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
 #endif
 
     enum State : uint8_t
@@ -311,19 +323,27 @@ class SecureTransport : private NonCopyable
     friend class SecureSession;
 
 public:
-    static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
+    static constexpr size_t  kSecureTransportKeyBlockSize     = 40;
+    static constexpr size_t  kSecureTransportRandomBufferSize = 32;
+    static constexpr uint8_t kPskMaxLength                    = 32; ///< Maximum PSK length.
 
     /**
-     * Pointer is called to send encrypted message.
+     * Pointer to function that is called to send an encrypted message.
      *
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     * @retval kErrorNone         Successfully sent message.
+     * @retval kErrorNoBufs       Message not sent: signal to SecureTransport that the sending operation blocks.
+     *                            In this case, the stack will retry the sending later.
+     * @retval kErrorFailed       Failure to send, for other reasons. Note that any other errors not listed here
+     *                            will map to kErrorFailed.
      */
     typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Callback to notify when the socket is automatically closed due to reaching the maximum number of connection
+     * Callback to notify when the transport is automatically closed due to reaching the maximum number of connection
      * attempts (set from `SetMaxConnectionAttempts()`).
      *
      * @param[in] aContext    A pointer to arbitrary context information.
@@ -339,7 +359,7 @@ public:
      *
      * `nullptr` can be returned to reject the new session connection request.
      *
-     * @param[in] aContex       A pointer to arbitrary context information.
+     * @param[in] aContext      A pointer to arbitrary context information.
      * @param[in] aMessageInfo  The message info from the new session connection request message.
      *
      * @returns A pointer to `SecureSession` to use for new session or `nullptr` if new connection is rejected.
@@ -597,26 +617,46 @@ public:
 #endif // OPENTHREAD_CONFIG_TLS_API_ENABLE
 
     /**
-     * Opens the transport.
+     * Opens the secure transport and binds it to a UDP socket.
      *
-     * @param[in] aNetifIdentifier A network interface identifier. If not explicitly provided, kNetifUnspecified will
-     *                             be used by default.
+     * This flavor of `Open` creates and binds a UDP socket to the specified @p aPort and @p aNetifIdentifier. The
+     * transport will then use this socket for all its traffic.
      *
-     * @retval kErrorNone     Successfully opened the socket.
-     * @retval kErrorAlready  The connection is already open.
+     * If @p aPort is zero, an ephemeral port number is picked by the socket. The chosen port can be retrieved using
+     * `GetUdpPort()`.
+     *
+     * @param[in] aPort             The port to bind to. If zero, an ephemeral port is used.
+     * @param[in] aNetifIdentifier  A network interface identifier. `kNetifUnspecified` will be used by default.
+     *
+     * @retval kErrorNone     Successfully opened the socket and bound it to @p aPort.
+     * @retval kErrorAlready  The secure transport is already open.
      */
-    Error Open(Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
+    Error Open(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier = Ip6::NetifIdentifier::kNetifUnspecified);
 
     /**
-     * Sets the maximum number of allowed connection requests before socket is automatically closed.
+     * Opens the secure transport using a callback for transmission.
      *
-     * This method can be called when socket is closed. Otherwise `kErrorInvalidSatet` is returned.
+     * This flavor of `Open` does not use a UDP socket. Instead, it relies on the provided @p aCallback for all outgoing
+     * message transmissions. It also expects received messages to be passed in through `HandleReceive()`.
      *
-     * If @p aMaxAttempts is zero, no limit is applied and connections are allowed until the socket is closed. This is
-     * the default behavior if `SetMaxConnectionAttempts()` is not called.
+     * @param[in] aCallback  A pointer to a function for sending messages.
+     * @param[in] aContext   A pointer to arbitrary context information.
+     *
+     * @retval kErrorNone     Successfully opened the transport.
+     * @retval kErrorAlready  The secure transport is already open.
+     */
+    Error Open(TransportCallback aCallback, void *aContext);
+
+    /**
+     * Sets the maximum number of allowed connection requests before transport is automatically closed.
+     *
+     * This method can be called when transport is closed. Otherwise `kErrorInvalidState` is returned.
+     *
+     * If @p aMaxAttempts is zero, no limit is applied and connections are allowed until the transport is closed. This
+     * is the default behavior if `SetMaxConnectionAttempts()` is not called.
      *
      * @param[in] aMaxAttempts    Maximum number of allowed connection attempts.
-     * @param[in] aCallback       Callback to notify when max number of attempts has reached and socket is closed.
+     * @param[in] aCallback       Callback to notify when max number of attempts has reached and transport is closed.
      * @param[in] aContext        A pointer to arbitrary context to use with `AutoCloseCallback`.
      *
      * @retval kErrorNone          Successfully set the maximum allowed connection attempts and callback.
@@ -644,45 +684,32 @@ public:
     }
 
     /**
-     * Binds this DTLS to a UDP port.
+     * Indicates whether or not the secure transport uses a UDP socket.
      *
-     * @param[in]  aPort              The port to bind.
-     *
-     * @retval kErrorNone           Successfully bound the socket.
-     * @retval kErrorInvalidState   The socket is not open.
-     * @retval kErrorAlready        Already bound.
+     * @retval TRUE   The secure transport is open and uses a UDP socket.
+     * @retval FALSE  The secure transport is either closed or does not use a UDP socket.
      */
-    Error Bind(uint16_t aPort);
+    bool UsesSocket(void) const { return mIsOpen && !mTransportCallback.IsSet(); }
 
     /**
-     * Gets the UDP port of this session.
+     * Gets the UDP port of the secure transport.
      *
-     * @returns  UDP port number.
+     * This method can only be used if the secure transport is open and uses a UDP socket. Otherwise, it returns 0.
+     *
+     * @returns  The UDP port number if the transport uses a socket, 0 otherwise.
      */
-    uint16_t GetUdpPort(void) const { return mSocket.GetSockName().GetPort(); }
+    uint16_t GetUdpPort(void) const { return UsesSocket() ? mSocket.GetSockName().GetPort() : 0; }
 
     /**
-     * Binds with a transport callback.
+     * Indicates whether or not the secure transport is closed.
      *
-     * @param[in]  aCallback  A pointer to a function for sending messages.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone           Successfully bound the socket.
-     * @retval kErrorInvalidState   The socket is not open.
-     * @retval kErrorAlready        Already bound.
-     */
-    Error Bind(TransportCallback aCallback, void *aContext);
-
-    /**
-     * Indicates whether or not the secure transpose socket is closed.
-     *
-     * @retval TRUE   The secure transport socket closed.
-     * @retval FALSE  The secure transport socket is not closed.
+     * @retval TRUE   The secure transport closed.
+     * @retval FALSE  The secure transport is not closed.
      */
     bool IsClosed(void) const { return !mIsOpen; }
 
     /**
-     * Closes the socket.
+     * Closes the transport.
      */
     void Close(void);
 
@@ -704,11 +731,13 @@ public:
     void SetPsk(const JoinerPskd &aPskd);
 
     /**
-     * Checks and handles a received message provided to the SecureTransport object. If checks based on
-     * the message info and current connection state pass, the message is processed.
+     * Checks and handles a received message provided to the `SecureTransport`.
      *
-     * @param[in]  aMessage  A reference to the message to receive.
-     * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
+     * This method is intended to be used with the flavor of `Open()` that uses a `TransportCallback`. It is used to
+     * pass in a received message for the transport to process.
+     *
+     * @param[in] aMessage      A reference to the message to receive.
+     * @param[in] aMessageInfo  A reference to the message info associated with @p aMessage.
      */
     void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -719,6 +748,27 @@ public:
      */
     LinkedList<SecureSession> &GetSessions(void) { return mSessions; }
 
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+    /**
+     * Defines the keylog callback.
+     */
+    typedef void (*KeylogCallback)(void                       *aContext,
+                                   mbedtls_ssl_key_export_type aType,
+                                   const unsigned char        *aMasterSecret,
+                                   size_t                      aMasterSecretLen,
+                                   const unsigned char         aClientRandom[kSecureTransportRandomBufferSize],
+                                   const unsigned char         aServerRandom[kSecureTransportRandomBufferSize],
+                                   mbedtls_tls_prf_types       aTlsPrfType);
+
+    /**
+     * Sets the keylog callback.
+     *
+     * @param[in] aCallback  The keylog callback.
+     * @param[in] aContext   The context.
+     */
+    void SetKeylogCallback(KeylogCallback aCallback, void *aContext) { mKeylogCallback.Set(aCallback, aContext); }
+#endif
+
 protected:
     SecureTransport(Instance &aInstance, LinkSecurityMode aLayerTwoSecurity, bool aDatagramTransport);
     ~SecureTransport(void) { Close(); }
@@ -728,9 +778,6 @@ protected:
 #endif
 
 private:
-    static constexpr size_t kSecureTransportKeyBlockSize     = 40;
-    static constexpr size_t kSecureTransportRandomBufferSize = 32;
-
     enum CipherSuite : uint8_t
     {
         kEcjpakeWithAes128Ccm8,
@@ -755,40 +802,37 @@ private:
     static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
     void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 
-#ifdef MBEDTLS_SSL_EXPORT_KEYS
-#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
     static void HandleMbedtlsExportKeys(void                       *aContext,
                                         mbedtls_ssl_key_export_type aType,
                                         const unsigned char        *aMasterSecret,
                                         size_t                      aMasterSecretLen,
-                                        const unsigned char         aClientRandom[32],
-                                        const unsigned char         aServerRandom[32],
+                                        const unsigned char         aClientRandom[kSecureTransportRandomBufferSize],
+                                        const unsigned char         aServerRandom[kSecureTransportRandomBufferSize],
                                         mbedtls_tls_prf_types       aTlsPrfType);
 
     void HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
                                  const unsigned char        *aMasterSecret,
                                  size_t                      aMasterSecretLen,
-                                 const unsigned char         aClientRandom[32],
-                                 const unsigned char         aServerRandom[32],
+                                 const unsigned char         aClientRandom[kSecureTransportRandomBufferSize],
+                                 const unsigned char         aServerRandom[kSecureTransportRandomBufferSize],
                                  mbedtls_tls_prf_types       aTlsPrfType);
 
 #else
 
-    static int       HandleMbedtlsExportKeys(void                *aContext,
-                                             const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength);
-    int              HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
-                                             const unsigned char *aKeyBlock,
-                                             size_t               aMacLength,
-                                             size_t               aKeyLength,
-                                             size_t               aIvLength);
+    static int HandleMbedtlsExportKeys(void                *aContext,
+                                       const unsigned char *aMasterSecret,
+                                       const unsigned char *aKeyBlock,
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
+    int        HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                       const unsigned char *aKeyBlock,
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
 
-#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
-#endif // MBEDTLS_SSL_EXPORT_KEYS
+#endif // OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
 
     static void HandleUpdateTask(Tasklet &aTasklet);
     void        HandleUpdateTask(void);
@@ -831,6 +875,9 @@ private:
     Callback<AcceptCallback>        mAcceptCallback;
     Callback<RemoveSessionCallback> mRemoveSessionCallback;
     Callback<TransportCallback>     mTransportCallback;
+#if OPENTHREAD_CONFIG_MBEDTLS_PROVIDES_SSL_KEY_EXPORT
+    Callback<KeylogCallback> mKeylogCallback;
+#endif
 #if OPENTHREAD_CONFIG_TLS_API_ENABLE
     Extension *mExtension;
 #endif
@@ -922,4 +969,4 @@ private:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // SECURE_TRANSPORT_HPP_
+#endif // OT_CORE_MESHCOP_SECURE_TRANSPORT_HPP_

@@ -208,11 +208,10 @@ void Timer::Scheduler::SetAlarm(const AlarmApi &aAlarmApi)
     }
     else
     {
-        Timer   *timer = mTimerList.GetHead();
         Time     now(aAlarmApi.AlarmGetNow());
         uint32_t remaining;
 
-        remaining = (now < timer->mFireTime) ? (timer->mFireTime - now) : 0;
+        remaining = mTimerList.GetHead()->mFireTime.DetermineRemainingDurationFrom(now);
 
         aAlarmApi.AlarmStartAt(&GetInstance(), now.GetValue(), remaining);
     }

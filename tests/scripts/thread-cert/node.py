@@ -91,11 +91,12 @@ class OtbrDocker:
         logging.info(f"socat running: device PTY: {rcp_device_pty}, device: {rcp_device}")
 
         ot_rcp_path = self._get_ot_rcp_path()
-        self._ot_rcp_proc = subprocess.Popen(f"{ot_rcp_path} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
-                                             shell=True,
-                                             stdin=subprocess.DEVNULL,
-                                             stdout=subprocess.DEVNULL,
-                                             stderr=subprocess.DEVNULL)
+        self._ot_rcp_proc = subprocess.Popen(
+            f"{ot_rcp_path} {'-U' if config.VIRTUAL_TIME else ''} {nodeid} > {rcp_device_pty} < {rcp_device_pty}",
+            shell=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
 
         try:
             self._ot_rcp_proc.wait(1)
@@ -644,8 +645,8 @@ class OtCli:
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
-                                                                                           nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
@@ -660,8 +661,8 @@ class OtCli:
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             if 'RADIO_DEVICE_1_1' in os.environ:
-                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
-                    os.environ['RADIO_DEVICE_1_1'], nodeid)
+                cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE_1_1'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
@@ -689,8 +690,8 @@ class OtCli:
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
-                                                                                        nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 args = ''
@@ -729,8 +730,8 @@ class OtCli:
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
-                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
-                                                                                        nodeid)
+                args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?%sforkpty-arg=%d' % (
+                    os.environ['RADIO_DEVICE_1_1'], 'forkpty-arg=-U&' if config.VIRTUAL_TIME else '', nodeid)
                 self.is_posix = True
             else:
                 args = ''
@@ -951,7 +952,7 @@ class NodeImpl:
         PROMPT = 'spinel-cli > ' if self.node_type == 'ncp-sim' else '> '
         while True:
             self._expect(r"[^\n]+\n")
-            line = self.pexpect.match.group(0).decode('utf8').strip()
+            line = self.pexpect.match.group(0).decode('utf-8', errors='backslashreplace').strip()
             while line.startswith(PROMPT):
                 line = line[len(PROMPT):]
 
@@ -1156,7 +1157,11 @@ class NodeImpl:
                'fullname': 'my-host.default.service.arpa.',
                'name': 'my-host',
                'deleted': 'false',
-               'addresses': ['2001::1', '2001::2']
+               'addresses': ['2001::1', '2001::2'],
+               'lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459'
            }]
         """
 
@@ -1172,12 +1177,21 @@ class NodeImpl:
 
             host['deleted'] = lines.pop(0).strip().split(':')[1].strip()
             if host['deleted'] == 'true':
+                for _ in range(2):
+                    # `key-lease` and `remaining key-lease`
+                    key_value = lines.pop(0).strip().split(':')
+                    host[key_value[0].strip()] = key_value[1].strip()
                 host_list.append(host)
                 continue
 
             addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
             host['addresses'] = [addr.strip() for addr in addresses if addr]
+
+            for _ in range(4):
+                # `lease`, `key-lease`, `remaining lease` and `remaining key-lease`
+                key_value = lines.pop(0).strip().split(':')
+                host[key_value[0].strip()] = key_value[1].strip()
 
             host_list.append(host)
 
@@ -1209,7 +1223,9 @@ class NodeImpl:
                'weight': '0',
                'ttl': '7200',
                'lease': '7200',
-               'key-lease': '7200',
+               'key-lease': '1209600',
+               'remaining lease': '6345.459',
+               'remaining key-lease': '1208734.459',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -1234,11 +1250,15 @@ class NodeImpl:
 
             service['deleted'] = lines.pop(0).strip().split(':')[1].strip()
             if service['deleted'] == 'true':
+                for _ in range(2):
+                    key_value = lines.pop(0).strip().split(':')
+                    service[key_value[0].strip()] = key_value[1].strip()
                 service_list.append(service)
                 continue
 
-            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', and 'key-lease'
-            for i in range(0, 7):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease',
+            # 'remaining lease', and `remaining key-lease`
+            for i in range(0, 9):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 
@@ -1452,6 +1472,14 @@ class NodeImpl:
         cmd = 'trel port'
         self.send_command(cmd)
         return int(self._expect_command_output()[0])
+
+    def enable_border_agent(self):
+        self.send_command('ba enable')
+        self._expect_done()
+
+    def disable_border_agent(self):
+        self.send_command('ba disable')
+        self._expect_done()
 
     def get_border_agent_counters(self):
         cmd = 'ba counters'
@@ -3084,20 +3112,20 @@ class NodeImpl:
         else:
             timeout = 5
 
-        self._expect(r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
-                     r'(?: with payload: ([\da-f]+))?\b',
-                     timeout=timeout)
-        (source, observe, payload) = self.pexpect.match.groups()
+        self._expect(
+            r'coap request from ([\da-f:]+) (GET|PUT|DELETE|POST)(?: OBS=(\d+))?'
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
+        (source, method, observe, payload) = self.pexpect.match.groups()
+
         source = source.decode('UTF-8')
+        method = method.decode('UTF-8')
 
         if observe is not None:
             observe = int(observe, base=10)
 
-        if payload is not None:
-            payload = binascii.a2b_hex(payload).decode('UTF-8')
-
         # Return the values received
-        return dict(source=source, observe=observe, payload=payload)
+        return dict(source=source, observe=observe, payload=payload, method=method)
 
     def coap_wait_subscribe(self):
         """
@@ -3260,6 +3288,14 @@ class NodeImpl:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
 
+    def tcat(self, cmd):
+        self.send_command(f'tcat {cmd}')
+        self._expect_done()
+
+    def udp_start_client(self):
+        self.send_command('udp open')
+        self._expect_done()
+
     def udp_start(self, local_ipaddr, local_port, bind_unspecified=False):
         cmd = 'udp open'
         self.send_command(cmd)
@@ -3274,8 +3310,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def udp_send(self, bytes, ipaddr, port, success=True):
-        cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes)
+    def udp_send(self, bytes_count, ipaddr, port, success=True, data_bytes: bytes = None):
+        if data_bytes is None:
+            cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes_count)
+        else:
+            cmd = 'udp send %s %d -x %s ' % (ipaddr, port, data_bytes.hex())
         self.send_command(cmd)
         if success:
             self._expect_done()
@@ -3284,6 +3323,20 @@ class NodeImpl:
 
     def udp_check_rx(self, bytes_should_rx):
         self._expect('%d bytes' % bytes_should_rx)
+
+    def udp_rx(self) -> bytes:
+        PROMPT = 'spinel-cli > ' if self.node_type == 'ncp-sim' else '> '
+        while True:
+            # match non-newline chars until EOL, such as prompts, whitespace, or UDP results '\d+ bytes from'
+            self._expect(r"[^\n]+$")
+            line = self.pexpect.match.group(0)
+            line_utf = line.decode('utf-8', errors='backslashreplace').lstrip()
+            if line_utf.startswith(PROMPT) or len(line_utf.rstrip()) == 0 or self.__is_logging_line(line_utf):
+                continue
+            else:
+                break
+
+        return line.strip()
 
     def set_routereligible(self, enable: bool):
         cmd = f'routereligible {"enable" if enable else "disable"}'

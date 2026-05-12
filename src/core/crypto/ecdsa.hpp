@@ -31,8 +31,8 @@
  *   This file includes definitions for performing ECDSA signing.
  */
 
-#ifndef ECDSA_HPP_
-#define ECDSA_HPP_
+#ifndef OT_CORE_CRYPTO_ECDSA_HPP_
+#define OT_CORE_CRYPTO_ECDSA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -345,4 +345,4 @@ DefineCoreType(otPlatCryptoEcdsaPublicKey, Crypto::Ecdsa::P256::PublicKey);
 
 #endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#endif // ECDSA_HPP_
+#endif // OT_CORE_CRYPTO_ECDSA_HPP_

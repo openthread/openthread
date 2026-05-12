@@ -31,8 +31,8 @@
  *   This file includes definitions and methods for generating and processing Thread Network Layer TLVs.
  */
 
-#ifndef THREAD_TLVS_HPP_
-#define THREAD_TLVS_HPP_
+#ifndef OT_CORE_THREAD_THREAD_TLVS_HPP_
+#define OT_CORE_THREAD_THREAD_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,6 +42,7 @@
 #include "meshcop/network_name.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/mlr_types.hpp"
 
 namespace ot {
 
@@ -131,199 +132,59 @@ typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissio
 
 /**
  * Defines Status TLV constants and types.
+ *
+ * The definition of Status values in this TLV depends on the TMF message in which it is used.
  */
-class ThreadStatusTlv : public UintTlvInfo<ThreadTlv::kStatus, uint8_t>
-{
-public:
-    /**
-     * Status values.
-     */
-    enum Status : uint8_t
-    {
-        kSuccess               = 0, ///< Success.
-        kNoAddressAvailable    = 1, ///< No address available.
-        kTooFewRouters         = 2, ///< Address Solicit due to too few routers.
-        kHaveChildIdRequest    = 3, ///< Address Solicit due to child ID request.
-        kParentPartitionChange = 4, ///< Address Solicit due to parent partition change
-        kBorderRouterRequest   = 5, ///< Address Solicit from Border Router request.
-        kUnrecognizedStatus    = 6, ///< The requested status is unrecognized or not meaningful in a request.
-    };
-
-    /**
-     * Multicast Listener Registration (MLR) Status values
-     */
-    enum MlrStatus
-    {
-        kMlrSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
-        kMlrInvalid        = 2, ///< Invalid IPv6 address(es) in request.
-        kMlrNoPersistent   = 3, ///< This device does not support persistent registrations.
-        kMlrNoResources    = 4, ///< BBR resource shortage.
-        kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
-        kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
-        kMlrStatusMax      = 6, ///< Max MLR status.
-    };
-
-    /**
-     * Domain Unicast Address (DUA) Registration Status values
-     */
-    enum DuaStatus : uint8_t
-    {
-        kDuaSuccess        = 0, ///< Successful registration.
-        kDuaReRegister     = 1, ///< Registration was accepted but immediate reregistration is required to solve.
-        kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
-        kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
-        kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
-        kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
-        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not further specified.
-    };
-};
+typedef UintTlvInfo<ThreadTlv::kStatus, uint8_t> ThreadStatusTlv;
 
 /**
- * Implements Router Mask TLV generation and parsing.
+ * Defines Router Mask TLV  constants and types.
  */
-class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kRouterMask);
-        SetLength(sizeof(*this) - sizeof(ThreadTlv));
-        mAssignedRouterIdMask.Clear();
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * Returns the ID Sequence value.
-     *
-     * @returns The ID Sequence value.
-     */
-    uint8_t GetIdSequence(void) const { return mIdSequence; }
-
-    /**
-     * Sets the ID Sequence value.
-     *
-     * @param[in]  aSequence  The ID Sequence value.
-     */
-    void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
-
-    /**
-     * Gets the Assigned Router ID Mask.
-     *
-     * @returns The Assigned Router ID Mask.
-     */
-    const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
-
-    /**
-     * Gets the Assigned Router ID Mask.
-     *
-     * @returns The Assigned Router ID Mask.
-     */
-    Mle::RouterIdSet &GetAssignedRouterIdMask(void) { return mAssignedRouterIdMask; }
-
-    /**
-     * Sets the Assigned Router ID Mask.
-     *
-     * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.
-     */
-    void SetAssignedRouterIdMask(const Mle::RouterIdSet &aRouterIdSet) { mAssignedRouterIdMask = aRouterIdSet; }
-
-private:
-    uint8_t          mIdSequence;
-    Mle::RouterIdSet mAssignedRouterIdMask;
-};
+typedef SimpleTlvInfo<ThreadTlv::kRouterMask, Mle::RouterIdMask> ThreadRouterMaskTlv;
 
 /**
- * Implements Thread Network Data TLV generation and parsing.
+ * Defines Thread Network Data TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadNetworkDataTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kThreadNetworkData>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kThreadNetworkData);
-        SetLength(0);
-    }
-
-    /**
-     * Overrides same method of the base class
-     *
-     * @retval TRUE  the TLV appears to be well-formed.
-     */
-    bool IsValid(void) const { return true; }
-
-    /**
-     * Returns a pointer to the Network Data TLVs.
-     *
-     * @returns A pointer to the Network Data TLVs.
-     */
-    uint8_t *GetTlvs(void) { return mTlvs; }
-
-private:
-    static constexpr uint8_t kMaxSize = 255;
-
-    uint8_t mTlvs[kMaxSize];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<ThreadTlv::kThreadNetworkData> ThreadNetworkDataTlv;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * Implements IPv6 Addresses TLV generation and parsing.
+ * Defines IPv6 Addresses TLV constants and types and helper methods.
  */
-OT_TOOL_PACKED_BEGIN
-class Ip6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIp6Addresses>
+class Ip6AddressesTlv : public TlvInfo<ThreadTlv::kIp6Addresses>
 {
 public:
-    // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses to [1, 15].
-    static constexpr uint8_t kMinAddresses = 1;
-    static constexpr uint8_t kMaxAddresses = OT_IP6_MAX_MLR_ADDRESSES;
+    /**
+     * Appends an IPv6 Addresses TLV to a message.
+     *
+     * @param[in,out] aMessage       The message to append to.
+     * @param[in]     aAddresses     A pointer to an array of IPv6 addresses.
+     * @param[in]     aNumAddresses  The number of IPv6 addresses in the @p aAddresses array.
+     *
+     * @retval kErrorNone     Successfully appended the TLV.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     */
+    static Error AppendTo(Message &aMessage, const Ip6::Address *aAddresses, uint16_t aNumAddresses);
 
     /**
-     * Initializes the TLV.
+     * Finds and parses the IPv6 Addresses TLV from a given message.
+     *
+     * @param[in]  aMessage    The message to parse.
+     * @param[out] aAddresses  An `AddressArray` to output the parsed IPv6 addresses.
+     *
+     * @retval kErrorNone       Successfully found and parsed the TLV.
+     * @retval kErrorNotFound   Could not find the TLV in the message.
+     * @retval kErrorParse      Failed to parse the TLV.
+     * @retval kErrorNoBufs     There are more addresses in the TLV than can fit in `aAddresses`.
      */
-    void Init(void) { SetType(kIp6Addresses); }
+    static Error FindIn(const Message &aMessage, Mlr::AddressArray &aAddresses);
 
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const
-    {
-        return GetLength() >= sizeof(Ip6::Address) * Ip6AddressesTlv::kMinAddresses &&
-               GetLength() <= sizeof(Ip6::Address) * Ip6AddressesTlv::kMaxAddresses &&
-               (GetLength() % sizeof(Ip6::Address)) == 0;
-    }
-
-    /**
-     * Returns a pointer to the IPv6 address entry.
-     *
-     * @param[in]  aIndex  The index into the IPv6 address list.
-     *
-     * @returns A reference to the IPv6 address.
-     */
-    const Ip6::Address &GetIp6Address(uint8_t aIndex) const
-    {
-        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
-    }
-} OT_TOOL_PACKED_END;
+    Ip6AddressesTlv(void) = delete;
+};
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 } // namespace ot
 
-#endif // THREAD_TLVS_HPP_
+#endif // OT_CORE_THREAD_THREAD_TLVS_HPP_

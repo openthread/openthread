@@ -33,8 +33,8 @@
  *  CoAP Secure use with cipher suite ECDHE_ECDSA_WITH_AES_128_CCM8.
  */
 
-#ifndef SRC_CLI_X509_CERT_KEY_HPP_
-#define SRC_CLI_X509_CERT_KEY_HPP_
+#ifndef OT_CLI_X509_CERT_KEY_HPP_
+#define OT_CLI_X509_CERT_KEY_HPP_
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,4 +113,4 @@ extern "C" {
 } // extern "C"
 #endif
 
-#endif /* SRC_CLI_X509_CERT_KEY_HPP_ */
+#endif // OT_CLI_X509_CERT_KEY_HPP_

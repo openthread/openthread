@@ -383,6 +383,7 @@ void otMacFrameUpdateTimeIe(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioCo
     uint8_t *timeIe;
     uint64_t time;
 
+    OT_UNUSED_VARIABLE(aRadioContext);
     VerifyOrExit((aFrame->mInfo.mTxInfo.mIeInfo != nullptr) && (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0));
 
     timeIe  = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
@@ -404,7 +405,7 @@ exit:
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aRadioContext->mCslPeriod > 0) // CSL IE should be filled for every transmit attempt
+    if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
     {
         otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
     }
@@ -414,4 +415,35 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 #endif
     aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
     return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+}
+
+bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)
+{
+    const Mac::Frame &frame   = *static_cast<const Mac::Frame *>(aFrame);
+    bool              matches = false;
+    Mac::Address      src;
+
+    VerifyOrExit(frame.GetSrcAddr(src) == kErrorNone);
+
+    switch (src.GetType())
+    {
+    case Mac::Address::kTypeShort:
+        VerifyOrExit(aRadioContext->mCslShortAddress != Mac::kShortAddrBroadcast &&
+                     aRadioContext->mCslShortAddress != Mac::kShortAddrInvalid);
+        VerifyOrExit(src.GetShort() == aRadioContext->mCslShortAddress);
+        matches = true;
+        break;
+
+    case Mac::Address::kTypeExtended:
+        VerifyOrExit(src.GetExtended() == *static_cast<const Mac::ExtAddress *>(&aRadioContext->mCslExtAddress));
+        matches = true;
+        break;
+
+    case Mac::Address::kTypeNone:
+        matches = false;
+        break;
+    }
+
+exit:
+    return matches;
 }

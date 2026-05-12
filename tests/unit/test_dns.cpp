@@ -34,6 +34,7 @@
 #include "test_util.hpp"
 
 #include "common/array.hpp"
+#include "common/string.hpp"
 #include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
@@ -485,9 +486,13 @@ void TestDnsName(void)
 
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", maxLengthName);
+        printf("\"%s\" (len:%u)\n", maxLengthName, static_cast<uint16_t>(strlen(maxLengthName)));
+
+        SuccessOrQuit(Dns::Name::ValidateName(maxLengthName));
 
         SuccessOrQuit(Dns::Name::AppendName(maxLengthName, *message));
+
+        VerifyOrQuit(message->GetLength() == Dns::Name::kMaxNameSize);
     }
 
     printf("----------------------------------------------------------------\n");
@@ -497,7 +502,9 @@ void TestDnsName(void)
     {
         IgnoreError(message->SetLength(0));
 
-        printf("\"%s\"\n", invalidName);
+        printf("\"%s\" (len:%u)\n", invalidName, static_cast<uint16_t>(strlen(invalidName)));
+
+        VerifyOrQuit(Dns::Name::ValidateName(invalidName) != kErrorNone);
 
         VerifyOrQuit(Dns::Name::AppendName(invalidName, *message) == kErrorInvalidArgs);
     }
@@ -590,6 +597,37 @@ void TestDnsName(void)
     VerifyOrQuit(!dnsName.Matches("Name.With.Dot.", "_srv._udp", "local."));
     VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._tcp", "local."));
     VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._udp", "arpa."));
+
+    printf("----------------------------------------------------------------\n");
+    printf("Name::ValidateLabel\n");
+
+    SuccessOrQuit(Dns::Name::ValidateLabel("a"));
+    SuccessOrQuit(Dns::Name::ValidateLabel("hello"));
+    SuccessOrQuit(Dns::Name::ValidateLabel("012345678901234567890123456789012345678901234567890123456789012")); // 63
+    VerifyOrQuit(Dns::Name::ValidateLabel("0123456789012345678901234567890123456789012345678901234567890123") ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateLabel("") == kErrorInvalidArgs);
+
+    SuccessOrQuit(Dns::Name::ValidateName("a"));
+    SuccessOrQuit(Dns::Name::ValidateName("a.b.c"));
+    SuccessOrQuit(Dns::Name::ValidateName("a.b.c."));
+    SuccessOrQuit(Dns::Name::ValidateName("a.b.012345678901234567890123456789012345678901234567890123456789012."));
+    SuccessOrQuit(Dns::Name::ValidateName("."));
+
+    // Empty labels
+    VerifyOrQuit(Dns::Name::ValidateName("") == kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName("a..b") == kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName(".a.b") == kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName("a.b..") == kErrorInvalidArgs);
+
+    // Long labels or names
+    VerifyOrQuit(Dns::Name::ValidateName("a.b.0123456789012345678901234567890123456789012345678901234567890123.") ==
+                 kErrorInvalidArgs);
+    VerifyOrQuit(Dns::Name::ValidateName("012345678901234567890123456789012345678901234567890123456789012."
+                                         "012345678901234567890123456789012345678901234567890123456789012."
+                                         "012345678901234567890123456789012345678901234567890123456789012."
+                                         "012345678901234567890123456789012345678901234567890123456789012") ==
+                 kErrorInvalidArgs);
 
     message->Free();
     testFreeInstance(instance);
@@ -1595,10 +1633,8 @@ void TestHeaderAndResourceRecords(void)
 
 void TestDnsTxtEntry(void)
 {
-    enum
-    {
-        kMaxTxtDataSize = 255,
-    };
+    static constexpr uint16_t kMaxTxtDataSize   = 255;
+    static constexpr uint16_t kMaxKeyStringSize = Dns::TxtEntry::kMaxIterKeyLength;
 
     struct EncodedTxtData
     {
@@ -1681,6 +1717,7 @@ void TestDnsTxtEntry(void)
     Dns::TxtEntry                  txtEntry;
     Dns::TxtEntry::Iterator        iterator;
     MutableData<kWithUint16Length> data;
+    char                           keyString[kMaxKeyStringSize];
 
     printf("================================================================\n");
     printf("TestDnsTxtEntry()\n");
@@ -1735,6 +1772,14 @@ void TestDnsTxtEntry(void)
         }
 
         VerifyOrQuit(strcmp(txtEntry.mKey, expectedTxtEntry.mKey) == 0);
+
+        SuccessOrQuit(StringCopy(keyString, expectedTxtEntry.mKey));
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToLowercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+        StringConvertToUppercase(keyString);
+        VerifyOrQuit(txtEntry.MatchesKey(keyString));
+
         VerifyOrQuit(txtEntry.mValueLength == expectedTxtEntry.mValueLength);
 
         if (txtEntry.mValueLength != 0)

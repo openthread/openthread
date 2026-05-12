@@ -11,10 +11,15 @@ The number of entries recorded for each history list is configurable through a s
 Usage : `history [command] ...`
 
 - [help](#help)
+- [ailrouters](#ailrouters)
+- [dhcp6pd](#dhcp6pd)
+- [dnssrpaddr](#dnssrpaddr)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
 - [neighbor](#neighbor)
 - [netinfo](#netinfo)
+- [omrprefix](#omrprefix)
+- [onlinkprefix](#onlinkprefix)
 - [prefix](#prefix)
 - [route](#route)
 - [router](#router)
@@ -63,6 +68,131 @@ rxtx
 tx
 Done
 >
+```
+
+### ailrouters
+
+Usage `history ailrouters [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+
+Print the AIL routers history. Each entry provides:
+
+- The event, possible values are `Added`, `Changed`, `Removed`.
+- The IPv6 address of the AIL router.
+- Flags
+  - `R`: Indicates whether or not this router is reachable.
+  - `M`: The Managed Address Config flag (from the received Router Advertisement (RA) header).
+  - `O`: The Other Config flag (from the RA header).
+  - `S`: The SNAC Router flag (from the RA header).
+  - `L`: Indicates whether or not this router is the local device (this BR).
+  - `P`: Indicates whether or not this router is a peer BR connected to same Thread mesh.
+  - `D`: Indicates whether or not this router provides a default route.
+- The default route preference (`high`, `med`, `low`) if this router provides a default route. Otherwise `-`.
+- The favored on-link prefix advertised by this router if any. If none, `-` is shown.
+
+```bash
+> history ailrouters
+| Age                  | Event   | IPv6 Address                             |R|M|O|S|L|P|D|RtPrf |
++----------------------+---------+------------------------------------------+-+-+-+-+-+-+-+------+
+|                      | Favored on-link prefix                             | | | | | | | |      |
++----------------------+----------------------------------------------------+-+-+-+-+-+-+-+------+
+|         00:01:35.107 | Changed | fe80:0:0:0:0:0:0:2                       |N|N|N|Y|N|Y|N|      |
+|                      | -                                                  | | | | | | | |      |
+|         00:05:01.115 | Changed | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+|                      | -                                                  | | | | | | | |      |
+|         00:08:01.804 | Added   | fe80:0:0:0:0:0:0:2                       |Y|N|N|Y|N|Y|N|      |
+|                      | fd99:4cdc:3b3d:56ef::/64                           | | | | | | | |      |
+Done
+```
+
+Print the history as a list.
+
+```bash
+>history ailrouters list
+00:01:35.161 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:N M:N O:N S:Y local:N peer:Y def-route:N prf:
+   favored-on-link-prefix:-
+00:05:01.169 -> event:Changed address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+   favored-on-link-prefix:-
+00:08:01.858 -> event:Added address:fe80:0:0:0:0:0:0:2 reachable:Y M:N O:N S:Y local:N peer:Y def-route:N prf:
+   favored-on-link-prefix:fd99:4cdc:3b3d:56ef::/64
+Done
+```
+
+### dhcp6pd
+
+Usage `history dhcp6pd [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` and `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+
+Print the DHCPv6-PD history. Each entry provides:
+
+- State: Possible states are `disabled`, `stopped`, `running`, `idle`.
+- Prefix: The delegated prefix if any. If none `-` is printed.
+
+Print the DHCPv6-PD history as a table.
+
+```bash
+> history dhcp6pd
+| Age                  | State    | Prefix                                        |
++----------------------+----------+-----------------------------------------------+
+|         00:03:20.128 | running  | 2001:dc78:510b:1::/64                         |
+|         00:03:30.152 | running  | -                                             |
+|         00:03:47.038 | disabled | -                                             |
+Done
+```
+
+Print the DHCPv6-PD history as a list.
+
+```bash
+> history dhcp6pd list
+00:03:38.172 -> state:running prefix:2001:dc78:510b:1::/64
+00:03:48.191 -> state:running prefix:-
+00:04:05.077 -> state:disabled prefix:-
+00:05:02.857 -> state:running prefix:-
+Done
+```
+
+### dnssrpaddr
+
+Usage `history dnssrpaddr [list] [<num-entries>]`
+
+Print the network data DNS/SRP address history. Each entry provides:
+
+- Event: Possible values are `Added` or `Removed`.
+- Address of DNS/SRP server.
+- Address type: `uni-local` unicast address local (address in server data) or `uni-infra` infrastructure server (addr in service data), or `anycast`.
+- Port: Server port number, only applicable when address type is unicast.
+- Sequence Number: Anycast sequence number, only applicable when address type is anycast.
+- Version number.
+- RLOC16 of the BR adding/removing this entry in Network Data.
+
+```bash
+> history dnssrpaddr
+| Age                  | Event   | Address                                 | Type      |Port/Seq| Ver | RLOC16 |
++----------------------+---------+-----------------------------------------+-----------+--------+-----+--------+
+|         00:00:07.150 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |   1234 |   0 | 0x0000 |
+|         00:00:09.351 | Removed | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+|         00:00:28.479 | Added   | fd00:0:0:0:0:0:0:1234                   | uni-infra |  51525 |   1 | 0x0000 |
+|         00:00:30.133 | Removed | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+|         00:01:02.609 | Added   | fd4f:59ae:348a:aa48:0:ff:fe00:fc10      |   anycast |      1 |   2 | 0x0000 |
+|         00:01:03.574 | Removed | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+|         00:01:33.631 | Added   | fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb | uni-local |  50152 |   2 | 0x0000 |
+Done
+```
+
+Print the history as a list.
+
+```bash
+> history dnssrpaddr list
+00:00:19.646 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:1234 ver:0 rloc16:0x0000
+00:00:21.847 -> event:Removed addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+00:00:40.975 -> event:Added addr:fd00:0:0:0:0:0:0:1234 type:uni-infra port:51525 ver:1 rloc16:0x0000
+00:00:42.629 -> event:Removed addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+00:01:15.105 -> event:Added addr:fd4f:59ae:348a:aa48:0:ff:fe00:fc10 type:anycast seqno:1 ver:2 rloc16:0x0000
+00:01:16.070 -> event:Removed addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+00:01:46.127 -> event:Added addr:fd4f:59ae:348a:aa48:74a4:6de9:7a30:5dfb type:uni-local port:50152 ver:2 rloc16:0x0000
+Done
 ```
 
 ### ipaddr
@@ -246,6 +376,71 @@ Print only the latest 2 entries.
 +----------------------+----------+------+--------+--------------+
 |         00:02:05.451 | router   | rdn  | 0x6000 |    151029327 |
 |         00:04:04.719 | child    | rdn  | 0x2001 |    151029327 |
+Done
+```
+
+### omrprefix
+
+Usage `history omrprefix [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+
+Print the favored OMR prefix history. Each entry provides:
+
+- The favored OMR prefix.
+- Preference (`high`, `med`, `low`).
+- IsLocal as boolean `yes`/`no` indicating whether the favored OMR prefix is the same as the local one maintained by this BR.
+
+Print the OMR prefix history as a table.
+
+```bash
+> history omrprefix
+| Age                  | OMR Prefix                                       | Pref   |IsLocal |
++----------------------+--------------------------------------------------+--------+--------+
+|         00:00:10.110 | fd44:dc78:510b:1::/64                            | low    | yes    |
+|         00:06:17.604 | 2001:1a:12d5:23ae::/64                           | med    | no     |
+|         00:13:11.235 | fd44:dc78:510b:1::/64                            | low    | yes    |
+Done
+```
+
+Print the OMR prefix history as a list.
+
+```bash
+> history omrprefix list
+00:03:20.379 -> omr-prefix:fd44:dc78:510b:1::/64 prf:low is-local:yes
+00:09:27.873 -> omr-prefix:2001:1a:12d5:23ae::/64 prf:med is-local:no
+00:16:21.504 -> omr-prefix:fd44:dc78:510b:1::/64 prf:low is-local:yes
+Done
+```
+
+### onlinkprefix
+
+Usage `history onlinkprefix [list] [<num-entries>]`
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE`.
+
+Print the favored on-link prefix history. Each entry provides:
+
+- The favored on-link prefix (on AIL).
+- IsLocal as boolean `yes`/`no` indicating whether the favored on-link prefix is the same as the local one maintained by this BR.
+
+Print the on-link prefix history as a table.
+
+```bash
+> history onlinkprefix
+| Age                  | On-link Prefix                                   |IsLocal |
++----------------------+--------------------------------------------------+--------+
+|         00:00:50.600 | 2001:efc6:75a8:efee::/64                         | no     |
+|         00:11:04.327 | fd74:fe69:9f21:437::/64                          | yes    |
+Done
+```
+
+Print the on-link prefix history as a list.
+
+```bash
+> history onlinkprefix list
+00:00:50.600 -> on-link-prefix:2001:efc6:75a8:efee::/64 is-local:no
+00:11:04.327 -> on-link-prefix:fd74:fe69:9f21:437::/64 is-local:yes
 Done
 ```
 

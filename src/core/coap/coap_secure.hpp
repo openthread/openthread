@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COAP_SECURE_HPP_
-#define COAP_SECURE_HPP_
+#ifndef OT_CORE_COAP_COAP_SECURE_HPP_
+#define OT_CORE_COAP_COAP_SECURE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -73,9 +73,37 @@ public:
      */
     void SetConnectCallback(ConnectHandler aHandler, void *aContext) { mConnectCallback.Set(aHandler, aContext); }
 
-#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
      * Sends a CoAP message over secure DTLS session.
+     *
+     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     *
+     * @retval kErrorNone          Successfully sent CoAP message.
+     * @retval kErrorNoBufs        Failed to allocate retransmission data.
+     * @retval kErrorInvalidState  DTLS connection was not initialized.
+     */
+    Error SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext);
+
+    /**
+     * Sends a CoAP message over secure DTLS session.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     *
+     * @retval kErrorNone          Successfully sent CoAP message.
+     * @retval kErrorNoBufs        Failed to allocate retransmission data.
+     * @retval kErrorInvalidState  DTLS connection was not initialized.
+     */
+    Error SendMessage(Message &aMessage);
+
+    /**
+     * Sends a CoAP message over secure DTLS session using `ResponseHandlerSeparateParams` handle type.
+     *
+     * This version of `SendMessage()` is intended for use by the public OT CoAP APIs, `otCoap*` and should not be used
+     * within the OpenThread core modules.
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be NULL pointers.
@@ -91,30 +119,13 @@ public:
      * @retval kErrorNoBufs        Failed to allocate retransmission data.
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      */
-    Error SendMessage(Message                    &aMessage,
-                      ResponseHandler             aHandler      = nullptr,
-                      void                       *aContext      = nullptr,
-                      otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
-                      otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
-
-#else
-    /**
-     * Sends a CoAP message over secure DTLS session.
-     *
-     * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be nullptr pointers.
-     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
-     *
-     * @param[in]  aMessage      A reference to the message to send.
-     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone          Successfully sent CoAP message.
-     * @retval kErrorNoBufs        Failed to allocate retransmission data.
-     * @retval kErrorInvalidState  DTLS connection was not initialized.
-     */
-    Error SendMessage(Message &aMessage, ResponseHandler aHandler = nullptr, void *aContext = nullptr);
+    Error SendMessageWithResponseHandlerSeparateParams(Message                      &aMessage,
+                                                       ResponseHandlerSeparateParams aHandler,
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+                                                       BlockwiseTransmitHook aTransmitHook,
+                                                       BlockwiseReceiveHook  aReceiveHook,
 #endif
+                                                       void *aContext);
 
 protected:
     SecureSession(Instance &aInstance, Dtls::Transport &aDtlsTransport);
@@ -169,4 +180,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
-#endif // COAP_SECURE_HPP_
+#endif // OT_CORE_COAP_COAP_SECURE_HPP_

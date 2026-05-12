@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for History Tracker module.
  */
 
-#ifndef CONFIG_HISTORY_TRACKER_H_
-#define CONFIG_HISTORY_TRACKER_H_
+#ifndef OT_CORE_CONFIG_HISTORY_TRACKER_H_
+#define OT_CORE_CONFIG_HISTORY_TRACKER_H_
 
 /**
  * @addtogroup config-history-tracker
@@ -50,6 +50,25 @@
  */
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+ *
+ * Define as 1 to enable History Tracker Server module (answering received TMF history queries).
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+ *
+ * Define as 1 to enable History Tracker Client module (using TMF history query to retrieve history info from other
+ * devices).
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 #endif
 
 /**
@@ -161,6 +180,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in Network Data DNS/SRP Address history list.
+ *
+ * Set to zero to prevent the History Tracker module from collecting this info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_DNSSRP_ADDR_LIST_SIZE 32
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_EPSKC_EVENT_SIZE
  *
  * Specifies the maximum number of entries in Border Agent ePSKc history list.
@@ -172,7 +202,51 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in OMR Prefix history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any OMR prefix info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_OMR_PREFIX_LIST_SIZE 16
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in On-Link Prefix (on AIL) history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any on-link prefix info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_LINK_PREFIX_LIST_SIZE 16
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in DHCPv6-PD history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any DHCPv6-PD info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_DHCP6_PD_LIST_SIZE 16
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in BR AIL Router history.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any BR AIL Router info.
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_AIL_ROUTER_LIST_SIZE 32
+#endif
+
+/**
  * @}
  */
 
-#endif // CONFIG_HISTORY_TRACKER_H_
+#endif // OT_CORE_CONFIG_HISTORY_TRACKER_H_

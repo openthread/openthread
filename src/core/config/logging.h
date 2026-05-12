@@ -31,8 +31,10 @@
  *   This file includes compile-time configurations for the logging service.
  */
 
-#ifndef CONFIG_LOGGING_H_
-#define CONFIG_LOGGING_H_
+#ifndef OT_CORE_CONFIG_LOGGING_H_
+#define OT_CORE_CONFIG_LOGGING_H_
+
+#include <openthread/platform/logging.h>
 
 /**
  * @addtogroup config-logging
@@ -74,6 +76,20 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_APP 2
 /** Log output is handled by a platform defined function */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+ *
+ * Define to 1 to enable the instance-aware platform logging API.
+ *
+ * When this configuration is enabled, OpenThread logging will track the OpenThread instance (`otInstance`) from which
+ * a log is generated. The core will use the `otPlatLogOutput()` platform API instead of `otPlatLog()`. The new
+ * platform API provides the `otInstance` pointer along with the log as a fully formatted string, which is particularly
+ * useful in multi-instance setups to distinguish logs from different OpenThread instances.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+#define OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE 0
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -182,7 +198,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+ *
+ * Define to 1 to enable the log level override feature and its associated APIs.
+ *
+ * This feature is used when `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE` is also enabled.
+ *
+ * When enabled, new mechanism is added to allow temporary override of the current log level (e.g., to increase the
+ * level to capture more detailed information) and subsequently restore it to the original user-specified level.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
+#define OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
-#endif // CONFIG_LOGGING_H_
+#endif // OT_CORE_CONFIG_LOGGING_H_

@@ -31,8 +31,8 @@
  *   This file contains definitions for Network Data CLI commands.
  */
 
-#ifndef CLI_NETWORK_DATA_HPP_
-#define CLI_NETWORK_DATA_HPP_
+#ifndef OT_CLI_CLI_NETWORK_DATA_HPP_
+#define OT_CLI_CLI_NETWORK_DATA_HPP_
 
 #include "openthread-core-config.h"
 
@@ -144,4 +144,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_NETWORK_DATA_HPP_
+#endif // OT_CLI_CLI_NETWORK_DATA_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread security material generation.
  */
 
-#ifndef KEY_MANAGER_HPP_
-#define KEY_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_KEY_MANAGER_HPP_
+#define OT_CORE_THREAD_KEY_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -227,6 +227,15 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
     explicit KeyManager(Instance &aInstance);
+
+    /**
+     * Initializes the `KeyManager`.
+     *
+     * This method is called after OpenThread `Instance` is fully initialized (from `Instance::AfterInit()`). This
+     * ensures that all `Instance` components (including `KeyManager`) have been constructed and are safe to interact
+     * with (e.g., to save a default key in `Crypto::Storage::KeyRefManager`).
+     */
+    void Init(void);
 
     /**
      * Starts KeyManager rotation timer and sets guard timer to initial value.
@@ -448,6 +457,14 @@ public:
     const KekKeyMaterial &GetKek(void) const { return mKek; }
 
     /**
+     * Indicates whether or not the KEK is set.
+     *
+     * @retval TRUE   If the KEK is set.
+     * @retval FALSE  If the KEK is not set.
+     */
+    bool IsKekSet(void) const { return mIsKekSet; }
+
+    /**
      * Retrieves the KEK as literal `Kek` key.
      *
      * @param[out] aKek  A reference to a `Kek` to output the retrieved KEK.
@@ -467,6 +484,11 @@ public:
      * @param[in]  aKekBytes  A pointer to the KEK bytes.
      */
     void SetKek(const uint8_t *aKekBytes) { SetKek(*reinterpret_cast<const Kek *>(aKekBytes)); }
+
+    /**
+     * Clears the KEK.
+     */
+    void ClearKek(void);
 
     /**
      * Returns the current KEK Frame Counter value.
@@ -629,7 +651,7 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     PskcRef mPskcRef;
 #else
-    Pskc       mPskc;
+    Pskc mPskc;
 #endif
 
     KekKeyMaterial mKek;
@@ -637,6 +659,7 @@ private:
 
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
+    bool           mIsKekSet : 1;
 };
 
 /**
@@ -649,4 +672,4 @@ DefineCoreType(otPskc, Pskc);
 
 } // namespace ot
 
-#endif // KEY_MANAGER_HPP_
+#endif // OT_CORE_THREAD_KEY_MANAGER_HPP_

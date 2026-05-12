@@ -86,7 +86,7 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
 
     if (checksum != 0xffff)
     {
-        checksum = ~checksum;
+        checksum = static_cast<uint16_t>(~checksum);
     }
 
     checksum = BigEndian::HostSwap16(checksum);
@@ -100,7 +100,7 @@ void Checksum::Calculate(const Ip6::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-2460).
 
@@ -126,7 +126,7 @@ void Checksum::Calculate(const Ip4::Address &aSource,
                          const Message      &aMessage)
 {
     Message::Chunk chunk;
-    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t       length = aMessage.DetermineLengthAfterOffset();
 
     // Pseudo-header for checksum calculation (RFC-768/792/793).
     // Note: ICMP checksum won't count the pseudo header like TCP and UDP.
@@ -241,7 +241,7 @@ void Checksum::UpdateIp4HeaderChecksum(Ip4::Header &aHeader)
 
     aHeader.SetChecksum(0);
     checksum.AddData(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
-    aHeader.SetChecksum(~checksum.GetValue());
+    aHeader.SetChecksum(static_cast<uint16_t>(~checksum.GetValue()));
 }
 
 } // namespace ot

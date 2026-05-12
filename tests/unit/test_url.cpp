@@ -36,7 +36,7 @@ namespace Url {
 
 void TestSimple(void)
 {
-    char url[] = "spinel:///dev/ttyUSB0?baudrate=460800";
+    char url[100] = "spinel:///dev/ttyUSB0?baudrate=460800";
     Url  args;
 
     VerifyOrQuit(!args.Init(url));
@@ -53,7 +53,7 @@ void TestSimple(void)
 
 void TestSimpleNoQueryString(void)
 {
-    char url[] = "spinel:///dev/ttyUSB0";
+    char url[100] = "spinel:///dev/ttyUSB0";
     Url  args;
 
     VerifyOrQuit(!args.Init(url));
@@ -67,7 +67,7 @@ void TestSimpleNoQueryString(void)
 
 void TestEmptyValue(void)
 {
-    char        url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=460800&verbose&verbose&verbose";
+    char        url[100] = "spinel:///dev/ttyUSB0?rtscts&baudrate=460800&verbose&verbose&verbose";
     Url         args;
     const char *arg = nullptr;
 
@@ -85,7 +85,7 @@ void TestEmptyValue(void)
 
 void TestMultipleProtocols(void)
 {
-    char url[] = "spinel+spi:///dev/ttyUSB0?baudrate=460800";
+    char url[100] = "spinel+spi:///dev/ttyUSB0?baudrate=460800";
     Url  args;
 
     VerifyOrQuit(!args.Init(url));
@@ -97,7 +97,7 @@ void TestMultipleProtocols(void)
 
 void TestMultipleProtocolsAndDuplicateParameters(void)
 {
-    char        url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
+    char        url[100] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
     Url         args;
     const char *arg = nullptr;
 
@@ -122,9 +122,9 @@ void TestMultipleProtocolsAndDuplicateParameters(void)
 
 void TestIntValue(void)
 {
-    char int8url[]  = "spinel:///dev/ttyUSB0?no-reset&val1=1&val2=0x02&val3=-0X03&val4=-4&val5=+5&val6=128&val7=-129";
-    char int16url[] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=-0X03&val4=-400&val5=+500&val6=32768&val7=-32769";
-    char int32url[] =
+    char int8url[200] = "spinel:///dev/ttyUSB0?no-reset&val1=1&val2=0x02&val3=-0X03&val4=-4&val5=+5&val6=128&val7=-129";
+    char int16url[200] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=-0X03&val4=-400&val5=+500&val6=32768&val7=-32769";
+    char int32url[200] =
         "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=-0X03&val4=-40000&val5=+50000&val6=2147483648&val7=-2147483649";
     Url     args;
     int8_t  int8val;
@@ -195,9 +195,9 @@ void TestIntValue(void)
 
 void TestUintValue(void)
 {
-    char uint8url[]  = "spinel:///dev/ttyUSB0?no-reset&val1=1&val2=0x02&val3=0X03&val4=-4&val5=+5&val6=256&val7=-1";
-    char uint16url[] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=0X03&val4=-400&val5=+500&val6=65536&val7=-1";
-    char uint32url[] =
+    char uint8url[200]  = "spinel:///dev/ttyUSB0?no-reset&val1=1&val2=0x02&val3=0X03&val4=-4&val5=+5&val6=256&val7=-1";
+    char uint16url[200] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=0X03&val4=-400&val5=+500&val6=65536&val7=-1";
+    char uint32url[200] =
         "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=0X03&val4=-40000&val5=+70000&val6=4294967296&val7=-1";
     Url      args;
     uint8_t  uint8val;
@@ -264,6 +264,58 @@ void TestUintValue(void)
     printf("PASS %s\r\n", __func__);
 }
 
+void TestValidate(void)
+{
+    char        url[100] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=0X03";
+    Url         args;
+    const char *unusedParam = nullptr;
+
+    VerifyOrQuit(!args.Init(url));
+
+    // Test idempotency
+    VerifyOrQuit(args.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+    VerifyOrQuit(!strncmp(unusedParam, "val1=1", 6));
+    VerifyOrQuit(args.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+    VerifyOrQuit(!strncmp(unusedParam, "val1=1", 6));
+
+    VerifyOrQuit(!strcmp(args.GetValue("val1"), "1"));
+    VerifyOrQuit(args.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+    VerifyOrQuit(!strncmp(unusedParam, "val2=0x02", 9));
+
+    VerifyOrQuit(!strcmp(args.GetValue("val2"), "0x02"));
+    VerifyOrQuit(args.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+    VerifyOrQuit(!strncmp(unusedParam, "val3=0X03", 9));
+
+    VerifyOrQuit(!strcmp(args.GetValue("val3"), "0X03"));
+    VerifyOrQuit(args.Validate(&unusedParam) == OT_ERROR_NONE);
+
+    // Test with multiple same-named parameters
+    {
+        char url2[100] = "spinel:///dev/tty?arg=1&arg=2&val=3";
+        Url  args2;
+
+        VerifyOrQuit(!args2.Init(url2));
+        VerifyOrQuit(args2.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+        VerifyOrQuit(!strncmp(unusedParam, "arg=1", 5));
+
+        const char *val = args2.GetValue("arg");
+        VerifyOrQuit(!strcmp(val, "1"));
+        VerifyOrQuit(args2.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+        VerifyOrQuit(!strncmp(unusedParam, "arg=2", 5));
+
+        val = args2.GetValue("arg", val);
+        VerifyOrQuit(!strcmp(val, "2"));
+        VerifyOrQuit(args2.Validate(&unusedParam) == OT_ERROR_INVALID_ARGS);
+        VerifyOrQuit(!strncmp(unusedParam, "val=3", 5));
+
+        val = args2.GetValue("val");
+        VerifyOrQuit(!strcmp(val, "3"));
+        VerifyOrQuit(args2.Validate(&unusedParam) == OT_ERROR_NONE);
+    }
+
+    printf("PASS %s\r\n", __func__);
+}
+
 } // namespace Url
 } // namespace ot
 
@@ -276,6 +328,7 @@ int main(void)
     ot::Url::TestMultipleProtocolsAndDuplicateParameters();
     ot::Url::TestIntValue();
     ot::Url::TestUintValue();
+    ot::Url::TestValidate();
 
     return 0;
 }

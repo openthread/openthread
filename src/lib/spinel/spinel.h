@@ -30,8 +30,8 @@
  *   This file contains definitions of spinel.
  */
 
-#ifndef SPINEL_HEADER_INCLUDED
-#define SPINEL_HEADER_INCLUDED 1
+#ifndef OT_LIB_SPINEL_SPINEL_H_
+#define OT_LIB_SPINEL_SPINEL_H_
 
 /*
  *   Spinel is a host-controller protocol designed to enable
@@ -470,7 +470,7 @@
 #define SPINEL_FRAME_BUFFER_SIZE (SPINEL_FRAME_MAX_SIZE + SPINEL_ENCRYPTER_EXTRA_DATA_SIZE)
 
 /// Macro for generating bit masks using bit index from the spec
-#define SPINEL_BIT_MASK(bit_index, field_bit_count) ((1 << ((field_bit_count)-1)) >> (bit_index))
+#define SPINEL_BIT_MASK(bit_index, field_bit_count) ((1 << ((field_bit_count) - 1)) >> (bit_index))
 
 #define SPINEL_BITS_PER_BYTE 8 // Number of bits in a byte
 
@@ -4897,6 +4897,68 @@ enum
      */
     SPINEL_PROP_DNSSD_KEY_RECORD = SPINEL_PROP_DNSSD__BEGIN + 5,
 
+    /// DNS-SD Service Browser
+    /**
+     * Format : Inserted/Removed
+     *
+     * `U`    : The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+     * `t(U)` : The sub-type label if browsing for sub-type, empty otherwise.
+     * `L`    : The infrastructure network interface index to browse the service.
+     * `D`    : The context of the request. A pointer to the browse callback to receive the result.
+     *
+     * NCP uses this property to browse services.
+     */
+    SPINEL_PROP_DNSSD_BROWSER = SPINEL_PROP_DNSSD__BEGIN + 6,
+
+    /// DNS-SD Service Browser Result
+    /**
+     * Format : Set
+     *
+     * `U`    : The service type (e.g., "_mt._udp"). MUST NOT include domain name.
+     * `t(U)` : The sub-type label if browsing for sub-type, empty otherwise.
+     * `U`    : Service instance label.
+     * `L`    : TTL in seconds. Zero TTL indicates that service is removed.
+     * `L`    : The infrastructure network interface index.
+     * `D`    : The context of the request. A pointer to the browse callback to receive the result.
+     *
+     * Host uses this property to send the result of the browser to NCP.
+     */
+    SPINEL_PROP_DNSSD_BROWSE_RESULT = SPINEL_PROP_DNSSD__BEGIN + 7,
+
+    /// DNS-SD Service Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request. A pointer to the callback to receive the result.
+     *
+     * NCP uses this property to resolve services.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 8,
+
+    /**
+     * DNS-SD SRV Resolution Result
+     *
+     * Format: `UUt(U)SSSLLD`: Set
+     *
+     * Reports the result of a DNS-SD service resolution on the infrastructure
+     * network.
+     *
+     * Content of the `otPlatDnssdSrvResult` struct:
+     *  `U`: The service instance name label.
+     *  `U`: The service type.
+     *  `U`: The host name (e.g., "myhost"). Can be NULL when `mTtl` is zero.
+     *  `S`: The service port number.
+     *  `S`: The service priority.
+     *  `S`: The service weight.
+     *  `L`: The service TTL in seconds. Zero TTL indicates SRV record is removed.
+     *  `L`: The infrastructure network interface index.
+     *  `D`: The context of the request. A pointer to the callback to receive the result.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
@@ -4910,6 +4972,45 @@ enum
      * `D`: The encoded MeshCoP service TXT data (from Thread side).
      */
     SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 1,
+
+    /// Border Agent Ephemeral Key State.
+    /**
+     * Format: `CS` - Get and Unsolicited notifications.
+     *
+     * `C`: The Ephemeral Key state. The value corresponds to `otBorderAgentEphemeralKeyState`.
+     * `S`: The UDP port that is being used by the ephemeral key. If the state is 'Disabled' or 'Stopped' , the port
+     * MUST be 0.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 2,
+
+    /// Enablement/Disablement of the Ephemeral Key feature.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: true to enable the Ephemeral Key feature and false to disable the feature.
+     *
+     * Note that enabling the Ephemeral Key feature doesn't mean activating Ephemeral Key mode. If the feature
+     * is enabled, the corresponding bit in state bitmap in the meshcop service will be set.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE = SPINEL_PROP_BORDER_AGENT__BEGIN + 3,
+
+    /// Activation of the Ephemeral Key mode.
+    /**
+     * Format: `ULS` - Write-Only
+     *
+     * `U`: The ephemeral key to use.
+     * `L`: The timeout duration, in milliseconds, to use the ephemeral key.
+     * `S`: The UDP port for the MeshCop-e service. An ephemeral port will be used if this is 0.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ACTIVATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 4,
+
+    /// Deactivation of the Ephemeral Key mode.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: true to retain the current session if existed. false to force the disconnection for existing session.
+     */
+    SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_DEACTIVATE = SPINEL_PROP_BORDER_AGENT__BEGIN + 5,
 
     SPINEL_PROP_BORDER_AGENT__END = 0x970,
 
@@ -4946,6 +5047,32 @@ enum
     SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER = SPINEL_PROP_BACKBONE_ROUTER__BEGIN + 3,
 
     SPINEL_PROP_BACKBONE_ROUTER__END = 0x990,
+
+    SPINEL_PROP_BORDER_ROUTER__BEGIN = 0x990,
+
+    /// Enables or Disables DHCPv6 Prefix Delegation
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Enables or disables DHCPv6 Prefix Delegation
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE = SPINEL_PROP_BORDER_ROUTER__BEGIN + 1,
+
+    /// Process DHCPv6 Prefix Delegation Prefix
+    /**
+     * Format: `6CLL` - Write-Only
+     *
+     * This property is used to provide a DHCPv6 Prefix Delegation (PD) prefix to the OpenThread stack
+     * via the NCP interface. It calls `otPlatBorderRoutingProcessDhcp6PdPrefix()`.
+     *
+     * `6` : IPv6 prefix address
+     * `C` : Prefix length in bits
+     * `L` : Valid lifetime in seconds
+     * `L` : Preferred lifetime in seconds
+     */
+    SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
+
+    SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
@@ -5028,7 +5155,7 @@ typedef uint32_t spinel_prop_key_t;
 #define SPINEL_HEADER_FLAG 0x80
 #define SPINEL_HEADER_FLAGS_SHIFT 6
 #define SPINEL_HEADER_FLAGS_MASK (3 << SPINEL_HEADER_FLAGS_SHIFT)
-#define SPINEL_HEADER_GET_FLAG(x) (((x)&SPINEL_HEADER_FLAGS_MASK) >> SPINEL_HEADER_FLAGS_SHIFT)
+#define SPINEL_HEADER_GET_FLAG(x) (((x) & SPINEL_HEADER_FLAGS_MASK) >> SPINEL_HEADER_FLAGS_SHIFT)
 
 #define SPINEL_HEADER_TID_SHIFT 0
 #define SPINEL_HEADER_TID_MASK (15 << SPINEL_HEADER_TID_SHIFT)
@@ -5045,8 +5172,8 @@ typedef uint32_t spinel_prop_key_t;
 
 #define SPINEL_HEADER_INVALID_IID 0xFF
 
-#define SPINEL_HEADER_GET_IID(x) (((x)&SPINEL_HEADER_IID_MASK) >> SPINEL_HEADER_IID_SHIFT)
-#define SPINEL_HEADER_GET_TID(x) (spinel_tid_t)(((x)&SPINEL_HEADER_TID_MASK) >> SPINEL_HEADER_TID_SHIFT)
+#define SPINEL_HEADER_GET_IID(x) (((x) & SPINEL_HEADER_IID_MASK) >> SPINEL_HEADER_IID_SHIFT)
+#define SPINEL_HEADER_GET_TID(x) (spinel_tid_t)(((x) & SPINEL_HEADER_TID_MASK) >> SPINEL_HEADER_TID_SHIFT)
 
 #define SPINEL_GET_NEXT_TID(x) (spinel_tid_t)((x) >= 0xF ? 1 : (x) + 1)
 
@@ -5225,4 +5352,4 @@ SPINEL_API_EXTERN const char *spinel_link_metrics_status_to_cstr(uint8_t status)
 }
 #endif
 
-#endif /* defined(SPINEL_HEADER_INCLUDED) */
+#endif // OT_LIB_SPINEL_SPINEL_H_

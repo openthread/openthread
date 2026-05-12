@@ -556,7 +556,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)
     {
         char         logStream[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE + 1];
-        unsigned int len = sizeof(logStream);
+        unsigned int len = sizeof(logStream) - 1;
 
         unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_S, logStream, &len);
         assert(len < sizeof(logStream));
@@ -1966,7 +1966,7 @@ exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
 }
 
-uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
+uint64_t RadioSpinel::GetNow(void) const { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
 
 uint32_t RadioSpinel::GetBusSpeed(void) const { return GetSpinelDriver().GetSpinelInterface()->GetBusSpeed(); }
 
@@ -2188,11 +2188,15 @@ void RadioSpinel::RestoreProperties(void)
                          otLinkGetFrameCounter(mInstance) + kFrameCounterGuard));
     }
 
+    SuccessOrDie(Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, nullptr));
+
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
     {
         SuccessOrDie(
             Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, mSrcMatchShortEntries[i]));
     }
+
+    SuccessOrDie(Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, nullptr));
 
     for (int i = 0; i < mSrcMatchExtEntryCount; ++i)
     {

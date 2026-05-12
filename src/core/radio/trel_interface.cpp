@@ -43,64 +43,69 @@ RegisterLogModule("TrelInterface");
 
 Interface::Interface(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mInitialized(false)
-    , mEnabled(false)
+    , mUserEnabled(true)
+    , mStackEnabled(false)
     , mFiltered(false)
+    , mState(kStateUninitialized)
 {
 }
 
 void Interface::Init(void)
 {
-    OT_ASSERT(!mInitialized);
-
-    mInitialized = true;
-
-    if (mEnabled)
-    {
-        mEnabled = false;
-        Enable();
-    }
-}
-
-void Interface::SetEnabled(bool aEnable)
-{
-    if (aEnable)
-    {
-        Enable();
-    }
-    else
-    {
-        Disable();
-    }
-}
-
-void Interface::Enable(void)
-{
-    VerifyOrExit(!mEnabled);
-
-    mEnabled = true;
-    VerifyOrExit(mInitialized);
-
-    otPlatTrelEnable(&GetInstance(), &mUdpPort);
-    Get<PeerDiscoverer>().Start();
-
-    LogInfo("Enabled interface, local port:%u", mUdpPort);
+    VerifyOrExit(mState == kStateUninitialized);
+    mState = kStateDisabled;
+    UpdateState();
 
 exit:
     return;
 }
 
-void Interface::Disable(void)
+void Interface::SetEnabled(bool aEnable, Requester aRequester)
 {
-    VerifyOrExit(mEnabled);
+    switch (aRequester)
+    {
+    case kRequesterUser:
+        VerifyOrExit(mUserEnabled != aEnable);
+        mUserEnabled = aEnable;
+        LogInfo("User %sabled interface", aEnable ? "en" : "dis");
+        break;
 
-    mEnabled = false;
-    VerifyOrExit(mInitialized);
+    case kRequesterStack:
+        VerifyOrExit(mStackEnabled != aEnable);
+        mStackEnabled = aEnable;
+        break;
+    }
 
-    otPlatTrelDisable(&GetInstance());
-    Get<PeerDiscoverer>().Stop();
+    UpdateState();
 
-    LogDebg("Disabled interface");
+exit:
+    return;
+}
+
+void Interface::UpdateState(void)
+{
+    VerifyOrExit(mState != kStateUninitialized);
+
+    if (mUserEnabled && mStackEnabled)
+    {
+        VerifyOrExit(mState == kStateDisabled);
+        mState = kStateEnabled;
+
+        otPlatTrelEnable(&GetInstance(), &mUdpPort);
+        Get<PeerDiscoverer>().Start();
+
+        LogInfo("Enabled interface, local port:%u", mUdpPort);
+    }
+    else
+    {
+        VerifyOrExit(mState == kStateEnabled);
+        mState = kStateDisabled;
+
+        otPlatTrelDisable(&GetInstance());
+        Get<PeerDiscoverer>().Stop();
+
+        LogInfo("Disabled interface");
+    }
 
 exit:
     return;
@@ -115,7 +120,7 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
     Error error = kErrorNone;
     Peer *peerEntry;
 
-    VerifyOrExit(mInitialized && mEnabled, error = kErrorAbort);
+    VerifyOrExit(IsEnabled(), error = kErrorAbort);
     VerifyOrExit(!mFiltered);
 
     switch (aPacket.GetHeader().GetType())
@@ -123,16 +128,16 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
     case Header::kTypeBroadcast:
         for (const Peer &peer : Get<PeerTable>())
         {
-            uint16_t        originalPacketNumber = aPacket.GetHeader().GetPacketNumber();
+            uint32_t        originalPacketNumber = aPacket.GetHeader().GetPacketNumber();
             Header::AckMode originalAckMode      = aPacket.GetHeader().GetAckMode();
             Neighbor       *neighbor;
 
-            if (!peer.IsStateValid())
+            if (!peer.HasValidSockAddr())
             {
                 continue;
             }
 
-            if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()))
+            if (!aIsDiscovery && (peer.GetExtPanId() != Get<MeshCoP::NetworkIdentity>().GetExtPanId()))
             {
                 continue;
             }
@@ -156,8 +161,10 @@ Error Interface::Send(Packet &aPacket, bool aIsDiscovery)
     case Header::kTypeUnicast:
     case Header::kTypeAck:
         peerEntry = Get<PeerTable>().FindMatching(aPacket.GetHeader().GetDestination());
-        VerifyOrExit((peerEntry != nullptr) && peerEntry->IsStateValid(), error = kErrorAbort);
-        otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peerEntry->mSockAddr);
+        VerifyOrExit(peerEntry != nullptr, error = kErrorAbort);
+        VerifyOrExit(peerEntry->HasValidSockAddr(), error = kErrorAbort);
+        peerEntry->UpdateLastInteractionTime();
+        otPlatTrelSend(&GetInstance(), aPacket.GetBuffer(), aPacket.GetLength(), &peerEntry->GetSockAddr());
         break;
     }
 
@@ -183,7 +190,7 @@ void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::So
 {
     LogDebg("HandleReceived(aLength:%u)", aLength);
 
-    VerifyOrExit(mInitialized && mEnabled && !mFiltered);
+    VerifyOrExit(IsEnabled() && !mFiltered);
 
     mRxPacket.Init(aBuffer, aLength);
     Get<Link>().ProcessReceivedPacket(mRxPacket, aSenderAddr);

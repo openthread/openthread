@@ -58,6 +58,18 @@ class NullField(object):
         """
         return self
 
+    def __call__(self, *args, **kwargs):
+        """
+        Calling NullField always returns NullField itself.
+        """
+        return self
+
+    def __iter__(self):
+        """
+        Iterating over NullField returns an empty iterator.
+        """
+        return iter([])
+
     def __setattr__(self, key, value):
         pass
 

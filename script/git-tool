@@ -47,33 +47,14 @@ apply_dependencies()
         depends_on_pr="$(echo "${dependency}" | tr -d '\r\n' | cut -d# -f2)"
         echo "pr: #${depends_on_pr}"
         git pull --no-edit --no-rebase origin "pull/${depends_on_pr}/merge"
-    done < <(grep -E "^Depends-On: *${project_name}" || true)
-}
-
-get_pr_body()
-{
-    local pr
-
-    [[ ${GITHUB_ACTIONS+x} && ${GITHUB_REF-} =~ ^refs/pull/[0-9]+/merge ]] || {
-        echo 'Not a pull request.' >&2
-        return 0
-    }
-
-    pr="$(echo "${GITHUB_REF}" | cut -d/ -f3)"
-
-    # do not print GITHUB_TOKEN
-    set +x
-    curl -H "authorization: Bearer ${GITHUB_TOKEN}" -H 'content-type: application/json' \
-        "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${pr}" \
-        | jq -r .body
-    set -x
+    done < <(grep -E "^Depends-On: *${project_name}" <<<"${PR_BODY:-}" || true)
 }
 
 try_update()
 {
     cd "$1"
 
-    get_pr_body | apply_dependencies
+    apply_dependencies
 }
 
 try_clone()
@@ -87,7 +68,7 @@ try_clone()
         dest_dir="$(git clone "$@" 2>&1 | tee | cut -d\' -f2)"
 
         cd "${dest_dir}"
-        get_pr_body | apply_dependencies
+        apply_dependencies
     fi
 }
 

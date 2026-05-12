@@ -44,10 +44,7 @@ constexpr bool NcpBase::AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntr
 
 NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_GET_HANDLER_ENTRY(aPropertyName)                   \
-    {                                                             \
-        aPropertyName, &NcpBase::HandlePropertyGet<aPropertyName> \
-    }
+#define OT_NCP_GET_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyGet<aPropertyName>}
 
     constexpr static HandlerEntry sHandlerEntries[] = {
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_LAST_STATUS),
@@ -229,6 +226,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE),
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE),
+#endif
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BACKBONE_ROUTER_STATE),
@@ -292,7 +292,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD),
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER),
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID),
+#endif
 #endif
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_THREAD_NEIGHBOR_TABLE),
 #if OPENTHREAD_FTD
@@ -411,10 +413,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 
 NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_SET_HANDLER_ENTRY(aPropertyName)                   \
-    {                                                             \
-        aPropertyName, &NcpBase::HandlePropertySet<aPropertyName> \
-    }
+#define OT_NCP_SET_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertySet<aPropertyName>}
 
     constexpr static HandlerEntry sHandlerEntries[] = {
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_POWER_STATE),
@@ -548,9 +547,22 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 #if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_STATE),
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_REQUEST_RESULT),
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_BROWSE_RESULT),
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_SRV_RESULT),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE),
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ACTIVATE),
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_DEACTIVATE),
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BACKBONE_ROUTER_ENABLE),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE),
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX),
+#endif
 #endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -600,7 +612,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED),
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD),
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER),
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID),
+#endif
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_THREAD_CHILD_COUNT_MAX),
 #endif
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG),
@@ -713,10 +727,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 
 NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_INSERT_HANDLER_ENTRY(aPropertyName)                   \
-    {                                                                \
-        aPropertyName, &NcpBase::HandlePropertyInsert<aPropertyName> \
-    }
+#define OT_NCP_INSERT_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyInsert<aPropertyName>}
 
     constexpr static HandlerEntry sHandlerEntries[] = {
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
@@ -769,10 +780,7 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
 
 NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aKey)
 {
-#define OT_NCP_REMOVE_HANDLER_ENTRY(aPropertyName)                   \
-    {                                                                \
-        aPropertyName, &NcpBase::HandlePropertyRemove<aPropertyName> \
-    }
+#define OT_NCP_REMOVE_HANDLER_ENTRY(aPropertyName) {aPropertyName, &NcpBase::HandlePropertyRemove<aPropertyName>}
 
     constexpr static HandlerEntry sHandlerEntries[] = {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

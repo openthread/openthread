@@ -31,13 +31,14 @@
  *   This file includes definitions for MAC Channel Mask
  */
 
-#ifndef MAC_CHANNEL_MASK_HPP_
-#define MAC_CHANNEL_MASK_HPP_
+#ifndef OT_CORE_MAC_CHANNEL_MASK_HPP_
+#define OT_CORE_MAC_CHANNEL_MASK_HPP_
 
 #include "openthread-core-config.h"
 
 #include <openthread/platform/radio.h>
 
+#include "common/bit_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
@@ -236,4 +237,4 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // MAC_CHANNEL_MASK_HPP_
+#endif // OT_CORE_MAC_CHANNEL_MASK_HPP_

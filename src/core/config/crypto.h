@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIG_CRYPTO_H_
-#define CONFIG_CRYPTO_H_
+#ifndef OT_CORE_CONFIG_CRYPTO_H_
+#define OT_CORE_CONFIG_CRYPTO_H_
 
 /**
  * @addtogroup config-crypto
@@ -58,6 +58,15 @@
 #define OPENTHREAD_CONFIG_CRYPTO_LIB_PSA 1
 /** Use platform provided crypto library */
 #define OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM 2
+
+/**
+ * @def OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+ *
+ * Define to 1 to enable the platform to allocate crypto operation context.
+ */
+#ifndef OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+#define OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT 0
+#endif
 
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
 
@@ -103,4 +112,4 @@
  * @}
  */
 
-#endif // CONFIG_CRYPTO_H_
+#endif // OT_CORE_CONFIG_CRYPTO_H_

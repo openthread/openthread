@@ -31,8 +31,8 @@
  *   This file includes definitions for `Heap`.
  */
 
-#ifndef HEAP_HPP_
-#define HEAP_HPP_
+#ifndef OT_CORE_COMMON_HEAP_HPP_
+#define OT_CORE_COMMON_HEAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -64,4 +64,4 @@ void Free(void *aPointer);
 } // namespace Heap
 } // namespace ot
 
-#endif // HEAP_HPP_
+#endif // OT_CORE_COMMON_HEAP_HPP_

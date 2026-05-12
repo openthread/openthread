@@ -106,7 +106,12 @@ exit:
 void PeerDiscoverer::NotifyPeerSocketAddressDifference(const Ip6::SockAddr &aPeerSockAddr,
                                                        const Ip6::SockAddr &aRxSockAddr)
 {
+#if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aRxSockAddr);
+#else
     otPlatTrelNotifyPeerSocketAddressDifference(&GetInstance(), &aPeerSockAddr, &aRxSockAddr);
+#endif
 }
 
 void PeerDiscoverer::PostServiceTask(void)
@@ -184,7 +189,8 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
     {
         peer = Get<PeerTable>().FindMatching(txtInfo.mExtAddress);
         VerifyOrExit(peer != nullptr);
-        peer->ScheduleToRemoveAfter(kRemoveDelay);
+        peer->SetDnssdState(Peer::kDnssdRemoved);
+        peer->Log(Peer::kUpdated);
         ExitNow();
     }
 
@@ -215,7 +221,7 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
         peer->SetExtAddress(txtInfo.mExtAddress);
         action = Peer::kAdded;
     }
-    else if (!peer->IsStateValid())
+    else if (peer->GetDnssdState() == Peer::kDnssdRemoved)
     {
         action = Peer::kReAdded;
     }
@@ -225,7 +231,7 @@ void PeerDiscoverer::HandleDiscoveredPeerInfo(const PeerInfo &aInfo)
         action    = Peer::kUpdated;
     }
 
-    peer->SetState(Peer::kStateValid);
+    peer->SetDnssdState(Peer::kDnssdResolved);
     peer->SetExtPanId(txtInfo.mExtPanId);
     peer->SetSockAddr(aInfo.GetSockAddr());
 
@@ -277,7 +283,7 @@ void PeerDiscoverer::RegisterService(uint16_t aPort, const TxtData &aTxtData)
 
     LogInfo("Registering service %s.%s", service.mServiceInstance, kTrelServiceType);
     LogInfo("    port:%u, ext-addr:%s, ext-panid:%s", aPort, Get<Mac::Mac>().GetExtAddress().ToString().AsCString(),
-            Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId().ToString().AsCString());
+            Get<MeshCoP::NetworkIdentity>().GetExtPanId().ToString().AsCString());
 
     Get<Dnssd>().RegisterService(service, /* aRequestId */ 0, HandleRegisterDone);
 }
@@ -309,8 +315,7 @@ void PeerDiscoverer::HandleRegisterDone(Error aError)
     }
     else
     {
-        LogInfo("Failed to register DNS-SD service with name:%s, Error:%s", mServiceName.GetName(),
-                ErrorToString(aError));
+        LogInfoOnError(aError, "register DNS-SD service with name:%s", mServiceName.GetName());
         UnregisterService();
 
         // Generate a new name (appending a suffix index to the name)
@@ -334,14 +339,15 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
 
     VerifyOrExit(IsRunning());
 
-    peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
+    peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
 
     if (aResult.mTtl == 0)
     {
         // Previously discovered service is now removed.
 
         VerifyOrExit(peer != nullptr);
-        peer->ScheduleToRemoveAfter(kRemoveDelay);
+        peer->SetDnssdState(Peer::kDnssdRemoved);
+        peer->Log(Peer::kUpdated);
     }
     else
     {
@@ -360,7 +366,7 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
             action = Peer::kReAdded;
         }
 
-        peer->SetState(Peer::kStateResolving);
+        peer->SetDnssdState(Peer::kDnssdResolving);
         peer->Log(action);
 
         StartServiceResolvers(*peer);
@@ -409,7 +415,7 @@ void PeerDiscoverer::HandleSrvResult(const Dnssd::SrvResult &aResult)
 
     VerifyOrExit(IsRunning());
 
-    peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
+    peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
     VerifyOrExit(peer != nullptr);
 
     if (aResult.mTtl == 0)
@@ -442,27 +448,16 @@ void PeerDiscoverer::HandleTxtResult(otInstance *aInstance, const otPlatDnssdTxt
 
 void PeerDiscoverer::HandleTxtResult(const Dnssd::TxtResult &aResult)
 {
-    Peer *peer;
-
-    VerifyOrExit(IsRunning());
-
-    peer = Get<PeerTable>().FindMatching(Peer::ServiceNameMatcher(aResult.mServiceInstance));
-    VerifyOrExit(peer != nullptr);
-
-    ProcessPeerTxtData(aResult, *peer);
-
-    UpdatePeerState(*peer);
-
-exit:
-    return;
-}
-
-void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &aPeer)
-{
+    Peer         *peer = nullptr;
     TxtData       txtData;
     TxtData::Info txtInfo;
 
-    aPeer.mTxtDataValidated = false;
+    VerifyOrExit(IsRunning());
+
+    peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
+    VerifyOrExit(peer != nullptr);
+
+    peer->mTxtDataValidated = false;
 
     VerifyOrExit(aResult.mTtl != 0);
 
@@ -472,14 +467,15 @@ void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &a
 
     if (txtInfo.mExtAddress == Get<Mac::Mac>().GetExtAddress())
     {
-        LogInfo("Peer %s is this device itself", aPeer.mServiceName.AsCString());
-        aPeer.ScheduleToRemoveAfter(0);
+        LogInfo("Peer %s is this device itself", peer->mServiceName.AsCString());
+        Get<PeerTable>().RemoveMatching(*peer);
+        peer = nullptr;
         ExitNow();
     }
 
-    aPeer.SetExtPanId(txtInfo.mExtPanId);
+    peer->SetExtPanId(txtInfo.mExtPanId);
 
-    if (aPeer.GetExtAddress() != txtInfo.mExtAddress)
+    if (peer->GetExtAddress() != txtInfo.mExtAddress)
     {
         // Remove any peer that is associated with the same ExtAddress.
         // These are likely stale entries. This ensure we have at most
@@ -487,13 +483,16 @@ void PeerDiscoverer::ProcessPeerTxtData(const Dnssd::TxtResult &aResult, Peer &a
 
         Get<PeerTable>().RemoveAndFreeAllMatching(txtInfo.mExtAddress);
 
-        aPeer.SetExtAddress(txtInfo.mExtAddress);
+        peer->SetExtAddress(txtInfo.mExtAddress);
     }
 
-    aPeer.mTxtDataValidated = true;
+    peer->mTxtDataValidated = true;
 
 exit:
-    return;
+    if (peer != nullptr)
+    {
+        UpdatePeerState(*peer);
+    }
 }
 
 void PeerDiscoverer::StartHostAddressResolver(Peer &aPeer)
@@ -502,7 +501,7 @@ void PeerDiscoverer::StartHostAddressResolver(Peer &aPeer)
 
     VerifyOrExit(!aPeer.mResolvingHost);
 
-    sameHostPeer = Get<PeerTable>().FindMatching(Peer::HostNameMatcher(aPeer.mHostName.AsCString()));
+    sameHostPeer = Get<PeerTable>().FindMatching(Peer::kMatchHostName, aPeer.mHostName.AsCString());
 
     aPeer.mResolvingHost = true;
 
@@ -530,7 +529,7 @@ void PeerDiscoverer::StopHostAddressResolver(Peer &aPeer)
     aPeer.mResolvingHost = false;
     aPeer.mHostAddresses.Free();
 
-    VerifyOrExit(!Get<PeerTable>().ContainsMatching(Peer::HostNameMatcher(aPeer.mHostName.AsCString())));
+    VerifyOrExit(!Get<PeerTable>().ContainsMatching(Peer::kMatchHostName, aPeer.mHostName.AsCString()));
 
     Get<Dnssd>().StopIp6AddressResolver(AddressResolver(aPeer));
 
@@ -608,12 +607,12 @@ void PeerDiscoverer::HandleAddressResult(const Dnssd::AddressResult &aResult)
 
     for (Peer &peer : Get<PeerTable>())
     {
-        if (peer.IsStateRemoving())
+        if (peer.GetDnssdState() == Peer::kDnssdRemoved)
         {
             continue;
         }
 
-        if (peer.Matches(Peer::HostNameMatcher(aResult.mHostName)))
+        if (peer.Matches(Peer::kMatchHostName, aResult.mHostName))
         {
             UpdatePeerAddresses(peer, sortedAddresses);
             UpdatePeerState(peer);
@@ -696,13 +695,13 @@ exit:
 
 void PeerDiscoverer::UpdatePeerState(Peer &aPeer)
 {
-    VerifyOrExit(aPeer.IsStateResolving());
+    VerifyOrExit(aPeer.GetDnssdState() == Peer::kDnssdResolving);
     VerifyOrExit(aPeer.mResolvingService && aPeer.mResolvingHost);
     VerifyOrExit(aPeer.mTxtDataValidated);
     VerifyOrExit(aPeer.mPort != 0);
     VerifyOrExit(aPeer.mHostAddresses.GetLength() > 0);
 
-    aPeer.SetState(Peer::kStateValid);
+    aPeer.SetDnssdState(Peer::kDnssdResolved);
     aPeer.Log(Peer::kUpdated);
 
 exit:
@@ -751,23 +750,14 @@ Error PeerDiscoverer::TxtData::Decode(Info &aInfo)
 
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
-        // If the TXT data happens to have entries with key longer
-        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
-        // entry would be placed in `mValue`. We skip over such
-        // entries.
-        if (entry.mKey == nullptr)
-        {
-            continue;
-        }
-
-        if (StringMatch(entry.mKey, kExtAddressKey))
+        if (entry.MatchesKey(kExtAddressKey))
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(Mac::ExtAddress), error = kErrorParse);
             aInfo.mExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
-        else if (StringMatch(entry.mKey, kExtPanIdKey))
+        else if (entry.MatchesKey(kExtPanIdKey))
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
             VerifyOrExit(entry.mValueLength >= sizeof(MeshCoP::ExtendedPanId), error = kErrorParse);
@@ -800,7 +790,7 @@ void PeerDiscoverer::TxtDataEncoder::Encode(void)
     Dns::TxtDataEncoder encoder(mBuffer, sizeof(mBuffer));
 
     SuccessOrAssert(encoder.AppendEntry(kExtAddressKey, Get<Mac::Mac>().GetExtAddress()));
-    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrAssert(encoder.AppendEntry(kExtPanIdKey, Get<MeshCoP::NetworkIdentity>().GetExtPanId()));
 
     mData   = mBuffer;
     mLength = encoder.GetLength();

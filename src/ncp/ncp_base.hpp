@@ -30,8 +30,8 @@
  *   This file contains definitions a spinel interface to the OpenThread stack.
  */
 
-#ifndef NCP_BASE_HPP_
-#define NCP_BASE_HPP_
+#ifndef OT_NCP_NCP_BASE_HPP_
+#define OT_NCP_NCP_BASE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -84,16 +84,13 @@ namespace Ncp {
 class NcpBase
 {
 public:
-    enum
-    {
-        kSpinelCmdHeaderSize = 2, ///< Size of spinel command header (in bytes).
-        kSpinelPropIdSize    = 3, ///< Size of spinel property identifier (in bytes).
+    static constexpr uint8_t kSpinelCmdHeaderSize = 2; ///< Size of spinel command header (in bytes).
+    static constexpr uint8_t kSpinelPropIdSize    = 3; ///< Size of spinel property identifier (in bytes).
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_RADIO
-        kSpinelInterfaceCount = SPINEL_HEADER_IID_MAX + 1, // Number of supported spinel interfaces
+    static constexpr uint8_t kSpinelInterfaceCount = SPINEL_HEADER_IID_MAX + 1; // Number of supported spinel interfaces
 #else
-        kSpinelInterfaceCount = 1, // Only one interface supported in single instance configuration
+    static constexpr uint8_t kSpinelInterfaceCount = 1; // Only one interface supported in single instance configuration
 #endif
-    };
 
     /**
      * Creates and initializes an NcpBase instance.
@@ -314,12 +311,40 @@ public:
                             otPlatDnssdRegisterCallback aCallback);
 
     /**
+     * Starts a service browser.
+     *
+     * @param[in] aBrowser  The browser to be started.
+     */
+    void DnssdStartBrowser(const otPlatDnssdBrowser *aBrowser);
+
+    /**
+     * Stops a service browser.
+     *
+     * @param[in] aBrowser  The browser to be stopped.
+     */
+    void DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser);
+
+    /**
+     * Starts a service resolver.
+     *
+     * @param[in] aResolver  The resolver to be started.
+     */
+    void DnssdStartSrvResolver(const otPlatDnssdSrvResolver *aResolver);
+
+    /**
+     * Stops a service resolver.
+     *
+     * @param[in] aResolver  The resolver to be stopped.
+     */
+    void DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver);
+
+    /**
      * Gets the Dnssd state.
      *
      * Returns the platform dnssd state.
      */
     otPlatDnssdState DnssdGetState(void);
-#endif
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
 protected:
     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
@@ -650,13 +675,15 @@ protected:
     static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    static void HandleDiagOutput_Jump(const char *aFormat, va_list aArguments, void *aContext);
-    void        HandleDiagOutput(const char *aFormat, va_list aArguments);
+    static void HandleDiagOutput_Jump(const char *aFormat, va_list aArguments, void *aContext)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 0);
+    void HandleDiagOutput(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 #endif
 
 #if OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
-    static int HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments);
-    int        HandleCliOutput(const char *aFormat, va_list aArguments);
+    static int HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+    int HandleCliOutput(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 #endif
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
@@ -734,12 +761,9 @@ protected:
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
     static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aDeviceType, bool aNetworkData);
 
-    enum
-    {
-        kTxBufferSize       = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE, // Tx Buffer size (used by mTxFrameBuffer).
-        kResponseQueueSize  = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE,
-        kInvalidScanChannel = -1, // Invalid scan channel.
-    };
+    static constexpr uint16_t kTxBufferSize       = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE;
+    static constexpr uint16_t kResponseQueueSize  = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE;
+    static constexpr int8_t   kInvalidScanChannel = -1; // Invalid scan channel.
 
     Instance *mInstance;
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_RADIO
@@ -792,7 +816,9 @@ protected:
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     otExtAddress mSteeringDataAddress;
 #endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t mPreferredRouteId;
+#endif
 #endif
     uint8_t mCurCommandIid;
 
@@ -857,6 +883,8 @@ protected:
 
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
+    template <typename DnssdObjType> struct DnssdDiscoveryPropKeyFor;
+
     template <typename DnssdObjType>
     void DnssdUpdate(const DnssdObjType         *aObj,
                      otPlatDnssdRequestId        aRequestId,
@@ -881,6 +909,28 @@ protected:
         }
     }
 
+    /**
+     * Template for making service discovery.
+     *
+     * DnssdDiscoveryType can be: otPlatDnssdBrowser, otPlatDnssdSrvResolver, otPlatDnssdTxtResolver,
+     * otPlatDnssdAddressResolver and otPlatDnssdRecordQuerier.
+     */
+    template <typename DnssdDiscoveryType> void DnssdUpdateDiscovery(const DnssdDiscoveryType *aDiscovery, bool aStart)
+    {
+        uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+        spinel_command_t cmd    = aStart ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
+
+        VerifyOrExit(aDiscovery != nullptr);
+        VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY);
+
+        SuccessOrExit(mEncoder.BeginFrame(header, cmd, DnssdDiscoveryPropKeyFor<DnssdDiscoveryType>::Key));
+        SuccessOrExit(Spinel::EncodeDnssdDiscovery(mEncoder, *aDiscovery));
+        SuccessOrExit(mEncoder.EndFrame());
+
+    exit:
+        return;
+    }
+
     otPlatDnssdState mDnssdState;
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
@@ -892,6 +942,11 @@ protected:
                                                            const otIp6Address                    *aAddress);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    static void HandleBorderAgentEphemeralKeyStateChanged(void *aContext);
+    void        HandleBorderAgentEphemeralKeyStateChanged(void);
+#endif
+
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -900,7 +955,19 @@ protected:
 #endif
 };
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdBrowser>
+{
+    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_BROWSER;
+};
+
+template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
+{
+    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_SRV_RESOLVER;
+};
+#endif
+
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_BASE_HPP_
+#endif // OT_NCP_NCP_BASE_HPP_

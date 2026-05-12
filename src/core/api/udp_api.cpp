@@ -39,7 +39,7 @@ using namespace ot;
 
 otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().NewMessage(0, Message::Settings::From(aSettings));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().NewMessage(Message::Settings::From(aSettings));
 }
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
@@ -81,7 +81,10 @@ exit:
     return error;
 }
 
-otUdpSocket *otUdpGetSockets(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets(); }
+otUdpSocket *otUdpGetSockets(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets().GetHead();
+}
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext)

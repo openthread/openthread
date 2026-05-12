@@ -31,8 +31,8 @@
  *   This file includes definitions for Advertising Proxy.
  */
 
-#ifndef SRP_ADVERTISING_PROXY_HPP_
-#define SRP_ADVERTISING_PROXY_HPP_
+#ifndef OT_CORE_NET_SRP_ADVERTISING_PROXY_HPP_
+#define OT_CORE_NET_SRP_ADVERTISING_PROXY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -223,21 +223,11 @@ private:
             // completed (successfully or failed).
         };
 
-        struct ExpirationChecker
-        {
-            explicit ExpirationChecker(TimeMilli aNow)
-                : mNow(aNow)
-            {
-            }
-
-            TimeMilli mNow;
-        };
-
         AdvInfo(Host &aHost, const Server::MessageMetadata &aMetadata, uint32_t aTimeout);
         void      SignalServerToCommit(void);
         bool      IsCompleted(void) const;
         bool      Matches(const CompletionChecker &) const { return IsCompleted(); }
-        bool      Matches(const ExpirationChecker &aChecker) const { return (mExpireTime <= aChecker.mNow); }
+        bool      Matches(const ExpirationChecker &aChecker) const { return aChecker.IsExpired(mExpireTime); }
         Instance &GetInstance(void) const { return mHost.GetInstance(); }
 
         AdvInfo                *mNext;
@@ -305,4 +295,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
 
-#endif // SRP_ADVERTISING_PROXY_HPP_
+#endif // OT_CORE_NET_SRP_ADVERTISING_PROXY_HPP_

@@ -31,12 +31,17 @@
  *   This file includes definitions for Thread network time synchronization service.
  */
 
-#ifndef TIME_SYNC_HPP_
-#define TIME_SYNC_HPP_
+#ifndef OT_CORE_THREAD_TIME_SYNC_SERVICE_HPP_
+#define OT_CORE_THREAD_TIME_SYNC_SERVICE_HPP_
 
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#error "TIME_SYNC feature is not supported under RADIO_LINK_TREL. " \
+       "TIME_SYNC is an experimental feature that only works on 15.4 radio."
+#endif
 
 #include <openthread/network_time.h>
 
@@ -212,4 +217,4 @@ DefineMapEnum(otNetworkTimeStatus, TimeSync::Status);
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#endif // TIME_SYNC_HPP_
+#endif // OT_CORE_THREAD_TIME_SYNC_SERVICE_HPP_

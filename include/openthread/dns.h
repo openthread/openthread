@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,17 +158,23 @@ otError otDnsEncodeTxtData(const otDnsTxtEntry *aTxtEntries,
 /**
  * Enables/disables the "DNS name compression" mode.
  *
- * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This
- * is applicable to OpenThread's DNS and SRP client/server modules.
+ * By default, DNS name compression is enabled. When disabled, DNS names are appended in full and are never compressed.
+ * This applies to OpenThread's DNS and SRP client/server modules.
+ *
+ * DNS name compression cannot be disabled if the OpenThread mDNS module is enabled. Enabling the mDNS module will
+ * automatically enable name compression if it was previously disabled. Attempting to disable compression while the mDNS
+ * module is active will return `OT_ERROR_NOT_CAPABLE`.
  *
  * This is intended for testing only and available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` config is enabled.
  *
- * Note that in the case `OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE` is used, this mode applies to all OpenThread
- * instances (i.e., calling this function enables/disables the compression mode on all OpenThread instances).
- *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
+ *
+ * @retval OT_ERROR_NONE          The "DNS name compression" mode is updated.
+ * @retval OT_ERROR_NOT_CAPABLE   The "DNS name compression" mode cannot be disabled since OpenThread mDNS module is
+ *                                enabled.
  */
-void otDnsSetNameCompressionEnabled(bool aEnabled);
+otError otDnsSetNameCompressionEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Indicates whether the "DNS name compression" mode is enabled or not.
@@ -176,7 +183,7 @@ void otDnsSetNameCompressionEnabled(bool aEnabled);
  *
  * @returns TRUE if the "DNS name compression" mode is enabled, FALSE otherwise.
  */
-bool otDnsIsNameCompressionEnabled(void);
+bool otDnsIsNameCompressionEnabled(otInstance *aInstance);
 
 /**
  * @}

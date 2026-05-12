@@ -31,8 +31,8 @@
  *   This file includes definitions for DHCPv6 Prefix Delegation (PD) Client.
  */
 
-#ifndef DHCP6_PD_CLIENT_HPP_
-#define DHCP6_PD_CLIENT_HPP_
+#ifndef OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_
+#define OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -141,12 +141,14 @@ private:
     static constexpr uint32_t kJitterDivisor       = 10;
 
     // The constants below are in seconds
-    static constexpr uint32_t kMinPreferredLifetime                 = 30 * Time::kOneMinuteInSec;
-    static constexpr uint32_t kMaxPreferredLifetime                 = 4 * Time::kOneHourInSec;
+    static constexpr uint32_t kMinPreferredLifetime = OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MIN_LIFETIME;
+    static constexpr uint32_t kMaxPreferredLifetime = OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_MAX_LIFETIME;
     static constexpr uint32_t kMaxValidMarginAfterPreferredLifetime = 2 * Time::kOneMinuteInSec;
     static constexpr uint32_t kMinT1                                = 5 * Time::kOneMinuteInSec;
     static constexpr uint32_t kMinT1MarginBeforePreferredLifetime   = 15 * Time::kOneMinuteInSec;
     static constexpr uint32_t kMinT2MarginBeforePreferredLifetime   = 6 * Time::kOneMinuteInSec;
+
+    static_assert(kMaxPreferredLifetime > kMinPreferredLifetime, "invalid min/max values for preferred lifetime");
 
     // Default T1 and T2 as 0.5 and 0.8 times the preferred lifetime
     // if they are zero (represented as 5/10 and 8/10).
@@ -272,4 +274,4 @@ private:
 
 #endif // OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
 
-#endif // DHCP6_PD_CLIENT_HPP_
+#endif // OT_CORE_BORDER_ROUTER_DHCP6_PD_CLIENT_HPP_

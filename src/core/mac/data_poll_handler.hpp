@@ -31,8 +31,8 @@
  *   This file includes definitions for handling of data polls and indirect frame transmission.
  */
 
-#ifndef DATA_POLL_HANDLER_HPP_
-#define DATA_POLL_HANDLER_HPP_
+#ifndef OT_CORE_MAC_DATA_POLL_HANDLER_HPP_
+#define OT_CORE_MAC_DATA_POLL_HANDLER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -207,4 +207,4 @@ private:
 
 } // namespace ot
 
-#endif // DATA_POLL_HANDLER_HPP_
+#endif // OT_CORE_MAC_DATA_POLL_HANDLER_HPP_

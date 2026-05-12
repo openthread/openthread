@@ -31,8 +31,8 @@
  *   This file includes definitions for Network Data types and constants.
  */
 
-#ifndef NETWORK_DATA_TYPES_HPP_
-#define NETWORK_DATA_TYPES_HPP_
+#ifndef OT_CORE_THREAD_NETWORK_DATA_TYPES_HPP_
+#define OT_CORE_THREAD_NETWORK_DATA_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -205,6 +205,13 @@ public:
     Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
     /**
+     * Gets the RLOC16.
+     *
+     * @returns The RLOC16.
+     */
+    uint16_t GetRloc16(void) const { return mRloc16; }
+
+    /**
      * Gets the preference.
      *
      * @return The preference.
@@ -265,6 +272,13 @@ public:
      * @param[in]  aPrefix  The prefix to set to.
      */
     void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
+
+    /**
+     * Gets the RLOC16.
+     *
+     * @returns The RLOC16.
+     */
+    uint16_t GetRloc16(void) const { return mRloc16; }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
@@ -347,6 +361,13 @@ public:
         void GetServerData(ServerData &aServerData) const { aServerData.Init(mServerData, mServerDataLength); }
 
         /**
+         * Gets the server RLOC16.
+         *
+         * @returns The server RLOC16.
+         */
+        uint16_t GetRloc16(void) const { return mRloc16; }
+
+        /**
          * Overloads operator `==` to evaluate whether or not two `ServerConfig` instances are equal.
          *
          * @param[in]  aOther  The other `ServerConfig` instance to compare with.
@@ -382,6 +403,13 @@ public:
     ServerConfig &GetServerConfig(void) { return static_cast<ServerConfig &>(mServerConfig); }
 
     /**
+     * Gets the RLOC16.
+     *
+     * @returns The RLOC16.
+     */
+    uint16_t GetRloc16(void) const { return GetServerConfig().GetRloc16(); }
+
+    /**
      * Overloads operator `==` to evaluate whether or not two `ServiceConfig` instances are equal.
      *
      * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
@@ -409,4 +437,4 @@ DefineCoreType(otServerConfig, NetworkData::ServiceConfig::ServerConfig);
 
 } // namespace ot
 
-#endif // NETWORK_DATA_TYPES_HPP_
+#endif // OT_CORE_THREAD_NETWORK_DATA_TYPES_HPP_

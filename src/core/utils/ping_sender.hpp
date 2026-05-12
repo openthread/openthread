@@ -31,8 +31,8 @@
  *   This file includes definitions to support ping functionality.
  */
 
-#ifndef PING_SENDER_HPP_
-#define PING_SENDER_HPP_
+#ifndef OT_CORE_UTILS_PING_SENDER_HPP_
+#define OT_CORE_UTILS_PING_SENDER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -77,9 +77,9 @@ public:
             mSentCount          = 0;
             mReceivedCount      = 0;
             mTotalRoundTripTime = 0;
-            mMinRoundTripTime   = NumericLimits<uint16_t>::kMax;
-            mMaxRoundTripTime   = NumericLimits<uint16_t>::kMin;
+            mMaxRoundTripTime   = 0;
             mIsMulticast        = false;
+            SetToUintMax(mMinRoundTripTime);
         }
     };
 
@@ -184,4 +184,4 @@ DefineCoreType(otPingSenderStatistics, Utils::PingSender::Statistics);
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
-#endif // PING_SENDER_HPP_
+#endif // OT_CORE_UTILS_PING_SENDER_HPP_

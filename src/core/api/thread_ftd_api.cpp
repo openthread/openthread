@@ -63,7 +63,7 @@ otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddr
 
 bool otThreadIsRouterEligible(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().IsRouterEligible();
+    return AsCoreType(aInstance).Get<Mle::Mle>().IsRouterRoleAllowed();
 }
 
 otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
@@ -71,10 +71,12 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
     return AsCoreType(aInstance).Get<Mle::Mle>().SetRouterEligible(aEligible);
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     return AsCoreType(aInstance).Get<Mle::Mle>().SetPreferredRouterId(aRouterId);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance)
@@ -176,12 +178,12 @@ exit:
 
 otError otThreadBecomeRouter(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+    return AsCoreType(aInstance).Get<Mle::Mle>().BecomeRouter(Mle::kReasonHaveChildIdRequest);
 }
 
 otError otThreadBecomeLeader(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().BecomeLeader(/* aCheckWeight */ true);
+    return AsCoreType(aInstance).Get<Mle::Mle>().BecomeLeader(Mle::Mle::kCheckLeaderWeight);
 }
 
 uint8_t otThreadGetRouterDowngradeThreshold(otInstance *aInstance)
@@ -320,12 +322,14 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
     AsCoreType(aInstance).Get<NeighborTable>().RegisterCallback(aCallback);
 }
 
+#if OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
 void otThreadSetDiscoveryRequestCallback(otInstance                      *aInstance,
                                          otThreadDiscoveryRequestCallback aCallback,
                                          void                            *aContext)
 {
     AsCoreType(aInstance).Get<Mle::Mle>().SetDiscoveryRequestCallback(aCallback, aContext);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 

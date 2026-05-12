@@ -259,7 +259,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
             {
                 service->mShouldAdvertise = true;
 
-                if (aHost.mKeyLease == 0)
+                if (aHost.GetKeyLease() == 0)
                 {
                     advService.mIsKeyRegistered = false;
                 }
@@ -270,7 +270,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
             advService.mIsReplaced = true;
         }
 
-        if (aHost.mKeyLease == 0)
+        if (aHost.GetKeyLease() == 0)
         {
             advHost.mIsKeyRegistered = false;
         }
@@ -291,7 +291,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
             UnregisterService(service);
         }
 
-        if (aHost.mKeyLease == 0)
+        if (aHost.GetKeyLease() == 0)
         {
             UnregisterKey(service);
         }
@@ -302,7 +302,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Host &aHost)
         UnregisterHost(aHost);
     }
 
-    if (aHost.mKeyLease == 0)
+    if (aHost.GetKeyLease() == 0)
     {
         UnregisterKey(aHost);
     }
@@ -352,7 +352,7 @@ void AdvertisingProxy::AdvertiseRemovalOf(Service &aService)
         UnregisterService(aService);
     }
 
-    if (aService.mKeyLease == 0)
+    if (aService.GetKeyLease() == 0)
     {
         UnregisterKey(aService);
     }
@@ -473,7 +473,7 @@ exit:
 void AdvertisingProxy::Advertise(Host &aHost)
 {
     bool shouldUnregisterHostAndServices = aHost.IsDeleted();
-    bool shouldUnregisterKeys            = (aHost.mKeyLease == 0);
+    bool shouldUnregisterKeys            = (aHost.GetKeyLease() == 0);
 
     DecideToAdvertise(aHost, shouldUnregisterHostAndServices, shouldUnregisterKeys);
 
@@ -817,7 +817,7 @@ bool AdvertisingProxy::CompareAndUpdateHost(Host &aHost, Host &aExistingHost)
         // we need to unregister keys for any services on
         // existing host that are not present in `aHost`.
 
-        if (aHost.mKeyLease == 0)
+        if (aHost.GetKeyLease() == 0)
         {
             for (Service &existingService : aExistingHost.mServices)
             {
@@ -956,10 +956,7 @@ void AdvertisingProxy::RegisterHost(Host &aHost)
     Get<Dnssd>().RegisterHost(hostInfo, aHost.mAdvId, HandleRegistered);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s registering host '%s'", ErrorToString(error), hostName);
-    }
+    LogWarnOnError(error, "register host '%s'", hostName);
 }
 
 void AdvertisingProxy::UnregisterHost(Host &aHost)
@@ -1006,7 +1003,7 @@ void AdvertisingProxy::RegisterService(Service &aService)
 
         IgnoreError(Server::Service::ParseSubTypeServiceName(subTypeName.AsCString(), label, sizeof(label)));
         SuccessOrExit(error = labelString.Set(label));
-        IgnoreError(subTypeHeapStrings.PushBack(static_cast<Heap::String &&>(labelString)));
+        IgnoreError(subTypeHeapStrings.PushBack(labelString.Move()));
         IgnoreError(subTypeLabels.PushBack(subTypeHeapStrings.Back()->AsCString()));
     }
 
@@ -1030,11 +1027,7 @@ void AdvertisingProxy::RegisterService(Service &aService)
     Get<Dnssd>().RegisterService(serviceInfo, aService.mAdvId, HandleRegistered);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Error %s registering service '%s' '%s'", ErrorToString(error), aService.GetInstanceLabel(),
-                serviceName);
-    }
+    LogWarnOnError(error, "register service '%s' '%s'", aService.GetInstanceLabel(), serviceName);
 }
 
 void AdvertisingProxy::UnregisterService(Service &aService)
@@ -1159,7 +1152,10 @@ void AdvertisingProxy::UnregisterKey(const char *aName, const char *aServiceType
 
 void AdvertisingProxy::CopyNameAndRemoveDomain(DnsName &aName, const char *aFullName)
 {
-    IgnoreError(Dns::Name::ExtractLabels(aFullName, Get<Server>().GetDomain(), aName, sizeof(aName)));
+    if (Dns::Name::ExtractLabels(aFullName, Get<Server>().GetDomain(), aName, sizeof(aName)) != kErrorNone)
+    {
+        aName[0] = kNullChar;
+    }
 }
 
 void AdvertisingProxy::HandleRegistered(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError)
@@ -1252,7 +1248,7 @@ void AdvertisingProxy::HandleTimer(void)
 
     VerifyOrExit(mState == kStateRunning);
 
-    mAdvInfoList.RemoveAllMatching(expiredList, AdvInfo::ExpirationChecker(nextTime.GetNow()));
+    mAdvInfoList.RemoveAllMatching(expiredList, ExpirationChecker(nextTime.GetNow()));
 
     for (AdvInfo &adv : mAdvInfoList)
     {

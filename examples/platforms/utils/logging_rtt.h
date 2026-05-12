@@ -124,7 +124,8 @@ void utilsLogRttDeinit(void);
  * @param[in]  aFormat     A pointer to the format string.
  * @param[in]  ap          va_list matching information for aFormat
  */
-void utilsLogRttOutput(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);
+void utilsLogRttOutput(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
 
 #ifdef __cplusplus
 } // extern "C"

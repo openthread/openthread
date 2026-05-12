@@ -36,6 +36,158 @@
 
 namespace ot {
 
+void TestDeviceMode(void)
+{
+    Mle::DeviceMode             mode;
+    Mle::DeviceMode::ModeConfig config;
+    Mle::DeviceMode::ModeConfig readConfig;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // SED (stable subset netdata)
+    config.mRxOnWhenIdle = false;
+    config.mDeviceType   = false;
+    config.mNetworkData  = false;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(!readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(!readConfig.mDeviceType);
+    VerifyOrQuit(!readConfig.mNetworkData);
+
+    VerifyOrQuit(mode.IsValid());
+    VerifyOrQuit(!mode.IsRxOnWhenIdle());
+    VerifyOrQuit(!mode.IsFullThreadDevice());
+    VerifyOrQuit(mode.GetNetworkDataType() == NetworkData::kStableSubset);
+    VerifyOrQuit(!mode.IsMinimalEndDevice());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // SED (full set netdata)
+
+    config.mRxOnWhenIdle = false;
+    config.mDeviceType   = false;
+    config.mNetworkData  = true;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(!readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(!readConfig.mDeviceType);
+    VerifyOrQuit(readConfig.mNetworkData);
+
+    VerifyOrQuit(mode.IsValid());
+    VerifyOrQuit(!mode.IsRxOnWhenIdle());
+    VerifyOrQuit(!mode.IsFullThreadDevice());
+    VerifyOrQuit(mode.GetNetworkDataType() == NetworkData::kFullSet);
+    VerifyOrQuit(!mode.IsMinimalEndDevice());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // MED (stable subset netdata)
+
+    config.mRxOnWhenIdle = true;
+    config.mDeviceType   = false;
+    config.mNetworkData  = false;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(!readConfig.mDeviceType);
+    VerifyOrQuit(!readConfig.mNetworkData);
+
+    VerifyOrQuit(mode.IsValid());
+    VerifyOrQuit(mode.IsRxOnWhenIdle());
+    VerifyOrQuit(!mode.IsFullThreadDevice());
+    VerifyOrQuit(mode.GetNetworkDataType() == NetworkData::kStableSubset);
+    VerifyOrQuit(mode.IsMinimalEndDevice());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // MED (full set netdata)
+
+    config.mRxOnWhenIdle = true;
+    config.mDeviceType   = false;
+    config.mNetworkData  = true;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(!readConfig.mDeviceType);
+    VerifyOrQuit(readConfig.mNetworkData);
+
+    VerifyOrQuit(mode.IsValid());
+    VerifyOrQuit(mode.IsRxOnWhenIdle());
+    VerifyOrQuit(!mode.IsFullThreadDevice());
+    VerifyOrQuit(mode.GetNetworkDataType() == NetworkData::kFullSet);
+    VerifyOrQuit(mode.IsMinimalEndDevice());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // FTD (stable subset netdata)
+
+    config.mRxOnWhenIdle = true;
+    config.mDeviceType   = true;
+    config.mNetworkData  = false;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(readConfig.mDeviceType);
+    VerifyOrQuit(!readConfig.mNetworkData);
+
+    VerifyOrQuit(mode.IsValid());
+    VerifyOrQuit(mode.IsRxOnWhenIdle());
+    VerifyOrQuit(mode.IsFullThreadDevice());
+    VerifyOrQuit(mode.GetNetworkDataType() == NetworkData::kStableSubset);
+    VerifyOrQuit(!mode.IsMinimalEndDevice());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // FTD (full set netdata)
+
+    config.mRxOnWhenIdle = true;
+    config.mDeviceType   = true;
+    config.mNetworkData  = true;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(readConfig.mDeviceType);
+    VerifyOrQuit(readConfig.mNetworkData);
+
+    VerifyOrQuit(mode.IsValid());
+    VerifyOrQuit(mode.IsRxOnWhenIdle());
+    VerifyOrQuit(mode.IsFullThreadDevice());
+    VerifyOrQuit(mode.GetNetworkDataType() == NetworkData::kFullSet);
+    VerifyOrQuit(!mode.IsMinimalEndDevice());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // Invalid
+
+    config.mRxOnWhenIdle = false;
+    config.mDeviceType   = true;
+    config.mNetworkData  = true;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(!readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(readConfig.mDeviceType);
+    VerifyOrQuit(readConfig.mNetworkData);
+
+    VerifyOrQuit(!mode.IsValid());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - -
+    // Invalid
+
+    config.mRxOnWhenIdle = false;
+    config.mDeviceType   = true;
+    config.mNetworkData  = false;
+    mode.Set(config);
+
+    mode.Get(readConfig);
+    VerifyOrQuit(!readConfig.mRxOnWhenIdle);
+    VerifyOrQuit(readConfig.mDeviceType);
+    VerifyOrQuit(!readConfig.mNetworkData);
+
+    VerifyOrQuit(!mode.IsValid());
+
+    printf("TestDeviceMode passed\n");
+}
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 void TestDefaultDeviceProperties(void)
@@ -176,6 +328,8 @@ void TestLeaderWeightCalculation(void)
 
 int main(void)
 {
+    ot::TestDeviceMode();
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     ot::TestDefaultDeviceProperties();
     ot::TestLeaderWeightCalculation();

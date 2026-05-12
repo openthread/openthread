@@ -31,8 +31,8 @@
  *   This file includes definitions for MLE Discover Scan process.
  */
 
-#ifndef DISCOVER_SCANNER_HPP_
-#define DISCOVER_SCANNER_HPP_
+#ifndef OT_CORE_THREAD_DISCOVER_SCANNER_HPP_
+#define OT_CORE_THREAD_DISCOVER_SCANNER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -44,6 +44,7 @@
 #include "mac/channel_mask.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
+#include "mac/scan_result.hpp"
 #include "meshcop/meshcop.hpp"
 #include "thread/mle.hpp"
 
@@ -67,20 +68,6 @@ public:
      * Default scan duration (per channel), in milliseconds.
      */
     static constexpr uint32_t kDefaultScanDuration = Mac::kScanDurationDefault;
-
-    /**
-     * Represents Discover Scan result.
-     */
-    typedef otActiveScanResult ScanResult;
-
-    /**
-     * Represents the handler function pointer called with any Discover Scan result or when the scan
-     * completes.
-     *
-     * The handler function format is `void (*oHandler)(ScanResult *aResult, void *aContext);`. End of scan is
-     * indicated by `aResult` pointer being set to `nullptr`.
-     */
-    typedef otHandleActiveScanResult Handler;
 
     /**
      * Represents the filter indexes, i.e., hash bit index values for the bloom filter (calculated from a
@@ -109,7 +96,7 @@ public:
      * @param[in]  aFilterIndexes     A pointer to `FilterIndexes` to use for filtering (when enabled).
      *                                If set to `nullptr`, filter indexes are derived from hash of factory-assigned
      *                                EUI64.
-     * @param[in]  aCallback          A pointer to a function that is called on receiving an MLE Discovery Response.
+     * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
      * @retval kErrorNone           Successfully started a Thread Discovery Scan.
@@ -122,7 +109,7 @@ public:
                    bool                    aJoiner,
                    bool                    aEnableFiltering,
                    const FilterIndexes    *aFilterIndexes,
-                   Handler                 aCallback,
+                   ScanResult::Handler     aHandler,
                    void                   *aContext);
 
     /**
@@ -132,6 +119,7 @@ public:
      */
     bool IsInProgress(void) const { return (mState != kStateIdle); }
 
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
     /**
      * Sets Joiner Advertisement.
      *
@@ -143,8 +131,15 @@ public:
      * @retval kErrorInvalidArgs    Invalid AdvData.
      */
     Error SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
+#endif
 
 private:
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    static constexpr uint32_t kMaxOui           = 0xffffff;
+    static constexpr uint8_t  kMinAdvDataLength = 1;
+    static constexpr uint8_t  kMaxAdvDataLength = MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength;
+#endif
+
     enum State : uint8_t
     {
         kStateIdle,
@@ -152,38 +147,39 @@ private:
         kStateScanDone,
     };
 
-    static constexpr uint32_t kMaxOui = 0xffffff;
-
     // Methods used by `MeshForwarder`
     Mac::TxFrame *PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);
-    void          HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError);
     void          Stop(void) { HandleDiscoverComplete(); }
 
     // Methods used from `Mle`
     void HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const;
 
-    void HandleDiscoverComplete(void);
-    void HandleScanDoneTask(void);
-    void HandleTimer(void);
+    void        HandleDiscoverComplete(void);
+    void        HandleScanDoneTask(void);
+    void        HandleTimer(void);
+    void        HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError);
+    static void HandleDiscoveryRequestFrameTxDone(const otMessage *aMessage, otError aError, void *aContext);
 
     using ScanTimer    = TimerMilliIn<DiscoverScanner, &DiscoverScanner::HandleTimer>;
     using ScanDoneTask = TaskletIn<DiscoverScanner, &DiscoverScanner::HandleScanDoneTask>;
 
-    Callback<Handler> mCallback;
-    ScanDoneTask      mScanDoneTask;
-    ScanTimer         mTimer;
-    FilterIndexes     mFilterIndexes;
-    Mac::ChannelMask  mScanChannels;
-    State             mState;
-    uint32_t          mOui;
-    uint8_t           mScanChannel;
-    uint8_t           mAdvDataLength;
-    uint8_t           mAdvData[MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength];
-    bool              mEnableFiltering : 1;
-    bool              mShouldRestorePanId : 1;
+    ScanResult::ScanCallback mCallback;
+    ScanDoneTask             mScanDoneTask;
+    ScanTimer                mTimer;
+    FilterIndexes            mFilterIndexes;
+    Mac::ChannelMask         mScanChannels;
+    State                    mState;
+    uint8_t                  mScanChannel;
+    bool                     mEnableFiltering : 1;
+    bool                     mShouldRestorePanId : 1;
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+    uint8_t  mAdvDataLength;
+    uint8_t  mAdvData[kMaxAdvDataLength];
+    uint32_t mOui;
+#endif
 };
 
 } // namespace Mle
 } // namespace ot
 
-#endif // DISCOVER_SCANNER_HPP_
+#endif // OT_CORE_THREAD_DISCOVER_SCANNER_HPP_

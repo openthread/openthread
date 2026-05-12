@@ -100,13 +100,15 @@ verify(br1_favored_onlink == br2_favored_onlink)
 # Check that the two BRs discover and track each other (not as peer BR since
 # connected to different networks).
 
-for br in [br1, br1]:
+for br in [br1, br2]:
     routers = br.br_get_routers()
     verify(len(routers) > 0)
     for router in routers:
         verify('reachable:yes' in router)
         verify('S:1' in router)
         verify(not router.endswith('(peer BR)'))
+    hist_list = br.cli('history onlinkprefix list')
+    verify(len(hist_list) == 1)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

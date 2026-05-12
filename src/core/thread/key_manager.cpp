@@ -175,25 +175,29 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
+    , mIsKekSet(false)
 {
     otPlatCryptoInit();
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    {
-        NetworkKey networkKey;
-
-        mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
-        mPskcRef       = Crypto::Storage::kInvalidKeyRef;
-
-        IgnoreError(networkKey.GenerateRandom());
-        StoreNetworkKey(networkKey, /* aOverWriteExisting */ false);
-    }
+    mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
+    mPskcRef       = Crypto::Storage::kInvalidKeyRef;
 #else
     IgnoreError(mNetworkKey.GenerateRandom());
     mPskc.Clear();
 #endif
 
     mMacFrameCounters.Reset();
+}
+
+void KeyManager::Init(void)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    NetworkKey networkKey;
+
+    IgnoreError(networkKey.GenerateRandom());
+    StoreNetworkKey(networkKey, /* aOverWriteExisting */ false);
+#endif
 }
 
 void KeyManager::Start(void)
@@ -473,7 +477,7 @@ void KeyManager::MacFrameCounterUsed(uint32_t aMacFrameCounter)
 
     if (mMacFrameCounters.Get154() >= mStoredMacFrameCounter)
     {
-        IgnoreError(Get<Mle::Mle>().Store());
+        Get<Mle::Mle>().Store();
     }
 
 exit:
@@ -490,7 +494,7 @@ void KeyManager::IncrementTrelMacFrameCounter(void)
 
     if (mMacFrameCounters.GetTrel() >= mStoredMacFrameCounter)
     {
-        IgnoreError(Get<Mle::Mle>().Store());
+        Get<Mle::Mle>().Store();
     }
 }
 #endif
@@ -501,7 +505,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 
     if (mMleFrameCounter >= mStoredMleFrameCounter)
     {
-        IgnoreError(Get<Mle::Mle>().Store());
+        Get<Mle::Mle>().Store();
     }
 }
 
@@ -509,6 +513,13 @@ void KeyManager::SetKek(const Kek &aKek)
 {
     mKek.SetFrom(aKek, /* aIsExportable */ true);
     mKekFrameCounter = 0;
+    mIsKekSet        = true;
+}
+
+void KeyManager::ClearKek(void)
+{
+    mKek.Clear();
+    mIsKekSet = false;
 }
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
@@ -692,8 +703,8 @@ void KeyManager::DestroyTemporaryKeys(void)
 {
     mMleKey.Clear();
     mKek.Clear();
+    mIsKekSet = false;
     Get<Mac::SubMac>().ClearMacKeys();
-    Get<Mac::Mac>().ClearMode2Key();
 }
 
 void KeyManager::DestroyPersistentKeys(void) { Get<Crypto::Storage::KeyRefManager>().DestroyPersistentKeys(); }

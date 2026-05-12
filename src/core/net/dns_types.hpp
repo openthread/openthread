@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing DNS headers.
  */
 
-#ifndef DNS_HEADER_HPP_
-#define DNS_HEADER_HPP_
+#ifndef OT_CORE_NET_DNS_TYPES_HPP_
+#define OT_CORE_NET_DNS_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,6 +41,7 @@
 
 #include "common/appender.hpp"
 #include "common/as_core_type.hpp"
+#include "common/bit_utils.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/encoding.hpp"
@@ -1000,6 +1001,37 @@ public:
     }
 
     /**
+     * Validates a DNS label.
+     *
+     * A label must be between 1 and 63 (`kMaxLabelLength`) characters long.
+     *
+     * @param[in] aLabel   The string containing the label.
+     *
+     * @retval kErrorNone         The label is valid.
+     * @retval kErrorInvalidArgs  The label is not valid (e.g., is `nullptr`, empty, or too long).
+     */
+    static Error ValidateLabel(const char *aLabel);
+
+    /**
+     * Validates a DNS name.
+     *
+     * A DNS name is a sequence of labels separated by dots.
+     *
+     * This method validates the following rules:
+     * - The name string is not `nullptr`.
+     * - The total length of the name is between 1 and 254 (`kMaxNameLength`) characters.
+     * - Each label is at most 63 (`kMaxLabelLength`) characters long.
+     * - Empty labels (e.g., consecutive dots `..`) are disallowed, except for a single trailing dot `.` at the end of
+     *   the name, or if the name is just ".".
+     *
+     * @param[in] aName           The string containing the name.
+     *
+     * @retval kErrorNone         The name is valid.
+     * @retval kErrorInvalidArgs  The name is not valid.
+     */
+    static Error ValidateName(const char *aName);
+
+    /**
      * Tests if a DNS name is a sub-domain of a given domain.
      *
      * Both @p aName and @p aDomain can end without dot ('.').
@@ -1192,6 +1224,16 @@ public:
     }
 
     /**
+     * Indicates whether the entry's key (`mKey`) matches a given key string using a case-insensitive comparison.
+     *
+     * @param[in] aKey  A pointer to a key string to compare with.
+     *
+     * @retval TRUE   The entry's key matches the given @p aKey.
+     * @retval FALSE  The entry's key does not match or `mKey` is `nullptr`.
+     */
+    bool MatchesKey(const char *aKey) const;
+
+    /**
      * Encodes and appends the `TxtEntry` to a message.
      *
      * @param[in] aMessage  The message to append to.
@@ -1304,7 +1346,7 @@ public:
      * @retval kErrorNone    Successfully appended the TXT entry.
      * @retval kErrorNoBufs  Insufficient available buffers to append the entry.
      */
-    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint16_t aLength);
+    Error AppendBytesEntry(const char *aKey, const void *aBuffer, uint8_t aLength);
 
     /**
      * Appends a TXT entry for a given key and a given object as the entry's value.
@@ -1690,7 +1732,6 @@ public:
      * @retval kErrorNone     The (translated) record data was successfully appended to @p aMessage.
      * @retval kErrorNoBufs   Failed to allocate new buffers.
      * @retval kErrorParse    The given @p aData format is not valid.
-     *
      */
     static Error AppendTranslatedRecordDataTo(Message                       &aMessage,
                                               uint16_t                       aRecordType,
@@ -2845,7 +2886,7 @@ public:
          *
          * @returns The Bitmap length
          */
-        uint8_t GetBitmapLength(void) { return mBitmapLength; }
+        uint8_t GetBitmapLength(void) const { return mBitmapLength; }
 
         /**
          * Gets the total size (number of bytes) of the `TypeBitMap` field.
@@ -2978,4 +3019,4 @@ DefineCoreType(otDnsTxtEntryIterator, Dns::TxtEntry::Iterator);
 
 } // namespace ot
 
-#endif // DNS_HEADER_HPP_
+#endif // OT_CORE_NET_DNS_TYPES_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for performing AES-CCM computations.
  */
 
-#ifndef AES_CCM_HPP_
-#define AES_CCM_HPP_
+#ifndef OT_CORE_CRYPTO_AES_CCM_HPP_
+#define OT_CORE_CRYPTO_AES_CCM_HPP_
 
 #include "openthread-core-config.h"
 
@@ -136,6 +136,9 @@ public:
     /**
      * Processes the payload.
      *
+     * When decrypting (`kDecrypt`), @p aPlainText can be `nullptr` if the decrypted plaintext is not needed.
+     * Similarly, when encrypting (`kEncrypt`), @p aCipherText can be `nullptr` if the ciphertext is not needed.
+     *
      * @param[in,out]  aPlainText   A pointer to the plaintext.
      * @param[in,out]  aCipherText  A pointer to the ciphertext.
      * @param[in]      aLength      Payload length in bytes.
@@ -206,4 +209,4 @@ private:
 } // namespace Crypto
 } // namespace ot
 
-#endif // AES_CCM_HPP_
+#endif // OT_CORE_CRYPTO_AES_CCM_HPP_

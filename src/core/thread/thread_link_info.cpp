@@ -55,24 +55,10 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
         mIsDstPanIdBroadcast = (dstPanId == Mac::kPanIdBroadcast);
     }
 
-    if (aFrame.GetSecurityEnabled())
-    {
-        uint8_t keyIdMode;
-
-        // MAC Frame Security was already validated at the MAC
-        // layer. As a result, `GetKeyIdMode()` will never return
-        // failure here.
-        IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
-
-        mLinkSecurity = (keyIdMode == Mac::Frame::kKeyIdMode0) || (keyIdMode == Mac::Frame::kKeyIdMode1);
-    }
-    else
-    {
-        mLinkSecurity = false;
-    }
-    mChannel = aFrame.GetChannel();
-    mRss     = aFrame.GetRssi();
-    mLqi     = aFrame.GetLqi();
+    mLinkSecurity = aFrame.IsSecuredWith(Mac::RxFrame::kAllowKeyIdMode0 | Mac::RxFrame::kAllowKeyIdMode1);
+    mChannel      = aFrame.GetChannel();
+    mRss          = aFrame.GetRssi();
+    mLqi          = aFrame.GetLqi();
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aFrame.GetTimeIe() != nullptr)
     {

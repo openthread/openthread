@@ -39,21 +39,12 @@
 #include "gmock/gmock.h"
 
 #include "fake_platform.hpp"
+#include "mock_callback.hpp"
 
 using namespace ot;
 using ::testing::AnyNumber;
 using ::testing::AtLeast;
-using ::testing::MockFunction;
 using ::testing::Truly;
-
-template <typename R, typename... A> class MockCallback : public testing::MockFunction<R(A...)>
-{
-public:
-    static R CallWithContext(A... aArgs, void *aContext)
-    {
-        return static_cast<MockCallback *>(aContext)->Call(aArgs...);
-    };
-};
 
 TEST(otDatasetSetActiveTlvs, shouldTriggerStateCallbackOnSuccess)
 {
@@ -85,4 +76,89 @@ TEST(otDatasetSetActiveTlvs, shouldTriggerStateCallbackOnSuccess)
     assert(error == OT_ERROR_NONE);
 
     fakePlatform.GoInMs(10000);
+}
+
+TEST(otDatasetIsValid, shouldReturnTrueForValidActiveDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_TRUE(otDatasetIsValid(&datasetTlvs, true));
+}
+
+TEST(otDatasetIsValid, shouldReturnFalseForIncompleteActiveDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    // Remove a required field, e.g., Network Key
+    dataset.mComponents.mIsNetworkKeyPresent = false;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_FALSE(otDatasetIsValid(&datasetTlvs, true));
+}
+
+TEST(otDatasetIsValid, shouldReturnFalseForDuplicatedTlvs)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    // Duplicate a TLV (e.g. Network Name TLV)
+    // TLV format: Type (1 byte), Length (1 byte), Value (n bytes)
+    datasetTlvs.mTlvs[datasetTlvs.mLength]     = OT_MESHCOP_TLV_NETWORKNAME; // Type: Network Name
+    datasetTlvs.mTlvs[datasetTlvs.mLength + 1] = 1;                          // Length: 1
+    datasetTlvs.mTlvs[datasetTlvs.mLength + 2] = 'A';
+    datasetTlvs.mLength += 3;
+
+    EXPECT_FALSE(otDatasetIsValid(&datasetTlvs, true));
+}
+
+TEST(otDatasetIsValid, shouldReturnTrueForValidPendingDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    // Pending Dataset MUST contain Pending Timestamp and Delay Timer.
+    dataset.mPendingTimestamp.mSeconds             = 100;
+    dataset.mPendingTimestamp.mTicks               = 0;
+    dataset.mComponents.mIsPendingTimestampPresent = true;
+    dataset.mDelay                                 = 30000;
+    dataset.mComponents.mIsDelayPresent            = true;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_TRUE(otDatasetIsValid(&datasetTlvs, false));
+}
+
+TEST(otDatasetIsValid, shouldReturnFalseForIncompletePendingDataset)
+{
+    FakePlatform             fakePlatform;
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    EXPECT_EQ(otDatasetCreateNewNetwork(FakePlatform::CurrentInstance(), &dataset), OT_ERROR_NONE);
+
+    // Provide Pending Timestamp but omit Delay Timer.
+    dataset.mPendingTimestamp.mSeconds             = 100;
+    dataset.mPendingTimestamp.mTicks               = 0;
+    dataset.mComponents.mIsPendingTimestampPresent = true;
+
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
+
+    EXPECT_FALSE(otDatasetIsValid(&datasetTlvs, false));
 }

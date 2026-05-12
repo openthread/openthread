@@ -311,7 +311,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
         name = (key == SPINEL_PROP_RCP_TIMESTAMP) ? "timestamp" : "counter";
-        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, static_cast<unsigned int>(value));
     }
     break;
 
@@ -422,7 +422,8 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
             maskLength -= static_cast<spinel_size_t>(unpacked);
         }
 
-        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channelMask:0x%08x", channelMask);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channelMask:0x%08x",
+                          static_cast<unsigned int>(channelMask));
     }
     break;
 
@@ -445,6 +446,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
             uint16_t     flags;
             int8_t       noiseFloor;
             unsigned int receiveError;
+            unsigned int psduLength;
 
             unpacked = spinel_datatype_unpack(data, len,
                                               SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
@@ -458,10 +460,12 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
                                                                   ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
                                                                   SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
                                                                   ),
-                                              &frame.mPsdu, &frame.mLength, &frame.mInfo.mRxInfo.mRssi, &noiseFloor,
-                                              &flags, &frame.mChannel, &frame.mInfo.mRxInfo.mLqi,
+                                              nullptr, &psduLength, &frame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
+                                              &frame.mChannel, &frame.mInfo.mRxInfo.mLqi,
                                               &frame.mInfo.mRxInfo.mTimestamp, &receiveError);
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            frame.mLength = static_cast<uint16_t>(psduLength);
+
             start += Snprintf(start, static_cast<uint32_t>(end - start), ", len:%u, rssi:%d ...", frame.mLength,
                               frame.mInfo.mRxInfo.mRssi);
             OT_UNUSED_VARIABLE(start); // Avoid static analysis error
@@ -475,10 +479,11 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         }
         else if (cmd == SPINEL_CMD_PROP_VALUE_SET)
         {
-            bool csmaCaEnabled;
-            bool isHeaderUpdated;
-            bool isARetx;
-            bool skipAes;
+            unsigned int psduLength;
+            bool         csmaCaEnabled;
+            bool         isHeaderUpdated;
+            bool         isARetx;
+            bool         skipAes;
 
             unpacked = spinel_datatype_unpack(
                 data, len,
@@ -492,11 +497,13 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
                                             SPINEL_DATATYPE_BOOL_S            // SkipAes
                                                 SPINEL_DATATYPE_UINT32_S      // TxDelay
                                                     SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
-                &frame.mPsdu, &frame.mLength, &frame.mChannel, &frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
+                nullptr, &psduLength, &frame.mChannel, &frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
                 &frame.mInfo.mTxInfo.mMaxFrameRetries, &csmaCaEnabled, &isHeaderUpdated, &isARetx, &skipAes,
                 &frame.mInfo.mTxInfo.mTxDelay, &frame.mInfo.mTxInfo.mTxDelayBaseTime);
 
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            frame.mLength = static_cast<uint16_t>(psduLength);
+
             start += Snprintf(start, static_cast<uint32_t>(end - start),
                               ", len:%u, channel:%u, maxbackoffs:%u, maxretries:%u ...", frame.mLength, frame.mChannel,
                               frame.mInfo.mTxInfo.mMaxCsmaBackoffs, frame.mInfo.mTxInfo.mMaxFrameRetries);
@@ -507,8 +514,9 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
             start += Snprintf(start, static_cast<uint32_t>(end - start),
                               "... csmaCaEnabled:%u, isHeaderUpdated:%u, isARetx:%u, skipAes:%u"
                               ", txDelay:%u, txDelayBase:%u",
-                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes, frame.mInfo.mTxInfo.mTxDelay,
-                              frame.mInfo.mTxInfo.mTxDelayBaseTime);
+                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes,
+                              static_cast<unsigned int>(frame.mInfo.mTxInfo.mTxDelay),
+                              static_cast<unsigned int>(frame.mInfo.mTxInfo.mTxDelayBaseTime));
         }
     }
     break;
@@ -516,7 +524,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
     case SPINEL_PROP_STREAM_DEBUG:
     {
         char          debugString[OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE + 1];
-        spinel_size_t stringLength = sizeof(debugString);
+        spinel_size_t stringLength = sizeof(debugString) - 1;
 
         unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, debugString, &stringLength);
         assert(stringLength < sizeof(debugString));
@@ -545,9 +553,8 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
     case SPINEL_PROP_NEST_STREAM_MFG:
     {
         const char *output;
-        size_t      outputLen;
 
-        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &output, &outputLen);
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &output);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         start += Snprintf(start, static_cast<uint32_t>(end - start), ", diag:%s", output);
     }
@@ -564,11 +571,11 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         otMacKey     nextKey;
         unsigned int nextKeyLen = sizeof(otMacKey);
 
-        unpacked = spinel_datatype_unpack(data, len,
-                                          SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
-                                              SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                                          &keyIdMode, &keyId, prevKey.m8, &prevKeyLen, currKey.m8, &currKeyLen,
-                                          nextKey.m8, &nextKeyLen);
+        unpacked = spinel_datatype_unpack_in_place(
+            data, len,
+            SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S
+                SPINEL_DATATYPE_DATA_WLEN_S,
+            &keyIdMode, &keyId, prevKey.m8, &prevKeyLen, currKey.m8, &currKeyLen, nextKey.m8, &nextKeyLen);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         start += Snprintf(start, static_cast<uint32_t>(end - start),
                           ", keyIdMode:%u, keyId:%u, prevKey:***, currKey:***, nextKey:***", keyIdMode, keyId);
@@ -672,17 +679,17 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         LogDebg(" stopped:%u", metrics.mStopped);
 
         start = buf;
-        start += Snprintf(start, static_cast<uint32_t>(end - start), " grantGlitch:%u", metrics.mNumGrantGlitch);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), " grantGlitch:%u",
+                          static_cast<unsigned int>(metrics.mNumGrantGlitch));
     }
     break;
 
     case SPINEL_PROP_MAC_SCAN_MASK:
     {
-        constexpr uint8_t kNumChannels = 16;
-        uint8_t           channels[kNumChannels];
-        spinel_size_t     size;
+        const uint8_t *channels;
+        spinel_size_t  size;
 
-        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_DATA_S, channels, &size);
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_DATA_S, &channels, &size);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         start += Snprintf(start, static_cast<uint32_t>(end - start), ", channels:");
 
@@ -699,7 +706,7 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
         uint8_t  m8[OT_EXT_ADDRESS_SIZE];
         uint8_t  flags;
 
-        unpacked = spinel_datatype_unpack(
+        unpacked = spinel_datatype_unpack_in_place(
             data, len, SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S, &saddr, m8, &flags);
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
@@ -713,10 +720,10 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
     {
         if (cmd == SPINEL_CMD_PROP_VALUE_INSERT)
         {
-            uint8_t      channel;
-            int16_t      actualPower;
-            uint8_t     *rawPowerSetting;
-            unsigned int rawPowerSettingLength;
+            uint8_t        channel;
+            int16_t        actualPower;
+            const uint8_t *rawPowerSetting;
+            unsigned int   rawPowerSettingLength;
 
             unpacked = spinel_datatype_unpack(
                 data, len, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S SPINEL_DATATYPE_DATA_WLEN_S, &channel,

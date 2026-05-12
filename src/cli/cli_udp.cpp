@@ -433,10 +433,7 @@ exit:
 
 otError UdpExample::Process(Arg aArgs[])
 {
-#define CmdEntry(aCommandString)                                  \
-    {                                                             \
-        aCommandString, &UdpExample::Process<Cmd(aCommandString)> \
-    }
+#define CmdEntry(aCommandString) {aCommandString, &UdpExample::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
         CmdEntry("bind"),         CmdEntry("close"), CmdEntry("connect"),

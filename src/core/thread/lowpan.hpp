@@ -31,8 +31,8 @@
  *   This file includes definitions for 6LoWPAN header compression.
  */
 
-#ifndef LOWPAN_HPP_
-#define LOWPAN_HPP_
+#ifndef OT_CORE_THREAD_LOWPAN_HPP_
+#define OT_CORE_THREAD_LOWPAN_HPP_
 
 #include "openthread-core-config.h"
 
@@ -47,8 +47,13 @@
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_types.hpp"
+#include "thread/network_data_tlvs.hpp"
 
 namespace ot {
+
+namespace NetworkData {
+class Leader;
+}
 
 /**
  * @addtogroup core-6lowpan
@@ -68,14 +73,63 @@ namespace ot {
 namespace Lowpan {
 
 /**
- * Represents a LOWPAN_IPHC Context.
+ * Represents a 6LoWPAN IPHC Context.
  */
-struct Context : public Clearable<Context>
+class Context : public Clearable<Context>
 {
-    Ip6::Prefix mPrefix;       ///< The Prefix
-    uint8_t     mContextId;    ///< The Context ID.
-    bool        mCompressFlag; ///< The Context compression flag.
-    bool        mIsValid;      ///< Indicates whether the context is valid.
+    friend class ot::NetworkData::Leader;
+
+public:
+    /**
+     * Indicates whether the context entry is valid.
+     *
+     * @retval TRUE   The context is valid and can be used.
+     * @retval FALSE  The context is not valid.
+     */
+    bool IsValid(void) const { return mIsValid; }
+
+    /**
+     * Gets the IPv6 prefix associated with this context.
+     *
+     * @returns The IPv6 prefix.
+     */
+    const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+
+    /**
+     * Gets the Context ID.
+     *
+     * @returns The Context ID.
+     */
+    uint8_t GetContextId(void) const { return mContextId; }
+
+    /**
+     * Gets the context compression flag.
+     *
+     * This flag indicates whether this context can be used for 6LoWPAN IPHC compression.
+     *
+     * @retval TRUE   Context compression is enabled.
+     * @retval FALSE  Context compression is disabled.
+     */
+    bool GetCompressFlag(void) const { return mCompressFlag; }
+
+    /**
+     * Checks whether this context is valid and matches a given Context ID.
+     *
+     * @param[in] aContextId  The Context ID to match.
+     *
+     * @retval TRUE   This context is valid and its ID matches @p aContextId.
+     * @retval FALSE  This context is not valid or its ID does not match.
+     */
+    bool MatchesContextId(uint8_t aContextId) const { return mIsValid && (mContextId == aContextId); }
+
+private:
+    void InitForMeshLocalPrefix(Instance &aInstance);
+    void InitFrom(const NetworkData::PrefixTlv &aPrefixTlv, const NetworkData::ContextTlv &aContextTlv);
+
+    Ip6::Prefix mPrefix;
+    uint8_t     mContextId;
+    bool        mCompressFlag : 1;
+    bool        mIsValid : 1;
 };
 
 /**
@@ -126,7 +180,10 @@ public:
      *
      * @returns The size of the compressed header in bytes.
      */
-    Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
+    Error Compress(Message              &aMessage,
+                   const Mac::Addresses &aMacAddrs,
+                   FrameBuilder         &aFrameBuilder,
+                   uint8_t               aRecursionDepth = 0);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -145,7 +202,8 @@ public:
     Error Decompress(Message              &aMessage,
                      const Mac::Addresses &aMacAddrs,
                      FrameData            &aFrameData,
-                     uint16_t              aDatagramLength);
+                     uint16_t              aDatagramLength,
+                     uint8_t               aRecursionDepth = 0);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -200,6 +258,8 @@ public:
     void MarkCompressedEcn(Message &aMessage, uint16_t aOffset);
 
 private:
+    static constexpr uint8_t kMaxRecursionDepth = 4;
+
     static constexpr uint16_t kHcDispatch     = 3 << 13;
     static constexpr uint16_t kHcDispatchMask = 7 << 13;
 
@@ -255,7 +315,8 @@ private:
     Error Compress(Message              &aMessage,
                    const Mac::Addresses &aMacAddrs,
                    FrameBuilder         &aFrameBuilder,
-                   uint8_t              &aHeaderDepth);
+                   uint8_t              &aHeaderDepth,
+                   uint8_t               aRecursionDepth);
 
     Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
     Error CompressSourceIid(const Mac::Address &aMacAddr,
@@ -587,4 +648,4 @@ private:
 } // namespace Lowpan
 } // namespace ot
 
-#endif // LOWPAN_HPP_
+#endif // OT_CORE_THREAD_LOWPAN_HPP_

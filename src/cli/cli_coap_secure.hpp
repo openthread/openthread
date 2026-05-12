@@ -31,8 +31,8 @@
  *   This file contains definitions for a simple CLI CoAP Secure server and client.
  */
 
-#ifndef CLI_COAP_SECURE_HPP_
-#define CLI_COAP_SECURE_HPP_
+#ifndef OT_CLI_CLI_COAP_SECURE_HPP_
+#define OT_CLI_CLI_COAP_SECURE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -87,7 +87,8 @@ private:
     using Command = CommandEntry<CoapSecure>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum BlockType : uint8_t{
+    enum BlockType : uint8_t
+    {
         kBlockType1,
         kBlockType2,
     };
@@ -161,4 +162,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-#endif // CLI_COAP_SECURE_HPP_
+#endif // OT_CLI_CLI_COAP_SECURE_HPP_

@@ -31,8 +31,8 @@
  *   This file includes definitions for a generic array.
  */
 
-#ifndef ARRAY_HPP_
-#define ARRAY_HPP_
+#ifndef OT_CORE_COMMON_ARRAY_HPP_
+#define OT_CORE_COMMON_ARRAY_HPP_
 
 #include "openthread-core-config.h"
 
@@ -95,6 +95,38 @@ template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&
 template <typename Type, uint16_t kArrayLength> inline const Type *GetArrayEnd(const Type (&aArray)[kArrayLength])
 {
     return &aArray[kArrayLength];
+}
+
+/**
+ * Indicates whether a given array contains a match to a given item.
+ *
+ * The template arguments are expected to be deduced by the compiler allowing  callers to simply use
+ * `DoesArrayContain(aArray, aItem)`.
+ *
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
+ *
+ * @param[in] aArray  A reference to the array to search in.
+ * @param[in] aItem   The item to search for.
+ *
+ * @retval TRUE   The array contains @p aItem.
+ * @retval FALSE  The array does not contain @p aItem.
+ */
+template <typename Type, uint16_t kArrayLength>
+inline bool DoesArrayContain(const Type (&aArray)[kArrayLength], const Type &aItem)
+{
+    bool contains = false;
+
+    for (const Type &entry : aArray)
+    {
+        if (entry == aItem)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
 }
 
 /**
@@ -571,4 +603,4 @@ private:
 
 } // namespace ot
 
-#endif // ARRAY_HPP_
+#endif // OT_CORE_COMMON_ARRAY_HPP_

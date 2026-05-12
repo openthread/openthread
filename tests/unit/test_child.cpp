@@ -46,9 +46,8 @@ enum
 
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])
 {
-    Ip6::Address::TypeFilter filters[] = {Ip6::Address::kTypeUnicast, Ip6::Address::kTypeMulticast};
-    bool                     addressObserved[kMaxChildIp6Addresses];
-    bool                     hasMeshLocal = false;
+    bool addressObserved[kMaxChildIp6Addresses];
+    bool hasMeshLocal = false;
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
@@ -105,9 +104,9 @@ void TestChildIp6Address(void)
     Ip6::Address addresses[kMaxChildIp6Addresses];
     uint8_t      numAddresses;
     const char  *ip6Addresses[] = {
-         "fd00:1234::1234",
-         "ff6b:e251:52fb:0:12e6:b94c:1c28:c56a",
-         "fd00:1234::204c:3d7c:98f6:9a1b",
+        "fd00:1234::1234",
+        "ff6b:e251:52fb:0:12e6:b94c:1c28:c56a",
+        "fd00:1234::204c:3d7c:98f6:9a1b",
     };
 
     const uint8_t            meshLocalIidArray[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};

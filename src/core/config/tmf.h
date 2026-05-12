@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the Thread Management Framework service.
  */
 
-#ifndef CONFIG_TMF_H_
-#define CONFIG_TMF_H_
+#ifndef OT_CORE_CONFIG_TMF_H_
+#define OT_CORE_CONFIG_TMF_H_
 
 /**
  * @addtogroup config-tmf
@@ -243,4 +243,4 @@
  * @}
  */
 
-#endif // CONFIG_TMF_H_
+#endif // OT_CORE_CONFIG_TMF_H_

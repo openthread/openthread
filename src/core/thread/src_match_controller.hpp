@@ -31,8 +31,8 @@
  *   This file includes definitions for source address match controller.
  */
 
-#ifndef SOURCE_MATCH_CONTROLLER_HPP_
-#define SOURCE_MATCH_CONTROLLER_HPP_
+#ifndef OT_CORE_THREAD_SRC_MATCH_CONTROLLER_HPP_
+#define OT_CORE_THREAD_SRC_MATCH_CONTROLLER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -184,4 +184,4 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-#endif // SOURCE_MATCH_CONTROLLER_HPP_
+#endif // OT_CORE_THREAD_SRC_MATCH_CONTROLLER_HPP_

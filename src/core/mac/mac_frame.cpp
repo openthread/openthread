@@ -274,6 +274,22 @@ Error Frame::ValidatePsdu(void) const
     uint8_t index = FindPayloadIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
+
+    if (IsMacCommand() && IsVersion2015())
+    {
+        // The treatment of the Command ID field in a MAC command frame
+        // is version-dependent. In the 2015 spec, it is part of the
+        // encrypted payload, while in earlier versions, it is part of
+        // the MAC header.
+        //
+        // `FindPayloadIndex()` accounts for this difference and returns
+        // the starting index of the payload. To correctly validate a
+        // 2015 frame, we must ensure it is long enough to contain the
+        // Command ID, so we include its size in the length check.
+
+        index += kCommandIdSize;
+    }
+
     VerifyOrExit((index + GetFooterLength()) <= mLength, error = kErrorParse);
 
 exit:
@@ -283,11 +299,12 @@ exit:
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 bool Frame::IsWakeupFrame(void) const
 {
-    const uint16_t fcf    = GetFrameControlField();
-    bool           result = false;
-    uint8_t        keyIdMode;
-    uint8_t        firstIeIndex;
-    Address        srcAddress;
+    const uint16_t      fcf    = GetFrameControlField();
+    bool                result = false;
+    uint8_t             keyIdMode;
+    uint8_t             firstIeIndex;
+    Address             srcAddress;
+    const ConnectionIe *connectionIe;
 
     // Wake-up frame is a Multipurpose frame without Ack Request...
     VerifyOrExit((fcf & kFcfFrameTypeMask) == kTypeMultipurpose);
@@ -303,12 +320,12 @@ bool Frame::IsWakeupFrame(void) const
 
     // ... that has Rendezvous Time IE and Connection IE...
     VerifyOrExit(GetRendezvousTimeIe() != nullptr);
-    VerifyOrExit(GetConnectionIe() != nullptr);
+    VerifyOrExit((connectionIe = GetConnectionIe()) != nullptr);
 
     // ... but no other IEs nor payload.
     firstIeIndex = FindHeaderIeIndex();
     VerifyOrExit(mPsdu + firstIeIndex + sizeof(HeaderIe) + RendezvousTimeIe::kIeContentSize + sizeof(HeaderIe) +
-                     ConnectionIe::kIeContentSize ==
+                     connectionIe->GetHeaderIe()->GetLength() ==
                  GetFooter());
 
     result = true;
@@ -826,7 +843,18 @@ Error Frame::GetCommandId(uint8_t &aCommandId) const
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
-    aCommandId = mPsdu[IsVersion2015() ? index : (index - 1)];
+    // The treatment of the Command ID field in a MAC command frame
+    // is version-dependent. In the 2015 spec, it is part of the
+    // encrypted payload, while in earlier versions, it is part of
+    // the MAC header. `FindPayloadIndex() accounts for both cases.
+
+    if (!IsVersion2015())
+    {
+        index -= kCommandIdSize;
+    }
+
+    VerifyOrExit(index + kCommandIdSize + GetFooterLength() <= mLength, error = kErrorParse);
+    aCommandId = mPsdu[index];
 
 exit:
     return error;
@@ -837,7 +865,7 @@ bool Frame::IsDataRequestCommand(void) const
     bool    isDataRequest = false;
     uint8_t commandId;
 
-    VerifyOrExit(GetType() == kTypeMacCmd);
+    VerifyOrExit(IsMacCommand());
     SuccessOrExit(GetCommandId(commandId));
     isDataRequest = (commandId == kMacCmdDataRequest);
 
@@ -1078,13 +1106,22 @@ uint8_t Frame::FindPayloadIndex(void) const
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-    if (!IsVersion2015() && (GetFrameControlField() & kFcfFrameTypeMask) == kTypeMacCmd)
+    if (IsMacCommand() && !IsVersion2015())
     {
+        // The treatment of the Command ID field in a MAC command frame
+        // is version-dependent. In IEEE 802.15.4-2015, it is part of
+        // the payload and therefore encrypted. In earlier versions, it
+        // is part of the MAC header and not encrypted.
+        //
+        // This adjusts the index to point to the start of the payload
+        // for pre-2015 frames. The `GetCommandId()` method also
+        // accounts for this version-specific difference.
+
         index += kCommandIdSize;
     }
 
 exit:
-    return static_cast<uint8_t>(index);
+    return (index <= kMaxPsduSize) ? static_cast<uint8_t>(index) : kInvalidIndex;
 }
 
 const uint8_t *Frame::GetPayload(void) const
@@ -1116,8 +1153,8 @@ exit:
 
 const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 {
-    uint8_t        index        = FindHeaderIeIndex();
-    uint8_t        payloadIndex = FindPayloadIndex();
+    uint16_t       index        = FindHeaderIeIndex();
+    uint16_t       payloadIndex = FindPayloadIndex();
     const uint8_t *header       = nullptr;
 
     // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
@@ -1125,7 +1162,7 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 
     VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
 
-    while (index <= payloadIndex)
+    while (index < payloadIndex)
     {
         const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
@@ -1146,15 +1183,15 @@ exit:
     OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 {
-    uint8_t        index        = FindHeaderIeIndex();
-    uint8_t        payloadIndex = FindPayloadIndex();
+    uint16_t       index        = FindHeaderIeIndex();
+    uint16_t       payloadIndex = FindPayloadIndex();
     const uint8_t *header       = nullptr;
 
     // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
     // are well-formed.
     VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
 
-    while (index <= payloadIndex)
+    while (index < payloadIndex)
     {
         const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
@@ -1469,26 +1506,39 @@ exit:
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Address &aSource)
+Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource)
 {
     Error        error = kErrorNone;
     uint16_t     fcf;
     uint8_t      secCtl;
+    uint8_t      wakeupIdLength;
     FrameBuilder builder;
+    Address      dest;
 
     fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
           kMpFcfIePresent;
 
-    VerifyOrExit(!aDest.IsNone() && !aSource.IsNone(), error = kErrorInvalidArgs);
+    VerifyOrExit(!aSource.IsNone(), error = kErrorInvalidArgs);
 
-    fcf |= DetermineFcfAddrType(aDest, kMpFcfDstAddrShift);
+    if (aWakeupRequest.IsWakeupByExtAddress())
+    {
+        wakeupIdLength = 0;
+        dest.SetExtended(aWakeupRequest.GetExtAddress());
+    }
+    else
+    {
+        wakeupIdLength = GetWakeupIdLength(aWakeupRequest.GetWakeupId());
+        dest.SetNone();
+    }
+
+    fcf |= DetermineFcfAddrType(dest, kMpFcfDstAddrShift);
     fcf |= DetermineFcfAddrType(aSource, kMpFcfSrcAddrShift);
 
     builder.Init(mPsdu, GetMtu());
 
     IgnoreError(builder.AppendLittleEndianUint16(fcf));
     IgnoreError(builder.AppendLittleEndianUint16(aPanId));
-    IgnoreError(builder.AppendMacAddress(aDest));
+    IgnoreError(builder.AppendMacAddress(dest));
     IgnoreError(builder.AppendMacAddress(aSource));
 
     secCtl = kKeyIdMode2 | kSecurityEncMic32;
@@ -1498,8 +1548,9 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const Address &aDest, const Add
     builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
     builder.Append<RendezvousTimeIe>();
 
-    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe));
+    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe) + wakeupIdLength);
     builder.Append<ConnectionIe>()->Init();
+    builder.AppendLength(wakeupIdLength);
 
     builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
 
@@ -1509,6 +1560,32 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+
+bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
+{
+    bool    isSecure = false;
+    uint8_t keyIdMode;
+
+    VerifyOrExit(GetSecurityEnabled());
+    SuccessOrExit(GetKeyIdMode(keyIdMode));
+
+    switch (keyIdMode)
+    {
+    case kKeyIdMode0:
+        VerifyOrExit(aFlags & kAllowKeyIdMode0);
+        break;
+    case kKeyIdMode1:
+        VerifyOrExit(aFlags & kAllowKeyIdMode1);
+        break;
+    default:
+        ExitNow();
+    }
+
+    isSecure = true;
+
+exit:
+    return isSecure;
+}
 
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
@@ -1536,9 +1613,8 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #else
-    // For fuzz tests, execute AES but do not alter the payload
-    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
-    aesCcm.Payload(fuzz, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+    // For fuzz tests, execute AES but do not alter the payload. A large
+    aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
 #endif
     aesCcm.Finalize(tag);
 

@@ -31,8 +31,8 @@
  *   This file includes definitions for Mesh Diagnostic module.
  */
 
-#ifndef MESH_DIAG_HPP_
-#define MESH_DIAG_HPP_
+#ifndef OT_CORE_UTILS_MESH_DIAG_HPP_
+#define OT_CORE_UTILS_MESH_DIAG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -44,7 +44,6 @@
 
 #include <openthread/mesh_diag.h>
 
-#include "coap/coap.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -52,6 +51,7 @@
 #include "net/ip6_address.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 struct otMeshDiagIp6AddrIterator
 {
@@ -157,6 +157,24 @@ public:
     explicit MeshDiag(Instance &aInstance);
 
     /**
+     * Sets the response timeout value to use for any future queries.
+     *
+     * Changing the response timeout does not impact any ongoing query.
+     *
+     * The provided @p aTimeout value will be clamped to stay between 50 milliseconds and 10 minutes.
+     *
+     * @param[in] aTimeout   The timeout interval in milliseconds.
+     */
+    void SetResponseTimeout(uint32_t aTimeout);
+
+    /**
+     * Gets the response timeout value.
+     *
+     * @returns The response timeout interval in milliseconds.
+     */
+    uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
+
+    /**
      * Starts network topology discovery.
      *
      * @param[in] aConfig          The configuration to use for discovery (e.g., which items to discover).
@@ -226,7 +244,9 @@ public:
 private:
     typedef ot::NetworkDiagnostic::Tlv Tlv;
 
-    static constexpr uint32_t kResponseTimeout = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
+    static constexpr uint32_t kResponseTimeout    = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
+    static constexpr uint32_t kMinResponseTimeout = 50;
+    static constexpr uint32_t kMaxResponseTimeout = 10 * Time::kOneMinuteInMsec;
 
     enum State : uint8_t
     {
@@ -240,7 +260,7 @@ private:
     struct DiscoverInfo
     {
         Callback<DiscoverCallback> mCallback;
-        Mle::RouterIdSet           mExpectedRouterIdSet;
+        Mle::RouterIdMask          mExpectedRouterIds;
     };
 
     struct QueryChildTableInfo
@@ -266,7 +286,7 @@ private:
         friend class MeshDiag;
 
     private:
-        void SetFrom(const NetworkDiagnostic::ChildTlv &aChildTlv);
+        void SetFrom(const NetworkDiagnostic::ChildTlvValue &aChildTlvValue);
     };
 
     class RouterNeighborEntry : public otMeshDiagRouterNeighborEntry
@@ -274,7 +294,7 @@ private:
         friend class MeshDiag;
 
     private:
-        void SetFrom(const NetworkDiagnostic::RouterNeighborTlv &aTlv);
+        void SetFrom(const NetworkDiagnostic::RouterNeighborTlvValue &aTlvValue);
     };
 
     Error SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
@@ -286,18 +306,14 @@ private:
     bool  ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     bool  ProcessRouterNeighborTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-
-    static void HandleDiagGetResponse(void                *aContext,
-                                      otMessage           *aMessage,
-                                      const otMessageInfo *aMessageInfo,
-                                      otError              aResult);
+    DeclareTmfResponseHandlerIn(MeshDiag, HandleDiagGetResponse);
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
 
     State        mState;
     uint16_t     mExpectedQueryId;
     uint16_t     mExpectedAnswerIndex;
+    uint32_t     mResponseTimeout;
     TimeoutTimer mTimer;
 
     union
@@ -320,4 +336,4 @@ DefineCoreType(otMeshDiagChildIterator, Utils::MeshDiag::ChildIterator);
 
 #endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
-#endif // MESH_DIAG_HPP_
+#endif // OT_CORE_UTILS_MESH_DIAG_HPP_

@@ -32,9 +32,7 @@
 #include <cutils/sockets.h>
 #endif
 #include <fcntl.h>
-#include <signal.h>
 #include <stdarg.h>
-#include <string.h>
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -62,19 +60,16 @@ namespace {
 
 typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
 
-void GetFilename(Filename &aFilename, const char *aPattern)
-{
-    int         rval;
-    const char *netIfName = strlen(gNetifName) > 0 ? gNetifName : OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
-
-    rval = snprintf(aFilename, sizeof(aFilename), aPattern, netIfName);
-    if (rval < 0 && static_cast<size_t>(rval) >= sizeof(aFilename))
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-}
-
 } // namespace
+
+// using macro to avoid the warning about format-nonliteral
+#define GetFilename(aFilename, aPattern)                                                                       \
+    do                                                                                                         \
+    {                                                                                                          \
+        int rval = snprintf(aFilename, sizeof(aFilename), aPattern,                                            \
+                            (gNetifName[0] ? gNetifName : OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME)); \
+        VerifyOrDie(rval > 0 && static_cast<size_t>(rval) < sizeof(aFilename), OT_EXIT_INVALID_ARGUMENTS);     \
+    } while (0)
 
 const char Daemon::kLogModuleName[] = "Daemon";
 
@@ -197,7 +192,7 @@ void Daemon::createListenSocketOrDie(void)
 void Daemon::createListenSocketOrDie(void)
 {
     struct sockaddr_un sockname;
-    int ret;
+    int                ret;
 
     class AllowAllGuard
     {
@@ -205,7 +200,7 @@ void Daemon::createListenSocketOrDie(void)
         AllowAllGuard(void)
         {
             const char *allowAll = getenv("OT_DAEMON_ALLOW_ALL");
-            mAllowAll = (allowAll != nullptr && strcmp("1", allowAll) == 0);
+            mAllowAll            = (allowAll != nullptr && strcmp("1", allowAll) == 0);
 
             if (mAllowAll)
             {
@@ -221,8 +216,8 @@ void Daemon::createListenSocketOrDie(void)
         }
 
     private:
-        bool mAllowAll = false;
-        mode_t mMode = 0;
+        bool   mAllowAll = false;
+        mode_t mMode     = 0;
     };
 
     mListenSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);

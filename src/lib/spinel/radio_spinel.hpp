@@ -31,8 +31,8 @@
  *   This file includes definitions for the spinel based radio transceiver.
  */
 
-#ifndef RADIO_SPINEL_HPP_
-#define RADIO_SPINEL_HPP_
+#ifndef OT_LIB_SPINEL_RADIO_SPINEL_HPP_
+#define OT_LIB_SPINEL_RADIO_SPINEL_HPP_
 
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -824,7 +824,7 @@ public:
      *
      * @returns The current estimated RCP time in microseconds.
      */
-    uint64_t GetNow(void);
+    uint64_t GetNow(void) const;
 
     /**
      * Returns the bus speed between the host and the radio.
@@ -1370,4 +1370,4 @@ private:
 } // namespace Spinel
 } // namespace ot
 
-#endif // RADIO_SPINEL_HPP_
+#endif // OT_LIB_SPINEL_RADIO_SPINEL_HPP_

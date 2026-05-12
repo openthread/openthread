@@ -153,6 +153,8 @@ public:
 private:
     static MeshCoP::SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
     {
+        OT_UNUSED_VARIABLE(aMessageInfo);
+
         return static_cast<DtlsTransportAndSingleSession *>(aContext)->HandleAccept();
     }
 
@@ -196,6 +198,8 @@ private:
 
     static MeshCoP::SecureSession *HandleAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo)
     {
+        OT_UNUSED_VARIABLE(aMessageInfo);
+
         DtlsTransportAndHeapSession *transport;
         HeapDtlsSession             *session;
 
@@ -250,13 +254,11 @@ void TestDtlsSingleSession(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
 
-    SuccessOrQuit(node1.Get<Mle::Mle>().SetRouterEligible(false));
-    node1.Join(node0);
+    node1.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node1.Get<Mle::Mle>().IsChild());
 
-    SuccessOrQuit(node2.Get<Mle::Mle>().SetRouterEligible(false));
-    node2.Join(node0);
+    node2.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
 
@@ -272,8 +274,7 @@ void TestDtlsSingleSession(void)
         SuccessOrQuit(dtls0.SetPsk(kPsk, sizeof(kPsk)));
         dtls0.SetReceiveCallback(HandleReceive, &node0);
         dtls0.SetConnectCallback(HandleConnectEvent, &node0);
-        SuccessOrQuit(dtls0.Open());
-        SuccessOrQuit(dtls0.Bind(kUdpPort));
+        SuccessOrQuit(dtls0.Open(kUdpPort));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
@@ -289,7 +290,7 @@ void TestDtlsSingleSession(void)
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk) - 1));
         dtls1.SetReceiveCallback(HandleReceive, &node1);
         dtls1.SetConnectCallback(HandleConnectEvent, &node1);
-        SuccessOrQuit(dtls1.Open());
+        SuccessOrQuit(dtls1.Open(0));
 
         for (uint16_t iter = 0; iter <= kMaxAttempts + 1; iter++)
         {
@@ -313,7 +314,7 @@ void TestDtlsSingleSession(void)
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk)));
         dtls1.SetReceiveCallback(HandleReceive, &node1);
         dtls1.SetConnectCallback(HandleConnectEvent, &node1);
-        SuccessOrQuit(dtls1.Open());
+        SuccessOrQuit(dtls1.Open(0));
         SuccessOrQuit(dtls1.Connect(sockAddr));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -331,7 +332,7 @@ void TestDtlsSingleSession(void)
         {
             OwnedPtr<Message> msg(PrepareMessage(node0));
 
-            SuccessOrQuit(dtls0.Send(*msg->Clone()));
+            SuccessOrQuit(dtls0.Send(*msg->Clone<kNoReservedHeader>()));
             nexus.AdvanceTime(100);
 
             VerifyOrQuit(sDtlsLastReceive[node1.GetId()].GetLength() == msg->GetLength());
@@ -345,7 +346,7 @@ void TestDtlsSingleSession(void)
         {
             OwnedPtr<Message> msg(PrepareMessage(node1));
 
-            SuccessOrQuit(dtls1.Send(*msg->Clone()));
+            SuccessOrQuit(dtls1.Send(*msg->Clone<kNoReservedHeader>()));
             nexus.AdvanceTime(100);
 
             VerifyOrQuit(sDtlsLastReceive[node0.GetId()].GetLength() == msg->GetLength());
@@ -384,7 +385,7 @@ void TestDtlsSingleSession(void)
         SuccessOrQuit(dtls2.SetPsk(kPsk, sizeof(kPsk)));
         dtls2.SetReceiveCallback(HandleReceive, &node2);
         dtls2.SetReceiveCallback(HandleReceive, &node2);
-        SuccessOrQuit(dtls2.Open());
+        SuccessOrQuit(dtls2.Open(0));
         SuccessOrQuit(dtls2.Connect(sockAddr));
 
         nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
@@ -423,8 +424,7 @@ void TestDtlsSingleSession(void)
         SuccessOrQuit(dtls0.SetPsk(kPsk, sizeof(kPsk)));
         dtls0.SetReceiveCallback(HandleReceive, &node0);
         dtls0.SetConnectCallback(HandleConnectEvent, &node0);
-        SuccessOrQuit(dtls0.Open());
-        SuccessOrQuit(dtls0.Bind(kUdpPort));
+        SuccessOrQuit(dtls0.Open(kUdpPort));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
@@ -437,7 +437,7 @@ void TestDtlsSingleSession(void)
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk) - 1));
         dtls1.SetReceiveCallback(HandleReceive, &node1);
         dtls1.SetConnectCallback(HandleConnectEvent, &node1);
-        SuccessOrQuit(dtls1.Open());
+        SuccessOrQuit(dtls1.Open(0));
 
         for (uint16_t iter = 0; iter < kMaxAttempts - 1; iter++)
         {
@@ -492,13 +492,11 @@ void TestDtlsMultiSession(void)
     nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
     VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
 
-    SuccessOrQuit(node1.Get<Mle::Mle>().SetRouterEligible(false));
-    node1.Join(node0);
+    node1.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node1.Get<Mle::Mle>().IsChild());
 
-    SuccessOrQuit(node2.Get<Mle::Mle>().SetRouterEligible(false));
-    node2.Join(node0);
+    node2.Join(node0, Node::kAsFed);
     nexus.AdvanceTime(20 * Time::kOneSecondInMsec);
     VerifyOrQuit(node2.Get<Mle::Mle>().IsChild());
 
@@ -513,8 +511,7 @@ void TestDtlsMultiSession(void)
         Log("Start DTLS (server) on node0 bound to port %u", kUdpPort);
 
         SuccessOrQuit(dtls0.SetPsk(kPsk, sizeof(kPsk)));
-        SuccessOrQuit(dtls0.Open());
-        SuccessOrQuit(dtls0.Bind(kUdpPort));
+        SuccessOrQuit(dtls0.Open(kUdpPort));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
 
@@ -531,7 +528,7 @@ void TestDtlsMultiSession(void)
         SuccessOrQuit(dtls1.SetPsk(kPsk, sizeof(kPsk)));
         dtls1.SetReceiveCallback(HandleReceive, &node1);
         dtls1.SetConnectCallback(HandleConnectEvent, &node1);
-        SuccessOrQuit(dtls1.Open());
+        SuccessOrQuit(dtls1.Open(0));
         SuccessOrQuit(dtls1.Connect(sockAddr));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
@@ -560,7 +557,7 @@ void TestDtlsMultiSession(void)
         SuccessOrQuit(dtls2.SetPsk(kPsk, sizeof(kPsk)));
         dtls2.SetReceiveCallback(HandleReceive, &node2);
         dtls2.SetConnectCallback(HandleConnectEvent, &node2);
-        SuccessOrQuit(dtls2.Open());
+        SuccessOrQuit(dtls2.Open(0));
         SuccessOrQuit(dtls2.Connect(sockAddr));
 
         nexus.AdvanceTime(1 * Time::kOneSecondInMsec);

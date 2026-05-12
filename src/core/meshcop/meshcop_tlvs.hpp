@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing MeshCoP TLVs.
  */
 
-#ifndef MESHCOP_TLVS_HPP_
-#define MESHCOP_TLVS_HPP_
+#ifndef OT_CORE_MESHCOP_MESHCOP_TLVS_HPP_
+#define OT_CORE_MESHCOP_MESHCOP_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -40,6 +40,7 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
+#include "common/bit_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
@@ -49,6 +50,7 @@
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "meshcop/network_name.hpp"
+#include "meshcop/steering_data.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -93,6 +95,7 @@ public:
         kJoinerIid               = OT_MESHCOP_TLV_JOINER_IID,               ///< Joiner IID TLV
         kJoinerRouterLocator     = OT_MESHCOP_TLV_JOINER_RLOC,              ///< Joiner Router Locator TLV
         kJoinerRouterKek         = OT_MESHCOP_TLV_JOINER_ROUTER_KEK,        ///< Joiner Router KEK TLV
+        kDuration                = OT_MESHCOP_TLV_DURATION,                 ///< Duration TLV
         kProvisioningUrl         = OT_MESHCOP_TLV_PROVISIONING_URL,         ///< Provisioning URL TLV
         kVendorName              = OT_MESHCOP_TLV_VENDOR_NAME_TLV,          ///< meshcop Vendor Name TLV
         kVendorModel             = OT_MESHCOP_TLV_VENDOR_MODEL_TLV,         ///< meshcop Vendor Model TLV
@@ -110,6 +113,9 @@ public:
         kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,              ///< Energy List TLV
         kThreadDomainName        = OT_MESHCOP_TLV_THREAD_DOMAIN_NAME,       ///< Thread Domain Name TLV
         kWakeupChannel           = OT_MESHCOP_TLV_WAKEUP_CHANNEL,           ///< Wakeup Channel TLV
+        kAdmitterState           = OT_MESHCOP_TLV_ADMITTER_STATE,           ///< Admitter State TLV
+        kEnrollerId              = OT_MESHCOP_TLV_ENROLLER_ID,              ///< Enroller ID TLV
+        kEnrollerMode            = OT_MESHCOP_TLV_ENROLLER_MODE,            ///< Enroller Mode TLV
         kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,         ///< Discovery Request TLV
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
         kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
@@ -121,6 +127,7 @@ public:
     static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
 
     static constexpr uint8_t kMaxCommissionerIdLength   = 64; ///< Max length of Commissioner ID TLV.
+    static constexpr uint8_t kMaxEnrollerIdLength       = 64; ///< Max length of Enroller ID TLV.
     static constexpr uint8_t kMaxVendorNameLength       = 32; ///< Max length of Vendor Name TLV.
     static constexpr uint8_t kMaxVendorModelLength      = 32; ///< Max length of Vendor Model TLV.
     static constexpr uint8_t kMaxVendorSwVersionLength  = 16; ///< Max length of Vendor SW Version TLV.
@@ -203,6 +210,11 @@ typedef UintTlvInfo<Tlv::kJoinerRouterLocator, uint16_t> JoinerRouterLocatorTlv;
  * Defines Joiner Router KEK TLV constants and types.
  */
 typedef SimpleTlvInfo<Tlv::kJoinerRouterKek, Kek> JoinerRouterKekTlv;
+
+/**
+ * Defines Duration TLV constants and types.
+ */
+typedef UintTlvInfo<Tlv::kDuration, uint16_t> DurationTlv;
 
 /**
  * Defines Count TLV constants and types.
@@ -311,8 +323,6 @@ typedef UintTlvInfo<Tlv::kNetworkKeySequence, uint32_t> NetworkKeySequenceTlv;
  */
 typedef SimpleTlvInfo<Tlv::kMeshLocalPrefix, Ip6::NetworkPrefix> MeshLocalPrefixTlv;
 
-class SteeringData;
-
 /**
  * Implements Steering Data TLV generation and parsing.
  */
@@ -343,25 +353,53 @@ public:
      *
      * @returns The Steering Data length.
      */
-    uint8_t GetSteeringDataLength(void) const
-    {
-        return GetLength() <= sizeof(mSteeringData) ? GetLength() : sizeof(mSteeringData);
-    }
+    uint8_t GetSteeringDataLength(void) const { return Min<uint8_t>(GetLength(), SteeringData::kMaxLength); }
 
     /**
      * Sets all bits in the Bloom Filter to zero.
      */
-    void Clear(void) { memset(mSteeringData, 0, GetSteeringDataLength()); }
+    void Clear(void) { ClearAllBytes(mSteeringData); }
 
     /**
      * Copies the Steering Data from the TLV into a given `SteeringData` variable.
      *
      * @param[out]  aSteeringData   A reference to a `SteeringData` to copy into.
+     *
+     * @retval kErrorNone         Successfully copied the steering data into @p aSteeringData.
+     * @retval kErrorInvalidArgs  The Steering Data TLV length is invalid.
      */
-    void CopyTo(SteeringData &aSteeringData) const;
+    Error CopyTo(SteeringData &aSteeringData) const;
+
+    /**
+     * Searches within a given message for Steering Data TLV, parses and validates the TLV value and returns the
+     * read Steering Data.
+     *
+     * @param[in]  aMessage       The message to search in.
+     * @param[out] aSteeringData  A reference to return the read Steering Data.
+     *
+     * @retval kErrorNone         Found the TLV, successfully parsed its value, @p aSteeringData is updated.
+     * @retval kErrorNotFound     No Steering Data TLV found in the @p aMessage.
+     * @retval kErrorParse        Found the TLV, but failed to parse it (e.g. not enough bytes in message).
+     * @retval kErrorInvalidArgs  Found the TLV, but TLV length is not valid for Steering Data (e.g., larger than max).
+     */
+    static Error FindIn(const Message &aMessage, SteeringData &aSteeringData);
+
+    /**
+     * Append a Steering Data TLV to a given message.
+     *
+     * @param[in] aMessage        The message to append to.
+     * @param[in] aSteeringData   The Steering Data value.
+     *
+     * @retval kErrorNone          Successfully appended the TLV to @p aMessage.
+     * @retval kErrorNoBufs        Insufficient available buffers to grow the message.
+     */
+    static Error AppendTo(Message &aMessage, const SteeringData &aSteeringData)
+    {
+        return Tlv::Append<SteeringDataTlv>(aMessage, aSteeringData.GetData(), aSteeringData.GetLength());
+    }
 
 private:
-    uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
+    uint8_t mSteeringData[SteeringData::kMaxLength];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -714,48 +752,9 @@ private:
 } OT_TOOL_PACKED_BEGIN;
 
 /**
- * Implements Energy List TLV generation and parsing.
+ * Defines Energy List TLV constants and types.
  */
-OT_TOOL_PACKED_BEGIN
-class EnergyListTlv : public Tlv, public TlvInfo<Tlv::kEnergyList>
-{
-public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kEnergyList);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return true; }
-
-    /**
-     * Returns a pointer to the start of energy measurement list.
-     *
-     * @returns A pointer to the start start of energy energy measurement list.
-     */
-    const uint8_t *GetEnergyList(void) const { return mEnergyList; }
-
-    /**
-     * Returns the length of energy measurement list.
-     *
-     * @returns The length of energy measurement list.
-     */
-    uint8_t GetEnergyListLength(void) const { return Min(kMaxListLength, GetLength()); }
-
-private:
-    static constexpr uint8_t kMaxListLength = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
-
-    uint8_t mEnergyList[kMaxListLength];
-} OT_TOOL_PACKED_END;
+typedef TlvInfo<Tlv::kEnergyList> EnergyListTlv;
 
 /**
  * Defines Provisioning TLV constants and types.
@@ -851,7 +850,10 @@ public:
      *
      * @returns The Revision value.
      */
-    uint8_t GetRevision(void) const { return ReadBitsBigEndian<uint16_t, kRevMask>(mBuildRevision); }
+    uint8_t GetRevision(void) const
+    {
+        return static_cast<uint8_t>(ReadBitsBigEndian<uint16_t, kRevMask>(mBuildRevision));
+    }
 
     /**
      * Sets the Revision value.
@@ -961,44 +963,25 @@ private:
 typedef StringTlvInfo<Tlv::kThreadDomainName, Tlv::kMaxThreadDomainNameLength> ThreadDomainNameTlv;
 
 /**
- * Implements Discovery Request TLV generation and parsing.
+ * Implements Discovery Request TLV value format.
  */
 OT_TOOL_PACKED_BEGIN
-class DiscoveryRequestTlv : public Tlv, public TlvInfo<Tlv::kDiscoveryRequest>
+class DiscoveryRequestTlvValue : public Clearable<DiscoveryRequestTlvValue>
 {
 public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kDiscoveryRequest);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        mFlags    = 0;
-        mReserved = 0;
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
     /**
      * Returns the Version value.
      *
      * @returns The Version value.
      */
-    uint8_t GetVersion(void) const { return mFlags >> kVersionOffset; }
+    uint8_t GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mFlags[0]); }
 
     /**
      * Sets the Version value.
      *
      * @param[in]  aVersion  The Version value.
      */
-    void SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mFlags, aVersion); }
+    void SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mFlags[0], aVersion); }
 
     /**
      * Indicates whether or not the Joiner flag is set.
@@ -1006,64 +989,46 @@ public:
      * @retval TRUE   If the Joiner flag is set.
      * @retval FALSE  If the Joiner flag is not set.
      */
-    bool IsJoiner(void) const { return (mFlags & kJoinerMask) != 0; }
+    bool GetJoinerFlag(void) const { return GetBit<uint8_t>(mFlags[0], kJoinerFlagOffset); }
 
     /**
      * Sets the Joiner flag.
-     *
-     * @param[in]  aJoiner  TRUE if set, FALSE otherwise.
      */
-    void SetJoiner(bool aJoiner) { WriteBit<uint8_t>(mFlags, kJoinerOffset, aJoiner); }
+    void SetJoinerFlag(void) { SetBit<uint8_t>(mFlags[0], kJoinerFlagOffset); }
 
 private:
-    static constexpr uint8_t kVersionOffset = 4;
-    static constexpr uint8_t kVersionMask   = 0xf << kVersionOffset;
-    static constexpr uint8_t kJoinerOffset  = 3;
-    static constexpr uint8_t kJoinerMask    = 1 << kJoinerOffset;
+    static constexpr uint8_t kVersionOffset    = 4;
+    static constexpr uint8_t kVersionMask      = 0xf << kVersionOffset;
+    static constexpr uint8_t kJoinerFlagOffset = 3;
 
-    uint8_t mFlags;
-    uint8_t mReserved;
+    uint8_t mFlags[2];
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Discovery Response TLV generation and parsing.
+ * Defines Discovery Request TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kDiscoveryRequest, DiscoveryRequestTlvValue> DiscoveryRequestTlv;
+
+/**
+ * Implements Discovery Response TLV value format.
  */
 OT_TOOL_PACKED_BEGIN
-class DiscoveryResponseTlv : public Tlv, public TlvInfo<Tlv::kDiscoveryResponse>
+class DiscoveryResponseTlvValue : public Clearable<DiscoveryResponseTlvValue>
 {
 public:
-    /**
-     * Initializes the TLV.
-     */
-    void Init(void)
-    {
-        SetType(kDiscoveryResponse);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        mFlags    = 0;
-        mReserved = 0;
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
     /**
      * Returns the Version value.
      *
      * @returns The Version value.
      */
-    uint8_t GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mFlags); }
+    uint8_t GetVersion(void) const { return ReadBits<uint8_t, kVersionMask>(mFlags[0]); }
 
     /**
      * Sets the Version value.
      *
      * @param[in]  aVersion  The Version value.
      */
-    void SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mFlags, aVersion); }
+    void SetVersion(uint8_t aVersion) { WriteBits<uint8_t, kVersionMask>(mFlags[0], aVersion); }
 
     /**
      * Indicates whether or not the Native Commissioner flag is set.
@@ -1071,17 +1036,12 @@ public:
      * @retval TRUE   If the Native Commissioner flag is set.
      * @retval FALSE  If the Native Commissioner flag is not set.
      */
-    bool IsNativeCommissioner(void) const { return GetBit<uint8_t>(mFlags, kNativeOffset); }
+    bool GetNativeCommissionerFlag(void) const { return GetBit<uint8_t>(mFlags[0], kNativeFlagOffset); }
 
     /**
      * Sets the Native Commissioner flag.
-     *
-     * @param[in]  aNativeCommissioner  TRUE if set, FALSE otherwise.
      */
-    void SetNativeCommissioner(bool aNativeCommissioner)
-    {
-        WriteBit<uint8_t>(mFlags, kNativeOffset, aNativeCommissioner);
-    }
+    void SetNativeCommissionerFlag(void) { SetBit<uint8_t>(mFlags[0], kNativeFlagOffset); }
 
     /**
      * Indicates whether or not the Commercial Commissioning Mode flag is set.
@@ -1089,24 +1049,28 @@ public:
      * @retval TRUE   If the Commercial Commissioning Mode flag is set.
      * @retval FALSE  If the Commercial Commissioning Mode flag is not set.
      */
-    bool IsCommercialCommissioningMode(void) const { return GetBit<uint8_t>(mFlags, kCcmOffset); }
+    bool GetCcmFlag(void) const { return GetBit<uint8_t>(mFlags[0], kCcmFlagOffset); }
 
     /**
      * Sets the Commercial Commissioning Mode flag.
-     *
-     * @param[in]  aCcm  TRUE if set, FALSE otherwise.
      */
-    void SetCommercialCommissioningMode(bool aCcm) { WriteBit<uint8_t>(mFlags, kCcmOffset, aCcm); }
+    void SetCcmFlag(void) { SetBit<uint8_t>(mFlags[0], kCcmFlagOffset); }
 
 private:
-    static constexpr uint8_t kVersionOffset = 4;
-    static constexpr uint8_t kVersionMask   = 0xf << kVersionOffset;
-    static constexpr uint8_t kNativeOffset  = 3;
-    static constexpr uint8_t kCcmOffset     = 2;
+    static constexpr uint8_t kVersionOffset    = 4;
+    static constexpr uint8_t kVersionMask      = 0xf << kVersionOffset;
+    static constexpr uint8_t kNativeFlagOffset = 3;
+    static constexpr uint8_t kCcmFlagOffset    = 2;
 
-    uint8_t mFlags;
-    uint8_t mReserved;
+    uint8_t mFlags[2];
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Discovery Response TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kDiscoveryResponse, DiscoveryResponseTlvValue> DiscoveryResponseTlv;
+
+#if OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
 
 /**
  * Implements Joiner Advertisement TLV generation and parsing.
@@ -1181,8 +1145,34 @@ private:
     uint8_t mAdvData[kAdvDataMaxLength];
 } OT_TOOL_PACKED_END;
 
+#endif // OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE
+
+/**
+ * Defines Enroller ID TLV constants and types.
+ */
+typedef StringTlvInfo<Tlv::kEnrollerId, Tlv::kMaxEnrollerIdLength> EnrollerIdTlv;
+
+/**
+ * Defines Admitter State TLV constants and types.
+ *
+ *State values are defined in `BorderAgent::Admitter`
+ */
+typedef UintTlvInfo<Tlv::kAdmitterState, uint8_t> AdmitterStateTlv;
+
+/**
+ * Implements Enroller Mode TLV generation and parsing.
+ */
+class EnrollerModeTlv : public UintTlvInfo<Tlv::kEnrollerMode, uint8_t>
+{
+public:
+    EnrollerModeTlv(void) = delete;
+
+    static constexpr uint8_t kForwardJoinerRelayRx = 1 << 7; ///< Forward RelayRx (from Joiners) to Enroller.
+    static constexpr uint8_t kForwardUdpProxyRx    = 1 << 6; ///< Forward UDP ProxyRx to Enroller.
+};
+
 } // namespace MeshCoP
 
 } // namespace ot
 
-#endif // MESHCOP_TLVS_HPP_
+#endif // OT_CORE_MESHCOP_MESHCOP_TLVS_HPP_

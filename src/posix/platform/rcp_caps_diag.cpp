@@ -34,10 +34,8 @@
 namespace ot {
 namespace Posix {
 
-#define SPINEL_ENTRY(aCategory, aCommand, aKey)                                      \
-    {                                                                                \
-        aCategory, aCommand, aKey, &RcpCapsDiag::HandleSpinelCommand<aCommand, aKey> \
-    }
+#define SPINEL_ENTRY(aCategory, aCommand, aKey) \
+    {aCategory, aCommand, aKey, &RcpCapsDiag::HandleSpinelCommand<aCommand, aKey>}
 
 template <> otError RcpCapsDiag::HandleSpinelCommand<SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_CAPS>(void)
 {
