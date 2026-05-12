@@ -133,7 +133,14 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
 #else
 #error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME requires LOG_INSTANCE_AWARE_API_ENABLE under multi-instance"
 #endif
-        ot::UptimeToString(instance->Get<ot::UptimeTracker>().GetUptime(), logString, kUptimeStringIncludeMsec);
+        if (instance->IsInitialized())
+        {
+            ot::UptimeToString(instance->Get<ot::UptimeTracker>().GetUptime(), logString, kUptimeStringIncludeMsec);
+        }
+        else
+        {
+            ot::UptimeToString(0, logString, kUptimeStringIncludeMsec);
+        }
         logString.Append(" ");
     }
 #endif
@@ -141,7 +148,14 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    VerifyOrExit(Instance::Get().GetLogLevel() >= aLogLevel);
+    if (Instance::Get().IsInitialized())
+    {
+        VerifyOrExit(Instance::Get().GetLogLevel() >= aLogLevel);
+    }
+    else
+    {
+        VerifyOrExit(OPENTHREAD_CONFIG_LOG_LEVEL_INIT >= aLogLevel);
+    }
 #elif !OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
     VerifyOrExit(Instance::GetGlobalLogLevel() >= aLogLevel);
 #else
@@ -149,7 +163,14 @@ void Logger::Log(const char *aModuleName, LogLevel aLogLevel, Error aError, cons
         Instance *instance = Instance::GetActiveInstance();
 
         VerifyOrExit(instance != nullptr);
-        VerifyOrExit(instance->GetLogLevel() >= aLogLevel);
+        if (instance->IsInitialized())
+        {
+            VerifyOrExit(instance->GetLogLevel() >= aLogLevel);
+        }
+        else
+        {
+            VerifyOrExit(OPENTHREAD_CONFIG_LOG_LEVEL_INIT >= aLogLevel);
+        }
     }
 #endif
 
