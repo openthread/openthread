@@ -844,7 +844,7 @@ static void HandleEpskcResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
     uint16_t length = aMsg->mMessage.DetermineLengthAfterOffset();
 
     VerifyOrQuit(length == EphemeralKeyManager::Tap::kLength);
-    
+
     OffsetRange offsetRange;
     offsetRange.InitFromMessageOffsetToEnd(aMsg->mMessage);
     for (uint16_t i = 0; i < length; i++)
@@ -857,13 +857,13 @@ static void HandleEpskcResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
 
 void TestBorderAgentEpskcRetrieval(void)
 {
-    Core                     nexus;
-    Node                    &node0 = nexus.CreateNode();
-    Node                    &node1 = nexus.CreateNode();
-    Ip6::SockAddr            sockAddr;
-    Pskc                     pskc;
-    Coap::Message           *message;
-    EpskcResponseContext     responseContext;
+    Core                 nexus;
+    Node                &node0 = nexus.CreateNode();
+    Node                &node1 = nexus.CreateNode();
+    Ip6::SockAddr        sockAddr;
+    Pskc                 pskc;
+    Coap::Message       *message;
+    EpskcResponseContext responseContext;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAgentEpskcRetrieval");
