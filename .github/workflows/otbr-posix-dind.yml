@@ -1,0 +1,87 @@
+#
+#  Copyright (c) 2026, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+name: OTBR DinD
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  dind-dns-sd:
+    runs-on: ubuntu-24.04
+    env:
+      PR_BODY: "${{ github.event.pull_request.body }}"
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+
+    - name: Clone ot-br-posix and replace openthread submodule
+      run: |
+        OPENTHREAD_DIR=$(pwd)
+        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 /tmp/ot-br-posix
+        cd /tmp/ot-br-posix
+        rm -rf third_party/openthread/repo
+        mkdir -p third_party/openthread/repo
+        rsync -r --exclude=.git --exclude=build --exclude=ot_testing "${OPENTHREAD_DIR}/." third_party/openthread/repo
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+    - name: Build DinD Runner Image
+      run: |
+        cd /tmp/ot-br-posix
+        docker build -t otbr-dind-runner -f etc/docker/test/Dockerfile.dind_runner .
+
+    - name: Run DinD Integration Test
+      run: |
+        cd /tmp/ot-br-posix
+        docker run --privileged --rm \
+          -v /tmp/ot-br-posix:/usr/src/ot-br-posix \
+          -w /usr/src/ot-br-posix \
+          -e DOCKER_HOST=unix:///var/run/docker.sock \
+          otbr-dind-runner \
+          bash -c "dockerd --host=unix:///var/run/docker.sock >/dev/null 2>&1 & ./tests/scripts/test_dind_dns_sd.sh"
