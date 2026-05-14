@@ -291,8 +291,7 @@ Error Ip6::RemoveMplOption(Message &aMessage)
 
     offsetRange.InitFromMessageFullLength(aMessage);
 
-    IgnoreError(aMessage.Read(offsetRange, ip6Header));
-    offsetRange.AdvanceOffset(sizeof(ip6Header));
+    IgnoreError(aMessage.ReadAndAdvance(offsetRange, ip6Header));
 
     VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts);
 
@@ -885,9 +884,7 @@ bool Ip6::HasIp6InIpTunnel(const Message &aMessage, uint8_t aNextHeader) const
         {
             FragmentHeader fragHeader;
 
-            SuccessOrExit(aMessage.Read(offsetRange, fragHeader));
-            VerifyOrExit(offsetRange.Contains(sizeof(FragmentHeader)));
-            offsetRange.AdvanceOffset(sizeof(FragmentHeader));
+            SuccessOrExit(aMessage.ReadAndAdvance(offsetRange, fragHeader));
             aNextHeader = fragHeader.GetNextHeader();
         }
         else

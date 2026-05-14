@@ -166,8 +166,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
         {
             while (!offsetRange.IsEmpty())
             {
-                IgnoreError(aMsg.mMessage.Read(offsetRange, address));
-                offsetRange.AdvanceOffset(sizeof(Ip6::Address));
+                IgnoreError(aMsg.mMessage.ReadAndAdvance(offsetRange, address));
                 addresses[failedAddressNum++] = address;
             }
         }
@@ -217,8 +216,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 
     while (!offsetRange.IsEmpty())
     {
-        IgnoreError(aMsg.mMessage.Read(offsetRange, address));
-        offsetRange.AdvanceOffset(sizeof(Ip6::Address));
+        IgnoreError(aMsg.mMessage.ReadAndAdvance(offsetRange, address));
 
         if (timeout == 0)
         {

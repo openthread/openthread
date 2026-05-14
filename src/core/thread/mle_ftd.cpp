@@ -1892,8 +1892,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         Ip6::Address address;
 
         // Read out the control byte (first byte in entry)
-        SuccessOrExit(error = aRxInfo.mMessage.Read(offsetRange, controlByte));
-        offsetRange.AdvanceOffset(sizeof(uint8_t));
+        SuccessOrExit(error = aRxInfo.mMessage.ReadAndAdvance(offsetRange, controlByte));
         count++;
 
         address.Clear();
@@ -1907,8 +1906,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             uint8_t         contextId = AddressRegistrationTlv::GetContextId(controlByte);
             Lowpan::Context context;
 
-            IgnoreError(aRxInfo.mMessage.Read(offsetRange, address.GetIid()));
-            offsetRange.AdvanceOffset(sizeof(Ip6::InterfaceIdentifier));
+            IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address.GetIid()));
 
             Get<NetworkData::Leader>().FindContextForId(contextId, context);
 
@@ -1925,8 +1923,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         {
             // Uncompressed entry contains the full IPv6 address.
 
-            IgnoreError(aRxInfo.mMessage.Read(offsetRange, address));
-            offsetRange.AdvanceOffset(sizeof(Ip6::Address));
+            IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address));
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

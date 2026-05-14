@@ -63,9 +63,7 @@ Error Ip6AddressesTlv::FindIn(const Message &aMessage, Mlr::AddressArray &aAddre
     {
         Ip6::Address address;
 
-        SuccessOrExit(error = aMessage.Read(offsetRange, address));
-        offsetRange.AdvanceOffset(sizeof(Ip6::Address));
-
+        SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, address));
         SuccessOrExit(error = aAddresses.AddUnique(address));
     }
 

@@ -586,8 +586,7 @@ Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessa
             uint8_t             type;
             const MeshCoP::Tlv *subTlv;
 
-            IgnoreError(aMessage.Read(offsetRange, type));
-            offsetRange.AdvanceOffset(sizeof(type));
+            IgnoreError(aMessage.ReadAndAdvance(offsetRange, type));
 
             subTlv = FindCommissioningDataSubTlv(type);
 

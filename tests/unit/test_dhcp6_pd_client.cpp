@@ -342,10 +342,9 @@ void Dhcp6Msg::ParseFrom(const Message &aMessage)
     Clear();
     offsetRange.InitFromMessageFullLength(aMessage);
 
-    SuccessOrQuit(aMessage.Read(offsetRange, header));
+    SuccessOrQuit(aMessage.ReadAndAdvance(offsetRange, header));
     mMsgType       = header.GetMsgType();
     mTransactionId = header.GetTransactionId();
-    offsetRange.AdvanceOffset(sizeof(header));
 
     while (!offsetRange.IsEmpty())
     {
@@ -432,8 +431,7 @@ void Dhcp6Msg::ParseFrom(const Message &aMessage)
             break;
 
         case Dhcp6::Option::kIaPd:
-            SuccessOrQuit(aMessage.Read(optionOffsetRange, iaPdOption));
-            optionOffsetRange.AdvanceOffset(sizeof(iaPdOption));
+            SuccessOrQuit(aMessage.ReadAndAdvance(optionOffsetRange, iaPdOption));
             VerifyOrQuit(!mIaPds.ContainsMatching(iaPdOption.GetIaid()));
 
             iaPd = mIaPds.PushBack();

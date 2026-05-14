@@ -53,8 +53,7 @@ Error RouteTlv::Data::ParseFrom(const Message &aMessage, const OffsetRange &aOff
     bool isEven = true;
 #endif
 
-    SuccessOrExit(error = aMessage.Read(offsetRange, routerIdMask));
-    offsetRange.AdvanceOffset(sizeof(routerIdMask));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, routerIdMask));
 
     mIdSequence = routerIdMask.GetSequence();
 
@@ -79,8 +78,7 @@ Error RouteTlv::Data::ParseFrom(const Message &aMessage, const OffsetRange &aOff
         entry->mRouterId = routerId;
 
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-        SuccessOrExit(error = aMessage.Read<uint8_t>(offsetRange, entry->mRouteData));
-        offsetRange.AdvanceOffset(sizeof(uint8_t));
+        SuccessOrExit(error = aMessage.ReadAndAdvance<uint8_t>(offsetRange, entry->mRouteData));
 #else
         {
             EntryType value;

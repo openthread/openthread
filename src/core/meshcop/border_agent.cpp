@@ -1016,8 +1016,7 @@ void Manager::CoapDtlsSession::HandleTmfProxyTx(Coap::Msg &aMsg)
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aMsg.mMessage, Tlv::kUdpEncapsulation, offsetRange));
 
-    SuccessOrExit(error = aMsg.mMessage.Read(offsetRange, udpEncapHeader));
-    offsetRange.AdvanceOffset(sizeof(UdpEncapsulationTlvHeader));
+    SuccessOrExit(error = aMsg.mMessage.ReadAndAdvance(offsetRange, udpEncapHeader));
 
     VerifyOrExit(udpEncapHeader.GetSourcePort() > 0 && udpEncapHeader.GetDestinationPort() > 0, error = kErrorDrop);
 

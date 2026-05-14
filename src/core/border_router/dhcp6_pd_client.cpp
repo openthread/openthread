@@ -475,8 +475,7 @@ Error Dhcp6PdClient::ParseHeaderAndValidateMessage(Message &aMessage, Header &aH
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
 
-    SuccessOrExit(error = aMessage.Read(offsetRange, aHeader));
-    offsetRange.AdvanceOffset(sizeof(Header));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, aHeader));
 
     aMessage.SetOffset(offsetRange.GetOffset());
 

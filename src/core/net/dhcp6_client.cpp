@@ -407,9 +407,7 @@ Error Client::ProcessIaNaOption(const Message &aMessage)
     Option::Iterator iterator;
 
     SuccessOrExit(error = Option::FindOption(aMessage, Option::kIaNa, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, option));
-
-    offsetRange.AdvanceOffset(sizeof(IaNaOption));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, option));
 
     // Iterate over and check the sub-options within `IaNaOption`.
 

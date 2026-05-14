@@ -944,6 +944,37 @@ public:
     }
 
     /**
+     * Reads a given number of bytes from the message at a given offset range and advances the offset range.
+     *
+     * @param[in,out] aOffsetRange  The offset range in the message to read from. On success, it is advanced.
+     * @param[out]    aBuf          A pointer to a data buffer to copy the read bytes into.
+     * @param[in]     aLength       Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message. @p aOffsetRange is advanced.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength. @p aOffsetRange is unchanged.
+     */
+    Error ReadAndAdvance(OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const;
+
+    /**
+     * Reads an object from the message at a given offset range and advances the offset range.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[in,out] aOffsetRange  The offset range in the message to read from. On success, it is advanced.
+     * @param[out]    aObject       A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message. @p aOffsetRange is advanced.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object. @p aOffsetRange is
+     * unchanged.
+     */
+    template <typename ObjectType> Error ReadAndAdvance(OffsetRange &aOffsetRange, ObjectType &aObject) const
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return ReadAndAdvance(aOffsetRange, &aObject, sizeof(ObjectType));
+    }
+
+    /**
      * Reads a given number of bytes from the message at the current message offset and advances the message offset.
      *
      * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.

@@ -663,6 +663,18 @@ exit:
     return error;
 }
 
+Error Message::ReadAndAdvance(OffsetRange &aOffsetRange, void *aBuf, uint16_t aLength) const
+{
+    Error error = Read(aOffsetRange, aBuf, aLength);
+
+    if (error == kErrorNone)
+    {
+        aOffsetRange.AdvanceOffset(aLength);
+    }
+
+    return error;
+}
+
 Error Message::ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength)
 {
     Error error;

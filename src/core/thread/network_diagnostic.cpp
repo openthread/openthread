@@ -863,8 +863,7 @@ Error Server::TlvTypeListIterator::ReadNextTlvType(uint8_t &aTlvType)
 
     while (!mOffsetRange.IsEmpty())
     {
-        SuccessOrExit(error = mMessage->Read(mOffsetRange, aTlvType));
-        mOffsetRange.AdvanceOffset(sizeof(uint8_t));
+        SuccessOrExit(error = mMessage->ReadAndAdvance(mOffsetRange, aTlvType));
 
         if (!mProcessedTlvs.Has(aTlvType))
         {
@@ -1058,8 +1057,7 @@ static Error ParseEnhancedRoute(const Message &aMessage, uint16_t aOffset, otNet
             continue;
         }
 
-        SuccessOrExit(error = aMessage.Read(offsetRange, entry));
-        offsetRange.AdvanceOffset(sizeof(entry));
+        SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, entry));
 
         aNetworkDiagEnhRoute.mRouteData[index].mRouterId = routerId;
         entry.Parse(aNetworkDiagEnhRoute.mRouteData[index]);
@@ -1095,8 +1093,7 @@ Error Client::ParseChildTable(ChildTable &aChildTable, const Message &aMessage, 
     {
         ChildTableTlvEntry entry;
 
-        SuccessOrExit(error = aMessage.Read(aOffsetRange, entry));
-        aOffsetRange.AdvanceOffset(sizeof(ChildTableTlvEntry));
+        SuccessOrExit(error = aMessage.ReadAndAdvance(aOffsetRange, entry));
 
         entry.Parse(aChildTable.mTable[aChildTable.mCount]);
         aChildTable.mCount++;
@@ -1112,8 +1109,7 @@ void Client::ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, O
 
     while (aOffsetRange.Contains(sizeof(Ip6::Address)) && (aIp6Addrs.mCount < GetArrayLength(aIp6Addrs.mList)))
     {
-        IgnoreError(aMessage.Read(aOffsetRange, aIp6Addrs.mList[aIp6Addrs.mCount]));
-        aOffsetRange.AdvanceOffset(sizeof(Ip6::Address));
+        IgnoreError(aMessage.ReadAndAdvance(aOffsetRange, aIp6Addrs.mList[aIp6Addrs.mCount]));
 
         aIp6Addrs.mCount++;
     }

@@ -390,8 +390,7 @@ bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6:
         // Read the `ChildIp6AddressListTlvValue` (which contains the
         // child RLOC16) and then prepare the `Ip6AddrIterator`.
 
-        SuccessOrExit(aMessage.Read(offsetRange, tlvValue));
-        offsetRange.AdvanceOffset(sizeof(tlvValue));
+        SuccessOrExit(aMessage.ReadAndAdvance(offsetRange, tlvValue));
 
         ip6AddrIterator.mMessage     = &aMessage;
         ip6AddrIterator.mOffsetRange = offsetRange;
@@ -520,12 +519,12 @@ exit:
 
 Error MeshDiag::Ip6AddrIterator::GetNextAddress(Ip6::Address &aAddress)
 {
-    Error error = kErrorNone;
+    Error error = kErrorNotFound;
 
-    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+    VerifyOrExit(mMessage != nullptr);
+    SuccessOrExit(mMessage->ReadAndAdvance(mOffsetRange, aAddress));
 
-    VerifyOrExit(mMessage->Read(mOffsetRange, aAddress) == kErrorNone, error = kErrorNotFound);
-    mOffsetRange.AdvanceOffset(sizeof(Ip6::Address));
+    error = kErrorNone;
 
 exit:
     return error;
@@ -555,8 +554,7 @@ Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
 
     VerifyOrExit(mMessage != nullptr);
 
-    SuccessOrExit(mMessage->Read(mOffsetRange, entry));
-    mOffsetRange.AdvanceOffset(sizeof(ChildTableTlvEntry));
+    SuccessOrExit(mMessage->ReadAndAdvance(mOffsetRange, entry));
 
     entry.Parse(info);
 

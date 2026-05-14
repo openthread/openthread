@@ -243,11 +243,9 @@ Error Server::ProcessIaNaOption(const Message &aMessage, uint32_t &aIaid)
     Option::Iterator iterator;
 
     SuccessOrExit(error = Option::FindOption(aMessage, Option::kIaNa, offsetRange));
-    SuccessOrExit(error = aMessage.Read(offsetRange, iaNaOption));
+    SuccessOrExit(error = aMessage.ReadAndAdvance(offsetRange, iaNaOption));
 
     aIaid = iaNaOption.GetIaid();
-
-    offsetRange.AdvanceOffset(sizeof(IaNaOption));
 
     mPrefixAgentsMask = 0;
 

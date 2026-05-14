@@ -234,8 +234,7 @@ bool Header::HasSourceRouteOption(const Message &aMessage) const
         uint8_t optionType;
         uint8_t optionLen;
 
-        SuccessOrExit(aMessage.Read(range, optionType));
-        range.AdvanceOffset(sizeof(uint8_t));
+        SuccessOrExit(aMessage.ReadAndAdvance(range, optionType));
 
         if (optionType == kOptionEnd)
         {
