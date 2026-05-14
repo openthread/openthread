@@ -92,12 +92,6 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEve
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     switch (aEvent)
     {
-    case BackboneRouter::kDomainPrefixUnchanged:
-        // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcefully
-        VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
-
-        OT_FALL_THROUGH;
-
     case BackboneRouter::kDomainPrefixRefreshed:
     case BackboneRouter::kDomainPrefixAdded:
     {
@@ -108,7 +102,8 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEve
         mDomainUnicastAddress.GetAddress().SetPrefix(*prefix);
     }
     break;
-    default:
+
+    case BackboneRouter::kDomainPrefixRemoved:
         ExitNow();
     }
 

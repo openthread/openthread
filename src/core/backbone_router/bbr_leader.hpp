@@ -76,7 +76,6 @@ enum DomainPrefixEvent : uint8_t
     kDomainPrefixAdded     = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED,   ///< Domain Prefix Added.
     kDomainPrefixRemoved   = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, ///< Domain Prefix Removed.
     kDomainPrefixRefreshed = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, ///< Domain Prefix Changed.
-    kDomainPrefixUnchanged,                                            ///< Domain Prefix did not change.
 };
 
 /**
@@ -151,10 +150,7 @@ public:
      *
      * @retval A pointer to the Domain Prefix or nullptr if there is no Domain Prefix.
      */
-    const Ip6::Prefix *GetDomainPrefix(void) const
-    {
-        return (mDomainPrefix.GetLength() == 0) ? nullptr : &mDomainPrefix;
-    }
+    const Ip6::Prefix *GetDomainPrefix(void) const { return HasDomainPrefix() ? &mDomainPrefix : nullptr; }
 
     /**
      * Indicates whether or not the Domain Prefix is available in the Thread Network.
@@ -186,15 +182,13 @@ private:
     void LogBackboneRouterPrimary(State, const Config &) const {}
 #endif
 
-    Config      mConfig;       ///< Primary Backbone Router information.
-    Ip6::Prefix mDomainPrefix; ///< Domain Prefix in the Thread network.
+    Config      mConfig;
+    Ip6::Prefix mDomainPrefix;
 };
 
 } // namespace BackboneRouter
 
-/**
- * @}
- */
+DefineMapEnum(otBackboneRouterDomainPrefixEvent, BackboneRouter::DomainPrefixEvent);
 
 } // namespace ot
 

@@ -112,11 +112,10 @@ const char *Leader::StateToString(State aState)
 
 const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
 {
-#define DomainPrefixEventMapList(_)        \
-    _(kDomainPrefixAdded, "Added")         \
-    _(kDomainPrefixRemoved, "Removed")     \
-    _(kDomainPrefixRefreshed, "Refreshed") \
-    _(kDomainPrefixUnchanged, "Unchanged")
+#define DomainPrefixEventMapList(_)    \
+    _(kDomainPrefixAdded, "Added")     \
+    _(kDomainPrefixRemoved, "Removed") \
+    _(kDomainPrefixRefreshed, "Refreshed")
 
     DefineEnumStringArray(DomainPrefixEventMapList);
 
@@ -225,16 +224,13 @@ void Leader::UpdateDomainPrefixConfig(void)
     {
         VerifyOrExit(HasDomainPrefix());
 
-        // Domain Prefix does not exist any more.
         mDomainPrefix.Clear();
         event = kDomainPrefixRemoved;
     }
-    else if (prefixConfig.GetPrefix() == mDomainPrefix)
-    {
-        event = kDomainPrefixUnchanged;
-    }
     else
     {
+        VerifyOrExit(prefixConfig.GetPrefix() != mDomainPrefix);
+
         event         = HasDomainPrefix() ? kDomainPrefixRefreshed : kDomainPrefixAdded;
         mDomainPrefix = prefixConfig.GetPrefix();
     }
@@ -250,12 +246,10 @@ void Leader::UpdateDomainPrefixConfig(void)
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     Get<DuaManager>().HandleDomainPrefixUpdate(event);
-#else
-    OT_UNUSED_VARIABLE(event);
 #endif
 
 exit:
-    return;
+    OT_UNUSED_VARIABLE(event);
 }
 
 bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const

@@ -374,10 +374,7 @@ exit:
 
 void Local::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
 {
-    if (!IsEnabled())
-    {
-        ExitNow();
-    }
+    VerifyOrExit(IsEnabled());
 
     if (aEvent == kDomainPrefixRemoved || aEvent == kDomainPrefixRefreshed)
     {
@@ -390,11 +387,8 @@ void Local::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
         Get<BackboneTmfAgent>().SubscribeMulticast(mAllDomainBackboneRouters);
     }
 
-    if (aEvent != kDomainPrefixUnchanged)
-    {
-        mDomainPrefixCallback.InvokeIfSet(static_cast<otBackboneRouterDomainPrefixEvent>(aEvent),
-                                          Get<Leader>().GetDomainPrefix());
-    }
+    mDomainPrefixCallback.InvokeIfSet(static_cast<otBackboneRouterDomainPrefixEvent>(aEvent),
+                                      Get<Leader>().GetDomainPrefix());
 
 exit:
     return;

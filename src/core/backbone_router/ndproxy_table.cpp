@@ -127,10 +127,8 @@ void NdProxyTable::Erase(NdProxy &aNdProxy) { aNdProxy.mValid = false; }
 
 void NdProxyTable::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
 {
-    if (aEvent == kDomainPrefixAdded || aEvent == kDomainPrefixRemoved || aEvent == kDomainPrefixRefreshed)
-    {
-        Clear();
-    }
+    OT_UNUSED_VARIABLE(aEvent);
+    Clear();
 }
 
 void NdProxyTable::Clear(void)
