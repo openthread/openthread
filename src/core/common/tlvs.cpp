@@ -57,28 +57,6 @@ const uint8_t *Tlv::GetValue(void) const
 
 Error Tlv::AppendTo(Message &aMessage) const { return aMessage.AppendBytes(this, static_cast<uint16_t>(GetSize())); }
 
-Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
-{
-    uint16_t offset;
-
-    return FindTlv(aMessage, aType, aMaxSize, aTlv, offset);
-}
-
-Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv, uint16_t &aOffset)
-{
-    Error error;
-    Info  info;
-
-    SuccessOrExit(error = info.FindIn(aMessage, aType));
-
-    info.mTlvOffsetRange.ShrinkLength(aMaxSize);
-    aMessage.ReadBytes(info.mTlvOffsetRange, &aTlv);
-    aOffset = info.GetTlvOffset();
-
-exit:
-    return error;
-}
-
 Error Tlv::FindTlvValueOffsetRange(const Message &aMessage, uint8_t aType, OffsetRange &aOffsetRange)
 {
     Error error;
