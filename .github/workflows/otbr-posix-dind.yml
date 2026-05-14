@@ -47,6 +47,10 @@ jobs:
 
   dind-dns-sd:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        mdns: ["", "--mdnsresponder"]
     env:
       PR_BODY: "${{ github.event.pull_request.body }}"
     steps:
@@ -84,4 +88,4 @@ jobs:
           -w /usr/src/ot-br-posix \
           -e DOCKER_HOST=unix:///var/run/docker.sock \
           otbr-dind-runner \
-          bash -c "dockerd --host=unix:///var/run/docker.sock >/dev/null 2>&1 & ./tests/scripts/test_dind_dns_sd.sh"
+          bash -c "dockerd --host=unix:///var/run/docker.sock >/dev/null 2>&1 & ./tests/scripts/test_dind_dns_sd.sh ${{ matrix.mdns }}"
