@@ -120,6 +120,33 @@ typedef struct otSrpClientService
 } otSrpClientService;
 
 /**
+ * Represents the SRP client counters.
+ */
+typedef struct otSrpClientCounters
+{
+    uint32_t mTxUpdates;              ///< Number of SRP update transmissions (wire-level; includes retransmissions).
+    uint32_t mUpdateAttempts;         ///< Number of fresh SRP update transactions started.
+    uint32_t mSuccess;                ///< Number of transactions completed with a successful server response.
+    uint32_t mRejectedDuplicate;      ///< Number of transactions completed with a name/record conflict response.
+    uint32_t mRejectedSecurity;       ///< Number of transactions completed with a security/policy/algorithm response.
+    uint32_t mRejectedOther;          ///< Number of transactions completed with any other server error response.
+    uint32_t mTimeouts;               ///< Number of retransmission timers that expired before a response arrived.
+    uint32_t mHostAddressChanges;     ///< Number of host-address change events that triggered an SRP re-registration.
+    uint32_t mServerChanges;          ///< Number of auto-start server (re-)selections that triggered an SRP update.
+    uint32_t mServiceAdds;            ///< Number of times a service was successfully added.
+    uint32_t mServiceRemoves;         ///< Number of times a service was removed (sends an unregister to server).
+    uint32_t mServiceClears;          ///< Number of times a service was cleared (local-only, no server message).
+    uint32_t mHostAndServicesRemoves; ///< Number of times the host and all services were removed (notifies server).
+    uint32_t mHostAndServicesClears;  ///< Number of times the host and all services were cleared (local-only).
+    uint32_t mTxTotalBytes;   ///< Cumulative number of bytes transmitted (includes IPv6 + UDP headers + SRP payload).
+    uint64_t mRegisteredTime; ///< Cumulative number of milliseconds spent in the registered state.
+    uint64_t mAnycastAvailableTime; ///< Subset of `mRegisteredTime` while registered with an anycast-selected server.
+    uint64_t mUnicastAvailableTime; ///< Subset of `mRegisteredTime` while registered with a unicast-selected server.
+    uint64_t mTrackedTime; ///< Cumulative milliseconds since last counter reset, across all client states (including
+                           ///< stopped/paused).
+} otSrpClientCounters;
+
+/**
  * Pointer type defines the callback used by SRP client to notify user of changes/events/errors.
  *
  * This callback is invoked on a successful registration of an update (i.e., add/remove of host-info and/or some
@@ -674,6 +701,28 @@ void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled)
  * @returns TRUE if "service key record inclusion" mode is enabled, FALSE otherwise.
  */
 bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance);
+
+/**
+ * Gets the SRP client counters.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE` to be enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the SRP client counters.
+ */
+const otSrpClientCounters *otSrpClientGetCounters(otInstance *aInstance);
+
+/**
+ * Resets the SRP client counters.
+ *
+ * Requires `OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE` to be enabled.
+ *
+ * All event counters are cleared and the time-tracking accumulators (`mRegisteredTime`, `mTrackedTime`) are restarted.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ */
+void otSrpClientResetCounters(otInstance *aInstance);
 
 /**
  * @}

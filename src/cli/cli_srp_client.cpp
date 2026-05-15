@@ -179,6 +179,109 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+/**
+ * @cli srp client counters
+ * @code
+ * srp client counters
+ * Tx Updates: 12
+ * Update Attempts: 11
+ * Success: 11
+ * Rejected Duplicate: 0
+ * Rejected Security: 0
+ * Rejected Other: 0
+ * Timeouts: 1
+ * Host Address Changes: 0
+ * Server Changes: 1
+ * Service Adds: 1
+ * Service Removes: 0
+ * Service Clears: 0
+ * Host And Services Removes: 0
+ * Host And Services Clears: 0
+ * Tx Total Bytes: 4380
+ * Registered Time Milli: 845321
+ * Anycast Available Time Milli: 0
+ * Unicast Available Time Milli: 901002
+ * Tracked Time Milli: 901002
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otSrpClientGetCounters
+ */
+template <> otError SrpClient::Process<Cmd("counters")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        struct CounterEntry
+        {
+            const uint32_t otSrpClientCounters::*mValuePtr;
+            const char                          *mName;
+        };
+
+        struct TimeCounterEntry
+        {
+            const uint64_t otSrpClientCounters::*mValuePtr;
+            const char                          *mName;
+        };
+
+        static const CounterEntry kCounters[] = {
+            {&otSrpClientCounters::mTxUpdates, "Tx Updates"},
+            {&otSrpClientCounters::mUpdateAttempts, "Update Attempts"},
+            {&otSrpClientCounters::mSuccess, "Success"},
+            {&otSrpClientCounters::mRejectedDuplicate, "Rejected Duplicate"},
+            {&otSrpClientCounters::mRejectedSecurity, "Rejected Security"},
+            {&otSrpClientCounters::mRejectedOther, "Rejected Other"},
+            {&otSrpClientCounters::mTimeouts, "Timeouts"},
+            {&otSrpClientCounters::mHostAddressChanges, "Host Address Changes"},
+            {&otSrpClientCounters::mServerChanges, "Server Changes"},
+            {&otSrpClientCounters::mServiceAdds, "Service Adds"},
+            {&otSrpClientCounters::mServiceRemoves, "Service Removes"},
+            {&otSrpClientCounters::mServiceClears, "Service Clears"},
+            {&otSrpClientCounters::mHostAndServicesRemoves, "Host And Services Removes"},
+            {&otSrpClientCounters::mHostAndServicesClears, "Host And Services Clears"},
+            {&otSrpClientCounters::mTxTotalBytes, "Tx Total Bytes"},
+        };
+
+        static const TimeCounterEntry kTimeCounters[] = {
+            {&otSrpClientCounters::mRegisteredTime, "Registered Time Milli"},
+            {&otSrpClientCounters::mAnycastAvailableTime, "Anycast Available Time Milli"},
+            {&otSrpClientCounters::mUnicastAvailableTime, "Unicast Available Time Milli"},
+            {&otSrpClientCounters::mTrackedTime, "Tracked Time Milli"},
+        };
+
+        const otSrpClientCounters *counters = otSrpClientGetCounters(GetInstancePtr());
+
+        for (const CounterEntry &entry : kCounters)
+        {
+            OutputLine("%s: %lu", entry.mName, ToUlong(counters->*entry.mValuePtr));
+        }
+
+        for (const TimeCounterEntry &entry : kTimeCounters)
+        {
+            OutputFormat("%s: ", entry.mName);
+            OutputUint64Line(counters->*entry.mValuePtr);
+        }
+    }
+    /**
+     * @cli srp client counters reset
+     * @par api_copy
+     * #otSrpClientResetCounters
+     */
+    else if ((aArgs[0] == "reset") && aArgs[1].IsEmpty())
+    {
+        otSrpClientResetCounters(GetInstancePtr());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+
 template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -979,9 +1082,15 @@ otError SrpClient::Process(Arg aArgs[])
 #define CmdEntry(aCommandString) {aCommandString, &SrpClient::Process<Cmd(aCommandString)>}
 
     static constexpr Command kCommands[] = {
-        CmdEntry("autostart"),     CmdEntry("callback"), CmdEntry("host"),    CmdEntry("keyleaseinterval"),
-        CmdEntry("leaseinterval"), CmdEntry("server"),   CmdEntry("service"), CmdEntry("start"),
-        CmdEntry("state"),         CmdEntry("stop"),     CmdEntry("ttl"),
+        CmdEntry("autostart"),     CmdEntry("callback"),
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        CmdEntry("counters"),
+#endif
+        CmdEntry("host"),          CmdEntry("keyleaseinterval"),
+        CmdEntry("leaseinterval"), CmdEntry("server"),
+        CmdEntry("service"),       CmdEntry("start"),
+        CmdEntry("state"),         CmdEntry("stop"),
+        CmdEntry("ttl"),
     };
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
