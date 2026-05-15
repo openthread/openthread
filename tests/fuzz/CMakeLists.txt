@@ -49,6 +49,7 @@ set(COMMON_LIBS
     ${OT_MBEDTLS}
     $ENV{LIB_FUZZING_ENGINE}
     ot-config
+    openthread-cli-ftd
 )
 
 target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
