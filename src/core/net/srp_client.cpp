@@ -260,10 +260,14 @@ const char *Client::TxJitter::ReasonToString(Reason aReason)
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-Client::AutoStart::AutoStart(void)
+Client::AutoStart::AutoStart(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mState(kDefaultMode ? kFirstTimeSelecting : kDisabled)
+    , mAnycastSeqNum(0)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    , mTimeoutFailureCount(0)
+#endif
 {
-    Clear();
-    mState = kDefaultMode ? kFirstTimeSelecting : kDisabled;
 }
 
 bool Client::AutoStart::HasSelectedServer(void) const
@@ -291,6 +295,9 @@ void Client::AutoStart::SetState(State aState)
 {
     if (mState != aState)
     {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        Get<Client>().UpdateTimeCounters();
+#endif
         LogInfo("AutoStartState %s -> %s", StateToString(mState), StateToString(aState));
         mState = aState;
     }
@@ -348,6 +355,7 @@ Client::Client(Instance &aInstance)
     , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     , mGuardTimer(aInstance)
+    , mAutoStart(aInstance)
 #endif
 {
     // The `Client` implementation uses different constant array of
@@ -370,6 +378,11 @@ Client::Client(Instance &aInstance)
     };
 
     mHostInfo.Init();
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    ClearAllBytes(mCounters);
+    mLastUpdatedTimestamp = Get<UptimeTracker>().GetUptime();
+#endif
 }
 
 Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
@@ -735,6 +748,10 @@ Error Client::UpdateHostInfoStateOnAddressChange(void)
     VerifyOrExit((mHostInfo.GetState() != kToRemove) && (mHostInfo.GetState() != kRemoving),
                  error = kErrorInvalidState);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mHostAddressChanges++;
+#endif
+
     if (mHostInfo.GetState() == kRemoved)
     {
         mHostInfo.SetState(kToAdd);
@@ -757,6 +774,10 @@ Error Client::AddService(Service &aService)
     SuccessOrExit(error = aService.Init());
     mServices.Push(aService);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServiceAdds++;
+#endif
+
     aService.SetState(kToAdd);
     UpdateState();
 
@@ -770,6 +791,10 @@ Error Client::RemoveService(Service &aService)
     LinkedList<Service> removedServices;
 
     VerifyOrExit(mServices.Contains(aService), error = kErrorNotFound);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServiceRemoves++;
+#endif
 
     UpdateServiceStateToRemove(aService);
     UpdateState();
@@ -791,6 +816,11 @@ Error Client::ClearService(Service &aService)
     Error error;
 
     SuccessOrExit(error = mServices.Remove(aService));
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServiceClears++;
+#endif
+
     aService.SetNext(nullptr);
     aService.SetState(kRemoved);
     UpdateState();
@@ -830,6 +860,10 @@ Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease, bool aSendUnregT
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mHostAndServicesRemoves++;
+#endif
+
     mHostInfo.SetState(kToRemove);
     UpdateState();
 
@@ -840,6 +874,10 @@ exit:
 void Client::ClearHostAndServices(void)
 {
     LogInfo("Clear host & services");
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mHostAndServicesClears++;
+#endif
 
     switch (GetState())
     {
@@ -867,6 +905,11 @@ void Client::SetState(State aState)
     VerifyOrExit(aState != mState);
 
     LogInfo("State %s -> %s", StateToString(mState), StateToString(aState));
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    UpdateTimeCounters();
+#endif
+
     mState = aState;
 
     switch (mState)
@@ -891,6 +934,51 @@ void Client::SetState(State aState)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+
+const Client::Counters &Client::GetCounters(void)
+{
+    UpdateTimeCounters();
+    return mCounters;
+}
+
+void Client::ResetCounters(void)
+{
+    ClearAllBytes(mCounters);
+    mLastUpdatedTimestamp = Get<UptimeTracker>().GetUptime();
+}
+
+void Client::UpdateTimeCounters(void)
+{
+    UptimeMsec now      = Get<UptimeTracker>().GetUptime();
+    UptimeMsec duration = now - mLastUpdatedTimestamp;
+
+    mLastUpdatedTimestamp = now;
+    mCounters.mTrackedTime += duration;
+
+    if (mState == kStateUpdated)
+    {
+        mCounters.mRegisteredTime += duration;
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+        switch (mAutoStart.GetState())
+        {
+        case AutoStart::kSelectedAnycast:
+            mCounters.mAnycastAvailableTime += duration;
+            break;
+        case AutoStart::kSelectedUnicastPreferred:
+        case AutoStart::kSelectedUnicast:
+            mCounters.mUnicastAvailableTime += duration;
+            break;
+        default:
+            break;
+        }
+#endif
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
 
 bool Client::ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode)
 {
@@ -1012,6 +1100,9 @@ void Client::SendUpdate(void)
     if (anyChanged)
     {
         SelectNewMessageId();
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        mCounters.mUpdateAttempts++;
+#endif
     }
 
     SuccessOrExit(error = UpdateIdAndSignatureInUpdateMessage(info));
@@ -1024,6 +1115,11 @@ void Client::SendUpdate(void)
     info.mMessage.Release();
 
     LogInfo("Send update, msg-id:0x%x", mCurMessageId);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mTxUpdates++;
+    mCounters.mTxTotalBytes += length;
+#endif
 
     // Remember the update message tx time to use later to determine the
     // lease renew time.
@@ -1820,6 +1916,21 @@ void Client::ProcessResponse(Message &aMessage)
     {
         LogInfo("Server rejected %s code:%d", ErrorToString(error), header.GetResponseCode());
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        switch (error)
+        {
+        case kErrorDuplicated:
+            mCounters.mRejectedDuplicate++;
+            break;
+        case kErrorSecurity:
+            mCounters.mRejectedSecurity++;
+            break;
+        default:
+            mCounters.mRejectedOther++;
+            break;
+        }
+#endif
+
         if (mHostInfo.GetState() == kAdding)
         {
             // Since server rejected the update message, we go back to
@@ -1928,6 +2039,10 @@ void Client::ProcessResponse(Message &aMessage)
     //   kRemoving   -> kRemoved
 
     ChangeHostAndServiceStates(kNewStateOnUpdateDone, kForServicesAppendedInMessage);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mSuccess++;
+#endif
 
     HandleUpdateDone();
     UpdateState();
@@ -2197,6 +2312,9 @@ void Client::HandleTimer(void)
     case kStateUpdating:
         LogRetryWaitInterval();
         LogInfo("Timed out, no response");
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+        mCounters.mTimeouts++;
+#endif
         GrowRetryWaitInterval();
         SetState(kStateToUpdate);
         InvokeCallback(kErrorResponseTimeout);
@@ -2393,6 +2511,10 @@ void Client::ProcessAutoStart(void)
         mTxJitter.Request(TxJitter::kOnServerSwitch);
         break;
     }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_COUNTERS_ENABLE
+    mCounters.mServerChanges++;
+#endif
 
     IgnoreError(Start(serverSockAddr, kRequesterAuto));
 
