@@ -129,11 +129,9 @@ exit:
 
 void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 {
-    Error       error     = kErrorNone;
-    bool        isPrimary = Get<Local>().IsPrimary();
-    Mlr::Status status    = Mlr::kStatusSuccess;
-    Config      config;
-
+    Error        error     = kErrorNone;
+    bool         isPrimary = Get<Local>().IsPrimary();
+    Mlr::Status  status    = Mlr::kStatusSuccess;
     OffsetRange  offsetRange;
     Ip6::Address address;
     Ip6::Address addresses[Mlr::kMaxIp6Addresses];
@@ -191,9 +189,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Msg &aMsg)
 
     if (!processTimeoutTlv)
     {
-        IgnoreError(Get<Leader>().GetConfig(config));
-
-        timeout = config.mMlrTimeout;
+        timeout = Get<Leader>().GetConfig().GetMlrTimeout();
     }
     else
     {

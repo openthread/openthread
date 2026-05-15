@@ -132,6 +132,13 @@ public:
      */
     uint8_t GetSequenceNumber(void) const { return mSequenceNumber; }
 
+    /**
+     * Selects a random reregistration delay.
+     *
+     * @returns A random reregistration delay in seconds.
+     */
+    uint16_t SelectRandomReregistrationDelay(void) const;
+
 private:
     void AdjustMlrTimeout(void);
 
@@ -173,14 +180,21 @@ public:
     void Reset(void);
 
     /**
-     * Gets the Primary Backbone Router in the Thread Network.
+     * Gets the Primary Backbone Router configuration.
      *
-     * @param[out]  aConfig        The Primary Backbone Router information.
+     * @returns The Primary Backbone Router configuration.
+     */
+    const Config &GetConfig(void) const { return mConfig; }
+
+    /**
+     * Reads the Primary Backbone Router configuration in the Thread Network.
      *
-     * @retval kErrorNone          Successfully got the Primary Backbone Router information.
+     * @param[out]  aConfig        A reference to a `Config` to populate.
+     *
+     * @retval kErrorNone          Successfully read the Primary BBR config. @p aConfig is updated.
      * @retval kErrorNotFound      No Backbone Router in the Thread Network.
      */
-    Error GetConfig(Config &aConfig) const;
+    Error ReadConfig(Config &aConfig) const;
 
     /**
      * Gets the Backbone Router Service ID.

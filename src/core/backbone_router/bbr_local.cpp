@@ -237,14 +237,14 @@ exit:
     return;
 }
 
-void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config &aConfig)
+void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState)
 {
     OT_UNUSED_VARIABLE(aState);
 
     VerifyOrExit(IsEnabled() && Get<Mle::Mle>().IsAttached());
 
     // Wait some jitter before trying to Register.
-    if (aConfig.mServer16 == Mle::kInvalidRloc16)
+    if (!Get<Leader>().HasPrimary())
     {
         if (Get<Mle::Mle>().IsLeader())
         {
@@ -259,7 +259,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
             Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
         }
     }
-    else if (aConfig.mServer16 != Get<Mle::Mle>().GetRloc16())
+    else if (!Get<Mle::Mle>().HasRloc16(Get<Leader>().GetConfig().GetServer16()))
     {
         Reset();
     }
@@ -267,9 +267,9 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     {
         // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
-        mSequenceNumber      = aConfig.mSequenceNumber;
-        mReregistrationDelay = aConfig.mReregistrationDelay;
-        mMlrTimeout          = aConfig.mMlrTimeout;
+        mSequenceNumber      = Get<Leader>().GetConfig().mSequenceNumber;
+        mReregistrationDelay = Get<Leader>().GetConfig().mReregistrationDelay;
+        mMlrTimeout          = Get<Leader>().GetConfig().mMlrTimeout;
         IncrementSequenceNumber();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         IgnoreError(AddService(kForceRegistration));
