@@ -57,14 +57,14 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
 {
     AssertPointerIsNotNull(aConfig);
 
-    AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig(*aConfig);
+    AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig(AsCoreType(aConfig));
 }
 
 otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
 {
     AssertPointerIsNotNull(aConfig);
 
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetConfig(*aConfig);
+    return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetConfig(AsCoreType(aConfig));
 }
 
 otError otBackboneRouterRegister(otInstance *aInstance)

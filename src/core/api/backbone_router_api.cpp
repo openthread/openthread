@@ -46,7 +46,7 @@ otError otBackboneRouterGetPrimary(otInstance *aInstance, otBackboneRouterConfig
 {
     AssertPointerIsNotNull(aConfig);
 
-    return AsCoreType(aInstance).Get<BackboneRouter::Leader>().GetConfig(*aConfig);
+    return AsCoreType(aInstance).Get<BackboneRouter::Leader>().GetConfig(AsCoreType(aConfig));
 }
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
