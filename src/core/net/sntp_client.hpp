@@ -35,6 +35,7 @@
 
 #include <openthread/sntp.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -57,6 +58,18 @@ class Client : private NonCopyable
 {
 public:
     typedef otSntpResponseHandler ResponseHandler; ///< Response handler callback.
+
+    /**
+     * Represents an SNTP Query parameters.
+     */
+    class QueryInfo : public otSntpQuery
+    {
+        friend class Client;
+
+    private:
+        bool                    IsValid(void) const { return mMessageInfo != nullptr; }
+        const Ip6::MessageInfo &GetMessageInfo(void) const { return AsCoreType(mMessageInfo); }
+    };
 
     /**
      * Initializes the object.
@@ -105,7 +118,7 @@ public:
      * @retval kErrorNoBufs       Failed to allocate retransmission data.
      * @retval kErrorInvalidArgs  Invalid arguments supplied.
      */
-    Error Query(const otSntpQuery *aQuery, ResponseHandler aHandler, void *aContext);
+    Error Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *aContext);
 
 private:
     static constexpr uint32_t kTimeAt1970 = 2208988800UL; // num seconds between 1st Jan 1900 and 1st Jan 1970.
@@ -113,102 +126,56 @@ private:
     static constexpr uint32_t kResponseTimeout = OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT;
     static constexpr uint8_t  kMaxRetransmit   = OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT;
 
+    typedef Callback<ResponseHandler> ResponseCallback;
+
+    OT_TOOL_PACKED_BEGIN
+    class Timestamp : public Clearable<Timestamp>
+    {
+    public:
+        bool     IsZero(void) const { return (mSeconds == 0) && (mFraction == 0); }
+        uint32_t GetSeconds(void) const { return BigEndian::HostSwap32(mSeconds); }
+        void     SetSeconds(uint32_t aSeconds) { mSeconds = BigEndian::HostSwap32(aSeconds); }
+        uint32_t GetFraction(void) const { return BigEndian::HostSwap32(mFraction); }
+        void     SetFraction(uint32_t aFraction) { mFraction = BigEndian::HostSwap32(aFraction); }
+
+    private:
+        uint32_t mSeconds;
+        uint32_t mFraction;
+    } OT_TOOL_PACKED_END;
+
     OT_TOOL_PACKED_BEGIN
     class Header : public Clearable<Header>
     {
     public:
-        enum Mode : uint8_t
-        {
-            kModeClient = 3,
-            kModeServer = 4,
-        };
-
+        static constexpr uint8_t kModeClient     = 3;
+        static constexpr uint8_t kModeServer     = 4;
         static constexpr uint8_t kKissCodeLength = 4;
 
-        void Init(void)
-        {
-            Clear();
-            mFlags = (kNtpVersion << kVersionOffset | kModeClient << kModeOffset);
-        }
-
-        uint8_t GetFlags(void) const { return mFlags; }
-        void    SetFlags(uint8_t aFlags) { mFlags = aFlags; }
-
-        Mode GetMode(void) const { return static_cast<Mode>(ReadBits<uint8_t, kModeMask>(mFlags)); }
-
-        uint8_t GetStratum(void) const { return mStratum; }
-        void    SetStratum(uint8_t aStratum) { mStratum = aStratum; }
-
-        uint8_t GetPoll(void) const { return mPoll; }
-        void    SetPoll(uint8_t aPoll) { mPoll = aPoll; }
-
-        uint8_t GetPrecision(void) const { return mPrecision; }
-        void    SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
-
-        uint32_t GetRootDelay(void) const { return BigEndian::HostSwap32(mRootDelay); }
-        void     SetRootDelay(uint32_t aRootDelay) { mRootDelay = BigEndian::HostSwap32(aRootDelay); }
-
-        uint32_t GetRootDispersion(void) const { return BigEndian::HostSwap32(mRootDispersion); }
-        void SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = BigEndian::HostSwap32(aRootDispersion); }
-
-        uint32_t GetReferenceId(void) const { return BigEndian::HostSwap32(mReferenceId); }
-        void     SetReferenceId(uint32_t aReferenceId) { mReferenceId = BigEndian::HostSwap32(aReferenceId); }
-
-        char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
-
-        uint32_t GetReferenceTimestampSeconds(void) const { return BigEndian::HostSwap32(mReferenceTimestampSeconds); }
-        void     SetReferenceTimestampSeconds(uint32_t aTimestamp)
-        {
-            mReferenceTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
-        }
-
-        uint32_t GetReferenceTimestampFraction(void) const
-        {
-            return BigEndian::HostSwap32(mReferenceTimestampFraction);
-        }
-        void SetReferenceTimestampFraction(uint32_t aFraction)
-        {
-            mReferenceTimestampFraction = BigEndian::HostSwap32(aFraction);
-        }
-
-        uint32_t GetOriginateTimestampSeconds(void) const { return BigEndian::HostSwap32(mOriginateTimestampSeconds); }
-        void     SetOriginateTimestampSeconds(uint32_t aTimestamp)
-        {
-            mOriginateTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
-        }
-
-        uint32_t GetOriginateTimestampFraction(void) const
-        {
-            return BigEndian::HostSwap32(mOriginateTimestampFraction);
-        }
-        void SetOriginateTimestampFraction(uint32_t aFraction)
-        {
-            mOriginateTimestampFraction = BigEndian::HostSwap32(aFraction);
-        }
-
-        uint32_t GetReceiveTimestampSeconds(void) const { return BigEndian::HostSwap32(mReceiveTimestampSeconds); }
-        void     SetReceiveTimestampSeconds(uint32_t aTimestamp)
-        {
-            mReceiveTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
-        }
-
-        uint32_t GetReceiveTimestampFraction(void) const { return BigEndian::HostSwap32(mReceiveTimestampFraction); }
-        void     SetReceiveTimestampFraction(uint32_t aFraction)
-        {
-            mReceiveTimestampFraction = BigEndian::HostSwap32(aFraction);
-        }
-
-        uint32_t GetTransmitTimestampSeconds(void) const { return BigEndian::HostSwap32(mTransmitTimestampSeconds); }
-        void     SetTransmitTimestampSeconds(uint32_t aTimestamp)
-        {
-            mTransmitTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
-        }
-
-        uint32_t GetTransmitTimestampFraction(void) const { return BigEndian::HostSwap32(mTransmitTimestampFraction); }
-        void     SetTransmitTimestampFraction(uint32_t aFraction)
-        {
-            mTransmitTimestampFraction = BigEndian::HostSwap32(aFraction);
-        }
+        void             Init(void) { Clear(), mFlags = (kNtpVersion << kVersionOffset | kModeClient << kModeOffset); }
+        uint8_t          GetFlags(void) const { return mFlags; }
+        void             SetFlags(uint8_t aFlags) { mFlags = aFlags; }
+        uint8_t          GetMode(void) const { return ReadBits<uint8_t, kModeMask>(mFlags); }
+        uint8_t          GetStratum(void) const { return mStratum; }
+        void             SetStratum(uint8_t aStratum) { mStratum = aStratum; }
+        uint8_t          GetPoll(void) const { return mPoll; }
+        void             SetPoll(uint8_t aPoll) { mPoll = aPoll; }
+        uint8_t          GetPrecision(void) const { return mPrecision; }
+        void             SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
+        uint32_t         GetRootDelay(void) const { return BigEndian::HostSwap32(mRootDelay); }
+        void             SetRootDelay(uint32_t aDelay) { mRootDelay = BigEndian::HostSwap32(aDelay); }
+        uint32_t         GetRootDispersion(void) const { return BigEndian::HostSwap32(mRootDispersion); }
+        void             SetRootDispersion(uint32_t aDisp) { mRootDispersion = BigEndian::HostSwap32(aDisp); }
+        uint32_t         GetReferenceId(void) const { return BigEndian::HostSwap32(mReferenceId); }
+        void             SetReferenceId(uint32_t aId) { mReferenceId = BigEndian::HostSwap32(aId); }
+        char            *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
+        Timestamp       &GetReferenceTimestamp(void) { return mReferenceTimestamp; }
+        Timestamp       &GetOriginateTimestamp(void) { return mOriginateTimestamp; }
+        Timestamp       &GetRxTimestamp(void) { return mRxTimestamp; }
+        Timestamp       &GetTxTimestamp(void) { return mTxTimestamp; }
+        const Timestamp &GetReferenceTimestamp(void) const { return mReferenceTimestamp; }
+        const Timestamp &GetOriginateTimestamp(void) const { return mOriginateTimestamp; }
+        const Timestamp &GetRxTimestamp(void) const { return mRxTimestamp; }
+        const Timestamp &GetTxTimestamp(void) const { return mTxTimestamp; }
 
     private:
         static constexpr uint8_t kNtpVersion    = 4;                      // Current NTP version.
@@ -219,56 +186,51 @@ private:
         static constexpr uint8_t kModeOffset    = 0;                      // Mode field offset.
         static constexpr uint8_t kModeMask      = 0x07 << kModeOffset;    // Mode filed mask.
 
-        uint8_t  mFlags;                      // SNTP flags: LI Leap Indicator, VN Version Number and Mode.
-        uint8_t  mStratum;                    // Packet Stratum.
-        uint8_t  mPoll;                       // Maximum interval between successive messages, in log2 seconds.
-        uint8_t  mPrecision;                  // The precision of the system clock, in log2 seconds.
-        uint32_t mRootDelay;                  // Total round-trip delay to the reference clock, in NTP short format.
-        uint32_t mRootDispersion;             // Total dispersion to the reference clock.
-        uint32_t mReferenceId;                // ID identifying the particular server or reference clock.
-        uint32_t mReferenceTimestampSeconds;  // Time the system clock was last set or corrected (NTP format).
-        uint32_t mReferenceTimestampFraction; // Fraction part of above value.
-        uint32_t mOriginateTimestampSeconds;  // Time at client when request departed for the server (NTP format).
-        uint32_t mOriginateTimestampFraction; // Fraction part of above value.
-        uint32_t mReceiveTimestampSeconds;    // Time at server when request arrived from the client (NTP format).
-        uint32_t mReceiveTimestampFraction;   // Fraction part of above value.
-        uint32_t mTransmitTimestampSeconds;   // Time at server when the response left for the client (NTP format).
-        uint32_t mTransmitTimestampFraction;  // Fraction part of above value.
+        uint8_t   mFlags;              // SNTP flags: LI Leap Indicator, VN Version Number and Mode.
+        uint8_t   mStratum;            // Packet Stratum.
+        uint8_t   mPoll;               // Maximum interval between successive messages, in log2 seconds.
+        uint8_t   mPrecision;          // The precision of the system clock, in log2 seconds.
+        uint32_t  mRootDelay;          // Total round-trip delay to the reference clock, in NTP short format.
+        uint32_t  mRootDispersion;     // Total dispersion to the reference clock.
+        uint32_t  mReferenceId;        // ID identifying the particular server or reference clock.
+        Timestamp mReferenceTimestamp; // Time the system clock was last set or corrected.
+        Timestamp mOriginateTimestamp; // Time at client when request departed for the server.
+        Timestamp mRxTimestamp;        // Time at server when request arrived from the client.
+        Timestamp mTxTimestamp;        // Time at server when the response left for the client.
     } OT_TOOL_PACKED_END;
 
     struct QueryMetadata : public Message::FooterData<QueryMetadata>
     {
-        uint32_t                  mTransmitTimestamp;   // Time at client when request departed for server
-        Callback<ResponseHandler> mResponseHandler;     // Response handler callback
-        TimeMilli                 mTransmissionTime;    // Time when the timer should shoot for this message
-        Ip6::Address              mSourceAddress;       // Source IPv6 address
-        Ip6::Address              mDestinationAddress;  // Destination IPv6 address
-        uint16_t                  mDestinationPort;     // Destination UDP port
-        uint8_t                   mRetransmissionCount; // Number of retransmissions
+        uint32_t         mTxTimestamp;      // Time at client when request departed for server
+        ResponseCallback mResponseCallback; // Response handler callback
+        TimeMilli        mRetxTime;         // Time to retx the query (`kResponseTimeout` after last tx)
+        Ip6::Address     mSourceAddr;       // Source IPv6 address
+        Ip6::Address     mDestAddr;         // Destination IPv6 address
+        uint16_t         mDestPort;         // Destination UDP port
+        uint8_t          mRetxCount;        // Number of retransmissions
     };
 
-    Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
-    void     DequeueMessage(Message &aMessage);
-    Error    SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aMetadata);
     void     SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aMetadata);
+    void     Finalize(Message &aQuery, const QueryMetadata &aMetadata, uint64_t aTime, Error aResult);
+    void     HandleTimer(void);
+    void     HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void     ProcessResponse(Message &aQuery, const QueryMetadata &aMetadata, Header &aResponseHeader);
 
-    Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
-    void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
-
-    void HandleRetransmissionTimer(void);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    using RetxTimer    = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
+    using RetxTimer    = TimerMilliIn<Client, &Client::HandleTimer>;
     using ClientSocket = Ip6::Udp::SocketIn<Client, &Client::HandleUdpReceive>;
 
     ClientSocket mSocket;
     MessageQueue mPendingQueries;
-    RetxTimer    mRetransmissionTimer;
-
-    uint32_t mUnixEra;
+    RetxTimer    mTimer;
+    uint32_t     mUnixEra;
 };
 
 } // namespace Sntp
+
+DefineCoreType(otSntpQuery, Sntp::Client::QueryInfo);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
