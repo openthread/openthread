@@ -104,6 +104,9 @@ void Notifier::EmitEvents(void)
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     Get<BackboneRouter::Leader>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<BackboneRouter::Local>().HandleNotifierEvents(events);
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     Get<Dhcp6::Server>().HandleNotifierEvents(events);
 #endif
