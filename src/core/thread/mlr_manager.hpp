@@ -92,11 +92,11 @@ public:
     explicit Manager(Instance &aInstance);
 
     /**
-     * Notifies Primary Backbone Router status.
+     * Notifies the `MlrManager` of a Primary Backbone Router event.
      *
-     * @param[in]  aState   The state or state change of Primary Backbone Router.
+     * @param[in]  aEvent   The Primary Backbone Router event.
      */
-    void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState);
+    void HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     static constexpr uint16_t kMaxChildAddresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1; ///< Max MLR addresses

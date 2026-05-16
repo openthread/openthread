@@ -68,14 +68,14 @@ void Manager::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState)
+void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent)
 {
     RegistrationRequest request = kRenew;
 
-    switch (aState)
+    switch (aEvent)
     {
-    case BackboneRouter::Leader::kStateAdded:
-    case BackboneRouter::Leader::kStateToTriggerRereg:
+    case BackboneRouter::kPrimaryAdded:
+    case BackboneRouter::kPrimaryUpdatedReregister:
         request = kReregister;
         break;
     default:
