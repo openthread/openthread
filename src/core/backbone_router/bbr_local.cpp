@@ -240,7 +240,19 @@ exit:
 void Local::HandleBackboneRouterPrimaryUpdate(PrimaryEvent aEvent)
 {
     OT_UNUSED_VARIABLE(aEvent);
+    UpdateState();
+}
 
+void Local::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadRoleChanged))
+    {
+        UpdateState();
+    }
+}
+
+void Local::UpdateState(void)
+{
     VerifyOrExit(IsEnabled() && Get<Mle::Mle>().IsAttached());
 
     // Wait some jitter before trying to Register.
