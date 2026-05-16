@@ -237,9 +237,9 @@ exit:
     return;
 }
 
-void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState)
+void Local::HandleBackboneRouterPrimaryUpdate(PrimaryEvent aEvent)
 {
-    OT_UNUSED_VARIABLE(aState);
+    OT_UNUSED_VARIABLE(aEvent);
 
     VerifyOrExit(IsEnabled() && Get<Mle::Mle>().IsAttached());
 

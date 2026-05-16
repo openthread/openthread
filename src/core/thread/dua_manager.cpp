@@ -332,9 +332,9 @@ exit:
     return;
 }
 
-void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState)
+void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent)
 {
-    if (aState == BackboneRouter::Leader::kStateAdded || aState == BackboneRouter::Leader::kStateToTriggerRereg)
+    if (aEvent == BackboneRouter::kPrimaryAdded || aEvent == BackboneRouter::kPrimaryUpdatedReregister)
     {
 #if OPENTHREAD_CONFIG_DUA_ENABLE
         if (Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1())

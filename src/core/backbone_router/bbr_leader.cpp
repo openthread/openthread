@@ -129,19 +129,17 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-const char *Leader::StateToString(State aState)
+const char *Leader::PrimaryEventToString(PrimaryEvent aEvent)
 {
-#define StateMapList(_)                        \
-    _(kStateNone, "None")                      \
-    _(kStateAdded, "Added")                    \
-    _(kStateRemoved, "Removed")                \
-    _(kStateToTriggerRereg, "Rereg triggered") \
-    _(kStateRefreshed, "Refreshed")            \
-    _(kStateUnchanged, "Unchanged")
+#define PrimaryEventMapList(_)              \
+    _(kPrimaryAdded, "Added")               \
+    _(kPrimaryRemoved, "Removed")           \
+    _(kPrimaryUpdatedReregister, "Updated") \
+    _(kPrimaryConfigParameterChanged, "ConfigChanged")
 
-    DefineEnumStringArray(StateMapList);
+    DefineEnumStringArray(PrimaryEventMapList);
 
-    return kStrings[aState];
+    return kStrings[aEvent];
 }
 
 const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
@@ -169,50 +167,39 @@ void Leader::HandleNotifierEvents(Events aEvents)
 
 void Leader::UpdateBackboneRouterPrimary(void)
 {
-    Config newConfig;
-    State  state;
+    Config       newConfig;
+    PrimaryEvent event;
 
     Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(newConfig);
 
     newConfig.AdjustMlrTimeout();
 
-    if (newConfig.GetServer16() != mConfig.GetServer16())
+    if (!mConfig.IsPresent())
     {
-        if (!newConfig.IsPresent())
-        {
-            state = kStateRemoved;
-        }
-        else if (!mConfig.IsPresent())
-        {
-            state = kStateAdded;
-        }
-        else
-        {
-            // Short Address of PBBR changes.
-            state = kStateToTriggerRereg;
-        }
+        VerifyOrExit(newConfig.IsPresent());
+        event = kPrimaryAdded;
     }
     else if (!newConfig.IsPresent())
     {
-        // If no Primary all the time.
-        state = kStateNone;
+        event = kPrimaryRemoved;
     }
-    else if (newConfig.GetSequenceNumber() != mConfig.GetSequenceNumber())
+    else if (newConfig.GetServer16() != mConfig.GetServer16() ||
+             newConfig.GetSequenceNumber() != mConfig.GetSequenceNumber())
     {
-        state = kStateToTriggerRereg;
+        event = kPrimaryUpdatedReregister;
     }
     else if (newConfig.GetReregistrationDelay() != mConfig.GetReregistrationDelay() ||
              newConfig.GetMlrTimeout() != mConfig.GetMlrTimeout())
     {
-        state = kStateRefreshed;
+        event = kPrimaryConfigParameterChanged;
     }
     else
     {
-        state = kStateUnchanged;
+        ExitNow(); // No changes
     }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    LogInfo("PBBR event: %s", StateToString(state));
+    LogInfo("PrimaryEvent: %s", PrimaryEventToString(event));
     mConfig.Log("Old");
     newConfig.Log("New");
 #endif
@@ -220,18 +207,19 @@ void Leader::UpdateBackboneRouterPrimary(void)
     mConfig = newConfig;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state);
+    Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(event);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    Get<Mlr::Manager>().HandleBackboneRouterPrimaryUpdate(state);
+    Get<Mlr::Manager>().HandleBackboneRouterPrimaryUpdate(event);
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(state);
+    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(event);
 #endif
 
-    OT_UNUSED_VARIABLE(state);
+exit:
+    OT_UNUSED_VARIABLE(event);
 }
 
 void Leader::UpdateDomainPrefixConfig(void)

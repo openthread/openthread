@@ -182,11 +182,11 @@ public:
     uint8_t GetRegistrationJitter(void) const { return mRegistrationJitter; }
 
     /**
-     * Notifies Primary Backbone Router status.
+     * Notifies the `Local` of a Primary Backbone Router event.
      *
-     * @param[in]  aState   The state or state change of Primary Backbone Router.
+     * @param[in]  aEvent   The Primary Backbone Router event.
      */
-    void HandleBackboneRouterPrimaryUpdate(Leader::State aState);
+    void HandleBackboneRouterPrimaryUpdate(PrimaryEvent aEvent);
 
     /**
      * Gets the Domain Prefix configuration.

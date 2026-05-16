@@ -77,6 +77,17 @@ enum DomainPrefixEvent : uint8_t
     kDomainPrefixRefreshed = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, ///< Domain Prefix Changed.
 };
 
+/**
+ * Represents Primary Backbone Router events.
+ */
+enum PrimaryEvent : uint8_t
+{
+    kPrimaryAdded,                  ///< A new Primary Backbone Router is added.
+    kPrimaryRemoved,                ///< The Primary Backbone Router is removed.
+    kPrimaryUpdatedReregister,      ///< The Primary BBR is updated, need re-registration (server16 or seqno change).
+    kPrimaryConfigParameterChanged, ///< Config parameter changed: Re-registration Delay or MLR Timeout value.
+};
+
 class Leader;
 
 /**
@@ -155,18 +166,6 @@ class Leader : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
 
 public:
-    // Primary Backbone Router Service state or state change.
-    enum State : uint8_t
-    {
-        kStateNone = 0,       ///< Not exist (trigger Backbone Router register its service).
-        kStateAdded,          ///< Newly added.
-        kStateRemoved,        ///< Newly removed (trigger Backbone Router register its service).
-        kStateToTriggerRereg, ///< Short address or sequence number changes (trigger re-registration).
-                              ///< May also have ReregistrationDelay or MlrTimeout update.
-        kStateRefreshed,      ///< Only ReregistrationDelay or MlrTimeout changes.
-        kStateUnchanged,      ///< No change on Primary Backbone Router information (only for logging).
-    };
-
     /**
      * Initializes the `Leader`.
      *
@@ -251,7 +250,7 @@ private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    static const char *StateToString(State aState);
+    static const char *PrimaryEventToString(PrimaryEvent aEvent);
     static const char *DomainPrefixEventToString(DomainPrefixEvent aEvent);
 #endif
 
