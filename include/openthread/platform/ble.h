@@ -276,6 +276,10 @@ extern void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnecti
  * The BLE device shall use the Remote User Terminated Connection (0x13) reason
  * code when disconnecting from the peer BLE device.
  *
+ * This function only triggers the disconnection procedure. When OT_ERROR_NONE is returned,
+ * the platform MUST report completion of the disconnection asynchronously, by invoking
+ * otPlatBleGapOnDisconnected().
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  *
  * @retval OT_ERROR_NONE           Disconnection procedure has been started.
