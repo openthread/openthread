@@ -599,6 +599,25 @@ public:
     static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint16_t aLength);
 
     /**
+     * Appends a TLV with a given type and value read from another message.
+     *
+     * This method automatically formats the TLV as an Extended TLV if the length exceeds `kBaseTlvMaxLength` (254).
+     *
+     * @param[in] aMessage                The message to append the TLV to.
+     * @param[in] aType                   The TLV type to append.
+     * @param[in] aValueMsg               The message to read the TLV value from.
+     * @param[in] aValueMsgOffsetRange    The offset range in @p aValueMsg to read the value from.
+     *
+     * @retval kErrorNone     Successfully appended the TLV.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     * @retval kErrorParse    Not enough bytes in @p aValueMsg to read the @p aValueMsgOffsetRange.
+     */
+    static Error AppendTlvWithValueFromMessage(Message           &aMessage,
+                                               uint8_t            aType,
+                                               const Message     &aValueMsg,
+                                               const OffsetRange &aValueMsgOffsetRange);
+
+    /**
      * Appends a TLV with a given type and value to a message.
      *
      * The TLV is appended as either a regular or an extended TLV based on the given @p aLength. If the length
@@ -820,6 +839,7 @@ protected:
     static const uint8_t kExtendedLength = 255; // Extended Length value.
 
 private:
+    static Error AppendTlvHeader(Message &aMessage, uint8_t aType, uint16_t aLength);
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint16_t aLength);
     static Error FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue);
     static Error AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue);

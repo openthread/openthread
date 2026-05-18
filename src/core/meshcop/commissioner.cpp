@@ -971,7 +971,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Error                   error = kErrorNone;
-    ExtendedTlv             tlv;
+    OffsetRange             offsetRange;
     OwnedPtr<Coap::Message> message;
     Kek                     kek;
 
@@ -989,10 +989,9 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
         SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, kek));
     }
 
-    tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
-    tlv.SetLength(aMessage.GetLength());
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
+    offsetRange.InitFromMessageFullLength(aMessage);
+    SuccessOrExit(
+        error = Tlv::AppendTlvWithValueFromMessage(*message, Tlv::kJoinerDtlsEncapsulation, aMessage, offsetRange));
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, mJoinerRloc));
     message.Release();
