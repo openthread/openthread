@@ -346,6 +346,8 @@ private:
         kNotAdvertising = 3, // Ble secure is started but not advertising.
     };
 
+    typedef otBleRadioPacket RadioPacket;
+
     static constexpr uint8_t  kInitialMtuSize   = OT_BLE_ATT_MTU_DEFAULT;
     static constexpr uint8_t  kMinMtuSize       = OT_BLE_ATT_MTU_MIN;
     static constexpr uint8_t  kMaxMtuSize       = OT_BLE_ATT_MTU_MAX;
