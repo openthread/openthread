@@ -196,6 +196,7 @@ otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvert
  *
  * @retval OT_ERROR_NONE           Advertising data set successfully.
  * @retval OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
+ * @retval OT_ERROR_FAILED         Setting of data failed.
  * @retval OT_ERROR_INVALID_ARGS   Invalid value has been supplied.
  */
 otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen);
@@ -211,6 +212,7 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
  * @param[in] aAdvertisementLen  The length of the @p aAdvertisementData frame.
  *
  * @retval OT_ERROR_NONE           Advertising data updated successfully.
+ * @retval OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
  * @retval OT_ERROR_FAILED         Update of data failed.
  * @retval OT_ERROR_INVALID_ARGS   Invalid value has been supplied.
  */
@@ -224,11 +226,13 @@ otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisement
  * channels (37, 38 and 39).
  * The advertising shall remain active until either otPlatBleGapAdvStop() is
  * called or a BLE Central Device connects (otPlatBleGapOnConnected()).
+ * The BLE platform is not obliged to exactly match the requested interval
+ * between subsequent advertising packets: it is a requested/desired value.
  *
  * @note This function shall be used only for BLE Peripheral role.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aInterval  The interval between subsequent advertising packets
+ * @param[in] aInterval  The requested interval between subsequent advertising packets
  *                       in OT_BLE_ADV_INTERVAL_UNIT units.
  *                       Shall be within OT_BLE_ADV_INTERVAL_MIN and
  *                       OT_BLE_ADV_INTERVAL_MAX range or OT_BLE_ADV_INTERVAL_DEFAULT
