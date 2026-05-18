@@ -144,7 +144,7 @@ private:
     Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-    Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, OffsetRange &aOffsetRange);
+    Error AppendRequestedTlvsForTcat(const Message &aRequest, Message &aResponse, const OffsetRange &aOffsetRange);
 #endif
 
 #if OPENTHREAD_MTD

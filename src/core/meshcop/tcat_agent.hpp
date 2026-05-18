@@ -446,26 +446,24 @@ private:
     void  Disconnected(void);
 
     Error HandleSingleTlv(const Message &aIncomingMessage, Message &aOutgoingMessage);
-    Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandleSetActiveOperationalDataset(const Message &aIncomingMessage, const OffsetRange &aOffsetRange);
     Error HandleGetActiveOperationalDataset(Message &aOutgoingMessage, bool &aResponse);
-    Error HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
-                                  Message       &aOutgoingMessage,
-                                  uint16_t       aOffset,
-                                  uint16_t       aLength,
-                                  bool          &response);
+    Error HandleGetDiagnosticTlvs(const Message     &aIncomingMessage,
+                                  Message           &aOutgoingMessage,
+                                  const OffsetRange &aOffsetRange,
+                                  bool              &aResponse);
     Error HandleDecommission(void);
-    Error HandlePing(const Message &aIncomingMessage,
-                     Message       &aOutgoingMessage,
-                     uint16_t       aOffset,
-                     uint16_t       aLength,
-                     bool          &aResponse);
+    Error HandlePing(const Message     &aIncomingMessage,
+                     Message           &aOutgoingMessage,
+                     const OffsetRange &aOffsetRange,
+                     bool              &aResponse);
     Error HandleGetNetworkName(Message &aOutgoingMessage, bool &aResponse);
     Error HandleGetDeviceId(Message &aOutgoingMessage, bool &aResponse);
     Error HandleGetExtPanId(Message &aOutgoingMessage, bool &aResponse);
     Error HandleGetProvisioningUrl(Message &aOutgoingMessage, bool &aResponse);
-    Error HandlePresentPskdHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
-    Error HandlePresentPskcHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
-    Error HandlePresentInstallCodeHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength);
+    Error HandlePresentPskdHash(const Message &aIncomingMessage, const OffsetRange &aOffsetRange);
+    Error HandlePresentPskcHash(const Message &aIncomingMessage, const OffsetRange &aOffsetRange);
+    Error HandlePresentInstallCodeHash(const Message &aIncomingMessage, const OffsetRange &aOffsetRange);
     Error HandleRequestRandomNumberChallenge(Message &aOutgoingMessage, bool &aResponse);
     Error HandleStartThreadInterface(void);
     Error HandleStopThreadInterface(void);
@@ -477,11 +475,10 @@ private:
                                 bool                   &aResponse);
     void  HandleTimer(void);
     void  AdaptToExistingActivePeriod(uint32_t &aPeriodDelayMs, uint32_t &aPeriodDurationMs);
-    Error VerifyHash(const Message &aIncomingMessage,
-                     uint16_t       aOffset,
-                     uint16_t       aLength,
-                     const void    *aBuf,
-                     size_t         aBufLen);
+    Error VerifyHash(const Message     &aIncomingMessage,
+                     const OffsetRange &aOffsetRange,
+                     const void        *aBuf,
+                     size_t             aBufLen);
     Error CalculateHash(uint64_t aChallenge, const char *aBuf, size_t aBufLen, Crypto::HmacSha256::Hash &aHash);
 
     bool    IsCommandClassAuthorizedWithFlags(CommandClassFlags aCommissionerCommandClassFlags,
