@@ -47,7 +47,11 @@ set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_CONFIG_USE_STD_NEW=1
 )
 
+option(OT_NEXUS_BUILD_TESTS "Build Nexus test executables" ON)
 option(OT_NEXUS_GRPC "Enable Nexus gRPC" OFF)
+
+message(STATUS "OT_NEXUS_BUILD_TESTS=\"${OT_NEXUS_BUILD_TESTS}\"")
+message(STATUS "OT_NEXUS_GRPC=\"${OT_NEXUS_GRPC}\"")
 
 if(OT_NEXUS_GRPC AND NOT EMSCRIPTEN)
     find_package(gRPC CONFIG REQUIRED)
@@ -175,33 +179,39 @@ macro(ot_nexus_test name labels)
     # file `test_{name}.cpp`. The `labels` argument assigns categories to the
     # test, allowing us to run specific subsets using `ctest -L {label}`.
 
-    add_executable(nexus_${name}
-        test_${name}.cpp ${ARGN}
-    )
+    if(OT_NEXUS_BUILD_TESTS)
 
-    target_include_directories(nexus_${name}
-    PRIVATE
-        ${COMMON_INCLUDES}
-    )
+        add_executable(nexus_${name}
+            test_${name}.cpp ${ARGN}
+        )
 
-    target_link_libraries(nexus_${name}
-    PRIVATE
-        ${COMMON_LIBS}
-    )
+        target_include_directories(nexus_${name}
+        PRIVATE
+            ${COMMON_INCLUDES}
+        )
 
-    target_compile_options(nexus_${name}
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-        ${OT_CFLAGS}
-    )
+        target_link_libraries(nexus_${name}
+        PRIVATE
+            ${COMMON_LIBS}
+        )
 
-    add_test(NAME nexus_${name} COMMAND nexus_${name})
+        target_compile_options(nexus_${name}
+        PRIVATE
+            ${COMMON_COMPILE_OPTIONS}
+            ${OT_CFLAGS}
+        )
 
-    set_tests_properties(nexus_${name} PROPERTIES LABELS "${labels}")
+        add_test(NAME nexus_${name} COMMAND nexus_${name})
+
+        set_tests_properties(nexus_${name} PROPERTIES LABELS "${labels}")
+
+    endif()
+
 endmacro()
 
 
 #----------------------------------------------------------------------------------------------------------------------
+
 # Cert tests
 ot_nexus_test(1_1_5_1_1 "cert;nexus")
 ot_nexus_test(1_1_5_1_2 "cert;nexus")
