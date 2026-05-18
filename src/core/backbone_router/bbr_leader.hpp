@@ -48,13 +48,12 @@
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/string.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
 
 namespace BackboneRouter {
-
-typedef otBackboneRouterConfig Config;
 
 constexpr uint16_t kDefaultRegistrationDelay  = 5;                 ///< Default registration delay (in sec).
 constexpr uint32_t kDefaultMlrTimeout         = 3600;              ///< Default MLR Timeout (in sec).
@@ -76,6 +75,69 @@ enum DomainPrefixEvent : uint8_t
     kDomainPrefixAdded     = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED,   ///< Domain Prefix Added.
     kDomainPrefixRemoved   = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, ///< Domain Prefix Removed.
     kDomainPrefixRefreshed = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, ///< Domain Prefix Changed.
+};
+
+class Leader;
+
+/**
+ * Represents a Backbone Router configuration.
+ */
+class Config : public otBackboneRouterConfig
+{
+    friend class Leader;
+
+public:
+    /**
+     * Marks the configuration as absent.
+     *
+     * This is done by setting the Primary Backbone Router short address (`GetServer16()`) to `Mle::kInvalidRloc16`.
+     */
+    void MarkAsAbsent(void) { mServer16 = Mle::kInvalidRloc16; }
+
+    /**
+     * Indicates whether the configuration is present (i.e., it is derived from a Primary Backbone Router).
+     *
+     * The presence state is tracked using the Primary Backbone Router short address (`GetServer16()`).
+     *
+     * @retval TRUE   The configuration is present.
+     * @retval FALSE  The configuration is not present.
+     */
+    bool IsPresent(void) const { return mServer16 != Mle::kInvalidRloc16; }
+
+    /**
+     * Gets the Primary Backbone Router short address.
+     *
+     * @returns The Primary Backbone Router short address, or `Mle::kInvalidRloc16` if not present.
+     */
+    uint16_t GetServer16(void) const { return mServer16; }
+
+    /**
+     * Gets the Reregistration Delay value.
+     *
+     * @returns The Reregistration Delay value (in seconds).
+     */
+    uint16_t GetReregistrationDelay(void) const { return mReregistrationDelay; }
+
+    /**
+     * Gets the Multicast Listener Registration (MLR) Timeout value.
+     *
+     * @returns The MLR Timeout value (in seconds).
+     */
+    uint32_t GetMlrTimeout(void) const { return mMlrTimeout; }
+
+    /**
+     * Gets the Sequence Number.
+     *
+     * @returns The Sequence Number.
+     */
+    uint8_t GetSequenceNumber(void) const { return mSequenceNumber; }
+
+private:
+    void AdjustMlrTimeout(void);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    void Log(const char *aTitle) const;
+#endif
 };
 
 /**
@@ -143,7 +205,7 @@ public:
      * @retval TRUE   If there is Primary Backbone Router.
      * @retval FALSE  If there is no Primary Backbone Router.
      */
-    bool HasPrimary(void) const { return mConfig.mServer16 != Mle::kInvalidRloc16; }
+    bool HasPrimary(void) const { return mConfig.IsPresent(); }
 
     /**
      * Gets the Domain Prefix in the Thread Network.
@@ -175,11 +237,8 @@ private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    void               LogBackboneRouterPrimary(State aState, const Config &aConfig) const;
     static const char *StateToString(State aState);
     static const char *DomainPrefixEventToString(DomainPrefixEvent aEvent);
-#else
-    void LogBackboneRouterPrimary(State, const Config &) const {}
 #endif
 
     Config      mConfig;
@@ -189,6 +248,7 @@ private:
 } // namespace BackboneRouter
 
 DefineMapEnum(otBackboneRouterDomainPrefixEvent, BackboneRouter::DomainPrefixEvent);
+DefineCoreType(otBackboneRouterConfig, BackboneRouter::Config);
 
 } // namespace ot
 

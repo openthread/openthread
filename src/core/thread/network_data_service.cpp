@@ -382,7 +382,7 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) cons
 
     serviceData.InitFrom(bbrServiceNumber);
 
-    aConfig.mServer16 = Mle::kInvalidRloc16;
+    aConfig.MarkAsAbsent();
 
     while ((serviceTlv = Get<Leader>().FindNextThreadService(serviceTlv, serviceData,
                                                              NetworkData::kServicePrefixMatch)) != nullptr)
