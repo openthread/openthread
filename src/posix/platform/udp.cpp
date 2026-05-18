@@ -293,7 +293,10 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 exit:
     if (error == OT_ERROR_FAILED)
     {
-        ot::Posix::Udp::LogCrit("Failed to bind UDP socket: %s", strerror(errno));
+        int err = errno;
+        ot::Posix::Udp::LogWarn("Failed to bind UDP socket to [%s]:%u: %s",
+                                Ip6AddressString(&aUdpSocket->mSockName.mAddress).AsCString(),
+                                aUdpSocket->mSockName.mPort, strerror(err));
     }
 
     return error;
@@ -420,12 +423,13 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 
     if (connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)) != 0)
     {
+        int err = errno;
 #ifdef __APPLE__
-        VerifyOrExit(errno == EAFNOSUPPORT && isDisconnect);
+        VerifyOrExit(err == EAFNOSUPPORT && isDisconnect);
 #endif
         ot::Posix::Udp::LogWarn("Failed to connect to [%s]:%u: %s",
                                 Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
-                                aUdpSocket->mPeerName.mPort, strerror(errno));
+                                aUdpSocket->mPeerName.mPort, strerror(err));
         error = OT_ERROR_FAILED;
     }
 
