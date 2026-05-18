@@ -180,14 +180,22 @@ void BleSecure::Disconnect(void)
 
     if (mBleState == kConnected)
     {
-        // request platform to close BLE. Once this closing is done, #HandleBleDisconnected will
-        // be called by the platform, which will call BleSecure::Disconnect again.
-        IgnoreError(otPlatBleGapDisconnect(&GetInstance()));
+        // Request the platform to close the BLE connection. When the platform signals completion
+        // (asynchronously) it calls otPlatBleGapOnDisconnected() -> #HandleBleDisconnected(), which
+        // in turn calls this method again - now with mBleState no longer kConnected - to invoke below
+        // mConnectCallback and update the advertisement data. We therefore return early here when
+        // the platform accepted the request, to avoid invoking the callback (and updating the
+        // advertisement data) twice. If the platform did not start the disconnection, no completion
+        // callback will follow and we handle mConnectCallback directly below.
+        VerifyOrExit(otPlatBleGapDisconnect(&GetInstance()) != kErrorNone);
     }
 
     mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
     // Update advertisement data
     IgnoreError(NotifyAdvertisementChanged());
+
+exit:
+    return;
 }
 
 Error BleSecure::NotifyAdvertisementChanged(void)

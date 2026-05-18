@@ -194,6 +194,7 @@ public:
     TestBleSecure(void)
         : mIsConnected(false)
         , mIsBleConnectionOpen(false)
+        , mConnectCallbackCount(0)
     {
     }
 
@@ -201,14 +202,18 @@ public:
     {
         mIsConnected         = aConnected;
         mIsBleConnectionOpen = aBleConnectionOpen;
+        mConnectCallbackCount++;
     }
 
-    bool IsConnected(void) const { return mIsConnected; }
-    bool IsBleConnectionOpen(void) const { return mIsBleConnectionOpen; }
+    bool     IsConnected(void) const { return mIsConnected; }
+    bool     IsBleConnectionOpen(void) const { return mIsBleConnectionOpen; }
+    uint32_t GetConnectCallbackCount(void) const { return mConnectCallbackCount; }
+    void     ResetConnectCallbackCount(void) { mConnectCallbackCount = 0; }
 
 private:
-    bool mIsConnected;
-    bool mIsBleConnectionOpen;
+    bool     mIsConnected;
+    bool     mIsBleConnectionOpen;
+    uint32_t mConnectCallbackCount;
 };
 
 static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool aBleConnectionOpen, void *aContext)
@@ -306,8 +311,11 @@ void TestTcatConnectionAndCertAttributes(void)
     // Validate connection callbacks when calling `otBleSecureDisconnect()`
     otPlatBleGapOnConnected(instance, kConnectionId);
     VerifyOrQuit(!ble.IsConnected() && ble.IsBleConnectionOpen());
+    ble.ResetConnectCallbackCount();
     otBleSecureDisconnect(instance);
     VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
+    // Regression test: a locally-initiated disconnect must invoke the connect callback exactly once.
+    VerifyOrQuit(ble.GetConnectCallbackCount() == 1);
 
     // Validate TLS connection can be started (as client) only when peer is BLE-connected
     otPlatBleGapOnConnected(instance, kConnectionId);

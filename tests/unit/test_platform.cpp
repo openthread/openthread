@@ -35,7 +35,7 @@
 #include <sys/time.h>
 #include <openthread/platform/flash.h>
 
-#ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 #endif
@@ -800,7 +800,7 @@ OT_TOOL_WEAK otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance) {
 
 OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState) { return OT_ERROR_NONE; }
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
-#ifdef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
 uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
 uint16_t sPlatBleLastAdvSetDataLen = 0;
@@ -842,7 +842,9 @@ otError otPlatBleGapAdvStop(otInstance *aInstance)
 
 otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    // Honor the platform contract: report completion of the disconnection via the callback.
+    // Normally this call is done asynchronously, but for unit testing purposes we make the reentrant call.
+    otPlatBleGapOnDisconnected(aInstance, 0);
     return OT_ERROR_NONE;
 }
 
