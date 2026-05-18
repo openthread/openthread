@@ -255,7 +255,21 @@ void Dhcp6PdSocket::SendQueuedMessages(void)
         CopyIp6AddressTo(metadata.mAddress, &addr6.sin6_addr);
 
         bytesSent = sendto(mFd6, buffer, length, 0, reinterpret_cast<struct sockaddr *>(&addr6), sizeof(addr6));
-        VerifyOrExit(bytesSent == length);
+
+        if (bytesSent != static_cast<int>(length))
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                // Socket send buffer full - retry when writable
+                ExitNow();
+            }
+
+            // Fatal send error - drop message; OT core retransmit timer will re-send after backoff
+            LogWarn("sendto() failed errno:%s - dropping message", strerror(errno));
+            otMessageQueueDequeue(&mTxQueue, message);
+            otMessageFree(message);
+            continue;
+        }
 
         otMessageQueueDequeue(&mTxQueue, message);
         otMessageFree(message);
