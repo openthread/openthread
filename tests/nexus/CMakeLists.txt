@@ -157,12 +157,14 @@ if(OT_NEXUS_GRPC)
 endif()
 
 set(COMMON_LIBS
+    openthread-cli-ftd
     ot-nexus-platform
     openthread-ftd
     ot-nexus-platform
     ${OT_MBEDTLS}
     ot-config
     openthread-ftd
+    openthread-cli-ftd
 )
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -441,6 +443,9 @@ ot_nexus_test(srp_server_reboot_port "core;nexus")
 ot_nexus_test(srp_ttl "core;nexus")
 ot_nexus_test(tmf_origin "core;nexus")
 ot_nexus_test(zero_len_external_route "core;nexus")
+
+# CLI tests
+ot_nexus_test(cli_basic "core;cli;nexus")
 
 # Trel
 ot_nexus_test(trel "trel;nexus")

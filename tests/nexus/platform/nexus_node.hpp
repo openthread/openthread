@@ -29,6 +29,7 @@
 #ifndef OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
 #define OT_NEXUS_PLATFORM_NEXUS_NODE_HPP_
 
+#include "cli/cli.hpp"
 #include "instance/instance.hpp"
 
 #include "nexus_alarm.hpp"
@@ -155,6 +156,40 @@ public:
     static void HandleIp6Receive(otMessage *aMessage, void *aContext);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // CLI
+
+    class CliOutputLine
+    {
+        friend class Node;
+
+    public:
+        CliOutputLine(void) = default;
+        CliOutputLine(const CliOutputLine &aOther) { SuccessOrQuit(mLine.Set(aOther.mLine)); }
+        CliOutputLine(CliOutputLine &&aOther) { mLine.TakeFrom(aOther.mLine.Move()); }
+        CliOutputLine &operator=(const CliOutputLine &aOther);
+        CliOutputLine &operator=(CliOutputLine &&aOther);
+
+        const char *GetLine(void) const { return mLine.AsCString(); }
+
+        bool Matches(const char *aLine) const { return StringMatch(GetLine(), aLine); }
+        bool StartsWith(const char *aSubString) const { return StringStartsWith(GetLine(), aSubString); }
+        bool EndsWith(const char *aSubString) const { return StringEndsWith(GetLine(), aSubString); }
+        bool IsDone(void) const { return Matches("Done"); }
+
+    private:
+        static constexpr uint16_t kMaxLineSize = 256;
+
+        Heap::String mLine;
+    };
+
+    typedef Heap::Array<CliOutputLine, 8> CliOutputArray;
+
+    void                  InputCli(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
+    void                  ClearCliOutput(void) { mCliOutputLines.Free(), mCliCurOutputLine.Clear(); }
+    const CliOutputArray &GetCliOutputLines(void) { return mCliOutputLines; }
+    bool                  IsCliOutputSuccess(void);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Platform components
 
     using Platform::mAlarmMicro;
@@ -176,6 +211,14 @@ public:
 private:
     Node(void);
     void HandleIp6Receive(OwnedPtr<Message> aMessagePtr);
+
+    static int HandleCliOutput(void *aContext, const char *aFormat, va_list aArguments)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+    int HandleCliOutput(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+
+    CliOutputArray                      mCliOutputLines;
+    String<CliOutputLine::kMaxLineSize> mCliCurOutputLine;
+    Cli::Interpreter                    mCliInterpreter;
 
     String<32> mName;
     float      mX;
