@@ -396,29 +396,15 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
 {
     Error          error;
     StatusCode     statusCode = kStatusGeneralError;
-    ot::Tlv        tlv;
-    uint16_t       offset                   = aIncomingMessage.GetOffset();
+    Tlv::Info      tlvInfo;
     const uint16_t initialOutgoingMsgLength = aOutgoingMessage.GetLength();
-    uint16_t       length;
-    bool           response = false;
+    bool           response                 = false;
 
     VerifyOrExit(IsConnected(), error = kErrorInvalidState);
-    SuccessOrExit(error = aIncomingMessage.Read(offset, tlv));
 
-    if (tlv.IsExtended())
-    {
-        ot::ExtendedTlv extTlv;
-        SuccessOrExit(error = aIncomingMessage.Read(offset, extTlv));
-        length = extTlv.GetLength();
-        offset += sizeof(ot::ExtendedTlv);
-    }
-    else
-    {
-        length = tlv.GetLength();
-        offset += sizeof(ot::Tlv);
-    }
+    SuccessOrExit(error = tlvInfo.ParseFrom(aIncomingMessage, aIncomingMessage.GetOffset()));
 
-    switch (tlv.GetType())
+    switch (tlvInfo.GetType())
     {
     case kTlvDisconnect:
         error    = kErrorAbort;
@@ -426,7 +412,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         break;
 
     case kTlvSetActiveOperationalDataset:
-        error = HandleSetActiveOperationalDataset(aIncomingMessage, offset, length);
+        error = HandleSetActiveOperationalDataset(aIncomingMessage, tlvInfo.GetValueOffsetRange());
         break;
 
     case kTlvGetActiveOperationalDataset:
@@ -434,7 +420,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         break;
 
     case kTlvGetDiagnosticTlvs:
-        error = HandleGetDiagnosticTlvs(aIncomingMessage, aOutgoingMessage, offset, length, response);
+        error = HandleGetDiagnosticTlvs(aIncomingMessage, aOutgoingMessage, tlvInfo.GetValueOffsetRange(), response);
         break;
 
     case kTlvStartThreadInterface:
@@ -454,8 +440,8 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
     case kTlvSendApplicationData3:
     case kTlvSendApplicationData4:
     case kTlvSendVendorSpecificData:
-        error = HandleApplicationData(aIncomingMessage, offset, static_cast<TcatApplicationProtocol>(tlv.GetType()),
-                                      response);
+        error = HandleApplicationData(aIncomingMessage, tlvInfo.GetValueOffset(),
+                                      static_cast<TcatApplicationProtocol>(tlvInfo.GetType()), response);
         break;
 
     case kTlvDecommission:
@@ -463,7 +449,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         break;
 
     case kTlvPing:
-        error = HandlePing(aIncomingMessage, aOutgoingMessage, offset, length, response);
+        error = HandlePing(aIncomingMessage, aOutgoingMessage, tlvInfo.GetValueOffsetRange(), response);
         break;
 
     case kTlvGetNetworkName:
@@ -483,15 +469,15 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
         break;
 
     case kTlvPresentPskdHash:
-        error = HandlePresentPskdHash(aIncomingMessage, offset, length);
+        error = HandlePresentPskdHash(aIncomingMessage, tlvInfo.GetValueOffsetRange());
         break;
 
     case kTlvPresentPskcHash:
-        error = HandlePresentPskcHash(aIncomingMessage, offset, length);
+        error = HandlePresentPskcHash(aIncomingMessage, tlvInfo.GetValueOffsetRange());
         break;
 
     case kTlvPresentInstallCodeHash:
-        error = HandlePresentInstallCodeHash(aIncomingMessage, offset, length);
+        error = HandlePresentInstallCodeHash(aIncomingMessage, tlvInfo.GetValueOffsetRange());
         break;
 
     case kTlvRequestRandomNumChallenge:
@@ -567,18 +553,16 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength)
+Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessage, const OffsetRange &aOffsetRange)
 {
-    Dataset     dataset;
-    OffsetRange offsetRange;
-    Error       error;
-    uint8_t     buf[kCommissionerCertMaxLength];
-    size_t      bufLen = sizeof(buf);
+    Dataset dataset;
+    Error   error;
+    uint8_t buf[kCommissionerCertMaxLength];
+    size_t  bufLen = sizeof(buf);
 
     VerifyOrExit(!mIsCommissioned, error = kErrorAlready);
 
-    offsetRange.Init(aOffset, aLength);
-    SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, offsetRange));
+    SuccessOrExit(error = dataset.SetFrom(aIncomingMessage, aOffsetRange));
     SuccessOrExit(error = dataset.ValidateTlvs());
     VerifyOrExit(dataset.ContainsTlv(Tlv::kNetworkKey), error = kErrorInvalidArgs);
 
@@ -623,21 +607,18 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
-                                         Message       &aOutgoingMessage,
-                                         uint16_t       aOffset,
-                                         uint16_t       aLength,
-                                         bool          &aResponse)
+Error TcatAgent::HandleGetDiagnosticTlvs(const Message     &aIncomingMessage,
+                                         Message           &aOutgoingMessage,
+                                         const OffsetRange &aOffsetRange,
+                                         bool              &aResponse)
 {
     Error           error = kErrorNone;
-    OffsetRange     offsetRange;
     ot::ExtendedTlv extTlv;
     uint16_t        initialLength;
     uint16_t        length;
 
     VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
 
-    offsetRange.Init(aOffset, aLength);
     initialLength = aOutgoingMessage.GetLength();
 
     // Start with extTlv to avoid the need for a temporary message buffer to calculate reply length
@@ -646,7 +627,7 @@ Error TcatAgent::HandleGetDiagnosticTlvs(const Message &aIncomingMessage,
     SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
 
     error =
-        Get<NetworkDiagnostic::Server>().AppendRequestedTlvsForTcat(aIncomingMessage, aOutgoingMessage, offsetRange);
+        Get<NetworkDiagnostic::Server>().AppendRequestedTlvsForTcat(aIncomingMessage, aOutgoingMessage, aOffsetRange);
 
     // Ensure enough message buffers are left for transmission of the result. Report error otherwise.
     if (Get<MessagePool>().GetFreeBufferCount() < kBufferReserve)
@@ -707,31 +688,31 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandlePing(const Message &aIncomingMessage,
-                            Message       &aOutgoingMessage,
-                            uint16_t       aOffset,
-                            uint16_t       aLength,
-                            bool          &aResponse)
+Error TcatAgent::HandlePing(const Message     &aIncomingMessage,
+                            Message           &aOutgoingMessage,
+                            const OffsetRange &aOffsetRange,
+                            bool              &aResponse)
 {
     Error           error = kErrorNone;
     ot::ExtendedTlv extTlv;
     ot::Tlv         tlv;
 
-    VerifyOrExit(aLength <= kPingPayloadMaxLength, error = kErrorParse);
-    if (aLength > ot::Tlv::kBaseTlvMaxLength)
+    VerifyOrExit(aOffsetRange.GetLength() <= kPingPayloadMaxLength, error = kErrorParse);
+
+    if (aOffsetRange.GetLength() > ot::Tlv::kBaseTlvMaxLength)
     {
         extTlv.SetType(kTlvResponseWithPayload);
-        extTlv.SetLength(aLength);
+        extTlv.SetLength(aOffsetRange.GetLength());
         SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
     }
     else
     {
         tlv.SetType(kTlvResponseWithPayload);
-        tlv.SetLength(static_cast<uint8_t>(aLength));
+        tlv.SetLength(static_cast<uint8_t>(aOffsetRange.GetLength()));
         SuccessOrExit(error = aOutgoingMessage.Append(tlv));
     }
 
-    SuccessOrExit(error = aOutgoingMessage.AppendBytesFromMessage(aIncomingMessage, aOffset, aLength));
+    SuccessOrExit(error = aOutgoingMessage.AppendBytesFromMessage(aIncomingMessage, aOffsetRange));
     aResponse = true;
 
 exit:
@@ -820,14 +801,14 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandlePresentPskdHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength)
+Error TcatAgent::HandlePresentPskdHash(const Message &aIncomingMessage, const OffsetRange &aOffsetRange)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
     VerifyOrExit(mVendorInfo->mPskdString != nullptr, error = kErrorSecurity);
 
-    SuccessOrExit(error = VerifyHash(aIncomingMessage, aOffset, aLength, mVendorInfo->mPskdString,
+    SuccessOrExit(error = VerifyHash(aIncomingMessage, aOffsetRange, mVendorInfo->mPskdString,
                                      StringLength(mVendorInfo->mPskdString, kMaxPskdLength)));
     mPskdVerified = true;
 
@@ -835,7 +816,7 @@ exit:
     return error;
 }
 
-Error TcatAgent::HandlePresentPskcHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength)
+Error TcatAgent::HandlePresentPskcHash(const Message &aIncomingMessage, const OffsetRange &aOffsetRange)
 {
     Error         error = kErrorNone;
     Dataset::Info datasetInfo;
@@ -845,21 +826,21 @@ Error TcatAgent::HandlePresentPskcHash(const Message &aIncomingMessage, uint16_t
     VerifyOrExit(datasetInfo.IsPresent<Dataset::kPskc>(), error = kErrorSecurity);
     pskc = datasetInfo.Get<Dataset::kPskc>();
 
-    SuccessOrExit(error = VerifyHash(aIncomingMessage, aOffset, aLength, pskc.m8, Pskc::kSize));
+    SuccessOrExit(error = VerifyHash(aIncomingMessage, aOffsetRange, pskc.m8, Pskc::kSize));
     mPskcVerified = true;
 
 exit:
     return error;
 }
 
-Error TcatAgent::HandlePresentInstallCodeHash(const Message &aIncomingMessage, uint16_t aOffset, uint16_t aLength)
+Error TcatAgent::HandlePresentInstallCodeHash(const Message &aIncomingMessage, const OffsetRange &aOffsetRange)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
     VerifyOrExit(mVendorInfo->mInstallCode != nullptr, error = kErrorSecurity);
 
-    SuccessOrExit(error = VerifyHash(aIncomingMessage, aOffset, aLength, mVendorInfo->mInstallCode,
+    SuccessOrExit(error = VerifyHash(aIncomingMessage, aOffsetRange, mVendorInfo->mInstallCode,
                                      StringLength(mVendorInfo->mInstallCode, kInstallCodeMaxSize)));
     mInstallCodeVerified = true;
 
@@ -881,11 +862,10 @@ exit:
     return error;
 }
 
-Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
-                            uint16_t       aOffset,
-                            uint16_t       aLength,
-                            const void    *aBuf,
-                            size_t         aBufLen)
+Error TcatAgent::VerifyHash(const Message     &aIncomingMessage,
+                            const OffsetRange &aOffsetRange,
+                            const void        *aBuf,
+                            size_t             aBufLen)
 {
     Error                    error = kErrorNone;
     Crypto::HmacSha256::Hash hash;
@@ -893,7 +873,7 @@ Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
     uint32_t newAttempts   = (currentTime - mLastHashVerificationTimestamp) / kHashVerificationAttemptTime;
     uint32_t totalAttempts = newAttempts + mHashVerificationAttempts;
 
-    VerifyOrExit(aLength == Crypto::HmacSha256::Hash::kSize, error = kErrorSecurity);
+    VerifyOrExit(aOffsetRange.GetLength() == Crypto::HmacSha256::Hash::kSize, error = kErrorSecurity);
     VerifyOrExit(mRandomChallenge != 0, error = kErrorSecurity);
 
     // In case uptime has overflowed (will never happen in practical functional operational life), up to
@@ -907,7 +887,7 @@ Error TcatAgent::VerifyHash(const Message &aIncomingMessage,
     SuccessOrExit(error = CalculateHash(mRandomChallenge, reinterpret_cast<const char *>(aBuf), aBufLen, hash));
     DumpDebg("Hash", &hash, sizeof(hash));
 
-    VerifyOrExit(aIncomingMessage.Compare(aOffset, hash), error = kErrorSecurity);
+    VerifyOrExit(aIncomingMessage.Compare(aOffsetRange.GetOffset(), hash), error = kErrorSecurity);
     mHashVerificationAttempts++;
 
 exit:
