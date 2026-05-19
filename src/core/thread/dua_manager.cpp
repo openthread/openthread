@@ -255,12 +255,11 @@ void DuaManager::NotifyDuplicateDomainUnicastAddress(void)
 
 void DuaManager::UpdateReregistrationDelay(void)
 {
-    uint16_t               delay = 0;
-    BackboneRouter::Config config;
+    uint16_t delay;
 
-    VerifyOrExit(Get<BackboneRouter::Leader>().GetConfig(config) == kErrorNone);
+    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary());
 
-    delay = config.mReregistrationDelay > 1 ? Random::NonCrypto::GetUint16InRange(1, config.mReregistrationDelay) : 1;
+    delay = Get<BackboneRouter::Leader>().GetConfig().SelectRandomReregistrationDelay();
 
     if (mDelay.mFields.mReregistrationDelay == 0 || mDelay.mFields.mReregistrationDelay > delay)
     {
@@ -333,11 +332,8 @@ exit:
     return;
 }
 
-void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState,
-                                                   const BackboneRouter::Config &aConfig)
+void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState)
 {
-    OT_UNUSED_VARIABLE(aConfig);
-
     if (aState == BackboneRouter::Leader::kStateAdded || aState == BackboneRouter::Leader::kStateToTriggerRereg)
     {
 #if OPENTHREAD_CONFIG_DUA_ENABLE

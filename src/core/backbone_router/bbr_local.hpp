@@ -185,9 +185,8 @@ public:
      * Notifies Primary Backbone Router status.
      *
      * @param[in]  aState   The state or state change of Primary Backbone Router.
-     * @param[in]  aConfig  The Primary Backbone Router service.
      */
-    void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config &aConfig);
+    void HandleBackboneRouterPrimaryUpdate(Leader::State aState);
 
     /**
      * Gets the Domain Prefix configuration.

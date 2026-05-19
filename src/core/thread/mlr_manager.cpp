@@ -68,11 +68,8 @@ void Manager::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState,
-                                                const BackboneRouter::Config &aConfig)
+void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState)
 {
-    OT_UNUSED_VARIABLE(aConfig);
-
     RegistrationRequest request = kRenew;
 
     switch (aState)
@@ -471,11 +468,9 @@ exit:
         // If a registration attempt fails, retry it after a random
         // delay (same as re-registration delay).
 
-        BackboneRouter::Config config;
-
-        if (Get<BackboneRouter::Leader>().GetConfig(config) == kErrorNone)
+        if (Get<BackboneRouter::Leader>().HasPrimary())
         {
-            ScheduleSend(DetermineReregistrationDelay(config));
+            ScheduleSend(Get<BackboneRouter::Leader>().GetConfig().SelectRandomReregistrationDelay());
         }
     }
 }
@@ -572,18 +567,7 @@ void Manager::Reregister(void)
     ScheduleNextRegistration(kRenew);
 }
 
-uint16_t Manager::DetermineReregistrationDelay(const BackboneRouter::Config &aConfig)
-{
-    uint16_t delay = 1;
-
-    VerifyOrExit(aConfig.mReregistrationDelay > 1);
-    delay = Random::NonCrypto::GetUint16InRange(1, aConfig.mReregistrationDelay);
-
-exit:
-    return delay;
-}
-
-uint32_t Manager::DetermineRenewDelay(const BackboneRouter::Config &aConfig)
+uint32_t Manager::DetermineRenewDelay(void)
 {
     // As per Thread spec, the renew delay is randomly chosen
     // between (0.5 * MLR-Timeout) and (MLR-Timeout - 9 seconds).
@@ -591,15 +575,16 @@ uint32_t Manager::DetermineRenewDelay(const BackboneRouter::Config &aConfig)
     // potential retransmissions, and acknowledgment before the
     // actual timeout.
 
-    uint32_t timeout = Clamp<uint32_t>(aConfig.mMlrTimeout, BackboneRouter::kMinMlrTimeout, kLongRenewTimeout);
+    uint32_t timeout = Get<BackboneRouter::Leader>().GetConfig().GetMlrTimeout();
+
+    timeout = Clamp<uint32_t>(timeout, BackboneRouter::kMinMlrTimeout, kLongRenewTimeout);
 
     return Random::NonCrypto::GetUint32InRange((timeout / 2) + 1, timeout - kRenewGuardTime);
 }
 
 void Manager::ScheduleNextRegistration(RegistrationRequest aRequest)
 {
-    uint32_t               delay;
-    BackboneRouter::Config config;
+    uint32_t delay;
 
     if (!ShouldRegister())
     {
@@ -607,16 +592,14 @@ void Manager::ScheduleNextRegistration(RegistrationRequest aRequest)
         ExitNow();
     }
 
-    IgnoreError(Get<BackboneRouter::Leader>().GetConfig(config));
-
     switch (aRequest)
     {
     case kReregister:
-        delay = DetermineReregistrationDelay(config);
+        delay = Get<BackboneRouter::Leader>().GetConfig().SelectRandomReregistrationDelay();
         break;
 
     case kRenew:
-        delay = DetermineRenewDelay(config);
+        delay = DetermineRenewDelay();
         break;
 
     default:

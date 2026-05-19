@@ -61,6 +61,17 @@ exit:
     return;
 }
 
+uint16_t Config::SelectRandomReregistrationDelay(void) const
+{
+    uint16_t delay = 1;
+
+    VerifyOrExit(mReregistrationDelay > 1);
+    delay = Random::NonCrypto::GetUint16InRange(1, mReregistrationDelay + 1);
+
+exit:
+    return delay;
+}
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Config::Log(const char *aTitle) const
 {
@@ -93,7 +104,7 @@ void Leader::Reset(void)
     mDomainPrefix.SetLength(0);
 }
 
-Error Leader::GetConfig(Config &aConfig) const
+Error Leader::ReadConfig(Config &aConfig) const
 {
     Error error = kErrorNone;
 
@@ -209,15 +220,15 @@ void Leader::UpdateBackboneRouterPrimary(void)
     mConfig = newConfig;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+    Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state);
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    Get<Mlr::Manager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+    Get<Mlr::Manager>().HandleBackboneRouterPrimaryUpdate(state);
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
+    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(state);
 #endif
 
     OT_UNUSED_VARIABLE(state);
