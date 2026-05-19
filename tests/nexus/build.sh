@@ -45,6 +45,7 @@ else
 fi
 
 long_routes=OFF
+build_tests=ON
 
 case $1 in
     trel)
@@ -59,6 +60,11 @@ case $1 in
         fifteenfour=ON
         wasm=OFF
         long_routes=ON
+        ;;
+    no_tests)
+        fifteenfour=ON
+        wasm=OFF
+        build_tests=OFF
         ;;
     *)
         fifteenfour=ON
@@ -81,6 +87,7 @@ CMAKE_ARGS=(
     -DOT_APP_RCP=OFF
     -DOT_15_4="${fifteenfour}"
     -DOT_MLE_LONG_ROUTES="${long_routes}"
+    -DOT_NEXUS_BUILD_TESTS="${build_tests}"
     -DOT_PROJECT_CONFIG="${top_srcdir}/tests/nexus/openthread-core-nexus-config.h"
 )
 
