@@ -1456,6 +1456,7 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     Child             *child;
     DeviceMode         mode;
     uint32_t           delay;
+    uint32_t           maxDelay;
     ParentResponseInfo info;
 
     Log(kMessageReceive, kTypeParentRequest, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -1526,8 +1527,14 @@ void Mle::HandleParentRequest(RxInfo &aRxInfo)
     aRxInfo.mClass = RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
-    delay = GenerateRandomDelay(!ScanMaskTlv::IsEndDeviceFlagSet(scanMask) ? kParentResponseMaxDelayRouters
-                                                                           : kParentResponseMaxDelayAll);
+    maxDelay = !ScanMaskTlv::IsEndDeviceFlagSet(scanMask) ? kParentResponseMaxDelayRouters : kParentResponseMaxDelayAll;
+
+    if (ScanMaskTlv::IsFastAttachFlagSet(scanMask) && IsRouterOrLeader())
+    {
+        maxDelay = Min(maxDelay, mRouterTable.GetActiveRouterCount() * kFastAttachJitterPerRouter);
+    }
+
+    delay = GenerateRandomDelay(maxDelay);
     mDelayedSender.ScheduleParentResponse(info, delay);
 
 exit:

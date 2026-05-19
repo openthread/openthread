@@ -4157,6 +4157,44 @@ template <> otError Interpreter::Process<Cmd("mleadvimax")>(Arg aArgs[])
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+template <> otError Interpreter::Process<Cmd("mle")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    /**
+     * @cli mle fastattach
+     * @code
+     * mle fastattach
+     * Disabled
+     * Done
+     * @endcode
+     * @code
+     * mle fastattach enable
+     * Done
+     * @endcode
+     * @code
+     * mle fastattach disable
+     * Done
+     * @endcode
+     * @cparam mle fastattach [@ca{enable|disable}]
+     * @par
+     * Gets, enables, or disables MLE Fast Attach. Defaults to disabled. Fast Attach is one-shot:
+     * enabling is allowed only while the device is not attached (role Disabled or Detached), and
+     * the flag is auto-cleared on successful attach. The application must re-enable per attach
+     * attempt.
+     * @sa otThreadIsFastAttachEnabled
+     * @sa otThreadSetFastAttachEnabled
+     */
+    if (aArgs[0] == "fastattach")
+    {
+        error = ProcessEnableDisable(aArgs + 1, otThreadIsFastAttachEnabled, otThreadSetFastAttachEnabled);
+    }
+
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 /**
  * @cli mliid
@@ -8657,6 +8695,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
         CmdEntry("meshdiag"),
+#endif
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        CmdEntry("mle"),
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("mleadvimax"),
