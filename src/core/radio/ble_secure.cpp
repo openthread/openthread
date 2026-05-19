@@ -633,38 +633,25 @@ Error BleSecure::HandleTransport(void *aContext, ot::Message &aMessage, const Ip
 
 Error BleSecure::HandleTransport(ot::Message &aMessage)
 {
-    otBleRadioPacket packet;
-    uint16_t         len    = aMessage.GetLength();
-    uint16_t         offset = 0;
-    Error            error  = kErrorNone;
+    Error       error = kErrorNone;
+    RadioPacket packet;
+    OffsetRange offsetRange;
 
-    while (len > 0)
+    offsetRange.InitFromMessageFullLength(aMessage);
+
+    while (!offsetRange.IsEmpty())
     {
-        if (len <= mMtuSize - kGattOverhead)
-        {
-            packet.mLength = len;
-        }
-        else
-        {
-            packet.mLength = mMtuSize - kGattOverhead;
-        }
+        packet.mLength = Min(offsetRange.GetLength(), Min<uint16_t>(mMtuSize - kGattOverhead, kPacketBufferSize));
 
-        if (packet.mLength > kPacketBufferSize)
-        {
-            packet.mLength = kPacketBufferSize;
-        }
-
-        IgnoreError(aMessage.Read(offset, mPacketBuffer, packet.mLength));
+        IgnoreError(aMessage.ReadAndAdvance(offsetRange, mPacketBuffer, packet.mLength));
         packet.mValue = mPacketBuffer;
         packet.mPower = OT_BLE_DEFAULT_POWER;
 
         SuccessOrExit(error = otPlatBleGattServerIndicate(&GetInstance(), kTxBleHandle, &packet));
-
-        len -= packet.mLength;
-        offset += packet.mLength;
     }
 
     aMessage.Free();
+
 exit:
     return error;
 }
