@@ -4059,9 +4059,9 @@ exit:
 
 bool Mle::RxMessage::ContainsTlv(Tlv::Type aTlvType) const
 {
-    OffsetRange offsetRange;
+    Tlv::Info tlvInfo;
 
-    return Tlv::FindTlvValueOffsetRange(*this, aTlvType, offsetRange) == kErrorNone;
+    return tlvInfo.FindIn(*this, aTlvType) == kErrorNone;
 }
 
 Error Mle::RxMessage::ReadModeTlv(DeviceMode &aMode) const
@@ -4089,11 +4089,11 @@ exit:
 
 Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const
 {
-    Error       error;
-    OffsetRange offsetRange;
+    Error     error;
+    Tlv::Info tlvInfo;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, aTlvType, offsetRange));
-    error = aRxChallenge.ReadFrom(*this, offsetRange);
+    SuccessOrExit(error = tlvInfo.FindIn(*this, aTlvType));
+    error = aRxChallenge.ReadFrom(*this, tlvInfo.GetValueOffsetRange());
 
 exit:
     return error;
@@ -4158,11 +4158,11 @@ exit:
 Error Mle::RxMessage::ReadConnectivityTlv(Connectivity &aConnectivity) const
 {
     Error                error;
+    Tlv::Info            tlvInfo;
     ConnectivityTlvValue tlvValue;
-    OffsetRange          offsetRange;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, ConnectivityTlv::kType, offsetRange));
-    SuccessOrExit(error = tlvValue.ParseFrom(*this, offsetRange));
+    SuccessOrExit(error = tlvInfo.FindIn(*this, ConnectivityTlv::kType));
+    SuccessOrExit(error = tlvValue.ParseFrom(*this, tlvInfo.GetValueOffsetRange()));
     tlvValue.GetConnectivity(aConnectivity);
 
 exit:
@@ -4171,14 +4171,14 @@ exit:
 
 Error Mle::RxMessage::ReadAndSetNetworkDataTlv(const LeaderData &aLeaderData) const
 {
-    Error       error;
-    OffsetRange offsetRange;
+    Error     error;
+    Tlv::Info tlvInfo;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, Tlv::kNetworkData, offsetRange));
+    SuccessOrExit(error = tlvInfo.FindIn(*this, Tlv::kNetworkData));
 
-    error = Get<NetworkData::Leader>().SetNetworkData(aLeaderData.GetDataVersion(NetworkData::kFullSet),
-                                                      aLeaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                      Get<Mle>().GetNetworkDataType(), *this, offsetRange);
+    error = Get<NetworkData::Leader>().SetNetworkData(
+        aLeaderData.GetDataVersion(NetworkData::kFullSet), aLeaderData.GetDataVersion(NetworkData::kStableSubset),
+        Get<Mle>().GetNetworkDataType(), *this, tlvInfo.GetValueOffsetRange());
 exit:
     return error;
 }
@@ -4199,11 +4199,11 @@ Error Mle::RxMessage::ReadAndSaveDataset(MeshCoP::Dataset::Type    aDatasetType,
     Error            error   = kErrorNone;
     Tlv::Type        tlvType = (aDatasetType == MeshCoP::Dataset::kActive) ? Tlv::kActiveDataset : Tlv::kPendingDataset;
     MeshCoP::Dataset dataset;
-    OffsetRange      offsetRange;
+    Tlv::Info        tlvInfo;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, tlvType, offsetRange));
+    SuccessOrExit(error = tlvInfo.FindIn(*this, tlvType));
 
-    SuccessOrExit(error = dataset.SetFrom(*this, offsetRange));
+    SuccessOrExit(error = dataset.SetFrom(*this, tlvInfo.GetValueOffsetRange()));
     SuccessOrExit(error = dataset.ValidateTlvs());
     SuccessOrExit(error = dataset.WriteTimestamp(aDatasetType, aTimestamp));
 
@@ -4255,11 +4255,11 @@ exit:
 
 Error Mle::RxMessage::ReadRouteTlv(RouteTlv::Data &aRouteTlvData) const
 {
-    Error       error;
-    OffsetRange offsetRange;
+    Error     error;
+    Tlv::Info tlvInfo;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(*this, RouteTlv::kType, offsetRange));
-    error = aRouteTlvData.ParseFrom(*this, offsetRange);
+    SuccessOrExit(error = tlvInfo.FindIn(*this, RouteTlv::kType));
+    error = aRouteTlvData.ParseFrom(*this, tlvInfo.GetValueOffsetRange());
 
 exit:
     return error;
