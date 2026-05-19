@@ -240,6 +240,45 @@ typedef void (*otDetachGracefullyCallback)(void *aContext);
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * Enables or disables MLE Fast Attach.
+ *
+ * When enabled, this device sets the F flag in Parent Request Scan Mask TLVs and selects a
+ * Parent as soon as the first acceptable LQ3 Parent Response arrives, instead of waiting
+ * for the full `MLE_PARENT_REQ_SCANMASK_R_TIMEOUT`.
+ *
+ * Available only when `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is 1. Defaults to disabled.
+ *
+ * Fast Attach applies starting from the next Parent Request sent, and stays in effect for all
+ * attach attempts (including retries with backoff) until the device attaches by any path (Child ID
+ * Response, becoming Leader, or role restore), at which point it is automatically cleared. The
+ * application must re-enable it for each new attach.
+ *
+ * Enabling is allowed only while the device is not attached (role Disabled or Detached), and
+ * stays in effect across stopping and restarting Thread. Disabling is always allowed.
+ *
+ * Note: Router-side handling of an incoming F flag does not require this API; when
+ * `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is 1, any Router/Leader honors F=1 by applying reduced response jitter.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aEnabled   TRUE to enable Fast Attach, FALSE to disable.
+ *
+ * @retval OT_ERROR_NONE           Setting applied.
+ * @retval OT_ERROR_INVALID_STATE  Tried to enable while already attached.
+ */
+otError otThreadSetFastAttachEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Indicates whether MLE Fast Attach is enabled at runtime.
+ *
+ * Available only when `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is 1.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if Fast Attach is enabled, FALSE otherwise.
+ */
+bool otThreadIsFastAttachEnabled(otInstance *aInstance);
+
+/**
  * Gets the Thread protocol version.
  *
  * The constants `OT_THREAD_VERSION_*` define the numerical version values.

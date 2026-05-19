@@ -75,6 +75,7 @@ Done
 - [macfilter](#macfilter)
 - [mdns](README_MDNS.md)
 - [meshdiag](#meshdiag-topology-ip6-addrs-children)
+- [mle](#mle-fastattach-enabledisable)
 - [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
@@ -2805,6 +2806,32 @@ Done
 
 > responsetimeout
 7000
+Done
+```
+
+### mle fastattach [enable|disable]
+
+Gets, enables, or disables MLE Fast Attach. Defaults to disabled.
+
+When enabled, the device sets the F flag in its Parent Request and selects a parent as soon as the first acceptable Link Quality 3 Parent Response is received. It stays in effect for all attach attempts and is automatically cleared when the device attaches.
+
+Enabling is allowed only while the device is not attached (role is disabled or detached), otherwise `InvalidState` is returned.
+
+Available only when `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is enabled (`OT_MLE_FAST_ATTACH` CMake option).
+
+```bash
+> mle fastattach
+Disabled
+Done
+
+> mle fastattach enable
+Done
+
+> mle fastattach
+Enabled
+Done
+
+> mle fastattach disable
 Done
 ```
 

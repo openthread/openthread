@@ -108,6 +108,7 @@ build_simulation()
         "-DOT_EXTERNAL_HEAP=ON"
         "-DOT_HISTORY_TRACKER=ON"
         "-DOT_MESSAGE_USE_HEAP=OFF"
+        "-DOT_MLE_FAST_ATTACH=ON"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_PING_SENDER=ON"
         "-DOT_PLATFORM_LOG_CRASH_DUMP=ON"
