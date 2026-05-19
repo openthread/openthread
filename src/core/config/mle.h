@@ -369,6 +369,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+ *
+ * Define as 1 to enable the MLE Fast Attach feature (SPEC-1333, a Thread 2.0 proposal). When enabled, the
+ * application may opt in (per attach) via `otThreadSetFastAttachEnabled()` to set the F flag in its Parent
+ * Request and early-select a Parent on the first acceptable LQ3 Parent Response. A Router or Leader also honors the
+ * F flag in a received Parent Request by applying a reduced response jitter.
+ *
+ * Bit 5 of the Scan Mask TLV is reserved in Thread 1.4, so this is disabled by default until the spec is finalized.
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+#define OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE 0
+#endif
+
+/**
  * @}
  */
 

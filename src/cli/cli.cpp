@@ -3170,6 +3170,36 @@ exit:
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+template <> otError Interpreter::Process<Cmd("fastattach")>(Arg aArgs[])
+{
+    /**
+     * @cli fastattach
+     * @code
+     * fastattach
+     * Disabled
+     * Done
+     * @endcode
+     * @code
+     * fastattach enable
+     * Done
+     * @endcode
+     * @code
+     * fastattach disable
+     * Done
+     * @endcode
+     * @cparam fastattach [@ca{enable|disable}]
+     * @par
+     * Gets, enables, or disables MLE Fast Attach. Defaults to disabled. Enabling is allowed only
+     * while the device is not attached (role Disabled or Detached). Fast Attach stays in effect
+     * for all attach attempts and is auto-cleared when the device attaches.
+     * @sa otThreadIsFastAttachEnabled
+     * @sa otThreadSetFastAttachEnabled
+     */
+    return ProcessEnableDisable(aArgs, otThreadIsFastAttachEnabled, otThreadSetFastAttachEnabled);
+}
+#endif
+
 template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -8460,6 +8490,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("factoryreset"),
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("fake"),
+#endif
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+        CmdEntry("fastattach"),
 #endif
         CmdEntry("fem"),
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
