@@ -228,3 +228,53 @@ otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalD
 exit:
     return error;
 }
+
+bool otDatasetIsConnectivityAffected(const otOperationalDataset *aDatasetOld, const otOperationalDataset *aDatasetNew)
+{
+    bool ret = true;
+
+    AssertPointerIsNotNull(aDatasetOld);
+    AssertPointerIsNotNull(aDatasetNew);
+
+    const MeshCoP::Dataset::Info &datasetOld = AsCoreType(aDatasetOld);
+    const MeshCoP::Dataset::Info &datasetNew = AsCoreType(aDatasetNew);
+
+    if (datasetOld.IsPresent<MeshCoP::Dataset::kChannel>() && datasetNew.IsPresent<MeshCoP::Dataset::kChannel>())
+    {
+        VerifyOrExit(datasetOld.Get<MeshCoP::Dataset::kChannel>() == datasetNew.Get<MeshCoP::Dataset::kChannel>());
+    }
+
+    if (datasetOld.IsPresent<MeshCoP::Dataset::kPanId>() && datasetNew.IsPresent<MeshCoP::Dataset::kPanId>())
+    {
+        VerifyOrExit(datasetOld.Get<MeshCoP::Dataset::kPanId>() == datasetNew.Get<MeshCoP::Dataset::kPanId>());
+    }
+
+    if (datasetOld.IsPresent<MeshCoP::Dataset::kNetworkKey>() && datasetNew.IsPresent<MeshCoP::Dataset::kNetworkKey>())
+    {
+        VerifyOrExit(datasetOld.Get<MeshCoP::Dataset::kNetworkKey>() ==
+                     datasetNew.Get<MeshCoP::Dataset::kNetworkKey>());
+    }
+
+    if (datasetOld.IsPresent<MeshCoP::Dataset::kMeshLocalPrefix>() &&
+        datasetNew.IsPresent<MeshCoP::Dataset::kMeshLocalPrefix>())
+    {
+        VerifyOrExit(datasetOld.Get<MeshCoP::Dataset::kMeshLocalPrefix>() ==
+                     datasetNew.Get<MeshCoP::Dataset::kMeshLocalPrefix>());
+    }
+
+    if (datasetOld.IsPresent<MeshCoP::Dataset::kSecurityPolicy>() &&
+        datasetNew.IsPresent<MeshCoP::Dataset::kSecurityPolicy>())
+    {
+        SecurityPolicy policyOld = datasetOld.Get<MeshCoP::Dataset::kSecurityPolicy>();
+        SecurityPolicy policyNew = datasetNew.Get<MeshCoP::Dataset::kSecurityPolicy>();
+
+        VerifyOrExit(!policyOld.mRoutersEnabled || policyNew.mRoutersEnabled);
+        VerifyOrExit(policyOld.mNonCcmRoutersEnabled || !policyNew.mNonCcmRoutersEnabled);
+        VerifyOrExit(!(policyOld.mVersionThresholdForRouting < policyNew.mVersionThresholdForRouting));
+    }
+
+    ret = false;
+
+exit:
+    return ret;
+}

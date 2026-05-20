@@ -634,6 +634,26 @@ void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalD
 otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
+ * This method checks if applying the given dataset can impact the Thread network connectivity.
+ *
+ * Changes in any of the following fields (if presents) of the dataset can impact the Thread network connectivity:
+ * - Channel
+ * - Mesh-Local Prefix
+ * - PAN ID
+ * - Network Key
+ * - Security Policy fields:
+ *   - R bit (when changed from 1 to 0)
+ *   - NCR bit (when changed from 0 to 1)
+ *   - VR field (when increasing the value VR)
+ *
+ * @param[in] aDatasetOld  The pointer to old Operational Dataset.
+ * @param[in] aDatasetNew  The pointer to new Operational Dataset.
+ *
+ * @retval true   The given dataset can impact the network connectivity.
+ * @retval false  The given dataset does not impact the network connectivity.
+ */
+bool otDatasetIsConnectivityAffected(const otOperationalDataset *aDatasetOld, const otOperationalDataset *aDatasetNew);
+/**
  * @}
  */
 

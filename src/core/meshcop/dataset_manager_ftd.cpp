@@ -49,16 +49,13 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
                                                  const Coap::Message &aMessage,
                                                  RequestInfo         &aInfo) const
 {
-    Error              error = kErrorParse;
-    Dataset            dataset;
-    OffsetRange        offsetRange;
-    Timestamp          activeTimestamp;
-    ChannelTlvValue    channelValue;
-    uint16_t           sessionId;
-    Ip6::NetworkPrefix meshLocalPrefix;
-    NetworkKey         networkKey;
-    uint16_t           panId;
-    uint32_t           delayTimer;
+    Error       error = kErrorParse;
+    Dataset     dataset;
+    OffsetRange offsetRange;
+    Timestamp   activeTimestamp;
+    NetworkKey  localNetworkKey;
+    uint16_t    sessionId;
+    uint32_t    delayTimer;
 
     aInfo.Clear();
 
@@ -86,34 +83,29 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
     // Determine whether the new Dataset affects connectivity
     // or network key.
 
-    if ((dataset.Read<ChannelTlv>(channelValue) == kErrorNone) &&
-        (channelValue.GetChannel() != Get<Mac::Mac>().GetPanChannel()))
+    Dataset::Info localDatasetInfo;
+    localDatasetInfo.Clear();
+    Get<KeyManager>().GetNetworkKey(localNetworkKey);
+
+    localDatasetInfo.Set<Dataset::kChannel>(Get<Mac::Mac>().GetPanChannel());
+    localDatasetInfo.Set<Dataset::kPanId>(Get<Mac::Mac>().GetPanId());
+    localDatasetInfo.Set<Dataset::kMeshLocalPrefix>(Get<Mle::Mle>().GetMeshLocalPrefix());
+    localDatasetInfo.Set<Dataset::kNetworkKey>(localNetworkKey);
+    localDatasetInfo.Set<Dataset::kSecurityPolicy>(Get<KeyManager>().GetSecurityPolicy());
+
+    Dataset::Info datasetInfo;
+    datasetInfo.Clear();
+    dataset.ConvertTo(datasetInfo);
+
+    if (datasetInfo.IsPresent<Dataset::kNetworkKey>() &&
+        datasetInfo.Get<Dataset::kNetworkKey>() != localDatasetInfo.Get<Dataset::kNetworkKey>())
     {
-        aInfo.mAffectsConnectivity = true;
+        aInfo.mAffectsNetworkKey = true;
     }
 
-    if ((dataset.Read<PanIdTlv>(panId) == kErrorNone) && (panId != Get<Mac::Mac>().GetPanId()))
+    if (otDatasetIsConnectivityAffected(&localDatasetInfo, &datasetInfo))
     {
         aInfo.mAffectsConnectivity = true;
-    }
-
-    if ((dataset.Read<MeshLocalPrefixTlv>(meshLocalPrefix) == kErrorNone) &&
-        (meshLocalPrefix != Get<Mle::Mle>().GetMeshLocalPrefix()))
-    {
-        aInfo.mAffectsConnectivity = true;
-    }
-
-    if (dataset.Read<NetworkKeyTlv>(networkKey) == kErrorNone)
-    {
-        NetworkKey localNetworkKey;
-
-        Get<KeyManager>().GetNetworkKey(localNetworkKey);
-
-        if (networkKey != localNetworkKey)
-        {
-            aInfo.mAffectsConnectivity = true;
-            aInfo.mAffectsNetworkKey   = true;
-        }
     }
 
     // Check active timestamp rollback. If there is no change to
