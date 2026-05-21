@@ -66,7 +66,7 @@ jobs:
     - name: Clone ot-br-posix and replace openthread submodule
       run: |
         OPENTHREAD_DIR=$(pwd)
-        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 /tmp/ot-br-posix
+        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 --recurse-submodules --shallow-submodules /tmp/ot-br-posix
         cd /tmp/ot-br-posix
         rm -rf third_party/openthread/repo
         mkdir -p third_party/openthread/repo

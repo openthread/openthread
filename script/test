@@ -395,7 +395,7 @@ do_build_otbr_docker()
 
     (
         if [[ -z ${LOCAL_OTBR_DIR} ]]; then
-            ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "${otbrdir}"
+            ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 --recurse-submodules --shallow-submodules "${otbrdir}"
         else
             rsync -r \
                 --exclude=third_party/openthread/repo \
