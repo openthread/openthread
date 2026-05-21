@@ -253,24 +253,37 @@ template Error Tlv::AppendUintTlv<uint32_t>(Message &aMessage, uint8_t aType, ui
 
 Error Tlv::AppendEmptyTlv(Message &aMessage, uint8_t aType) { return AppendTlv(aMessage, aType, nullptr, 0); }
 
-Error Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint16_t aLength)
+Error Tlv::AppendTlvHeader(Message &aMessage, uint8_t aType, uint16_t aLength)
 {
-    Error       error = kErrorNone;
-    ExtendedTlv extTlv;
-    Tlv         tlv;
+    uint16_t size;
+
+    union
+    {
+        Tlv         tlv;
+        ExtendedTlv extTlv;
+    };
+
+    tlv.SetType(aType);
 
     if (aLength > kBaseTlvMaxLength)
     {
-        extTlv.SetType(aType);
         extTlv.SetLength(aLength);
-        SuccessOrExit(error = aMessage.Append(extTlv));
+        size = sizeof(ExtendedTlv);
     }
     else
     {
-        tlv.SetType(aType);
         tlv.SetLength(static_cast<uint8_t>(aLength));
-        SuccessOrExit(error = aMessage.Append(tlv));
+        size = sizeof(Tlv);
     }
+
+    return aMessage.AppendBytes(&tlv, size);
+}
+
+Error Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint16_t aLength)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendTlvHeader(aMessage, aType, aLength));
 
     VerifyOrExit(aLength > 0);
     error = aMessage.AppendBytes(aValue, aLength);
@@ -279,16 +292,25 @@ exit:
     return error;
 }
 
+Error Tlv::AppendTlvWithValueFromMessage(Message           &aMessage,
+                                         uint8_t            aType,
+                                         const Message     &aValueMsg,
+                                         const OffsetRange &aValueMsgOffsetRange)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendTlvHeader(aMessage, aType, aValueMsgOffsetRange.GetLength()));
+    error = aMessage.AppendBytesFromMessage(aValueMsg, aValueMsgOffsetRange);
+
+exit:
+    return error;
+}
+
 Error Tlv::StartTlv(Message &aMessage, uint8_t aType, Bookmark &aBookmark)
 {
-    Tlv tlv;
-
-    tlv.SetType(aType);
-    tlv.SetLength(0);
-
     aBookmark = aMessage.GetLength();
 
-    return aMessage.Append(tlv);
+    return AppendTlvHeader(aMessage, aType, 0);
 }
 
 Error Tlv::AdjustTlv(Message &aMessage, Bookmark aBookmark)

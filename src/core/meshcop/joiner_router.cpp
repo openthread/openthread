@@ -118,7 +118,6 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 {
     Error          error;
     Coap::Message *message = nullptr;
-    ExtendedTlv    tlv;
     uint16_t       borderAgentRloc;
     OffsetRange    offsetRange;
 
@@ -134,11 +133,8 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = Tlv::Append<JoinerRouterLocatorTlv>(*message, Get<Mle::Mle>().GetRloc16()));
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
-
-    tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
-    tlv.SetLength(offsetRange.GetLength());
-    SuccessOrExit(error = message->Append(tlv));
-    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
+    SuccessOrExit(
+        error = Tlv::AppendTlvWithValueFromMessage(*message, Tlv::kJoinerDtlsEncapsulation, aMessage, offsetRange));
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessageToRloc(*message, borderAgentRloc));
 

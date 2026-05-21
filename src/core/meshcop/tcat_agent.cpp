@@ -693,26 +693,12 @@ Error TcatAgent::HandlePing(const Message     &aIncomingMessage,
                             const OffsetRange &aOffsetRange,
                             bool              &aResponse)
 {
-    Error           error = kErrorNone;
-    ot::ExtendedTlv extTlv;
-    ot::Tlv         tlv;
+    Error error;
 
     VerifyOrExit(aOffsetRange.GetLength() <= kPingPayloadMaxLength, error = kErrorParse);
 
-    if (aOffsetRange.GetLength() > ot::Tlv::kBaseTlvMaxLength)
-    {
-        extTlv.SetType(kTlvResponseWithPayload);
-        extTlv.SetLength(aOffsetRange.GetLength());
-        SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
-    }
-    else
-    {
-        tlv.SetType(kTlvResponseWithPayload);
-        tlv.SetLength(static_cast<uint8_t>(aOffsetRange.GetLength()));
-        SuccessOrExit(error = aOutgoingMessage.Append(tlv));
-    }
-
-    SuccessOrExit(error = aOutgoingMessage.AppendBytesFromMessage(aIncomingMessage, aOffsetRange));
+    SuccessOrExit(error = Tlv::AppendTlvWithValueFromMessage(aOutgoingMessage, kTlvResponseWithPayload,
+                                                             aIncomingMessage, aOffsetRange));
     aResponse = true;
 
 exit:
