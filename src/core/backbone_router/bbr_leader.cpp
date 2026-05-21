@@ -66,7 +66,7 @@ uint16_t Config::SelectRandomReregistrationDelay(void) const
     uint16_t delay = 1;
 
     VerifyOrExit(mReregistrationDelay > 1);
-    delay = Random::NonCrypto::GetUint16InRange(1, mReregistrationDelay + 1);
+    delay = 1 + Random::NonCrypto::GetUint16InRange(0, mReregistrationDelay);
 
 exit:
     return delay;
