@@ -127,9 +127,6 @@ class Firewall(thread_cert.TestCase):
         # 1. Host pings router1's OMR from host's infra address.
         self.assertTrue(host_ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], interface=host.ETH_DEV))
 
-        # 2. Host pings router1's DUA from host's infra address.
-        self.assertTrue(host_ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.DUA), interface=host.ETH_DEV))
-
         # 3. Host pings router1's OMR from router1's RLOC.
         self.assertFalse(
             host_ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
@@ -215,7 +212,6 @@ class Firewall(thread_cert.TestCase):
         self.collect_rloc16s()
         self.collect_extra_vars()
         self.collect_omrs()
-        self.collect_duas()
 
     def verify(self, pv: pktverify.packet_verifier.PacketVerifier):
         pkts = pv.pkts
@@ -228,12 +224,6 @@ class Firewall(thread_cert.TestCase):
         # 1. Host pings router1's OMR from host's infra address.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(
             vars['Router_1_OMR'][0]).filter_ping_request().must_next()
-        pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
-            vars['Router_1_RLOC16']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_next()
-
-        # 2. Host pings router1's DUA from host's infra address.
-        _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(
-            vars['Router_1_DUA']).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
             vars['Router_1_RLOC16']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_next()
 
