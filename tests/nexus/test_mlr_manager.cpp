@@ -37,7 +37,8 @@ namespace ot {
 namespace Nexus {
 
 static constexpr uint32_t kFormNetworkTime     = 10 * 1000;
-static constexpr uint32_t kAttachToRouterTime  = 200 * 1000;
+static constexpr uint32_t kAttachAsRouterTime  = 200 * 1000;
+static constexpr uint32_t kAttachAsSedTime     = 10 * 1000;
 static constexpr uint32_t kMlrRegistrationTime = 10 * 1000;
 
 struct Context
@@ -45,7 +46,7 @@ struct Context
     Context(void) { mMlrReqCount = 0; }
 
     uint32_t     mMlrReqCount;
-    Ip6::Address mSharedAddress;
+    Ip6::Address mTargetAddress;
 };
 
 static Error BrCoapInterceptor(void *aContext, const Coap::Msg &aMsg)
@@ -70,7 +71,7 @@ static Error BrCoapInterceptor(void *aContext, const Coap::Msg &aMsg)
         Log("   - %s", address.ToString().AsCString());
     }
 
-    if (addresses.Contains(context->mSharedAddress))
+    if (addresses.Contains(context->mTargetAddress))
     {
         context->mMlrReqCount++;
     }
@@ -115,20 +116,25 @@ void TestMlrRedundant(void)
     VerifyOrQuit(br.Get<Mle::Mle>().IsLeader());
 
     router.Join(br, Node::kAsFtd);
-    nexus.AdvanceTime(kAttachToRouterTime);
+    nexus.AdvanceTime(kAttachAsRouterTime);
     VerifyOrQuit(router.Get<Mle::Mle>().IsRouter());
 
     sed1.Join(router, Node::kAsSed);
     sed2.Join(router, Node::kAsSed);
     sed3.Join(router, Node::kAsSed);
-    nexus.AdvanceTime(kAttachToRouterTime);
+
+    SuccessOrQuit(sed1.Get<DataPollSender>().SetExternalPollPeriod(5 * Time::kOneSecondInMsec));
+    SuccessOrQuit(sed2.Get<DataPollSender>().SetExternalPollPeriod(5 * Time::kOneSecondInMsec));
+    SuccessOrQuit(sed3.Get<DataPollSender>().SetExternalPollPeriod(5 * Time::kOneSecondInMsec));
+
+    nexus.AdvanceTime(kAttachAsSedTime);
 
     VerifyOrQuit(sed1.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(sed2.Get<Mle::Mle>().IsChild());
     VerifyOrQuit(sed3.Get<Mle::Mle>().IsChild());
 
     SuccessOrQuit(sharedAddress.FromString("ff04::1"));
-    context.mSharedAddress = sharedAddress;
+    context.mTargetAddress = sharedAddress;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Set an interceptor on leader to count incoming MLR.req messages");
@@ -164,12 +170,87 @@ void TestMlrRedundant(void)
     VerifyOrQuit(context.mMlrReqCount == 1);
 }
 
+void TestMlrState(void)
+{
+    /**
+     * This test verifies the state machine transitions and timing behavior of the MLR manager.
+     */
+
+    Core                   nexus;
+    Node                  &br     = nexus.CreateNode();
+    Node                  &router = nexus.CreateNode();
+    Ip6::Address           firstAddress;
+    Ip6::Address           newAddress;
+    BackboneRouter::Config config;
+    Context                context;
+
+    nexus.AdvanceTime(0);
+    SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form topology");
+
+    AllowLinkBetween(br, router);
+    br.Form();
+    nexus.AdvanceTime(kFormNetworkTime);
+    router.Join(br, Node::kAsFtd);
+    nexus.AdvanceTime(kAttachAsRouterTime);
+
+    SuccessOrQuit(firstAddress.FromString("ff04::1"));
+    context.mTargetAddress = firstAddress;
+    br.Get<Tmf::Agent>().SetInterceptor(BrCoapInterceptor, &context);
+
+    Log("Enable BBR and verify initial registration");
+    br.Get<BackboneRouter::Local>().SetEnabled(true);
+    SuccessOrQuit(router.Get<Ip6::Netif>().SubscribeExternalMulticast(firstAddress));
+
+    nexus.AdvanceTime(kMlrRegistrationTime);
+    VerifyOrQuit(context.mMlrReqCount == 1);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Add new address and verify quick registration");
+
+    SuccessOrQuit(newAddress.FromString("ff04::100"));
+    context.mTargetAddress = newAddress;
+    context.mMlrReqCount   = 0;
+
+    SuccessOrQuit(router.Get<Ip6::Netif>().SubscribeExternalMulticast(newAddress));
+
+    // Verify it is registered quickly (within short aggregation window)
+    nexus.AdvanceTime(1000);
+    VerifyOrQuit(context.mMlrReqCount == 1);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Update MLR Timeout and verify renewal time update");
+
+    config = br.Get<BackboneRouter::Leader>().GetConfig();
+
+    Log("Initial MLR timeout: %lu", ToUlong(br.Get<BackboneRouter::Leader>().GetConfig().GetMlrTimeout()));
+
+    // We set a short MLR timeout (300 seconds is the minimum).
+    config.mReregistrationDelay = 10;
+    config.mMlrTimeout          = 300;
+    SuccessOrQuit(br.Get<BackboneRouter::Local>().SetConfig(config));
+
+    context.mTargetAddress = firstAddress;
+    context.mMlrReqCount   = 0;
+
+    Log("Wait for renewal registration");
+
+    // Renewal happens between (0.5 * 300) = 150s and (300 - 9) = 291s.
+    nexus.AdvanceTime(300 * Time::kOneSecondInMsec);
+
+    VerifyOrQuit(context.mMlrReqCount >= 1);
+    Log("Renewal registration successful");
+}
+
 } // namespace Nexus
 } // namespace ot
 
 int main(void)
 {
     ot::Nexus::TestMlrRedundant();
+    ot::Nexus::TestMlrState();
     printf("All tests passed\n");
     return 0;
 }

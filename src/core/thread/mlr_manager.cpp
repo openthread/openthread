@@ -44,13 +44,80 @@ RegisterLogModule("MlrManager");
 
 Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReregistrationDelay(0)
-    , mSendDelay(0)
-    , mPending(false)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     , mRegisterPending(false)
 #endif
+    , mState(kStateStopped)
+    , mTimer(aInstance)
 {
+}
+
+void Manager::EnterState(State aState)
+{
+    State oldState;
+
+    VerifyOrExit(mState != aState);
+
+    oldState = mState;
+    mState   = aState;
+
+    if (oldState == kStateRegistering)
+    {
+        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleResponse, this));
+    }
+
+    if (mState == kStateToRegisterAll)
+    {
+        // Clear "MlrRegistered" state on all addresses
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+        for (Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().GetMulticastAddresses())
+        {
+            if (addr.IsMlrCandidate())
+            {
+                addr.SetMlrRegistered(false);
+            }
+        }
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+        {
+            child.ClearMlrRegisteredStateOnAllIp6Addresses();
+        }
+#endif
+    }
+
+exit:
+    return;
+}
+
+void Manager::UpdateState(void)
+{
+    // `UpdateState()` evaluates whether the MLR manager should be
+    // running or not. It handles starting or stopping the manager.
+
+    bool canRun = false;
+
+    if (Get<Mle::Mle>().IsAttached() && Get<BackboneRouter::Leader>().HasPrimary())
+    {
+        canRun = Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1();
+    }
+
+    if (!IsRunning())
+    {
+        VerifyOrExit(canRun);
+        EnterState(kStateToRegisterAll);
+        ScheduleTimerForReregistrationDelay();
+    }
+    else
+    {
+        VerifyOrExit(!canRun);
+        EnterState(kStateStopped);
+        mTimer.Stop();
+    }
+
+exit:
+    return;
 }
 
 void Manager::HandleNotifierEvents(Events aEvents)
@@ -62,43 +129,90 @@ void Manager::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
-    if (aEvents.Contains(kEventThreadRoleChanged) && Get<Mle::Mle>().IsChild())
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        ScheduleNextRegistration(kReregister);
+        UpdateState();
     }
 }
 
 void Manager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent)
 {
-    RegistrationRequest request = kRenew;
+    UpdateState();
 
     switch (aEvent)
     {
     case BackboneRouter::kPrimaryAdded:
-    case BackboneRouter::kPrimaryUpdatedReregister:
-        request = kReregister;
+    case BackboneRouter::kPrimaryRemoved:
         break;
-    default:
+
+    case BackboneRouter::kPrimaryUpdatedReregister:
+        VerifyOrExit(IsRunning());
+        EnterState(kStateToRegisterAll);
+        ScheduleTimerForReregistrationDelay();
+        break;
+
+    case BackboneRouter::kPrimaryConfigParameterChanged:
+
+        // When PBBR config parameters (like MLR Timeout) change, we
+        // need to recalculate and update the renewal time for all
+        // currently registered addresses to ensure they don't expire
+        // prematurely.
+
+        switch (GetState())
+        {
+        case kStateStopped:
+        case kStateIdle:
+        case kStateToRegisterAll:
+        case kStateRegistering:
+            break;
+
+        case kStateRegistered:
+            mTimer.Stop();
+            OT_FALL_THROUGH;
+
+        case kStateNewAddrToRegister:
+            DetermineRenewTime();
+            mTimer.FireAtIfEarlier(mRenewTime);
+            break;
+        }
+
         break;
     }
 
-    ScheduleNextRegistration(request);
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
 void Manager::HandleEventIp6MulticastSubscribed(void)
 {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+    bool hasUnregistered = false;
+
     for (Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().GetMulticastAddresses())
     {
-        if (addr.IsMlrCandidate() && !addr.IsMlrRegistered() && IsAddressRegisteredByAnyChild(addr.GetAddress()))
+        if (!addr.IsMlrCandidate())
         {
-            addr.SetMlrRegistered(true);
+            continue;
         }
-    }
+
+        if (!addr.IsMlrRegistered())
+        {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+            if (IsAddressRegisteredByAnyChild(addr.GetAddress()))
+            {
+                addr.SetMlrRegistered(true);
+                continue;
+            }
 #endif
 
-    ScheduleSend(0);
+            hasUnregistered = true;
+        }
+    }
+
+    if (hasUnregistered)
+    {
+        ScheduleNewAddrRegistration(0, kMaxNewNetifAddrRegistraionDelay);
+    }
 }
 
 bool Manager::IsAddressRegisteredByNetif(const Ip6::Address &aAddress) const
@@ -120,6 +234,11 @@ bool Manager::IsAddressRegisteredByNetif(const Ip6::Address &aAddress) const
 #endif // OPENTHREAD_CONFIG_MLR_ENABLE
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+
+bool Manager::IsAddressRegisteredByAnyChild(const Ip6::Address &aAddress) const
+{
+    return IsAddressRegisteredByAnyChildExcept(aAddress, nullptr);
+}
 
 bool Manager::IsAddressRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const
 {
@@ -169,7 +288,7 @@ void Manager::UpdateProxiedSubscriptions(Child &aChild, const ChildAddressArray 
 
     if (hasUnregistered)
     {
-        ScheduleSend(Random::NonCrypto::GenerateInClosedRange<uint16_t>(1, BackboneRouter::kParentAggregateDelay));
+        ScheduleNewAddrRegistration(kMinNewChildAddrRegistrationDelay, kMaxNewChildAddrRegistrationDelay);
     }
 
 exit:
@@ -178,50 +297,37 @@ exit:
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
-void Manager::ScheduleSend(uint16_t aDelay)
+void Manager::ScheduleNewAddrRegistration(uint32_t aMinDelay, uint32_t aMaxDelay)
 {
-    OT_ASSERT(!mPending || mSendDelay == 0);
+    uint32_t delay;
 
-    VerifyOrExit(!mPending);
-
-    if (aDelay == 0)
+    switch (GetState())
     {
-        mSendDelay = 0;
-        Send();
-    }
-    else if (mSendDelay == 0 || mSendDelay > aDelay)
-    {
-        mSendDelay = aDelay;
+    case kStateIdle:
+        EnterState(kStateToRegisterAll);
+        break;
+
+    case kStateRegistered:
+    case kStateNewAddrToRegister:
+        EnterState(kStateNewAddrToRegister);
+        break;
+
+    case kStateStopped:
+    case kStateToRegisterAll:
+    case kStateRegistering:
+        ExitNow();
     }
 
-    UpdateTimeTickerRegistration();
+    delay = Random::NonCrypto::GenerateInClosedRange(aMinDelay, aMaxDelay);
+
+    // The timer may already be running for a periodic renewal or for a
+    // previously scheduled new address registration. We ensure the
+    // timer fires at the earliest requested time.
+
+    mTimer.FireAtIfEarlier(TimerMilli::GetNow() + delay);
+
 exit:
     return;
-}
-
-void Manager::UpdateTimeTickerRegistration(void)
-{
-    if (mSendDelay == 0 && mReregistrationDelay == 0)
-    {
-        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMlrManager);
-    }
-    else
-    {
-        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMlrManager);
-    }
-}
-
-bool Manager::ShouldRegister(void) const
-{
-    bool shouldRegister = false;
-
-    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1());
-    VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary());
-
-    shouldRegister = true;
-
-exit:
-    return shouldRegister;
 }
 
 void Manager::DetermineAddressesToRegister(AddressArray &aAddresses) const
@@ -255,22 +361,63 @@ exit:
     return;
 }
 
-void Manager::Send(void)
+void Manager::SendNextRequest(void)
 {
-    Error        error;
     AddressArray addresses;
 
-    VerifyOrExit(!mPending, error = kErrorBusy);
-
-    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(ShouldRegister(), error = kErrorInvalidState);
+    IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleResponse, this));
 
     DetermineAddressesToRegister(addresses);
-    VerifyOrExit(!addresses.IsEmpty(), error = kErrorNotFound);
 
-    SuccessOrExit(error = SendMessage(addresses.GetArrayBuffer(), addresses.GetLength(), nullptr, HandleResponse));
+    if (addresses.IsEmpty())
+    {
+        // There are no (more) addresses to register. If we are still
+        // in `kStateToRegisterAll`, it indicates there is no multicast
+        // address to register at all, so we transition to `kStateIdle`.
+        // Otherwise, we at least sent one registration, and all addresses
+        // are now registered, so we transition to `kStateRegistered` and
+        // schedule the next periodic renewal.
 
-    mPending = true;
+        switch (GetState())
+        {
+        case kStateToRegisterAll:
+            EnterState(kStateIdle);
+            break;
+
+        case kStateRegistering:
+        case kStateNewAddrToRegister:
+            EnterState(kStateRegistered);
+            mTimer.FireAt(mRenewTime);
+            break;
+
+        case kStateStopped:
+        case kStateIdle:
+        case kStateRegistered:
+            break;
+        }
+
+        ExitNow();
+    }
+
+    if (SendMessage(addresses.GetArrayBuffer(), addresses.GetLength(), nullptr, HandleResponse) != kErrorNone)
+    {
+        mTimer.Start(kSendFailureRetryDelay);
+        ExitNow();
+    }
+
+    // Transitioning from `kStateToRegisterAll` to `kStateRegistering`
+    // indicates the start of a full registration cycle. We record the
+    // start time and determine the renewal time. The start time is
+    // tracked so we can recalculate the renewal time if PBBR config
+    // parameters change later.
+
+    if (GetState() == kStateToRegisterAll)
+    {
+        mStartTime = TimerMilli::GetNow();
+        DetermineRenewTime();
+    }
+
+    EnterState(kStateRegistering);
 
     // Generally Thread 1.2 Router would send MLR.req on behalf for MA (scope >=4) subscribed by its MTD child.
     // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send MLR.req to PBBR itself.
@@ -281,10 +428,7 @@ void Manager::Send(void)
     }
 
 exit:
-    if (error == kErrorNoBufs)
-    {
-        ScheduleSend(1);
-    }
+    return;
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
@@ -392,13 +536,20 @@ exit:
 
 void Manager::HandleResponse(Coap::Msg *aMsg, Error aResult)
 {
+    VerifyOrExit(GetState() == kStateRegistering);
+    ProcessResponse(aMsg, aResult);
+
+exit:
+    return;
+}
+
+void Manager::ProcessResponse(Coap::Msg *aMsg, Error aResult)
+{
     Error                   error;
     uint8_t                 status;
     AddressArray            failedAddresses;
     AddressArray            registeredAddresses;
     OwnedPtr<Coap::Message> requestMsg;
-
-    mPending = false;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Parse the response message
@@ -460,18 +611,14 @@ void Manager::HandleResponse(Coap::Msg *aMsg, Error aResult)
 exit:
     if ((error == kErrorNone) && (status == kStatusSuccess))
     {
-        // Send an MLR request for any remaining unregistered addresses.
-        ScheduleSend(0);
+        SendNextRequest();
     }
     else
     {
         // If a registration attempt fails, retry it after a random
         // delay (same as re-registration delay).
 
-        if (Get<BackboneRouter::Leader>().HasPrimary())
-        {
-            ScheduleSend(Get<BackboneRouter::Leader>().GetConfig().SelectRandomReregistrationDelay());
-        }
+        ScheduleTimerForReregistrationDelay();
     }
 }
 
@@ -527,94 +674,58 @@ exit:
     return error;
 }
 
-void Manager::HandleTimeTick(void)
+void Manager::ScheduleTimerForReregistrationDelay(void)
 {
-    if (mSendDelay > 0 && --mSendDelay == 0)
-    {
-        Send();
-    }
-
-    if (mReregistrationDelay > 0 && --mReregistrationDelay == 0)
-    {
-        Reregister();
-    }
-
-    UpdateTimeTickerRegistration();
+    mTimer.Start(Time::SecToMsec(Get<BackboneRouter::Leader>().GetConfig().SelectRandomReregistrationDelay()));
 }
 
-void Manager::Reregister(void)
+void Manager::HandleTimer(void)
 {
-    LogInfo("Reregister");
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE
-    for (Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().GetMulticastAddresses())
+    switch (GetState())
     {
-        if (addr.IsMlrCandidate())
+    case kStateNewAddrToRegister:
+        if (mRenewTime > TimerMilli::GetNow())
         {
-            addr.SetMlrRegistered(false);
+            break;
         }
-    }
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
-    {
-        child.ClearMlrRegisteredStateOnAllIp6Addresses();
-    }
-#endif
 
-    ScheduleSend(0);
+        OT_FALL_THROUGH;
 
-    ScheduleNextRegistration(kRenew);
+    case kStateRegistered:
+        EnterState(kStateToRegisterAll);
+
+        OT_FALL_THROUGH;
+
+    case kStateToRegisterAll:
+    case kStateRegistering:
+        break;
+
+    case kStateStopped:
+    case kStateIdle:
+        ExitNow();
+    }
+
+    SendNextRequest();
+
+exit:
+    return;
 }
 
-uint32_t Manager::DetermineRenewDelay(void)
+void Manager::DetermineRenewTime(void)
 {
     // As per Thread spec, the renew delay is randomly chosen
     // between (0.5 * MLR-Timeout) and (MLR-Timeout - 9 seconds).
-    // The `kRenewGuardTime`(9 sec) allows time for transmission,
+    // The `RenewGuardTime`(9 sec) allows time for transmission,
     // potential retransmissions, and acknowledgment before the
     // actual timeout.
 
-    uint32_t timeout = Get<BackboneRouter::Leader>().GetConfig().GetMlrTimeout();
+    uint32_t timeout;
 
-    timeout = Clamp<uint32_t>(timeout, BackboneRouter::kMinMlrTimeout, kLongRenewTimeout);
+    timeout = Get<BackboneRouter::Leader>().GetConfig().GetMlrTimeout();
+    timeout = Time::SecToMsec(Clamp<uint32_t>(timeout, BackboneRouter::kMinMlrTimeout, kLongRenewTimeout));
 
-    return Random::NonCrypto::GenerateInClosedRange<uint32_t>((timeout / 2) + 1, timeout - kRenewGuardTime);
-}
-
-void Manager::ScheduleNextRegistration(RegistrationRequest aRequest)
-{
-    uint32_t delay;
-
-    if (!ShouldRegister())
-    {
-        mReregistrationDelay = 0;
-        ExitNow();
-    }
-
-    switch (aRequest)
-    {
-    case kReregister:
-        delay = Get<BackboneRouter::Leader>().GetConfig().SelectRandomReregistrationDelay();
-        break;
-
-    case kRenew:
-        delay = DetermineRenewDelay();
-        break;
-
-    default:
-        ExitNow();
-    }
-
-    if (mReregistrationDelay == 0 || mReregistrationDelay > delay)
-    {
-        mReregistrationDelay = delay;
-
-        LogDebg("ScheduleNextRegistration() delay:%lu", ToUlong(delay));
-    }
-
-exit:
-    UpdateTimeTickerRegistration();
+    mRenewTime =
+        mStartTime + Random::NonCrypto::GenerateInClosedRange((timeout / 2) + 1, timeout - kRenewGuardTimeInMsec);
 }
 
 } // namespace Mlr

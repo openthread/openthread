@@ -111,13 +111,6 @@ void TimeTicker::HandleTimer(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-    if (mReceivers & Mask(kMlrManager))
-    {
-        Get<Mlr::Manager>().HandleTimeTick();
-    }
-#endif
-
     if (mReceivers & Mask(kIp6Mpl))
     {
         Get<Ip6::Mpl>().HandleTimeTick();
