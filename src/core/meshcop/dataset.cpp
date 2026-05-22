@@ -611,6 +611,51 @@ exit:
     return isSubset;
 }
 
+bool Dataset::AffectsConnectivity(Instance &aInstance) const
+{
+    bool               affects = true;
+    ChannelTlvValue    channelValue;
+    Mac::PanId         panId;
+    Ip6::NetworkPrefix meshLocalPrefix;
+
+    if (Read<ChannelTlv>(channelValue) == kErrorNone)
+    {
+        VerifyOrExit(channelValue.GetChannel() == aInstance.Get<Mac::Mac>().GetPanChannel());
+    }
+
+    if (Read<PanIdTlv>(panId) == kErrorNone)
+    {
+        VerifyOrExit(panId == aInstance.Get<Mac::Mac>().GetPanId());
+    }
+
+    if (Read<MeshLocalPrefixTlv>(meshLocalPrefix) == kErrorNone)
+    {
+        VerifyOrExit(meshLocalPrefix == aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
+    }
+
+    VerifyOrExit(!AffectsNetworkKey(aInstance));
+
+    affects = false;
+
+exit:
+    return affects;
+}
+
+bool Dataset::AffectsNetworkKey(Instance &aInstance) const
+{
+    bool       affects = false;
+    NetworkKey networkKey;
+    NetworkKey localNetworkKey;
+
+    SuccessOrExit(Read<NetworkKeyTlv>(networkKey));
+
+    aInstance.Get<KeyManager>().GetNetworkKey(localNetworkKey);
+    affects = (networkKey != localNetworkKey);
+
+exit:
+    return affects;
+}
+
 const char *Dataset::TypeToString(Type aType) { return (aType == kActive) ? "Active" : "Pending"; }
 
 } // namespace MeshCoP

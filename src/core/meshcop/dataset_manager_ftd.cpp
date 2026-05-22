@@ -49,16 +49,12 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
                                                  const Coap::Message &aMessage,
                                                  RequestInfo         &aInfo) const
 {
-    Error              error = kErrorParse;
-    Dataset            dataset;
-    OffsetRange        offsetRange;
-    Timestamp          activeTimestamp;
-    ChannelTlvValue    channelValue;
-    uint16_t           sessionId;
-    Ip6::NetworkPrefix meshLocalPrefix;
-    NetworkKey         networkKey;
-    uint16_t           panId;
-    uint32_t           delayTimer;
+    Error       error = kErrorParse;
+    Dataset     dataset;
+    OffsetRange offsetRange;
+    Timestamp   activeTimestamp;
+    uint16_t    sessionId;
+    uint32_t    delayTimer;
 
     aInfo.Clear();
 
@@ -86,35 +82,8 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
     // Determine whether the new Dataset affects connectivity
     // or network key.
 
-    if ((dataset.Read<ChannelTlv>(channelValue) == kErrorNone) &&
-        (channelValue.GetChannel() != Get<Mac::Mac>().GetPanChannel()))
-    {
-        aInfo.mAffectsConnectivity = true;
-    }
-
-    if ((dataset.Read<PanIdTlv>(panId) == kErrorNone) && (panId != Get<Mac::Mac>().GetPanId()))
-    {
-        aInfo.mAffectsConnectivity = true;
-    }
-
-    if ((dataset.Read<MeshLocalPrefixTlv>(meshLocalPrefix) == kErrorNone) &&
-        (meshLocalPrefix != Get<Mle::Mle>().GetMeshLocalPrefix()))
-    {
-        aInfo.mAffectsConnectivity = true;
-    }
-
-    if (dataset.Read<NetworkKeyTlv>(networkKey) == kErrorNone)
-    {
-        NetworkKey localNetworkKey;
-
-        Get<KeyManager>().GetNetworkKey(localNetworkKey);
-
-        if (networkKey != localNetworkKey)
-        {
-            aInfo.mAffectsConnectivity = true;
-            aInfo.mAffectsNetworkKey   = true;
-        }
-    }
+    aInfo.mAffectsConnectivity = dataset.AffectsConnectivity(GetInstance());
+    aInfo.mAffectsNetworkKey   = dataset.AffectsNetworkKey(GetInstance());
 
     // Check active timestamp rollback. If there is no change to
     // network key, active timestamp must be ahead of local value.
