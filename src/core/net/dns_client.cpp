@@ -1789,7 +1789,7 @@ void Client::RecordServerAsLimitedToSingleQuestion(const Ip6::Address &aServerAd
 
     if (mLimitedQueryServers.IsFull())
     {
-        uint8_t randomIndex = Random::NonCrypto::GetUint8InRange(0, mLimitedQueryServers.GetMaxSize());
+        uint8_t randomIndex = Random::NonCrypto::GenerateUpToExcluding(mLimitedQueryServers.GetMaxSize());
 
         mLimitedQueryServers.Remove(mLimitedQueryServers[randomIndex]);
     }

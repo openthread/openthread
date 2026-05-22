@@ -631,7 +631,7 @@ Error Dso::Connection::AppendPadding(Message &aMessage)
     // that its padded length is a multiple of the chosen block
     // length.
 
-    blockLength = kBlockLengths[Random::NonCrypto::GetUint8InRange(0, GetArrayLength(kBlockLengths))];
+    blockLength = kBlockLengths[Random::NonCrypto::GenerateUpToExcluding(GetArrayLength(kBlockLengths))];
 
     paddingTlv.Init((blockLength - ((aMessage.GetLength() + sizeof(Tlv)) % blockLength)) % blockLength);
 

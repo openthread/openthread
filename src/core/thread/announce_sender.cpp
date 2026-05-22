@@ -68,7 +68,7 @@ void AnnounceSenderBase::SendAnnounce(uint8_t aCount)
     mCount   = aCount;
     mChannel = mStartingChannel;
 
-    mTimer.Start(Random::NonCrypto::GetUint32InRange(0, mJitter + 1));
+    mTimer.Start(Random::NonCrypto::GenerateUpToExcluding<uint32_t>(mJitter + 1));
 
 exit:
     return;

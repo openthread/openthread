@@ -303,7 +303,7 @@ uint8_t Mle::SelectLeaderId(void) const
 #endif
 
     return IsValueInRange(mPreviousRouterId, minId, maxId) ? mPreviousRouterId
-                                                           : Random::NonCrypto::GetUint8InRange(minId, maxId + 1);
+                                                           : Random::NonCrypto::GenerateInClosedRange(minId, maxId);
 }
 
 uint32_t Mle::SelectPartitionId(void) const
@@ -318,7 +318,7 @@ uint32_t Mle::SelectPartitionId(void) const
     else
 #endif
     {
-        partitionId = Random::NonCrypto::GetUint32();
+        partitionId = Random::NonCrypto::Generate<uint32_t>();
     }
 
     return partitionId;
@@ -1432,7 +1432,8 @@ void Mle::EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_
         VerifyOrExit(neighborCount < mChildRouterLinks + GradualChildRouterLink::kExtraChildRouterLinks);
         VerifyOrExit(LinkQualityForLinkMargin(aLinkMargin) >= kLinkQuality2);
         VerifyOrExit(GetCurrentAttachDuration() > GradualChildRouterLink::kWaitDurationAfterAttach);
-        VerifyOrExit(Random::NonCrypto::GetUint8InRange(0, 100) < GradualChildRouterLink::kProbabilityPercentage);
+        VerifyOrExit(Random::NonCrypto::GenerateUpToExcluding<uint8_t>(100) <
+                     GradualChildRouterLink::kProbabilityPercentage);
 
         minDelay = GradualChildRouterLink::kMinLinkRequestDelay;
         maxDelay = GradualChildRouterLink::kMaxLinkRequestDelay;
@@ -1441,7 +1442,7 @@ void Mle::EstablishRouterLinkOnFtdChild(Router &aRouter, RxInfo &aRxInfo, uint8_
     InitNeighbor(aRouter, aRxInfo);
     aRouter.SetState(Neighbor::kStateLinkRequest);
     aRouter.ClearLinkAcceptTimeout();
-    mDelayedSender.ScheduleLinkRequest(aRouter, Random::NonCrypto::GetUint32InRange(minDelay, maxDelay));
+    mDelayedSender.ScheduleLinkRequest(aRouter, Random::NonCrypto::GenerateInClosedRange(minDelay, maxDelay));
 
 exit:
     return;
@@ -3981,7 +3982,7 @@ Mle::RoleTransitioner::RoleTransitioner(Instance &aInstance)
 {
 }
 
-void Mle::RoleTransitioner::StartTimeout(void) { mTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mJitter); }
+void Mle::RoleTransitioner::StartTimeout(void) { mTimeout = 1 + Random::NonCrypto::GenerateUpToExcluding(mJitter); }
 
 bool Mle::RoleTransitioner::IsRouterCountBelowUpgradeThreshold(void) const
 {

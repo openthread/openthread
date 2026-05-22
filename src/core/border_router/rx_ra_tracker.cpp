@@ -1806,7 +1806,7 @@ void RxRaTracker::RsSender::Start(void)
 
     VerifyOrExit(!IsInProgress());
 
-    delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
+    delay = Random::NonCrypto::GenerateUpToExcluding(kMaxStartDelay);
 
     LogInfo("RsSender: Starting - will send first RS in %lu msec", ToUlong(delay));
 

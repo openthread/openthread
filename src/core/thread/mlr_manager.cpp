@@ -169,7 +169,7 @@ void Manager::UpdateProxiedSubscriptions(Child &aChild, const ChildAddressArray 
 
     if (hasUnregistered)
     {
-        ScheduleSend(Random::NonCrypto::GetUint16InRange(1, BackboneRouter::kParentAggregateDelay));
+        ScheduleSend(Random::NonCrypto::GenerateInClosedRange<uint16_t>(1, BackboneRouter::kParentAggregateDelay));
     }
 
 exit:
@@ -579,7 +579,7 @@ uint32_t Manager::DetermineRenewDelay(void)
 
     timeout = Clamp<uint32_t>(timeout, BackboneRouter::kMinMlrTimeout, kLongRenewTimeout);
 
-    return Random::NonCrypto::GetUint32InRange((timeout / 2) + 1, timeout - kRenewGuardTime);
+    return Random::NonCrypto::GenerateInClosedRange<uint32_t>((timeout / 2) + 1, timeout - kRenewGuardTime);
 }
 
 void Manager::ScheduleNextRegistration(RegistrationRequest aRequest)

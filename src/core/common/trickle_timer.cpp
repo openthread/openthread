@@ -216,7 +216,7 @@ void TrickleTimer::Start(Mode aMode, uint32_t aIntervalMin, uint32_t aIntervalMa
     mMode               = aMode;
 
     // Select interval randomly from range [Imin, Imax].
-    mInterval = Random::NonCrypto::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
+    mInterval = Random::NonCrypto::GenerateInClosedRange(mIntervalMin, mIntervalMax);
 
     StartNewInterval();
 }
@@ -257,11 +257,12 @@ void TrickleTimer::StartNewInterval(void)
 
     case kModeTrickle:
         // Select a random point in the interval taken from the range [I/2, I).
-        halfInterval = mInterval / 2;
-        mTimeInInterval =
-            (halfInterval < mInterval) ? Random::NonCrypto::GetUint32InRange(halfInterval, mInterval) : halfInterval;
-        mCounter = 0;
-        mPhase   = kBeforeRandomTime;
+        halfInterval    = mInterval / 2;
+        mTimeInInterval = (halfInterval < mInterval)
+                              ? Random::NonCrypto::GenerateFromMinUpToExcluding(halfInterval, mInterval)
+                              : halfInterval;
+        mCounter        = 0;
+        mPhase          = kBeforeRandomTime;
         break;
     }
 
@@ -275,7 +276,7 @@ void TrickleTimer::HandleTimer(void)
     switch (mMode)
     {
     case kModePlainTimer:
-        mInterval = Random::NonCrypto::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
+        mInterval = Random::NonCrypto::GenerateInClosedRange(mIntervalMin, mIntervalMax);
         StartNewInterval();
         break;
 

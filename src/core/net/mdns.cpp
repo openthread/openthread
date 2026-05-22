@@ -4337,7 +4337,7 @@ Core::RxMessage::ProcessOutcome Core::RxMessage::ProcessQuery(bool aShouldProces
 
     if (shouldDelay)
     {
-        delay = Random::NonCrypto::GetUint16InRange(kMinResponseDelay, kMaxResponseDelay);
+        delay = Random::NonCrypto::GenerateInClosedRange(kMinResponseDelay, kMaxResponseDelay);
     }
 
     for (const Question &question : mQuestions)
@@ -5035,7 +5035,7 @@ void Core::MultiPacketRxMessages::RxMsgEntry::Add(OwnedPtr<RxMessage> &aRxMessag
 
     if (aRxMessagePtr->IsTruncated())
     {
-        mProcessTime += Random::NonCrypto::GetUint32InRange(kMinProcessDelay, kMaxProcessDelay);
+        mProcessTime += Random::NonCrypto::GenerateInClosedRange(kMinProcessDelay, kMaxProcessDelay);
     }
 
     // We push the new `RxMessage` at tail of the list to keep the
@@ -5416,7 +5416,7 @@ TimeMilli Core::RandomizeFirstProbeTxTime(void)
 
     if ((mNextProbeTxTime - now) >= kMaxProbeDelay)
     {
-        mNextProbeTxTime = now + Random::NonCrypto::GetUint32InRange(kMinProbeDelay, kMaxProbeDelay);
+        mNextProbeTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinProbeDelay, kMaxProbeDelay);
     }
 
     return mNextProbeTxTime;
@@ -5428,7 +5428,7 @@ TimeMilli Core::RandomizeInitialQueryTxTime(void)
 
     if ((mNextQueryTxTime - now) >= kMaxInitialQueryDelay)
     {
-        mNextQueryTxTime = now + Random::NonCrypto::GetUint32InRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
+        mNextQueryTxTime = now + Random::NonCrypto::GenerateInClosedRange(kMinInitialQueryDelay, kMaxInitialQueryDelay);
     }
 
     return mNextQueryTxTime;
@@ -5550,7 +5550,7 @@ void Core::CacheRecordInfo::UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry)
 
         if (queryTime > now)
         {
-            queryTime += Random::NonCrypto::GetUint32InRange(0, GetClampedTtl() * kQueryTtlVariation);
+            queryTime += Random::NonCrypto::GenerateUpToExcluding(GetClampedTtl() * kQueryTtlVariation);
             aCacheEntry.ScheduleQuery(queryTime);
             break;
         }

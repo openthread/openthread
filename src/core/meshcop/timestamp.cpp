@@ -124,7 +124,7 @@ void Timestamp::AdvanceRandomTicks(void)
 {
     uint16_t ticks = GetTicks();
 
-    ticks += Random::NonCrypto::GetUint32InRange(1, kMaxTicks + 1);
+    ticks += Random::NonCrypto::GenerateInClosedRange<uint16_t>(1, kMaxTicks);
 
     if (ticks > kMaxTicks)
     {

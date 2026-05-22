@@ -309,7 +309,7 @@ Mac::TxFrame &RadioSelector::SelectRadio(Message &aMessage, const Mac::Address &
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     if (!selections.Contains(Mac::kRadioTypeTrel) && neighbor->GetSupportedRadioTypes().Contains(Mac::kRadioTypeTrel) &&
-        (Random::NonCrypto::GetUint8InRange(0, 100) < kTrelProbeProbability))
+        (Random::NonCrypto::GenerateUpToExcluding<uint8_t>(100) < kTrelProbeProbability))
     {
         aTxFrames.SetRequiredRadioTypes(selections);
         selections.Add(Mac::kRadioTypeTrel);

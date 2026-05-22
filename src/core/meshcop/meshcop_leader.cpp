@@ -45,7 +45,7 @@ RegisterLogModule("MeshCoPLeader");
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
-    , mSessionId(Random::NonCrypto::GetUint16())
+    , mSessionId(Random::NonCrypto::Generate<uint16_t>())
 {
 }
 

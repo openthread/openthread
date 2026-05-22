@@ -120,7 +120,7 @@ void Dhcp6PdClient::EnterState(State aState)
     case kStateToSolicit:
         ClearServerDuid();
         ClearPdPrefix();
-        mTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxDelayFirstSolicit));
+        mTimer.Start(Random::NonCrypto::GenerateUpToExcluding(kMaxDelayFirstSolicit));
         break;
 
     case kStateSoliciting:
@@ -1183,11 +1183,11 @@ uint32_t Dhcp6PdClient::RetxTracker::AddJitter(uint32_t aValue, JitterMode aJitt
     switch (aJitterMode)
     {
     case kPositiveJitter:
-        randomizedValue += Random::NonCrypto::GetUint32InRange(0, jitter);
+        randomizedValue += Random::NonCrypto::GenerateUpToExcluding<uint32_t>(jitter);
         break;
 
     case kFullJitter:
-        randomizedValue += Random::NonCrypto::GetUint32InRange(0, 2 * jitter) - jitter;
+        randomizedValue += Random::NonCrypto::GenerateUpToExcluding<uint32_t>(2 * jitter) - jitter;
         break;
     }
 

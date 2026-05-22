@@ -159,11 +159,11 @@ void CorruptMessage(Message &aMessage)
     uint8_t  bitOffset;
     uint8_t  byte;
 
-    byteOffset = Random::NonCrypto::GetUint16InRange(0, aMessage.GetLength());
+    byteOffset = Random::NonCrypto::GenerateUpToExcluding<uint16_t>(aMessage.GetLength());
 
     SuccessOrQuit(aMessage.Read(byteOffset, byte));
 
-    bitOffset = Random::NonCrypto::GetUint8InRange(0, kBitsPerByte);
+    bitOffset = Random::NonCrypto::GenerateUpToExcluding<uint8_t>(kBitsPerByte);
 
     byte ^= (1 << bitOffset);
 

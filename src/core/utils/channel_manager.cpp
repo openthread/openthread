@@ -100,7 +100,7 @@ void ChannelManager::RequestNetworkChannelChange(uint8_t aChannel)
     mState   = kStateChangeRequested;
     mChannel = aChannel;
 
-    mTimer.Start(1 + Random::NonCrypto::GetUint32InRange(0, kRequestStartJitterInterval));
+    mTimer.Start(1 + Random::NonCrypto::GenerateUpToExcluding(kRequestStartJitterInterval));
 
     Get<Notifier>().Signal(kEventChannelManagerNewChannelChanged);
 

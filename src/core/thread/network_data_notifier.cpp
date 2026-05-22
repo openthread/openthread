@@ -321,7 +321,7 @@ void Notifier::ScheduleRouterRoleUpgradeIfEligible(void)
     VerifyOrExit(Get<Mle::Mle>().IsChild());
     VerifyOrExit(IsEligibleForRouterRoleUpgradeAsBorderRouter() && (mRouterRoleUpgradeTimeout == 0));
 
-    mRouterRoleUpgradeTimeout = Random::NonCrypto::GetUint8InRange(1, kRouterRoleUpgradeMaxTimeout + 1);
+    mRouterRoleUpgradeTimeout = Random::NonCrypto::GenerateInClosedRange<uint8_t>(1, kRouterRoleUpgradeMaxTimeout);
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kNetworkDataNotifier);
 
 exit:

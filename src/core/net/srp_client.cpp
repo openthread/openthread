@@ -232,7 +232,7 @@ uint32_t Client::TxJitter::DetermineDelay(void)
         mRequestedMax = 0;
     }
 
-    delay = Random::NonCrypto::GetUint32InRange(kMinTxJitter, maxJitter);
+    delay = Random::NonCrypto::GenerateInClosedRange(kMinTxJitter, maxJitter);
     LogInfo("Use random tx jitter %lu from [%lu, %lu]", ToUlong(delay), ToUlong(kMinTxJitter), ToUlong(maxJitter));
 
     return delay;
@@ -1942,7 +1942,7 @@ void Client::SelectNewMessageId(void)
 
     do
     {
-        mCurMessageId = Random::NonCrypto::GetUint16();
+        mCurMessageId = Random::NonCrypto::Generate<uint16_t>();
     } while (oldId == mCurMessageId);
 }
 
