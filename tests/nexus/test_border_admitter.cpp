@@ -3196,7 +3196,6 @@ void TestBorderAdmitterForwardingUdpProxy(void)
     uint16_t                           sessionId;
     uint16_t                           rloc16;
     MeshCoP::UdpEncapsulationTlvHeader udpEncapHeader;
-    ExtendedTlv                        extTlv;
 
     Log("------------------------------------------------------------------------------------------------------");
     Log("TestBorderAdmitterForwardingUdpProxy");
@@ -3360,10 +3359,8 @@ void TestBorderAdmitterForwardingUdpProxy(void)
     udpEncapHeader.SetSourcePort(Tmf::kUdpPort);
     udpEncapHeader.SetDestinationPort(Tmf::kUdpPort);
 
-    extTlv.SetType(MeshCoP::Tlv::kUdpEncapsulation);
-    extTlv.SetLength(sizeof(udpEncapHeader) + diagMessage->GetLength());
-
-    SuccessOrQuit(message->Append(extTlv));
+    SuccessOrQuit(Tlv::AppendTlvHeader(*message, MeshCoP::Tlv::kUdpEncapsulation,
+                                       sizeof(udpEncapHeader) + diagMessage->GetLength()));
     SuccessOrQuit(message->Append(udpEncapHeader));
     SuccessOrQuit(message->AppendBytesFromMessage(*diagMessage, 0, diagMessage->GetLength()));
     diagMessage->Free();
