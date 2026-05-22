@@ -257,8 +257,8 @@ otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval);
 otError otPlatBleGapAdvStop(otInstance *aInstance);
 
 /**
- * The BLE driver calls this method to notify OpenThread that a BLE Central Device has
- * been connected.
+ * The BLE driver calls this function to notify OpenThread that a BLE Central Device has
+ * been connected. The BLE driver MUST stop advertising before calling this function.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aConnectionId The identifier of the open connection.
@@ -266,8 +266,9 @@ otError otPlatBleGapAdvStop(otInstance *aInstance);
 extern void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId);
 
 /**
- * The BLE driver calls this method to notify OpenThread that the BLE Central Device
- * has been disconnected.
+ * The BLE driver calls this function to notify OpenThread that the BLE Central Device
+ * has been disconnected. The BLE driver MUST NOT start advertising before or after this
+ * call: this is controlled explicitly via otPlatBleGapAdvStart().
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aConnectionId The identifier of the closed connection.
@@ -307,7 +308,7 @@ otError otPlatBleGapDisconnect(otInstance *aInstance);
 otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu);
 
 /**
- * The BLE driver calls this method to notify OpenThread that ATT_MTU has been updated.
+ * The BLE driver calls this function to notify OpenThread that ATT_MTU has been updated.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aMtu          The updated ATT_MTU value. It MUST be >=OT_BLE_ATT_MTU_MIN.
@@ -335,7 +336,7 @@ extern void otPlatBleGattOnMtuUpdate(otInstance *aInstance, uint16_t aMtu);
 otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket);
 
 /**
- * The BLE driver calls this method to notify OpenThread that an ATT Write Request
+ * The BLE driver calls this function to notify OpenThread that an ATT Write Request
  * packet has been received.
  *
  * @note This function shall be used only for GATT Server.
