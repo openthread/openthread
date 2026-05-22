@@ -150,9 +150,6 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
         Case(kUriMlr, BackboneRouter::Manager);
 #endif
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
-#endif
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
         Case(kUriTcatEnable, MeshCoP::TcatAgent);

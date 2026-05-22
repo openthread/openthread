@@ -87,11 +87,6 @@ bool BackboneTmfAgent::HandleResource(const char *aUriPath, ot::Coap::Msg &aMsg)
 
     switch (uri)
     {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        Case(kUriBackboneQuery, Manager);
-        Case(kUriBackboneAnswer, Manager);
-#endif
-
     default:
         didHandle = false;
         break;

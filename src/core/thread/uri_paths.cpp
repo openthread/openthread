@@ -59,9 +59,7 @@ struct Entry
     _("a/as", kUriAddressSolicit, "AddrSolicit")                  \
     _("a/sd", kUriServerData, "ServerData")                       \
     _("a/yl", kUriAnycastLocate, "AnycastLocate")                 \
-    _("b/ba", kUriBackboneAnswer, "BbAnswer")                     \
     _("b/bmr", kUriBackboneMlr, "BbMlr")                          \
-    _("b/bq", kUriBackboneQuery, "BbQuery")                       \
     _("c/ab", kUriAnnounceBegin, "AnnounceBegin")                 \
     _("c/ag", kUriActiveGet, "ActiveGet")                         \
     _("c/ar", kUriActiveReplace, "ActiveReplace")                 \

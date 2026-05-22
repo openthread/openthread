@@ -52,9 +52,7 @@ enum Uri : uint8_t
     kUriAddressSolicit,         ///< Address Solicit ("a/as")
     kUriServerData,             ///< Server Data Registration ("a/sd")
     kUriAnycastLocate,          ///< Anycast Locate ("a/yl")
-    kUriBackboneAnswer,         ///< Backbone Answer / Backbone Notification ("b/ba")
     kUriBackboneMlr,            ///< Backbone Multicast Listener Report ("b/bmr")
-    kUriBackboneQuery,          ///< Backbone Query ("b/bq")
     kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
     kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
     kUriActiveReplace,          ///< MGMT_ACTIVE_REPLACE ("c/ar")
@@ -131,9 +129,7 @@ template <> const char *UriToString<kUriAddressRelease>(void);
 template <> const char *UriToString<kUriAddressSolicit>(void);
 template <> const char *UriToString<kUriServerData>(void);
 template <> const char *UriToString<kUriAnycastLocate>(void);
-template <> const char *UriToString<kUriBackboneAnswer>(void);
 template <> const char *UriToString<kUriBackboneMlr>(void);
-template <> const char *UriToString<kUriBackboneQuery>(void);
 template <> const char *UriToString<kUriAnnounceBegin>(void);
 template <> const char *UriToString<kUriActiveGet>(void);
 template <> const char *UriToString<kUriActiveReplace>(void);

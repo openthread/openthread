@@ -174,55 +174,6 @@ template <> otError Bbr::Process<Cmd("mgmt")>(Arg aArgs[])
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    /**
-     * @cli bbr mgmt dua
-     * @code
-     * bbr mgmt dua 1 2f7c235e5025a2fd
-     * Done
-     * @endcode
-     * @code
-     * bbr mgmt dua 160
-     * Done
-     * @endcode
-     * @cparam bbr mgmt dua @ca{status|coap-code} [@ca{meshLocalIid}]
-     * For `status` or `coap-code`, use:
-     * *    0: ST_DUA_SUCCESS
-     * *    1: ST_DUA_REREGISTER
-     * *    2: ST_DUA_INVALID
-     * *    3: ST_DUA_DUPLICATE
-     * *    4: ST_DUA_NO_RESOURCES
-     * *    5: ST_DUA_BBR_NOT_PRIMARY
-     * *    6: ST_DUA_GENERAL_FAILURE
-     * *    160: COAP code 5.00
-     * @par
-     * With the `meshLocalIid` included, this command configures the response status
-     * for the next DUA registration. Without `meshLocalIid`, respond to the next
-     * DUA.req with the specified `status` or `coap-code`.
-     * @par
-     * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
-     * @sa otBackboneRouterConfigNextDuaRegistrationResponse
-     */
-    if (aArgs[0] == "dua")
-    {
-        uint8_t                   status;
-        otIp6InterfaceIdentifier *mlIid = nullptr;
-        otIp6InterfaceIdentifier  iid;
-
-        SuccessOrExit(error = aArgs[1].ParseAsUint8(status));
-
-        if (!aArgs[2].IsEmpty())
-        {
-            SuccessOrExit(error = aArgs[2].ParseAsHexString(iid.mFields.m8));
-            mlIid = &iid;
-            VerifyOrExit(aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        }
-
-        otBackboneRouterConfigNextDuaRegistrationResponse(GetInstancePtr(), mlIid, status);
-        ExitNow();
-    }
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     if (aArgs[0] == "mlr")
     {

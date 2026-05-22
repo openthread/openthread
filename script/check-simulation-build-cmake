@@ -176,14 +176,6 @@ build_all_features()
     CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
         "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_FULL_LOGS=ON
 
-    # Build Thread 1.4 Backbone Router without DUA ND Proxying
-    reset_source
-    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
-
-    # Build Thread 1.4 Backbone Router without Multicast Routing
-    reset_source
-    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
-
     # Build with Vendor Extension
     reset_source
     "$(dirname "$0")"/cmake-build simulation \

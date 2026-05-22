@@ -257,9 +257,6 @@ void Leader::UpdateDomainPrefixConfig(void)
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<Local>().HandleDomainPrefixUpdate(event);
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    Get<NdProxyTable>().HandleDomainPrefixUpdate(event);
-#endif
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)

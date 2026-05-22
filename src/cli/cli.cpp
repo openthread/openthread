@@ -3215,20 +3215,6 @@ template <> otError Interpreter::Process<Cmd("fake")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[3].ParseAsHexString(mlIid.mFields.m8));
         otThreadSendAddressNotification(GetInstancePtr(), &destination, &target, &mlIid);
     }
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    else if (aArgs[0] == "/b/ba")
-    {
-        otIp6Address             target;
-        otIp6InterfaceIdentifier mlIid;
-        uint32_t                 timeSinceLastTransaction;
-
-        SuccessOrExit(error = aArgs[1].ParseAsIp6Address(target));
-        SuccessOrExit(error = aArgs[2].ParseAsHexString(mlIid.mFields.m8));
-        SuccessOrExit(error = aArgs[3].ParseAsUint32(timeSinceLastTransaction));
-
-        error = otThreadSendProactiveBackboneNotification(GetInstancePtr(), &target, &mlIid, timeSinceLastTransaction);
-    }
-#endif
 
 exit:
     return error;

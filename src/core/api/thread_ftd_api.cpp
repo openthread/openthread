@@ -344,17 +344,6 @@ void otThreadSendAddressNotification(otInstance               *aInstance,
                                                                           nullptr, AsCoreType(aDestination));
 }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-otError otThreadSendProactiveBackboneNotification(otInstance               *aInstance,
-                                                  otIp6Address             *aTarget,
-                                                  otIp6InterfaceIdentifier *aMlIid,
-                                                  uint32_t                  aTimeSinceLastTransaction)
-{
-    return AsCoreType(aInstance).Get<BackboneRouter::Manager>().SendProactiveBackboneNotification(
-        AsCoreType(aTarget), AsCoreType(aMlIid), aTimeSinceLastTransaction);
-}
-#endif
-
 void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled)
 {
     AsCoreType(aInstance).Get<Mle::Mle>().SetCcmEnabled(aEnabled);

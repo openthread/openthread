@@ -1242,13 +1242,7 @@ void Ip6::DetermineAction(const Message &aMessage,
 
     if (IsOnLink(aHeader.GetDestination()))
     {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        aForwardThread = (!aMessage.IsLoopbackToHostAllowed() ||
-                          !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aHeader.GetDestination()));
-        aForwardHost   = !aForwardThread;
-#else
         aForwardThread = true;
-#endif
         ExitNow();
     }
 
