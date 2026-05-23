@@ -27,6 +27,21 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+display_usage()
+{
+    echo ""
+    echo "Nexus Build script"
+    echo ""
+    echo "Usage: $(basename "$0") [config]"
+    echo "    <config> can be:"
+    echo "        (no arg)        : Build OpenThread Nexus platform with default config"
+    echo "        trel            : Build OpenThread Nexus platform with TREL radio (no 15.4)"
+    echo "        wasm            : Build OpenThread Nexus platform for WebAssembly"
+    echo "        long_routes     : Build OpenThread Nexus platform with LONG_ROUTES feature enabled"
+    echo "        no_tests        : Build OpenThread Nexus platform without test executables"
+    echo ""
+}
+
 die()
 {
     echo " *** ERROR: " "$*"
@@ -42,6 +57,11 @@ if [ -n "${top_builddir}" ]; then
     mkdir -p "${top_builddir}"
 else
     top_builddir=.
+fi
+
+if [ "$#" -gt 1 ]; then
+    display_usage
+    exit 1
 fi
 
 long_routes=OFF
@@ -66,9 +86,18 @@ case $1 in
         wasm=OFF
         build_tests=OFF
         ;;
-    *)
+    "")
         fifteenfour=ON
         wasm=OFF
+        ;;
+    help | --help | -h)
+        display_usage
+        exit 0
+        ;;
+    *)
+        echo "Error: Unknown configuration \"$1\""
+        display_usage
+        exit 1
         ;;
 esac
 
