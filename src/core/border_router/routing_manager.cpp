@@ -2271,9 +2271,9 @@ const char *RoutingManager::RoutePublisher::StateToString(State aState)
     _(kPublishDefault, "def-route")   \
     _(kPublishUla, "ula")
 
-    DefineEnumStringArray(RoutePublisherStateMapList)
+    DefineEnumStringArray(RoutePublisherStateMapList);
 
-        return kStrings[aState];
+    return kStrings[aState];
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
