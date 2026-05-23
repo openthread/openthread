@@ -187,23 +187,6 @@ void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitte
 otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig);
 
 /**
- * Configures response status for next DUA registration.
- *
- * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
- *       Only used for test and certification.
- *
- * TODO: (DUA) support coap error code and corresponding process for certification purpose.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aMlIid    A pointer to the Mesh Local IID. If NULL, respond with @p aStatus for any
- *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.
- * @param[in] aStatus   The status to respond.
- */
-void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance                     *aInstance,
-                                                       const otIp6InterfaceIdentifier *aMlIid,
-                                                       uint8_t                         aStatus);
-
-/**
  * Configures the response status for the next Multicast Listener Registration.
  *
  * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`,
@@ -316,64 +299,6 @@ typedef struct otBackboneRouterMulticastListenerInfo
 otError otBackboneRouterMulticastListenerGetNext(otInstance                                *aInstance,
                                                  otBackboneRouterMulticastListenerIterator *aIterator,
                                                  otBackboneRouterMulticastListenerInfo     *aListenerInfo);
-
-/**
- * Represents the ND Proxy events.
- */
-typedef enum
-{
-    OT_BACKBONE_ROUTER_NDPROXY_ADDED   = 0, ///< ND Proxy was added.
-    OT_BACKBONE_ROUTER_NDPROXY_REMOVED = 1, ///< ND Proxy was removed.
-    OT_BACKBONE_ROUTER_NDPROXY_RENEWED = 2, ///< ND Proxy was renewed.
-    OT_BACKBONE_ROUTER_NDPROXY_CLEARED = 3, ///< All ND Proxies were cleared.
-} otBackboneRouterNdProxyEvent;
-
-/**
- * Pointer is called whenever the Nd Proxy changed.
- *
- * @param[in] aContext  The user context pointer.
- * @param[in] aEvent    The ND Proxy event.
- * @param[in] aDua      The Domain Unicast Address of the ND Proxy, or NULL if @p aEvent is
- *                      `OT_BACKBONE_ROUTER_NDPROXY_CLEARED`.
- */
-typedef void (*otBackboneRouterNdProxyCallback)(void                        *aContext,
-                                                otBackboneRouterNdProxyEvent aEvent,
-                                                const otIp6Address          *aDua);
-
-/**
- * Sets the Backbone Router ND Proxy callback.
- *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aCallback  A pointer to the ND Proxy callback.
- * @param[in] aContext   A user context pointer.
- */
-void otBackboneRouterSetNdProxyCallback(otInstance                     *aInstance,
-                                        otBackboneRouterNdProxyCallback aCallback,
-                                        void                           *aContext);
-
-/**
- * Represents the Backbone Router ND Proxy info.
- */
-typedef struct otBackboneRouterNdProxyInfo
-{
-    otIp6InterfaceIdentifier *mMeshLocalIid;             ///< Mesh-local IID
-    uint32_t                  mTimeSinceLastTransaction; ///< Time since last transaction (Seconds)
-    uint16_t                  mRloc16;                   ///< RLOC16
-} otBackboneRouterNdProxyInfo;
-
-/**
- * Gets the Backbone Router ND Proxy info.
- *
- * @param[in]   aInstance     A pointer to an OpenThread instance.
- * @param[in]   aDua          The Domain Unicast Address.
- * @param[out]  aNdProxyInfo  A pointer to the ND Proxy info.
- *
- * @retval OT_ERROR_NONE       Successfully got the ND Proxy info.
- * @retval OT_ERROR_NOT_FOUND  Failed to find the Domain Unicast Address in the ND Proxy table.
- */
-otError otBackboneRouterGetNdProxyInfo(otInstance                  *aInstance,
-                                       const otIp6Address          *aDua,
-                                       otBackboneRouterNdProxyInfo *aNdProxyInfo);
 
 /**
  * Represents the Domain Prefix events.

@@ -628,17 +628,6 @@ exit:
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kAddressResolver);
     FreeMessageOnError(message, error);
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aEid))
-    {
-        uint16_t selfRloc16 = Get<Mle::Mle>().GetRloc16();
-
-        LogInfo("Extending %s to %s for target %s, rloc16=%04x(self)", UriToString<kUriAddressQuery>(),
-                UriToString<kUriBackboneQuery>(), aEid.ToString().AsCString(), selfRloc16);
-        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(aEid, selfRloc16));
-    }
-#endif
-
     return error;
 }
 
@@ -846,17 +835,6 @@ template <> void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Msg &aMsg)
             ExitNow();
         }
     }
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(target))
-    {
-        uint16_t srcRloc16 = aMsg.mMessageInfo.GetPeerAddr().GetIid().GetLocator();
-
-        LogInfo("Extending %s to %s for target %s rloc16=%04x", UriToString<kUriAddressQuery>(),
-                UriToString<kUriBackboneQuery>(), target.ToString().AsCString(), srcRloc16);
-        IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(target, srcRloc16));
-    }
-#endif
 
 exit:
     return;

@@ -1242,13 +1242,6 @@ template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-template <> inline BackboneRouter::NdProxyTable &Instance::Get(void)
-{
-    return mBackboneRouterManager.GetNdProxyTable();
-}
-#endif
-
 template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 {
     return mBackboneRouterManager.GetBackboneTmfAgent();

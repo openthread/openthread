@@ -1073,24 +1073,6 @@ void otThreadSendAddressNotification(otInstance               *aInstance,
                                      otIp6InterfaceIdentifier *aMlIid);
 
 /**
- * Sends a Proactive Backbone Notification (PRO_BB.ntf) message on the Backbone link.
- *
- * Is only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
- *
- * @param[in]  aInstance                    A pointer to an OpenThread instance.
- * @param[in]  aTarget                      The target address of the PRO_BB.ntf message.
- * @param[in]  aMlIid                       The ML-IID of the PRO_BB.ntf message.
- * @param[in]  aTimeSinceLastTransaction    Time since last transaction (in seconds).
- *
- * @retval OT_ERROR_NONE           Successfully sent PRO_BB.ntf on backbone link.
- * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
- */
-otError otThreadSendProactiveBackboneNotification(otInstance               *aInstance,
-                                                  otIp6Address             *aTarget,
-                                                  otIp6InterfaceIdentifier *aMlIid,
-                                                  uint32_t                  aTimeSinceLastTransaction);
-
-/**
  * Notifies other nodes in the network (if any) and then stops Thread protocol operation.
  *
  * It sends an Address Release if it's a router, or sets its child timeout to 0 if it's a child.

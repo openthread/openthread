@@ -94,25 +94,6 @@ void otBackboneRouterSetDomainPrefixCallback(otInstance                         
     return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetDomainPrefixCallback(aCallback, aContext);
 }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-void otBackboneRouterSetNdProxyCallback(otInstance                     *aInstance,
-                                        otBackboneRouterNdProxyCallback aCallback,
-                                        void                           *aContext)
-{
-    AsCoreType(aInstance).Get<BackboneRouter::NdProxyTable>().SetCallback(aCallback, aContext);
-}
-
-otError otBackboneRouterGetNdProxyInfo(otInstance                  *aInstance,
-                                       const otIp6Address          *aDua,
-                                       otBackboneRouterNdProxyInfo *aNdProxyInfo)
-{
-    AssertPointerIsNotNull(aNdProxyInfo);
-
-    return AsCoreType(aInstance).Get<BackboneRouter::NdProxyTable>().GetInfo(
-        reinterpret_cast<const Ip6::Address &>(*aDua), *aNdProxyInfo);
-}
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void otBackboneRouterSetMulticastListenerCallback(otInstance                               *aInstance,
                                                   otBackboneRouterMulticastListenerCallback aCallback,
@@ -133,15 +114,6 @@ otError otBackboneRouterMulticastListenerGetNext(otInstance                     
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance                     *aInstance,
-                                                       const otIp6InterfaceIdentifier *aMlIid,
-                                                       uint8_t                         aStatus)
-{
-    AsCoreType(aInstance).Get<BackboneRouter::Manager>().ConfigNextDuaRegistrationResponse(AsCoreTypePtr(aMlIid),
-                                                                                           aStatus);
-}
-#endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus)
