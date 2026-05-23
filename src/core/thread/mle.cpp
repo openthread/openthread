@@ -299,6 +299,7 @@ void Mle::SetRole(DeviceRole aRole)
     if ((oldRole == kRoleDetached) && IsAttached())
     {
         mLastAttachTime = Get<UptimeTracker>().GetUptimeInSeconds();
+        LogNote("Successfully attached after %u attempt(s)", mAttacher.GetAttachCounter());
     }
 
     UpdateRoleTimeCounters(oldRole);
@@ -4501,6 +4502,7 @@ void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
 Mle::Attacher::Attacher(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReceivedResponseFromParent(false)
+    , mShouldCapBackoff(false)
     , mState(kStateIdle)
     , mMode(kAnyPartition)
     , mReattachMode(kReattachModeStop)
@@ -4614,6 +4616,7 @@ void Mle::Attacher::Attach(AttachMode aMode)
     }
 
     mTimer.Start(GetStartDelay());
+    mShouldCapBackoff = false;
 
     if (Get<Mle>().IsDetached())
     {
@@ -4665,6 +4668,11 @@ uint32_t Mle::Attacher::GetStartDelay(void) const
         }
     }
 #endif // OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
+
+    if (mShouldCapBackoff)
+    {
+        delay = Min(delay, kAttachBackoffParentReachableInterval);
+    }
 
     jitter = Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
 
@@ -4814,6 +4822,7 @@ void Mle::Attacher::HandleTimer(void)
     if (HasAcceptableParentCandidate() && (SendChildIdRequest() == kErrorNone))
     {
         SetState(kStateChildIdRequest);
+        mShouldCapBackoff = (mParentCandidate.GetTwoWayLinkQuality() >= kLinkQuality2);
         mChildIdRequestsRemaining--;
         delay = Random::NonCrypto::AddJitter(kChildIdResponseTimeout, kChildIdResponseJitter);
         ExitNow();
@@ -5462,6 +5471,8 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
     VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorSecurity);
 
     VerifyOrExit(mState == kStateChildIdRequest);
+
+    mShouldCapBackoff = false;
 
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aRxInfo.mMessage, shortAddress));
     VerifyOrExit(RouterIdMatch(sourceAddress, shortAddress), error = kErrorRejected);
