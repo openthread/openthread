@@ -43,12 +43,10 @@ namespace Spinel {
 // This module implements unit-test for Spinel::Buffer class.
 
 // Test related constants:
-enum
-{
-    kTestBufferSize       = 800,
-    kTestIterationAttemps = 10000,
-    kTagArraySize         = 1000,
-};
+
+constexpr uint16_t kTestBufferSize       = 800;
+constexpr uint16_t kTestIterationAttemps = 10000;
+constexpr uint16_t kTagArraySize         = 1000;
 
 //  Messages used for building frames...
 static const uint8_t sOpenThreadText[] = "OpenThread Rocks";
@@ -68,15 +66,13 @@ struct CallbackContext
 
 CallbackContext sContext;
 
-enum
-{
-    kNumPrios = 2, // Number of priority levels.
+constexpr uint8_t kNumPrios = 2; // Number of priority levels.
 
-    kTestFrame1Size = sizeof(sMottoText) + sizeof(sMysteryText) + sizeof(sMottoText) + sizeof(sHelloText),
-    kTestFrame2Size = sizeof(sMysteryText) + sizeof(sHelloText) + sizeof(sOpenThreadText),
-    kTestFrame3Size = sizeof(sMysteryText),
-    kTestFrame4Size = sizeof(sOpenThreadText),
-};
+constexpr uint16_t kTestFrame1Size =
+    sizeof(sMottoText) + sizeof(sMysteryText) + sizeof(sMottoText) + sizeof(sHelloText);
+constexpr uint16_t kTestFrame2Size = sizeof(sMysteryText) + sizeof(sHelloText) + sizeof(sOpenThreadText);
+constexpr uint16_t kTestFrame3Size = sizeof(sMysteryText);
+constexpr uint16_t kTestFrame4Size = sizeof(sOpenThreadText);
 
 Spinel::Buffer::FrameTag sTagHistoryArray[kNumPrios][kTagArraySize];
 uint32_t                 sTagHistoryHead[kNumPrios] = {0};
@@ -870,16 +866,13 @@ void TestBuffer(void)
  * Handle the cases where buffer gets full or empty.
  */
 
-enum
-{
-    kFuzTestBufferSize            = 2000,   // Size of the buffer used during fuzz testing
-    kFuzTestIterationAttempts     = 500000, // Number of iterations  to run
-    kLensArraySize                = 500,    // Size of "Lengths" array.
-    kMaxFrameLen                  = 400,    // Maximum frame length
-    kReadProbability              = 50,     // Probability (in percent) to randomly choose to read vs write frame
-    kHighPriorityProbability      = 20,     // Probability (in percent) to write a high priority frame
-    kUseTrueRandomNumberGenerator = 1,      // To use true random number generator or not.
-};
+constexpr uint16_t kFuzTestBufferSize            = 2000;   // Size of the buffer used during fuzz testing
+constexpr uint32_t kFuzTestIterationAttempts     = 500000; // Number of iterations to run
+constexpr uint16_t kLensArraySize                = 500;    // Size of "Lengths" array.
+constexpr uint16_t kMaxFrameLen                  = 400;    // Maximum frame length
+constexpr uint8_t  kReadProbability              = 50;     // Probability to randomly choose to read vs write frame
+constexpr uint8_t  kHighPriorityProbability      = 20;     // Probability to write a high priority frame
+constexpr bool     kUseTrueRandomNumberGenerator = true;   // To use true random number generator or not.
 
 uint8_t  sFrameBuffer[kNumPrios][kFuzTestBufferSize];
 uint32_t sFrameBufferTailIndex[kNumPrios] = {0};

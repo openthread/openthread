@@ -38,20 +38,16 @@
 namespace ot {
 namespace Ncp {
 
-enum
-{
-    kBufferSize        = 1500,  // Frame buffer size
-    kMaxFrameLength    = 500,   // Maximum allowed frame length (used when randomly generating frames)
-    kFuzzTestIteration = 50000, // Number of iteration during fuzz test (randomly generating frames)
-    kFrameHeaderSize   = 4,     // Frame header size
+constexpr uint16_t kBufferSize        = 1500;  // Frame buffer size
+constexpr uint16_t kMaxFrameLength    = 500;   // Maximum allowed frame length (used when randomly generating frames)
+constexpr uint32_t kFuzzTestIteration = 50000; // Number of iteration during fuzz test (randomly generating frames)
+constexpr uint16_t kFrameHeaderSize   = 4;     // Frame header size
 
-    kFlagXOn        = 0x11,
-    kFlagXOff       = 0x13,
-    kFlagSequence   = 0x7e, ///< HDLC Flag value
-    kEscapeSequence = 0x7d, ///< HDLC Escape value
-    kFlagSpecial    = 0xf8,
-
-};
+constexpr uint8_t kFlagXOn        = 0x11;
+constexpr uint8_t kFlagXOff       = 0x13;
+constexpr uint8_t kFlagSequence   = 0x7e; // HDLC Flag value
+constexpr uint8_t kEscapeSequence = 0x7d; // HDLC Escape value
+constexpr uint8_t kFlagSpecial    = 0xf8;
 
 static const uint8_t sOpenThreadText[] = "OpenThread Rocks";
 static const uint8_t sHelloText[]      = "Hello there!";

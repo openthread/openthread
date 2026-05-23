@@ -1856,12 +1856,9 @@ void TestLowpanIphc(void)
 
 void TestLowpanMeshHeader(void)
 {
-    enum
-    {
-        kMaxFrameSize = 127,
-        kSourceAddr   = 0x100,
-        kDestAddr     = 0x200,
-    };
+    static constexpr uint16_t kMaxFrameSize = 127;
+    static constexpr uint16_t kSourceAddr   = 0x100;
+    static constexpr uint16_t kDestAddr     = 0x200;
 
     const uint8_t kMeshHeader1[] = {0xb1, 0x01, 0x00, 0x02, 0x00};       // src:0x100, dest:0x200, hop:0x1
     const uint8_t kMeshHeader2[] = {0xbf, 0x20, 0x01, 0x00, 0x02, 0x00}; // src:0x100, dest:0x200, hop:0x20
