@@ -246,9 +246,8 @@ private:
                                   PdPrefixArray                   &aPdPrefixes,
                                   Dhcp6::StatusCodeOption::Status &aStatus) const;
     bool      ShouldSkipPrefixOption(const Dhcp6::IaPrefixOption &aPrefixOption) const;
-    void      ProcessServerUnicastOption(const Message &aMessage, Ip6::Address &aServerAddress) const;
     void      ProcessPreferenceOption(const Message &aMessage, uint8_t &aPreference) const;
-    void      SaveServerDuidAndAddress(const Message &aMessage);
+    void      SaveServerDuid(const Message &aMessage);
     void      ClearServerDuid(void);
     void      ClearPdPrefix(void);
     void      CommitPdPrefix(const PdPrefix &aPdPrefix);
@@ -259,14 +258,13 @@ private:
 
     using DelayTimer = TimerMilliIn<Dhcp6PdClient, &Dhcp6PdClient::HandleTimer>;
 
-    State        mState;
-    bool         mPdPrefixCommited;
-    RetxTracker  mRetxTracker;
-    uint32_t     mMaxSolicitTimeout;
-    PdPrefix     mPdPrefix;
-    ServerDuid   mServerDuid;
-    Ip6::Address mServerAddress;
-    DelayTimer   mTimer;
+    State       mState;
+    bool        mPdPrefixCommited;
+    RetxTracker mRetxTracker;
+    uint32_t    mMaxSolicitTimeout;
+    PdPrefix    mPdPrefix;
+    ServerDuid  mServerDuid;
+    DelayTimer  mTimer;
 };
 
 } // namespace BorderRouter

@@ -363,4 +363,11 @@ OT_TOOL_WEAK void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
     DieNow(OT_EXIT_FAILURE);
 }
 
+OT_TOOL_WEAK void otMessageFree(otMessage *aMessage)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    fprintf(stderr, "\n\rWeak otMessageFree() is incorrectly used\n\r");
+    DieNow(OT_EXIT_FAILURE);
+}
+
 #endif // OPENTHREAD_SIMULATION_IMPLEMENT_INFRA_IF && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

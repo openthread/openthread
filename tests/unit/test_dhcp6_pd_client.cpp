@@ -198,7 +198,6 @@ struct Dhcp6Msg : public Clearable<Dhcp6Msg>
     bool                 mHasServerId : 1;
     bool                 mHasOptionRequest : 1;
     bool                 mHasPreference : 1;
-    bool                 mHasServerUnicast : 1;
     bool                 mHasSolMaxRt : 1;
     uint16_t             mStatusCode;
     uint16_t             mElapsedTime;
@@ -206,7 +205,6 @@ struct Dhcp6Msg : public Clearable<Dhcp6Msg>
     Duid                 mServerDuid;
     ReqOptionArray       mRequestedOptions;
     uint8_t              mPreference;
-    Ip6::Address         mServerAddress;
     uint16_t             mSolMaxRt;
     IaPdArray            mIaPds;
 };
@@ -292,11 +290,6 @@ void Dhcp6Msg::LogMsg(const char *aAction) const
         Log("  %-13s : %u", "Preference", mPreference);
     }
 
-    if (mHasServerUnicast)
-    {
-        Log("  %-13s : %s", "ServerAddr", mServerAddress.ToString().AsCString());
-    }
-
     if (mHasSolMaxRt)
     {
         Log("  %-13s : %lu", "SolMaxRt", ToUlong(mSolMaxRt));
@@ -329,14 +322,13 @@ void Dhcp6Msg::ParseFrom(const Message &aMessage)
     IaPrefix     *iaPrefix;
     union
     {
-        Dhcp6::Option              option;
-        Dhcp6::StatusCodeOption    statusOption;
-        Dhcp6::ElapsedTimeOption   elapsedTimeOption;
-        Dhcp6::PreferenceOption    preferenceOption;
-        Dhcp6::ServerUnicastOption serverUnicastOption;
-        Dhcp6::SolMaxRtOption      solMaxRtOption;
-        Dhcp6::IaPdOption          iaPdOption;
-        Dhcp6::IaPrefixOption      iaPrefixOption;
+        Dhcp6::Option            option;
+        Dhcp6::StatusCodeOption  statusOption;
+        Dhcp6::ElapsedTimeOption elapsedTimeOption;
+        Dhcp6::PreferenceOption  preferenceOption;
+        Dhcp6::SolMaxRtOption    solMaxRtOption;
+        Dhcp6::IaPdOption        iaPdOption;
+        Dhcp6::IaPrefixOption    iaPrefixOption;
     };
 
     Clear();
@@ -416,13 +408,6 @@ void Dhcp6Msg::ParseFrom(const Message &aMessage)
             mPreference = preferenceOption.GetPreference();
             break;
 
-        case Dhcp6::Option::kServerUnicast:
-            VerifyOrQuit(!mHasServerUnicast);
-            mHasServerUnicast = true;
-            SuccessOrQuit(aMessage.Read(optionOffsetRange, serverUnicastOption));
-            mServerAddress = serverUnicastOption.GetServerAddress();
-            break;
-
         case Dhcp6::Option::kSolMaxRt:
             VerifyOrQuit(!mHasSolMaxRt);
             mHasSolMaxRt = true;
@@ -491,14 +476,13 @@ void Dhcp6Msg::PrepareMessage(Message &aMessage)
     Dhcp6::Header header;
     union
     {
-        Dhcp6::Option              option;
-        Dhcp6::StatusCodeOption    statusOption;
-        Dhcp6::ElapsedTimeOption   elapsedTimeOption;
-        Dhcp6::PreferenceOption    preferenceOption;
-        Dhcp6::ServerUnicastOption serverUnicastOption;
-        Dhcp6::SolMaxRtOption      solMaxRtOption;
-        Dhcp6::IaPdOption          iaPdOption;
-        Dhcp6::IaPrefixOption      iaPrefixOption;
+        Dhcp6::Option            option;
+        Dhcp6::StatusCodeOption  statusOption;
+        Dhcp6::ElapsedTimeOption elapsedTimeOption;
+        Dhcp6::PreferenceOption  preferenceOption;
+        Dhcp6::SolMaxRtOption    solMaxRtOption;
+        Dhcp6::IaPdOption        iaPdOption;
+        Dhcp6::IaPrefixOption    iaPrefixOption;
     };
 
     header.SetMsgType(static_cast<Dhcp6::MsgType>(mMsgType));
@@ -550,13 +534,6 @@ void Dhcp6Msg::PrepareMessage(Message &aMessage)
         preferenceOption.Init();
         preferenceOption.SetPreference(mPreference);
         SuccessOrQuit(aMessage.Append(preferenceOption));
-    }
-
-    if (mHasServerUnicast)
-    {
-        serverUnicastOption.Init();
-        serverUnicastOption.SetServerAddress(mServerAddress);
-        SuccessOrQuit(aMessage.Append(serverUnicastOption));
     }
 
     if (mHasSolMaxRt)
@@ -617,19 +594,13 @@ class Dhcp6RxMsg : public Dhcp6Msg
 public:
     void ValidateAsSolicit(void) const;
 
-    void ValidateAsRequest(const Ip6::Prefix     &aPrefix,
-                           const Mac::ExtAddress &aServerMacAddr,
-                           const Ip6::Address    *aServerIp6Addr = nullptr) const;
+    void ValidateAsRequest(const Ip6::Prefix &aPrefix, const Mac::ExtAddress &aServerMacAddr) const;
 
-    void ValidateAsRenew(const Ip6::Prefix     &aPrefix,
-                         const Mac::ExtAddress &aServerMacAddr,
-                         const Ip6::Address    *aServerIp6Addr = nullptr) const;
+    void ValidateAsRenew(const Ip6::Prefix &aPrefix, const Mac::ExtAddress &aServerMacAddr) const;
 
     void ValidateAsRebind(const Ip6::Prefix &aPrefix) const;
 
-    void ValidateAsRelease(const Ip6::Prefix     &aPrefix,
-                           const Mac::ExtAddress &aServerMacAddr,
-                           const Ip6::Address    *aServerIp6Addr = nullptr) const;
+    void ValidateAsRelease(const Ip6::Prefix &aPrefix, const Mac::ExtAddress &aServerMacAddr) const;
 
     uint32_t     mRxTime;
     Ip6::Address mDstAddr;
@@ -637,8 +608,7 @@ public:
 private:
     void Validate(Dhcp6::MsgType         aMsgType,
                   const Ip6::Prefix     &aPrefix,
-                  const Mac::ExtAddress *aServerMacAddr = nullptr,
-                  const Ip6::Address    *aServerIp6Addr = nullptr) const;
+                  const Mac::ExtAddress *aServerMacAddr = nullptr) const;
 };
 
 Ip6::Prefix PrefixFromString(const char *aString, uint8_t aPrefixLength)
@@ -673,48 +643,33 @@ void Dhcp6RxMsg::ValidateAsSolicit(void) const
     Validate(Dhcp6::kMsgTypeSolicit, prefix);
 }
 
-void Dhcp6RxMsg::ValidateAsRequest(const Ip6::Prefix     &aPrefix,
-                                   const Mac::ExtAddress &aServerMacAddr,
-                                   const Ip6::Address    *aServerIp6Addr) const
+void Dhcp6RxMsg::ValidateAsRequest(const Ip6::Prefix &aPrefix, const Mac::ExtAddress &aServerMacAddr) const
 {
-    Validate(Dhcp6::kMsgTypeRequest, aPrefix, &aServerMacAddr, aServerIp6Addr);
+    Validate(Dhcp6::kMsgTypeRequest, aPrefix, &aServerMacAddr);
 }
 
-void Dhcp6RxMsg::ValidateAsRenew(const Ip6::Prefix     &aPrefix,
-                                 const Mac::ExtAddress &aServerMacAddr,
-                                 const Ip6::Address    *aServerIp6Addr) const
+void Dhcp6RxMsg::ValidateAsRenew(const Ip6::Prefix &aPrefix, const Mac::ExtAddress &aServerMacAddr) const
 {
-    Validate(Dhcp6::kMsgTypeRenew, aPrefix, &aServerMacAddr, aServerIp6Addr);
+    Validate(Dhcp6::kMsgTypeRenew, aPrefix, &aServerMacAddr);
 }
 
 void Dhcp6RxMsg::ValidateAsRebind(const Ip6::Prefix &aPrefix) const { Validate(Dhcp6::kMsgTypeRebind, aPrefix); }
 
-void Dhcp6RxMsg::ValidateAsRelease(const Ip6::Prefix     &aPrefix,
-                                   const Mac::ExtAddress &aServerMacAddr,
-                                   const Ip6::Address    *aServerIp6Addr) const
+void Dhcp6RxMsg::ValidateAsRelease(const Ip6::Prefix &aPrefix, const Mac::ExtAddress &aServerMacAddr) const
 {
-    Validate(Dhcp6::kMsgTypeRelease, aPrefix, &aServerMacAddr, aServerIp6Addr);
+    Validate(Dhcp6::kMsgTypeRelease, aPrefix, &aServerMacAddr);
 }
 
 void Dhcp6RxMsg::Validate(Dhcp6::MsgType         aMsgType,
                           const Ip6::Prefix     &aPrefix,
-                          const Mac::ExtAddress *aServerMacAddr,
-                          const Ip6::Address    *aServerIp6Addr) const
+                          const Mac::ExtAddress *aServerMacAddr) const
 {
     VerifyOrQuit(mMsgType == aMsgType);
 
-    if (aServerIp6Addr != nullptr)
-    {
-        VerifyOrQuit(mDstAddr == *aServerIp6Addr);
-    }
-    else
-    {
-        VerifyOrQuit(mDstAddr == AddressFromString("ff02::1:2"));
-    }
+    VerifyOrQuit(mDstAddr == AddressFromString("ff02::1:2"));
 
     VerifyOrQuit(!mHasStatus);
     VerifyOrQuit(!mHasPreference);
-    VerifyOrQuit(!mHasServerUnicast);
     VerifyOrQuit(!mHasSolMaxRt);
 
     VerifyOrQuit(mHasElapsedTime);
@@ -763,19 +718,13 @@ struct Dhcp6TxMsg : public Dhcp6Msg
         Ip6::Prefix mPrefix;
     };
 
-    void PrepareAdvertise(const Dhcp6RxMsg      &aClientMsg,
-                          const Mac::ExtAddress &aServerMacAddr,
-                          const Ip6::Address    *aServerIp6Addr = nullptr);
-    void PrepareReply(const Dhcp6RxMsg      &aClientMsg,
-                      const Mac::ExtAddress &aServerMacAddr,
-                      const Ip6::Address    *aServerIp6Addr = nullptr);
+    void PrepareAdvertise(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr);
+    void PrepareReply(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr);
     void AddIaPrefix(const PrefixInfo &aInfo);
     void Send(void);
 };
 
-void Dhcp6TxMsg::PrepareAdvertise(const Dhcp6RxMsg      &aClientMsg,
-                                  const Mac::ExtAddress &aServerMacAddr,
-                                  const Ip6::Address    *aServerIp6Addr)
+void Dhcp6TxMsg::PrepareAdvertise(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr)
 {
     Clear();
     mMsgType       = Dhcp6::kMsgTypeAdvertise;
@@ -785,17 +734,9 @@ void Dhcp6TxMsg::PrepareAdvertise(const Dhcp6RxMsg      &aClientMsg,
     mClientDuid    = aClientMsg.mClientDuid;
     mServerDuid.mShared.mEui64.Init(aServerMacAddr);
     mServerDuid.mLength = sizeof(Dhcp6::Eui64Duid);
-
-    if (aServerIp6Addr != nullptr)
-    {
-        mHasServerUnicast = true;
-        mServerAddress    = *aServerIp6Addr;
-    }
 }
 
-void Dhcp6TxMsg::PrepareReply(const Dhcp6RxMsg      &aClientMsg,
-                              const Mac::ExtAddress &aServerMacAddr,
-                              const Ip6::Address    *aServerIp6Addr)
+void Dhcp6TxMsg::PrepareReply(const Dhcp6RxMsg &aClientMsg, const Mac::ExtAddress &aServerMacAddr)
 {
     Clear();
     mMsgType       = Dhcp6::kMsgTypeReply;
@@ -805,12 +746,6 @@ void Dhcp6TxMsg::PrepareReply(const Dhcp6RxMsg      &aClientMsg,
     mClientDuid    = aClientMsg.mClientDuid;
     mServerDuid.mShared.mEui64.Init(aServerMacAddr);
     mServerDuid.mLength = sizeof(Dhcp6::Eui64Duid);
-
-    if (aServerIp6Addr != nullptr)
-    {
-        mHasServerUnicast = true;
-        mServerAddress    = *aServerIp6Addr;
-    }
 }
 
 void Dhcp6TxMsg::AddIaPrefix(const PrefixInfo &aInfo)
@@ -958,7 +893,7 @@ void FinalizeTest(void) { testFreeInstance(sInstance); }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption)
+void TestDhcp6PdPrefixDelegation(bool aShortPrefix)
 {
     uint16_t               heapAllocations;
     Dhcp6TxMsg             txMsg;
@@ -967,12 +902,9 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     Ip6::Prefix            adjustedPrefix;
     Mac::ExtAddress        serverMacAddr;
     const DelegatedPrefix *delegatedPrefix;
-    Ip6::Address           serverAddr;
-    const Ip6::Address    *serverIp6Addr;
 
     Log("--------------------------------------------------------------------------------------------");
-    Log("TestDhcp6PdPrefixDelegation(aShortPrefix:%u, aAddServerUnicastOption:%u)", aShortPrefix,
-        aAddServerUnicastOption);
+    Log("TestDhcp6PdPrefixDelegation(aShortPrefix:%u)", aShortPrefix);
 
     InitTest();
 
@@ -991,15 +923,6 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
         adjustedPrefix = prefix;
     }
 
-    // If `aAddServerUnicastOption` is enabled, we add `ServerUnicastOption`
-    // to Advertise and Reply messages. This prompts the client to use a
-    // specific server unicast address instead of the all-servers multicast
-    // address. The client's use of this address is then validated when it
-    // sends Request or Renew messages throughout all the test steps.
-
-    serverAddr    = AddressFromString("fe80::1");
-    serverIp6Addr = (aAddServerUnicastOption ? &serverAddr : 0);
-
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Start the client and wait for the first two Solicit messages");
 
@@ -1017,7 +940,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Send Advertisement");
 
-    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr, serverIp6Addr);
+    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr);
 
     prefixInfo.mIaid              = sDhcp6RxMsgs[0].mIaPds[0].mIaid;
     prefixInfo.mT1                = 2000;
@@ -1039,7 +962,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     Log("Validate Request message is received");
 
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
-    sDhcp6RxMsgs[0].ValidateAsRequest(prefix, serverMacAddr, serverIp6Addr);
+    sDhcp6RxMsgs[0].ValidateAsRequest(prefix, serverMacAddr);
 
     for (uint16_t iter = 0; iter < 3; iter++)
     {
@@ -1048,7 +971,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
 
         sDhcp6RxMsgs.Clear();
 
-        txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr, serverIp6Addr);
+        txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr);
         txMsg.AddIaPrefix(prefixInfo);
 
         txMsg.Send();
@@ -1081,7 +1004,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
         AdvanceTime(5);
         VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
 
-        sDhcp6RxMsgs[0].ValidateAsRenew(prefix, serverMacAddr, serverIp6Addr);
+        sDhcp6RxMsgs[0].ValidateAsRenew(prefix, serverMacAddr);
         VerifyOrQuit(sDhcp6RxMsgs[0].mElapsedTime == 0);
     }
 
@@ -1093,7 +1016,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
 
     for (uint16_t index = 2; index < sDhcp6RxMsgs.GetLength(); index++)
     {
-        sDhcp6RxMsgs[index].ValidateAsRenew(prefix, serverMacAddr, serverIp6Addr);
+        sDhcp6RxMsgs[index].ValidateAsRenew(prefix, serverMacAddr);
         VerifyOrQuit(sDhcp6RxMsgs[index].mTransactionId == sDhcp6RxMsgs[0].mTransactionId);
         VerifyOrQuit(sDhcp6RxMsgs[index].mElapsedTime > 0);
     }
@@ -1122,7 +1045,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Send Reply to Rebind");
 
-    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr, serverIp6Addr);
+    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr);
     txMsg.AddIaPrefix(prefixInfo);
 
     sDhcp6RxMsgs.Clear();
@@ -1157,7 +1080,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     AdvanceTime(5);
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
 
-    sDhcp6RxMsgs[0].ValidateAsRenew(prefix, serverMacAddr, serverIp6Addr);
+    sDhcp6RxMsgs[0].ValidateAsRenew(prefix, serverMacAddr);
     VerifyOrQuit(sDhcp6RxMsgs[0].mElapsedTime == 0);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
@@ -1168,7 +1091,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
 
     for (uint16_t index = 2; index < sDhcp6RxMsgs.GetLength(); index++)
     {
-        sDhcp6RxMsgs[index].ValidateAsRenew(prefix, serverMacAddr, serverIp6Addr);
+        sDhcp6RxMsgs[index].ValidateAsRenew(prefix, serverMacAddr);
         VerifyOrQuit(sDhcp6RxMsgs[index].mTransactionId == sDhcp6RxMsgs[0].mTransactionId);
         VerifyOrQuit(sDhcp6RxMsgs[index].mElapsedTime > 0);
     }
@@ -1236,7 +1159,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Send Advertisement, check Request message and respond with Reply");
 
-    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr, serverIp6Addr);
+    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr);
     txMsg.AddIaPrefix(prefixInfo);
     sDhcp6RxMsgs.Clear();
     txMsg.Send();
@@ -1244,9 +1167,9 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     AdvanceTime(1);
 
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
-    sDhcp6RxMsgs[0].ValidateAsRequest(prefix, serverMacAddr, serverIp6Addr);
+    sDhcp6RxMsgs[0].ValidateAsRequest(prefix, serverMacAddr);
 
-    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr, serverIp6Addr);
+    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr);
     txMsg.AddIaPrefix(prefixInfo);
     sDhcp6RxMsgs.Clear();
     txMsg.Send();
@@ -1272,12 +1195,12 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
     sInstance->Get<BorderRouter::Dhcp6PdClient>().Stop();
 
     VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
-    sDhcp6RxMsgs[0].ValidateAsRelease(prefix, serverMacAddr, serverIp6Addr);
+    sDhcp6RxMsgs[0].ValidateAsRelease(prefix, serverMacAddr);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Send Reply to Release message and check that no more messages is received");
 
-    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr, serverIp6Addr);
+    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr);
     txMsg.AddIaPrefix(prefixInfo);
     sDhcp6RxMsgs.Clear();
     txMsg.Send();
@@ -1290,8 +1213,7 @@ void TestDhcp6PdPrefixDelegation(bool aShortPrefix, bool aAddServerUnicastOption
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
 
-    Log("End of TestDhcp6PdPrefixDelegation(aShortPrefix:%u, aAddServerUnicastOption:%u)", aShortPrefix,
-        aAddServerUnicastOption);
+    Log("End of TestDhcp6PdPrefixDelegation(aShortPrefix:%u)", aShortPrefix);
 
     FinalizeTest();
 }
@@ -2547,99 +2469,6 @@ void TestDhcp6PdServerReplacingPrefix(void)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void TestDhcp6PdServerStatusCodeUseMulticast(void)
-{
-    uint16_t               heapAllocations;
-    Dhcp6TxMsg             txMsg;
-    Dhcp6TxMsg::PrefixInfo prefixInfo;
-    Ip6::Prefix            prefix;
-    Ip6::Prefix            adjustedPrefix;
-    Mac::ExtAddress        serverMacAddr;
-    const DelegatedPrefix *delegatedPrefix;
-    Ip6::Address           serverIp6Addr;
-
-    Log("--------------------------------------------------------------------------------------------");
-    Log("TestDhcp6PdServerStatusCodeUseMulticast()");
-
-    InitTest();
-
-    heapAllocations = sHeapAllocatedPtrs.GetLength();
-
-    serverMacAddr.GenerateRandom();
-
-    prefix         = PrefixFromString("2001:f57c::", 48);
-    adjustedPrefix = PrefixFromString("2001:f57c::", 64);
-
-    serverIp6Addr = AddressFromString("fe80::2");
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-    Log("Start the client and wait for the first two Solicit messages");
-
-    VerifyOrQuit(!sDhcp6ListeningEnabled);
-    sInstance->Get<BorderRouter::Dhcp6PdClient>().Start();
-    VerifyOrQuit(sDhcp6ListeningEnabled);
-
-    AdvanceTime(2200);
-
-    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 2);
-    sDhcp6RxMsgs[0].ValidateAsSolicit();
-    sDhcp6RxMsgs[1].ValidateAsSolicit();
-    VerifyOrQuit(sDhcp6RxMsgs[0].mTransactionId == sDhcp6RxMsgs[1].mTransactionId);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-    Log("Send Advertisement");
-
-    txMsg.PrepareAdvertise(sDhcp6RxMsgs[0], serverMacAddr, &serverIp6Addr);
-
-    prefixInfo.mIaid              = sDhcp6RxMsgs[0].mIaPds[0].mIaid;
-    prefixInfo.mT1                = 2000;
-    prefixInfo.mT2                = 3200;
-    prefixInfo.mPreferredLifetime = 3600;
-    prefixInfo.mValidLifetime     = 4000;
-    prefixInfo.mPrefix            = prefix;
-    txMsg.AddIaPrefix(prefixInfo);
-
-    sDhcp6RxMsgs.Clear();
-
-    txMsg.Send();
-
-    AdvanceTime(1);
-
-    VerifyOrQuit(sInstance->Get<BorderRouter::Dhcp6PdClient>().GetDelegatedPrefix() == nullptr);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-    Log("Validate Request message is received using unicast address of server");
-
-    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
-    sDhcp6RxMsgs[0].ValidateAsRequest(prefix, serverMacAddr, &serverIp6Addr);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-    Log("Send Reply message with status code UseMulticast");
-
-    sDhcp6RxMsgs.Clear();
-
-    txMsg.PrepareReply(sDhcp6RxMsgs[0], serverMacAddr);
-    txMsg.mHasStatus  = true;
-    txMsg.mStatusCode = Dhcp6::StatusCodeOption::kUseMulticast;
-
-    sDhcp6RxMsgs.Clear();
-    txMsg.Send();
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-    Log("Validate Request message is sent again now as a multicast");
-
-    VerifyOrQuit(sDhcp6RxMsgs.GetLength() == 1);
-    sDhcp6RxMsgs[0].ValidateAsRequest(prefix, serverMacAddr, nullptr);
-
-    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-
-    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
-
-    Log("End of TestDhcp6PdServerStatusCodeUseMulticast");
-
-    FinalizeTest();
-}
-
 //---------------------------------------------------------------------------------------------------------------------
 
 void TestDhcp6PdServerReplyWithNoBindingToRelease(void)
@@ -2769,10 +2598,8 @@ void TestDhcp6PdServerReplyWithNoBindingToRelease(void)
 int main(void)
 {
 #if OT_CONFIG_DHCP6_PD_CLIENT_ENABLE
-    ot::TestDhcp6PdPrefixDelegation(/* aShortPrefix */ false, /* aAddServerUnicastOption */ false);
-    ot::TestDhcp6PdPrefixDelegation(/* aShortPrefix */ false, /* aAddServerUnicastOption */ true);
-    ot::TestDhcp6PdPrefixDelegation(/* aShortPrefix */ true, /* aAddServerUnicastOption */ false);
-    ot::TestDhcp6PdPrefixDelegation(/* aShortPrefix */ true, /* aAddServerUnicastOption */ true);
+    ot::TestDhcp6PdPrefixDelegation(/* aShortPrefix */ false);
+    ot::TestDhcp6PdPrefixDelegation(/* aShortPrefix */ true);
     ot::TestDhcp6PdSolicitRetries();
     ot::TestDhcp6PdRequestRetries();
     ot::TestDhcp6PdSelectBetweenMultipleServers();
@@ -2783,7 +2610,6 @@ int main(void)
     ot::TestDhcp6PdServerVoidingLeaseDuringRenew();
     ot::TestDhcp6PdServerNotExtendingLeaseDuringRenew();
     ot::TestDhcp6PdServerReplacingPrefix();
-    ot::TestDhcp6PdServerStatusCodeUseMulticast();
     ot::TestDhcp6PdServerReplyWithNoBindingToRelease();
 
     printf("All tests passed\n");
