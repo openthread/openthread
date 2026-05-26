@@ -769,7 +769,7 @@ private:
     Mlr::Manager mMlrManager;
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     DuaManager mDuaManager;
 #endif
 
@@ -1252,7 +1252,7 @@ template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 template <> inline Mlr::Manager &Instance::Get(void) { return mMlrManager; }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 template <> inline DuaManager &Instance::Get(void) { return mDuaManager; }
 #endif
 

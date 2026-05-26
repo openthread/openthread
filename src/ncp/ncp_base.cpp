@@ -2151,10 +2151,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_LINK_METRICS));
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_DUA));
-#endif
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_REFERENCE_DEVICE));
 #endif

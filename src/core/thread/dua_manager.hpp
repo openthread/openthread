@@ -36,15 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
-#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_DUA_ENABLE"
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE && !OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-#error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_DUA_ENABLE"
-#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
@@ -120,57 +112,6 @@ public:
      */
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent);
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-
-    /**
-     * Returns a reference to the Domain Unicast Address.
-     *
-     * @returns A reference to the Domain Unicast Address.
-     */
-    const Ip6::Address &GetDomainUnicastAddress(void) const { return mDomainUnicastAddress.GetAddress(); }
-
-    /**
-     * Sets the Interface Identifier manually specified for the Thread Domain Unicast Address.
-     *
-     * @param[in]  aIid        A reference to the Interface Identifier to set.
-     *
-     * @retval kErrorNone          Successfully set the Interface Identifier.
-     * @retval kErrorInvalidArgs   The specified Interface Identifier is reserved.
-     */
-    Error SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
-
-    /**
-     * Clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
-     */
-    void ClearFixedDuaInterfaceIdentifier(void);
-
-    /**
-     * Indicates whether or not there is Interface Identifier manually specified for the Thread
-     * Domain Unicast Address.
-     *
-     * @retval true  If there is Interface Identifier manually specified.
-     * @retval false If there is no Interface Identifier manually specified.
-     */
-    bool IsFixedDuaInterfaceIdentifierSet(void) { return !mFixedDuaInterfaceIdentifier.IsUnspecified(); }
-
-    /**
-     * Gets the Interface Identifier for the Thread Domain Unicast Address if manually specified.
-     *
-     * @returns A reference to the Interface Identifier.
-     */
-    const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const { return mFixedDuaInterfaceIdentifier; }
-
-    /*
-     * Restores duplicate address detection information from non-volatile memory.
-     */
-    void Restore(void);
-
-    /**
-     * Notifies duplicated Domain Unicast Address.
-     */
-    void NotifyDuplicateDomainUnicastAddress(void);
-#endif
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
      * Events related to a Child DUA address.
@@ -193,20 +134,8 @@ public:
 #endif
 
 private:
-    static constexpr uint32_t kDuaDadPeriod               = 100; // DAD wait time to become "Preferred" (in sec).
-    static constexpr uint8_t  kNoBufDelay                 = 5;   // In sec.
-    static constexpr uint8_t  KResponseTimeoutDelay       = 30;  // In sec.
-    static constexpr uint8_t  kNewRouterRegistrationDelay = 3;   // Delay (in sec) to establish link for a new router.
-    static constexpr uint8_t  kNewDuaRegistrationDelay    = 1;   // Delay (in sec) for newly added DUA.
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    Error GenerateDomainUnicastAddressIid(void);
-    void  Store(void);
-
-    void AddDomainUnicastAddress(void);
-    void RemoveDomainUnicastAddress(void);
-    void UpdateRegistrationDelay(uint8_t aDelay);
-#endif
+    static constexpr uint8_t kNoBufDelay           = 5;  // In sec.
+    static constexpr uint8_t KResponseTimeoutDelay = 30; // In sec.
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SendAddressNotification(Ip6::Address &aAddress, DuaStatus aStatus, const Child &aChild);
@@ -234,31 +163,12 @@ private:
     Ip6::Address     mRegisteringDua;
     bool             mIsDuaPending : 1;
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    enum DuaState : uint8_t
-    {
-        kNotExist,    ///< DUA is not available.
-        kToRegister,  ///< DUA is to be registered.
-        kRegistering, ///< DUA is being registered.
-        kRegistered,  ///< DUA is registered.
-    };
-
-    DuaState  mDuaState;
-    uint8_t   mDadCounter;
-    TimeMilli mLastRegistrationTime; // The time (in milliseconds) when sent last DUA.req or received DUA.rsp.
-    Ip6::InterfaceIdentifier   mFixedDuaInterfaceIdentifier;
-    Ip6::Netif::UnicastAddress mDomainUnicastAddress;
-#endif
-
     union
     {
         struct
         {
             uint16_t mReregistrationDelay; // Delay (in seconds) for DUA re-registration.
             uint8_t  mCheckDelay;          // Delay (in seconds) for checking whether or not registration is required.
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-            uint8_t mRegistrationDelay; // Delay (in seconds) for DUA registration.
-#endif
         } mFields;
         uint32_t mValue; // Non-zero indicates timer should start.
     } mDelay;
@@ -277,5 +187,5 @@ DeclareTmfHandler(DuaManager, kUriDuaRegistrationNotify);
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 #endif // OT_CORE_THREAD_DUA_MANAGER_HPP_

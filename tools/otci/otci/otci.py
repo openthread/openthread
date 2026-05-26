@@ -2594,23 +2594,6 @@ class OTCI(object):
         """Set the Thread Domain Name for Thread 1.2 device."""
         self.execute_command(f'domainname {self.__escape_escapable(name)}')
 
-    def get_dua_iid(self) -> str:
-        """Get the DUA IID for Thread 1.2 device."""
-        raw_iid = self.execute_command('dua iid')
-        if raw_iid:
-            return self.__parse_iid(raw_iid)
-        else:
-            return ''
-
-    def set_dua_iid(self, iid: str):
-        """Set the DUA IID for Thread 1.2 device."""
-        self.__validate_iid(iid)
-        self.execute_command(f'dua iid {iid}')
-
-    def clear_dua_iid(self):
-        """Clear the DUA IID for Thread 1.2 device."""
-        self.execute_command('dua iid clear')
-
     # TODO: mlr reg <ipaddr> ... [timeout]
 
     #

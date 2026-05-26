@@ -71,13 +71,6 @@ void SettingsBase::ChildInfo::Log(Action aAction) const
 }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-void SettingsBase::DadInfo::Log(Action aAction) const
-{
-    LogInfo("%s DadInfo {DadCounter:%2d}", ActionToString(aAction), GetDadCounter());
-}
-#endif
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 void SettingsBase::LogPrefix(Action aAction, Key aKey, const Ip6::Prefix &aPrefix)
 {
@@ -151,7 +144,7 @@ const char *SettingsBase::KeyToString(Key aKey)
     _(kKeyChildInfo, "ChildInfo")                 \
     _(6, "")                                      \
     _(kKeySlaacIidSecretKey, "SlaacIidSecretKey") \
-    _(kKeyDadInfo, "DadInfo")                     \
+    _(8, "")                                      \
     _(9, "")                                      \
     _(10, "")                                     \
     _(kKeySrpEcdsaKey, "SrpEcdsaKey")             \
@@ -484,12 +477,6 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #if OPENTHREAD_FTD
         case kKeyChildInfo:
             reinterpret_cast<const ChildInfo *>(aValue)->Log(aAction);
-            break;
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        case kKeyDadInfo:
-            reinterpret_cast<const DadInfo *>(aValue)->Log(aAction);
             break;
 #endif
 
