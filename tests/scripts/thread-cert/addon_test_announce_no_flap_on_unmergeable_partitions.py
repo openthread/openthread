@@ -125,10 +125,8 @@ class AnnounceNoFlapOnUnmergeablePartitions(thread_cert.TestCase):
 
         partition_old = self.nodes[LEADER_OLD].get_partition_id()
         partition_new = self.nodes[LEADER_NEW].get_partition_id()
-        self.assertNotEqual(
-            partition_old, partition_new,
-            'Test setup failed: nodes share a partition ID before the '
-            'weak link is wired up.')
+        self.assertNotEqual(partition_old, partition_new, 'Test setup failed: nodes share a partition ID before the '
+                            'weak link is wired up.')
 
         # Wire a weak link between the two leaders. Cross-traffic now
         # flows but Advertisements between different partitions fail
@@ -154,14 +152,12 @@ class AnnounceNoFlapOnUnmergeablePartitions(thread_cert.TestCase):
         # Both nodes must still be Leader of their original partitions.
         # Any Stop()/Start() flap from buggy Announce handling would
         # have allocated a fresh partition ID on re-attach.
-        self.assertEqual(
-            self.nodes[LEADER_OLD].get_state(), 'leader',
-            'LEADER_OLD no longer leader -- role flapped during the '
-            'test window.')
-        self.assertEqual(
-            self.nodes[LEADER_NEW].get_state(), 'leader',
-            'LEADER_NEW no longer leader -- role flapped during the '
-            'test window.')
+        self.assertEqual(self.nodes[LEADER_OLD].get_state(), 'leader',
+                         'LEADER_OLD no longer leader -- role flapped during the '
+                         'test window.')
+        self.assertEqual(self.nodes[LEADER_NEW].get_state(), 'leader',
+                         'LEADER_NEW no longer leader -- role flapped during the '
+                         'test window.')
 
         self.assertEqual(
             self.nodes[LEADER_OLD].get_partition_id(), partition_old,
