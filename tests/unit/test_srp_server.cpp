@@ -967,11 +967,11 @@ void TestUpdateLeaseShortVariant(void)
     VerifyOrQuit(service1.GetState() == Srp::Client::kRemoved);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Register the service again, but this time change it to request
-    // a lease time that is larger than the `LeaseConfig.mMinLease` of
-    // 27 hours. This ensures that server needs to include the Lease
-    // Option in its response (since it need to grant a different
-    // lease interval).
+    // Register the service again, but this time request a lease time
+    // larger than the server's `LeaseConfig.mMaxLease` of 27 hours, so
+    // the server grants a different (clamped) interval. Validate that
+    // the client adopts the granted lease from the Update Lease
+    // Option in the response.
 
     service1.mLease    = 100u * 3600; // 100 hours >= 27 hours.
     service1.mKeyLease = 110u * 3600;

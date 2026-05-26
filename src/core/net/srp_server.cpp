@@ -727,8 +727,9 @@ void Server::CommitSrpUpdate(Error                    aError,
 exit:
     if (aMessageInfo != nullptr)
     {
-        if (aError == kErrorNone && (grantedLease != hostLease || grantedKeyLease != hostKeyLease))
+        if (aError == kErrorNone)
         {
+            // RFC 9664: server MUST echo the Update Lease option in any successful (RCODE=0) response.
             SendResponse(aDnsHeader, grantedLease, grantedKeyLease, useShortLease, *aMessageInfo);
         }
         else
