@@ -49,7 +49,6 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
-#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/netif.hpp"
 #include "thread/child.hpp"
@@ -79,7 +78,6 @@ namespace Mlr {
 class Manager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
-    friend class ot::TimeTicker;
 
 public:
     typedef otIp6RegisterMulticastListenersCallback RegisterCallback;
@@ -142,27 +140,46 @@ public:
 #endif
 
 private:
-    static constexpr uint32_t kLongRenewTimeout = 4 * Time::kOneHourInSec; // `MLR_TIMEOUT_LONG` (in sec)
-    static constexpr uint32_t kRenewGuardTime   = 9;                       // (in sec).
+    // Delays (in msec) applied before registration attempts when new
+    // `Netif` or child multicast addresses are added. The longer
+    // delay for child addresses allows the parent to aggregate
+    // multiple address updates into a single MLR request.
+    static constexpr uint32_t kMaxNewNetifAddrRegistraionDelay  = 100;
+    static constexpr uint32_t kMinNewChildAddrRegistrationDelay = 750;
+    static constexpr uint32_t kMaxNewChildAddrRegistrationDelay = 5000;
 
-    enum RegistrationRequest : uint8_t
+    static constexpr uint32_t kLongRenewTimeout      = 4 * Time::kOneHourInSec;    // `MLR_TIMEOUT_LONG` (in sec)
+    static constexpr uint32_t kRenewGuardTimeInMsec  = 9 * Time::kOneSecondInMsec; // (in msec)
+    static constexpr uint32_t kSendFailureRetryDelay = 1000;                       // (in msec)
+
+    enum State : uint8_t
     {
-        kReregister,
-        kRenew,
+        kStateStopped,           // Manager is stopped (e.g., no PBBR).
+        kStateIdle,              // Started but has no multicast addresses to register.
+        kStateToRegisterAll,     // Waiting to register (or re-register) all multicast addresses.
+        kStateRegistering,       // MLR.req is sent, waiting for MLR.rsp, or waiting to retry.
+        kStateRegistered,        // All addresses are registered, waiting for periodic renewal.
+        kStateNewAddrToRegister, // All were registered, but new addresses are pending registration.
     };
 
+    State GetState(void) const { return mState; }
+    bool  IsRunning(void) const { return mState != kStateStopped; }
+    void  EnterState(State aState);
+    void  UpdateState(void);
     void  HandleNotifierEvents(Events aEvents);
-    bool  ShouldRegister(void) const;
     void  DetermineAddressesToRegister(AddressArray &aAddresses) const;
-    void  Send(void);
+    void  SendNextRequest(void);
+    void  DetermineRenewTime(void);
+    void  ScheduleTimerForReregistrationDelay(void);
+    void  ScheduleNewAddrRegistration(uint32_t aMinDelay, uint32_t aMaxDelay);
+    void  ProcessResponse(Coap::Msg *aMsg, Error aResult);
+    void  HandleTimer(void);
     Error SendMessage(const Ip6::Address   *aAddresses,
                       uint8_t               aAddressNum,
                       const uint32_t       *aTimeout,
                       Coap::ResponseHandler aResponseHandler);
 
     DeclareTmfResponseHandlerIn(Manager, HandleResponse);
-
-    uint32_t DetermineRenewDelay(void);
 
     static Error ParseResponse(Error aResult, Coap::Msg *aMsg, uint8_t &aStatus, AddressArray &aFailedAddresses);
 
@@ -176,31 +193,20 @@ private:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    bool IsAddressRegisteredByAnyChild(const Ip6::Address &aAddress) const
-    {
-        return IsAddressRegisteredByAnyChildExcept(aAddress, nullptr);
-    }
-
+    bool IsAddressRegisteredByAnyChild(const Ip6::Address &aAddress) const;
     bool IsAddressRegisteredByAnyChildExcept(const Ip6::Address &aAddress, const Child *aExceptChild) const;
 #endif
 
-    void ScheduleSend(uint16_t aDelay);
-    void UpdateTimeTickerRegistration(void);
-    void ScheduleNextRegistration(RegistrationRequest aRequest);
-    void Reregister(void);
-    void HandleTimeTick(void);
+    using DelayTimer = TimerMilliIn<Manager, &Manager::HandleTimer>;
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Callback<RegisterCallback> mRegisterCallback;
+    bool                       mRegisterPending;
 #endif
-
-    uint32_t mReregistrationDelay;
-    uint16_t mSendDelay;
-
-    bool mPending : 1;
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    bool mRegisterPending : 1;
-#endif
+    State      mState;
+    TimeMilli  mStartTime;
+    TimeMilli  mRenewTime;
+    DelayTimer mTimer;
 };
 
 } // namespace Mlr
