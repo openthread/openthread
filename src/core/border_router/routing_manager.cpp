@@ -995,6 +995,11 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
             break;
         }
 
+        case kToRemove:
+            // No favored prefix; cancel the pending removal and re-add our local prefix.
+            AddLocalToNetData();
+            break;
+
         case kAdded:
         case kToAdd:
             break;
@@ -1013,7 +1018,29 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
     // we remove our local prefix if it is added or scheduled to be added.
 
     SetFavoredPrefix(favoredPrefix);
-    RemoveLocalFromNetData();
+
+    switch (mLocalInNetDataState)
+    {
+    case kAdded:
+    {
+        uint32_t delay = Random::NonCrypto::GenerateInClosedRange(kMinDelayToRemove, kMaxDelayToRemove);
+
+        mLocalInNetDataState = kToRemove;
+        mTimer.Start(delay);
+        LogInfo("Will remove %s from NetData in %lu msec", LocalToString().AsCString(), ToUlong(delay));
+        break;
+    }
+
+    case kToAdd:
+        // Prefix not yet in Network Data; cancel the pending add.
+        mTimer.Stop();
+        mLocalInNetDataState = kNotAdded;
+        break;
+
+    case kToRemove:
+    case kNotAdded:
+        break;
+    }
 
 exit:
     return;
@@ -1021,11 +1048,18 @@ exit:
 
 void RoutingManager::OmrPrefixManager::HandleTimer(void)
 {
-    VerifyOrExit(mLocalInNetDataState == kToAdd);
-    AddLocalToNetData();
-
-exit:
-    return;
+    switch (mLocalInNetDataState)
+    {
+    case kToAdd:
+        AddLocalToNetData();
+        break;
+    case kToRemove:
+        RemoveLocalFromNetData();
+        break;
+    case kNotAdded:
+    case kAdded:
+        break;
+    }
 }
 
 bool RoutingManager::OmrPrefixManager::ShouldAdvertiseLocalAsRio(void) const
@@ -1113,6 +1147,8 @@ void RoutingManager::OmrPrefixManager::RemoveLocalFromNetData(void)
     switch (mLocalInNetDataState)
     {
     case kAdded:
+    case kToRemove:
+        mTimer.Stop();
         IgnoreError(Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalPrefix.GetPrefix()));
         Get<NetworkData::Notifier>().HandleServerDataUpdated();
         LogInfo("Removed %s from NetData", LocalToString().AsCString());

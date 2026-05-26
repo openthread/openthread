@@ -643,9 +643,14 @@ private:
 #endif
 
     private:
-        // All times are in msec
-        static constexpr uint32_t kMinDelayToAdd  = 250;
-        static constexpr uint32_t kMaxDelayToAdd  = kMinDelayToAdd + 3500;
+        // All times are in msec.
+        static constexpr uint32_t kMinDelayToAdd = 250;
+        static constexpr uint32_t kMaxDelayToAdd =
+            kMinDelayToAdd + OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD;
+        static constexpr uint32_t kMinDelayToRemove =
+            kMaxDelayToAdd; // never remove before the peer's add window closes
+        static constexpr uint32_t kMaxDelayToRemove = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_REMOVE;
+        static_assert(kMinDelayToRemove <= kMaxDelayToRemove, "kMinDelayToRemove must be <= kMaxDelayToRemove");
         static constexpr uint32_t kRetryDelay     = 1500;
         static constexpr uint16_t kRetryJitter    = 150;
         static constexpr uint16_t kInfoStringSize = 85;
@@ -664,6 +669,7 @@ private:
             kNotAdded,
             kToAdd,
             kAdded,
+            kToRemove,
         };
 
         void       SetFavoredPrefix(const OmrPrefix &aOmrPrefix);
