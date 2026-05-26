@@ -40,11 +40,8 @@
 #include <openthread/platform/ble.h>
 #endif
 
-enum
-{
-    FLASH_SWAP_SIZE = 2048,
-    FLASH_SWAP_NUM  = 2,
-};
+constexpr uint16_t kFlashSwapSize = 2048;
+constexpr uint8_t  kFlashSwapNum  = 2;
 
 std::map<uint32_t, std::vector<std::vector<uint8_t>>> settings;
 
@@ -53,7 +50,7 @@ ot::Instance *testInitInstance(void)
     otInstance *instance = nullptr;
 
     settings.clear();
-    for (uint8_t idx = 0; idx < FLASH_SWAP_NUM; idx++)
+    for (uint8_t idx = 0; idx < kFlashSwapNum; idx++)
     {
         otPlatFlashErase(nullptr, idx);
     }
@@ -388,7 +385,7 @@ OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *) { settings.clear(); }
 
 uint8_t *GetFlash(void)
 {
-    static uint8_t sFlash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+    static uint8_t sFlash[kFlashSwapSize * kFlashSwapNum];
     static bool    sInitialized;
 
     if (!sInitialized)
@@ -402,28 +399,28 @@ uint8_t *GetFlash(void)
 
 OT_TOOL_WEAK void otPlatFlashInit(otInstance *) {}
 
-OT_TOOL_WEAK uint32_t otPlatFlashGetSwapSize(otInstance *) { return FLASH_SWAP_SIZE; }
+OT_TOOL_WEAK uint32_t otPlatFlashGetSwapSize(otInstance *) { return kFlashSwapSize; }
 
 OT_TOOL_WEAK void otPlatFlashErase(otInstance *, uint8_t aSwapIndex)
 {
     uint32_t address;
 
-    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
+    VerifyOrQuit(aSwapIndex < kFlashSwapNum, "aSwapIndex invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address = aSwapIndex ? kFlashSwapSize : 0;
 
-    memset(GetFlash() + address, 0xff, FLASH_SWAP_SIZE);
+    memset(GetFlash() + address, 0xff, kFlashSwapSize);
 }
 
 OT_TOOL_WEAK void otPlatFlashRead(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
     uint32_t address;
 
-    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
-    VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
-    VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+    VerifyOrQuit(aSwapIndex < kFlashSwapNum, "aSwapIndex invalid");
+    VerifyOrQuit(aSize <= kFlashSwapSize, "aSize invalid");
+    VerifyOrQuit(aOffset <= (kFlashSwapSize - aSize), "aOffset + aSize invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address = aSwapIndex ? kFlashSwapSize : 0;
 
     memcpy(aData, GetFlash() + address + aOffset, aSize);
 }
@@ -436,11 +433,11 @@ OT_TOOL_WEAK void otPlatFlashWrite(otInstance *,
 {
     uint32_t address;
 
-    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
-    VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
-    VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+    VerifyOrQuit(aSwapIndex < kFlashSwapNum, "aSwapIndex invalid");
+    VerifyOrQuit(aSize <= kFlashSwapSize, "aSize invalid");
+    VerifyOrQuit(aOffset <= (kFlashSwapSize - aSize), "aOffset + aSize invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address = aSwapIndex ? kFlashSwapSize : 0;
 
     for (uint32_t index = 0; index < aSize; index++)
     {

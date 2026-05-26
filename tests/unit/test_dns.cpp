@@ -42,11 +42,8 @@ namespace ot {
 
 void TestDnsName(void)
 {
-    enum
-    {
-        kMaxSize       = 300,
-        kMaxNameLength = Dns::Name::kMaxNameSize - 1,
-    };
+    static constexpr uint16_t kMaxSize       = 300;
+    static constexpr uint16_t kMaxNameLength = Dns::Name::kMaxNameSize - 1;
 
     struct TestName
     {
@@ -635,19 +632,14 @@ void TestDnsName(void)
 
 void TestDnsCompressedName(void)
 {
-    enum
-    {
-        kHeaderOffset   = 10,
-        kGuardBlockSize = 20,
-        kMaxBufferSize  = 100,
-        kLabelSize      = 64,
-        kNameSize       = 256,
-
-        kName2EncodedSize = 4 + 2,  // encoded "FOO" + pointer label (2 bytes)
-        kName3EncodedSize = 2,      // pointer label (2 bytes)
-        kName4EncodedSize = 15 + 2, // encoded "Human.Readable" + pointer label (2 bytes).
-
-    };
+    static constexpr uint8_t  kHeaderOffset     = 10;
+    static constexpr uint8_t  kGuardBlockSize   = 20;
+    static constexpr uint16_t kMaxBufferSize    = 100;
+    static constexpr uint16_t kLabelSize        = 64;
+    static constexpr uint16_t kNameSize         = 256;
+    static constexpr uint16_t kName2EncodedSize = 4 + 2;  // encoded "FOO" + pointer label (2 bytes)
+    static constexpr uint16_t kName3EncodedSize = 2;      // pointer label (2 bytes)
+    static constexpr uint16_t kName4EncodedSize = 15 + 2; // encoded "Human.Readable" + pointer label (2 bytes).
 
     const char kName[]          = "F.ISI.ARPA";
     const char kLabel1[]        = "FOO";
@@ -1155,19 +1147,16 @@ void TestDnsCompressedName(void)
 
 void TestHeaderAndResourceRecords(void)
 {
-    enum
-    {
-        kHeaderOffset    = 0,
-        kQuestionCount   = 1,
-        kAnswerCount     = 2,
-        kAdditionalCount = 6,
-        kTtl             = 7200,
-        kTxtTtl          = 7300,
-        kSrvPort         = 1234,
-        kSrvPriority     = 1,
-        kSrvWeight       = 2,
-        kMaxSize         = 600,
-    };
+    static constexpr uint8_t  kHeaderOffset    = 0;
+    static constexpr uint16_t kQuestionCount   = 1;
+    static constexpr uint16_t kAnswerCount     = 2;
+    static constexpr uint16_t kAdditionalCount = 6;
+    static constexpr uint32_t kTtl             = 7200;
+    static constexpr uint32_t kTxtTtl          = 7300;
+    static constexpr uint16_t kSrvPort         = 1234;
+    static constexpr uint16_t kSrvPriority     = 1;
+    static constexpr uint16_t kSrvWeight       = 2;
+    static constexpr uint16_t kMaxSize         = 600;
 
     const char    kMessageString[]  = "DnsMessage";
     const char    kDomainName[]     = "example.com.";
