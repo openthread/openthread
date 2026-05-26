@@ -424,6 +424,7 @@ openthread_core_files = [
   "common/as_core_type.hpp",
   "common/binary_search.cpp",
   "common/binary_search.hpp",
+  "common/bit_set.cpp",
   "common/bit_set.hpp",
   "common/bit_utils.cpp",
   "common/bit_utils.hpp",
