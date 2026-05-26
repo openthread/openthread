@@ -40,7 +40,7 @@
 namespace ot {
 namespace Utils {
 
-using namespace NetworkDiagnostic;
+using namespace NetDiag;
 
 RegisterLogModule("MeshDiag");
 

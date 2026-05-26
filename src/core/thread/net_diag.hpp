@@ -31,8 +31,8 @@
  *   This file includes definitions for handle network diagnostic.
  */
 
-#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
-#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
+#ifndef OT_CORE_THREAD_NET_DIAG_HPP_
+#define OT_CORE_THREAD_NET_DIAG_HPP_
 
 #include "openthread-core-config.h"
 
@@ -44,8 +44,8 @@
 #include "common/non_copyable.hpp"
 #include "common/numeric_limits.hpp"
 #include "net/udp6.hpp"
-#include "thread/network_diagnostic_tlvs.hpp"
-#include "thread/network_diagnostic_types.hpp"
+#include "thread/net_diag_tlvs.hpp"
+#include "thread/net_diag_types.hpp"
 #include "thread/tmf.hpp"
 #include "thread/uri_paths.hpp"
 
@@ -59,7 +59,7 @@ namespace MeshCoP {
 class TcatAgent;
 }
 
-namespace NetworkDiagnostic {
+namespace NetDiag {
 
 /**
  * @addtogroup core-netdiag
@@ -303,8 +303,8 @@ DeclareTmfHandler(Client, kUriDiagnosticReset);
 /**
  * @}
  */
-} // namespace NetworkDiagnostic
+} // namespace NetDiag
 
 } // namespace ot
 
-#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_HPP_
+#endif // OT_CORE_THREAD_NET_DIAG_HPP_

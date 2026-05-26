@@ -41,7 +41,7 @@
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/net_diag_tlvs.hpp"
 
 namespace ot {
 
@@ -177,10 +177,10 @@ private:
     static constexpr uint32_t kOuiMask = 0xffffff;
 
     // String buffer types (max size specified by corresponding TLV)
-    typedef NetworkDiagnostic::VendorNameTlv::StringType      NameStringType;
-    typedef NetworkDiagnostic::VendorModelTlv::StringType     ModelStringType;
-    typedef NetworkDiagnostic::VendorSwVersionTlv::StringType SwVersionStringType;
-    typedef NetworkDiagnostic::VendorAppUrlTlv::StringType    AppUrlStringType;
+    typedef NetDiag::VendorNameTlv::StringType      NameStringType;
+    typedef NetDiag::VendorModelTlv::StringType     ModelStringType;
+    typedef NetDiag::VendorSwVersionTlv::StringType SwVersionStringType;
+    typedef NetDiag::VendorAppUrlTlv::StringType    AppUrlStringType;
 
     static const char kName[];
     static const char kModel[];

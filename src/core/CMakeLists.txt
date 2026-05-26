@@ -257,6 +257,9 @@ set(COMMON_SOURCES
     thread/mlr_types.cpp
     thread/neighbor.cpp
     thread/neighbor_table.cpp
+    thread/net_diag.cpp
+    thread/net_diag_tlvs.cpp
+    thread/net_diag_types.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp
@@ -266,9 +269,6 @@ set(COMMON_SOURCES
     thread/network_data_service.cpp
     thread/network_data_tlvs.cpp
     thread/network_data_types.cpp
-    thread/network_diagnostic.cpp
-    thread/network_diagnostic_tlvs.cpp
-    thread/network_diagnostic_types.cpp
     thread/panid_query_server.cpp
     thread/peer.cpp
     thread/peer_table.cpp

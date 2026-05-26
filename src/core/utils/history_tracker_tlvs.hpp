@@ -42,7 +42,7 @@
 
 #include "common/encoding.hpp"
 #include "common/tlvs.hpp"
-#include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/net_diag_tlvs.hpp"
 #include "utils/history_tracker.hpp"
 
 namespace ot {
@@ -75,7 +75,7 @@ typedef UintTlvInfo<Tlv::kQueryId, uint16_t> QueryIdTlv;
 /**
  * Represents an Answer TLV value.
  */
-typedef NetworkDiagnostic::AnswerTlvValue AnswerTlvValue;
+typedef NetDiag::AnswerTlvValue AnswerTlvValue;
 
 /**
  * Defines Answer TLV constants and types.

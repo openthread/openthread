@@ -3175,7 +3175,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
     static const char *kEnrollerIds[kNumEnrollers] = {"1", "2", "3", "4"};
 
-    static const uint8_t kDiagTlvs[] = {NetworkDiagnostic::Tlv::kExtMacAddress, NetworkDiagnostic::Tlv::kVersion};
+    static const uint8_t kDiagTlvs[] = {NetDiag::Tlv::kExtMacAddress, NetDiag::Tlv::kVersion};
 
     Core                               nexus;
     Node                              &admitter = nexus.CreateNode();
@@ -3347,7 +3347,7 @@ void TestBorderAdmitterForwardingUdpProxy(void)
 
     diagMessage = enrollers[0]->Get<Tmf::Agent>().AllocateAndInitNonConfirmablePostMessage(kUriDiagnosticGetQuery);
     VerifyOrQuit(diagMessage != nullptr);
-    SuccessOrQuit(Tlv::Append<NetworkDiagnostic::TypeListTlv>(*diagMessage, kDiagTlvs, sizeof(kDiagTlvs)));
+    SuccessOrQuit(Tlv::Append<NetDiag::TypeListTlv>(*diagMessage, kDiagTlvs, sizeof(kDiagTlvs)));
     diagMessage->WriteMessageId(0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

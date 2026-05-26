@@ -137,11 +137,11 @@
 #include "thread/message_framer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mlr_manager.hpp"
+#include "thread/net_diag.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
 #include "thread/network_data_publisher.hpp"
 #include "thread/network_data_service.hpp"
-#include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
 #include "thread/radio_selector.hpp"
 #include "thread/thread_netif.hpp"
@@ -711,9 +711,9 @@ private:
 
     VendorInfo mVendorInfo;
 
-    NetworkDiagnostic::Server mNetworkDiagnosticServer;
+    NetDiag::Server mNetDiagServer;
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    NetworkDiagnostic::Client mNetworkDiagnosticClient;
+    NetDiag::Client mNetDiagClient;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -1128,10 +1128,10 @@ template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore;
 
 template <> inline VendorInfo &Instance::Get(void) { return mVendorInfo; }
 
-template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
+template <> inline NetDiag::Server &Instance::Get(void) { return mNetDiagServer; }
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-template <> inline NetworkDiagnostic::Client &Instance::Get(void) { return mNetworkDiagnosticClient; }
+template <> inline NetDiag::Client &Instance::Get(void) { return mNetDiagClient; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

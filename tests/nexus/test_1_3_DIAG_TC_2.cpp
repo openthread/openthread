@@ -31,7 +31,7 @@
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -153,16 +153,12 @@ void TestDiagTc2(const char *aJsonFile)
     td1Rloc.SetToRoutingLocator(leader1.Get<Mle::Mle>().GetMeshLocalPrefix(), td1.Get<Mle::Mle>().GetRloc16());
 
     uint8_t tlvTypesStep2[] = {
-        NetworkDiagnostic::Tlv::kMaxChildTimeout,
-        NetworkDiagnostic::Tlv::kEui64,
-        NetworkDiagnostic::Tlv::kVersion,
-        NetworkDiagnostic::Tlv::kVendorName,
-        NetworkDiagnostic::Tlv::kVendorModel,
-        NetworkDiagnostic::Tlv::kVendorSwVersion,
-        NetworkDiagnostic::Tlv::kThreadStackVersion,
+        NetDiag::Tlv::kMaxChildTimeout,    NetDiag::Tlv::kEui64,       NetDiag::Tlv::kVersion,
+        NetDiag::Tlv::kVendorName,         NetDiag::Tlv::kVendorModel, NetDiag::Tlv::kVendorSwVersion,
+        NetDiag::Tlv::kThreadStackVersion,
     };
-    SuccessOrQuit(leader1.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(td1Rloc, tlvTypesStep2,
-                                                                             sizeof(tlvTypesStep2), nullptr, nullptr));
+    SuccessOrQuit(leader1.Get<NetDiag::Client>().SendDiagnosticGet(td1Rloc, tlvTypesStep2, sizeof(tlvTypesStep2),
+                                                                   nullptr, nullptr));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 3: TD_1 (DUT) Automatically responds either with 1. DIAG_GET.rsp or 2. CoAP response 4.04.");
@@ -213,9 +209,9 @@ void TestDiagTc2(const char *aJsonFile)
      * - Pass Criteria:
      *   - N/A
      */
-    uint8_t tlvTypesStep4[] = {NetworkDiagnostic::Tlv::kMleCounters};
-    SuccessOrQuit(leader1.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(td1Rloc, tlvTypesStep4,
-                                                                             sizeof(tlvTypesStep4), nullptr, nullptr));
+    uint8_t tlvTypesStep4[] = {NetDiag::Tlv::kMleCounters};
+    SuccessOrQuit(leader1.Get<NetDiag::Client>().SendDiagnosticGet(td1Rloc, tlvTypesStep4, sizeof(tlvTypesStep4),
+                                                                   nullptr, nullptr));
 
     Log("---------------------------------------------------------------------------------------");
     Log("Step 5: TD_1 (DUT) Automatically responds with DIAG_GET.rsp containing the requested Diagnostic TLVs.");

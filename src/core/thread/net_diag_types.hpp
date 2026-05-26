@@ -31,12 +31,12 @@
  *   This file includes definitions for Network Diagnostics helper types and classes.
  */
 
-#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TYPES_HPP_
-#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TYPES_HPP_
+#ifndef OT_CORE_THREAD_NET_DIAG_TYPES_HPP_
+#define OT_CORE_THREAD_NET_DIAG_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
-#include "network_diagnostic_tlvs.hpp"
+#include "net_diag_tlvs.hpp"
 #include "coap/coap_message.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -44,7 +44,7 @@
 #include "thread/uri_paths.hpp"
 
 namespace ot {
-namespace NetworkDiagnostic {
+namespace NetDiag {
 
 /**
  * Represents an object for tracking and managing Network Diagnostic answer messages.
@@ -133,7 +133,7 @@ private:
     Message::Priority  mPriority;
 };
 
-} // namespace NetworkDiagnostic
+} // namespace NetDiag
 } // namespace ot
 
-#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TYPES_HPP_
+#endif // OT_CORE_THREAD_NET_DIAG_TYPES_HPP_

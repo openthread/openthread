@@ -31,12 +31,12 @@
  *   This file implements methods for generating and processing Network Diagnostics TLVs.
  */
 
-#include "network_diagnostic_tlvs.hpp"
+#include "net_diag_tlvs.hpp"
 
 #include "common/time.hpp"
 
 namespace ot {
-namespace NetworkDiagnostic {
+namespace NetDiag {
 
 //---------------------------------------------------------------------------------------------------------------------
 // ChildTableTlvEntry
@@ -292,5 +292,5 @@ void MleCountersTlv::Read(MleCounters &aDiagMleCounters) const
     aDiagMleCounters.mLeaderTime                    = BigEndian::HostSwap64(mLeaderTime);
 }
 
-} // namespace NetworkDiagnostic
+} // namespace NetDiag
 } // namespace ot

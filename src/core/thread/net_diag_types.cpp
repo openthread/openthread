@@ -31,12 +31,12 @@
  *   This file implements methods for Network Diagnostics helper types and classes.
  */
 
-#include "network_diagnostic_types.hpp"
+#include "net_diag_types.hpp"
 
 #include "instance/instance.hpp"
 
 namespace ot {
-namespace NetworkDiagnostic {
+namespace NetDiag {
 
 AnswerBuilder::AnswerBuilder(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -104,5 +104,5 @@ exit:
     return error;
 }
 
-} // namespace NetworkDiagnostic
+} // namespace NetDiag
 } // namespace ot

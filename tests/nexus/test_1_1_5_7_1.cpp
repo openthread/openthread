@@ -30,7 +30,7 @@
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 
 namespace ot {
 namespace Nexus {
@@ -155,15 +155,13 @@ void Test5_7_1(void)
     Log("Step 2: Leader");
 
     uint8_t tlvTypes2[] = {
-        NetworkDiagnostic::Tlv::kExtMacAddress, NetworkDiagnostic::Tlv::kAddress16,
-        NetworkDiagnostic::Tlv::kMode,          NetworkDiagnostic::Tlv::kConnectivity,
-        NetworkDiagnostic::Tlv::kRoute,         NetworkDiagnostic::Tlv::kLeaderData,
-        NetworkDiagnostic::Tlv::kNetworkData,   NetworkDiagnostic::Tlv::kIp6AddressList,
-        NetworkDiagnostic::Tlv::kChannelPages,
+        NetDiag::Tlv::kExtMacAddress, NetDiag::Tlv::kAddress16,      NetDiag::Tlv::kMode,
+        NetDiag::Tlv::kConnectivity,  NetDiag::Tlv::kRoute,          NetDiag::Tlv::kLeaderData,
+        NetDiag::Tlv::kNetworkData,   NetDiag::Tlv::kIp6AddressList, NetDiag::Tlv::kChannelPages,
     };
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypes2, sizeof(tlvTypes2),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypes2, sizeof(tlvTypes2), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     /**
@@ -180,10 +178,10 @@ void Test5_7_1(void)
      */
     Log("Step 3: Leader");
 
-    uint8_t tlvTypes3[] = {NetworkDiagnostic::Tlv::kMacCounters};
+    uint8_t tlvTypes3[] = {NetDiag::Tlv::kMacCounters};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypes3, sizeof(tlvTypes3),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypes3, sizeof(tlvTypes3), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     /**
@@ -199,10 +197,10 @@ void Test5_7_1(void)
      */
     Log("Step 4: Leader");
 
-    uint8_t tlvTypes4[] = {NetworkDiagnostic::Tlv::kTimeout};
+    uint8_t tlvTypes4[] = {NetDiag::Tlv::kTimeout};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypes4, sizeof(tlvTypes4),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypes4, sizeof(tlvTypes4), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     /**
@@ -220,10 +218,10 @@ void Test5_7_1(void)
      */
     Log("Step 5: Leader");
 
-    uint8_t tlvTypes5[] = {NetworkDiagnostic::Tlv::kBatteryLevel, NetworkDiagnostic::Tlv::kSupplyVoltage};
+    uint8_t tlvTypes5[] = {NetDiag::Tlv::kBatteryLevel, NetDiag::Tlv::kSupplyVoltage};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypes5, sizeof(tlvTypes5),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypes5, sizeof(tlvTypes5), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     /**
@@ -241,10 +239,10 @@ void Test5_7_1(void)
      */
     Log("Step 6: Leader");
 
-    uint8_t tlvTypes6[] = {NetworkDiagnostic::Tlv::kChildTable};
+    uint8_t tlvTypes6[] = {NetDiag::Tlv::kChildTable};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypes6, sizeof(tlvTypes6),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypes6, sizeof(tlvTypes6), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     /**
@@ -258,9 +256,9 @@ void Test5_7_1(void)
      */
     Log("Step 7: Leader");
 
-    uint8_t tlvTypes7[] = {NetworkDiagnostic::Tlv::kMacCounters};
+    uint8_t tlvTypes7[] = {NetDiag::Tlv::kMacCounters};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticReset(dutRloc, tlvTypes7, sizeof(tlvTypes7)));
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticReset(dutRloc, tlvTypes7, sizeof(tlvTypes7)));
     nexus.AdvanceTime(kDiagResponseTime);
 
     /**
@@ -278,10 +276,10 @@ void Test5_7_1(void)
      */
     Log("Step 8: Leader");
 
-    uint8_t tlvTypes8[] = {NetworkDiagnostic::Tlv::kMacCounters};
+    uint8_t tlvTypes8[] = {NetDiag::Tlv::kMacCounters};
 
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypes8, sizeof(tlvTypes8),
-                                                                            nullptr, nullptr));
+    SuccessOrQuit(
+        leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypes8, sizeof(tlvTypes8), nullptr, nullptr));
     nexus.AdvanceTime(kDiagResponseTime);
 
     nexus.SaveTestInfo("test_1_1_5_7_1.json");
