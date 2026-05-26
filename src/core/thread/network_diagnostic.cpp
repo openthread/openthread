@@ -886,7 +886,7 @@ exit:
 
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mQueryId(Random::NonCrypto::GetUint16())
+    , mQueryId(Random::NonCrypto::Generate<uint16_t>())
 {
 }
 

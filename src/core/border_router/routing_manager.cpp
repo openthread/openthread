@@ -986,7 +986,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
         {
         case kNotAdded:
         {
-            uint32_t delay = Random::NonCrypto::GetUint32InRange(kMinDelayToAdd, kMaxDelayToAdd);
+            uint32_t delay = Random::NonCrypto::GenerateInClosedRange(kMinDelayToAdd, kMaxDelayToAdd);
 
             mLocalInNetDataState = kToAdd;
             mTimer.Start(delay);

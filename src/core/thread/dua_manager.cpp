@@ -732,7 +732,8 @@ void DuaManager::HandleChildDuaAddressEvent(const Child &aChild, ChildDuaAddress
     {
         if (mChildDuaMask == mChildDuaRegisteredMask)
         {
-            UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, BackboneRouter::kParentAggregateDelay));
+            UpdateCheckDelay(
+                Random::NonCrypto::GenerateInClosedRange<uint8_t>(1, BackboneRouter::kParentAggregateDelay));
         }
 
         mChildDuaMask.Add(childIndex);

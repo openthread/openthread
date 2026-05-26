@@ -144,8 +144,8 @@ static void UpdateSrpRegistration(Node &aNode)
     service->mSubTypeLabels = nullptr;
     service->mTxtEntries    = nullptr;
     service->mNumTxtEntries = 0;
-    service->mPort          = Random::NonCrypto::GetUint16InRange(0x100, 0xff00);
-    service->mSubTypeLabels = &info->mSubTypeLabels[Random::NonCrypto::GetUint8InRange(0, 4)];
+    service->mPort          = Random::NonCrypto::GenerateFromMinUpToExcluding<uint16_t>(0x100, 0xff00);
+    service->mSubTypeLabels = &info->mSubTypeLabels[Random::NonCrypto::GenerateUpToExcluding<uint8_t>(4)];
 
     SuccessOrQuit(aNode.Get<Srp::Client>().AddService(*service));
 }
@@ -154,7 +154,7 @@ static bool ShouldPerform(uint16_t aProbability)
 {
     // Uses the given probability to randomly decide whether a certain action should be performed.
 
-    return Random::NonCrypto::GetUint16InRange(0, 1000) < aProbability;
+    return Random::NonCrypto::GenerateUpToExcluding<uint16_t>(1000) < aProbability;
 }
 
 static const Srp::Server::Host *FindHost(Node &aServer, const char *aName)

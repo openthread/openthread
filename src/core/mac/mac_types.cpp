@@ -52,7 +52,7 @@ PanId GenerateRandomPanId(void)
 
     do
     {
-        panId = Random::NonCrypto::GetUint16();
+        panId = Random::NonCrypto::Generate<uint16_t>();
     } while (panId == kPanIdBroadcast);
 
     return panId;

@@ -305,7 +305,7 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
         if (aNumEntries < aDesiredNumEntries)
         {
-            mUpdateTime = now + Random::NonCrypto::GetUint32InRange(1, kMaxDelayToAdd);
+            mUpdateTime = now + Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToAdd);
             SetState(kAdding);
             Get<Publisher>().GetTimer().FireAtIfEarlier(mUpdateTime);
             LogUpdateTime(now);
@@ -345,7 +345,7 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
             if (aDesiredNumEntries > 0)
             {
-                mUpdateTime += Random::NonCrypto::GetUint32InRange(1, kMaxDelayToRemove);
+                mUpdateTime += Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, kMaxDelayToRemove);
 
                 if (aNumPreferredEntries < aDesiredNumEntries)
                 {

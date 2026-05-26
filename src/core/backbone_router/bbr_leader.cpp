@@ -63,13 +63,7 @@ exit:
 
 uint16_t Config::SelectRandomReregistrationDelay(void) const
 {
-    uint16_t delay = 1;
-
-    VerifyOrExit(mReregistrationDelay > 1);
-    delay = 1 + Random::NonCrypto::GetUint16InRange(0, mReregistrationDelay);
-
-exit:
-    return delay;
+    return Random::NonCrypto::GenerateInClosedRange<uint16_t>(1, mReregistrationDelay);
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

@@ -558,7 +558,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     header.SetNextHeader(kProtoFragment);
 
     fragmentHeader.Init();
-    fragmentHeader.SetIdentification(Random::NonCrypto::GetUint32());
+    fragmentHeader.SetIdentification(Random::NonCrypto::Generate<uint32_t>());
     fragmentHeader.SetNextHeader(aIpProto);
     fragmentHeader.SetMoreFlag();
 

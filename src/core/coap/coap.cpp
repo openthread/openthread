@@ -124,7 +124,7 @@ CoapBase::CoapBase(Instance &aInstance, Transmitter aTransmitter)
     , mResponseCache(aInstance)
     , mResourceHandler(nullptr)
     , mTransmitter(aTransmitter)
-    , mMessageId(Random::NonCrypto::GetUint16())
+    , mMessageId(Random::NonCrypto::Generate<uint16_t>())
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     , mLastResponse(nullptr)
 #endif
@@ -2045,8 +2045,8 @@ exit:
 
 uint32_t TxParameters::CalculateInitialRetransmissionTimeout(void) const
 {
-    return Random::NonCrypto::GetUint32InRange(
-        mAckTimeout, mAckTimeout * mAckRandomFactorNumerator / mAckRandomFactorDenominator + 1);
+    return Random::NonCrypto::GenerateInClosedRange<uint32_t>(mAckTimeout, mAckTimeout * mAckRandomFactorNumerator /
+                                                                               mAckRandomFactorDenominator);
 }
 
 uint32_t TxParameters::CalculateExchangeLifetime(void) const

@@ -47,7 +47,7 @@ Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsServiceAdded(false)
     , mState(kStateDisabled)
-    , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
+    , mSequenceNumber(Random::NonCrypto::GenerateUpToExcluding<uint8_t>(127))
     , mRegistrationJitter(kDefaultRegistrationJitter)
     , mReregistrationDelay(kDefaultRegistrationDelay)
     , mRegistrationTimeout(0)
@@ -266,8 +266,7 @@ void Local::UpdateState(void)
         }
         else
         {
-            mRegistrationTimeout =
-                1 + Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter));
+            mRegistrationTimeout = Random::NonCrypto::GenerateInClosedRange<uint16_t>(1, mRegistrationJitter);
             Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
         }
     }

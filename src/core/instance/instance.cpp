@@ -331,7 +331,7 @@ Instance::Instance(void)
 #endif
 #endif
     , mIsInitialized(false)
-    , mId(Random::NonCrypto::GetUint32())
+    , mId(Random::NonCrypto::Generate<uint32_t>())
 {
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE

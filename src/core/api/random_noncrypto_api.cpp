@@ -37,25 +37,25 @@
 
 using namespace ot;
 
-uint32_t otRandomNonCryptoGetUint32(void) { return Random::NonCrypto::GetUint32(); }
+uint32_t otRandomNonCryptoGetUint32(void) { return Random::NonCrypto::Generate<uint32_t>(); }
 
-uint8_t otRandomNonCryptoGetUint8(void) { return Random::NonCrypto::GetUint8(); }
+uint8_t otRandomNonCryptoGetUint8(void) { return Random::NonCrypto::Generate<uint8_t>(); }
 
-uint16_t otRandomNonCryptoGetUint16(void) { return Random::NonCrypto::GetUint16(); }
+uint16_t otRandomNonCryptoGetUint16(void) { return Random::NonCrypto::Generate<uint16_t>(); }
 
 uint8_t otRandomNonCryptoGetUint8InRange(uint8_t aMin, uint8_t aMax)
 {
-    return Random::NonCrypto::GetUint8InRange(aMin, aMax);
+    return Random::NonCrypto::GenerateFromMinUpToExcluding(aMin, aMax);
 }
 
 uint16_t otRandomNonCryptoGetUint16InRange(uint16_t aMin, uint16_t aMax)
 {
-    return Random::NonCrypto::GetUint16InRange(aMin, aMax);
+    return Random::NonCrypto::GenerateFromMinUpToExcluding(aMin, aMax);
 }
 
 uint32_t otRandomNonCryptoGetUint32InRange(uint32_t aMin, uint32_t aMax)
 {
-    return Random::NonCrypto::GetUint32InRange(aMin, aMax);
+    return Random::NonCrypto::GenerateFromMinUpToExcluding(aMin, aMax);
 }
 
 void otRandomNonCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { Random::NonCrypto::FillBuffer(aBuffer, aSize); }

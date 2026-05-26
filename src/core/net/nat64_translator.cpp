@@ -365,7 +365,7 @@ uint16_t Translator::AllocateSourcePort(uint16_t aSrcPort)
 
     do
     {
-        port = Random::NonCrypto::GetUint16InRange(kMinTranslationPort, kMaxTranslationPort);
+        port = Random::NonCrypto::GenerateInClosedRange(kMinTranslationPort, kMaxTranslationPort);
 
         // The NAT64 SHOULD preserve the port parity (odd/even), as
         // per Section 4.2.2 of [RFC4787]). Determine if original and

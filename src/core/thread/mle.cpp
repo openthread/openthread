@@ -652,7 +652,7 @@ uint32_t Mle::GenerateRandomDelay(uint32_t aMaxDelay) const
 {
     // Generates a random delay within `[1, aMaxDelay]` (inclusive).
 
-    return 1 + Random::NonCrypto::GetUint32InRange(0, aMaxDelay);
+    return Random::NonCrypto::GenerateInClosedRange<uint32_t>(1, aMaxDelay);
 }
 
 void Mle::SetTimeout(uint32_t aTimeout, TimeoutAction aAction)
@@ -2819,7 +2819,7 @@ void Mle::ParentSearch::StartTimer(void)
         ExitNow();
     }
 
-    interval = Random::NonCrypto::GetUint32InRange(0, kJitterInterval);
+    interval = Random::NonCrypto::GenerateUpToExcluding(kJitterInterval);
 
     if (mIsInBackoff)
     {
@@ -4485,7 +4485,8 @@ void Mle::PrevRoleRestorer::SendMulticastLinkRequest(void)
         retxDelayMax = kLeaderRetxDelayMax;
     }
 
-    delay = (mAttempts == 0) ? kLinkRequestTimeout : Random::NonCrypto::GetUint32InRange(retxDelayMin, retxDelayMax);
+    delay =
+        (mAttempts == 0) ? kLinkRequestTimeout : Random::NonCrypto::GenerateInClosedRange(retxDelayMin, retxDelayMax);
 
     mTimer.Start(delay);
 
@@ -4666,7 +4667,7 @@ uint32_t Mle::Attacher::GetStartDelay(void) const
     }
 #endif // OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
 
-    jitter = Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
+    jitter = Random::NonCrypto::GenerateUpToExcluding(kAttachStartJitter);
 
     if (jitter + delay > delay) // check for overflow
     {

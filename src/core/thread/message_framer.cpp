@@ -40,7 +40,7 @@ namespace ot {
 MessageFramer::MessageFramer(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
-    mFragTag = Random::NonCrypto::GetUint16();
+    mFragTag = Random::NonCrypto::Generate<uint16_t>();
 }
 
 void MessageFramer::DetermineMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Addresses &aMacAddrs) const

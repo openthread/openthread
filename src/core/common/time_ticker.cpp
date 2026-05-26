@@ -50,7 +50,7 @@ void TimeTicker::RegisterReceiver(Receiver aReceiver)
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(Random::NonCrypto::GetUint32InRange(0, kTickInterval + 1));
+        mTimer.Start(Random::NonCrypto::GenerateInClosedRange<uint32_t>(0, kTickInterval));
     }
 }
 

@@ -887,7 +887,7 @@ uint32_t GetRandom(uint32_t max)
     }
     else
     {
-        value = Random::NonCrypto::GetUint32();
+        value = Random::NonCrypto::Generate<uint32_t>();
     }
 
     return value % max;

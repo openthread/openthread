@@ -125,11 +125,11 @@ OwnedPtr<Message> PrepareMessage(Node &aNode)
 
     VerifyOrQuit(message != nullptr);
 
-    length = Random::NonCrypto::GetUint16InRange(1, kMessageSize);
+    length = Random::NonCrypto::GenerateFromMinUpToExcluding<uint16_t>(1, kMessageSize);
 
     for (uint16_t i = 0; i < length; i++)
     {
-        SuccessOrQuit(message->Append(Random::NonCrypto::GetUint8()));
+        SuccessOrQuit(message->Append(Random::NonCrypto::Generate<uint8_t>()));
     }
 
     return OwnedPtr<Message>(message);

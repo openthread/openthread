@@ -41,7 +41,7 @@ RouterTable::RouterTable(Instance &aInstance)
     , mRouters(aInstance)
     , mChangedTask(aInstance)
     , mRouterIdSequenceLastUpdated(0)
-    , mRouterIdSequence(Random::NonCrypto::GetUint8())
+    , mRouterIdSequence(Random::NonCrypto::Generate<uint8_t>())
     , mEvents(0)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMinRouterId(0)
@@ -168,7 +168,7 @@ Router *RouterTable::Allocate(void)
             // selected ID with current entry in the list with
             // probably `1/numAvailable`.
 
-            if (Random::NonCrypto::GetUint8InRange(0, numAvailable) == 0)
+            if (Random::NonCrypto::GenerateUpToExcluding(numAvailable) == 0)
             {
                 selectedRouterId = routerId;
             }
