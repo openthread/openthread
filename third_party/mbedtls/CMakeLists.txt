@@ -30,6 +30,12 @@ set(OT_MBEDTLS_DEFAULT_CONFIG_FILE \"openthread-mbedtls-config.h\")
 
 set(OT_MBEDTLS_CONFIG_FILE "" CACHE STRING "The mbedTLS config file")
 
+if(OT_MBEDTLS_CONFIG_FILE)
+    set(MBEDTLS_CONFIG_FILE "${OT_MBEDTLS_CONFIG_FILE}" CACHE FILEPATH "Mbed TLS config file (overrides default)." FORCE)
+else()
+    set(MBEDTLS_CONFIG_FILE "openthread-mbedtls-config.h" CACHE FILEPATH "Mbed TLS config file (overrides default)." FORCE)
+endif()
+
 set(ENABLE_TESTING OFF CACHE BOOL "Disable mbedtls test" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Disable mbetls program" FORCE)
 

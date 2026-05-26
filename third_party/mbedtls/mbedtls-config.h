@@ -66,7 +66,17 @@
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_NIST_OPTIM
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_HAVE_ASM
+
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+#define OPENTHREAD_HAS_MEMSAN
+#endif
+#endif
+#ifndef OPENTHREAD_HAS_MEMSAN
+//#define MBEDTLS_HAVE_ASM
+#endif
+#undef OPENTHREAD_HAS_MEMSAN
+
 #define MBEDTLS_HMAC_DRBG_C
 #define MBEDTLS_MD_C
 #define MBEDTLS_SHA224_C
