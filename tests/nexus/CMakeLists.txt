@@ -397,6 +397,7 @@ ot_nexus_test(inform_previous_parent_on_reattach "cert;nexus")
 ot_nexus_test(retransmission_security "core;nexus")
 
 # Misc tests
+ot_nexus_test(announce_no_flap_on_unmergeable_partitions "core;nexus")
 ot_nexus_test(anycast "core;nexus")
 ot_nexus_test(anycast_locator "core;nexus")
 ot_nexus_test(br_upgrade_router_role "core;nexus")
