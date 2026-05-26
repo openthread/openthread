@@ -627,6 +627,14 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
+     * Indicates whether the frame contains header IEs.
+     *
+     * @retval TRUE   The frame contains header IEs.
+     * @retval FALSE  The frame contains no header IEs.
+     */
+    bool HasHeaderIe(void) const { return FindHeaderIeIndex() != kInvalidIndex; }
+
+    /**
      * Returns a pointer to the Header IE.
      *
      * @param[in] aIeId  The Element Id of the Header IE.
@@ -1239,6 +1247,14 @@ public:
      *                          for AES CCM computation.
      */
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
+
+    /**
+     * Decrypts the frame which was previously encrypted.
+     *
+     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
+     *                          for AES CCM computation.
+     */
+    void DecryptTransmitAesCcm(const ExtAddress &aExtAddress);
 
     /**
      * Indicates whether or not the frame has security processed.

@@ -404,6 +404,12 @@ exit:
 
 otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadioContext *aRadioContext)
 {
+    otError error = OT_ERROR_NONE;
+
+    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
+
+    VerifyOrExit(!otMacFrameIsSecurityEnabled(aFrame) || !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
     {
@@ -413,8 +419,10 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otMacFrameUpdateTimeIe(aFrame, aRadioTime, aRadioContext);
 #endif
-    aFrame->mInfo.mTxInfo.mTimestamp = aRadioTime;
-    return otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+    error = otMacFrameProcessTransmitSecurity(aFrame, aRadioContext);
+
+exit:
+    return error;
 }
 
 bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext)

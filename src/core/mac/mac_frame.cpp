@@ -41,7 +41,8 @@
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "radio/trel_link.hpp"
-#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE || \
+    (OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE)
 #include "crypto/aes_ccm.hpp"
 #endif
 
@@ -1403,6 +1404,39 @@ exit:
     OT_UNUSED_VARIABLE(aExtAddress);
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
+{
+    uint32_t       frameCounter = 0;
+    uint8_t        securityLevel;
+    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
+    uint8_t        tagLength;
+    Crypto::AesCcm aesCcm;
+
+    VerifyOrExit(GetSecurityEnabled() && IsSecurityProcessed());
+
+    SuccessOrExit(GetSecurityLevel(securityLevel));
+    SuccessOrExit(GetFrameCounter(frameCounter));
+
+    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+
+    aesCcm.SetKey(GetAesKey());
+    tagLength = GetFooterLength() - GetFcsSize();
+
+    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    aesCcm.Header(GetHeader(), GetHeaderLength());
+    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
+    // Note: We skip aesCcm.Finalize() checking because we are only decrypting back to plaintext,
+    // and we know the ciphertext was generated correctly by us previously.
+
+    SetIsSecurityProcessed(false);
+    SetIsHeaderUpdated(false);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {

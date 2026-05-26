@@ -63,6 +63,10 @@ SubMac::SubMac(Instance &aInstance)
     mCslParentAccuracy.Init();
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && !OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+    // Assuming the platform must deal with the retransmission security correctly.
+    OT_ASSERT(mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES);
+#endif
     Init();
 }
 
@@ -600,6 +604,15 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     {
         mTransmitRetries++;
         aFrame.SetIsARetransmission(true);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
+        if (aFrame.GetSecurityEnabled() && aFrame.IsSecurityProcessed() && aFrame.HasHeaderIe())
+        {
+            aFrame.DecryptTransmitAesCcm(GetExtAddress());
+        }
+
+        ProcessTransmitSecurity();
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
         if (aError == kErrorNoAck)

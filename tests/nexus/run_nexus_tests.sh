@@ -238,6 +238,7 @@ DEFAULT_TESTS=(
     "leader_reboot_multiple_link_request"
     "router_reboot_multiple_link_request"
     "pbbr_aloc"
+    "retransmission_security"
 )
 
 # Use provided arguments or the default test list
