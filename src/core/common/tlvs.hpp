@@ -551,6 +551,21 @@ public:
     }
 
     /**
+     * Appends a TLV header to a message.
+     *
+     * This method automatically formats the header as a standard TLV header or an extended one based on the
+     * @p aLength value.
+     *
+     * @param[in] aMessage  The message to append the TLV header to.
+     * @param[in] aType     The TLV type to append.
+     * @param[in] aLength   The length of the TLV value.
+     *
+     * @retval kErrorNone    Successfully appended the TLV header.
+     * @retval kErrorNoBufs  Could not add the TLV header due to insufficient buffer space.
+     */
+    static Error AppendTlvHeader(Message &aMessage, uint8_t aType, uint16_t aLength);
+
+    /**
      * Appends an empty TLV (no value) with a given type to a message.
      *
      * On success this method grows the message by the size of the TLV.
@@ -839,7 +854,6 @@ protected:
     static const uint8_t kExtendedLength = 255; // Extended Length value.
 
 private:
-    static Error AppendTlvHeader(Message &aMessage, uint8_t aType, uint16_t aLength);
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint16_t aLength);
     static Error FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue);
     static Error AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue);

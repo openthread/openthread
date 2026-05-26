@@ -903,7 +903,6 @@ Error Manager::CoapDtlsSession::ForwardUdpProxy(const Message &aMessage, const I
 {
     Error                     error = kErrorNone;
     OwnedPtr<Coap::Message>   message;
-    ExtendedTlv               extTlv;
     UdpEncapsulationTlvHeader udpEncapHeader;
     OffsetRange               offsetRange;
 
@@ -914,13 +913,11 @@ Error Manager::CoapDtlsSession::ForwardUdpProxy(const Message &aMessage, const I
 
     offsetRange.InitFromMessageOffsetToEnd(aMessage);
 
-    extTlv.SetType(Tlv::kUdpEncapsulation);
-    extTlv.SetLength(sizeof(UdpEncapsulationTlvHeader) + offsetRange.GetLength());
-
     udpEncapHeader.SetSourcePort(aMessageInfo.GetPeerPort());
     udpEncapHeader.SetDestinationPort(aMessageInfo.GetSockPort());
 
-    SuccessOrExit(error = message->Append(extTlv));
+    SuccessOrExit(error = Tlv::AppendTlvHeader(*message, Tlv::kUdpEncapsulation,
+                                               sizeof(UdpEncapsulationTlvHeader) + offsetRange.GetLength()));
     SuccessOrExit(error = message->Append(udpEncapHeader));
     SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offsetRange));
 
