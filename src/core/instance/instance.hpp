@@ -902,7 +902,7 @@ private:
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
     LogLevel mOriginalLogLevel;
     LogLevel mOverrideLogLevel;
-    bool     mIsLogLevelOverriden;
+    bool     mIsLogLevelOverridden;
 #endif
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     bool mIsLogLevelSet;
