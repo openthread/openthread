@@ -164,6 +164,16 @@ Error Child::AddIp6Address(const Ip6::Address &aAddress)
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = kErrorInvalidArgs);
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (Get<ChildTable>().IsMaxChildIpAddressesOverridden())
+    {
+        uint8_t num = mMeshLocalIid.IsUnspecified() ? 0 : 1;
+
+        num += mIp6Addresses.GetLength();
+        VerifyOrExit(num < Get<ChildTable>().GetMaxChildIpAddresses(), error = kErrorNoBufs);
+    }
+#endif
+
     if (Get<Mle::Mle>().IsMeshLocalAddress(aAddress))
     {
         VerifyOrExit(mMeshLocalIid.IsUnspecified(), error = kErrorAlready);

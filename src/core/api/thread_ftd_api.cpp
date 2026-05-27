@@ -51,13 +51,13 @@ otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildr
 
 uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().GetMaxChildIpAddresses();
+    return AsCoreType(aInstance).Get<ChildTable>().GetMaxChildIpAddresses();
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().SetMaxChildIpAddresses(aMaxIpAddresses);
+    return AsCoreType(aInstance).Get<ChildTable>().OverrideMaxChildIpAddresses(aMaxIpAddresses);
 }
 #endif
 
