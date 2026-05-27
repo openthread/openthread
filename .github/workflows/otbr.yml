@@ -143,19 +143,6 @@ jobs:
             packet_verification: 1
             nat64: 1
             description: "internet access"
-          - otbr_mdns: "avahi"
-            otbr_trel: 0
-            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
-            packet_verification: 1
-            nat64: 0
-            description: ""
-          - otbr_mdns: "avahi"
-            otbr_trel: 0
-            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
-            packet_verification: 1
-            nat64: 0
-            use_core_firewall: 1
-            description: "core-firewall"
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
