@@ -278,7 +278,7 @@ Error InfraIf::LinkLayerAddress::ConvertToIid(Ip6::InterfaceIdentifier &aIid) co
         ExitNow(error = kErrorNotCapable);
     }
 
-    aIid.SetFromExtAddress(extAddress);
+    aIid.InitFromExtAddress(extAddress);
 
 exit:
     return error;

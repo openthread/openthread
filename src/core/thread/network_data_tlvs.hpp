@@ -656,7 +656,7 @@ public:
      *
      * @param[out] aPrefix  An `Ip6::Prefix` to copy the Prefix from TLV into.
      */
-    void CopyPrefixTo(Ip6::Prefix &aPrefix) const { aPrefix.Set(GetPrefix(), GetPrefixLength()); }
+    void CopyPrefixTo(Ip6::Prefix &aPrefix) const { aPrefix.InitFrom(GetPrefix(), GetPrefixLength()); }
 
     /**
      * Indicates whether the Prefix from TLV is equal to a given `Ip6::Prefix`.

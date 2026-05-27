@@ -81,7 +81,10 @@ public:
      *
      * @returns The link local IPv6 address of the peer.
      */
-    void GetLinkLocalIp6Address(Ip6::Address &aIp6Address) const { aIp6Address.SetToLinkLocalAddress(GetExtAddress()); }
+    void GetLinkLocalIp6Address(Ip6::Address &aIp6Address) const
+    {
+        aIp6Address.InitAsLinkLocalAddress(GetExtAddress());
+    }
 
     /**
      * Generates a new challenge value to use during a child attach.

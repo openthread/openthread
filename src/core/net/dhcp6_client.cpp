@@ -268,7 +268,7 @@ void Client::Solicit(uint16_t aRloc16)
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
     messageInfo.SetPeerAddr(Ip6::Address::GetRealmLocalAllRoutersMulticast());
 #else
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    messageInfo.GetPeerAddr().InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
 #endif
     messageInfo.SetSockAddr(Get<Mle::Mle>().GetMeshLocalRloc());
     messageInfo.mPeerPort = kDhcpServerPort;

@@ -72,7 +72,7 @@ Error Address::ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address)
     Error error = kErrorNone;
 
     VerifyOrExit(aIp6Address.IsIp4Mapped(), error = kErrorParse);
-    SetBytes(&aIp6Address.GetBytes()[12]);
+    InitFrom(&aIp6Address.GetBytes()[12]);
 
 exit:
     return error;

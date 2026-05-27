@@ -224,7 +224,7 @@ void RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
 
         SuccessOrAssert(randomUlaPrefix.GenerateRandomUla());
 
-        mBrUlaPrefix.Set(randomUlaPrefix);
+        mBrUlaPrefix.InitFrom(randomUlaPrefix);
         mBrUlaPrefix.SetSubnetId(0);
         mBrUlaPrefix.SetLength(kBrUlaPrefixLength);
 

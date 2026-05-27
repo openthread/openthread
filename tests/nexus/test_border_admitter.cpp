@@ -1859,7 +1859,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
                                                   /* aCallback */ nullptr,
                                                   /* aContext */ nullptr));
 
-    joinerIids[0].SetFromExtAddress(joiners[0]->Get<Joiner>().GetId());
+    joinerIids[0].InitFromExtAddress(joiners[0]->Get<Joiner>().GetId());
 
     nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
 
@@ -2008,7 +2008,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
                                                   /* aCallback */ nullptr,
                                                   /* aContext */ nullptr));
 
-    joinerIids[1].SetFromExtAddress(joiners[1]->Get<Joiner>().GetId());
+    joinerIids[1].InitFromExtAddress(joiners[1]->Get<Joiner>().GetId());
 
     nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
 
@@ -2154,7 +2154,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
                                                   /* aCallback */ nullptr,
                                                   /* aContext */ nullptr));
 
-    joinerIids[1].SetFromExtAddress(joiners[1]->Get<Joiner>().GetId());
+    joinerIids[1].InitFromExtAddress(joiners[1]->Get<Joiner>().GetId());
 
     nexus.AdvanceTime(8 * Time::kOneSecondInMsec);
 

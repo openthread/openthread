@@ -558,7 +558,7 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::
 {
     Ip6::MessageInfo messageInfo;
 
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aMeshSource);
+    messageInfo.GetPeerAddr().InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aMeshSource);
 
     IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp::Header::kTypeDstUnreach,
                                            Ip6::Icmp::Header::kCodeDstUnreachNoRoute, messageInfo, aIp6Headers));

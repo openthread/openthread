@@ -286,7 +286,7 @@ Error LinkMetricsManager::Subject::ConfigureEap(Instance &aInstance)
     LinkMetrics::Metrics     metricsFlags;
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    destination.SetToLinkLocalAddress(neighbor->GetExtAddress());
+    destination.InitAsLinkLocalAddress(neighbor->GetExtAddress());
 
     metricsFlags.Clear();
     metricsFlags.mLinkMargin = 1;
@@ -311,7 +311,7 @@ Error LinkMetricsManager::Subject::UnregisterEap(Instance &aInstance)
     LinkMetrics::EnhAckFlags enhAckFlags = LinkMetrics::kEnhAckClear;
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    destination.SetToLinkLocalAddress(neighbor->GetExtAddress());
+    destination.InitAsLinkLocalAddress(neighbor->GetExtAddress());
 
     error = aInstance.Get<LinkMetrics::Initiator>().SendMgmtRequestEnhAckProbing(destination, enhAckFlags, nullptr);
 exit:

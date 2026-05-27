@@ -110,12 +110,12 @@ public:
     const uint8_t *GetBytes(void) const { return mFields.m8; }
 
     /**
-     * Sets the IPv4 address from a given byte array.
+     * Initializes the IPv4 address from a given byte array.
      *
      * @param[in] aBuffer    Pointer to an array containing the IPv4 address. `kSize` bytes from the buffer
      *                       are copied to form the IPv4 address.
      */
-    void SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
+    void InitFrom(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
     /**
      * Sets the IPv4 address from a given IPv4-mapped IPv6 address.

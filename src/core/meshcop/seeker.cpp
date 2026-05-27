@@ -279,7 +279,7 @@ Error Seeker::SetUpNextConnection(Ip6::SockAddr &aSockAddr)
 
     aSockAddr.Clear();
     aSockAddr.SetPort(entry.mJoinerUdpPort);
-    aSockAddr.GetAddress().SetToLinkLocalAddress(entry.mExtAddr);
+    aSockAddr.GetAddress().InitAsLinkLocalAddress(entry.mExtAddr);
 
 exit:
     return error;

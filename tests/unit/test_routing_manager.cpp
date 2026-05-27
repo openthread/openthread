@@ -4997,7 +4997,7 @@ void TestDhcp6Pd(void)
 
     prefix = PrefixFromString("2001:db8:cafe:0::", 64);
 
-    shortPrefix.Set(prefix.GetBytes(), 48);
+    shortPrefix.InitFrom(prefix.GetBytes(), 48);
     ReportPdPrefixesAsRa({Pio(shortPrefix, kValidLitime, kPreferredLifetime)});
 
     sExpectedRios.Add(prefix);

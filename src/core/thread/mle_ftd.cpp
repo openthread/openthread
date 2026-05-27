@@ -552,7 +552,7 @@ void Mle::ScheduleUnicastAdvertisementTo(const Router &aRouter)
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    destination.InitAsLinkLocalAddress(aRouter.GetExtAddress());
     mDelayedSender.ScheduleAdvertisement(destination, GenerateRandomDelay(kMaxUnicastAdvertisementDelay));
 }
 
@@ -671,7 +671,7 @@ void Mle::SendLinkRequest(Router *aRouter)
             SuccessOrExit(error = message->AppendChallengeTlv(challenge));
         }
 
-        destination.SetToLinkLocalAddress(aRouter->GetExtAddress());
+        destination.InitAsLinkLocalAddress(aRouter->GetExtAddress());
         aRouter->RestartLinkAcceptTimeout();
     }
 
@@ -870,7 +870,7 @@ Error Mle::SendLinkAccept(const LinkAcceptInfo &aInfo)
     }
 #endif
 
-    destination.SetToLinkLocalAddress(aInfo.mExtAddress);
+    destination.InitAsLinkLocalAddress(aInfo.mExtAddress);
 
     SuccessOrExit(error = message->SendTo(destination));
 
@@ -1809,7 +1809,7 @@ void Mle::SendParentResponse(const ParentResponseInfo &aInfo)
     SuccessOrExit(error = message->AppendConnectivityTlv());
     SuccessOrExit(error = message->AppendVersionTlv());
 
-    destination.SetToLinkLocalAddress(aInfo.mChildExtAddress);
+    destination.InitAsLinkLocalAddress(aInfo.mChildExtAddress);
 
     SuccessOrExit(error = message->SendTo(destination));
 
@@ -2919,7 +2919,7 @@ Error Mle::SendChildIdResponse(Child &aChild)
     }
 #endif
 
-    destination.SetToLinkLocalAddress(aChild.GetExtAddress());
+    destination.InitAsLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
 
     SetChildStateToValid(aChild);
@@ -2983,7 +2983,7 @@ Error Mle::SendChildUpdateRequestToChild(Child &aChild)
         SuccessOrExit(error = message->AppendChallengeTlv(aChild.GetChallenge()));
     }
 
-    destination.SetToLinkLocalAddress(aChild.GetExtAddress());
+    destination.InitAsLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
 
     if (aChild.IsRxOnWhenIdle())

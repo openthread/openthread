@@ -96,7 +96,7 @@ void PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
     mPrefix       = AsCoreType(&aPrefix.mPrefix);
 }
 
-void PrefixInfoOption::GetPrefix(Prefix &aPrefix) const { aPrefix.Set(mPrefix.GetBytes(), mPrefixLength); }
+void PrefixInfoOption::GetPrefix(Prefix &aPrefix) const { aPrefix.InitFrom(mPrefix.GetBytes(), mPrefixLength); }
 
 bool PrefixInfoOption::IsValid(void) const
 {
@@ -131,7 +131,7 @@ void RouteInfoOption::SetPrefix(const Prefix &aPrefix)
     memcpy(GetPrefixBytes(), aPrefix.GetBytes(), aPrefix.GetBytesSize());
 }
 
-void RouteInfoOption::GetPrefix(Prefix &aPrefix) const { aPrefix.Set(GetPrefixBytes(), mPrefixLength); }
+void RouteInfoOption::GetPrefix(Prefix &aPrefix) const { aPrefix.InitFrom(GetPrefixBytes(), mPrefixLength); }
 
 bool RouteInfoOption::IsValid(void) const
 {
@@ -234,7 +234,7 @@ Error Nat64PrefixOption::GetPrefix(Prefix &aPrefix) const
 
     VerifyOrExit(prefixLengthCode < GetArrayLength(kPrefixLengths), error = kErrorParse);
 
-    aPrefix.Set(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
+    aPrefix.InitFrom(mPrefixMsb, kPrefixLengths[prefixLengthCode]);
 
 exit:
     return error;

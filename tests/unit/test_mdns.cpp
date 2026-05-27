@@ -2271,7 +2271,7 @@ void TestLocalHost(void)
 
     SuccessOrQuit(ip4Address.FromString("200.1.5.6"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     AdvanceTime(4);
@@ -2436,17 +2436,17 @@ void TestLocalHost(void)
 
     SuccessOrQuit(ip4Address.FromString("200.1.5.7"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     SuccessOrQuit(ip4Address.FromString("200.1.2.100"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     SuccessOrQuit(ip4Address.FromString("200.1.4.0"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     Log("Validate the announcements");
@@ -2481,7 +2481,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2510,7 +2510,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2562,7 +2562,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2589,7 +2589,7 @@ void TestLocalHost(void)
 
     for (const Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
     }
 

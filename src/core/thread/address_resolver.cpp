@@ -786,7 +786,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
 
             if (child.RemoveIp6Address(target) == kErrorNone)
             {
-                destination.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
+                destination.InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), child.GetRloc16());
 
                 SendAddressError(target, meshLocalIid, destination);
                 ExitNow();

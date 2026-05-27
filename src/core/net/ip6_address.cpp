@@ -48,7 +48,7 @@ Error NetworkPrefix::GenerateRandomUla(void)
     return Random::Crypto::FillBuffer(&m8[1], kSize - 1);
 }
 
-Error NetworkPrefix::SetFrom(const Prefix &aPrefix)
+Error NetworkPrefix::InitFrom(const Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
@@ -62,7 +62,7 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Prefix methods
 
-void Prefix::Set(const uint8_t *aPrefix, uint8_t aLength)
+void Prefix::InitFrom(const uint8_t *aPrefix, uint8_t aLength)
 {
     memcpy(mPrefix.mFields.m8, aPrefix, SizeForLength(aLength));
     mLength = aLength;
@@ -227,9 +227,9 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
 
 void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::Fill(*this)); }
 
-void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
+void InterfaceIdentifier::InitFrom(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
-void InterfaceIdentifier::SetFromExtAddress(const Mac::ExtAddress &aExtAddress)
+void InterfaceIdentifier::InitFromExtAddress(const Mac::ExtAddress &aExtAddress)
 {
     Mac::ExtAddress addr;
 
@@ -238,7 +238,7 @@ void InterfaceIdentifier::SetFromExtAddress(const Mac::ExtAddress &aExtAddress)
     addr.CopyTo(mFields.m8);
 }
 
-void InterfaceIdentifier::SetToLocator(uint16_t aLocator)
+void InterfaceIdentifier::InitAsLocator(uint16_t aLocator)
 {
     // Locator IID pattern `0000:00ff:fe00:xxxx`
     mFields.m32[0] = BigEndian::HostSwap32(0x000000ff);
@@ -307,14 +307,14 @@ bool Address::IsLinkLocalUnicast(void) const
     return (mFields.m16[0] & BigEndian::HostSwap16(0xffc0)) == BigEndian::HostSwap16(0xfe80);
 }
 
-void Address::SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
+void Address::InitAsLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
 {
     mFields.m32[0] = BigEndian::HostSwap32(0xfe800000);
     mFields.m32[1] = 0;
-    GetIid().SetFromExtAddress(aExtAddress);
+    GetIid().InitFromExtAddress(aExtAddress);
 }
 
-void Address::SetToLinkLocalAddress(const InterfaceIdentifier &aIid)
+void Address::InitAsLinkLocalAddress(const InterfaceIdentifier &aIid)
 {
     mFields.m32[0] = BigEndian::HostSwap32(0xfe800000);
     mFields.m32[1] = 0;
@@ -334,7 +334,7 @@ bool Address::IsIp4Mapped(void) const
     return (mFields.m32[0] == 0) && (mFields.m32[1] == 0) && (mFields.m32[2] == BigEndian::HostSwap32(0xffff));
 }
 
-void Address::SetToIp4Mapped(const Ip4::Address &aIp4Address)
+void Address::InitAsIp4Mapped(const Ip4::Address &aIp4Address)
 {
     Clear();
     mFields.m16[5] = 0xffff;
@@ -385,10 +385,10 @@ void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixL
     mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
 }
 
-void Address::SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator)
+void Address::InitAsLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator)
 {
     SetPrefix(aNetworkPrefix);
-    GetIid().SetToLocator(aLocator);
+    GetIid().InitAsLocator(aLocator);
 }
 
 uint8_t Address::GetScope(void) const

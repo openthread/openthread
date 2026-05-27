@@ -57,7 +57,7 @@ void InfraIf::AfterInit(void)
     GetLinkLayerAddress(mac);
     SuccessOrQuit(mac.ConvertToIid(iid));
 
-    address.SetToLinkLocalAddress(iid);
+    address.InitAsLinkLocalAddress(iid);
 
     AddAddress(address);
 }

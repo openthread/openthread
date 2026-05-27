@@ -92,7 +92,7 @@ void TestPbbrAloc(void)
 
     // 2. PBBR ALOC
     aloc.SetPrefix(leader.Get<Mle::Mle>().GetMeshLocalPrefix());
-    aloc.GetIid().SetToLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
+    aloc.GetIid().InitAsLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
     Log("Pinging PBBR ALOC %s from ROUTER", aloc.ToString().AsCString());
     nexus.SendAndVerifyEchoRequest(router, aloc);
 

@@ -525,7 +525,8 @@ Error Manager::SendMessage(const Ip6::Address         *aAddresses,
     }
     else
     {
-        destAddr.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
+        destAddr.InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
+                                      Get<BackboneRouter::Leader>().GetServer16());
     }
 
     error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, aResponseHandler, this);
