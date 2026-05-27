@@ -419,9 +419,13 @@ void Manager::SendNextRequest(void)
 
     EnterState(kStateRegistering);
 
-    // Generally Thread 1.2 Router would send MLR.req on behalf for MA (scope >=4) subscribed by its MTD child.
-    // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send MLR.req to PBBR itself.
-    // In this case, Thread 1.2 sleepy end device relies on fast data poll to fetch the response timely.
+    // Generally, a Thread 1.2 Router sends MLR.req on behalf of its
+    // MTD children for multicast addresses. However, when a Thread
+    // 1.2 MTD child attaches to a Thread 1.1 parent, the MTD child
+    // must send the MLR.req to the PBBR itself. In this scenario, a
+    // Thread 1.2 Sleepy End Device relies on fast data polls to
+    // receive the response in a timely manner.
+
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SendFastPolls();
@@ -550,6 +554,11 @@ void Manager::ProcessResponse(Coap::Msg *aMsg, Error aResult)
     AddressArray            failedAddresses;
     AddressArray            registeredAddresses;
     OwnedPtr<Coap::Message> requestMsg;
+
+    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().StopFastPolls();
+    }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Parse the response message
