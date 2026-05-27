@@ -51,7 +51,6 @@ Dhcp6PdClient::Dhcp6PdClient(Instance &aInstance)
     , mMaxSolicitTimeout(kMaxSolicitTimeout)
     , mTimer(aInstance)
 {
-    mServerAddress.Clear();
 }
 
 void Dhcp6PdClient::Start(void)
@@ -268,18 +267,9 @@ void Dhcp6PdClient::SendMessage(void)
 
     SuccessOrExit(AppendIaPdOption(*message));
 
-    LogInfo("Sending %s %s%s", MsgTypeToString(msgType),
-            mServerAddress.IsUnspecified() ? "(multicast)" : "(unicast) to:",
-            mServerAddress.IsUnspecified() ? "" : mServerAddress.ToString().AsCString());
+    LogInfo("Sending %s (multicast)", MsgTypeToString(msgType));
 
-    if (!mServerAddress.IsUnspecified())
-    {
-        dstAddr = mServerAddress;
-    }
-    else
-    {
-        GetAllRelayAgentsAndServersMulticastAddress(dstAddr);
-    }
+    GetAllRelayAgentsAndServersMulticastAddress(dstAddr);
 
     Get<InfraIf>().SendDhcp6(*message.Release(), dstAddr);
 
@@ -535,7 +525,7 @@ void Dhcp6PdClient::HandleAdvertise(const Message &aMessage)
 
     mPdPrefix = *favoredPdPrefix;
 
-    SaveServerDuidAndAddress(aMessage);
+    SaveServerDuid(aMessage);
 
     if (!mRetxTracker.IsFirstAttempt() || (preference == 255))
     {
@@ -562,20 +552,6 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
         ExitNow();
     }
 
-    if (status == StatusCodeOption::kUseMulticast)
-    {
-        // Per RFC 8514 Section 18.2.10, if the client receives a Reply
-        // message with a status code of UseMulticast, the client
-        // records the receipt of the message and sends subsequent
-        // messages to the server using multicast. The client re-sends the
-        // original message using multicast.
-
-        VerifyOrExit(!mServerAddress.IsUnspecified());
-        mServerAddress.Clear();
-        SendMessage();
-        ExitNow();
-    }
-
     if (mState == kStateReleasing)
     {
         // Per RFC 8415 Section 18.2.10.2: When the client receives a
@@ -599,7 +575,7 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
             ExitNow();
         }
 
-        SaveServerDuidAndAddress(aMessage);
+        SaveServerDuid(aMessage);
         CommitPdPrefix(*favoredPdPrefix);
 
         ExitNow();
@@ -613,7 +589,7 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
 
         if (matchedPdPrefix != nullptr)
         {
-            SaveServerDuidAndAddress(aMessage);
+            SaveServerDuid(aMessage);
             CommitPdPrefix(*matchedPdPrefix);
 
             if (mPdPrefix.mPreferredLifetime >= kMinPreferredLifetime)
@@ -631,7 +607,7 @@ void Dhcp6PdClient::HandleReply(const Message &aMessage)
 
         if (favoredPdPrefix != nullptr)
         {
-            SaveServerDuidAndAddress(aMessage);
+            SaveServerDuid(aMessage);
             CommitPdPrefix(*favoredPdPrefix);
             ExitNow();
         }
@@ -685,32 +661,20 @@ Dhcp6PdClient::PdPrefix *Dhcp6PdClient::SelectFavoredPrefix(PdPrefixArray &aPdPr
     return favoredPdPrefix;
 }
 
-void Dhcp6PdClient::SaveServerDuidAndAddress(const Message &aMessage)
+void Dhcp6PdClient::SaveServerDuid(const Message &aMessage)
 {
-    // Reads the server DUID and Server Unicast option from the given
-    // message and saves them. The message is assumed to have already
-    // been validated to contain a Server ID option.
+    // Reads the server DUID from the given message and saves it.
+    // The message is assumed to have already been validated to contain
+    // a Server ID option.
 
-    OffsetRange  serverDuidOffsetRange;
-    Ip6::Address serverAddress;
+    OffsetRange serverDuidOffsetRange;
 
     SuccessOrAssert(ServerIdOption::ReadDuid(aMessage, serverDuidOffsetRange));
     mServerDuid.SetLength(static_cast<uint8_t>(serverDuidOffsetRange.GetLength()));
     aMessage.ReadBytes(serverDuidOffsetRange, mServerDuid.GetArrayBuffer());
-
-    ProcessServerUnicastOption(aMessage, serverAddress);
-
-    if (!serverAddress.IsUnspecified())
-    {
-        mServerAddress = serverAddress;
-    }
 }
 
-void Dhcp6PdClient::ClearServerDuid(void)
-{
-    mServerDuid.Clear();
-    mServerAddress.Clear();
-}
+void Dhcp6PdClient::ClearServerDuid(void) { mServerDuid.Clear(); }
 
 void Dhcp6PdClient::ClearPdPrefix(void)
 {
@@ -968,28 +932,6 @@ bool Dhcp6PdClient::ShouldSkipPrefixOption(const IaPrefixOption &aPrefixOption) 
 
 exit:
     return shouldSkip;
-}
-
-void Dhcp6PdClient::ProcessServerUnicastOption(const Message &aMessage, Ip6::Address &aServerAddress) const
-{
-    // Searches the message for a `ServerUnicastOption`. If found, the
-    // server address is retrieved from it. Otherwise, `aServerAddress`
-    // is set to `::` (unspecified address).
-
-    OffsetRange         offsetRange;
-    ServerUnicastOption serverUnicastOption;
-
-    aServerAddress.Clear();
-
-    SuccessOrExit(Option::FindOption(aMessage, Option::kServerUnicast, offsetRange));
-    SuccessOrExit(aMessage.Read(offsetRange, serverUnicastOption));
-
-    aServerAddress = serverUnicastOption.GetServerAddress();
-
-    LogInfo("Processed Sever Unicast Option, serverAddr:%s", aServerAddress.ToString().AsCString());
-
-exit:
-    return;
 }
 
 void Dhcp6PdClient::ProcessPreferenceOption(const Message &aMessage, uint8_t &aPreference) const
