@@ -214,13 +214,10 @@ void AnswerTlvValue::Init(uint16_t aIndex, IsLastFlag aIsLastFlag)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// MacCountersTlv
+// MacCountersTlvValue
 
-void MacCountersTlv::Init(const Mac::Counters &aMacCounters)
+void MacCountersTlvValue::InitFrom(const Mac::Counters &aMacCounters)
 {
-    SetType(kMacCounters);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-
     mIfInUnknownProtos  = BigEndian::HostSwap32(aMacCounters.mRxOther);
     mIfInErrors         = BigEndian::HostSwap32(aMacCounters.mRxErrNoFrame + aMacCounters.mRxErrUnknownNeighbor +
                                                 aMacCounters.mRxErrInvalidSrcAddr + aMacCounters.mRxErrSec +
@@ -235,7 +232,7 @@ void MacCountersTlv::Init(const Mac::Counters &aMacCounters)
     mIfOutDiscards      = BigEndian::HostSwap32(aMacCounters.mTxErrBusyChannel);
 }
 
-void MacCountersTlv::Read(MacCounters &aDiagMacCounters) const
+void MacCountersTlvValue::Read(MacCounters &aDiagMacCounters) const
 {
     aDiagMacCounters.mIfInUnknownProtos  = BigEndian::HostSwap32(mIfInUnknownProtos);
     aDiagMacCounters.mIfInErrors         = BigEndian::HostSwap32(mIfInErrors);
@@ -249,13 +246,10 @@ void MacCountersTlv::Read(MacCounters &aDiagMacCounters) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// MleCountersTlv
+// MleCountersTlvValue
 
-void MleCountersTlv::Init(const Mle::Counters &aMleCounters)
+void MleCountersTlvValue::InitFrom(const Mle::Counters &aMleCounters)
 {
-    SetType(kMleCounters);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-
     mDisabledRole                  = BigEndian::HostSwap16(aMleCounters.mDisabledRole);
     mDetachedRole                  = BigEndian::HostSwap16(aMleCounters.mDetachedRole);
     mChildRole                     = BigEndian::HostSwap16(aMleCounters.mChildRole);
@@ -273,7 +267,7 @@ void MleCountersTlv::Init(const Mle::Counters &aMleCounters)
     mLeaderTime                    = BigEndian::HostSwap64(aMleCounters.mLeaderTime);
 }
 
-void MleCountersTlv::Read(MleCounters &aDiagMleCounters) const
+void MleCountersTlvValue::Read(MleCounters &aDiagMleCounters) const
 {
     aDiagMleCounters.mDisabledRole                  = BigEndian::HostSwap16(mDisabledRole);
     aDiagMleCounters.mDetachedRole                  = BigEndian::HostSwap16(mDetachedRole);

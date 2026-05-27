@@ -371,19 +371,19 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
     case Tlv::kMacCounters:
     {
-        MacCountersTlv tlv;
+        MacCountersTlvValue tlvValue;
 
-        tlv.Init(Get<Mac::Mac>().GetCounters());
-        error = tlv.AppendTo(aMessage);
+        tlvValue.InitFrom(Get<Mac::Mac>().GetCounters());
+        error = Tlv::Append<MacCountersTlv>(aMessage, tlvValue);
         break;
     }
 
     case Tlv::kMleCounters:
     {
-        MleCountersTlv tlv;
+        MleCountersTlvValue tlvValue;
 
-        tlv.Init(Get<Mle::Mle>().GetCounters());
-        error = tlv.AppendTo(aMessage);
+        tlvValue.InitFrom(Get<Mle::Mle>().GetCounters());
+        error = Tlv::Append<MleCountersTlv>(aMessage, tlvValue);
         break;
     }
 
@@ -1195,21 +1195,19 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kMacCounters:
         {
-            MacCountersTlv macCountersTlv;
+            MacCountersTlvValue tlvValue;
 
-            SuccessOrExit(error = aMessage.Read(offset, macCountersTlv));
-            VerifyOrExit(macCountersTlv.IsValid(), error = kErrorParse);
-            macCountersTlv.Read(aDiagTlv.mData.mMacCounters);
+            SuccessOrExit(error = tlvInfo.Read<MacCountersTlv>(aMessage, tlvValue));
+            tlvValue.Read(aDiagTlv.mData.mMacCounters);
             break;
         }
 
         case Tlv::kMleCounters:
         {
-            MleCountersTlv mleCoutersTlv;
+            MleCountersTlvValue tlvValue;
 
-            SuccessOrExit(error = aMessage.Read(offset, mleCoutersTlv));
-            VerifyOrExit(mleCoutersTlv.IsValid(), error = kErrorParse);
-            mleCoutersTlv.Read(aDiagTlv.mData.mMleCounters);
+            SuccessOrExit(error = tlvInfo.Read<MleCountersTlv>(aMessage, tlvValue));
+            tlvValue.Read(aDiagTlv.mData.mMleCounters);
             break;
         }
 

@@ -330,31 +330,23 @@ typedef SimpleTlvInfo<Tlv::kLeaderData, LeaderDataTlvValue> LeaderDataTlv;
 typedef otNetworkDiagMacCounters MacCounters;
 
 /**
- * Implements Mac Counters TLV generation and parsing.
+ * Implements Mac Counters TLV value generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class MacCountersTlv : public Tlv, public TlvInfo<Tlv::kMacCounters>
+class MacCountersTlvValue
 {
 public:
     /**
-     * Initializes the TLV.
+     * Initializes the TLV value.
      *
      * @param[in] aMacCounters    The MAC counters to initialize the TLV with.
      */
-    void Init(const Mac::Counters &aMacCounters);
+    void InitFrom(const Mac::Counters &aMacCounters);
 
     /**
-     * Indicates whether or not the TLV appears to be well-formed.
+     * Reads the counters from the TLV value.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Reads the counters from TLV.
-     *
-     * @param[out] aDiagMacCounters   A reference to `NetDiag::MacCounters` to populate.
+     * @param[out] aDiagMacCounters   A reference to `MacCounters` to populate.
      */
     void Read(MacCounters &aDiagMacCounters) const;
 
@@ -369,6 +361,11 @@ private:
     uint32_t mIfOutBroadcastPkts;
     uint32_t mIfOutDiscards;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Mac Counters  TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kMacCounters, MacCountersTlvValue> MacCountersTlv;
 
 /**
  * Implements Child Table TLV Entry generation and parsing.
@@ -870,30 +867,21 @@ typedef SimpleTlvInfo<Tlv::kAnswer, AnswerTlvValue> AnswerTlv;
 typedef otNetworkDiagMleCounters MleCounters;
 
 /**
- * Implements MLE Counters TLV generation and parsing.
+ * Implements MLE Counters TLV value generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
-class MleCountersTlv : public Tlv, public TlvInfo<Tlv::kMleCounters>
+class MleCountersTlvValue
 {
 public:
     /**
-     * Initializes the TLV.
+     * Initializes the TLV value.
      *
      * @param[in] aMleCounters    The MLE counters to initialize the TLV with.
      */
-    void Init(const Mle::Counters &aMleCounters);
+    void InitFrom(const Mle::Counters &aMleCounters);
 
     /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     *
-     * Reads the counters from TLV.
+     * Reads the counters from TLV value
      *
      * @param[out] aDiagMleCounters   A reference to `NetDiag::MleCounters` to populate.
      */
@@ -916,6 +904,11 @@ private:
     uint64_t mRouterTime;                    // Milliseconds device has been in router role.
     uint64_t mLeaderTime;                    // Milliseconds device has been in leader role.
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines MLE Counters TLV constants and types.
+ */
+typedef SimpleTlvInfo<Tlv::kMleCounters, MleCountersTlvValue> MleCountersTlv;
 
 } // namespace NetDiag
 
