@@ -1820,34 +1820,6 @@ exit:
     LogSendError(kTypeParentResponse, error);
 }
 
-uint8_t Mle::GetMaxChildIpAddresses(void) const
-{
-    uint8_t num = kMaxChildIpAddresses;
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (mMaxChildIpAddresses != 0)
-    {
-        num = mMaxChildIpAddresses;
-    }
-#endif
-
-    return num;
-}
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-Error Mle::SetMaxChildIpAddresses(uint8_t aMaxIpAddresses)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aMaxIpAddresses <= kMaxChildIpAddresses, error = kErrorInvalidArgs);
-
-    mMaxChildIpAddresses = aMaxIpAddresses;
-
-exit:
-    return error;
-}
-#endif
-
 Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 {
     Error       error;
@@ -1927,21 +1899,7 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
             IgnoreError(aRxInfo.mMessage.ReadAndAdvance(offsetRange, address));
         }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        if (mMaxChildIpAddresses > 0 && storedCount >= mMaxChildIpAddresses)
-        {
-            // Skip remaining address registration entries but keep logging
-            // skipped addresses.
-            error = kErrorNoBufs;
-        }
-        else
-#endif
-        {
-            // We try to accept/add as many IPv6 addresses as possible.
-            // "Child ID/Update Response" will indicate the accepted
-            // addresses.
-            error = aChild.AddIp6Address(address);
-        }
+        error = aChild.AddIp6Address(address);
 
         if (error == kErrorNone)
         {

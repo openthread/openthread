@@ -79,6 +79,9 @@ exit:
 
 ChildTable::ChildTable(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mMaxChildIpAddresses(0)
+#endif
     , mNextChildId(Mle::kMaxChildId)
     , mMaxChildrenAllowed(kMaxChildren)
 {
@@ -372,6 +375,21 @@ bool ChildTable::HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) cons
 
     return hasChild;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+Error ChildTable::OverrideMaxChildIpAddresses(uint8_t aMaxIpAddresses)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aMaxIpAddresses <= kMaxChildIpAddresses, error = kErrorInvalidArgs);
+    mMaxChildIpAddresses = aMaxIpAddresses;
+
+exit:
+    return error;
+}
+
+#endif
 
 } // namespace ot
 

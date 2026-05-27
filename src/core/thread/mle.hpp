@@ -1153,26 +1153,7 @@ public:
     Error SendTimeSync(void);
 #endif
 
-    /**
-     * Gets the maximum number of IP addresses that each MTD child may register with this device as parent.
-     *
-     * @returns The maximum number of IP addresses that each MTD child may register with this device as parent.
-     */
-    uint8_t GetMaxChildIpAddresses(void) const;
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-
-    /**
-     * Sets/restores the maximum number of IP addresses that each MTD child may register with this
-     * device as parent.
-     *
-     * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
-     *                              device as parent. 0 to clear the setting and restore the default.
-     *
-     * @retval kErrorNone           Successfully set/cleared the number.
-     * @retval kErrorInvalidArgs    If exceeds the allowed maximum number.
-     */
-    Error SetMaxChildIpAddresses(uint8_t aMaxIpAddresses);
 
     /**
      * Sets whether the device was commissioned using CCM.
@@ -1361,7 +1342,6 @@ private:
     static constexpr uint8_t kLinkRequestMinMargin    = OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN;
     static constexpr uint8_t kPartitionMergeMinMargin = OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN;
     static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
-    static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
     // Constants for gradual router link establishment (on FTD child)
     struct GradualChildRouterLink
@@ -2575,21 +2555,18 @@ private:
 
 #if OPENTHREAD_FTD
 
-    bool    mAddressSolicitPending : 1;
-    bool    mAddressSolicitRejected : 1;
-    uint8_t mRouterId;
-    uint8_t mPreviousRouterId;
-    uint8_t mNetworkIdTimeout;
-    uint8_t mRouterUpgradeThreshold;
-    uint8_t mRouterDowngradeThreshold;
-    uint8_t mLeaderWeight;
-    uint8_t mPreviousPartitionRouterIdSequence;
-    uint8_t mPreviousPartitionIdTimeout;
-    uint8_t mChildRouterLinks;
-    uint8_t mAlternateRloc16Timeout;
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    uint8_t mMaxChildIpAddresses;
-#endif
+    bool     mAddressSolicitPending : 1;
+    bool     mAddressSolicitRejected : 1;
+    uint8_t  mRouterId;
+    uint8_t  mPreviousRouterId;
+    uint8_t  mNetworkIdTimeout;
+    uint8_t  mRouterUpgradeThreshold;
+    uint8_t  mRouterDowngradeThreshold;
+    uint8_t  mLeaderWeight;
+    uint8_t  mPreviousPartitionRouterIdSequence;
+    uint8_t  mPreviousPartitionIdTimeout;
+    uint8_t  mChildRouterLinks;
+    uint8_t  mAlternateRloc16Timeout;
     int8_t   mParentPriority;
     uint32_t mPreviousPartitionIdRouter;
     uint32_t mPreviousPartitionId;

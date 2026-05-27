@@ -87,9 +87,6 @@ Mle::Mle(Instance &aInstance)
     , mPreviousPartitionIdTimeout(0)
     , mChildRouterLinks(kChildRouterLinks)
     , mAlternateRloc16Timeout(0)
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    , mMaxChildIpAddresses(0)
-#endif
     , mParentPriority(kParentPriorityUnspecified)
     , mPreviousPartitionIdRouter(0)
     , mPreviousPartitionId(0)
