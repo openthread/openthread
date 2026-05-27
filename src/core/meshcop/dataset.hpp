@@ -656,6 +656,36 @@ public:
     bool IsSubsetOf(const Dataset &aOther) const;
 
     /**
+     * Indicates whether or not the Dataset affects connectivity.
+     *
+     * A Dataset affects connectivity if it contains a different Channel, PAN ID, Mesh Local Prefix, Network Key, or
+     * Security Policy than the current values in use.
+     *
+     * The following security policy changes are considered to affect connectivity:
+     * - Disabling routers (R bit: 1 to 0).
+     * - Enabling non-CCM routers (NCR bit: 0 to 1).
+     * - Increasing the version threshold for routing (VR field).
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     *
+     * @retval TRUE   The Dataset affects connectivity.
+     * @retval FALSE  The Dataset does not affect connectivity.
+     */
+    bool AffectsConnectivity(Instance &aInstance) const;
+
+    /**
+     * Indicates whether or not the Dataset affects the Network Key.
+     *
+     * A Dataset affects the Network Key if it contains a different Network Key than the current value in use.
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     *
+     * @retval TRUE   The Dataset affects the Network Key.
+     * @retval FALSE  The Dataset does not affect the Network Key.
+     */
+    bool AffectsNetworkKey(Instance &aInstance) const;
+
+    /**
      * Converts a Dataset Type to a string.
      *
      * @param[in]  aType   A Dataset type.

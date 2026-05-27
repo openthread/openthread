@@ -228,3 +228,17 @@ otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalD
 exit:
     return error;
 }
+
+bool otDatasetAffectsConnectivity(otInstance *aInstance, const otOperationalDatasetTlvs *aDatasetTlvs)
+{
+    bool             affects = false;
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
+
+    SuccessOrExit(dataset.SetFrom(*aDatasetTlvs));
+    affects = dataset.AffectsConnectivity(AsCoreType(aInstance));
+
+exit:
+    return affects;
+}
