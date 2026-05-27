@@ -31,6 +31,7 @@ import multiprocessing
 import os
 import queue
 import subprocess
+import sys
 import time
 import traceback
 from collections import Counter, defaultdict
@@ -41,8 +42,6 @@ import config
 THREAD_VERSION = os.getenv('THREAD_VERSION')
 VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', '1'))
 MAX_JOBS = int(os.getenv('MAX_JOBS', (multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10)))
-
-_BACKBONE_TESTS_DIR = 'tests/scripts/thread-cert/backbone'
 
 _COLOR_PASS = '\033[0;32m'
 _COLOR_FAIL = '\033[0;31m'
@@ -98,31 +97,13 @@ def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: st
 pool = multiprocessing.Pool(processes=MAX_JOBS)
 
 
-def cleanup_backbone_env():
-    logging.info("Cleaning up Backbone testing environment ...")
-    bash('pkill socat 2>/dev/null || true')
-    bash('pkill dumpcap 2>/dev/null || true')
-    bash(f'docker rm -f $(docker ps -a -q -f "name=otbr_") 2>/dev/null || true')
-    bash(f'docker network rm $(docker network ls -q -f "name=backbone") 2>/dev/null || true')
-
-
-def setup_backbone_env():
-    if THREAD_VERSION == '1.1':
-        raise RuntimeError('Backbone tests do not work with THREAD_VERSION=1.1')
-
-    if VIRTUAL_TIME:
-        raise RuntimeError('Backbone tests only work with VIRTUAL_TIME=0')
-
-    bash(f'docker image inspect {config.OTBR_DOCKER_IMAGE} >/dev/null')
-
-
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--multiply', type=int, default=1, help='run each test for multiple times')
     parser.add_argument('--timeout', type=int, default=0, help='timeout in seconds per test, zero means no timeout')
     parser.add_argument('--run-directory', type=str, default=None, help='run each test in the specified directory')
-    parser.add_argument("scripts", nargs='+', type=str, help='specify Backbone test scripts')
+    parser.add_argument("scripts", nargs='+', type=str, help='specify test scripts')
 
     args = parser.parse_args()
     logging.info("Max jobs: %d", MAX_JOBS)
@@ -131,15 +112,6 @@ def parse_args():
     logging.info("Timeout: %d", args.timeout)
     logging.info("Test scripts: %d", len(args.scripts))
     return args
-
-
-def check_has_backbone_tests(scripts):
-    for script in scripts:
-        relpath = os.path.relpath(script, _BACKBONE_TESTS_DIR)
-        if not relpath.startswith('..'):
-            return True
-
-    return False
 
 
 class PortOffsetPool:
@@ -205,19 +177,8 @@ def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None, 
 def main():
     args = parse_args()
 
-    has_backbone_tests = check_has_backbone_tests(args.scripts)
-    logging.info('Has Backbone tests: %s', has_backbone_tests)
-
-    if has_backbone_tests:
-        cleanup_backbone_env()
-        setup_backbone_env()
-
-    try:
-        fail_count = run_tests(args.scripts, args.multiply, args.run_directory, args.timeout)
-        exit(fail_count)
-    finally:
-        if has_backbone_tests:
-            cleanup_backbone_env()
+    fail_count = run_tests(args.scripts, args.multiply, args.run_directory, args.timeout)
+    sys.exit(1 if fail_count else 0)
 
 
 if __name__ == '__main__':
