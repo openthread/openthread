@@ -72,24 +72,6 @@ void Child::Info::SetFrom(const Child &aChild)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// Child::Ip6AddrEntry
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-
-bool Child::Ip6AddrEntry::IsMlrRegistered(const Child &aChild) const
-{
-    return aChild.mMlrRegisteredSet.Has(aChild.mIp6Addresses.IndexOf(*this));
-}
-
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void Child::Ip6AddrEntry::SetMlrRegistered(bool aRegistered, Child &aChild)
-{
-    aChild.mMlrRegisteredSet.Update(aChild.mIp6Addresses.IndexOf(*this), aRegistered);
-}
-
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-
-//---------------------------------------------------------------------------------------------------------------------
 // Child
 
 void Child::Clear(void)
@@ -172,7 +154,7 @@ Error Child::AddIp6Address(const Ip6::Address &aAddress)
     }
 
     VerifyOrExit(!mIp6Addresses.ContainsMatching(aAddress), error = kErrorAlready);
-    error = mIp6Addresses.PushBack(static_cast<const Ip6AddrEntry &>(aAddress));
+    error = mIp6Addresses.PushBack(aAddress);
 
 exit:
     return error;
@@ -181,7 +163,7 @@ exit:
 Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
 {
     Error         error = kErrorNotFound;
-    Ip6AddrEntry *entry;
+    Ip6::Address *entry;
 
     if (Get<Mle::Mle>().IsMeshLocalAddress(aAddress))
     {
@@ -261,18 +243,44 @@ exit:
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 {
     bool                hasAddress = false;
-    const Ip6AddrEntry *entry;
+    const Ip6::Address *entry;
 
     entry = mIp6Addresses.FindMatching(aAddress);
     VerifyOrExit(entry != nullptr);
 
-    hasAddress = entry->IsMlrRegistered(*this);
+    hasAddress = mMlrRegisteredSet.Has(mIp6Addresses.IndexOf(*entry));
 
 exit:
     return hasAddress;
 }
 
-#endif
+void Child::SetAddressMlrRegistrationState(const Ip6::Address &aAddress, bool aRegistered)
+{
+    Ip6::Address *entry;
+
+    entry = mIp6Addresses.FindMatching(aAddress);
+    VerifyOrExit(entry != nullptr);
+
+    mMlrRegisteredSet.Update(mIp6Addresses.IndexOf(*entry), aRegistered);
+
+exit:
+    return;
+}
+
+void Child::GetAllMlrRegisteredAddresses(Ip6AddressArray &aAddressArray) const
+{
+    aAddressArray.Clear();
+
+    for (const Ip6::Address &entry : mIp6Addresses)
+    {
+        if (mMlrRegisteredSet.Has(mIp6Addresses.IndexOf(entry)))
+        {
+            IgnoreError(aAddressArray.PushBack(entry));
+        }
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 #endif // OPENTHREAD_FTD
 

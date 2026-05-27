@@ -82,7 +82,7 @@ void Manager::EnterState(State aState)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
         for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
         {
-            child.ClearMlrRegisteredStateOnAllIp6Addresses();
+            child.ClearAllAddressesMlrRegistrationState();
         }
 #endif
     }
@@ -256,29 +256,36 @@ bool Manager::IsAddressRegisteredByAnyChildExcept(const Ip6::Address &aAddress, 
     return isRegistered;
 }
 
-void Manager::UpdateProxiedSubscriptions(Child &aChild, const ChildAddressArray &aOldRegisteredAddresses)
+void Manager::UpdateChildRegistrations(Child &aChild)
+{
+    Child::Ip6AddressArray emptyArray;
+
+    UpdateChildRegistrations(aChild, emptyArray);
+}
+
+void Manager::UpdateChildRegistrations(Child &aChild, const Child::Ip6AddressArray &aOldRegisteredAddresses)
 {
     bool hasUnregistered = false;
 
     VerifyOrExit(aChild.IsStateValid());
 
-    for (Child::Ip6AddrEntry &addrEntry : aChild.GetIp6Addresses())
+    for (const Ip6::Address &addr : aChild.GetIp6Addresses())
     {
         bool isRegistered;
 
-        if (!addrEntry.IsMulticastLargerThanRealmLocal())
+        if (!addr.IsMulticastLargerThanRealmLocal())
         {
             continue;
         }
 
-        isRegistered = aOldRegisteredAddresses.Contains(addrEntry);
+        isRegistered = aOldRegisteredAddresses.ContainsMatching(addr);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-        isRegistered = isRegistered || IsAddressRegisteredByNetif(addrEntry);
+        isRegistered = isRegistered || IsAddressRegisteredByNetif(addr);
 #endif
-        isRegistered = isRegistered || IsAddressRegisteredByAnyChildExcept(addrEntry, &aChild);
+        isRegistered = isRegistered || IsAddressRegisteredByAnyChildExcept(addr, &aChild);
 
-        addrEntry.SetMlrRegistered(isRegistered, aChild);
+        aChild.SetAddressMlrRegistrationState(addr, isRegistered);
 
         if (!isRegistered)
         {
@@ -347,11 +354,11 @@ void Manager::DetermineAddressesToRegister(AddressArray &aAddresses) const
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        for (const Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
+        for (const Ip6::Address &addr : child.GetIp6Addresses())
         {
-            if (addrEntry.IsMulticastLargerThanRealmLocal() && !addrEntry.IsMlrRegistered(child))
+            if (addr.IsMulticastLargerThanRealmLocal() && !child.HasMlrRegisteredAddress(addr))
             {
-                SuccessOrExit(aAddresses.AddUnique(addrEntry));
+                SuccessOrExit(aAddresses.AddUnique(addr));
             }
         }
     }
@@ -606,12 +613,12 @@ void Manager::ProcessResponse(Coap::Msg *aMsg, Error aResult)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        for (Child::Ip6AddrEntry &addrEntry : child.GetIp6Addresses())
+        for (const Ip6::Address &addr : child.GetIp6Addresses())
         {
-            if (addrEntry.IsMulticastLargerThanRealmLocal() && !addrEntry.IsMlrRegistered(child) &&
-                registeredAddresses.Contains(addrEntry))
+            if (addr.IsMulticastLargerThanRealmLocal() && !child.HasMlrRegisteredAddress(addr) &&
+                registeredAddresses.Contains(addr))
             {
-                addrEntry.SetMlrRegistered(true, child);
+                child.SetAddressMlrRegistrationState(addr, true);
             }
         }
     }

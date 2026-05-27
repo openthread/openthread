@@ -97,17 +97,20 @@ public:
     void HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent aEvent);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    static constexpr uint16_t kMaxChildAddresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1; ///< Max MLR addresses
-
-    typedef Array<Ip6::Address, kMaxChildAddresses> ChildAddressArray; ///< Registered MLR addresses array.
+    /**
+     * Updates the MLR registration status of a given child's addresses.
+     *
+     * @param[in]  aChild  The child to update.
+     */
+    void UpdateChildRegistrations(Child &aChild);
 
     /**
-     * Updates the Multicast Subscription Table according to the Child information.
+     * Updates the MLR registration status of a given child's addresses.
      *
-     * @param[in]  aChild                       A reference to the child information.
-     * @param[in]  aOldRegisteredAddresses   Array of the Child's previously registered IPv6 addresses.
+     * @param[in]  aChild                    The child to update.
+     * @param[in]  aOldRegisteredAddresses   Child's previously registered addresses.
      */
-    void UpdateProxiedSubscriptions(Child &aChild, const ChildAddressArray &aOldRegisteredAddresses);
+    void UpdateChildRegistrations(Child &aChild, const Child::Ip6AddressArray &aOldRegisteredAddresses);
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
