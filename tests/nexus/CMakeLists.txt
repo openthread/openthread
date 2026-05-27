@@ -395,6 +395,7 @@ ot_nexus_test(1_4_PIC_TC_4 "cert;nexus")
 ot_nexus_test(1_4_CS_TC_3 "cert;nexus")
 
 # Misc tests
+ot_nexus_test(announce_no_flap_on_unmergeable_partitions "core;nexus")
 ot_nexus_test(anycast "core;nexus")
 ot_nexus_test(anycast_locator "core;nexus")
 ot_nexus_test(br_upgrade_router_role "core;nexus")

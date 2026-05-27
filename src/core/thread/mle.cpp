@@ -5994,6 +5994,7 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
         if (Get<Mle>().IsFullThreadDevice() && Get<Mle>().IsRouterRoleAllowed())
         {
+            VerifyOrExit(!channelAndPanIdMatch);
             action = kSendAnnouceBack;
         }
         else
@@ -6024,14 +6025,14 @@ void Mle::AnnounceHandler::HandleAnnounce(RxInfo &aRxInfo)
         break;
 
     case kAnnounceAttachAfterDelay:
-        // No action is required if device is detached, and current
-        // channel and pan-id match the values from the received MLE
-        // Announce message.
+        // `StartAnnounceAttach` only migrates the MAC channel and PAN
+        // ID. If they already match the announced values there is no
+        // migration to perform; skipping avoids a pointless
+        // Stop()/Start() that, in pathological topologies (two
+        // unmergeable partitions sharing channel/PAN ID), produces an
+        // endless role flap.
 
-        if (Get<Mle>().IsDetached())
-        {
-            VerifyOrExit(!channelAndPanIdMatch);
-        }
+        VerifyOrExit(!channelAndPanIdMatch);
 
         if (Get<MeshCoP::PendingDatasetManager>().ReadActiveTimestamp(pendingActiveTimestamp) == kErrorNone)
         {
