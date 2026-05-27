@@ -118,10 +118,11 @@ void Test(void)
         Log("---------------------------------------------------------------------------------------");
         Log("Step 2: LEADER_NEW forms its own partition with the newer Active Timestamp (isolated)");
 
-        // Isolate LEADER_NEW (empty allowlist drops all RX) so it cannot
-        // hear LEADER_OLD and is forced to form its own partition rather
-        // than attach as a child.
+        // Isolate both nodes so they cannot hear each other. This prevents
+        // LEADER_OLD from attempting to attach to LEADER_NEW, and forces
+        // LEADER_NEW to form its own partition.
         leaderNew.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
+        leaderOld.Get<Mac::Filter>().SetMode(Mac::Filter::kModeAllowlist);
 
         timestamp.SetSeconds(kTimestampNew);
         datasetInfo.Set<MeshCoP::Dataset::kActiveTimestamp>(timestamp);
