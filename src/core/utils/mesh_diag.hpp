@@ -49,8 +49,8 @@
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
-#include "thread/network_diagnostic.hpp"
-#include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/net_diag.hpp"
+#include "thread/net_diag_tlvs.hpp"
 #include "thread/tmf.hpp"
 
 struct otMeshDiagIp6AddrIterator
@@ -69,7 +69,7 @@ namespace Utils {
  */
 class MeshDiag : public InstanceLocator
 {
-    friend class ot::NetworkDiagnostic::Client;
+    friend class ot::NetDiag::Client;
 
 public:
     static constexpr uint16_t kVersionUnknown = OT_MESH_DIAG_VERSION_UNKNOWN; ///< Unknown version.
@@ -242,7 +242,7 @@ public:
     void Cancel(void);
 
 private:
-    typedef ot::NetworkDiagnostic::Tlv Tlv;
+    typedef ot::NetDiag::Tlv Tlv;
 
     static constexpr uint32_t kResponseTimeout    = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
     static constexpr uint32_t kMinResponseTimeout = 50;
@@ -286,7 +286,7 @@ private:
         friend class MeshDiag;
 
     private:
-        void SetFrom(const NetworkDiagnostic::ChildTlvValue &aChildTlvValue);
+        void SetFrom(const NetDiag::ChildTlvValue &aChildTlvValue);
     };
 
     class RouterNeighborEntry : public otMeshDiagRouterNeighborEntry
@@ -294,7 +294,7 @@ private:
         friend class MeshDiag;
 
     private:
-        void SetFrom(const NetworkDiagnostic::RouterNeighborTlvValue &aTlvValue);
+        void SetFrom(const NetDiag::RouterNeighborTlvValue &aTlvValue);
     };
 
     Error SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);

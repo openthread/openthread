@@ -170,9 +170,9 @@ Instance::Instance(void)
 #endif
     , mNetworkDataServiceManager(*this)
     , mVendorInfo(*this)
-    , mNetworkDiagnosticServer(*this)
+    , mNetDiagServer(*this)
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    , mNetworkDiagnosticClient(*this)
+    , mNetDiagClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgentTxtData(*this)

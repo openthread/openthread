@@ -131,12 +131,12 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriAnycastLocate, AnycastLocator);
 #endif
 
-        Case(kUriDiagnosticGetRequest, NetworkDiagnostic::Server);
-        Case(kUriDiagnosticGetQuery, NetworkDiagnostic::Server);
-        Case(kUriDiagnosticReset, NetworkDiagnostic::Server);
+        Case(kUriDiagnosticGetRequest, NetDiag::Server);
+        Case(kUriDiagnosticGetQuery, NetDiag::Server);
+        Case(kUriDiagnosticReset, NetDiag::Server);
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-        Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
+        Case(kUriDiagnosticGetAnswer, NetDiag::Client);
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE

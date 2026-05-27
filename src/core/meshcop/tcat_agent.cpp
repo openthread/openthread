@@ -39,7 +39,7 @@
 #include "common/error.hpp"
 #include "crypto/storage.hpp"
 #include "instance/instance.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -626,8 +626,7 @@ Error TcatAgent::HandleGetDiagnosticTlvs(const Message     &aIncomingMessage,
     extTlv.SetLength(0);
     SuccessOrExit(error = aOutgoingMessage.Append(extTlv));
 
-    error =
-        Get<NetworkDiagnostic::Server>().AppendRequestedTlvsForTcat(aIncomingMessage, aOutgoingMessage, aOffsetRange);
+    error = Get<NetDiag::Server>().AppendRequestedTlvsForTcat(aIncomingMessage, aOutgoingMessage, aOffsetRange);
 
     // Ensure enough message buffers are left for transmission of the result. Report error otherwise.
     if (Get<MessagePool>().GetFreeBufferCount() < kBufferReserve)

@@ -31,7 +31,7 @@
  *   This file implements Thread's Network Diagnostic processing.
  */
 
-#include "network_diagnostic.hpp"
+#include "net_diag.hpp"
 
 #include "instance/instance.hpp"
 
@@ -39,7 +39,7 @@ namespace ot {
 
 RegisterLogModule("NetDiag");
 
-namespace NetworkDiagnostic {
+namespace NetDiag {
 
 //---------------------------------------------------------------------------------------------------------------------
 // Server
@@ -1338,6 +1338,6 @@ const char *Client::UriToString(Uri aUri)
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
-} // namespace NetworkDiagnostic
+} // namespace NetDiag
 
 } // namespace ot

@@ -30,7 +30,7 @@
 
 #include "platform/nexus_core.hpp"
 #include "platform/nexus_node.hpp"
-#include "thread/network_diagnostic.hpp"
+#include "thread/net_diag.hpp"
 #include "utils/mesh_diag.hpp"
 
 namespace ot {
@@ -165,16 +165,12 @@ void TestDiagTc1(const char *aJsonFileName)
     dutRloc.SetToRoutingLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), router1.Get<Mle::Mle>().GetRloc16());
 
     uint8_t tlvTypesStep2[] = {
-        NetworkDiagnostic::Tlv::kMaxChildTimeout,
-        NetworkDiagnostic::Tlv::kEui64,
-        NetworkDiagnostic::Tlv::kVersion,
-        NetworkDiagnostic::Tlv::kVendorName,
-        NetworkDiagnostic::Tlv::kVendorModel,
-        NetworkDiagnostic::Tlv::kVendorSwVersion,
-        NetworkDiagnostic::Tlv::kThreadStackVersion,
+        NetDiag::Tlv::kMaxChildTimeout,    NetDiag::Tlv::kEui64,       NetDiag::Tlv::kVersion,
+        NetDiag::Tlv::kVendorName,         NetDiag::Tlv::kVendorModel, NetDiag::Tlv::kVendorSwVersion,
+        NetDiag::Tlv::kThreadStackVersion,
     };
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep2,
-                                                                            sizeof(tlvTypesStep2), nullptr, nullptr));
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep2, sizeof(tlvTypesStep2),
+                                                                  nullptr, nullptr));
 
     /**
      * Step 3
@@ -242,9 +238,9 @@ void TestDiagTc1(const char *aJsonFileName)
      * - Pass Criteria:
      *   - N/A
      */
-    uint8_t tlvTypesStep5[] = {NetworkDiagnostic::Tlv::kMaxChildTimeout, NetworkDiagnostic::Tlv::kMleCounters};
-    SuccessOrQuit(leader.Get<NetworkDiagnostic::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep5,
-                                                                            sizeof(tlvTypesStep5), nullptr, nullptr));
+    uint8_t tlvTypesStep5[] = {NetDiag::Tlv::kMaxChildTimeout, NetDiag::Tlv::kMleCounters};
+    SuccessOrQuit(leader.Get<NetDiag::Client>().SendDiagnosticGet(dutRloc, tlvTypesStep5, sizeof(tlvTypesStep5),
+                                                                  nullptr, nullptr));
 
     /**
      * Step 6

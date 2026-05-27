@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing Network Diagnostics TLVs.
  */
 
-#ifndef OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
-#define OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
+#ifndef OT_CORE_THREAD_NET_DIAG_TLVS_HPP_
+#define OT_CORE_THREAD_NET_DIAG_TLVS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -54,7 +54,7 @@
 #include "thread/router.hpp"
 
 namespace ot {
-namespace NetworkDiagnostic {
+namespace NetDiag {
 
 /**
  * Implements Network Diagnostic TLV generation and parsing.
@@ -299,7 +299,7 @@ typedef TlvInfo<Tlv::kConnectivity> ConnectivityTlv;
 class RouteTlv : public Mle::RouteTlv
 {
 public:
-    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kRoute; ///< The TLV Type value.
+    static constexpr uint8_t kType = ot::NetDiag::Tlv::kRoute; ///< The TLV Type value.
 
     /**
      * Finds and parses a Route TLV in a given message.
@@ -354,7 +354,7 @@ public:
     /**
      * Reads the counters from TLV.
      *
-     * @param[out] aDiagMacCounters   A reference to `NetworkDiagnostic::MacCounters` to populate.
+     * @param[out] aDiagMacCounters   A reference to `NetDiag::MacCounters` to populate.
      */
     void Read(MacCounters &aDiagMacCounters) const;
 
@@ -895,7 +895,7 @@ public:
      *
      * Reads the counters from TLV.
      *
-     * @param[out] aDiagMleCounters   A reference to `NetworkDiagnostic::MleCounters` to populate.
+     * @param[out] aDiagMleCounters   A reference to `NetDiag::MleCounters` to populate.
      */
     void Read(MleCounters &aDiagMleCounters) const;
 
@@ -917,10 +917,10 @@ private:
     uint64_t mLeaderTime;                    // Milliseconds device has been in leader role.
 } OT_TOOL_PACKED_END;
 
-} // namespace NetworkDiagnostic
+} // namespace NetDiag
 
-DefineCoreType(otNetworkDiagConnectivity, NetworkDiagnostic::Connectivity);
+DefineCoreType(otNetworkDiagConnectivity, NetDiag::Connectivity);
 
 } // namespace ot
 
-#endif // OT_CORE_THREAD_NETWORK_DIAGNOSTIC_TLVS_HPP_
+#endif // OT_CORE_THREAD_NET_DIAG_TLVS_HPP_
