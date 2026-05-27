@@ -323,7 +323,7 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
     , mOriginalLogLevel(kLogLevelNone)
     , mOverrideLogLevel(kLogLevelNone)
-    , mIsLogLevelOverriden(false)
+    , mIsLogLevelOverridden(false)
 #endif
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     , mIsLogLevelSet(false)
@@ -601,7 +601,7 @@ Error Instance::SetLogLevel(LogLevel aLogLevel)
     ExitNow(error = kErrorNotCapable);
 #else
 #if OPENTHREAD_CONFIG_LOG_LEVEL_OVERRIDE_ENABLE
-    if (mIsLogLevelOverriden)
+    if (mIsLogLevelOverridden)
     {
         mOriginalLogLevel = aLogLevel;
         aLogLevel         = Max(aLogLevel, mOverrideLogLevel);
@@ -632,10 +632,10 @@ void Instance::OverrideLogLevel(LogLevel aLogLevel)
 {
     LogLevel logLevel;
 
-    if (!mIsLogLevelOverriden)
+    if (!mIsLogLevelOverridden)
     {
-        mOriginalLogLevel    = GetLogLevel();
-        mIsLogLevelOverriden = true;
+        mOriginalLogLevel     = GetLogLevel();
+        mIsLogLevelOverridden = true;
     }
 
     mOverrideLogLevel = aLogLevel;
@@ -652,8 +652,8 @@ exit:
 
 void Instance::RestoreLogLevel(void)
 {
-    VerifyOrExit(mIsLogLevelOverriden);
-    mIsLogLevelOverriden = false;
+    VerifyOrExit(mIsLogLevelOverridden);
+    mIsLogLevelOverridden = false;
     IgnoreError(SetLogLevel(mOriginalLogLevel));
 
 exit:
