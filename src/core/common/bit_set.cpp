@@ -67,7 +67,7 @@ void BitSetUtils::FlipBits(uint8_t *aTargetMask, uint16_t aSize, uint16_t aNumBi
 {
     for (uint16_t i = 0; i < aSize; i++)
     {
-        aTargetMask[i] = ~aTargetMask[i];
+        aTargetMask[i] = static_cast<uint8_t>(~aTargetMask[i]);
     }
 
     Tidy(aTargetMask, aSize, aNumBits);
@@ -106,7 +106,7 @@ void BitSetUtils::Subtract(uint8_t *aTargetMask, const uint8_t *aMask, uint16_t 
 {
     for (uint16_t i = 0; i < aSize; i++)
     {
-        aTargetMask[i] &= (~aMask[i]);
+        aTargetMask[i] &= static_cast<uint8_t>(~aMask[i]);
     }
 }
 
