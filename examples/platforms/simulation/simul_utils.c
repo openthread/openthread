@@ -91,6 +91,7 @@ static void InitRxSocket(utilsSocket           *aSocket,
     int fd;
     int one = 1;
     int rval;
+    int rcvBufSize = 2 * 1024 * 1024;
 
     fd = socket(aIp4Address ? AF_INET : AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     ExpectOrExitWithErrorMsg(fd != -1, "socket(RxFd)");
@@ -100,6 +101,9 @@ static void InitRxSocket(utilsSocket           *aSocket,
 
     rval = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one));
     ExpectOrExitWithErrorMsg(rval != -1, "setsockopt(RxFd, SO_REUSEPORT)");
+
+    rval = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rcvBufSize, sizeof(rcvBufSize));
+    ExpectOrExitWithErrorMsg(rval != -1, "setsockopt(RxFd, SO_RCVBUF)");
 
     if (aIp4Address)
     {
