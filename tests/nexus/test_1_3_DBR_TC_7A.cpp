@@ -189,6 +189,7 @@ void Test_1_3_DBR_TC_7A(void)
     nexus.AddTestVar("PRE_1", kPre1Prefix);
 
     NetworkData::OnMeshPrefixConfig config;
+    config.Clear();
     SuccessOrQuit(AsCoreType(&config.mPrefix).FromString(kPre1Prefix));
     config.mPreference   = NetworkData::kRoutePreferenceHigh;
     config.mPreferred    = true;
