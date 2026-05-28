@@ -116,6 +116,7 @@
 #include "net/nat64_translator.hpp"
 #include "net/nd_agent.hpp"
 #include "net/netif.hpp"
+#include "net/plat_tcp.hpp"
 #include "net/slaac_address.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_advertising_proxy.hpp"
@@ -631,6 +632,10 @@ private:
     ThreadNetif mThreadNetif;
     Tmf::Agent  mTmfAgent;
 
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+    Ip6::PlatTcp mPlatTcp;
+#endif
+
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
 #endif
@@ -1064,6 +1069,10 @@ template <> inline Ip6::Udp &Instance::Get(void) { return mIp6.mUdp; }
 template <> inline Ip6::Icmp &Instance::Get(void) { return mIp6.mIcmp; }
 
 template <> inline Ip6::Mpl &Instance::Get(void) { return mIp6.mMpl; }
+
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+template <> inline Ip6::PlatTcp &Instance::Get(void) { return mPlatTcp; }
+#endif
 
 template <> inline Tmf::Agent &Instance::Get(void) { return mTmfAgent; }
 

@@ -880,6 +880,15 @@ public:
     void ToString(char *aBuffer, uint16_t aSize) const;
 
     /**
+     * Appends the IPv6 address to a given `StringWriter`.
+     *
+     * The IPv6 address string is formatted as 16 hex values separated by ':' (i.e., "%x:%x:%x:...:%x").
+     *
+     * @param[in,out] aWriter  A reference to a `StringWriter` to append the string to.
+     */
+    void ToString(StringWriter &aWriter) const;
+
+    /**
      * Overloads operator `<` to compare two IPv6 addresses.
      *
      * @param[in] aOther  The other IPv6 address to compare with.
@@ -893,7 +902,6 @@ private:
     static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306)
     static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306)
 
-    void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
 
     static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits);

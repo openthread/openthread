@@ -210,6 +210,7 @@ set(COMMON_SOURCES
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
+    net/plat_tcp.cpp
     net/slaac_address.cpp
     net/sntp_client.cpp
     net/socket.cpp

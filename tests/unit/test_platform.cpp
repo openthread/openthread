@@ -658,6 +658,46 @@ OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
 
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+
+OT_TOOL_WEAK otError otPlatTcpEnableListener(otPlatTcpListener *aListener, const otPlatTcpSockAddr *aLocalSockAddr)
+{
+    OT_UNUSED_VARIABLE(aListener);
+    OT_UNUSED_VARIABLE(aLocalSockAddr);
+
+    return OT_ERROR_FAILED;
+}
+
+OT_TOOL_WEAK void otPlatTcpDisableListener(otPlatTcpListener *aListener) { OT_UNUSED_VARIABLE(aListener); }
+
+OT_TOOL_WEAK otError otPlatTcpConnect(otPlatTcpConnection     *aConn,
+                                      const otPlatTcpSockAddr *aPeerSockAddr,
+                                      const otPlatTcpSockAddr *aLocalSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConn);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aLocalSockAddr);
+
+    return OT_ERROR_FAILED;
+}
+
+OT_TOOL_WEAK void otPlatTcpNotifyTxPending(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+OT_TOOL_WEAK uint16_t otPlatTcpSend(otPlatTcpConnection *aConn, const uint8_t *aBuffer, uint16_t aLength)
+{
+    OT_UNUSED_VARIABLE(aConn);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aLength);
+
+    return 0;
+}
+
+OT_TOOL_WEAK void otPlatTcpClose(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+OT_TOOL_WEAK void otPlatTcpAbort(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+#endif // #if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
 OT_TOOL_WEAK void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)
