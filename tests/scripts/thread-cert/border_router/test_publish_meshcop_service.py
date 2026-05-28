@@ -172,7 +172,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 1)
         br1.start_otbr_service()
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         br1.enable_border_agent()
         self.simulator.go(5)
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
