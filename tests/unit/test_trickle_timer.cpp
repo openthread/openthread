@@ -240,6 +240,7 @@ void TestTrickleTimerMinMaxIntervalChange(void)
     TimeMilli          fireTime;
     uint32_t           interval;
     uint32_t           t;
+    uint32_t           newIntervalMax;
 
     sInstance = instance;
     TrickleTimerTester::RemoveAll(*instance);
@@ -457,9 +458,11 @@ void TestTrickleTimerMinMaxIntervalChange(void)
     AdvanceTime(1999);
     timer.VerifyTimerDidFire();
 
-    timer.SetIntervalMax(t + 1);
+    newIntervalMax = Min(t + 1, interval - 1);
 
-    VerifyOrQuit(timer.GetInterval() == t + 1);
+    timer.SetIntervalMax(newIntervalMax);
+
+    VerifyOrQuit(timer.GetInterval() == newIntervalMax);
     fireTime = timer.GetFireTime();
 
     // Check that new interval is started immediately.
@@ -487,9 +490,11 @@ void TestTrickleTimerMinMaxIntervalChange(void)
     AdvanceTime(t);
     timer.VerifyTimerDidFire();
 
-    timer.SetIntervalMax(t + 1);
+    newIntervalMax = Min(t + 1, interval - 1);
 
-    VerifyOrQuit(timer.GetInterval() == t + 1);
+    timer.SetIntervalMax(newIntervalMax);
+
+    VerifyOrQuit(timer.GetInterval() == newIntervalMax);
     fireTime = timer.GetFireTime();
 
     AdvanceTime(1);
