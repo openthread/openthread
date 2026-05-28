@@ -173,66 +173,11 @@ exit:
     return error;
 }
 
-Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader)
-{
-    Error  error = kErrorNone;
-    Header tunnelHeader;
-
-#if OPENTHREAD_FTD
-    if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
-        Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
-    {
-        Message *messageCopy = aMessage.Clone<kSameReservedHeader>();
-
-        if (messageCopy != nullptr)
-        {
-            EnqueueDatagram(*messageCopy);
-        }
-        else
-        {
-            LogWarn("Failed to clone mcast message for indirect tx to sleepy children");
-        }
-    }
-#endif
-
-    // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
-    tunnelHeader.InitVersionTrafficClassFlow();
-    tunnelHeader.SetHopLimit(kDefaultHopLimit);
-    tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
-    tunnelHeader.SetSource(Get<Mle::Mle>().GetMeshLocalRloc());
-    tunnelHeader.SetDestination(Address::GetRealmLocalAllMplForwarders());
-    tunnelHeader.SetNextHeader(kProtoIp6);
-
-    SuccessOrExit(error = AddMplOption(aMessage, tunnelHeader));
-    SuccessOrExit(error = aMessage.Prepend(tunnelHeader));
-
-exit:
-    return error;
-}
-
 Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
 {
     Error error = kErrorNone;
 
-    if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
-    {
-#if OPENTHREAD_FTD
-        if (Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
-        {
-            Message *messageCopy = aMessage.Clone<kSameReservedHeader>();
-
-            if (messageCopy != nullptr)
-            {
-                EnqueueDatagram(*messageCopy);
-            }
-            else
-            {
-                LogWarn("Failed to clone mcast message for indirect tx to sleepy children");
-            }
-        }
-#endif
-    }
-    else
+    if (!aHeader.GetDestination().IsMulticastLargerThanRealmLocal())
     {
         VerifyOrExit(aHeader.GetDestination().IsRealmLocalMulticast());
     }
