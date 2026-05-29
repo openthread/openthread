@@ -52,6 +52,7 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "common/uptime.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/dataset.hpp"
@@ -74,6 +75,7 @@ class TcatAgent : public InstanceLocator, private NonCopyable
 {
     friend class Ble::BleSecure;
     friend class UnitTester;
+    friend class ot::Notifier;
 
 public:
     /**
@@ -164,49 +166,44 @@ public:
     enum CommandTlvType : uint8_t
     {
         // Command Class General
-        kTlvResponseWithStatus        = 0x01, ///< TCAT response with status value TLV
-        kTlvResponseWithPayload       = 0x02, ///< TCAT response with payload TLV
-        kTlvResponseEvent             = 0x03, ///< TCAT response event TLV (reserved)
-        kTlvGetNetworkName            = 0x08, ///< TCAT network name query TLV
-        kTlvDisconnect                = 0x09, ///< TCAT disconnect request TLV
-        kTlvPing                      = 0x0A, ///< TCAT ping request TLV
-        kTlvGetDeviceId               = 0x0B, ///< TCAT device ID query TLV
-        kTlvGetExtendedPanID          = 0x0C, ///< TCAT extended PAN ID query TLV
-        kTlvGetProvisioningURL        = 0x0D, ///< TCAT provisioning URL query TLV
-        kTlvPresentPskdHash           = 0x10, ///< TCAT commissioner rights elevation request TLV using PSKd hash
-        kTlvPresentPskcHash           = 0x11, ///< TCAT commissioner rights elevation request TLV using PSKc hash
-        kTlvPresentInstallCodeHash    = 0x12, ///< TCAT commissioner rights elevation request TLV using install code
-        kTlvRequestRandomNumChallenge = 0x13, ///< TCAT random number challenge query TLV
+        kTlvResponseWithStatus        = OT_TCAT_TLV_RESPONSE_WITH_STATUS,
+        kTlvResponseWithPayload       = OT_TCAT_TLV_RESPONSE_WITH_PAYLOAD,
+        kTlvResponseEvent             = OT_TCAT_TLV_RESPONSE_EVENT,
+        kTlvGetNetworkName            = OT_TCAT_TLV_GET_NETWORK_NAME,
+        kTlvDisconnect                = OT_TCAT_TLV_DISCONNECT,
+        kTlvPing                      = OT_TCAT_TLV_PING,
+        kTlvGetDeviceId               = OT_TCAT_TLV_GET_DEVICE_ID,
+        kTlvGetExtendedPanID          = OT_TCAT_TLV_GET_EXTENDED_PAN_ID,
+        kTlvGetProvisioningURL        = OT_TCAT_TLV_GET_PROVISIONING_URL,
+        kTlvPresentPskdHash           = OT_TCAT_TLV_PRESENT_PSKD_HASH,
+        kTlvPresentPskcHash           = OT_TCAT_TLV_PRESENT_PSKC_HASH,
+        kTlvPresentInstallCodeHash    = OT_TCAT_TLV_PRESENT_INSTALL_CODE_HASH,
+        kTlvRequestRandomNumChallenge = OT_TCAT_TLV_REQUEST_RANDOM_CHALLENGE,
 
         // Command Class Commissioning
-        kTlvSetActiveOperationalDataset    = 0x20, ///< TCAT active operational dataset TLV
-        kTlvSetActiveOperationalDatasetAlt = 0x21, ///< TCAT active operational dataset alternative #1 TLV (reserved)
-        kTlvGetCommissionerCertificate     = 0x25, ///< TCAT commissioner certificate query TLV
-        kTlvGetDiagnosticTlvs              = 0x26, ///< TCAT diagnostics TLVs query TLV
-        kTlvStartThreadInterface           = 0x27, ///< TCAT start thread interface request TLV
-        kTlvStopThreadInterface            = 0x28, ///< TCAT stop thread interface request TLV
+        kTlvSetActiveOperationalDataset    = OT_TCAT_TLV_SET_ACTIVE_OPERATIONAL_DATASET,
+        kTlvSetActiveOperationalDatasetAlt = OT_TCAT_TLV_SET_ACTIVE_OPERATIONAL_DATASET_ALT,
+        kTlvGetCommissionerCertificate     = OT_TCAT_TLV_GET_COMMISSIONER_CERTIFICATE,
+        kTlvGetDiagnosticTlvs              = OT_TCAT_TLV_GET_DIAGNOSTIC_TLVS,
+        kTlvStartThreadInterface           = OT_TCAT_TLV_START_THREAD_INTERFACE,
+        kTlvStopThreadInterface            = OT_TCAT_TLV_STOP_THREAD_INTERFACE,
 
         // Command Class Extraction
-        kTlvGetActiveOperationalDataset    = 0x40, ///< TCAT active operational dataset query TLV
-        kTlvGetActiveOperationalDatasetAlt = 0x41, ///< TCAT active operational dataset alternative #1 query TLV (rsv)
+        kTlvGetActiveOperationalDataset    = OT_TCAT_TLV_GET_ACTIVE_OPERATIONAL_DATASET,
+        kTlvGetActiveOperationalDatasetAlt = OT_TCAT_TLV_GET_ACTIVE_OPERATIONAL_DATASET_ALT,
 
         // Command Class Decommissioning
-        kTlvDecommission = 0x60, ///< TCAT decommission request TLV
+        kTlvDecommission = OT_TCAT_TLV_DECOMMISSION,
 
         // Command Class Application
-        kTlvGetApplicationLayers   = 0x80, ///< TCAT get application layers request TLV
-        kTlvSendApplicationData1   = 0x81, ///< TCAT send application data 1 TLV
-        kTlvSendApplicationData2   = 0x82, ///< TCAT send application data 2 TLV
-        kTlvSendApplicationData3   = 0x83, ///< TCAT send application data 3 TLV
-        kTlvSendApplicationData4   = 0x84, ///< TCAT send application data 4 TLV
-        kTlvServiceNameUdp         = 0x89, ///< TCAT service name UDP sub-TLV (not used as a command)
-        kTlvServiceNameTcp         = 0x8A, ///< TCAT service name TCP sub-TLV (not used as a command)
-        kTlvSendVendorSpecificData = 0x9F, ///< TCAT send vendor specific command or data TLV
-
-        // Command Class CCM
-        kTlvSetLDevIdOperationalCert = 0xA0, ///< TCAT set LDevID operational certificate TLV (reserved)
-        kTlvSetLDevIdPrivateKey      = 0xA1, ///< TCAT set LDevID operational certificate private key TLV (reserved)
-        kTlvSetDomainCaCert          = 0xA2, ///< TCAT set domain CA certificate TLV (reserved)
+        kTlvGetApplicationLayers   = OT_TCAT_TLV_GET_APPLICATION_LAYERS,
+        kTlvSendApplicationData1   = OT_TCAT_TLV_SEND_APPLICATION_DATA_1,
+        kTlvSendApplicationData2   = OT_TCAT_TLV_SEND_APPLICATION_DATA_2,
+        kTlvSendApplicationData3   = OT_TCAT_TLV_SEND_APPLICATION_DATA_3,
+        kTlvSendApplicationData4   = OT_TCAT_TLV_SEND_APPLICATION_DATA_4,
+        kTlvServiceNameUdp         = OT_TCAT_TLV_SERVICE_NAME_UDP,
+        kTlvServiceNameTcp         = OT_TCAT_TLV_SERVICE_NAME_TCP,
+        kTlvSendVendorSpecificData = OT_TCAT_TLV_SEND_VENDOR_SPECIFIC_DATA,
     };
 
     /**
@@ -441,6 +438,7 @@ public:
 private:
     void  NotifyApplicationResponseSent(void) { mApplicationResponsePending = false; }
     void  NotifyStateChange(void);
+    void  HandleNotifierEvents(Events aEvents);
     void  ClearCommissionerState();
     Error Connected(MeshCoP::Tls::Extension &aTls);
     void  Disconnected(void);
@@ -520,10 +518,11 @@ private:
     bool                             mIsCommissioned : 1;
     bool                             mApplicationResponsePending : 1;
     using ExpireTimer = TimerMilliIn<TcatAgent, &TcatAgent::HandleTimer>;
-    ExpireTimer mActiveOrStandbyTimer;
-    uint32_t    mTcatActiveDurationMs;
-    UptimeSec   mLastHashVerificationTimestamp;
-    uint8_t     mHashVerificationAttempts;
+    ExpireTimer     mActiveOrStandbyTimer;
+    uint32_t        mTcatActiveDurationMs;
+    UptimeSec       mLastHashVerificationTimestamp;
+    uint8_t         mHashVerificationAttempts;
+    Mle::DeviceRole mLastDeviceRole;
 };
 
 DeclareTmfHandler(TcatAgent, kUriTcatEnable);
