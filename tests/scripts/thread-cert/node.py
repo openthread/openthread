@@ -4198,9 +4198,8 @@ class LinuxHost():
                 return
         raise Exception("Failed to start radvd service")
 
-    def start_radvd_service(self, prefix, slaac):
-        self.bash("""cat >/etc/radvd.conf <<EOF
-interface eth0
+    def start_radvd_service(self, prefix, slaac, nat64_prefix=None):
+        config = """interface eth0
 {
     AdvSendAdvert on;
 
@@ -4219,9 +4218,17 @@ interface eth0
         AdvPreferredLifetime 1800;
         AdvValidLifetime 1800;
     };
-};
-EOF
-""" % (prefix, 'on' if slaac else 'off'))
+""" % (prefix, 'on' if slaac else 'off')
+        if nat64_prefix:
+            config += """
+    nat64prefix %s
+    {
+        AdvNAT64Lifetime 1800;
+    };
+""" % nat64_prefix
+        config += "};\n"
+
+        self.bash("cat >/etc/radvd.conf <<EOF\n%sEOF" % config)
         self._start_radvd_and_verify()
 
     def start_pd_radvd_service(self, prefix):
@@ -4330,10 +4337,10 @@ class HostNode(LinuxHost, OtbrDocker):
         super().__init__(nodeid, **kwargs)
         self.bash('service otbr-agent stop')
 
-    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
+    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False, nat64_prefix=None):
         self._setup_sysctl()
         if start_radvd:
-            self.start_radvd_service(prefix, slaac)
+            self.start_radvd_service(prefix, slaac, nat64_prefix=nat64_prefix)
         else:
             self.stop_radvd_service()
 

@@ -34,6 +34,9 @@
 #include "openthread-core-config.h"
 
 #include "instance/instance.hpp"
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#include "border_router/routing_manager.hpp"
+#endif
 
 using namespace ot;
 

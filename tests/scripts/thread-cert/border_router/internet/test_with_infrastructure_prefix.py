@@ -27,29 +27,32 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import unittest
+import logging
 
 import config
 import thread_cert
 
 # Test description:
-#   This test verifies publishing infrastructure NAT64 prefix in Thread network.
+#   This test verifies publishing infrastructure NAT64 prefix (PREF64) in Thread network.
 #
 #
 # Topology:
 #
 #   ----------------(eth)--------------------
-#           |
-#          BR (with DNS64 on infrastructure interface)
+#           |                 |
+#          BR (Leader)      HOST (Router)
 #           |
 #        ROUTER
 #
 
 BR = 1
 ROUTER = 2
+HOST = 3
 
+ETH_PREFIX = "fd00:abcd:7890::/64"
 OMR_PREFIX = "2000:0:1111:4444::/64"
-# The prefix is set smaller than the default infrastructure NAT64 prefix.
-SMALL_NAT64_PREFIX = "2000:0:0:1:0:0::/96"
+INFRA_NAT64_PREFIX = "fd00:beef:1234::/96"
+SMALL_NAT64_PREFIX = "fd00:aaaa:2222::/96"
 
 NAT64_PREFIX_REFRESH_DELAY = 305
 
@@ -59,7 +62,7 @@ NAT64_STATE_IDLE = 'idle'
 NAT64_STATE_ACTIVE = 'active'
 
 
-class Nat64SingleBorderRouter(thread_cert.TestCase):
+class Nat64InfrastructurePrefix(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
@@ -74,18 +77,22 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
             'allowlist': [BR],
             'version': '1.2',
         },
+        HOST: {
+            'name': 'Host',
+            'is_host': True
+        },
     }
 
     def test(self):
-        # TODO: re-enable test when PREF64 capability is ready
-        return
-
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
+        host = self.nodes[HOST]
+
+        # Start host with radvd advertising an infrastructure prefix but NO NAT64 prefix yet.
+        host.start(start_radvd=True, prefix=ETH_PREFIX, slaac=True)
+        self.simulator.go(5)
 
         br.start()
-        # When feature flag is enabled, NAT64 might be disabled by default. So
-        # ensure NAT64 is enabled here.
         br.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
@@ -94,77 +101,13 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
-        # Case 1 No infra-derived OMR prefix. BR publishes its local prefix.
-        local_nat64_prefix = br.get_br_nat64_prefix()
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        nat64_prefix = br.get_netdata_nat64_routes()[0]
-        self.assertEqual(nat64_prefix, local_nat64_prefix)
-
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_ACTIVE,
-            'Translator': NAT64_STATE_ACTIVE
-        })
-
-        # Case 2 Add OMR prefix. BR publishes the infrastructure nat64 prefix
-        br.add_prefix(OMR_PREFIX)
-        br.register_netdata()
+        # Case 1: No infra-discovered NAT64 prefix. BR publishes its local prefix.
+        # Since OMR is not yet infra-derived (no OMR published), it should publish local prefix anyway?
+        # Actually, if no OMR is published, it generates one.
         self.simulator.go(10)
-
-        favored_nat64_prefix = br.get_br_favored_nat64_prefix()
-        self.assertNotEqual(favored_nat64_prefix, local_nat64_prefix)
-        infra_nat64_prefix = favored_nat64_prefix
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        nat64_prefix = br.get_netdata_nat64_routes()[0]
-        self.assertEqual(nat64_prefix, infra_nat64_prefix)
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_ACTIVE,
-            'Translator': NAT64_STATE_NOT_RUNNING
-        })
-
-        # Case 3 Unpublish infrastructure prefix when a smaller prefix in medium
-        # preference is present
-        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True, prf='med')
-        br.register_netdata()
-        self.simulator.go(5)
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        self.assertNotEqual(infra_nat64_prefix, br.get_netdata_nat64_routes()[0])
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_IDLE,
-            'Translator': NAT64_STATE_NOT_RUNNING
-        })
-
-        br.remove_route(SMALL_NAT64_PREFIX)
-        br.register_netdata()
-        self.simulator.go(10)
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        self.assertEqual(nat64_prefix, infra_nat64_prefix)
-
-        # Case 4 No change when a smaller prefix in low preference is present
-        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True, prf='low')
-        br.register_netdata()
-        self.simulator.go(5)
-
-        self.assertEqual(len(br.get_netdata_nat64_routes()), 2)
-        self.assertEqual(br.get_netdata_nat64_routes(), [infra_nat64_prefix, SMALL_NAT64_PREFIX])
-        self.assertDictIncludes(br.nat64_state, {
-            'PrefixManager': NAT64_STATE_ACTIVE,
-            'Translator': NAT64_STATE_NOT_RUNNING
-        })
-
-        br.remove_route(SMALL_NAT64_PREFIX)
-        br.register_netdata()
-        self.simulator.go(5)
-
-        # Case 5 Infrastructure nat64 prefix no longer presents
-        br.bash("service bind9 stop || true")
-        self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
-
         local_nat64_prefix = br.get_br_nat64_prefix()
-        self.assertNotEqual(local_nat64_prefix, infra_nat64_prefix)
+        logging.info("Local NAT64 prefix: %s", local_nat64_prefix)
+
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
         self.assertEqual(br.get_netdata_nat64_routes()[0], local_nat64_prefix)
         self.assertDictIncludes(br.nat64_state, {
@@ -172,25 +115,51 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
             'Translator': NAT64_STATE_ACTIVE
         })
 
-        # Case 6 Infrastructure nat64 prefix is recovered
-        br.bash("service bind9 start")
-        self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
+        # Case 2: Host starts advertising a NAT64 prefix (PREF64).
+        # We also need to add an infra-derived OMR prefix for BR to favor infra NAT64 prefix.
+        br.add_prefix(OMR_PREFIX)
+        br.register_netdata()
+        self.simulator.go(10)
 
-        self.assertEqual(br.get_br_favored_nat64_prefix(), infra_nat64_prefix)
+        host.start_radvd_service(prefix=ETH_PREFIX, slaac=True, nat64_prefix=INFRA_NAT64_PREFIX)
+        # Give some time for RA discovery and evaluation.
+        # RoutingManager evaluates every few seconds or on RA events.
+        self.simulator.go(20)
+
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
-        self.assertEqual(br.get_netdata_nat64_routes()[0], infra_nat64_prefix)
+        self.assertEqual(br.get_netdata_nat64_routes()[0], INFRA_NAT64_PREFIX)
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
             'Translator': NAT64_STATE_NOT_RUNNING
         })
 
-        # Case 7 Change infrastructure nat64 prefix
-        br.bash("sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
-        br.bash("sed -i '/\/\/dns64 /a dns64 " + SMALL_NAT64_PREFIX + " {};' /etc/bind/named.conf.options")
-        br.bash("service bind9 restart")
+        # Case 3: Stop infrastructure NAT64 prefix advertisement.
+        host.stop_radvd_service()
+        # Wait for the discovered prefix to expire or be deprecated.
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
-        self.assertEqual(br.get_br_favored_nat64_prefix(), SMALL_NAT64_PREFIX)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(br.get_netdata_nat64_routes()[0], local_nat64_prefix)
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
+
+        # Case 4: Recover infrastructure NAT64 prefix advertisement.
+        host.start_radvd_service(prefix=ETH_PREFIX, slaac=True, nat64_prefix=INFRA_NAT64_PREFIX)
+        self.simulator.go(20)
+
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(br.get_netdata_nat64_routes()[0], INFRA_NAT64_PREFIX)
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
+
+        # Case 5: Change infrastructure NAT64 prefix to a smaller one.
+        host.start_radvd_service(prefix=ETH_PREFIX, slaac=True, nat64_prefix=SMALL_NAT64_PREFIX)
+        self.simulator.go(20)
+
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
         self.assertEqual(br.get_netdata_nat64_routes()[0], SMALL_NAT64_PREFIX)
         self.assertDictIncludes(br.nat64_state, {
