@@ -723,7 +723,7 @@ public:
      * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2
      *                           metrics can be specified. The probing would be disabled if @p `aLinkMetrics` is
      *                           bitwise 0.
-     * @param[in]  aShortAddress The short address of the the probing Initiator.
+     * @param[in]  aShortAddress The short address of the probing Initiator.
      * @param[in]  aExtAddress   The extended source address of the probing Initiator.
      *
      * @retval kErrorNone            Successfully enable/disable or update Enhanced-ACK Based Probing for a specific

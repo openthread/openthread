@@ -2556,7 +2556,7 @@ Locate the closest destination of an anycast address (i.e., find the destination
 
 `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is required.
 
-The closest destination is determined based on the the current routing table and path costs within the Thread mesh.
+The closest destination is determined based on the current routing table and path costs within the Thread mesh.
 
 Locate the leader using its anycast address:
 

@@ -53,8 +53,7 @@ extern "C" {
 typedef struct otPlatDsoConnection otPlatDsoConnection;
 
 /**
- * Can be used by DSO platform implementation to get the the OpenThread instance associated with a
- * connection instance.
+ * Can be used by DSO platform implementation to get the OpenThread instance associated with a connection instance.
  *
  * @param[in] aConnection   A pointer to the DSO connection.
  *
@@ -124,7 +123,7 @@ extern void otPlatDsoHandleConnected(otPlatDsoConnection *aConnection);
  * Passes the ownership of the @p aMessage to the DSO platform layer, and the platform implementation is
  * expected to free the message once it is no longer needed.
  *
- * The @p aMessage contains the DNS message (starting with DNS header). Note that it does not contain the the length
+ * The @p aMessage contains the DNS message (starting with DNS header). Note that it does not contain the length
  * field that is needed when sending over TLS/TCP transport. The platform layer MUST therefore include the length
  * field when passing the message to TLS/TCP layer.
  *

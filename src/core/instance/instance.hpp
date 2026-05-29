@@ -461,7 +461,7 @@ public:
 #endif
 
     /**
-     * Retrieves the the Message Buffer information.
+     * Retrieves the Message Buffer information.
      *
      * @param[out]  aInfo  A `BufferInfo` where information is written.
      */

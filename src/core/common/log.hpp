@@ -112,7 +112,7 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
 /**
  * Emits an error log message at critical log level if there is an error.
  *
- * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * The emitted log will use the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
  * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
  *
  * @param[in] aError       The error to check and log.
@@ -135,7 +135,7 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
 /**
  * Emits an error log message at warning log level if there is an error.
  *
- * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * The emitted log will use the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
  * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
  *
  * @param[in] aError       The error to check and log.
@@ -159,7 +159,7 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
 /**
  * Emits an error log message at note log level if there is an error.
  *
- * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * The emitted log will use the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
  * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
  *
  * @param[in] aError       The error to check and log.
@@ -183,7 +183,7 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
 /**
  * Emits an error log message at info log level if there is an error.
  *
- * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * The emitted log will use the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
  * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
  *
  * @param[in] aError       The error to check and log.
@@ -207,7 +207,7 @@ constexpr uint16_t kMaxLogStringSize = OPENTHREAD_CONFIG_LOG_MAX_SIZE; ///< Max 
 /**
  * Emits an error log message at debug log level if there is an error.
  *
- * The emitted log will use the the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
+ * The emitted log will use the following format "Failed to {aFormattedText} - {ErrorToString(aError)}", and will
  * be emitted only if there is an error, i.e., @p aError is not `kErrorNone`.
  *
  * @param[in] aError       The error to check and log.

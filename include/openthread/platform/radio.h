@@ -359,7 +359,7 @@ typedef struct otRadioFrame
              * If `mIsHeaderUpdated` is not set, then the frame counter and key CSL IE not set in the frame by
              * OpenThread core and it is the responsibility of the radio platform to assign them. The platform
              * must update the frame header (assign counter and CSL IE values) before sending the frame over the air,
-             * however if the the transmission gets aborted and the frame is never sent over the air (e.g., channel
+             * however if the transmission gets aborted and the frame is never sent over the air (e.g., channel
              * access error) the platform may choose to not update the header. If the platform updates the header,
              * it must also set this flag before passing the frame back from the `otPlatRadioTxDone()` callback.
              */
