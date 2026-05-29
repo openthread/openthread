@@ -623,7 +623,7 @@ exit:
 Error Translator::TranslateIcmp4(Message &aMessage, uint16_t aOriginalId)
 {
     Error             error = kErrorNone;
-    Ip4::Icmp::Header icmp4Header;
+    Ip4::Icmp4Header  icmp4Header;
     Ip6::Icmp::Header icmp6Header;
 
     // TODO: Implement the translation of other ICMP messages.
@@ -634,7 +634,7 @@ Error Translator::TranslateIcmp4(Message &aMessage, uint16_t aOriginalId)
 
     switch (icmp4Header.GetType())
     {
-    case Ip4::Icmp::Header::Type::kTypeEchoReply:
+    case Ip4::Icmp4Header::Type::kTypeEchoReply:
         // The only difference between ICMPv6 echo and ICMP4 echo is
         // the message type field, so we can reinterpret it as ICMP6
         // header and set the message type.
@@ -656,7 +656,7 @@ exit:
 Error Translator::TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId)
 {
     Error             error = kErrorNone;
-    Ip4::Icmp::Header icmp4Header;
+    Ip4::Icmp4Header  icmp4Header;
     Ip6::Icmp::Header icmp6Header;
 
     // TODO: Implement the translation of other ICMP messages.
@@ -669,10 +669,10 @@ Error Translator::TranslateIcmp6(Message &aMessage, uint16_t aTranslatedId)
     {
     case Ip6::Icmp::Header::kTypeEchoRequest:
         // The only difference between ICMPv6 echo and ICMP4 echo is
-        // the message type field, so we can reinterpret it as ICMP6
+        // the message type field, so we can reinterpret it as ICMP4
         // header and set the message type.
         SuccessOrExit(error = aMessage.Read(0, icmp4Header));
-        icmp4Header.SetType(Ip4::Icmp::Header::Type::kTypeEchoRequest);
+        icmp4Header.SetType(Ip4::Icmp4Header::Type::kTypeEchoRequest);
         icmp4Header.SetId(aTranslatedId);
         aMessage.Write(0, icmp4Header);
         break;

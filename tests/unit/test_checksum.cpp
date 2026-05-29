@@ -432,8 +432,8 @@ void TestIcmp4MessageChecksum(void)
     Ip4::Address source;
     Ip4::Address dest;
 
-    uint8_t           mPayload[sizeof(kExampleIcmpMessage)];
-    Ip4::Icmp::Header icmpHeader;
+    uint8_t          mPayload[sizeof(kExampleIcmpMessage)];
+    Ip4::Icmp4Header icmpHeader;
 
     SuccessOrQuit(message->AppendBytes(kExampleIcmpMessage, sizeof(kExampleIcmpMessage)));
 

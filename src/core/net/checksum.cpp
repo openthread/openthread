@@ -219,7 +219,7 @@ void Checksum::UpdateMessageChecksum(Message            &aMessage,
         break;
 
     case Ip4::kProtoIcmp:
-        headerOffset = Ip4::Icmp::Header::kChecksumFieldOffset;
+        headerOffset = Ip4::Icmp4Header::kChecksumFieldOffset;
         break;
 
     default:
