@@ -226,7 +226,7 @@ bool Udp::HandleReceive(const Message &aMessage, const Ip6::Headers &aHeaders)
             Message *payload = aMessage.Clone<kNoReservedHeader>();
 
             VerifyOrExit(payload != nullptr);
-            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
 
             socket.mHandler(socket.mContext, payload, &messageInfo);
             payload->Free();

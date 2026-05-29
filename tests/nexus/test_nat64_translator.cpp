@@ -294,10 +294,10 @@ Message *PrepareUdpMessage(Node               &aNode,
                            uint16_t            aDstPort    = 1235,
                            uint16_t            aPayloadLen = 10)
 {
-    Message         *message = nullptr;
-    Ip6::Prefix      nat64Prefix;
-    Ip6::Header      ip6Header;
-    Ip6::Udp::Header udpHeader;
+    Message       *message = nullptr;
+    Ip6::Prefix    nat64Prefix;
+    Ip6::Header    ip6Header;
+    Ip6::UdpHeader udpHeader;
 
     message = aNode.Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr);
@@ -311,7 +311,7 @@ Message *PrepareUdpMessage(Node               &aNode,
     ip6Header.GetDestination().SynthesizeFromIp4Address(nat64Prefix, aDstIp4Address);
 
     ip6Header.SetNextHeader(Ip6::kProtoUdp);
-    ip6Header.SetPayloadLength(sizeof(Ip6::Udp::Header) + aPayloadLen);
+    ip6Header.SetPayloadLength(sizeof(Ip6::UdpHeader) + aPayloadLen);
 
     SuccessOrQuit(message->Append(ip6Header));
 
@@ -337,10 +337,10 @@ Message *PrepareTcpMessage(Node               &aNode,
                            uint16_t            aDstPort    = 1235,
                            uint16_t            aPayloadLen = 10)
 {
-    Message         *message = nullptr;
-    Ip6::Prefix      nat64Prefix;
-    Ip6::Header      ip6Header;
-    Ip6::Tcp::Header tcpHeader;
+    Message       *message = nullptr;
+    Ip6::Prefix    nat64Prefix;
+    Ip6::Header    ip6Header;
+    Ip6::TcpHeader tcpHeader;
 
     message = aNode.Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr);
@@ -354,7 +354,7 @@ Message *PrepareTcpMessage(Node               &aNode,
     ip6Header.GetDestination().SynthesizeFromIp4Address(nat64Prefix, aDstIp4Address);
 
     ip6Header.SetNextHeader(Ip6::kProtoTcp);
-    ip6Header.SetPayloadLength(sizeof(Ip6::Tcp::Header) + aPayloadLen);
+    ip6Header.SetPayloadLength(sizeof(Ip6::TcpHeader) + aPayloadLen);
 
     SuccessOrQuit(message->Append(ip6Header));
 
@@ -1147,14 +1147,14 @@ void TestNat64IhlBypass(void)
         ip6Header.SetSource(ip6Addr);
         ip6Header.GetDestination().SynthesizeFromIp4Address(prefix, ip4Addr);
         ip6Header.SetNextHeader(Ip6::kProtoUdp);
-        ip6Header.SetPayloadLength(sizeof(Ip6::Udp::Header) + payloadLen);
+        ip6Header.SetPayloadLength(sizeof(Ip6::UdpHeader) + payloadLen);
         SuccessOrQuit(message->Append(ip6Header));
 
-        Ip6::Udp::Header udpHeader;
+        Ip6::UdpHeader udpHeader;
         udpHeader.Clear();
         udpHeader.SetSourcePort(srcPort);
         udpHeader.SetDestinationPort(dstPort);
-        udpHeader.SetLength(sizeof(Ip6::Udp::Header) + payloadLen);
+        udpHeader.SetLength(sizeof(Ip6::UdpHeader) + payloadLen);
         SuccessOrQuit(message->Append(udpHeader));
 
         for (uint16_t i = 0; i < payloadLen; i++)
@@ -1176,7 +1176,7 @@ void TestNat64IhlBypass(void)
         ip4Header.Clear();
         // IHL=6 means header length is 6*4 = 24 bytes.
         ip4Header.SetVersionIhl(0x46);
-        ip4Header.SetTotalLength(24 + sizeof(Ip4::Udp::Header) + payloadLen);
+        ip4Header.SetTotalLength(24 + sizeof(Ip4::UdpHeader) + payloadLen);
         ip4Header.SetProtocol(Ip4::kProtoUdp);
         ip4Header.SetTtl(64);
         ip4Header.SetSource(ip4Addr);
@@ -1194,11 +1194,11 @@ void TestNat64IhlBypass(void)
         uint8_t options[] = {0x01, 0x01, 0x01, 0x00};
         SuccessOrQuit(message->Append(options));
 
-        Ip4::Udp::Header udpHeader;
+        Ip4::UdpHeader udpHeader;
         udpHeader.Clear();
         udpHeader.SetSourcePort(srcPort);
         udpHeader.SetDestinationPort(dstPort);
-        udpHeader.SetLength(sizeof(Ip4::Udp::Header) + payloadLen);
+        udpHeader.SetLength(sizeof(Ip4::UdpHeader) + payloadLen);
         SuccessOrQuit(message->Append(udpHeader));
 
         for (uint16_t i = 0; i < payloadLen; i++)
@@ -1230,7 +1230,7 @@ void TestNat64IhlBypass(void)
         ip4Header.Clear();
         // IHL=7 means header length is 7*4 = 28 bytes.
         ip4Header.SetVersionIhl(0x47);
-        ip4Header.SetTotalLength(28 + sizeof(Ip4::Udp::Header) + payloadLen);
+        ip4Header.SetTotalLength(28 + sizeof(Ip4::UdpHeader) + payloadLen);
         ip4Header.SetProtocol(Ip4::kProtoUdp);
         ip4Header.SetTtl(64);
         ip4Header.SetSource(ip4Addr);
@@ -1248,11 +1248,11 @@ void TestNat64IhlBypass(void)
         uint8_t options[] = {0x83, 0x08, 0x04, 0x01, 0x01, 0x01, 0x01, 0x00};
         SuccessOrQuit(message->Append(options));
 
-        Ip4::Udp::Header udpHeader;
+        Ip4::UdpHeader udpHeader;
         udpHeader.Clear();
         udpHeader.SetSourcePort(srcPort);
         udpHeader.SetDestinationPort(dstPort);
-        udpHeader.SetLength(sizeof(Ip4::Udp::Header) + payloadLen);
+        udpHeader.SetLength(sizeof(Ip4::UdpHeader) + payloadLen);
         SuccessOrQuit(message->Append(udpHeader));
 
         for (uint16_t i = 0; i < payloadLen; i++)
@@ -1276,7 +1276,7 @@ void TestNat64IhlBypass(void)
         ip4Header.Clear();
         // IHL=7 means header length is 7*4 = 28 bytes.
         ip4Header.SetVersionIhl(0x47);
-        ip4Header.SetTotalLength(28 + sizeof(Ip4::Udp::Header) + payloadLen);
+        ip4Header.SetTotalLength(28 + sizeof(Ip4::UdpHeader) + payloadLen);
         ip4Header.SetProtocol(Ip4::kProtoUdp);
         ip4Header.SetTtl(64);
         ip4Header.SetSource(ip4Addr);
@@ -1294,11 +1294,11 @@ void TestNat64IhlBypass(void)
         uint8_t options[] = {0x89, 0x08, 0x04, 0x01, 0x01, 0x01, 0x01, 0x00};
         SuccessOrQuit(message->Append(options));
 
-        Ip4::Udp::Header udpHeader;
+        Ip4::UdpHeader udpHeader;
         udpHeader.Clear();
         udpHeader.SetSourcePort(srcPort);
         udpHeader.SetDestinationPort(dstPort);
-        udpHeader.SetLength(sizeof(Ip4::Udp::Header) + payloadLen);
+        udpHeader.SetLength(sizeof(Ip4::UdpHeader) + payloadLen);
         SuccessOrQuit(message->Append(udpHeader));
 
         for (uint16_t i = 0; i < payloadLen; i++)

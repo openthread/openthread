@@ -234,7 +234,7 @@ public:
      * @retval kErrorNone    The header was decompressed successfully. @p aUdpHeader and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
      */
-    Error DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData);
+    Error DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, FrameData &aFrameData);
 
     /**
      * Decompresses the IPv6 ECN field in a LOWPAN_IPHC header.

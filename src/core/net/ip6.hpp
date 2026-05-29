@@ -525,7 +525,7 @@ public:
      *
      * @returns The UDP header.
      */
-    const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
+    const UdpHeader &GetUdpHeader(void) const { return mHeader.mUdp; }
 
     /**
      * Returns the TCP header.
@@ -534,7 +534,7 @@ public:
      *
      * @returns The TCP header.
      */
-    const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
+    const TcpHeader &GetTcpHeader(void) const { return mHeader.mTcp; }
 
     /**
      * Returns the ICMPv6 header.
@@ -577,8 +577,8 @@ private:
     Header mIp6Header;
     union
     {
-        Udp::Header  mUdp;
-        Tcp::Header  mTcp;
+        UdpHeader    mUdp;
+        TcpHeader    mTcp;
         Icmp::Header mIcmp;
     } mHeader;
 };

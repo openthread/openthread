@@ -382,12 +382,12 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
                       uint16_t            aDestPort,
                       Message            &aPayload)
 {
-    Ip6::Header      ip6Header;
-    Ip6::Udp::Header udpHeader;
+    Ip6::Header    ip6Header;
+    Ip6::UdpHeader udpHeader;
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();
-    ip6Header.SetPayloadLength(sizeof(Ip6::Udp::Header) + aPayload.GetLength());
+    ip6Header.SetPayloadLength(sizeof(Ip6::UdpHeader) + aPayload.GetLength());
     ip6Header.SetNextHeader(Ip6::kProtoUdp);
     ip6Header.SetHopLimit(64);
     ip6Header.SetSource(aSrcAddress);
@@ -395,7 +395,7 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
 
     udpHeader.SetSourcePort(aSourcePort);
     udpHeader.SetDestinationPort(aDestPort);
-    udpHeader.SetLength(sizeof(Ip6::Udp::Header) + aPayload.GetLength());
+    udpHeader.SetLength(sizeof(Ip6::UdpHeader) + aPayload.GetLength());
     udpHeader.SetChecksum(0);
 
     SuccessOrQuit(aPayload.Prepend(udpHeader));
@@ -435,7 +435,7 @@ void InfraIf::Receive(Message &aMessage)
         Message *payload = aMessage.Clone<kNoReservedHeader>();
 
         VerifyOrQuit(payload != nullptr);
-        payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
         otPlatInfraIfDhcp6PdClientHandleReceived(&GetInstance(), payload, mIfIndex);
         ExitNow();
     }
@@ -483,7 +483,7 @@ void InfraIf::Receive(Message &aMessage)
             Message          *payload = aMessage.Clone<kNoReservedHeader>();
 
             VerifyOrQuit(payload != nullptr);
-            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
 
             senderAddress.mAddress      = headers.GetSourceAddress();
             senderAddress.mPort         = headers.GetSourcePort();
@@ -502,13 +502,13 @@ void InfraIf::Receive(Message &aMessage)
         {
             Ip6::SockAddr senderAddr;
             Heap::Data    payload;
-            uint16_t      offset = sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header);
+            uint16_t      offset = sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader);
 
             senderAddr.SetAddress(headers.GetSourceAddress());
             senderAddr.SetPort(headers.GetSourcePort());
 
             SuccessOrQuit(
-                payload.SetFrom(aMessage, offset, headers.GetUdpHeader().GetLength() - sizeof(Ip6::Udp::Header)));
+                payload.SetFrom(aMessage, offset, headers.GetUdpHeader().GetLength() - sizeof(Ip6::UdpHeader)));
             Get<Trel>().Receive(GetInstance(), payload, senderAddr);
         }
         ExitNow();
@@ -518,7 +518,7 @@ void InfraIf::Receive(Message &aMessage)
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     if (headers.IsUdp() && headers.GetDestinationPort() == UpstreamDns::kDnsPort)
     {
-        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
         if (Get<UpstreamDns>().HandleUpstreamDnsResponse(headers.GetSourceAddress(), aMessage))
         {
             ExitNow();
@@ -540,7 +540,7 @@ void InfraIf::Receive(Message &aMessage)
         messageInfo.SetSockAddr(headers.GetDestinationAddress());
         messageInfo.SetSockPort(headers.GetDestinationPort());
 
-        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
         if (mUdpHook(GetInstance(), aMessage, messageInfo))
         {
             ExitNow();

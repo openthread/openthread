@@ -523,11 +523,11 @@ exit:
 
 Error Lowpan::CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder)
 {
-    Error            error       = kErrorNone;
-    uint16_t         startOffset = aMessage.GetOffset();
-    Ip6::Udp::Header udpHeader;
-    uint16_t         source;
-    uint16_t         destination;
+    Error          error       = kErrorNone;
+    uint16_t       startOffset = aMessage.GetOffset();
+    Ip6::UdpHeader udpHeader;
+    uint16_t       source;
+    uint16_t       destination;
 
     SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(udpHeader));
 
@@ -554,7 +554,7 @@ Error Lowpan::CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder)
     else
     {
         SuccessOrExit(error = aFrameBuilder.AppendUint8(kUdpDispatch));
-        SuccessOrExit(error = aFrameBuilder.AppendBytes(&udpHeader, Ip6::Udp::Header::kLengthFieldOffset));
+        SuccessOrExit(error = aFrameBuilder.AppendBytes(&udpHeader, Ip6::UdpHeader::kLengthFieldOffset));
     }
 
     SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(udpHeader.GetChecksum()));
@@ -895,7 +895,7 @@ exit:
     return error;
 }
 
-Error Lowpan::DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData)
+Error Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, FrameData &aFrameData)
 {
     Error    error = kErrorParse;
     uint8_t  udpCtl;
@@ -958,8 +958,8 @@ exit:
 
 Error Lowpan::DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength)
 {
-    Error            error;
-    Ip6::Udp::Header udpHeader;
+    Error          error;
+    Ip6::UdpHeader udpHeader;
 
     SuccessOrExit(error = DecompressUdpHeader(udpHeader, aFrameData));
 
