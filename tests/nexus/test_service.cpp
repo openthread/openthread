@@ -110,8 +110,8 @@ void TestService(void)
     Ip6::Address aloc0;
     Ip6::Address aloc1;
 
-    aloc0.SetToAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(0));
-    aloc1.SetToAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(1));
+    aloc0.InitAsAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(0));
+    aloc1.InitAsAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(1));
 
     // Initial check: no ALOCs
     for (Node &node : nexus.GetNodes())

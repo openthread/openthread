@@ -171,7 +171,7 @@ void Test9_2_13(void)
     Ip6::NetworkPrefix networkPrefix;
 
     SuccessOrQuit(prefix.FromString("fd00:7d1:a11:1::/64"));
-    SuccessOrQuit(networkPrefix.SetFrom(prefix));
+    SuccessOrQuit(networkPrefix.InitFrom(prefix));
 
     /** Network 1 on Primary Channel. */
     {

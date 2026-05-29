@@ -142,7 +142,7 @@ otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Address, otIp4Addre
 
 void otIp4ToIp4MappedIp6Address(const otIp4Address *aIp4Address, otIp6Address *aIp6Address)
 {
-    AsCoreType(aIp6Address).SetToIp4Mapped(AsCoreType(aIp4Address));
+    AsCoreType(aIp6Address).InitAsIp4Mapped(AsCoreType(aIp4Address));
 }
 
 otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress)

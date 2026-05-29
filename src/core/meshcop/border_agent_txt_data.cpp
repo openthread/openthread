@@ -544,7 +544,7 @@ bool TxtData::Info::ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPre
     VerifyOrExit(length <= Ip6::Prefix::kMaxLength);
     VerifyOrExit(aEntry.mValueLength >= sizeof(uint8_t) + Ip6::Prefix::SizeForLength(length));
 
-    aPrefix.Set(&aEntry.mValue[1], length);
+    aPrefix.InitFrom(&aEntry.mValue[1], length);
     didRead = true;
 
 exit:

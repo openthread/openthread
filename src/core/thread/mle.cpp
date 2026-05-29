@@ -109,13 +109,13 @@ Mle::Mle(Instance &aInstance)
     ResetCounters();
 
     mLinkLocalAddress.InitAsThreadOrigin();
-    mLinkLocalAddress.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
+    mLinkLocalAddress.GetAddress().InitAsLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
     mMeshLocalEid.InitAsThreadOriginMeshLocal();
     mMeshLocalEid.GetAddress().GetIid().GenerateRandom();
 
     mMeshLocalRloc.InitAsThreadOriginMeshLocal();
-    mMeshLocalRloc.GetAddress().GetIid().SetToLocator(0);
+    mMeshLocalRloc.GetAddress().GetIid().InitAsLocator(0);
     mMeshLocalRloc.mRloc = true;
 
     mLinkLocalAllThreadNodes.InitAsThreadOrigin();
@@ -768,7 +768,7 @@ exit:
 void Mle::UpdateLinkLocalAddress(void)
 {
     Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocalAddress);
-    mLinkLocalAddress.GetAddress().GetIid().SetFromExtAddress(Get<Mac::Mac>().GetExtAddress());
+    mLinkLocalAddress.GetAddress().GetIid().InitFromExtAddress(Get<Mac::Mac>().GetExtAddress());
     Get<ThreadNetif>().AddUnicastAddress(mLinkLocalAddress);
 
     Get<Notifier>().Signal(kEventThreadLinkLocalAddrChanged);
@@ -893,22 +893,22 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 
 void Mle::GetLeaderRloc(Ip6::Address &aAddress) const
 {
-    aAddress.SetToRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
+    aAddress.InitAsRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
 }
 
 void Mle::GetLeaderAloc(Ip6::Address &aAddress) const
 {
-    aAddress.SetToAnycastLocator(mMeshLocalPrefix, Aloc16::ForLeader());
+    aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::ForLeader());
 }
 
 void Mle::GetCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
 {
-    aAddress.SetToAnycastLocator(mMeshLocalPrefix, Aloc16::FromCommissionerSessionId(aSessionId));
+    aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::FromCommissionerSessionId(aSessionId));
 }
 
 void Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
-    aAddress.SetToAnycastLocator(mMeshLocalPrefix, Aloc16::FromServiceId(aServiceId));
+    aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::FromServiceId(aServiceId));
 }
 
 const LeaderData &Mle::GetLeaderData(void)
@@ -1125,7 +1125,7 @@ Error Mle::SendDataRequestToParent(void)
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(mParent.GetExtAddress());
+    destination.InitAsLinkLocalAddress(mParent.GetExtAddress());
 
     return SendDataRequest(destination);
 }
@@ -1282,7 +1282,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
         SuccessOrExit(error = message->AppendAddressRegistrationTlv(addrRegMode));
     }
 
-    destination.SetToLinkLocalAddress(mParent.GetExtAddress());
+    destination.InitAsLinkLocalAddress(mParent.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend, kTypeChildUpdateRequestAsChild, destination);
@@ -2680,7 +2680,7 @@ void Mle::InformPreviousParent(void)
     SuccessOrExit(error = message->SetLength(0));
 
     messageInfo.SetSockAddr(GetMeshLocalEid());
-    messageInfo.GetPeerAddr().SetToRoutingLocator(mMeshLocalPrefix, mPreviousParentRloc);
+    messageInfo.GetPeerAddr().InitAsRoutingLocator(mMeshLocalPrefix, mPreviousParentRloc);
 
     SuccessOrExit(error = Get<Ip6::Ip6>().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
 
@@ -3191,7 +3191,7 @@ void Mle::DelayedSender::ScheduleChildUpdateRequestToParent(uint32_t aDelay)
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+    destination.InitAsLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
     VerifyOrExit(!HasMatchingSchedule(kTypeChildUpdateRequestAsChild, destination));
     AddSchedule(kTypeChildUpdateRequestAsChild, destination, aDelay, nullptr, 0);
 
@@ -3203,7 +3203,7 @@ void Mle::DelayedSender::RemoveScheduledChildUpdateRequestToParent(void)
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+    destination.InitAsLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
     RemoveMatchingSchedules(kTypeChildUpdateRequestAsChild, destination);
 }
 
@@ -3213,7 +3213,7 @@ void Mle::DelayedSender::ScheduleParentResponse(const ParentResponseInfo &aInfo,
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(aInfo.mChildExtAddress);
+    destination.InitAsLinkLocalAddress(aInfo.mChildExtAddress);
 
     RemoveMatchingSchedules(kTypeParentResponse, destination);
     AddSchedule(kTypeParentResponse, destination, aDelay, &aInfo, sizeof(aInfo));
@@ -3250,7 +3250,7 @@ void Mle::DelayedSender::ScheduleLinkRequest(const Router &aRouter, uint32_t aDe
     Ip6::Address destination;
     uint16_t     routerRloc16;
 
-    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    destination.InitAsLinkLocalAddress(aRouter.GetExtAddress());
 
     VerifyOrExit(!HasMatchingSchedule(kTypeLinkRequest, destination));
     routerRloc16 = aRouter.GetRloc16();
@@ -3264,7 +3264,7 @@ void Mle::DelayedSender::RemoveScheduledLinkRequest(const Router &aRouter)
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    destination.InitAsLinkLocalAddress(aRouter.GetExtAddress());
     RemoveMatchingSchedules(kTypeLinkRequest, destination);
 }
 
@@ -3272,7 +3272,7 @@ bool Mle::DelayedSender::HasAnyScheduledLinkRequest(const Router &aRouter) const
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(aRouter.GetExtAddress());
+    destination.InitAsLinkLocalAddress(aRouter.GetExtAddress());
 
     return HasMatchingSchedule(kTypeLinkRequest, destination);
 }
@@ -3281,7 +3281,7 @@ void Mle::DelayedSender::ScheduleLinkAccept(const LinkAcceptInfo &aInfo, uint32_
 {
     Ip6::Address destination;
 
-    destination.SetToLinkLocalAddress(aInfo.mExtAddress);
+    destination.InitAsLinkLocalAddress(aInfo.mExtAddress);
 
     RemoveMatchingSchedules(kTypeLinkAccept, destination);
     AddSchedule(kTypeLinkAccept, destination, aDelay, &aInfo, sizeof(aInfo));
@@ -5044,7 +5044,7 @@ void Mle::Attacher::SendParentRequest(ParentRequestType aType)
         messageToCurParent = static_cast<TxMessage *>(Get<Mle>().mSocket.CloneMessage(*message));
         VerifyOrExit(messageToCurParent != nullptr, error = kErrorNoBufs);
 
-        destination.SetToLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
+        destination.InitAsLinkLocalAddress(Get<Mle>().mParent.GetExtAddress());
         error = messageToCurParent->SendTo(destination);
 
         if (error != kErrorNone)
@@ -5055,7 +5055,7 @@ void Mle::Attacher::SendParentRequest(ParentRequestType aType)
 
         Log(kMessageSend, kTypeParentRequestToRouters, destination);
 
-        destination.SetToLinkLocalAddress(Get<Mle>().mParentSearch.GetSelectedParent().GetExtAddress());
+        destination.InitAsLinkLocalAddress(Get<Mle>().mParentSearch.GetSelectedParent().GetExtAddress());
     }
     else
 #endif
@@ -5165,7 +5165,7 @@ Error Mle::Attacher::SendChildIdRequest(void)
 
     message->RegisterTxCallback(HandleChildIdRequestTxDone, this);
 
-    destination.SetToLinkLocalAddress(mParentCandidate.GetExtAddress());
+    destination.InitAsLinkLocalAddress(mParentCandidate.GetExtAddress());
     SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend,

@@ -275,7 +275,8 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     if (leaderNode != nullptr)
     {
         Ip6::Prefix prefix;
-        prefix.Set(leaderNode->Get<Mle::Mle>().GetMeshLocalPrefix());
+
+        prefix.InitFrom(leaderNode->Get<Mle::Mle>().GetMeshLocalPrefix());
         fprintf(file, "    \"mesh_local_prefix\": \"%s\"%s\n", prefix.ToString().AsCString(),
                 mTestVars.IsEmpty() ? "" : ",");
     }

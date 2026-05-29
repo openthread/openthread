@@ -272,7 +272,7 @@ void Test9_2_16(void)
             Ip6::NetworkPrefix networkPrefix;
 
             SuccessOrQuit(prefix.FromString(kMeshLocalPrefixStep3));
-            SuccessOrQuit(networkPrefix.SetFrom(prefix));
+            SuccessOrQuit(networkPrefix.InitFrom(prefix));
             SuccessOrQuit(Tlv::Append<MeshCoP::MeshLocalPrefixTlv>(*message, networkPrefix));
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::DelayTimerTlv>(*message, kDelayTimerStep3));
@@ -425,7 +425,7 @@ void Test9_2_16(void)
             Ip6::NetworkPrefix networkPrefix;
 
             SuccessOrQuit(prefix.FromString(kMeshLocalPrefixStep11));
-            SuccessOrQuit(networkPrefix.SetFrom(prefix));
+            SuccessOrQuit(networkPrefix.InitFrom(prefix));
             SuccessOrQuit(Tlv::Append<MeshCoP::MeshLocalPrefixTlv>(*message, networkPrefix));
         }
         SuccessOrQuit(Tlv::Append<MeshCoP::NetworkNameTlv>(*message, kNetworkNameStep13));

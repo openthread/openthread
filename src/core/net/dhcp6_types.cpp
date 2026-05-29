@@ -304,7 +304,7 @@ void IaPrefixOption::GetPrefix(Ip6::Prefix &aPrefix) const
 {
     uint8_t length = Min(GetPrefixLength(), Ip6::Prefix::kMaxLength);
 
-    aPrefix.Set(mPrefix.mFields.m8, length);
+    aPrefix.InitFrom(mPrefix.mFields.m8, length);
     aPrefix.Tidy();
 }
 

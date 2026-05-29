@@ -83,14 +83,14 @@ public:
     Error GenerateRandomUla(void);
 
     /**
-     * Sets the Network Prefix from a given `Prefix`.
+     * Initializes the Network Prefix from a given `Prefix`.
      *
      * @param[in] aPrefix  The prefix to use to set the Network Prefix.
      *
      * @retval kErrorNone          Successfully set the Network Prefix from @p aPrefix.
      * @retval kErrorInvalidArgs   The @p aPrefix length is not valid (must be `kLength`).
      */
-    Error SetFrom(const Prefix &aPrefix);
+    Error InitFrom(const Prefix &aPrefix);
 
 } OT_TOOL_PACKED_END;
 
@@ -140,19 +140,19 @@ public:
     uint8_t GetBytesSize(void) const { return SizeForLength(mLength); }
 
     /**
-     * Sets the prefix.
+     * Initializes the prefix.
      *
      * @param[in] aPrefix  A pointer to buffer containing the prefix bytes.
      * @param[in] aLength  The length or prefix in bits.
      */
-    void Set(const uint8_t *aPrefix, uint8_t aLength);
+    void InitFrom(const uint8_t *aPrefix, uint8_t aLength);
 
     /**
-     * Sets the prefix from a given Network Prefix.
+     * Initializes the prefix from a given Network Prefix.
      *
      * @param[in] aNetworkPrefix    A Network Prefix.
      */
-    void Set(const NetworkPrefix &aNetworkPrefix) { Set(aNetworkPrefix.m8, NetworkPrefix::kLength); }
+    void InitFrom(const NetworkPrefix &aNetworkPrefix) { InitFrom(aNetworkPrefix.m8, NetworkPrefix::kLength); }
 
     /**
      * Sets the subnet ID of the prefix.
@@ -394,27 +394,27 @@ public:
     const uint8_t *GetBytes(void) const { return mFields.m8; }
 
     /**
-     * Sets the Interface Identifier from a given byte array.
+     * Initializes the Interface Identifier from a given byte array.
      *
      * @param[in] aBuffer    Pointer to an array containing the Interface Identifier. `kSize` bytes from the buffer
      *                       are copied to form the Interface Identifier.
      */
-    void SetBytes(const uint8_t *aBuffer);
+    void InitFrom(const uint8_t *aBuffer);
 
     /**
-     * Sets the Interface Identifier from a given IEEE 802.15.4 Extended Address.
+     * Initializes the Interface Identifier from a given IEEE 802.15.4 Extended Address.
      *
      * @param[in] aExtAddress  An Extended Address.
      */
-    void SetFromExtAddress(const Mac::ExtAddress &aExtAddress);
+    void InitFromExtAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * Sets the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
+     * Initializes the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
      * locator (RLOC16 or ALOC16) value.
      *
      * @param[in]  aLocator    RLOC16 or ALOC16.
      */
-    void SetToLocator(uint16_t aLocator);
+    void InitAsLocator(uint16_t aLocator);
 
     /**
      * Indicates whether or not the Interface Identifier matches the locator pattern `0000:00ff:fe00:xxxx`.
@@ -470,7 +470,7 @@ public:
     /**
      * Sets the Interface Identifier (IID) address locator field.
      *
-     * Unlike `SetToLocator()`, this method only changes the last 2 bytes of the IID and keeps the rest of the address
+     * Unlike `InitAsLocator()`, this method only changes the last 2 bytes of the IID and keeps the rest of the address
      * as before.
      *
      * @param[in]  aLocator   RLOC16 or ALOC16.
@@ -539,12 +539,12 @@ public:
     const uint8_t *GetBytes(void) const { return mFields.m8; }
 
     /**
-     * Sets the IPv6 address from a given byte array.
+     * Initializes the IPv6 address from a given byte array.
      *
      * @param[in] aBuffer    Pointer to an array containing the IPv6 address. `kSize` bytes from the buffer
      *                       are copied to form the IPv6 address.
      */
-    void SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
+    void InitFrom(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
     /**
      * Indicates whether or not the IPv6 address is the Unspecified Address.
@@ -571,19 +571,19 @@ public:
     bool IsLinkLocalUnicast(void) const;
 
     /**
-     * Sets the IPv6 address to a Link-Local address with Interface Identifier generated from a given
-     * MAC Extended Address.
+     * Initializes the IPv6 address as a Link-Local address with Interface Identifier generated from a given MAC
+     * Extended Address.
      *
      * @param[in]  aExtAddress  A MAC Extended Address (used to generate the IID).
      */
-    void SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress);
+    void InitAsLinkLocalAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * Sets the IPv6 address to a Link-Local address with a given Interface Identifier.
+     * Initializes the IPv6 address to a Link-Local address with a given Interface Identifier.
      *
      * @param[in]  aIid   An Interface Identifier.
      */
-    void SetToLinkLocalAddress(const InterfaceIdentifier &aIid);
+    void InitAsLinkLocalAddress(const InterfaceIdentifier &aIid);
 
     /**
      * Indicates whether or not the IPv6 address is multicast address.
@@ -661,27 +661,27 @@ public:
     static const Address &GetRealmLocalAllMplForwarders(void);
 
     /**
-     * Sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Network Prefix and
-     * RLOC16 value.
+     * Initializes the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Network Prefix and RLOC16
+     * value.
      *
      * @param[in]  aNetworkPrefix    A Network Prefix.
      * @param[in]  aRloc16           A RLOC16 value.
      */
-    void SetToRoutingLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aRloc16)
+    void InitAsRoutingLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aRloc16)
     {
-        SetToLocator(aNetworkPrefix, aRloc16);
+        InitAsLocator(aNetworkPrefix, aRloc16);
     }
 
     /**
-     * Sets the IPv6 address to a Anycast Locator (ALOC) IPv6 address with a given Network Prefix and
-     * ALOC16 value.
+     * Initializes the IPv6 address to a Anycast Locator (ALOC) IPv6 address with a given Network Prefix and ALOC16
+     * value.
      *
      * @param[in]  aNetworkPrefix    A Network Prefix.
      * @param[in]  aAloc16           A ALOC16 value.
      */
-    void SetToAnycastLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aAloc16)
+    void InitAsAnycastLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aAloc16)
     {
-        SetToLocator(aNetworkPrefix, aAloc16);
+        InitAsLocator(aNetworkPrefix, aAloc16);
     }
 
     /**
@@ -697,11 +697,11 @@ public:
     bool IsIp4Mapped(void) const;
 
     /**
-     * Sets the IPv6 address to follow the IPv4-mapped IPv6 address for a given IPv4 address.
+     * Initializes the IPv6 address to follow the IPv4-mapped IPv6 address for a given IPv4 address.
      *
      * @param[in] aIp4Address  An IPv4 address.
      */
-    void SetToIp4Mapped(const Ip4::Address &aIp4Address);
+    void InitAsIp4Mapped(const Ip4::Address &aIp4Address);
 
     /**
      * Returns the Network Prefix of the IPv6 address (most significant 64 bits of the address).
@@ -719,7 +719,7 @@ public:
      * @param[in]  aLength  The length of prefix in bits.
      * @param[out] aPrefix  A reference to a prefix to output the fetched prefix.
      */
-    void GetPrefix(uint8_t aLength, Prefix &aPrefix) const { aPrefix.Set(mFields.m8, aLength); }
+    void GetPrefix(uint8_t aLength, Prefix &aPrefix) const { aPrefix.InitFrom(mFields.m8, aLength); }
 
     /**
      * Indicates whether the IPv6 address matches a given prefix.
@@ -908,7 +908,7 @@ private:
     static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306)
     static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306)
 
-    void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
+    void InitAsLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
     void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
 

@@ -7242,7 +7242,7 @@ void Core::Ip4AddrCache::ProcessResponseRecord(const Message &aMessage, uint16_t
     SuccessOrExit(aMessage.Read(aRecordOffset, aRecord));
     VerifyOrExit(aRecord.GetLength() >= sizeof(Ip4::Address));
 
-    address.SetToIp4Mapped(aRecord.GetAddress());
+    address.InitAsIp4Mapped(aRecord.GetAddress());
 
     AddNewResponseAddress(address, aRecord.GetTtl(), aRecord.GetClass() & kClassCacheFlushFlag);
 

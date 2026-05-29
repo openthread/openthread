@@ -191,7 +191,7 @@ bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress) { return AsCoreType(a
 
 void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress)
 {
-    AsCoreType(aAddress).SetToLinkLocalAddress(AsCoreType(aExtAddress));
+    AsCoreType(aAddress).InitAsLinkLocalAddress(AsCoreType(aExtAddress));
 }
 
 void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress)

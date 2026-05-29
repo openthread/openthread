@@ -130,7 +130,7 @@ void Test_1_3_DPR_TC_2(void)
         Ip6::NetworkPrefix networkPrefix;
 
         SuccessOrQuit(prefix.FromString("fd00:db8::/64"));
-        SuccessOrQuit(networkPrefix.SetFrom(prefix));
+        SuccessOrQuit(networkPrefix.InitFrom(prefix));
         br1.Get<Mle::Mle>().SetMeshLocalPrefix(networkPrefix);
         br2.Get<Mle::Mle>().SetMeshLocalPrefix(networkPrefix);
     }

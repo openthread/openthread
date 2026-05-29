@@ -46,7 +46,7 @@ void Context::InitForMeshLocalPrefix(Instance &aInstance)
     mIsValid      = true;
     mCompressFlag = true;
     mContextId    = Mle::kMeshLocalPrefixContextId;
-    mPrefix.Set(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
+    mPrefix.InitFrom(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
 }
 
 void Context::InitFrom(const NetworkData::PrefixTlv &aPrefixTlv, const NetworkData::ContextTlv &aContextTlv)
@@ -87,11 +87,11 @@ Error Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, 
     switch (aMacAddr.GetType())
     {
     case Mac::Address::kTypeShort:
-        aIid.SetToLocator(aMacAddr.GetShort());
+        aIid.InitAsLocator(aMacAddr.GetShort());
         break;
 
     case Mac::Address::kTypeExtended:
-        aIid.SetFromExtAddress(aMacAddr.GetExtended());
+        aIid.InitFromExtAddress(aMacAddr.GetExtended());
         break;
 
     default:

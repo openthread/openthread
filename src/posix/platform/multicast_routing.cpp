@@ -279,8 +279,8 @@ void MulticastRoutingManager::ProcessMulticastRouterMessages(void)
     VerifyOrExit(mrt6msg->im6_mbz == 0);
     VerifyOrExit(mrt6msg->im6_msgtype == MRT6MSG_NOCACHE);
 
-    src.SetBytes(mrt6msg->im6_src.s6_addr);
-    dst.SetBytes(mrt6msg->im6_dst.s6_addr);
+    src.InitFrom(mrt6msg->im6_src.s6_addr);
+    dst.InitFrom(mrt6msg->im6_dst.s6_addr);
 
     error = AddMulticastForwardingCache(src, dst, static_cast<MifIndex>(mrt6msg->im6_mif));
 

@@ -498,7 +498,8 @@ void DuaManager::PerformNextRegistration(void)
     }
     else
     {
-        destAddr.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
+        destAddr.InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
+                                      Get<BackboneRouter::Leader>().GetServer16());
     }
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, HandleDuaResponse, this));

@@ -406,7 +406,7 @@ void TestIp6AddressSetPrefix(void)
         for (size_t prefixLength = 0; prefixLength <= sizeof(Ip6::Address) * kBitsPerByte; prefixLength++)
         {
             ip6Prefix.Clear();
-            ip6Prefix.Set(prefix, prefixLength);
+            ip6Prefix.InitFrom(prefix, prefixLength);
 
             address = allZeroAddress;
             address.SetPrefix(ip6Prefix);
@@ -442,7 +442,7 @@ Ip6::Prefix PrefixFrom(const char *aAddressString, uint8_t aPrefixLength)
     Ip6::Address address;
 
     SuccessOrQuit(address.FromString(aAddressString));
-    prefix.Set(address.GetBytes(), aPrefixLength);
+    prefix.InitFrom(address.GetBytes(), aPrefixLength);
 
     return prefix;
 }
@@ -466,7 +466,7 @@ void TestIp6Prefix(void)
 
         for (uint8_t prefixLength = 1; prefixLength <= Ip6::Prefix::kMaxLength; prefixLength++)
         {
-            prefix.Set(prefixBytes, prefixLength);
+            prefix.InitFrom(prefixBytes, prefixLength);
 
             printf("Prefix %s\n", prefix.ToString().AsCString());
 
@@ -484,7 +484,7 @@ void TestIp6Prefix(void)
             {
                 Ip6::Prefix subPrefix;
 
-                subPrefix.Set(prefixBytes, subPrefixLength);
+                subPrefix.InitFrom(prefixBytes, subPrefixLength);
 
                 VerifyOrQuit(prefix.ContainsPrefix(subPrefix));
 
@@ -740,7 +740,7 @@ void TestIp6PrefixTidy(void)
             Ip6::Prefix prefix, answer;
 
             SuccessOrQuit(answer.FromString(test.prefixStringAfterTidy[i]));
-            prefix.Set(test.originalPrefix, i);
+            prefix.InitFrom(test.originalPrefix, i);
             prefix.Tidy();
 
             {
@@ -774,10 +774,10 @@ void TestIp4MappedIp6Address(void)
 
     printf("\nTestIp4MappedIp6Address()\n");
 
-    expectedIp4Address.SetBytes(kIp4Address);
+    expectedIp4Address.InitFrom(kIp4Address);
 
     SuccessOrQuit(expectedIp6Address.FromString("::ffff:192.0.2.33"));
-    ip6Address.SetToIp4Mapped(expectedIp4Address);
+    ip6Address.InitAsIp4Mapped(expectedIp4Address);
 
     printf("IPv4-mapped IPv6 address: %s\n", ip6Address.ToString().AsCString());
 
@@ -823,7 +823,7 @@ void TestIp4Ip6Translation(void)
 
     printf("\nTestIp4Ip6Translation()\n");
 
-    ip4Address.SetBytes(kIp4Address);
+    ip4Address.InitFrom(kIp4Address);
 
     for (const TestCase &testCase : kTestCases)
     {
@@ -832,7 +832,7 @@ void TestIp4Ip6Translation(void)
         Ip6::Address expectedAddress;
 
         SuccessOrQuit(address.FromString(testCase.mPrefix));
-        prefix.Set(address.GetBytes(), testCase.mLength);
+        prefix.InitFrom(address.GetBytes(), testCase.mLength);
 
         SuccessOrQuit(expectedAddress.FromString(testCase.mIp6Address));
 
