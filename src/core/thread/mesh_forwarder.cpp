@@ -1091,7 +1091,7 @@ void MeshForwarder::HandleFragment(RxInfo &aRxInfo)
         }
 
         // Duplication suppression for a "next fragment" is handled
-        // by the code below where the the datagram offset is
+        // by the code below where the datagram offset is
         // checked against the offset of the corresponding message
         // (same datagram tag and size) in Reassembly List. Note
         // that if there is no matching message in the Reassembly

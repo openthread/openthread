@@ -416,7 +416,7 @@ public:
     Error ParseFrom(const Message &aMessage, uint16_t &aHeaderLength);
 
     /**
-     * Returns the the Mesh Header length when written to a frame.
+     * Returns the Mesh Header length when written to a frame.
      *
      * @note The returned value from this method gives the header length (number of bytes) when the header is written
      * to a frame or message. This should not be used to determine the parsed length (number of bytes read) when the

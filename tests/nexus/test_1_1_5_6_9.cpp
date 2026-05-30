@@ -321,7 +321,7 @@ void Test5_6_9(void)
     Log("---------------------------------------------------------------------------------------");
     /**
      * Step 10: Router_1 (DUT)
-     * - Description: Depending on the the DUT’s implementation, automatically sends new stable network data to SED_1
+     * - Description: Depending on the DUT’s implementation, automatically sends new stable network data to SED_1
      *   via a unicast MLE Child Update Request or MLE Data Response.
      * - Pass Criteria: The DUT MUST send EITHER a unicast MLE Child Update Request OR a unicast MLE Data Response to
      *   SED_1, which includes the following TLVs:

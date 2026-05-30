@@ -578,7 +578,7 @@ public:
         uint32_t GetLifetime(void) const { return mLifetime; }
 
         /**
-         * Sets the the prefix lifetime.
+         * Sets the prefix lifetime.
          *
          * @param[in] aLifetime  The prefix lifetime in seconds.
          */

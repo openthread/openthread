@@ -3292,7 +3292,7 @@ class OTCI(object):
         self.execute_command('diag rawpowersetting disable')
 
     def is_command_supported(self, command: str) -> bool:
-        """Check whether the the given command is supported by the device."""
+        """Check whether the given command is supported by the device."""
         output = self.__otcmd.execute_command(command, timeout=10)
 
         if re.match(r"Error \d+: \w*", output[-1]):
