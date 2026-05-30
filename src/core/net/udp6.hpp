@@ -83,7 +83,6 @@ enum NetifIdentifier : uint8_t
 class Udp : public InstanceLocator, public MessageAllocator<Udp, ReservedHeaderSize::kUdpMessage>, private NonCopyable
 {
 public:
-    typedef UdpHeader    Header;         ///< UDP header.
     typedef otUdpReceive ReceiveHandler; ///< Receive handler callback.
 
     /**
@@ -534,6 +533,8 @@ private:
     // Reserved range for use by SRP server
     static constexpr uint16_t kSrpServerPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN;
     static constexpr uint16_t kSrpServerPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX;
+
+    typedef UdpHeader Header;
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     struct Plat

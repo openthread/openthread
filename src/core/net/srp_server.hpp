@@ -832,7 +832,7 @@ public:
 private:
     static constexpr uint8_t kSrpVersion = 0;
 
-    static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
+    static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::UdpHeader);
 
     static constexpr uint32_t kDefaultMinLease             = 30;          // 30 seconds.
     static constexpr uint32_t kDefaultMaxLease             = 27u * 3600;  // 27 hours (in seconds).

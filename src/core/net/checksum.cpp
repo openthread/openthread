@@ -176,11 +176,11 @@ void Checksum::UpdateMessageChecksum(Message            &aMessage,
     switch (aIpProto)
     {
     case Ip6::kProtoTcp:
-        headerOffset = Ip6::Tcp::Header::kChecksumFieldOffset;
+        headerOffset = Ip6::TcpHeader::kChecksumFieldOffset;
         break;
 
     case Ip6::kProtoUdp:
-        headerOffset = Ip6::Udp::Header::kChecksumFieldOffset;
+        headerOffset = Ip6::UdpHeader::kChecksumFieldOffset;
         break;
 
     case Ip6::kProtoIcmp6:
@@ -211,11 +211,11 @@ void Checksum::UpdateMessageChecksum(Message            &aMessage,
     switch (aIpProto)
     {
     case Ip4::kProtoTcp:
-        headerOffset = Ip4::Tcp::Header::kChecksumFieldOffset;
+        headerOffset = Ip4::TcpHeader::kChecksumFieldOffset;
         break;
 
     case Ip4::kProtoUdp:
-        headerOffset = Ip4::Udp::Header::kChecksumFieldOffset;
+        headerOffset = Ip4::UdpHeader::kChecksumFieldOffset;
         break;
 
     case Ip4::kProtoIcmp:

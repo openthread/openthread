@@ -687,8 +687,8 @@ static constexpr uint8_t kProtoTcp  = Ip6::kProtoTcp; ///< Transmission Control 
 static constexpr uint8_t kProtoUdp  = Ip6::kProtoUdp; ///< User Datagram
 static constexpr uint8_t kProtoIcmp = 1;              ///< ICMP for IPv4
 
-using Tcp = Ip6::Tcp; // TCP in IPv4 is the same as TCP in IPv6
-using Udp = Ip6::Udp; // UDP in IPv4 is the same as UDP in IPv6
+using TcpHeader = Ip6::TcpHeader; ///< TCP header (the same as in IPv6)
+using UdpHeader = Ip6::UdpHeader; ///< UDP header (the same as in IPv6)
 
 /**
  * Represents parsed IPv4 header along with UDP/TCP/ICMP4 headers from a received message/frame.
@@ -781,7 +781,7 @@ public:
      *
      * @returns The UDP header.
      */
-    const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
+    const UdpHeader &GetUdpHeader(void) const { return mHeader.mUdp; }
 
     /**
      * Returns the TCP header.
@@ -790,7 +790,7 @@ public:
      *
      * @returns The TCP header.
      */
-    const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
+    const TcpHeader &GetTcpHeader(void) const { return mHeader.mTcp; }
 
     /**
      * Returns the ICMPv4 header.
@@ -833,8 +833,8 @@ private:
     Header mIp4Header;
     union
     {
-        Udp::Header  mUdp;
-        Tcp::Header  mTcp;
+        UdpHeader    mUdp;
+        TcpHeader    mTcp;
         Icmp::Header mIcmp;
     } mHeader;
 };

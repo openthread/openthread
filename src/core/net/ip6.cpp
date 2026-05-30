@@ -1021,7 +1021,7 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 
         case kProtoUdp:
         {
-            Udp::Header udp;
+            UdpHeader udp;
 
             IgnoreError(aMessagePtr->Read(aMessagePtr->GetOffset(), udp));
             VerifyOrExit(!Get<Udp>().IsPortInUse(udp.GetDestinationPort()), error = kErrorNoRoute);
@@ -1358,7 +1358,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled, ui
         {
             if (aMessagePtr->IsOriginHostUntrusted() && (nextHeader == kProtoUdp))
             {
-                Udp::Header udpHeader;
+                UdpHeader udpHeader;
 
                 SuccessOrExit(error = aMessagePtr->Read(aMessagePtr->GetOffset(), udpHeader));
 

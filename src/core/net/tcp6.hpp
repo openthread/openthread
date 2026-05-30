@@ -86,8 +86,6 @@ namespace Ip6 {
 class Tcp : public InstanceLocator, private NonCopyable
 {
 public:
-    typedef TcpHeader Header; ///< TCP Header.
-
     /**
      * Represents an endpoint of a TCP/IPv6 connection.
      */
@@ -561,6 +559,8 @@ private:
     static constexpr uint8_t kForwardProgressCallbackFlag  = (1 << 2);
     static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
     static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
+
+    typedef TcpHeader Header;
 
     void ProcessSignals(Endpoint             &aEndpoint,
                         otLinkedBuffer       *aPriorHead,
