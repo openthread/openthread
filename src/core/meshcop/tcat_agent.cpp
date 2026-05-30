@@ -82,6 +82,7 @@ void TcatAgent::ClearCommissionerState(void)
     mInstallCodeVerified           = false;
     mIsCommissioned                = false;
     mApplicationResponsePending    = false;
+    mHasWrittenActiveDataset       = false;
 }
 
 Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aJoinHandler, void *aContext)
@@ -590,12 +591,18 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncomingMessa
     SuccessOrExit(error = dataset.ValidateTlvs());
     VerifyOrExit(dataset.ContainsTlv(Tlv::kNetworkKey), error = kErrorInvalidArgs);
 
+    VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(IsSetActiveDatasetAuthorized(&dataset), error = kErrorRejected);
 
     SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
     Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
 
     Get<ActiveDatasetManager>().SaveLocal(dataset);
+
+    // Flag lets HandleNotifierEvents() know that the Agent is the source of the change. In theory, this could be
+    // coalesced with another module's dataset write at exactly the same time, but this is in practice impossible
+    // to exploit as an attack vector by the TCAT Commissioner.
+    mHasWrittenActiveDataset = true;
 
 exit:
     return error;
@@ -1083,15 +1090,27 @@ void TcatAgent::HandleNotifierEvents(Events aEvents)
     VerifyOrExit(IsStarted());
     VerifyOrExit(mVendorInfo != nullptr);
 
-    if (aEvents.ContainsAny(kEventThreadRoleChanged))
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         if (!mVendorInfo->mKeepActiveAfterJoining && Get<Mle::Mle>().IsAttached() &&
             (mLastDeviceRole == Mle::kRoleDisabled || mLastDeviceRole == Mle::kRoleDetached))
         {
             IgnoreError(Standby());
         }
-
         mLastDeviceRole = Get<Mle::Mle>().GetRole();
+    }
+
+    // Change of network key or ExtPanId by another process: it wrote a dataset for *another* Thread Network.
+    // This event revokes the Commissioner's existing authorization (if any) to rewrite datasets.
+    if (!mHasWrittenActiveDataset && aEvents.ContainsAny(kEventNetworkKeyChanged | kEventThreadExtPanIdChanged))
+    {
+        mIsCommissioned = true;
+    }
+    mHasWrittenActiveDataset = false;
+
+    if (aEvents.Contains(kEventPskcChanged))
+    {
+        mPskcVerified = false; // if changed: require new proof-of-PSKc-possession by Commissioner
     }
 
 exit:

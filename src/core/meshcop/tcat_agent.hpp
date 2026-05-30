@@ -397,6 +397,11 @@ public:
      * Indicates if Set Active Dataset commands in the Commissioning command class are currently
      * authorized for use by the active TCAT Commissioner for setting the @p aDataset.
      *
+     * Authorization is granted when the TCAT Commissioner certificate's flags allow commissioning
+     * operations (for the given aDataset) and the TCAT Device is not already commissioned by or due
+     * to another process/source. If the TCAT Commissioner did set a dataset within the same session
+     * then that dataset can be overwritten.
+     *
      * @param aDataset  The specific Active Operational Dataset intended to be written.
      *
      * @retval TRUE     The command for writing @p aDataset is currently authorized.
@@ -517,6 +522,7 @@ private:
     bool                             mInstallCodeVerified : 1;
     bool                             mIsCommissioned : 1;
     bool                             mApplicationResponsePending : 1;
+    bool                             mHasWrittenActiveDataset : 1;
     using ExpireTimer = TimerMilliIn<TcatAgent, &TcatAgent::HandleTimer>;
     ExpireTimer     mActiveOrStandbyTimer;
     uint32_t        mTcatActiveDurationMs;
