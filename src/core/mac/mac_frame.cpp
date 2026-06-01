@@ -1196,7 +1196,7 @@ const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
     {
         const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
-        if (ie->GetId() == VendorIeHeader::kHeaderIeId)
+        if ((ie->GetId() == VendorIeHeader::kHeaderIeId) && (ie->GetLength() >= VendorIeHeader::kIeContentSize))
         {
             const VendorIeHeader *vendorIe =
                 reinterpret_cast<const VendorIeHeader *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
@@ -1242,6 +1242,7 @@ const CslIe *Frame::GetCslIe(void) const
 
     cur = GetHeaderIe(CslIe::kHeaderIeId);
     VerifyOrExit(cur != nullptr);
+    VerifyOrExit(reinterpret_cast<const HeaderIe *>(cur)->GetLength() >= CslIe::kIeContentSize);
     csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
 
 exit:
@@ -1270,6 +1271,7 @@ const TimeIe *Frame::GetTimeIe(void) const
 
     cur = GetHeaderIe(VendorIeHeader::kHeaderIeId);
     VerifyOrExit(cur != nullptr);
+    VerifyOrExit(reinterpret_cast<const HeaderIe *>(cur)->GetLength() >= TimeIe::kIeContentSize);
 
     cur += sizeof(HeaderIe);
 
