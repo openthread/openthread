@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 11
+#define SPINEL_RCP_API_VERSION 12
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -5091,6 +5091,10 @@ enum
      * This property is deprecated.
      */
     SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED = SPINEL_PROP_NEST__BEGIN + 2,
+
+    /// Decide whether the time ie in the frame should be a network offset or the network time.
+    /** Format: `b` (Write-only) */
+    SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET = SPINEL_PROP_NEST__BEGIN + 3,
 
     SPINEL_PROP_NEST__END = 0x3C00,
 

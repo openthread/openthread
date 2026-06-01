@@ -826,6 +826,9 @@ protected:
     uint8_t mCurTransmitTID[kSpinelInterfaceCount];
     int8_t  mCurScanChannel[kSpinelInterfaceCount];
     bool    mSrcMatchEnabled[kSpinelInterfaceCount];
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    bool mNetworkTimeExpectingOffset;
+#endif
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

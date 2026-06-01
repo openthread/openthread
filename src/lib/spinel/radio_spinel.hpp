@@ -553,6 +553,15 @@ public:
      */
     otError Transmit(otRadioFrame &aFrame);
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * Processes the Time IE based on the RCP version.
+     *
+     * @param[in] aFrame     A reference to the transmitted frame.
+     */
+    void ProcessTimeIe(otRadioFrame &aFrame);
+#endif
+
     /**
      * Switches the radio state from Sleep to Receive.
      *
@@ -1270,10 +1279,6 @@ private:
     otRadioFrame      mAckRadioFrame;
     otRadioFrame     *mTransmitFrame; ///< Points to the frame to send
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otRadioIeInfo mTxIeInfo;
-#endif
-
     otExtAddress        mExtendedAddress;
     uint16_t            mShortAddress;
     uint16_t            mPanId;
@@ -1363,6 +1368,9 @@ private:
 
     bool mTimeSyncEnabled : 1;
     bool mTimeSyncOn : 1;
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    bool mRcpExpectsNetworkTimeOffset : 1; ///< Whether the RCP expects network time offset in the TimeIE.
+#endif
 
     SpinelDriver *mSpinelDriver;
 };

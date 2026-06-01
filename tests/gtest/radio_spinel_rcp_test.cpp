@@ -32,8 +32,10 @@
 #include <openthread/platform/radio.h>
 
 #include "common/error.hpp"
+#include "common/frame_builder.hpp"
 #include "lib/spinel/openthread-spinel-config.h"
 #include "mac/mac_frame.hpp"
+#include "mac/mac_header_ie.hpp"
 #include "mac/mac_types.hpp"
 
 #include "fake_coprocessor_platform.hpp"
@@ -520,3 +522,158 @@ TEST(RadioSpinelSrcMatch, shouldNotDuplicateSrcMatchEntriesOnRestoreProperties)
     ASSERT_EQ(platform.SrcMatchHasExtEntry(kTestExtAddrReversed), 1);
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+TEST(RadioSpinelTimeSync, shouldUnifyTimeIeToOffsetIfRcpExpectingNetworkTimeOffset)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, Transmit, (otRadioFrame * aFrame), (override));
+    };
+
+    MockPlatform platform;
+
+    platform.mRadioSpinel.Deinit();
+    platform.mRadioSpinel.Init(true, false, &platform.mSpinelDriver, 0, true);
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+
+    constexpr Mac::PanId kSrcPanId  = 0x1234;
+    constexpr Mac::PanId kDstPanId  = 0x4321;
+    constexpr uint8_t    kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr uint16_t   kSrcAddr   = 0xac00;
+
+    uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame txFrame{};
+    txFrame.mPsdu = frameBuffer;
+
+    Mac::TxFrame::Info frameInfo;
+    frameInfo.mType    = Mac::Frame::kTypeData;
+    frameInfo.mVersion = Mac::Frame::kVersion2015;
+    frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
+    frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+    frameInfo.mPanIds.SetSource(kSrcPanId);
+    frameInfo.mPanIds.SetDestination(kDstPanId);
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+    frameInfo.PrepareHeadersIn(txFrame);
+    txFrame.SetIePresent(true);
+    {
+        uint8_t ieIndex = 17; // Hardcoded header length
+
+        FrameBuilder builder;
+        builder.Init(txFrame.mPsdu + ieIndex, OT_RADIO_FRAME_MAX_SIZE - ieIndex);
+
+        builder.Append<Mac::HeaderIe>()->Init(Mac::VendorIeHeader::kHeaderIeId, Mac::TimeIe::kIeContentSize);
+        Mac::TimeIe *timeIe = builder.Append<Mac::TimeIe>();
+        timeIe->Init();
+        timeIe->SetSequence(1);
+        timeIe->SetTime(1000);
+
+        txFrame.mLength = ieIndex + builder.GetLength() + 2;
+    }
+
+    EXPECT_CALL(platform, Transmit(testing::_))
+        .Times(1)
+        .WillOnce(testing::Invoke([&platform](otRadioFrame *aFrame) -> otError {
+            Mac::TxFrame      &frame  = *static_cast<Mac::TxFrame *>(aFrame);
+            const Mac::TimeIe *timeIe = frame.GetTimeIe();
+            EXPECT_NE(timeIe, nullptr);
+            if (timeIe != nullptr)
+            {
+                uint64_t t  = timeIe->GetTime();
+                uint8_t *tp = reinterpret_cast<uint8_t *>(&t);
+                fprintf(stderr, "Mock Transmit: timeIe->GetTime() = %llu (0x%llx)\n",
+                        static_cast<unsigned long long>(t), static_cast<unsigned long long>(t));
+                fprintf(stderr, "Mock Transmit: t bytes = ");
+                for (int i = 0; i < 8; i++) fprintf(stderr, "%02x ", tp[i]);
+                fprintf(stderr, "\n");
+                EXPECT_TRUE(t - 1000 == 0);
+            }
+            otPlatRadioTxDone(FakePlatform::CurrentInstance(), aFrame, nullptr, OT_ERROR_NONE);
+            return OT_ERROR_NONE;
+        }));
+
+    ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+    platform.GoInMs(1000);
+}
+
+TEST(RadioSpinelTimeSync, shouldUnifyTimeIeToOffsetIfRcpNotExpectingNetworkTimeOffset)
+{
+    class MockPlatform : public FakeCoprocessorPlatform
+    {
+    public:
+        MOCK_METHOD(otError, Transmit, (otRadioFrame * aFrame), (override));
+    };
+
+    MockPlatform platform;
+
+    ASSERT_EQ(platform.mRadioSpinel.Enable(FakePlatform::CurrentInstance()), kErrorNone);
+    ASSERT_EQ(platform.mRadioSpinel.Set(SPINEL_PROP_NEST_NETWORK_TIME_EXPECTING_OFFSET, SPINEL_DATATYPE_BOOL_S, false),
+              kErrorNone);
+
+    constexpr Mac::PanId kSrcPanId  = 0x1234;
+    constexpr Mac::PanId kDstPanId  = 0x4321;
+    constexpr uint8_t    kDstAddr[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    constexpr uint16_t   kSrcAddr   = 0xac00;
+
+    uint8_t      frameBuffer[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame txFrame{};
+    txFrame.mPsdu = frameBuffer;
+
+    Mac::TxFrame::Info frameInfo;
+    frameInfo.mType    = Mac::Frame::kTypeData;
+    frameInfo.mVersion = Mac::Frame::kVersion2015;
+    frameInfo.mAddrs.mSource.SetShort(kSrcAddr);
+    frameInfo.mAddrs.mDestination.SetExtended(kDstAddr);
+    frameInfo.mPanIds.SetSource(kSrcPanId);
+    frameInfo.mPanIds.SetDestination(kDstPanId);
+    frameInfo.mSecurityLevel = Mac::Frame::kSecurityNone;
+
+    frameInfo.PrepareHeadersIn(txFrame);
+    txFrame.SetIePresent(true);
+    {
+        uint8_t ieIndex = 17; // Hardcoded header length
+
+        FrameBuilder builder;
+        builder.Init(txFrame.mPsdu + ieIndex, OT_RADIO_FRAME_MAX_SIZE - ieIndex);
+
+        builder.Append<Mac::HeaderIe>()->Init(Mac::VendorIeHeader::kHeaderIeId, Mac::TimeIe::kIeContentSize);
+        Mac::TimeIe *timeIe = builder.Append<Mac::TimeIe>();
+        timeIe->Init();
+        timeIe->SetSequence(1);
+        timeIe->SetTime(1000);
+
+        txFrame.mLength = ieIndex + builder.GetLength() + 2;
+    }
+    txFrame.mInfo.mTxInfo.mTimestamp = 0;
+
+    EXPECT_CALL(platform, Transmit(testing::_))
+        .Times(1)
+        .WillOnce(testing::Invoke([&platform](otRadioFrame *aFrame) -> otError {
+            Mac::TxFrame      &frame  = *static_cast<Mac::TxFrame *>(aFrame);
+            const Mac::TimeIe *timeIe = frame.GetTimeIe();
+            EXPECT_NE(timeIe, nullptr);
+            if (timeIe != nullptr)
+            {
+                uint64_t t  = timeIe->GetTime();
+                uint8_t *tp = reinterpret_cast<uint8_t *>(&t);
+                fprintf(stderr, "Mock Transmit: timeIe->GetTime() = %llu (0x%llx)\n",
+                        static_cast<unsigned long long>(t), static_cast<unsigned long long>(t));
+                fprintf(stderr, "Mock Transmit: t bytes = ");
+                for (int i = 0; i < 8; i++) fprintf(stderr, "%02x ", tp[i]);
+                fprintf(stderr, "\n");
+                EXPECT_EQ(t + 500000, 1000ULL);
+            }
+            otPlatRadioTxDone(FakePlatform::CurrentInstance(), aFrame, nullptr, OT_ERROR_NONE);
+            return OT_ERROR_NONE;
+        }));
+
+    platform.GoInMs(500);
+    ASSERT_EQ(platform.mRadioSpinel.Transmit(txFrame), kErrorNone);
+    platform.GoInMs(1000);
+}
+
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

@@ -1335,8 +1335,7 @@ uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
-    uint8_t       *psduBuffer   = mPsdu;
-    otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
+    uint8_t *psduBuffer = mPsdu;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     uint8_t radioType = mRadioType;
 #endif
@@ -1346,19 +1345,13 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
     // Set the original buffer pointers (and link type) back on
     // the frame (which were overwritten by above `memcpy()`).
 
-    mPsdu                 = psduBuffer;
-    mInfo.mTxInfo.mIeInfo = ieInfoBuffer;
+    mPsdu = psduBuffer;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mRadioType = radioType;
 #endif
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.mLength);
-
-    // mIeInfo may be null when TIME_SYNC is not enabled.
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
-#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (mRadioType != aFromFrame.GetRadioType())
@@ -1436,6 +1429,20 @@ void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
 exit:
     return;
 }
+
+void TxFrame::Restore(const ExtAddress &aExtAddress)
+{
+    VerifyOrExit(HasHeaderIe());
+
+    DecryptTransmitAesCcm(aExtAddress);
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    TimeSyncRestore();
+#endif
+    mInfo.mTxInfo.mTimestamp = 0;
+
+exit:
+    return;
+}
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
@@ -1455,6 +1462,54 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 
     mLength = kImmAckLength;
 }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+void TxFrame::TimeSyncInit(int64_t aTimeOffset, uint8_t aSequence)
+{
+    Mac::TimeIe *timeIe = static_cast<Mac::TimeIe *>(GetTimeIe());
+
+    VerifyOrExit(timeIe != nullptr);
+
+    // The Time IE can only be initialized when the transmitting time is not set.
+    OT_ASSERT(mInfo.mTxInfo.mTimestamp == 0);
+
+    timeIe->SetSequence(aSequence);
+    // Initialize the time field with the network time offset, which is going to be used when the transmitting time is
+    // decided.
+    timeIe->SetTime(static_cast<uint64_t>(aTimeOffset));
+
+exit:
+    return;
+}
+
+void TxFrame::TimeSyncFinalize(void)
+{
+    TimeIe *timeIe = static_cast<TimeIe *>(GetTimeIe());
+
+    VerifyOrExit(timeIe != nullptr);
+
+    // The Time IE can only be finalized when transmitting time is determined.
+    OT_ASSERT(mInfo.mTxInfo.mTimestamp != 0);
+
+    timeIe->SetTime(static_cast<uint64_t>(static_cast<int64_t>(timeIe->GetTime()) + mInfo.mTxInfo.mTimestamp));
+
+exit:
+    return;
+}
+
+void TxFrame::TimeSyncRestore(void)
+{
+    TimeIe *timeIe = static_cast<TimeIe *>(GetTimeIe());
+
+    VerifyOrExit(timeIe != nullptr && mInfo.mTxInfo.mTimestamp != 0);
+
+    // Restore the time field to be the network time offset.
+    timeIe->SetTime(static_cast<uint64_t>(static_cast<int64_t>(timeIe->GetTime()) - mInfo.mTxInfo.mTimestamp));
+
+exit:
+    return;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)

@@ -900,7 +900,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(aFrame.GetTimeIeOffset() == 0);
+    VerifyOrExit(aFrame.GetTimeIe() == nullptr);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -1018,17 +1018,7 @@ void Mac::BeginTransmit(void)
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    {
-        uint8_t timeIeOffset = GetTimeIeOffset(*frame);
-
-        frame->SetTimeIeOffset(timeIeOffset);
-
-        if (timeIeOffset != 0)
-        {
-            frame->SetTimeSyncSeq(Get<TimeSync>().GetTimeSyncSeq());
-            frame->SetNetworkTimeOffset(Get<TimeSync>().GetNetworkTimeOffset());
-        }
-    }
+    frame->TimeSyncInit(Get<TimeSync>().GetNetworkTimeOffset(), Get<TimeSync>().GetTimeSyncSeq());
 #endif
 
     if (!frame->IsSecurityProcessed())

@@ -99,7 +99,6 @@ struct Radio
     Mac::ShortAddress                       mShortAddress;
     Mac::ExtAddress                         mExtAddress;
     Frame                                   mTxFrame;
-    otRadioIeInfo                           mTxIeInfo;
     otRadioContext                          mRadioContext;
     Array<uint16_t, kMaxSrcMatchShort>      mSrcMatchShortEntries;
     Array<Mac::ExtAddress, kMaxSrcMatchExt> mSrcMatchExtEntries;
