@@ -156,9 +156,6 @@ class OtbrDocker:
                 subprocess.check_call(f'docker exec -i {self._docker_name} ot-ctl state', shell=True)
                 launch_ok = True
                 logging.info("OTBR Docker %s on %s Is Ready!", self._docker_name, self.backbone_network)
-                subprocess.call(
-                    f"docker exec -i {self._docker_name} bash -c 'ls /lib/*/libbsd.so.0 /usr/lib/*/libbsd.so.0 || (apt-get update && apt-get install -y libbsd0)'",
-                    shell=True)
                 break
             except subprocess.CalledProcessError:
                 time.sleep(5)

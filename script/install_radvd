@@ -33,7 +33,7 @@ set -euxo pipefail
 # It is required for PREF64 (RFC 8781) support.
 
 apt-get update
-apt-get install --no-install-recommends -y wget build-essential bison flex autoconf automake pkg-config ca-certificates libbsd-dev
+apt-get install --no-install-recommends -y wget build-essential bison flex autoconf automake pkg-config ca-certificates libbsd-dev libbsd0
 
 # Use a temporary directory for building
 mkdir -p /tmp/radvd-build
@@ -51,4 +51,5 @@ make install
 cd /
 rm -rf /tmp/radvd-build
 apt-get purge -y --auto-remove wget build-essential bison flex autoconf automake pkg-config libbsd-dev
+apt-get install --no-install-recommends -y libbsd0
 rm -rf /var/lib/apt/lists/*
