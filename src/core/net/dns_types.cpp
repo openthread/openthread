@@ -1592,6 +1592,10 @@ Error PtrRecord::ReadPtrName(const Message &aMessage,
     aOffset = startOffset + sizeof(PtrRecord);
     SuccessOrExit(error = Name::ReadLabel(aMessage, aOffset, aLabelBuffer, aLabelBufferSize));
 
+    // The first label of a PTR target (the service-instance or host label)
+    // must be non-empty.
+    VerifyOrExit(aLabelBuffer[0] != kNullChar, error = kErrorParse);
+
     if (aNameBuffer != nullptr)
     {
         SuccessOrExit(error = Name::ReadName(aMessage, aOffset, aNameBuffer, aNameBufferSize));
