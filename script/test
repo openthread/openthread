@@ -417,11 +417,11 @@ do_build_otbr_docker()
 
         # Install radvd 2.20
         if grep -q "ENTRYPOINT" etc/docker/test/Dockerfile; then
-            sed -i '/ENTRYPOINT/i RUN third_party/openthread/repo/script/install-radvd' etc/docker/test/Dockerfile
+            sed -i '/ENTRYPOINT/i RUN third_party/openthread/repo/script/install_radvd' etc/docker/test/Dockerfile
         elif grep -q "CMD" etc/docker/test/Dockerfile; then
-            sed -i '/CMD/i RUN third_party/openthread/repo/script/install-radvd' etc/docker/test/Dockerfile
+            sed -i '/CMD/i RUN third_party/openthread/repo/script/install_radvd' etc/docker/test/Dockerfile
         else
-            echo "RUN third_party/openthread/repo/script/install-radvd" >>etc/docker/test/Dockerfile
+            echo "RUN third_party/openthread/repo/script/install_radvd" >>etc/docker/test/Dockerfile
         fi
 
         docker build -t "${otbr_docker_image}" -f etc/docker/test/Dockerfile . \
