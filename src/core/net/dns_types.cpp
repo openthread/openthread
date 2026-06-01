@@ -639,6 +639,9 @@ Error Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, 
     aLabelBuffer[mLabelLength] = kNullChar;
     aLabelLength               = mLabelLength;
 
+    // Ensure the label is not empty (represented as a null-terminated string).
+    VerifyOrExit(aLabelBuffer[0] != kNullChar, error = kErrorParse);
+
     if (!aAllowDotCharInLabel)
     {
         VerifyOrExit(StringFind(aLabelBuffer, kLabelSeparatorChar) == nullptr, error = kErrorParse);
@@ -1591,10 +1594,6 @@ Error PtrRecord::ReadPtrName(const Message &aMessage,
 
     aOffset = startOffset + sizeof(PtrRecord);
     SuccessOrExit(error = Name::ReadLabel(aMessage, aOffset, aLabelBuffer, aLabelBufferSize));
-
-    // The first label of a PTR target (the service-instance or host label)
-    // must be non-empty.
-    VerifyOrExit(aLabelBuffer[0] != kNullChar, error = kErrorParse);
 
     if (aNameBuffer != nullptr)
     {
