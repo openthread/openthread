@@ -238,37 +238,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
-{
-    Error error = kErrorNone;
-
-    if (aIid)
-    {
-        error = AsCoreType(aInstance).Get<DuaManager>().SetFixedDuaInterfaceIdentifier(AsCoreType(aIid));
-    }
-    else
-    {
-        AsCoreType(aInstance).Get<DuaManager>().ClearFixedDuaInterfaceIdentifier();
-    }
-
-    return error;
-}
-
-const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance)
-{
-    Instance                       &instance = AsCoreType(aInstance);
-    const otIp6InterfaceIdentifier *iid      = nullptr;
-
-    if (instance.Get<DuaManager>().IsFixedDuaInterfaceIdentifierSet())
-    {
-        iid = &instance.Get<DuaManager>().GetFixedDuaInterfaceIdentifier();
-    }
-
-    return iid;
-}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
-
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 uint32_t otThreadGetKeySequenceCounter(otInstance *aInstance)

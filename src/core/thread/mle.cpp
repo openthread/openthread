@@ -356,10 +356,6 @@ void Mle::Restore(void)
     IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
     IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    Get<DuaManager>().Restore();
-#endif
-
     SuccessOrExit(Get<Settings>().Read(networkInfo));
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence(),
@@ -3670,14 +3666,6 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
     // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
     VerifyOrExit(aMode != kAppendMeshLocalOnly);
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()))
-    {
-        // Prioritize DUA, compressed entry
-        SuccessOrExit(error = AppendAddressRegistrationEntry(Get<DuaManager>().GetDomainUnicastAddress()));
-    }
-#endif
-
     for (const Ip6::Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
         if (!Get<Mle>().ShouldRegisterUnicastAddrWithParent(addr))
@@ -3689,13 +3677,6 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
         {
             continue;
         }
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        if (addr.GetAddress() == Get<DuaManager>().GetDomainUnicastAddress())
-        {
-            continue;
-        }
-#endif
 
         SuccessOrExit(error = AppendAddressRegistrationEntry(addr.GetAddress()));
     }

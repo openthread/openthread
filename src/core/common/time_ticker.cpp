@@ -104,7 +104,7 @@ void TimeTicker::HandleTimer(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     if (mReceivers & Mask(kDuaManager))
     {
         Get<DuaManager>().HandleTimeTick();

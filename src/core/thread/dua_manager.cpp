@@ -33,7 +33,7 @@
 
 #include "dua_manager.hpp"
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -45,21 +45,11 @@ DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRegistrationTask(aInstance)
     , mIsDuaPending(false)
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    , mDuaState(kNotExist)
-    , mDadCounter(0)
-    , mLastRegistrationTime(0)
-#endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     , mChildIndexDuaRegistering(Mle::kMaxChildren)
 #endif
 {
     mDelay.mValue = 0;
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    mDomainUnicastAddress.InitAsThreadOriginGlobalScope();
-    mFixedDuaInterfaceIdentifier.Clear();
-#endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     mChildDuaMask.Clear();
@@ -76,182 +66,13 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEve
             IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDuaResponse, this));
         }
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        RemoveDomainUnicastAddress();
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         if (!mChildDuaMask.IsEmpty())
         {
             mChildDuaMask.Clear();
             mChildDuaRegisteredMask.Clear();
         }
-#endif
-    }
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    switch (aEvent)
-    {
-    case BackboneRouter::kDomainPrefixRefreshed:
-    case BackboneRouter::kDomainPrefixAdded:
-    {
-        const Ip6::Prefix *prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
-        OT_ASSERT(prefix != nullptr);
-        mDomainUnicastAddress.mPrefixLength = prefix->GetLength();
-        mDomainUnicastAddress.GetAddress().Clear();
-        mDomainUnicastAddress.GetAddress().SetPrefix(*prefix);
-    }
-    break;
-
-    case BackboneRouter::kDomainPrefixRemoved:
-        ExitNow();
-    }
-
-    // Apply cached DUA Interface Identifier manually specified.
-    if (IsFixedDuaInterfaceIdentifierSet())
-    {
-        mDomainUnicastAddress.GetAddress().SetIid(mFixedDuaInterfaceIdentifier);
-    }
-    else
-    {
-        SuccessOrExit(GenerateDomainUnicastAddressIid());
-    }
-
-    AddDomainUnicastAddress();
-
-exit:
-    return;
-#endif
-}
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-Error DuaManager::GenerateDomainUnicastAddressIid(void)
-{
-    Error   error;
-    uint8_t dadCounter = mDadCounter;
-
-    if ((error = Get<Ip6::Slaac>().GenerateIid(mDomainUnicastAddress, dadCounter)) == kErrorNone)
-    {
-        if (dadCounter != mDadCounter)
-        {
-            mDadCounter = dadCounter;
-            Store();
-        }
-
-        LogInfo("Generated DUA: %s", mDomainUnicastAddress.GetAddress().ToString().AsCString());
-    }
-    else
-    {
-        LogWarnOnError(error, "generate DUA");
-    }
-
-    return error;
-}
-
-Error DuaManager::SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(!aIid.IsReserved(), error = kErrorInvalidArgs);
-    VerifyOrExit(mFixedDuaInterfaceIdentifier.IsUnspecified() || mFixedDuaInterfaceIdentifier != aIid);
-
-    mFixedDuaInterfaceIdentifier = aIid;
-    LogInfo("Set DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
-
-    if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
-    {
-        RemoveDomainUnicastAddress();
-        mDomainUnicastAddress.GetAddress().SetIid(mFixedDuaInterfaceIdentifier);
-        AddDomainUnicastAddress();
-    }
-
-exit:
-    return error;
-}
-
-void DuaManager::ClearFixedDuaInterfaceIdentifier(void)
-{
-    // Nothing to clear.
-    VerifyOrExit(IsFixedDuaInterfaceIdentifierSet());
-
-    if (GetDomainUnicastAddress().GetIid() == mFixedDuaInterfaceIdentifier &&
-        Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
-    {
-        RemoveDomainUnicastAddress();
-
-        if (GenerateDomainUnicastAddressIid() == kErrorNone)
-        {
-            AddDomainUnicastAddress();
-        }
-    }
-
-    LogInfo("Cleared DUA IID: %s", mFixedDuaInterfaceIdentifier.ToString().AsCString());
-    mFixedDuaInterfaceIdentifier.Clear();
-
-exit:
-    return;
-}
-
-void DuaManager::Restore(void)
-{
-    Settings::DadInfo dadInfo;
-
-    SuccessOrExit(Get<Settings>().Read(dadInfo));
-    mDadCounter = dadInfo.GetDadCounter();
-
-exit:
-    return;
-}
-
-void DuaManager::Store(void)
-{
-    Settings::DadInfo dadInfo;
-
-    dadInfo.SetDadCounter(mDadCounter);
-    Get<Settings>().Save(dadInfo);
-}
-
-void DuaManager::AddDomainUnicastAddress(void)
-{
-    mDuaState             = kToRegister;
-    mLastRegistrationTime = TimerMilli::GetNow();
-    Get<ThreadNetif>().AddUnicastAddress(mDomainUnicastAddress);
-}
-
-void DuaManager::RemoveDomainUnicastAddress(void)
-{
-    if (mDuaState == kRegistering && mIsDuaPending)
-    {
-        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDuaResponse, this));
-    }
-
-    mDuaState                        = kNotExist;
-    mDomainUnicastAddress.mPreferred = false;
-    Get<ThreadNetif>().RemoveUnicastAddress(mDomainUnicastAddress);
-}
-
-void DuaManager::UpdateRegistrationDelay(uint8_t aDelay)
-{
-    if (mDelay.mFields.mRegistrationDelay == 0 || mDelay.mFields.mRegistrationDelay > aDelay)
-    {
-        mDelay.mFields.mRegistrationDelay = aDelay;
-
-        LogDebg("update regdelay %d", mDelay.mFields.mRegistrationDelay);
-        UpdateTimeTickerRegistration();
     }
 }
-
-void DuaManager::NotifyDuplicateDomainUnicastAddress(void)
-{
-    RemoveDomainUnicastAddress();
-    mDadCounter++;
-
-    if (GenerateDomainUnicastAddressIid() == kErrorNone)
-    {
-        AddDomainUnicastAddress();
-    }
-}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 void DuaManager::UpdateReregistrationDelay(void)
 {
@@ -285,20 +106,6 @@ void DuaManager::UpdateCheckDelay(uint8_t aDelay)
 
 void DuaManager::HandleNotifierEvents(Events aEvents)
 {
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (aEvents.Contains(kEventThreadNetdataChanged) && Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
-    {
-        Lowpan::Context context;
-
-        Get<NetworkData::Leader>().FindContextForAddress(GetDomainUnicastAddress(), context);
-
-        if (!context.IsValid())
-        {
-            RemoveDomainUnicastAddress();
-        }
-    }
-#endif
-
     VerifyOrExit(Get<Mle::Mle>().IsAttached(), mDelay.mValue = 0);
 
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -307,26 +114,7 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
         {
             UpdateReregistrationDelay();
         }
-#if OPENTHREAD_CONFIG_DUA_ENABLE && OPENTHREAD_FTD
-        else if (Get<Mle::Mle>().IsRouter())
-        {
-            // Wait for link establishment with neighboring routers.
-            UpdateRegistrationDelay(kNewRouterRegistrationDelay);
-        }
-        else if (Get<Mle::Mle>().WillBecomeRouterSoon())
-        {
-            // Will check again in case the device decides to stay REED when jitter timeout expires.
-            UpdateRegistrationDelay(Get<Mle::Mle>().GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
-        }
-#endif
     }
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (aEvents.ContainsAny(kEventIp6AddressAdded))
-    {
-        UpdateRegistrationDelay(kNewDuaRegistrationDelay);
-    }
-#endif
 
 exit:
     return;
@@ -336,12 +124,7 @@ void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::PrimaryEvent 
 {
     if (aEvent == BackboneRouter::kPrimaryAdded || aEvent == BackboneRouter::kPrimaryUpdatedReregister)
     {
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        if (Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1())
-#endif
-        {
-            UpdateReregistrationDelay();
-        }
+        UpdateReregistrationDelay();
     }
 }
 
@@ -349,23 +132,7 @@ void DuaManager::HandleTimeTick(void)
 {
     bool attempt = false;
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    LogDebg("regdelay %d, reregdelay %d, checkdelay %d", mDelay.mFields.mRegistrationDelay,
-            mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
-
-    if ((mDuaState != kNotExist) &&
-        (TimerMilli::GetNow() > (mLastRegistrationTime + TimeMilli::SecToMsec(kDuaDadPeriod))))
-    {
-        mDomainUnicastAddress.mPreferred = true;
-    }
-
-    if ((mDelay.mFields.mRegistrationDelay > 0) && (--mDelay.mFields.mRegistrationDelay == 0))
-    {
-        attempt = true;
-    }
-#else
     LogDebg("reregdelay %d, checkdelay %d", mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
-#endif
 
     if ((mDelay.mFields.mCheckDelay > 0) && (--mDelay.mFields.mCheckDelay == 0))
     {
@@ -374,13 +141,6 @@ void DuaManager::HandleTimeTick(void)
 
     if ((mDelay.mFields.mReregistrationDelay > 0) && (--mDelay.mFields.mReregistrationDelay == 0))
     {
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        if (mDuaState != kNotExist)
-        {
-            mDuaState = kToRegister;
-        }
-#endif
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         mChildDuaRegisteredMask.Clear();
 #endif
@@ -420,48 +180,13 @@ void DuaManager::PerformNextRegistration(void)
     // Only allow one outgoing DUA.req
     VerifyOrExit(!mIsDuaPending);
 
-    // Only send DUA.req when necessary
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-#if OPENTHREAD_FTD
-    if (!Get<Mle::Mle>().IsRouterOrLeader() && Get<Mle::Mle>().WillBecomeRouterSoon())
-    {
-        UpdateRegistrationDelay(Get<Mle::Mle>().GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
-        ExitNow();
-    }
-#endif
-    VerifyOrExit(Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1());
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
-
-    {
-        bool needReg = false;
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        needReg = (mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0);
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        needReg = needReg || (!mChildDuaMask.IsEmpty() && mChildDuaMask != mChildDuaRegisteredMask);
-#endif
-        VerifyOrExit(needReg);
-    }
+    VerifyOrExit(!mChildDuaMask.IsEmpty() && mChildDuaMask != mChildDuaRegisteredMask);
 
     // Prepare DUA.req
     message = Get<Tmf::Agent>().AllocateAndInitPriorityConfirmablePostMessage(kUriDuaRegistrationRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0)
     {
-        dua = GetDomainUnicastAddress();
-        SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
-        SuccessOrExit(error = Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocalEid().GetIid()));
-        mDuaState             = kRegistering;
-        mLastRegistrationTime = TimerMilli::GetNow();
-    }
-    else
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
-    {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         uint32_t lastTransactionTime;
         Child   *child = nullptr;
 
@@ -486,35 +211,15 @@ void DuaManager::PerformNextRegistration(void)
 
         lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child->GetLastHeard());
         SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, lastTransactionTime));
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     }
 
-    if (!Get<Mle::Mle>().IsFullThreadDevice() && Get<Mle::Mle>().GetParent().IsThreadVersion1p1())
-    {
-        uint8_t pbbrServiceId;
-
-        SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, destAddr);
-    }
-    else
-    {
-        destAddr.InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                      Get<BackboneRouter::Leader>().GetServer16());
-    }
+    destAddr.InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, HandleDuaResponse, this));
 
     mIsDuaPending   = true;
     mRegisteringDua = dua;
     mDelay.mValue   = 0;
-
-    // Generally Thread 1.2 Router would send DUA.req on behalf for DUA registered by its MTD child.
-    // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send DUA.req to PBBR itself.
-    // In this case, Thread 1.2 sleepy end device relies on fast data poll to fetch the response timely.
-    if (!Get<Mle::Mle>().IsRxOnWhenIdle())
-    {
-        Get<DataPollSender>().SendFastPolls();
-    }
 
     LogInfo("Sent %s for DUA %s", UriToString<kUriDuaRegistrationRequest>(), dua.ToString().AsCString());
 
@@ -594,39 +299,6 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 
     VerifyOrExit(Get<BackboneRouter::Leader>().IsDomainUnicast(target), error = kErrorDrop);
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (Get<ThreadNetif>().HasUnicastAddress(target))
-    {
-        switch (static_cast<DuaStatus>(status))
-        {
-        case kDuaSuccess:
-            mLastRegistrationTime = TimerMilli::GetNow();
-            mDuaState             = kRegistered;
-            break;
-        case kDuaReRegister:
-            if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
-            {
-                RemoveDomainUnicastAddress();
-                AddDomainUnicastAddress();
-            }
-            break;
-        case kDuaInvalid:
-            // Domain Prefix might be invalid.
-            RemoveDomainUnicastAddress();
-            break;
-        case kDuaDuplicate:
-            NotifyDuplicateDomainUnicastAddress();
-            break;
-        case kDuaNoResources:
-        case kDuaNotPrimary:
-        case kDuaGeneralFailure:
-            UpdateReregistrationDelay();
-            break;
-        }
-    }
-    else
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     {
         Child   *child = nullptr;
         uint16_t childIndex;
@@ -676,7 +348,6 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             SendAddressNotification(target, static_cast<DuaStatus>(status), *child);
         }
     }
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 exit:
     UpdateTimeTickerRegistration();
@@ -745,4 +416,4 @@ void DuaManager::HandleChildDuaAddressEvent(const Child &aChild, ChildDuaAddress
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE

@@ -754,17 +754,7 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
         if (address.GetAddress() == target && Get<Mle::Mle>().GetMeshLocalEid().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address.GetAddress()))
-            {
-                Get<DuaManager>().NotifyDuplicateDomainUnicastAddress();
-            }
-            else
-#endif
-            {
-                Get<ThreadNetif>().RemoveUnicastAddress(address);
-            }
-
+            Get<ThreadNetif>().RemoveUnicastAddress(address);
             ExitNow();
         }
     }
