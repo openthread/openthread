@@ -228,26 +228,6 @@ exit:
     return hasAddress;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-Error Child::GetDomainUnicastAddress(Ip6::Address &aAddress) const
-{
-    Error error = kErrorNotFound;
-
-    for (const Ip6::Address &ip6Address : mIp6Addresses)
-    {
-        if (Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Address))
-        {
-            aAddress = ip6Address;
-            error    = kErrorNone;
-            ExitNow();
-        }
-    }
-
-exit:
-    return error;
-}
-#endif
-
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const

@@ -690,8 +690,6 @@ openthread_core_files = [
   "thread/csl_tx_scheduler.hpp",
   "thread/discover_scanner.cpp",
   "thread/discover_scanner.hpp",
-  "thread/dua_manager.cpp",
-  "thread/dua_manager.hpp",
   "thread/energy_scan_server.cpp",
   "thread/energy_scan_server.hpp",
   "thread/indirect_sender.cpp",

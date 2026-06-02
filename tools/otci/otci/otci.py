@@ -2436,14 +2436,6 @@ class OTCI(object):
     #
 
     # TODO: bbr mgmt ...
-    def set_bbr_dua_response_status(self, status: int, mliid: Optional[str] = None):
-        """Set Backbone Router Data Unicast Address Response status/coap-code.
-
-        Only for testing/reference devices
-        """
-        _mliid = mliid if mliid is not None else ""
-        self.execute_command(f'bbr mgmt dua {status} {_mliid}')
-
     def set_bbr_mlr_response_status(self, status: int):
         """Set Backbone Router Multicast Listener Response status."""
         self.execute_command(f'bbr mgmt mlr response {status}')
@@ -2583,7 +2575,7 @@ class OTCI(object):
         return listeners
 
     #
-    # Thread 1.2 and DUA/MLR utilities
+    # Thread 1.2 and MLR utilities
     #
 
     def get_domain_name(self) -> str:

@@ -1102,18 +1102,12 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
         ExitNow(error = kErrorDrop);
     }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // The filtering rules don't apply to packets from DUA.
-    if (!Get<BackboneRouter::Leader>().IsDomainUnicast(header.GetSource()))
-#endif
+    // When the packet is forwarded from host to Thread, if its source is on-mesh or its destination is
+    // mesh-local, we'll drop the packet unless the packet originates from this device.
+    if (Get<NetworkData::Leader>().IsOnMesh(header.GetSource()) ||
+        Get<Mle::Mle>().IsMeshLocalAddress(header.GetDestination()))
     {
-        // When the packet is forwarded from host to Thread, if its source is on-mesh or its destination is
-        // mesh-local, we'll drop the packet unless the packet originates from this device.
-        if (Get<NetworkData::Leader>().IsOnMesh(header.GetSource()) ||
-            Get<Mle::Mle>().IsMeshLocalAddress(header.GetDestination()))
-        {
-            VerifyOrExit(Get<ThreadNetif>().HasUnicastAddress(header.GetSource()), error = kErrorDrop);
-        }
+        VerifyOrExit(Get<ThreadNetif>().HasUnicastAddress(header.GetSource()), error = kErrorDrop);
     }
 
     if (header.GetDestination().IsMulticast())

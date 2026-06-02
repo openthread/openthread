@@ -186,18 +186,6 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    /**
-     * Retrieves the Domain Unicast Address registered by the child.
-     *
-     * @param[out] aAddress    A reference to return the DUA address.
-     *
-     * @retval kErrorNone      Successfully retrieved the DUA address, @p aAddress is updated.
-     * @retval kErrorNotFound  Could not find any DUA address.
-     */
-    Error GetDomainUnicastAddress(Ip6::Address &aAddress) const;
-#endif
-
     /**
      * Gets the child timeout.
      *
