@@ -184,7 +184,7 @@ void Checksum::UpdateMessageChecksum(Message            &aMessage,
         break;
 
     case Ip6::kProtoIcmp6:
-        headerOffset = Ip6::Icmp::Header::kChecksumFieldOffset;
+        headerOffset = Ip6::Icmp6Header::kChecksumFieldOffset;
         break;
 
     default:

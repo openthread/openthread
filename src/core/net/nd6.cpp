@@ -275,7 +275,7 @@ void RouterAdvert::Header::SetToDefault(void)
     OT_UNUSED_VARIABLE(mRetransTimer);
 
     Clear();
-    mType = Icmp::Header::kTypeRouterAdvert;
+    mType = Icmp6Header::kTypeRouterAdvert;
 }
 
 RoutePreference RouterAdvert::Header::GetDefaultRouterPreference(void) const
@@ -443,7 +443,7 @@ exit:
 RouterSolicitHeader::RouterSolicitHeader(void)
 {
     mHeader.Clear();
-    mHeader.SetType(Icmp::Header::kTypeRouterSolicit);
+    mHeader.SetType(Icmp6Header::kTypeRouterSolicit);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -455,7 +455,7 @@ NeighborSolicitHeader::NeighborSolicitHeader(void)
     OT_UNUSED_VARIABLE(mReserved);
 
     Clear();
-    mType = Icmp::Header::kTypeNeighborSolicit;
+    mType = Icmp6Header::kTypeNeighborSolicit;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -467,7 +467,7 @@ NeighborAdvertMessage::NeighborAdvertMessage(void)
     OT_UNUSED_VARIABLE(mReserved);
 
     Clear();
-    mType = Icmp::Header::kTypeNeighborAdvert;
+    mType = Icmp6Header::kTypeNeighborAdvert;
 }
 
 } // namespace Nd

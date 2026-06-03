@@ -240,7 +240,7 @@ void TestUdpMessageChecksum(void)
 
 void TestIcmp6MessageChecksum(void)
 {
-    constexpr uint16_t kMinSize = sizeof(Ip6::Icmp::Header);
+    constexpr uint16_t kMinSize = sizeof(Ip6::Icmp6Header);
     constexpr uint16_t kMaxSize = Buffer::kSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:feef:dccd:baab:9889:7667:5444:3223";
@@ -252,9 +252,9 @@ void TestIcmp6MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message          *message = instance->Get<Ip6::Ip6>().NewMessage();
-        Ip6::Icmp::Header icmp6Header;
-        Ip6::MessageInfo  messageInfo;
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage();
+        Ip6::Icmp6Header icmp6Header;
+        Ip6::MessageInfo messageInfo;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
         SuccessOrQuit(message->SetLength(size));

@@ -45,10 +45,10 @@ struct NoEchoReplyContext
 
 void HandleIcmpNoEchoReply(void *aContext, otMessage *, const otMessageInfo *, const otIcmp6Header *aIcmpHeader)
 {
-    NoEchoReplyContext      *ctx    = static_cast<NoEchoReplyContext *>(aContext);
-    const Ip6::Icmp::Header *header = AsCoreTypePtr(aIcmpHeader);
+    NoEchoReplyContext     *ctx    = static_cast<NoEchoReplyContext *>(aContext);
+    const Ip6::Icmp6Header *header = AsCoreTypePtr(aIcmpHeader);
 
-    if (header->GetType() == Ip6::Icmp::Header::kTypeEchoReply && header->GetId() == ctx->mId)
+    if (header->GetType() == Ip6::Icmp6Header::kTypeEchoReply && header->GetId() == ctx->mId)
     {
         ctx->mReceived = true;
     }
