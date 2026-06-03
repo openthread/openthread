@@ -62,6 +62,17 @@ jobs:
           const report = fs.readFileSync('/tmp/ot-size-report/report_pr', 'utf8');
           const pr_number = parseInt(fs.readFileSync('/tmp/ot-size-report/pr_number', 'utf8').trim());
 
+          // Validate pr_number against the workflow_run's actual PR associations.
+          // Without this check, an attacker with RCE in the size-check job can
+          // overwrite pr_number to post comments on arbitrary PRs using this
+          // workflow's pull-requests:write token.
+          const run = context.payload.workflow_run;
+          const associatedPRs = (run.pull_requests || []).map(pr => pr.number);
+          if (!associatedPRs.includes(pr_number)) {
+            core.setFailed(`pr_number ${pr_number} does not match any PR associated with workflow run ${run.id} (expected one of: ${associatedPRs.join(', ')})`);
+            return;
+          }
+
           const params = {
               issue_number: pr_number,
               owner: context.repo.owner,
