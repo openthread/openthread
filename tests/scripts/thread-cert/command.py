@@ -557,7 +557,7 @@ def check_compressed_address_registration_tlv(command_msg, cid, iid, cid_present
 
         Args:
             command_msg (MleMessage) : The Mle message to check.
-            cid (int): The context id of the domain prefix.
+            cid (int): The context id of the prefix.
             iid (string): The Interface Identifier.
             cid_present_once(boolean): True if cid entry should appear only once in AR Tlv.
                                        False otherwise.

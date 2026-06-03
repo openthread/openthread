@@ -90,13 +90,7 @@ Leader::Leader(Instance &aInstance)
     Reset();
 }
 
-void Leader::Reset(void)
-{
-    mConfig.MarkAsAbsent();
-
-    // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
-    mDomainPrefix.SetLength(0);
-}
+void Leader::Reset(void) { mConfig.MarkAsAbsent(); }
 
 Error Leader::ReadConfig(Config &aConfig) const
 {
@@ -136,18 +130,6 @@ const char *Leader::PrimaryEventToString(PrimaryEvent aEvent)
     return kStrings[aEvent];
 }
 
-const char *Leader::DomainPrefixEventToString(DomainPrefixEvent aEvent)
-{
-#define DomainPrefixEventMapList(_)    \
-    _(kDomainPrefixAdded, "Added")     \
-    _(kDomainPrefixRemoved, "Removed") \
-    _(kDomainPrefixRefreshed, "Refreshed")
-
-    DefineEnumStringArray(DomainPrefixEventMapList);
-
-    return kStrings[aEvent];
-}
-
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::HandleNotifierEvents(Events aEvents)
@@ -155,7 +137,6 @@ void Leader::HandleNotifierEvents(Events aEvents)
     if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged))
     {
         UpdateBackboneRouterPrimary();
-        UpdateDomainPrefixConfig();
     }
 }
 
@@ -210,52 +191,6 @@ void Leader::UpdateBackboneRouterPrimary(void)
 
 exit:
     OT_UNUSED_VARIABLE(event);
-}
-
-void Leader::UpdateDomainPrefixConfig(void)
-{
-    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig prefixConfig;
-    DomainPrefixEvent               event;
-    bool                            found = false;
-
-    while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
-    {
-        if (prefixConfig.mDp)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found)
-    {
-        VerifyOrExit(HasDomainPrefix());
-
-        mDomainPrefix.Clear();
-        event = kDomainPrefixRemoved;
-    }
-    else
-    {
-        VerifyOrExit(prefixConfig.GetPrefix() != mDomainPrefix);
-
-        event         = HasDomainPrefix() ? kDomainPrefixRefreshed : kDomainPrefixAdded;
-        mDomainPrefix = prefixConfig.GetPrefix();
-    }
-
-    LogInfo("%s domain Prefix: %s", DomainPrefixEventToString(event), mDomainPrefix.ToString().AsCString());
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<Local>().HandleDomainPrefixUpdate(event);
-#endif
-
-exit:
-    OT_UNUSED_VARIABLE(event);
-}
-
-bool Leader::IsDomainUnicast(const Ip6::Address &aAddress) const
-{
-    return HasDomainPrefix() && aAddress.MatchesPrefix(mDomainPrefix);
 }
 
 } // namespace BackboneRouter

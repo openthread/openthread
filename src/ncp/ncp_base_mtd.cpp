@@ -129,11 +129,6 @@ static uint8_t BorderRouterConfigToFlagByteExtended(const otBorderRouterConfig &
         flags |= SPINEL_NET_FLAG_EXT_DNS;
     }
 
-    if (aConfig.mDp)
-    {
-        flags |= SPINEL_NET_FLAG_EXT_DP;
-    }
-
     return flags;
 }
 
@@ -1026,7 +1021,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NET
         (mDecoder.ReadUint8(flagsExtended) == OT_ERROR_NONE))
     {
         borderRouterConfig.mNdDns = ((flagsExtended & SPINEL_NET_FLAG_EXT_DNS) != 0);
-        borderRouterConfig.mDp    = ((flagsExtended & SPINEL_NET_FLAG_EXT_DP) != 0);
+        borderRouterConfig.mDp    = false;
     }
 
     error = otBorderRouterAddOnMeshPrefix(mInstance, &borderRouterConfig);

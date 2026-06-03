@@ -632,9 +632,6 @@ class OpenThreadTHCI(object):
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
                                     ReRegDelay=self.bbrReRegDelay)
-            # Add default domain prefix is not configured otherwise
-            if self.__useDefaultDomainPrefix:
-                self.__addDefaultDomainPrefix()
 
         self.__executeCommand('ifconfig up')
         self.__executeCommand('thread start')
@@ -1473,8 +1470,6 @@ class OpenThreadTHCI(object):
         # to default when joining network
         self.hasSetChannel = False
         self.IsBeingTestedAsCommercialBBR = False
-        # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = True
         self.__isUdpOpened = False
         self.IsHost = False
 
@@ -1646,15 +1641,8 @@ class OpenThreadTHCI(object):
         """
         assert (ipaddress.IPv6Network(P_Prefix.decode()))
 
-        # turn off default domain prefix if configBorderRouter is called before joining network
-        if P_dp == 0 and not self.__isOpenThreadRunning():
-            self.__useDefaultDomainPrefix = False
-
         parameter = ''
         prf = ''
-
-        if P_dp:
-            P_slaac_preferred = 1
 
         if P_slaac_preferred == 1:
             parameter += 'p'
@@ -1671,10 +1659,6 @@ class OpenThreadTHCI(object):
 
         if P_on_mesh == 1:
             parameter += 'o'
-
-        if P_dp == 1:
-            assert P_slaac_preferred and P_default and P_on_mesh and P_stable
-            parameter += 'D'
 
         if P_preference == 1:
             prf = 'high'

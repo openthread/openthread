@@ -68,16 +68,6 @@ static_assert(kMaxMlrTimeout * 1000 > kMaxMlrTimeout, "SecToMsec(kMaxMlrTimeout)
 static_assert(kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
 
 /**
- * Represents Domain Prefix changes.
- */
-enum DomainPrefixEvent : uint8_t
-{
-    kDomainPrefixAdded     = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED,   ///< Domain Prefix Added.
-    kDomainPrefixRemoved   = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, ///< Domain Prefix Removed.
-    kDomainPrefixRefreshed = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, ///< Domain Prefix Changed.
-};
-
-/**
  * Represents Primary Backbone Router events.
  */
 enum PrimaryEvent : uint8_t
@@ -220,47 +210,18 @@ public:
      */
     bool HasPrimary(void) const { return mConfig.IsPresent(); }
 
-    /**
-     * Gets the Domain Prefix in the Thread Network.
-     *
-     * @retval A pointer to the Domain Prefix or nullptr if there is no Domain Prefix.
-     */
-    const Ip6::Prefix *GetDomainPrefix(void) const { return HasDomainPrefix() ? &mDomainPrefix : nullptr; }
-
-    /**
-     * Indicates whether or not the Domain Prefix is available in the Thread Network.
-     *
-     * @retval TRUE   If there is Domain Prefix.
-     * @retval FALSE  If there is no Domain Prefix.
-     */
-    bool HasDomainPrefix(void) const { return (mDomainPrefix.GetLength() > 0); }
-
-    /**
-     * Indicates whether or not the address is a Domain Unicast Address.
-     *
-     * @param[in]  aAddress A reference to the address.
-     *
-     * @retval true  @p aAddress is a Domain Unicast Address.
-     * @retval false @p aAddress is not a Domain Unicast Address.
-     */
-    bool IsDomainUnicast(const Ip6::Address &aAddress) const;
-
 private:
     void HandleNotifierEvents(Events aEvents);
     void UpdateBackboneRouterPrimary(void);
-    void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *PrimaryEventToString(PrimaryEvent aEvent);
-    static const char *DomainPrefixEventToString(DomainPrefixEvent aEvent);
 #endif
 
-    Config      mConfig;
-    Ip6::Prefix mDomainPrefix;
+    Config mConfig;
 };
 
 } // namespace BackboneRouter
 
-DefineMapEnum(otBackboneRouterDomainPrefixEvent, BackboneRouter::DomainPrefixEvent);
 DefineCoreType(otBackboneRouterConfig, BackboneRouter::Config);
 
 } // namespace ot

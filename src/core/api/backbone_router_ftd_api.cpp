@@ -82,18 +82,6 @@ void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitte
     return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetRegistrationJitter(aJitter);
 }
 
-otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig)
-{
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().GetDomainPrefix(AsCoreType(aConfig));
-}
-
-void otBackboneRouterSetDomainPrefixCallback(otInstance                          *aInstance,
-                                             otBackboneRouterDomainPrefixCallback aCallback,
-                                             void                                *aContext)
-{
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetDomainPrefixCallback(aCallback, aContext);
-}
-
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 void otBackboneRouterSetMulticastListenerCallback(otInstance                               *aInstance,
                                                   otBackboneRouterMulticastListenerCallback aCallback,

@@ -708,11 +708,6 @@ otError Utils::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
                     aConfig.mNdDns = true;
                     break;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-                case 'D':
-                    aConfig.mDp = true;
-                    break;
-#endif
                 case '-':
                     break;
 

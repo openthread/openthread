@@ -43,7 +43,6 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
-#include <openthread/netdata.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -176,17 +175,6 @@ uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance);
 void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitter);
 
 /**
- * Gets the local Domain Prefix configuration.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[out] aConfig   A pointer to the Domain Prefix configuration.
- *
- * @retval OT_ERROR_NONE       Successfully got the Domain Prefix configuration.
- * @retval OT_ERROR_NOT_FOUND  No Domain Prefix was configured.
- */
-otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig);
-
-/**
  * Configures the response status for the next Multicast Listener Registration.
  *
  * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`,
@@ -299,37 +287,6 @@ typedef struct otBackboneRouterMulticastListenerInfo
 otError otBackboneRouterMulticastListenerGetNext(otInstance                                *aInstance,
                                                  otBackboneRouterMulticastListenerIterator *aIterator,
                                                  otBackboneRouterMulticastListenerInfo     *aListenerInfo);
-
-/**
- * Represents the Domain Prefix events.
- */
-typedef enum
-{
-    OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED   = 0, ///< Domain Prefix was added.
-    OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED = 1, ///< Domain Prefix was removed.
-    OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED = 2, ///< Domain Prefix was changed.
-} otBackboneRouterDomainPrefixEvent;
-
-/**
- * Pointer is called whenever the Domain Prefix changed.
- *
- * @param[in] aContext       The user context pointer.
- * @param[in] aEvent         The Domain Prefix event.
- * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, NULL otherwise.
- */
-typedef void (*otBackboneRouterDomainPrefixCallback)(void                             *aContext,
-                                                     otBackboneRouterDomainPrefixEvent aEvent,
-                                                     const otIp6Prefix                *aDomainPrefix);
-/**
- * Sets the Backbone Router Domain Prefix callback.
- *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aCallback  A pointer to the Domain Prefix callback.
- * @param[in] aContext   A user context pointer.
- */
-void otBackboneRouterSetDomainPrefixCallback(otInstance                          *aInstance,
-                                             otBackboneRouterDomainPrefixCallback aCallback,
-                                             void                                *aContext);
 
 /**
  * @}

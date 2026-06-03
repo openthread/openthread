@@ -66,7 +66,6 @@
  *
  * - It has added at least one external route entry.
  * - It has added at least one prefix entry with default-route and on-mesh flags set.
- * - It has added at least one domain prefix (domain and on-mesh flags set).
  *
  * A Border Router which provides IP connectivity and is acting as a REED is eligible to request a router role upgrade
  * by sending an "Address Solicit" request to leader with status reason `BorderRouterRequest`. This reason is used when
