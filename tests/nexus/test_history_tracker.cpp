@@ -175,7 +175,7 @@ void TestHistoryTracker(void)
             VerifyOrQuit(txRequestsFound < 3);
             uint16_t expectedSize = kPingSizes[2 - txRequestsFound];
             VerifyOrQuit(msgInfo->mIpProto == OT_IP6_PROTO_ICMP6);
-            VerifyOrQuit(msgInfo->mPayloadLength == expectedSize + sizeof(Ip6::Icmp::Header));
+            VerifyOrQuit(msgInfo->mPayloadLength == expectedSize + sizeof(Ip6::Icmp6Header));
             VerifyOrQuit(AsCoreType(&msgInfo->mSource.mAddress) == leader.Get<Mle::Mle>().GetMeshLocalEid());
             VerifyOrQuit(AsCoreType(&msgInfo->mDestination.mAddress) == child.Get<Mle::Mle>().GetMeshLocalEid());
             VerifyOrQuit(msgInfo->mLinkSecurity);
@@ -199,7 +199,7 @@ void TestHistoryTracker(void)
             VerifyOrQuit(rxRequestsFound < 3);
             uint16_t expectedSize = kPingSizes[2 - rxRequestsFound];
             VerifyOrQuit(msgInfo->mIpProto == OT_IP6_PROTO_ICMP6);
-            VerifyOrQuit(msgInfo->mPayloadLength == expectedSize + sizeof(Ip6::Icmp::Header));
+            VerifyOrQuit(msgInfo->mPayloadLength == expectedSize + sizeof(Ip6::Icmp6Header));
             VerifyOrQuit(AsCoreType(&msgInfo->mSource.mAddress) == leader.Get<Mle::Mle>().GetMeshLocalEid());
             VerifyOrQuit(AsCoreType(&msgInfo->mDestination.mAddress) == child.Get<Mle::Mle>().GetMeshLocalEid());
             VerifyOrQuit(msgInfo->mLinkSecurity);

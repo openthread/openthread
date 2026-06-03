@@ -69,8 +69,6 @@ class Icmp : public InstanceLocator,
              private NonCopyable
 {
 public:
-    typedef Icmp6Header Header; ///< ICMPv6 header
-
     /**
      * Implements ICMPv6 message handlers.
      */
@@ -93,7 +91,7 @@ public:
         }
 
     private:
-        void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const Header &aIcmp6Header)
+        void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const Icmp6Header &aIcmp6Header)
         {
             mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
         }
@@ -150,7 +148,10 @@ public:
      * @retval kErrorNone     Successfully enqueued the ICMPv6 error message.
      * @retval kErrorNoBufs   Insufficient buffers available.
      */
-    Error SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage);
+    Error SendError(Icmp6Header::Type  aType,
+                    Icmp6Header::Code  aCode,
+                    const MessageInfo &aMessageInfo,
+                    const Message     &aMessage);
 
     /**
      * Sends an ICMPv6 error message.
@@ -163,7 +164,10 @@ public:
      * @retval kErrorNone     Successfully enqueued the ICMPv6 error message.
      * @retval kErrorNoBufs   Insufficient buffers available.
      */
-    Error SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Headers &aHeaders);
+    Error SendError(Icmp6Header::Type  aType,
+                    Icmp6Header::Code  aCode,
+                    const MessageInfo &aMessageInfo,
+                    const Headers     &aHeaders);
 
     /**
      * Handles an ICMPv6 message.
@@ -210,6 +214,8 @@ public:
     uint16_t GetEchoSequence(void) const { return mEchoSequence; }
 
 private:
+    typedef Icmp6Header Header;
+
     Error HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
     LinkedList<Handler> mHandlers;

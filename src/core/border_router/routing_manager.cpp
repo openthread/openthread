@@ -706,8 +706,8 @@ void RoutingManager::CheckReachabilityToSendIcmpError(const Message &aMessage, c
     messageInfo.Clear();
     messageInfo.SetPeerAddr(aIp6Header.GetSource());
 
-    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp::Header::kTypeDstUnreach,
-                                           Ip6::Icmp::Header::kCodeDstUnreachProhibited, messageInfo, aMessage));
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp6Header::kTypeDstUnreach,
+                                           Ip6::Icmp6Header::kCodeDstUnreachProhibited, messageInfo, aMessage));
 
 exit:
     return;

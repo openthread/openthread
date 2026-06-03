@@ -302,8 +302,8 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
-    Icmp6Packet        packet;
-    Ip6::Icmp::Header *header;
+    Icmp6Packet       packet;
+    Ip6::Icmp6Header *header;
 
     Log("otPlatInfraIfSendIcmp6Nd(aDestAddr: %s, aBufferLength:%u)", AsCoreType(aDestAddress).ToString().AsCString(),
         aBufferLength);
@@ -313,19 +313,19 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
 
     packet.Init(aBuffer, aBufferLength);
 
-    VerifyOrQuit(aBufferLength >= sizeof(Ip6::Icmp::Header));
+    VerifyOrQuit(aBufferLength >= sizeof(Ip6::Icmp6Header));
 
-    header = reinterpret_cast<Ip6::Icmp::Header *>(const_cast<uint8_t *>(aBuffer));
+    header = reinterpret_cast<Ip6::Icmp6Header *>(const_cast<uint8_t *>(aBuffer));
 
     switch (header->GetType())
     {
-    case Ip6::Icmp::Header::kTypeRouterSolicit:
+    case Ip6::Icmp6Header::kTypeRouterSolicit:
         Log("  Router Solicit message");
         sRsEmitted = true;
         otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
-    case Ip6::Icmp::Header::kTypeRouterAdvert:
+    case Ip6::Icmp6Header::kTypeRouterAdvert:
         Log("  Router Advertisement message");
         LogRouterAdvert(packet);
         ValidateRouterAdvert(packet);
@@ -335,7 +335,7 @@ otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
         otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
-    case Ip6::Icmp::Header::kTypeNeighborSolicit:
+    case Ip6::Icmp6Header::kTypeNeighborSolicit:
     {
         const Ip6::Nd::NeighborSolicitHeader *nsMsg =
             reinterpret_cast<const Ip6::Nd::NeighborSolicitHeader *>(packet.GetBytes());

@@ -157,10 +157,10 @@ struct IcmpResponseContext
 
 static void HandleIcmpResponse(void *aContext, otMessage *, const otMessageInfo *, const otIcmp6Header *aIcmpHeader)
 {
-    IcmpResponseContext     *context = static_cast<IcmpResponseContext *>(aContext);
-    const Ip6::Icmp::Header *header  = AsCoreTypePtr(aIcmpHeader);
+    IcmpResponseContext    *context = static_cast<IcmpResponseContext *>(aContext);
+    const Ip6::Icmp6Header *header  = AsCoreTypePtr(aIcmpHeader);
 
-    if ((header->GetType() == Ip6::Icmp::Header::kTypeEchoReply) && (header->GetId() == context->mIdentifier))
+    if ((header->GetType() == Ip6::Icmp6Header::kTypeEchoReply) && (header->GetId() == context->mIdentifier))
     {
         context->mResponseReceived = true;
     }
