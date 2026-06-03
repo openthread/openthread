@@ -161,8 +161,7 @@ void TestDiagTc1(const char *aJsonFileName)
      * - Pass Criteria:
      *   - N/A
      */
-    Ip6::Address dutRloc;
-    dutRloc.InitAsRoutingLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), router1.Get<Mle::Mle>().GetRloc16());
+    Ip6::Address dutRloc = router1.Get<Mle::Mle>().GetMeshLocalRloc();
 
     uint8_t tlvTypesStep2[] = {
         NetDiag::Tlv::kMaxChildTimeout,    NetDiag::Tlv::kEui64,       NetDiag::Tlv::kVersion,
