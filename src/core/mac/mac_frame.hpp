@@ -211,7 +211,10 @@ public:
     {
         const uint8_t *ie = GetHeaderIe(RendezvousTimeIe::kHeaderIeId);
 
-        return (ie != nullptr) ? reinterpret_cast<const RendezvousTimeIe *>(ie + sizeof(HeaderIe)) : nullptr;
+        return (ie != nullptr &&
+                reinterpret_cast<const HeaderIe *>(ie)->GetLength() >= RendezvousTimeIe::kIeContentSize)
+                   ? reinterpret_cast<const RendezvousTimeIe *>(ie + sizeof(HeaderIe))
+                   : nullptr;
     }
 
     /**
@@ -230,7 +233,9 @@ public:
     {
         const uint8_t *ie = GetThreadIe(ConnectionIe::kThreadIeSubtype);
 
-        return (ie != nullptr) ? reinterpret_cast<const ConnectionIe *>(ie + sizeof(HeaderIe)) : nullptr;
+        return (ie != nullptr && reinterpret_cast<const HeaderIe *>(ie)->GetLength() >= ConnectionIe::kIeContentSize)
+                   ? reinterpret_cast<const ConnectionIe *>(ie + sizeof(HeaderIe))
+                   : nullptr;
     }
 #endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 
