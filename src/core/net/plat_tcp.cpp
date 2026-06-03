@@ -567,6 +567,22 @@ const char *PlatTcp::Connection::EventToString(Event aEvent)
     return kStrings[aEvent];
 }
 
+const char *PlatTcp::Connection::DisconnectReasonToString(DisconnectReason aDisconnectReason)
+{
+#define ConnDisconnectReasonMapList(_)     \
+    _(kDisconnectReasonClosed, "Closed")   \
+    _(kDisconnectReasonTimeout, "Timeout") \
+    _(kDisconnectReasonRefused, "Refused") \
+    _(kDisconnectReasonReset, "Reset")     \
+    _(kDisconnectReasonError, "Error")     \
+    _(kDisconnectReasonAbort, "Abort")     \
+    _(kDisconnectReasonNoBufs, "NoBufs")
+
+    DefineEnumStringArray(ConnDisconnectReasonMapList);
+
+    return kStrings[aDisconnectReason];
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // PlatTcp
 
