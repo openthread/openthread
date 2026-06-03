@@ -86,7 +86,7 @@ void TestPbbrAloc(void)
     Ip6::Address aloc;
 
     // 1. Leader ALOC
-    leader.Get<Mle::Mle>().GetLeaderAloc(aloc);
+    leader.Get<Mle::Mle>().ComposeLeaderAloc(aloc);
     Log("Pinging Leader ALOC %s from ROUTER", aloc.ToString().AsCString());
     nexus.SendAndVerifyEchoRequest(router, aloc);
 

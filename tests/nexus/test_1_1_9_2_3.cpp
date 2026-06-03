@@ -151,7 +151,7 @@ void RunTest9_2_3(Topology aTopology, const char *aJsonFile)
         MeshCoP::Dataset::Components components;
         Ip6::Address                 leaderAloc;
 
-        leader.Get<Mle::Mle>().GetLeaderAloc(leaderAloc);
+        leader.Get<Mle::Mle>().ComposeLeaderAloc(leaderAloc);
         components.Clear();
         SuccessOrQuit(
             commissioner.Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(components, nullptr, 0, &leaderAloc));
@@ -198,7 +198,7 @@ void RunTest9_2_3(Topology aTopology, const char *aJsonFile)
         Ip6::Address                 leaderAloc;
         uint8_t tlvs[] = {MeshCoP::Tlv::kChannelMask, MeshCoP::Tlv::kMeshLocalPrefix, MeshCoP::Tlv::kNetworkName};
 
-        leader.Get<Mle::Mle>().GetLeaderAloc(leaderAloc);
+        leader.Get<Mle::Mle>().ComposeLeaderAloc(leaderAloc);
         components.Clear();
         SuccessOrQuit(commissioner.Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(components, tlvs, sizeof(tlvs),
                                                                                        &leaderAloc));
@@ -246,7 +246,7 @@ void RunTest9_2_3(Topology aTopology, const char *aJsonFile)
         uint8_t tlvs[] = {MeshCoP::Tlv::kChannel, MeshCoP::Tlv::kMeshLocalPrefix, MeshCoP::Tlv::kNetworkName,
                           MeshCoP::Tlv::kScanDuration, MeshCoP::Tlv::kEnergyList};
 
-        leader.Get<Mle::Mle>().GetLeaderAloc(leaderAloc);
+        leader.Get<Mle::Mle>().ComposeLeaderAloc(leaderAloc);
         components.Clear();
         SuccessOrQuit(commissioner.Get<MeshCoP::ActiveDatasetManager>().SendGetRequest(components, tlvs, sizeof(tlvs),
                                                                                        &leaderAloc));

@@ -887,22 +887,22 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     mLeaderData.SetLeaderRouterId(aLeaderRouterId);
 }
 
-void Mle::GetLeaderRloc(Ip6::Address &aAddress) const
+void Mle::ComposeLeaderRloc(Ip6::Address &aAddress) const
 {
     aAddress.InitAsRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
 }
 
-void Mle::GetLeaderAloc(Ip6::Address &aAddress) const
+void Mle::ComposeLeaderAloc(Ip6::Address &aAddress) const
 {
     aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::ForLeader());
 }
 
-void Mle::GetCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
+void Mle::ComposeCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
 {
     aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::FromCommissionerSessionId(aSessionId));
 }
 
-void Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
+void Mle::ComposeServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
     aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::FromServiceId(aServiceId));
 }

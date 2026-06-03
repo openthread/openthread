@@ -566,34 +566,34 @@ public:
     uint16_t GetLeaderRloc16(void) const { return Rloc16FromRouterId(GetLeaderId()); }
 
     /**
-     * Retrieves the Leader's RLOC.
+     * Composes the Leader's RLOC.
      *
      * @param[out]  aAddress  A reference to an address to return the Leader's RLOC.
      */
-    void GetLeaderRloc(Ip6::Address &aAddress) const;
+    void ComposeLeaderRloc(Ip6::Address &aAddress) const;
 
     /**
-     * Retrieves the Leader's ALOC.
+     * Composes the Leader's ALOC.
      *
      * @param[out]  aAddress  A reference to an address to return the Leader's ALOC.
      */
-    void GetLeaderAloc(Ip6::Address &aAddress) const;
+    void ComposeLeaderAloc(Ip6::Address &aAddress) const;
 
     /**
-     * Retrieves the Commissioner's ALOC for a given session ID.
+     * Composes the Commissioner's ALOC for a given session ID.
      *
-     * @param[in]   aSessionId      Commissioner session id.
+     * @param[in]   aSessionId      Commissioner session ID.
      * @param[out]  aAddress        A reference to an address to return the Commissioner's ALOC.
      */
-    void GetCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const;
+    void ComposeCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const;
 
     /**
-     * Retrieves the Service ALOC for given Service ID.
+     * Composes the Service ALOC for a given Service ID.
      *
-     * @param[in]   aServiceId Service ID to get ALOC for.
-     * @param[out]  aAddress   A reference to an address to return the Service ALOC.
+     * @param[in]   aServiceId   Service ID to compose ALOC for.
+     * @param[out]  aAddress     A reference to an address to return the Service ALOC.
      */
-    void GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
+    void ComposeServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
 
     /**
      * Returns the most recently received Leader Data.

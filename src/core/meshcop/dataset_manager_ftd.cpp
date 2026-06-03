@@ -190,7 +190,7 @@ Error DatasetManager::HandleSetOrReplace(MgmtCommand aCommand, const Coap::Msg &
         Ip6::Address destination;
 
         SuccessOrExit(Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId));
-        Get<Mle::Mle>().GetCommissionerAloc(localSessionId, destination);
+        Get<Mle::Mle>().ComposeCommissionerAloc(localSessionId, destination);
         Get<Leader>().SendDatasetChanged(destination);
     }
 

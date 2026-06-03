@@ -136,7 +136,7 @@ void TestAnycastLocator(void)
     Log("1. Locate leader ALOC from all nodes");
 
     Ip6::Address leaderAloc;
-    leader.Get<Mle::Mle>().GetLeaderAloc(leaderAloc);
+    leader.Get<Mle::Mle>().ComposeLeaderAloc(leaderAloc);
 
     LocateResult result;
 

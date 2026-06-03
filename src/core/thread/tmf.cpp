@@ -259,7 +259,7 @@ Error Agent::SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler
 {
     Ip6::MessageInfo messageInfo;
 
-    Get<Mle::Mle>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    Get<Mle::Mle>().ComposeLeaderAloc(messageInfo.GetPeerAddr());
     PrepareMessageInfo(messageInfo);
 
     return SendMessage(aMessage, messageInfo, aHandler, aContext);
