@@ -350,7 +350,6 @@ do_build_otbr_docker()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
-        "-DOTBR_DUA_ROUTING=ON"
         "-DOTBR_DHCP6_PD=ON"
     )
     local args=(

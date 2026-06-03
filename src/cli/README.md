@@ -50,7 +50,6 @@ Done
 - [discover](#discover-channel)
 - [dns](#dns-config)
 - [domainname](#domainname)
-- [dua](#dua-iid)
 - [eidcache](#eidcache)
 - [eui64](#eui64)
 - [extaddr](#extaddr)
@@ -171,30 +170,6 @@ Done
 ```bash
 > bbr
 BBR Primary: None
-Done
-```
-
-### bbr mgmt dua \<status\|coap-code\> [meshLocalIid]
-
-Configure the response status for DUA.req with meshLocalIid in payload. Without meshLocalIid, simply respond any coming DUA.req next with the specified status or COAP code.
-
-Only for testing/reference device.
-
-known status value:
-
-- 0: ST_DUA_SUCCESS
-- 1: ST_DUA_REREGISTER
-- 2: ST_DUA_INVALID
-- 3: ST_DUA_DUPLICATE
-- 4: ST_DUA_NO_RESOURCES
-- 5: ST_DUA_BBR_NOT_PRIMARY
-- 6: ST_DUA_GENERAL_FAILURE
-- 160: COAP code 5.00
-
-```bash
-> bbr mgmt dua 1 2f7c235e5025a2fd
-Done
-> bbr mgmt dua 160
 Done
 ```
 
@@ -1956,34 +1931,6 @@ Set the Thread Domain Name for Thread 1.2 device.
 
 ```bash
 > domainname Test\ Thread
-Done
-```
-
-### dua iid
-
-Get the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid
-0004000300020001
-Done
-```
-
-### dua iid \<iid\>
-
-Set the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid 0004000300020001
-Done
-```
-
-### dua iid clear
-
-Clear the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
-
-```bash
-> dua iid clear
 Done
 ```
 

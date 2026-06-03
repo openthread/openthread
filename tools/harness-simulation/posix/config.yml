@@ -54,7 +54,6 @@ ot_build:
     - REST_API=0
     - OT_COMMISSIONER=1
     options:
-    - "-DOTBR_DUA_ROUTING=ON"
     - "-DOT_MLR=ON"
     rcp_subpath: build/ot12/simulation
     rcp_options:
@@ -72,7 +71,6 @@ ot_build:
     - REST_API=0
     - EXTERNAL_COMMISSIONER=1
     options:
-    - "-DOTBR_DUA_ROUTING=ON"
     - "-DOT_MLR=ON"
     rcp_subpath: build/ot13/simulation
     rcp_options:

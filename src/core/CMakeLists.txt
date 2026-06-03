@@ -237,7 +237,6 @@ set(COMMON_SOURCES
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp
-    thread/dua_manager.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp
     thread/key_manager.cpp

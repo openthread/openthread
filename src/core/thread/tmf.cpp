@@ -123,10 +123,6 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriRelayRx, Agent);
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        Case(kUriDuaRegistrationNotify, DuaManager);
-#endif
-
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
         Case(kUriAnycastLocate, AnycastLocator);
 #endif

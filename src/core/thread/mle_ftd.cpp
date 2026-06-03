@@ -1826,9 +1826,6 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     OffsetRange offsetRange;
     uint8_t     count       = 0;
     uint8_t     storedCount = 0;
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    Ip6::Address oldDua;
-#endif
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Child::Ip6AddressArray oldMlrRegisteredAddresses;
 #endif
@@ -1836,13 +1833,6 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     OT_UNUSED_VARIABLE(storedCount);
 
     SuccessOrExit(error = Tlv::FindTlvValueOffsetRange(aRxInfo.mMessage, Tlv::kAddressRegistration, offsetRange));
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    if (aChild.GetDomainUnicastAddress(oldDua) != kErrorNone)
-    {
-        oldDua.Clear();
-    }
-#endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     aChild.GetAllMlrRegisteredAddresses(oldMlrRegisteredAddresses);
@@ -1932,9 +1922,6 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
         Get<AddressResolver>().RemoveEntryForAddress(address);
     }
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    SignalDuaAddressEvent(aChild, oldDua);
-#endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Get<Mlr::Manager>().UpdateChildRegistrations(aChild, oldMlrRegisteredAddresses);
@@ -1955,40 +1942,6 @@ Error Mle::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 exit:
     return error;
 }
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-void Mle::SignalDuaAddressEvent(const Child &aChild, const Ip6::Address &aOldDua) const
-{
-    DuaManager::ChildDuaAddressEvent event = DuaManager::kAddressUnchanged;
-    Ip6::Address                     newDua;
-
-    if (aChild.GetDomainUnicastAddress(newDua) == kErrorNone)
-    {
-        if (aOldDua.IsUnspecified())
-        {
-            event = DuaManager::kAddressAdded;
-        }
-        else if (aOldDua != newDua)
-        {
-            event = DuaManager::kAddressChanged;
-        }
-    }
-    else
-    {
-        // Child has no DUA address. If there was no old DUA, no need
-        // to signal.
-
-        VerifyOrExit(!aOldDua.IsUnspecified());
-
-        event = DuaManager::kAddressRemoved;
-    }
-
-    Get<DuaManager>().HandleChildDuaAddressEvent(aChild, event);
-
-exit:
-    return;
-}
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
 bool Mle::IsMessageMleSubType(const Message &aMessage) { return aMessage.IsSubTypeMle(); }
 
