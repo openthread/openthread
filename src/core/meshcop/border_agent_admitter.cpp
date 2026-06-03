@@ -678,7 +678,7 @@ void Admitter::CommissionerPetitioner::AddAlocAndUdpReceiver(void)
 {
     Ip6::Address alocAddr;
 
-    Get<Mle::Mle>().GetCommissionerAloc(mSessionId, alocAddr);
+    Get<Mle::Mle>().ComposeCommissionerAloc(mSessionId, alocAddr);
 
     if (Get<ThreadNetif>().HasUnicastAddress(mAloc))
     {

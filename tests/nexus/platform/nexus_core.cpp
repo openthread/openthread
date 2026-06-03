@@ -172,7 +172,7 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
         if (leaderNode->Get<Mle::Mle>().IsLeader())
         {
             Ip6::Address aloc;
-            leaderNode->Get<Mle::Mle>().GetLeaderAloc(aloc);
+            leaderNode->Get<Mle::Mle>().ComposeLeaderAloc(aloc);
             fprintf(file, "  \"leader_aloc\": \"%s\",\n", aloc.ToString().AsCString());
         }
     }
