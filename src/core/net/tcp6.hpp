@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+
 #include <openthread/tcp.h>
 
 #include "common/as_core_type.hpp"
@@ -591,5 +593,7 @@ DefineCoreType(otTcpEndpoint, Ip6::Tcp::Endpoint);
 DefineCoreType(otTcpListener, Ip6::Tcp::Listener);
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_TCP_ENABLE
 
 #endif // OT_CORE_NET_TCP6_HPP_
