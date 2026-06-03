@@ -102,9 +102,8 @@ void Agent::UpdateService(void)
         {
             uint16_t aloc16 = Mle::Aloc16::FromNdAgentContextId(lowpanContext.GetContextId());
 
-            mAloc.InitAsThreadOrigin();
-            mAloc.GetAddress().InitAsAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aloc16);
-            mAloc.mMeshLocal = true;
+            mAloc.InitAsThreadOriginMeshLocal();
+            Get<Mle::Mle>().ComposeAloc(aloc16, mAloc.GetAddress());
             Get<ThreadNetif>().AddUnicastAddress(mAloc);
             ExitNow();
         }

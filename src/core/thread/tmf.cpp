@@ -247,7 +247,7 @@ Error Agent::SendMessageToRloc(Message &aMessage, uint16_t aRloc16, ResponseHand
 {
     Ip6::MessageInfo messageInfo;
 
-    messageInfo.GetPeerAddr().InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aRloc16);
+    Get<Mle::Mle>().ComposeRloc(aRloc16, messageInfo.GetPeerAddr());
     PrepareMessageInfo(messageInfo);
 
     return SendMessage(aMessage, messageInfo, aHandler, aContext);

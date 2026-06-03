@@ -55,7 +55,6 @@ Local::Local(Instance &aInstance)
 {
     // Primary Backbone Router Aloc
     mBbrPrimaryAloc.InitAsThreadOriginMeshLocal();
-    mBbrPrimaryAloc.GetAddress().GetIid().InitAsLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
 
     // All Network Backbone Routers Multicast Address.
     mAllNetworkBackboneRouters.Clear();
@@ -214,7 +213,7 @@ void Local::SetState(State aState)
     if (aState == kStatePrimary)
     {
         // Add Primary Backbone Router ALOC for Primary Backbone Router.
-        mBbrPrimaryAloc.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+        Get<Mle::Mle>().ComposeAloc(Mle::Aloc16::ForPrimaryBackboneRouter(), mBbrPrimaryAloc.GetAddress());
         Get<ThreadNetif>().AddUnicastAddress(mBbrPrimaryAloc);
     }
 

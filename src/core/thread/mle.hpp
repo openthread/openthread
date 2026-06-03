@@ -566,6 +566,22 @@ public:
     uint16_t GetLeaderRloc16(void) const { return Rloc16FromRouterId(GetLeaderId()); }
 
     /**
+     * Composes a Routing Locator (RLOC) address for a given RLOC16.
+     *
+     * @param[in]   aRloc16   The RLOC16 value.
+     * @param[out]  aAddress  A reference to an address to return the RLOC.
+     */
+    void ComposeRloc(uint16_t aRloc16, Ip6::Address &aAddress) const;
+
+    /**
+     * Composes an Anycast Locator (ALOC) address for a given ALOC16.
+     *
+     * @param[in]   aAloc16   The ALOC16 value.
+     * @param[out]  aAddress  A reference to an address to return the ALOC.
+     */
+    void ComposeAloc(uint16_t aAloc16, Ip6::Address &aAddress) const { ComposeRloc(aAloc16, aAddress); }
+
+    /**
      * Composes the Leader's RLOC.
      *
      * @param[out]  aAddress  A reference to an address to return the Leader's RLOC.

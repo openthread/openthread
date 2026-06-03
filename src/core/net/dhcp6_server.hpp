@@ -141,20 +141,19 @@ private:
         }
 
         /**
-         * Sets the ALOC.
+         * Sets the IPv6 prefix.
          *
-         * @param[in]  aPrefix           The IPv6 prefix.
-         * @param[in]  aMeshLocalPrefix  The Mesh Local Prefix.
+         * @param[in] aPrefix  The IPv6 prefix.
+         */
+        void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
+
+        /**
+         * Composes the ALOC address.
+         *
+         * @param[in]  aInstance         The OpenThread instance.
          * @param[in]  aContextId        The 6LoWPAN Context ID.
          */
-        void Set(const Ip6::Prefix &aPrefix, const Ip6::NetworkPrefix &aMeshLocalPrefix, uint8_t aContextId)
-        {
-            mPrefix = aPrefix;
-
-            mAloc.InitAsThreadOrigin();
-            mAloc.GetAddress().InitAsAnycastLocator(aMeshLocalPrefix, (Ip6::Address::kAloc16Mask << 8) + aContextId);
-            mAloc.mMeshLocal = true;
-        }
+        void ComposeAloc(Instance &aInstance, uint8_t aContextId);
 
     private:
         Ip6::Netif::UnicastAddress mAloc;
