@@ -1493,11 +1493,10 @@ exit:
 }
 #endif
 
-Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
-                                  Message                &aMessage,
-                                  const Ip6::MessageInfo &aMessageInfo,
-                                  uint16_t                aCmdOffset,
-                                  const SecurityHeader   &aHeader)
+Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
+                                  Message              &aMessage,
+                                  uint16_t              aCmdOffset,
+                                  const AesCcmAuthData &aAuthData)
 {
     // This method performs MLE message security. Based on `aMode` it
     // can be used to encrypt and append tag to `aMessage` or to
@@ -1522,20 +1521,14 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
     uint8_t               tag[kMleSecurityTagSize];
     Mac::ExtAddress       extAddress;
     uint32_t              keySequence;
-    uint16_t              payloadLength   = aMessage.GetLength() - aCmdOffset;
-    const Ip6::Address   *senderAddress   = &aMessageInfo.GetSockAddr();
-    const Ip6::Address   *receiverAddress = &aMessageInfo.GetPeerAddr();
+    uint16_t              payloadLength = aMessage.GetLength() - aCmdOffset;
 
     switch (aMode)
     {
     case Crypto::AesCcm::kEncrypt:
-        // Use the initialized values for `senderAddress`,
-        // `receiverAddress` and `payloadLength`
         break;
 
     case Crypto::AesCcm::kDecrypt:
-        senderAddress   = &aMessageInfo.GetPeerAddr();
-        receiverAddress = &aMessageInfo.GetSockAddr();
         // Ensure message contains command field (uint8_t) and
         // tag. Then exclude the tag from payload to decrypt.
         VerifyOrExit(aCmdOffset + sizeof(uint8_t) + kMleSecurityTagSize <= aMessage.GetLength(), error = kErrorParse);
@@ -1543,21 +1536,18 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
         break;
     }
 
-    extAddress.SetFromIid(senderAddress->GetIid());
-    nonce.InitFrom(extAddress, aHeader.GetFrameCounter(), Mac::Frame::kSecurityEncMic32);
+    extAddress.SetFromIid(aAuthData.mSenderAddr.GetIid());
+    nonce.InitFrom(extAddress, aAuthData.mSecurityHeader.GetFrameCounter(), Mac::Frame::kSecurityEncMic32);
 
-    keySequence = aHeader.GetKeyId();
+    keySequence = aAuthData.mSecurityHeader.GetKeyId();
 
     aesCcm.SetKey(keySequence == Get<KeyManager>().GetCurrentKeySequence()
                       ? Get<KeyManager>().GetCurrentMleKey()
                       : Get<KeyManager>().GetTemporaryMleKey(keySequence));
 
-    aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader), payloadLength,
-                kMleSecurityTagSize, &nonce, sizeof(nonce));
+    aesCcm.Init(sizeof(AesCcmAuthData), payloadLength, kMleSecurityTagSize, &nonce, sizeof(nonce));
 
-    aesCcm.Header(*senderAddress);
-    aesCcm.Header(*receiverAddress);
-    aesCcm.Header(aHeader);
+    aesCcm.Header(&aAuthData, sizeof(AesCcmAuthData));
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     if (aMode == Crypto::AesCcm::kDecrypt)
@@ -1590,7 +1580,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     Error           error = kErrorNone;
     RxInfo          rxInfo(aMessage, aMessageInfo);
     uint8_t         securitySuite;
-    SecurityHeader  header;
+    AesCcmAuthData  authData;
     uint32_t        keySequence;
     uint32_t        frameCounter;
     Mac::ExtAddress extAddr;
@@ -1635,15 +1625,17 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     VerifyOrExit(!IsDisabled());
     VerifyOrExit(securitySuite == k154Security, error = kErrorParse);
 
-    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(header));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(authData.mSecurityHeader));
 
-    VerifyOrExit(header.IsSecurityControlValid(), error = kErrorParse);
+    VerifyOrExit(authData.mSecurityHeader.IsSecurityControlValid(), error = kErrorParse);
 
-    keySequence  = header.GetKeyId();
-    frameCounter = header.GetFrameCounter();
+    keySequence  = authData.mSecurityHeader.GetKeyId();
+    frameCounter = authData.mSecurityHeader.GetFrameCounter();
 
-    SuccessOrExit(
-        error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessageInfo, aMessage.GetOffset(), header));
+    authData.mSenderAddr   = aMessageInfo.GetPeerAddr();
+    authData.mReceiverAddr = aMessageInfo.GetSockAddr();
+
+    SuccessOrExit(error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessage.GetOffset(), authData));
 
     IgnoreError(aMessage.ReadAtAndAdvanceOffset(command));
 
@@ -3895,18 +3887,20 @@ Error Mle::TxMessage::SendTo(const Ip6::Address &aDestination)
 
     if (securitySuite == k154Security)
     {
-        SecurityHeader header;
+        AesCcmAuthData authData;
 
         // Update the fields in the security header
 
-        IgnoreError(Read(offset, header));
-        header.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
-        header.SetKeyId(Get<KeyManager>().GetCurrentKeySequence());
-        Write(offset, header);
+        IgnoreError(Read(offset, authData.mSecurityHeader));
+        authData.mSecurityHeader.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
+        authData.mSecurityHeader.SetKeyId(Get<KeyManager>().GetCurrentKeySequence());
+        Write(offset, authData.mSecurityHeader);
         offset += sizeof(SecurityHeader);
 
-        SuccessOrExit(
-            error = Get<Mle>().ProcessMessageSecurity(Crypto::AesCcm::kEncrypt, *this, messageInfo, offset, header));
+        authData.mSenderAddr   = messageInfo.GetSockAddr();
+        authData.mReceiverAddr = messageInfo.GetPeerAddr();
+
+        SuccessOrExit(error = Get<Mle>().ProcessMessageSecurity(Crypto::AesCcm::kEncrypt, *this, offset, authData));
 
         Get<KeyManager>().IncrementMleFrameCounter();
     }

@@ -1821,6 +1821,24 @@ private:
         uint8_t  mKeyIndex;
     } OT_TOOL_PACKED_END;
 
+    static_assert(sizeof(SecurityHeader) == 10, "SecurityHeader is not packed");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    OT_TOOL_PACKED_BEGIN
+    struct AesCcmAuthData
+    {
+        // Represents the authenticated data used during MLE AES-CCM
+        // security processing. It includes the sender and receiver
+        // IPv6 addresses followed by the Aux Security Header.
+
+        Ip6::Address   mSenderAddr;
+        Ip6::Address   mReceiverAddr;
+        SecurityHeader mSecurityHeader;
+    } OT_TOOL_PACKED_END;
+
+    static_assert(sizeof(AesCcmAuthData) == 42, "AesCcmAuthData is not packed");
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     class ParentCandidate : public Parent
@@ -2377,11 +2395,10 @@ private:
     bool       HasUnregisteredAddress(void) const;
     bool       ShouldRegisterUnicastAddrWithParent(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
     bool       ShouldRegisterMulticastAddrsWithParent(void) const;
-    Error      ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
-                                      Message                &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      uint16_t                aCmdOffset,
-                                      const SecurityHeader   &aHeader);
+    Error      ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
+                                      Message              &aMessage,
+                                      uint16_t              aCmdOffset,
+                                      const AesCcmAuthData &aAuthData);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     void InformPreviousParent(void);

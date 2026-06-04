@@ -226,7 +226,7 @@ void TestInPlaceAesCcmProcessing(void)
 
         // Encrypt in place
         aesCcm.Init(kHeaderLength, msgLength - kHeaderLength, kTagLength, kNonce, sizeof(kNonce));
-        aesCcm.Header(header);
+        aesCcm.Header(&header, sizeof(header));
         aesCcm.Payload(*message, kHeaderLength, msgLength - kHeaderLength, Crypto::AesCcm::kEncrypt);
 
         // Append the tag
@@ -237,7 +237,7 @@ void TestInPlaceAesCcmProcessing(void)
 
         // Decrypt in place
         aesCcm.Init(kHeaderLength, msgLength - kHeaderLength, kTagLength, kNonce, sizeof(kNonce));
-        aesCcm.Header(header);
+        aesCcm.Header(&header, sizeof(header));
         aesCcm.Payload(*message, kHeaderLength, msgLength - kHeaderLength, Crypto::AesCcm::kDecrypt);
 
         // Check the tag against what is the message
