@@ -63,7 +63,6 @@ class AesCcm
 public:
     static constexpr uint8_t kMinTagLength = 4;                  ///< Minimum tag length (in bytes).
     static constexpr uint8_t kMaxTagLength = AesEcb::kBlockSize; ///< Maximum tag length (in bytes).
-    static constexpr uint8_t kNonceSize    = 13;                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
 
     /**
      * Type represent the encryption vs decryption mode.
@@ -73,6 +72,30 @@ public:
         kEncrypt, // Encryption mode.
         kDecrypt, // Decryption mode.
     };
+
+    /**
+     * Represents an IEEE 802.15.4 nonce byte sequence.
+     */
+    OT_TOOL_PACKED_BEGIN
+    class Nonce : public Clearable<Nonce>
+    {
+    public:
+        /**
+         * Initializes the nonce from a given extended address, frame counter, and security level.
+         *
+         * @param[in]  aExtAddress     An extended address.
+         * @param[in]  aFrameCounter   A frame counter.
+         * @param[in]  aSecurityLevel  A security level.
+         */
+        void InitFrom(const Mac::ExtAddress &aExtAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel);
+
+    private:
+        Mac::ExtAddress mExtAddress;
+        uint32_t        mFrameCounter;
+        uint8_t         mSecurityLevel;
+    } OT_TOOL_PACKED_END;
+
+    static_assert(sizeof(Nonce) == 13, "Nonce format is not valid");
 
     /**
      * Sets the key.
@@ -173,19 +196,6 @@ public:
      * @param[out]  aTag        A pointer to the tag (must have `GetTagLength()` bytes).
      */
     void Finalize(void *aTag);
-
-    /**
-     * Generates IEEE 802.15.4 nonce byte sequence.
-     *
-     * @param[in]  aAddress        An extended address.
-     * @param[in]  aFrameCounter   A frame counter.
-     * @param[in]  aSecurityLevel  A security level.
-     * @param[out] aNonce          A buffer (with `kNonceSize` bytes) to place the generated nonce.
-     */
-    static void GenerateNonce(const Mac::ExtAddress &aAddress,
-                              uint32_t               aFrameCounter,
-                              uint8_t                aSecurityLevel,
-                              uint8_t               *aNonce);
 
 private:
     AesEcb   mEcb;

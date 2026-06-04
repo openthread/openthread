@@ -1520,15 +1520,15 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
     // `kErrorNone` message encrypted and tag appended to message.
     // `kErrorNoBufs` could not grow the message to append the tag.
 
-    Error               error = kErrorNone;
-    Crypto::AesCcm      aesCcm;
-    uint8_t             nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t             tag[kMleSecurityTagSize];
-    Mac::ExtAddress     extAddress;
-    uint32_t            keySequence;
-    uint16_t            payloadLength   = aMessage.GetLength() - aCmdOffset;
-    const Ip6::Address *senderAddress   = &aMessageInfo.GetSockAddr();
-    const Ip6::Address *receiverAddress = &aMessageInfo.GetPeerAddr();
+    Error                 error = kErrorNone;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
+    uint8_t               tag[kMleSecurityTagSize];
+    Mac::ExtAddress       extAddress;
+    uint32_t              keySequence;
+    uint16_t              payloadLength   = aMessage.GetLength() - aCmdOffset;
+    const Ip6::Address   *senderAddress   = &aMessageInfo.GetSockAddr();
+    const Ip6::Address   *receiverAddress = &aMessageInfo.GetPeerAddr();
 
     switch (aMode)
     {
@@ -1548,7 +1548,7 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
     }
 
     extAddress.SetFromIid(senderAddress->GetIid());
-    Crypto::AesCcm::GenerateNonce(extAddress, aHeader.GetFrameCounter(), Mac::Frame::kSecurityEncMic32, nonce);
+    nonce.InitFrom(extAddress, aHeader.GetFrameCounter(), Mac::Frame::kSecurityEncMic32);
 
     keySequence = aHeader.GetKeyId();
 
@@ -1557,7 +1557,7 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
                       : Get<KeyManager>().GetTemporaryMleKey(keySequence));
 
     aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader), payloadLength,
-                kMleSecurityTagSize, nonce, sizeof(nonce));
+                kMleSecurityTagSize, &nonce, sizeof(nonce));
 
     aesCcm.Header(*senderAddress);
     aesCcm.Header(*receiverAddress);

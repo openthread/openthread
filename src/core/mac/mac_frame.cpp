@@ -1375,23 +1375,23 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tagLength;
-    Crypto::AesCcm aesCcm;
+    uint32_t              frameCounter = 0;
+    uint8_t               securityLevel;
+    uint8_t               tagLength;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
 
     VerifyOrExit(GetSecurityEnabled());
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
 
-    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(GetAesKey());
     tagLength = GetFooterLength() - GetFcsSize();
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, &nonce, sizeof(nonce));
     aesCcm.Header(GetHeader(), GetHeaderLength());
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kEncrypt);
     aesCcm.Finalize(GetFooter());
@@ -1408,23 +1408,23 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tagLength;
-    Crypto::AesCcm aesCcm;
+    uint32_t              frameCounter = 0;
+    uint8_t               securityLevel;
+    uint8_t               tagLength;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
 
     VerifyOrExit(GetSecurityEnabled() && IsSecurityProcessed());
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
 
-    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(GetAesKey());
     tagLength = GetFooterLength() - GetFcsSize();
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, &nonce, sizeof(nonce));
     aesCcm.Header(GetHeader(), GetHeaderLength());
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
     // Note: We skip aesCcm.Finalize() checking because we are only decrypting back to plaintext,
@@ -1624,25 +1624,25 @@ exit:
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-    Error          error        = kErrorSecurity;
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tag[kMaxMicSize];
-    uint8_t        tagLength;
-    Crypto::AesCcm aesCcm;
+    Error                 error        = kErrorSecurity;
+    uint32_t              frameCounter = 0;
+    uint8_t               securityLevel;
+    uint8_t               tag[kMaxMicSize];
+    uint8_t               tagLength;
+    Crypto::AesCcm        aesCcm;
+    Crypto::AesCcm::Nonce nonce;
 
     VerifyOrExit(GetSecurityEnabled(), error = kErrorNone);
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
 
-    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(aMacKey);
     tagLength = GetFooterLength() - GetFcsSize();
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, &nonce, sizeof(nonce));
     aesCcm.Header(GetHeader(), GetHeaderLength());
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);

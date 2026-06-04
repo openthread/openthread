@@ -40,6 +40,11 @@
 namespace ot {
 namespace Crypto {
 
+//---------------------------------------------------------------------------------------------------------------------
+// AesCcm
+
+static_assert(sizeof(AesCcm::Nonce) == 13, "Nonce format is not valid");
+
 void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
     Key cryptoKey;
@@ -283,18 +288,14 @@ void AesCcm::Finalize(void *aTag)
     }
 }
 
-void AesCcm::GenerateNonce(const Mac::ExtAddress &aAddress,
-                           uint32_t               aFrameCounter,
-                           uint8_t                aSecurityLevel,
-                           uint8_t               *aNonce)
+//---------------------------------------------------------------------------------------------------------------------
+// AesCcm::Nonce
+
+void AesCcm::Nonce::InitFrom(const Mac::ExtAddress &aExtAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel)
 {
-    memcpy(aNonce, aAddress.m8, sizeof(Mac::ExtAddress));
-    aNonce += sizeof(Mac::ExtAddress);
-
-    BigEndian::WriteUint32(aFrameCounter, aNonce);
-    aNonce += sizeof(uint32_t);
-
-    aNonce[0] = aSecurityLevel;
+    mExtAddress    = aExtAddress;
+    mFrameCounter  = BigEndian::HostSwap32(aFrameCounter);
+    mSecurityLevel = aSecurityLevel;
 }
 
 } // namespace Crypto
