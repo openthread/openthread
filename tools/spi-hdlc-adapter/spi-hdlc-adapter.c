@@ -531,8 +531,9 @@ static int push_pull_spi(void)
     spi_header_set_accept_len(sSpiTxFrameBuffer, 0);
     spi_header_set_data_len(sSpiTxFrameBuffer, 0);
 
-    // Sanity check.
-    if (slave_data_len > MAX_FRAME_SIZE)
+    // Sanity check. The header `data_len` carries the payload length only
+    // (it excludes HEADER_LEN), so the largest valid value is the MTU.
+    if (slave_data_len > MAX_FRAME_SIZE - HEADER_LEN)
     {
         slave_data_len = 0;
     }
@@ -630,8 +631,8 @@ static int push_pull_spi(void)
     slave_max_rx   = spi_header_get_accept_len(spiRxFrameBuffer);
     slave_data_len = spi_header_get_data_len(spiRxFrameBuffer);
 
-    if (((slave_header & SPI_HEADER_PATTERN_MASK) != SPI_HEADER_PATTERN_VALUE) || (slave_max_rx > MAX_FRAME_SIZE) ||
-        (slave_data_len > MAX_FRAME_SIZE))
+    if (((slave_header & SPI_HEADER_PATTERN_MASK) != SPI_HEADER_PATTERN_VALUE) ||
+        (slave_max_rx > MAX_FRAME_SIZE - HEADER_LEN) || (slave_data_len > MAX_FRAME_SIZE - HEADER_LEN))
     {
         sSpiGarbageFrameCount++;
         sSpiTxRefusedCount++;
