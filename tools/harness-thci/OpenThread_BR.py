@@ -357,13 +357,10 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.bash(cmd)
 
     @API
-    def setupHost(self, setDp=False, setDua=False):
+    def setupHost(self, setDp=False):
         self.IsHost = True
 
         self.bash('ip -6 addr add 910b::1 dev %s' % self.backboneNetif)
-
-        if setDua:
-            self.bash('ip -6 addr add fd00:7d03:7d03:7d03::1 dev %s' % self.backboneNetif)
 
         self.__startRadvdService(setDp)
 

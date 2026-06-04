@@ -208,10 +208,6 @@ void Leader::UpdateBackboneRouterPrimary(void)
     Get<Mlr::Manager>().HandleBackboneRouterPrimaryUpdate(event);
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(event);
-#endif
-
 exit:
     OT_UNUSED_VARIABLE(event);
 }
@@ -251,10 +247,6 @@ void Leader::UpdateDomainPrefixConfig(void)
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<Local>().HandleDomainPrefixUpdate(event);
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleDomainPrefixUpdate(event);
 #endif
 
 exit:

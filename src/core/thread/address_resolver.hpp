@@ -366,9 +366,9 @@ private:
                                   otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   const otIcmp6Header *aIcmpHeader);
-    void        HandleIcmpReceive(Message                 &aMessage,
-                                  const Ip6::MessageInfo  &aMessageInfo,
-                                  const Ip6::Icmp::Header &aIcmpHeader);
+    void        HandleIcmpReceive(Message                &aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  const Ip6::Icmp6Header &aIcmpHeader);
 
     void        HandleTimeTick(void);
     void        LogCacheEntryChange(EntryChange       aChange,

@@ -323,10 +323,6 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 
     case kChildRemoved:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        Get<DuaManager>().HandleChildDuaAddressEvent(static_cast<const Child &>(aNeighbor),
-                                                     DuaManager::kAddressRemoved);
-#endif
         break;
 
 #if OPENTHREAD_FTD

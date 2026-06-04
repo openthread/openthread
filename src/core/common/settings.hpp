@@ -112,7 +112,6 @@ public:
         kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
         kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
         kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
-        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
@@ -485,45 +484,6 @@ public:
         SlaacIidSecretKey(void) = default;
     };
 #endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    /**
-     * Represents the duplicate address detection information for settings storage.
-     */
-    OT_TOOL_PACKED_BEGIN
-    class DadInfo : private Clearable<DadInfo>
-    {
-        friend class Settings;
-        friend class Clearable<DadInfo>;
-
-    public:
-        static constexpr Key kKey = kKeyDadInfo; ///< The associated key.
-
-        /**
-         * Initializes the `DadInfo` object.
-         */
-        void Init(void) { Clear(); }
-
-        /**
-         * Returns the Dad Counter.
-         *
-         * @returns The Dad Counter value.
-         */
-        uint8_t GetDadCounter(void) const { return mDadCounter; }
-
-        /**
-         * Sets the Dad Counter.
-         *
-         * @param[in] aDadCounter The Dad Counter value.
-         */
-        void SetDadCounter(uint8_t aDadCounter) { mDadCounter = aDadCounter; }
-
-    private:
-        void Log(Action aAction) const;
-
-        uint8_t mDadCounter; ///< Dad Counter used to resolve address conflict in Thread 1.2 DUA feature.
-    } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**

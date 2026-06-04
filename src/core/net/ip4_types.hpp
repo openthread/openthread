@@ -563,124 +563,124 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements ICMP(v4).
- * Note: ICMP(v4) messages will only be generated / handled by NAT64. So only header definition is required.
+ * Represents an ICMPv4 header.
  */
-class Icmp
+OT_TOOL_PACKED_BEGIN
+class Icmp4Header : public Clearable<Icmp4Header>
 {
 public:
+    static constexpr uint16_t kChecksumFieldOffset = 2; ///< The byte offset of the Checksum field in the ICMPv4 header.
+
     /**
-     * Represents an IPv4 ICMP header.
+     * ICMPv4 message types.
+     *
+     * Only the ICMPv4 types used with NAT64 are listed here.
      */
-    OT_TOOL_PACKED_BEGIN
-    class Header : public Clearable<Header>
+    enum Type : uint8_t
     {
-    public:
-        static constexpr uint16_t kChecksumFieldOffset = 2;
-        // A few ICMP types, only the ICMP types work with NAT64 are listed here.
-        enum Type : uint8_t
-        {
-            kTypeEchoReply              = 0,
-            kTypeDestinationUnreachable = 3,
-            kTypeEchoRequest            = 8,
-            kTypeTimeExceeded           = 11,
-        };
+        kTypeEchoReply              = 0,  ///< Echo Reply.
+        kTypeDestinationUnreachable = 3,  ///< Destination Unreachable.
+        kTypeEchoRequest            = 8,  ///< Echo Request.
+        kTypeTimeExceeded           = 11, ///< Time Exceeded.
+    };
 
-        enum Code : uint8_t
-        {
-            kCodeNone = 0,
-            // Destination Unreachable codes
-            kCodeNetworkUnreachable  = 0,
-            kCodeHostUnreachable     = 1,
-            kCodeProtocolUnreachable = 2,
-            kCodePortUnreachable     = 3,
-            kCodeSourceRouteFailed   = 5,
-            kCodeNetworkUnknown      = 6,
-            kCodeHostUnknown         = 7,
-        };
+    /**
+     * ICMPv4 message codes.
+     */
+    enum Code : uint8_t
+    {
+        kCodeNone = 0, ///< None.
 
-        /**
-         * Returns the type of the ICMP message.
-         *
-         * @returns The type field of the ICMP message.
-         */
-        uint8_t GetType(void) const { return mType; }
+        kCodeNetworkUnreachable  = 0, ///< Network Unreachable.
+        kCodeHostUnreachable     = 1, ///< Host Unreachable.
+        kCodeProtocolUnreachable = 2, ///< Protocol Unreachable.
+        kCodePortUnreachable     = 3, ///< Port Unreachable.
+        kCodeSourceRouteFailed   = 5, ///< Source Route Failed.
+        kCodeNetworkUnknown      = 6, ///< Network Unknown.
+        kCodeHostUnknown         = 7, ///< Host Unknown.
+    };
 
-        /**
-         * Sets the type of the ICMP message.
-         *
-         * @param[in] aType The type of the ICMP message.
-         */
-        void SetType(uint8_t aType) { mType = aType; }
+    /**
+     * Returns the ICMPv4 message type.
+     *
+     * @returns The ICMPv4 message type.
+     */
+    uint8_t GetType(void) const { return mType; }
 
-        /**
-         * Returns the code of the ICMP message.
-         *
-         * @returns The code field of the ICMP message.
-         */
-        uint8_t GetCode(void) const { return mCode; }
+    /**
+     * Sets the ICMPv4 message type.
+     *
+     * @param[in] aType  The ICMPv4 message type.
+     */
+    void SetType(uint8_t aType) { mType = aType; }
 
-        /**
-         * Sets the code of the ICMP message.
-         *
-         * @param[in] aCode The code of the ICMP message.
-         */
-        void SetCode(uint8_t aCode) { mCode = aCode; }
+    /**
+     * Returns the ICMPv4 message code.
+     *
+     * @returns The ICMPv4 message code.
+     */
+    uint8_t GetCode(void) const { return mCode; }
 
-        /**
-         * Sets the checksum field in the ICMP message.
-         *
-         * @returns The checksum of the ICMP message.
-         */
-        uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
+    /**
+     * Sets the ICMPv4 message code.
+     *
+     * @param[in] aCode  The ICMPv4 message code.
+     */
+    void SetCode(uint8_t aCode) { mCode = aCode; }
 
-        /**
-         * Sets the checksum field in the ICMP message.
-         *
-         * @param[in] aChecksum The checksum of the ICMP message.
-         */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
+    /**
+     * Returns the ICMPv4 message checksum.
+     *
+     * @returns The ICMPv4 message checksum.
+     */
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
 
-        /**
-         * Returns the ICMPv4 message ID for Echo Requests and Replies.
-         *
-         * @returns The ICMPv4 message ID.
-         */
-        uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
+    /**
+     * Sets the ICMPv4 message checksum.
+     *
+     * @param[in] aChecksum  The ICMPv4 message checksum.
+     */
+    void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
-        /**
-         * Sets the ICMPv4 message ID for Echo Requests and Replies.
-         *
-         * @param[in]  aId  The ICMPv4 message ID.
-         */
-        void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
+    /**
+     * Returns the ICMPv4 message ID for Echo Requests and Replies.
+     *
+     * @returns The ICMPv4 message ID.
+     */
+    uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
 
-        /**
-         * Returns the rest of header field in the ICMP message.
-         *
-         * @returns The rest of header field in the ICMP message. The returned buffer has 4 octets.
-         */
-        const uint8_t *GetRestOfHeader(void) const { return mData.m8; }
+    /**
+     * Sets the ICMPv4 message ID for Echo Requests and Replies.
+     *
+     * @param[in]  aId  The ICMPv4 message ID.
+     */
+    void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
 
-        /**
-         * Sets the rest of header field in the ICMP message.
-         *
-         * @param[in] aRestOfHeader The rest of header field in the ICMP message. The buffer should have 4 octets.
-         */
-        void SetRestOfHeader(const uint8_t *aRestOfHeader) { memcpy(mData.m8, aRestOfHeader, sizeof(mData)); }
+    /**
+     * Returns the "Rest of Header" field in the ICMPv4 message.
+     *
+     * @returns The "Rest of Header" field in the ICMPv4 message. The returned buffer has 4 octets.
+     */
+    const uint8_t *GetRestOfHeader(void) const { return mData.m8; }
 
-    private:
-        uint8_t  mType;
-        uint8_t  mCode;
-        uint16_t mChecksum;
-        union OT_TOOL_PACKED_FIELD
-        {
-            uint8_t  m8[4];
-            uint16_t m16[2];
-            uint32_t m32[1];
-        } mData;
-    } OT_TOOL_PACKED_END;
-};
+    /**
+     * Sets the "Rest of Header" field in the ICMPv4 message.
+     *
+     * @param[in] aRestOfHeader  The "Rest of Header" field in the ICMPv4 message. The buffer should have 4 octets.
+     */
+    void SetRestOfHeader(const uint8_t *aRestOfHeader) { memcpy(mData.m8, aRestOfHeader, sizeof(mData)); }
+
+private:
+    uint8_t  mType;
+    uint8_t  mCode;
+    uint16_t mChecksum;
+    union OT_TOOL_PACKED_FIELD
+    {
+        uint8_t  m8[4];
+        uint16_t m16[2];
+        uint32_t m32[1];
+    } mData;
+} OT_TOOL_PACKED_END;
 
 // Internet Protocol Numbers
 static constexpr uint8_t kProtoTcp  = Ip6::kProtoTcp; ///< Transmission Control Protocol
@@ -691,7 +691,7 @@ using TcpHeader = Ip6::TcpHeader; ///< TCP header (the same as in IPv6)
 using UdpHeader = Ip6::UdpHeader; ///< UDP header (the same as in IPv6)
 
 /**
- * Represents parsed IPv4 header along with UDP/TCP/ICMP4 headers from a received message/frame.
+ * Represents parsed IPv4 header along with UDP/TCP/ICMPv4 headers from a received message/frame.
  */
 class Headers : private Clearable<Headers>
 {
@@ -799,7 +799,7 @@ public:
      *
      * @returns The ICMPv4 header.
      */
-    const Icmp::Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
+    const Icmp4Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
 
     /**
      * Returns the source port number if the header is UDP or TCP, or zero otherwise
@@ -833,9 +833,9 @@ private:
     Header mIp4Header;
     union
     {
-        UdpHeader    mUdp;
-        TcpHeader    mTcp;
-        Icmp::Header mIcmp;
+        UdpHeader   mUdp;
+        TcpHeader   mTcp;
+        Icmp4Header mIcmp;
     } mHeader;
 };
 

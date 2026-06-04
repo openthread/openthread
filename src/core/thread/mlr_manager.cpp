@@ -528,7 +528,7 @@ Error Manager::SendMessage(const Ip6::Address         *aAddresses,
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, destAddr);
+        Get<Mle::Mle>().ComposeServiceAloc(pbbrServiceId, destAddr);
     }
     else
     {

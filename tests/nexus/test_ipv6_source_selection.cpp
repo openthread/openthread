@@ -70,7 +70,7 @@ void TestIPv6SourceSelection(void)
     Ip6::Address leaderMleid     = leader.Get<Mle::Mle>().GetMeshLocalEid();
     Ip6::Address leaderLinkLocal = leader.Get<Mle::Mle>().GetLinkLocalAddress();
     Ip6::Address leaderAloc;
-    leader.Get<Mle::Mle>().GetLeaderAloc(leaderAloc);
+    leader.Get<Mle::Mle>().ComposeLeaderAloc(leaderAloc);
 
     Ip6::Address routerRloc      = router.Get<Mle::Mle>().GetMeshLocalRloc();
     Ip6::Address routerMleid     = router.Get<Mle::Mle>().GetMeshLocalEid();

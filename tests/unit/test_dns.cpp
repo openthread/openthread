@@ -161,6 +161,14 @@ void TestDnsName(void)
         {"_s1._sub._srv._udp.default.service.arpa.", "_s1", "_sub._srv._udp", "default.service.arpa.", true},
     };
 
+    typedef uint8_t EncodedNameWithNullChar[6];
+
+    static const EncodedNameWithNullChar kEncodedNamesWithNullChar[] = {
+        {4, 0, 'a', 'b', 'c', 0}, // Null char at the start of the label
+        {4, 'a', 0, 'c', 'd', 0}, // Null char in the middle of the label
+        {4, 'a', 'b', 'c', 0, 0}  // Null char in the end of the label
+    };
+
     printf("================================================================\n");
     printf("TestDnsName()\n");
 
@@ -625,6 +633,22 @@ void TestDnsName(void)
                                          "012345678901234567890123456789012345678901234567890123456789012."
                                          "012345678901234567890123456789012345678901234567890123456789012") ==
                  kErrorInvalidArgs);
+
+    printf("----------------------------------------------------------------\n");
+    printf("Name::ReadLabel() when there is null-char \'\\0\' in the label\n");
+
+    for (const EncodedNameWithNullChar &encodedName : kEncodedNamesWithNullChar)
+    {
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->AppendBytes(encodedName, sizeof(encodedName)));
+
+        SuccessOrQuit(message->Read(0, buffer, message->GetLength()));
+        DumpBuffer("EncodedName", buffer, message->GetLength());
+
+        offset      = 0;
+        labelLength = sizeof(label);
+        VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == kErrorParse);
+    }
 
     message->Free();
     testFreeInstance(instance);

@@ -735,7 +735,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Msg *aMsg, Error aResult)
         ExitNow();
     }
 
-    Get<Mle::Mle>().GetCommissionerAloc(mSessionId, mCommissionerAloc.GetAddress());
+    Get<Mle::Mle>().ComposeCommissionerAloc(mSessionId, mCommissionerAloc.GetAddress());
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     SetState(kStateActive);

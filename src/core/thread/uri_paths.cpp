@@ -95,8 +95,6 @@ struct Entry
     _("d/dr", kUriDiagnosticReset, "DiagReset")                   \
     _("h/an", kUriHistoryAnswer, "HistAnswer")                    \
     _("h/qy", kUriHistoryQuery, "HistQuery")                      \
-    _("n/dn", kUriDuaRegistrationNotify, "DuaRegNotify")          \
-    _("n/dr", kUriDuaRegistrationRequest, "DuaRegRequest")        \
     _("n/mr", kUriMlr, "Mlr")
 
 // We use the X-Macro pattern here. The `UriEntryMapList` macro defines the

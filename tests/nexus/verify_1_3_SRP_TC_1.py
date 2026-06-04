@@ -181,6 +181,44 @@ def verify(pv):
         assert MDNS_INSTANCE_NAME in verify_utils.as_list(era_mdns_55555.mdns.ptr.domain_name)
         assert ED_1_OMR in verify_utils.as_list(era_mdns_55555.mdns.aaaa)
 
+    # Step 9b: Eth 1 sends mDNS query QTYPE SRV.
+    print("Step 9b: Eth 1 sends mDNS query QTYPE SRV.")
+    pkts.\
+        filter_ipv6_dst('ff02::fb').\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 0).\
+        filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.qry.name)).\
+        must_next()
+
+    print("Step 9b: BR 1 (DUT) sends mDNS Response.")
+    pkts.\
+        filter(lambda p: p.eth.src == BR_1_ETH).\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 1).\
+        filter(lambda p: p.mdns.flags.rcode == 0).\
+        filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.resp.name)).\
+        filter(lambda p: SRP_SERVICE_PORT in verify_utils.as_list(p.mdns.srv.port)).\
+        filter(lambda p: MDNS_HOST_NAME in verify_utils.as_list(p.mdns.srv.target)).\
+        must_next()
+
+    # Step 9c: Eth 1 sends mDNS query QTYPE AAAA.
+    print("Step 9c: Eth 1 sends mDNS query QTYPE AAAA.")
+    pkts.\
+        filter_ipv6_dst('ff02::fb').\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 0).\
+        filter(lambda p: MDNS_HOST_NAME in verify_utils.as_list(p.mdns.qry.name)).\
+        must_next()
+
+    print("Step 9c: BR 1 (DUT) sends mDNS Response.")
+    pkts.\
+        filter(lambda p: p.eth.src == BR_1_ETH).\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 1).\
+        filter(lambda p: p.mdns.flags.rcode == 0).\
+        filter(lambda p: ED_1_OMR in verify_utils.as_list(p.mdns.aaaa)).\
+        must_next()
+
     # Step 10: ED 1 sends SRP Update to update the service parameters and address.
     print("Step 10: ED 1 sends SRP Update to update the service parameters and address.")
     index_era_2 = pkts.index
@@ -276,6 +314,44 @@ def verify(pv):
             filter(lambda p: p.mdns.flags.response == 1).\
             filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.ptr.domain_name)).\
             must_next()
+
+    # Step 15b: Eth 1 sends mDNS query QTYPE SRV.
+    print("Step 15b: Eth 1 sends mDNS query QTYPE SRV.")
+    pkts.\
+        filter_ipv6_dst('ff02::fb').\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 0).\
+        filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.qry.name)).\
+        must_next()
+
+    print("Step 15b: BR 1 (DUT) sends mDNS Response.")
+    pkts.\
+        filter(lambda p: p.eth.src == BR_1_ETH).\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 1).\
+        filter(lambda p: p.mdns.flags.rcode == 0).\
+        filter(lambda p: MDNS_INSTANCE_NAME in verify_utils.as_list(p.mdns.resp.name)).\
+        filter(lambda p: SRP_UPDATED_PORT in verify_utils.as_list(p.mdns.srv.port)).\
+        filter(lambda p: MDNS_HOST_NAME in verify_utils.as_list(p.mdns.srv.target)).\
+        must_next()
+
+    # Step 15c: Eth 1 sends mDNS query QTYPE AAAA.
+    print("Step 15c: Eth 1 sends mDNS query QTYPE AAAA.")
+    pkts.\
+        filter_ipv6_dst('ff02::fb').\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 0).\
+        filter(lambda p: MDNS_HOST_NAME in verify_utils.as_list(p.mdns.qry.name)).\
+        must_next()
+
+    print("Step 15c: BR 1 (DUT) sends mDNS Response.")
+    pkts.\
+        filter(lambda p: p.eth.src == BR_1_ETH).\
+        filter(lambda p: p.udp.dstport == 5353).\
+        filter(lambda p: p.mdns.flags.response == 1).\
+        filter(lambda p: p.mdns.flags.rcode == 0).\
+        filter(lambda p: all(addr == ED_1_MLEID for addr in verify_utils.as_list(p.mdns.aaaa) if isinstance(addr, Ipv6Addr) and not addr.is_link_local)).\
+        must_next()
 
 
 if __name__ == '__main__':

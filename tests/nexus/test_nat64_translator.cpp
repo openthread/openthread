@@ -377,10 +377,10 @@ Message *PrepareIcmp6Message(Node               &aNode,
                              const Ip4::Address &aDstIp4Address,
                              uint16_t            aPayloadLen = 10)
 {
-    Message          *message = nullptr;
-    Ip6::Prefix       nat64Prefix;
-    Ip6::Header       ip6Header;
-    Ip6::Icmp::Header icmpHeader;
+    Message         *message = nullptr;
+    Ip6::Prefix      nat64Prefix;
+    Ip6::Header      ip6Header;
+    Ip6::Icmp6Header icmpHeader;
 
     message = aNode.Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr);
@@ -394,12 +394,12 @@ Message *PrepareIcmp6Message(Node               &aNode,
     ip6Header.GetDestination().SynthesizeFromIp4Address(nat64Prefix, aDstIp4Address);
 
     ip6Header.SetNextHeader(Ip6::kProtoIcmp6);
-    ip6Header.SetPayloadLength(sizeof(Ip6::Icmp::Header) + aPayloadLen);
+    ip6Header.SetPayloadLength(sizeof(Ip6::Icmp6Header) + aPayloadLen);
 
     SuccessOrQuit(message->Append(ip6Header));
 
     icmpHeader.Clear();
-    icmpHeader.SetType(Ip6::Icmp::Header::kTypeEchoRequest);
+    icmpHeader.SetType(Ip6::Icmp6Header::kTypeEchoRequest);
 
     SuccessOrQuit(message->Append(icmpHeader));
 

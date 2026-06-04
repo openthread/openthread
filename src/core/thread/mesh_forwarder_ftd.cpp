@@ -165,28 +165,6 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
             continue;
         }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        // Pass back to IPv6 layer for DUA destination resolved
-        // by Backbone Query
-        if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Dst) &&
-            Get<Mle::Mle>().HasRloc16(Get<AddressResolver>().LookUp(ip6Dst)))
-        {
-            uint8_t hopLimit;
-
-            mSendQueue.Dequeue(message);
-
-            // Avoid decreasing Hop Limit twice
-            IgnoreError(message.Read(Ip6::Header::kHopLimitFieldOffset, hopLimit));
-            hopLimit++;
-            message.Write(Ip6::Header::kHopLimitFieldOffset, hopLimit);
-            message.SetLoopbackToHostAllowed(true);
-            message.SetOrigin(Message::kOriginHostTrusted);
-
-            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&message)));
-            continue;
-        }
-#endif
-
         message.SetResolvingAddress(false);
         didUpdate = true;
     }
@@ -560,8 +538,8 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::
 
     messageInfo.GetPeerAddr().InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), aMeshSource);
 
-    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp::Header::kTypeDstUnreach,
-                                           Ip6::Icmp::Header::kCodeDstUnreachNoRoute, messageInfo, aIp6Headers));
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp6Header::kTypeDstUnreach, Ip6::Icmp6Header::kCodeDstUnreachNoRoute,
+                                           messageInfo, aIp6Headers));
 }
 
 void MeshForwarder::HandleMesh(RxInfo &aRxInfo)

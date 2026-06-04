@@ -135,10 +135,6 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('fd00:dba::/64', leader.get_mesh_local_prefix())
         leader.set_mesh_local_prefix(TEST_MESH_LOCAL_PREFIX + '/64')
         leader.set_ml_iid('b1a5ed57a71571c5')
-        leader.set_dua_iid('ad4a011dad4a011d')
-        self.assertEqual('ad4a011dad4a011d', leader.get_dua_iid())
-        leader.clear_dua_iid()
-        self.assertEqual('', leader.get_dua_iid())
 
         self.assertFalse(leader.get_ifconfig_state())
         # ifconfig up

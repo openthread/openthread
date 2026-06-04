@@ -629,24 +629,26 @@ const char *Utils::PreferenceToString(signed int aPreference)
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-otError Utils::ParseToIp6Address(otInstance *aInstance, const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized)
-{
-    Error error = OT_ERROR_NONE;
 
-    VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    error        = aArg.ParseAsIp6Address(aAddress);
+otError Utils::ParseOrSynthesizeIp6Address(const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized)
+{
+    Error        error;
+    otIp4Address ip4Address;
+
     aSynthesized = false;
 
-    if (error != OT_ERROR_NONE)
-    {
-        // It might be an IPv4 address, let's have a try.
-        otIp4Address ip4Address;
+    error = aArg.ParseAsIp6Address(aAddress);
 
-        // Do not touch the error value if we failed to parse it as an IPv4 address.
-        SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
-        SuccessOrExit(error = otNat64SynthesizeIp6Address(aInstance, &ip4Address, &aAddress));
-        aSynthesized = true;
+    if (error == OT_ERROR_NONE)
+    {
+        ExitNow();
     }
+
+    // Try to parse it as an IPv4 address and synthesize.
+
+    SuccessOrExit(error = aArg.ParseAsIp4Address(ip4Address));
+    SuccessOrExit(error = otNat64SynthesizeIp6Address(GetInstancePtr(), &ip4Address, &aAddress));
+    aSynthesized = true;
 
 exit:
     return error;

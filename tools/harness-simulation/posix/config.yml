@@ -20,7 +20,6 @@ ot_build:
     - "-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8"
     options:
     - "-DOT_REFERENCE_DEVICE=ON"
-    - "-DOT_DUA=ON"
     - "-DOT_MLR=ON"
     - "-DOT_COMMISSIONER=ON"
     - "-DOT_JOINER=ON"
@@ -35,7 +34,6 @@ ot_build:
     - "-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8"
     options:
     - "-DOT_REFERENCE_DEVICE=ON"
-    - "-DOT_DUA=ON"
     - "-DOT_MLR=ON"
     - "-DOT_COMMISSIONER=ON"
     - "-DOT_JOINER=ON"
@@ -56,8 +54,6 @@ ot_build:
     - REST_API=0
     - OT_COMMISSIONER=1
     options:
-    - "-DOTBR_DUA_ROUTING=ON"
-    - "-DOT_DUA=ON"
     - "-DOT_MLR=ON"
     rcp_subpath: build/ot12/simulation
     rcp_options:
@@ -75,8 +71,6 @@ ot_build:
     - REST_API=0
     - EXTERNAL_COMMISSIONER=1
     options:
-    - "-DOTBR_DUA_ROUTING=ON"
-    - "-DOT_DUA=ON"
     - "-DOT_MLR=ON"
     rcp_subpath: build/ot13/simulation
     rcp_options:

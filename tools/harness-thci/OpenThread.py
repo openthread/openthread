@@ -3086,37 +3086,6 @@ class OpenThreadTHCI(object):
         cmd = 'childip max %d' % int(num)
         self.__executeCommand(cmd)
 
-    @API
-    def config_next_dua_status_rsp(self, mliid, status_code):
-        if status_code >= 400:
-            # map status_code to correct COAP response code
-            a, b = divmod(status_code, 100)
-            status_code = ((a & 0x7) << 5) + (b & 0x1f)
-
-        cmd = 'bbr mgmt dua %d' % status_code
-
-        if mliid is not None:
-            mliid = mliid.replace(':', '')
-            cmd += ' %s' % mliid
-
-        self.__executeCommand(cmd)
-
-    @API
-    def getDUA(self):
-        dua = self.getGUA('fd00:7d03')
-        return dua
-
-    def __addDefaultDomainPrefix(self):
-        self.configBorderRouter(P_dp=1, P_stable=1, P_on_mesh=1, P_default=1)
-
-    def __setDUA(self, sDua):
-        """specify the DUA before Thread Starts."""
-        if isinstance(sDua, str):
-            sDua = sDua.decode('utf8')
-        iid = ipaddress.IPv6Address(sDua).packed[-8:]
-        cmd = 'dua iid %s' % ''.join('%02x' % ord(b) for b in iid)
-        return self.__executeCommand(cmd)[-1] == 'Done'
-
     def __getMlIid(self):
         """get the Mesh Local IID."""
         # getULA64() would return the full string representation
@@ -3129,10 +3098,6 @@ class OpenThreadTHCI(object):
         assert ':' not in sMlIid
         cmd = 'mliid %s' % sMlIid
         self.__executeCommand(cmd)
-
-    @API
-    def registerDUA(self, sAddr=''):
-        self.__setDUA(sAddr)
 
     @API
     def config_next_mlr_status_rsp(self, status_code):
@@ -3185,8 +3150,7 @@ class OpenThreadTHCI(object):
     @API
     def migrateNetwork(self, channel=None, net_name=None):
         """migrate to another Thread Partition 'net_name' (could be None)
-            on specified 'channel'. Make sure same Mesh Local IID and DUA
-            after migration for DUA-TC-06/06b (DEV-1923)
+            on specified 'channel'.
         """
         if channel is None:
             raise Exception('channel None')
@@ -3197,7 +3161,6 @@ class OpenThreadTHCI(object):
         print('new partition %s on channel %d' % (net_name, channel))
 
         mliid = self.__getMlIid()
-        dua = self.getDUA()
         self.reset()
         deviceRole = self.deviceRole
         self.setDefaultValues()
@@ -3205,7 +3168,6 @@ class OpenThreadTHCI(object):
         if net_name is not None:
             self.setNetworkName(net_name)
         self.__setMlIid(mliid)
-        self.__setDUA(dua)
         return self.joinNetwork(deviceRole)
 
     @API

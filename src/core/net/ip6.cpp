@@ -41,8 +41,8 @@ namespace Ip6 {
 RegisterLogModule("Ip6");
 
 const uint8_t Ip6::kForwardIcmpTypes[] = {
-    Icmp::Header::kTypeDstUnreach,       Icmp::Header::kTypePacketToBig, Icmp::Header::kTypeTimeExceeded,
-    Icmp::Header::kTypeParameterProblem, Icmp::Header::kTypeEchoRequest, Icmp::Header::kTypeEchoReply,
+    Icmp6Header::kTypeDstUnreach,       Icmp6Header::kTypePacketToBig, Icmp6Header::kTypeTimeExceeded,
+    Icmp6Header::kTypeParameterProblem, Icmp6Header::kTypeEchoRequest, Icmp6Header::kTypeEchoReply,
 };
 
 Ip6::Ip6(Instance &aInstance)
@@ -756,14 +756,14 @@ void Ip6::UpdateReassemblyList(void)
         if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kReassemblyTimeout))
         {
             LogInfo("Reassembly timeout.");
-            SendIcmpError(message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
+            SendIcmpError(message, Icmp6Header::kTypeTimeExceeded, Icmp6Header::kCodeFragmReasTimeEx);
 
             mReassemblyList.DequeueAndFree(message);
         }
     }
 }
 
-void Ip6::SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode)
+void Ip6::SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode)
 {
     Error       error = kErrorNone;
     Header      header;
@@ -1011,10 +1011,10 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
         case kProtoIcmp6:
             if (mIcmp.ShouldHandleEchoRequest(aHeader.GetDestination()))
             {
-                Icmp::Header icmp;
+                Icmp6Header icmp;
 
                 IgnoreError(aMessagePtr->Read(aMessagePtr->GetOffset(), icmp));
-                VerifyOrExit(icmp.GetType() != Icmp::Header::kTypeEchoRequest, error = kErrorDrop);
+                VerifyOrExit(icmp.GetType() != Icmp6Header::kTypeEchoRequest, error = kErrorDrop);
             }
 
             break;
@@ -1102,18 +1102,12 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
         ExitNow(error = kErrorDrop);
     }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // The filtering rules don't apply to packets from DUA.
-    if (!Get<BackboneRouter::Leader>().IsDomainUnicast(header.GetSource()))
-#endif
+    // When the packet is forwarded from host to Thread, if its source is on-mesh or its destination is
+    // mesh-local, we'll drop the packet unless the packet originates from this device.
+    if (Get<NetworkData::Leader>().IsOnMesh(header.GetSource()) ||
+        Get<Mle::Mle>().IsMeshLocalAddress(header.GetDestination()))
     {
-        // When the packet is forwarded from host to Thread, if its source is on-mesh or its destination is
-        // mesh-local, we'll drop the packet unless the packet originates from this device.
-        if (Get<NetworkData::Leader>().IsOnMesh(header.GetSource()) ||
-            Get<Mle::Mle>().IsMeshLocalAddress(header.GetDestination()))
-        {
-            VerifyOrExit(Get<ThreadNetif>().HasUnicastAddress(header.GetSource()), error = kErrorDrop);
-        }
+        VerifyOrExit(Get<ThreadNetif>().HasUnicastAddress(header.GetSource()), error = kErrorDrop);
     }
 
     if (header.GetDestination().IsMulticast())

@@ -331,7 +331,7 @@ void Manager::HandleCommissionerPetitionAccepted(CoapDtlsSession &aSession, uint
 
     mCommissionerSession = &aSession;
 
-    Get<Mle::Mle>().GetCommissionerAloc(aSessionId, mCommissionerAloc.GetAddress());
+    Get<Mle::Mle>().ComposeCommissionerAloc(aSessionId, mCommissionerAloc.GetAddress());
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     IgnoreError(Get<Ip6::Udp>().AddReceiver(mCommissionerUdpReceiver));

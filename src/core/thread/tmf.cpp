@@ -123,10 +123,6 @@ bool Agent::HandleResource(const char *aUriPath, Msg &aMsg)
         Case(kUriRelayRx, Agent);
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-        Case(kUriDuaRegistrationNotify, DuaManager);
-#endif
-
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
         Case(kUriAnycastLocate, AnycastLocator);
 #endif
@@ -263,7 +259,7 @@ Error Agent::SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler
 {
     Ip6::MessageInfo messageInfo;
 
-    Get<Mle::Mle>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    Get<Mle::Mle>().ComposeLeaderAloc(messageInfo.GetPeerAddr());
     PrepareMessageInfo(messageInfo);
 
     return SendMessage(aMessage, messageInfo, aHandler, aContext);
