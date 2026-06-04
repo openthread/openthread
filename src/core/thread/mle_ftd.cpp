@@ -903,6 +903,7 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
     LeaderData      leaderData;
     uint8_t         linkMargin;
     bool            shouldUpdateRoutes = false;
+    Mac::ExtAddress extAddress;
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -928,6 +929,8 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         break;
 
     case Neighbor::kStateValid:
+        extAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
+        VerifyOrExit(router->GetExtAddress() == extAddress, error = kErrorSecurity);
         break;
 
     default:
@@ -1042,20 +1045,32 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         OT_ASSERT(false);
     }
 
-    InitNeighbor(*router, aRxInfo);
-    router->SetRloc16(sourceAddress);
-    router->GetLinkFrameCounters().SetAll(linkFrameCounter);
-    router->SetLinkAckFrameCounter(linkFrameCounter);
-    router->SetMleFrameCounter(mleFrameCounter);
-    router->SetVersion(version);
-    router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
-                                     DeviceMode::kModeFullNetworkData));
+    if (neighborState != Neighbor::kStateValid)
+    {
+        InitNeighbor(*router, aRxInfo);
+        router->SetRloc16(sourceAddress);
+        router->GetLinkFrameCounters().SetAll(linkFrameCounter);
+        router->SetLinkAckFrameCounter(linkFrameCounter);
+        router->SetMleFrameCounter(mleFrameCounter);
+        router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
+                                         DeviceMode::kModeFullNetworkData));
+        router->SetKeySequence(aRxInfo.mKeySequence);
+        router->SetState(Neighbor::kStateValid);
+    }
+    else
+    {
+        router->GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
+        router->SetLastHeard(TimerMilli::GetNow());
+    }
+
     router->SetLinkQualityOut(LinkQualityForLinkMargin(linkMargin));
-    router->SetState(Neighbor::kStateValid);
-    router->SetKeySequence(aRxInfo.mKeySequence);
+    router->SetVersion(version);
     router->ClearLinkAcceptTimeout();
 
-    mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+    if (neighborState != Neighbor::kStateValid)
+    {
+        mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+    }
 
     mDelayedSender.RemoveScheduledLinkRequest(*router);
 
