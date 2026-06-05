@@ -1499,13 +1499,13 @@ exit:
 }
 #endif
 
-Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
-                                  Message              &aMessage,
-                                  uint16_t              aCmdOffset,
-                                  const AesCcmAuthData &aAuthData)
+Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Operation aOperation,
+                                  Message                  &aMessage,
+                                  uint16_t                  aCmdOffset,
+                                  const AesCcmAuthData     &aAuthData)
 {
-    // This method performs MLE message security. Based on `aMode` it
-    // can be used to encrypt and append tag to `aMessage` or to
+    // This method performs MLE message security. Based on `aOperation`
+    // it can be used to encrypt and append tag to `aMessage` or to
     // decrypt and validate the tag in a received `aMessage` (which is
     // then removed from `aMessage`).
     //
@@ -1524,23 +1524,8 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
     Error                 error = kErrorNone;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
-    uint8_t               tag[kMleSecurityTagSize];
     Mac::ExtAddress       extAddress;
     uint32_t              keySequence;
-    uint16_t              payloadLength = aMessage.GetLength() - aCmdOffset;
-
-    switch (aMode)
-    {
-    case Crypto::AesCcm::kEncrypt:
-        break;
-
-    case Crypto::AesCcm::kDecrypt:
-        // Ensure message contains command field (uint8_t) and
-        // tag. Then exclude the tag from payload to decrypt.
-        VerifyOrExit(aCmdOffset + sizeof(uint8_t) + kMleSecurityTagSize <= aMessage.GetLength(), error = kErrorParse);
-        payloadLength -= kMleSecurityTagSize;
-        break;
-    }
 
     extAddress.SetFromIid(aAuthData.mSenderAddr.GetIid());
     nonce.InitFrom(extAddress, aAuthData.mSecurityHeader.GetFrameCounter(), Mac::Frame::kSecurityEncMic32);
@@ -1551,12 +1536,12 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
                       ? Get<KeyManager>().GetCurrentMleKey()
                       : Get<KeyManager>().GetTemporaryMleKey(keySequence));
 
-    aesCcm.Init(sizeof(AesCcmAuthData), payloadLength, kMleSecurityTagSize, &nonce, sizeof(nonce));
-
-    aesCcm.Header(&aAuthData, sizeof(AesCcmAuthData));
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(&aAuthData, sizeof(AesCcmAuthData));
+    aesCcm.SetTagLength(kMleSecurityTagSize);
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    if (aMode == Crypto::AesCcm::kDecrypt)
+    if (aOperation == Crypto::AesCcm::kDecrypt)
     {
         // Skip decrypting the message under fuzz build mode
         aMessage.RemoveFooter(kMleSecurityTagSize);
@@ -1564,18 +1549,8 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
     }
 #endif
 
-    aesCcm.Payload(aMessage, aCmdOffset, payloadLength, aMode);
-    aesCcm.Finalize(tag);
-
-    if (aMode == Crypto::AesCcm::kEncrypt)
-    {
-        SuccessOrExit(error = aMessage.Append(tag));
-    }
-    else
-    {
-        VerifyOrExit(aMessage.Compare(aMessage.GetLength() - kMleSecurityTagSize, tag), error = kErrorSecurity);
-        aMessage.RemoveFooter(kMleSecurityTagSize);
-    }
+    error = aesCcm.Process(aOperation, aMessage, aCmdOffset);
+    ExitNow();
 
 exit:
     return error;
@@ -1643,7 +1618,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     SuccessOrExit(error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessage.GetOffset(), authData));
 
-    IgnoreError(aMessage.ReadAtAndAdvanceOffset(command));
+    SuccessOrExit(error = aMessage.ReadAtAndAdvanceOffset(command));
 
     extAddr.SetFromIid(aMessageInfo.GetPeerAddr().GetIid());
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
