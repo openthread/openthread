@@ -49,6 +49,9 @@ const otMeshLocalPrefix Mle::kMeshLocalPrefixInit = {
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    , mFastAttachEnabled(false)
+#endif
     , mRetrieveNewNetworkData(false)
     , mRequestRouteTlv(false)
     , mHasRestored(false)
@@ -566,6 +569,19 @@ exit:
 bool Mle::IsAttached(void) const { return (IsChild() || IsRouter() || IsLeader()); }
 
 bool Mle::IsRouterOrLeader(void) const { return (IsRouter() || IsLeader()); }
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+Error Mle::SetFastAttachEnabled(bool aEnabled)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!aEnabled || !IsAttached(), error = kErrorInvalidState);
+    mFastAttachEnabled = aEnabled;
+
+exit:
+    return error;
+}
+#endif
 
 void Mle::SetStateDetached(void)
 {
@@ -5008,6 +5024,16 @@ void Mle::Attacher::SendParentRequest(ParentRequestType aType)
         break;
     }
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // Set the F flag to request fast-attach behavior from responding Routers.
+    // Suppressed in opportunistic background scans (kBetterPartition / kBetterParent) where
+    // the "first acceptable wins" policy could regress parent-quality selection.
+    if (Get<Mle>().mFastAttachEnabled && mMode != kBetterPartition && mMode != kBetterParent)
+    {
+        scanMask |= ScanMaskTlv::kFastAttachFlag;
+    }
+#endif
+
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv());
     SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
@@ -5422,6 +5448,20 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.mLeaderData   = leaderData;
     mParentCandidate.mLinkMargin   = twoWayLinkMargin;
 
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // Trigger immediate parent selection when fast-attach is engaged and the new
+    // candidate is acceptable at LQ3. The tight LQ3 gate here closes the REED-phase regression
+    // (LQ1 REED winning a random race) without modifying HasAcceptableParentCandidate(), so the
+    // legacy timeout path retains its existing semantics. mTimer.Start(0) cancels the in-flight
+    // kParentRequestRouterTimeout and posts a fire-now event; HandleTimer() then drives
+    // SendChildIdRequest() via its existing path.
+    if (Get<Mle>().mFastAttachEnabled && mState == kStateParentRequest &&
+        mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3 && HasAcceptableParentCandidate())
+    {
+        mTimer.Start(0);
+    }
+#endif
+
 exit:
     LogProcessError(kTypeParentResponse, error);
 }
@@ -5513,6 +5553,12 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
     IgnoreError(aRxInfo.mMessage.ReadAndSetNetworkDataTlv(leaderData));
 
     Get<Mle>().SetStateChild(shortAddress);
+
+#if OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE
+    // One-shot semantics: clear Fast Attach intent on successful attach so the
+    // application must re-enable per attempt.
+    Get<Mle>().mFastAttachEnabled = false;
+#endif
 
     if (!Get<Mle>().IsRxOnWhenIdle())
     {

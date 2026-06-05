@@ -250,6 +250,44 @@ typedef void (*otWakeupCallback)(otError aError, void *aContext);
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * Enables or disables MLE Fast Attach.
+ *
+ * When enabled, this device sets the F flag in Parent Request Scan Mask TLVs and selects a
+ * Parent as soon as the first acceptable LQ3 Parent Response arrives, instead of waiting
+ * for the full `MLE_PARENT_REQ_SCANMASK_R_TIMEOUT`.
+ *
+ * Available only when `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is 1. Defaults to disabled.
+ *
+ * Fast Attach is one-shot: it is automatically cleared on successful attach, so the
+ * application must re-enable it per attach attempt. Listen for `OT_CHANGED_THREAD_ROLE`
+ * via `otSetStateChangedCallback` to detect detach and re-arm as needed.
+ *
+ * Enabling is allowed only while the device is not attached (role Disabled or Detached).
+ * Disabling is always allowed.
+ *
+ * Note: Router-side handling of an incoming F flag is always-on and does not require
+ * this API; any Router/Leader honors F=1 by applying reduced response jitter.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aEnabled   TRUE to enable Fast Attach, FALSE to disable.
+ *
+ * @retval OT_ERROR_NONE           Setting applied.
+ * @retval OT_ERROR_INVALID_STATE  Tried to enable while already attached.
+ */
+otError otThreadSetFastAttachEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Indicates whether MLE Fast Attach is enabled at runtime.
+ *
+ * Available only when `OPENTHREAD_CONFIG_MLE_FAST_ATTACH_ENABLE` is 1.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if Fast Attach is enabled, FALSE otherwise.
+ */
+bool otThreadIsFastAttachEnabled(otInstance *aInstance);
+
+/**
  * Gets the Thread protocol version.
  *
  * The constants `OT_THREAD_VERSION_*` define the numerical version values.
