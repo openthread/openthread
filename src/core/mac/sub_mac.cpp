@@ -267,6 +267,7 @@ Error SubMac::RadioSleep(void)
         SuccessOrExit(error = Get<Radio>().Sleep());
     }
 
+    Get<Radio>().SyncSleepState();
     SetState(kStateSleep);
 
 exit:

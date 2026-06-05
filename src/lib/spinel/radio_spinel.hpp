@@ -589,6 +589,14 @@ public:
     otError Sleep(void);
 
     /**
+     * Updates the host-side sleep state without changing the radio hardware.
+     *
+     * Used when @ref otPlatRadioSetRxOnWhenIdle() is supported and idle sleep is handled
+     * on the radio side instead of calling @ref Sleep().
+     */
+    void SyncSleepState(void);
+
+    /**
      * Enable the radio.
      *
      * @param[in]   aInstance   A pointer to the OpenThread instance.

@@ -854,6 +854,16 @@ bool otPlatRadioIsEnabled(otInstance *aInstance);
 otError otPlatRadioSleep(otInstance *aInstance);
 
 /**
+ * Updates the host-side sleep state without changing the radio hardware.
+ *
+ * Used when @ref otPlatRadioSetRxOnWhenIdle() is supported and idle sleep is handled on the radio side instead of
+ * calling @ref otPlatRadioSleep().
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+void otPlatRadioSyncSleepState(otInstance *aInstance);
+
+/**
  * Transition the radio from Sleep to Receive (turn on the radio).
  *
  * @param[in]  aInstance  The OpenThread instance structure.

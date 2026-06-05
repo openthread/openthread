@@ -1754,6 +1754,14 @@ exit:
     return error;
 }
 
+void RadioSpinel::SyncSleepState(void)
+{
+    if (mState == kStateReceive)
+    {
+        mState = kStateSleep;
+    }
+}
+
 otError RadioSpinel::Enable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;

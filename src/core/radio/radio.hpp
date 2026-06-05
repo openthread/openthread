@@ -503,6 +503,12 @@ public:
     Error Sleep(void);
 
     /**
+     * Updates the host-side sleep state when the radio platform handles idle sleep
+     * via otPlatRadioSetRxOnWhenIdle() instead of otPlatRadioSleep().
+     */
+    void SyncSleepState(void);
+
+    /**
      * Transitions the radio from Sleep to Receive (turn on the radio).
      *
      * @param[in]  aChannel   The channel to use for receiving.
@@ -975,6 +981,8 @@ inline Error Radio::Sleep(void)
     return otPlatRadioSleep(GetInstancePtr());
 }
 
+inline void Radio::SyncSleepState(void) { otPlatRadioSyncSleepState(GetInstancePtr()); }
+
 inline Error Radio::Receive(uint8_t aChannel)
 {
 #if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
@@ -1104,6 +1112,8 @@ inline Error Radio::Disable(void) { return kErrorInvalidState; }
 inline bool Radio::IsEnabled(void) { return true; }
 
 inline Error Radio::Sleep(void) { return kErrorNone; }
+
+inline void Radio::SyncSleepState(void) {}
 
 inline Error Radio::Receive(uint8_t) { return kErrorNone; }
 

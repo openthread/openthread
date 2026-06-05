@@ -335,6 +335,12 @@ otError otPlatRadioSleep(otInstance *aInstance)
     return GetRadioSpinel().Sleep();
 }
 
+void otPlatRadioSyncSleepState(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    GetRadioSpinel().SyncSleepState();
+}
+
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
