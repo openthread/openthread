@@ -185,7 +185,7 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #endif
 
     builder.Init(aTxFrame.mPsdu, aTxFrame.GetMtu());
-    IgnoreError(builder.AppendLittleEndianUint16(fcf));
+    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
 
     if (IsSequencePresent(fcf))
     {
@@ -194,14 +194,14 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 
     if (IsDstPanIdPresent(fcf))
     {
-        IgnoreError(builder.AppendLittleEndianUint16(mPanIds.GetDestination()));
+        IgnoreError(builder.AppendUint<kLittleEndian>(mPanIds.GetDestination()));
     }
 
     IgnoreError(builder.AppendMacAddress(mAddrs.mDestination));
 
     if (IsSrcPanIdPresent(fcf))
     {
-        IgnoreError(builder.AppendLittleEndianUint16(mPanIds.GetSource()));
+        IgnoreError(builder.AppendUint<kLittleEndian>(mPanIds.GetSource()));
     }
 
     IgnoreError(builder.AppendMacAddress(mAddrs.mSource));
@@ -1572,8 +1572,8 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupReq
 
     builder.Init(mPsdu, GetMtu());
 
-    IgnoreError(builder.AppendLittleEndianUint16(fcf));
-    IgnoreError(builder.AppendLittleEndianUint16(aPanId));
+    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
+    IgnoreError(builder.AppendUint<kLittleEndian>(aPanId));
     IgnoreError(builder.AppendMacAddress(dest));
     IgnoreError(builder.AppendMacAddress(aSource));
 
