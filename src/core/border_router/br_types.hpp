@@ -569,20 +569,6 @@ public:
      */
     RoutePreference GetPreference(void) const { return mPreference; }
 
-    /**
-     * Indicates whether the OMR prefix is a domain prefix.
-     *
-     * @retval TRUE   If the OMR prefix is a domain prefix.
-     * @retval FALSE  If the OMR prefix is not a domain prefix.
-     */
-    bool IsDomainPrefix(void) const { return mIsDomainPrefix; }
-
-    /**
-     * Sets the OMR prefix and its preference.
-     *
-     * @param[in] aPrefix      The IPv6 prefix to set.
-     * @param[in] aPreference  The preference to set.
-     */
     void SetPrefix(const Ip6::Prefix &aPrefix, RoutePreference aPreference);
 
     /**
@@ -599,7 +585,6 @@ public:
 protected:
     Ip6::Prefix     mPrefix;
     RoutePreference mPreference;
-    bool            mIsDomainPrefix;
 };
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

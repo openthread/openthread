@@ -112,7 +112,6 @@ enum RoleFilter : uint8_t
  *
  * - It has added at least one external route entry.
  * - It has added at least one prefix entry with default-route and on-mesh flags set.
- * - It has added at least one domain prefix (domain and on-mesh flags set).
  */
 enum BorderRouterFilter : uint8_t
 {

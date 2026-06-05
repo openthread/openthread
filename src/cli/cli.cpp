@@ -5450,9 +5450,6 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
      * @endcode
      * @par
      * Get the prefix list in the local Network Data.
-     * @note For the Thread 1.2 border router with backbone capability, the local Domain Prefix
-     * is listed as well and includes the `D` flag. If backbone functionality is disabled, a dash
-     * `-` is printed before the local Domain Prefix.
      * @par
      * For more information about #otBorderRouterConfig flags, refer to @overview.
      * @sa otBorderRouterGetNextOnMeshPrefix
@@ -5466,15 +5463,6 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
         {
             mNetworkData.OutputPrefix(config);
         }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        if (otBackboneRouterGetState(GetInstancePtr()) == OT_BACKBONE_ROUTER_STATE_DISABLED)
-        {
-            SuccessOrExit(otBackboneRouterGetDomainPrefix(GetInstancePtr(), &config));
-            OutputFormat("- ");
-            mNetworkData.OutputPrefix(config);
-        }
-#endif
     }
     /**
      * @cli prefix add

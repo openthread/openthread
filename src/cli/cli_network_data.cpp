@@ -96,11 +96,6 @@ void NetworkData::PrefixFlagsToString(const otBorderRouterConfig &aConfig, Flags
         *flagsPtr++ = 'n';
     }
 
-    if (aConfig.mDp)
-    {
-        *flagsPtr++ = 'D';
-    }
-
     *flagsPtr = '\0';
 }
 
@@ -804,7 +799,6 @@ exit:
  *   * o: On Mesh flag
  *   * s: Stable flag
  *   * n: Nd Dns flag
- *   * D: Domain Prefix flag (only available for Thread 1.2).
  * * Preference `high`, `med`, or `low`
  * * RLOC16 of device which added the on-mesh prefix
  * @par

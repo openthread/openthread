@@ -1608,14 +1608,6 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def set_domain_prefix(self, prefix, flags='prosD'):
-        self.add_prefix(prefix, flags)
-        self.register_netdata()
-
-    def remove_domain_prefix(self, prefix):
-        self.remove_prefix(prefix)
-        self.register_netdata()
-
     def multicast_listener_list(self) -> Dict[IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
         self.send_command(cmd)

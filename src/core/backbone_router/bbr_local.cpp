@@ -53,8 +53,6 @@ Local::Local(Instance &aInstance)
     , mRegistrationTimeout(0)
     , mMlrTimeout(kDefaultMlrTimeout)
 {
-    mDomainPrefixConfig.GetPrefix().SetLength(0);
-
     // Primary Backbone Router Aloc
     mBbrPrimaryAloc.InitAsThreadOriginMeshLocal();
     mBbrPrimaryAloc.GetAddress().GetIid().InitAsLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
@@ -65,13 +63,6 @@ Local::Local(Instance &aInstance)
     mAllNetworkBackboneRouters.mFields.m8[0]  = 0xff; // Multicast
     mAllNetworkBackboneRouters.mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
     mAllNetworkBackboneRouters.mFields.m8[15] = 3;    // Group ID = 3
-
-    // All Domain Backbone Routers Multicast Address.
-    mAllDomainBackboneRouters.Clear();
-
-    mAllDomainBackboneRouters.mFields.m8[0]  = 0xff; // Multicast
-    mAllDomainBackboneRouters.mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
-    mAllDomainBackboneRouters.mFields.m8[15] = 3;    // Group ID = 3
 }
 
 void Local::SetEnabled(bool aEnable)
@@ -81,12 +72,10 @@ void Local::SetEnabled(bool aEnable)
     if (aEnable)
     {
         SetState(kStateSecondary);
-        AddDomainPrefixToNetworkData();
         IgnoreError(AddService(kDecideBasedOnState));
     }
     else
     {
-        RemoveDomainPrefixFromNetworkData();
         RemoveService();
         SetState(kStateDisabled);
     }
@@ -318,59 +307,6 @@ exit:
     }
 }
 
-Error Local::GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mDomainPrefixConfig.GetPrefix().GetLength() > 0, error = kErrorNotFound);
-
-    aConfig = mDomainPrefixConfig;
-
-exit:
-    return error;
-}
-
-Error Local::RemoveDomainPrefix(const Ip6::Prefix &aPrefix)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aPrefix.GetLength() > 0, error = kErrorInvalidArgs);
-    VerifyOrExit(mDomainPrefixConfig.GetPrefix() == aPrefix, error = kErrorNotFound);
-
-    if (IsEnabled())
-    {
-        RemoveDomainPrefixFromNetworkData();
-    }
-
-    mDomainPrefixConfig.GetPrefix().SetLength(0);
-
-exit:
-    return error;
-}
-
-Error Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aConfig.IsValid(GetInstance()), error = kErrorInvalidArgs);
-
-    if (IsEnabled())
-    {
-        RemoveDomainPrefixFromNetworkData();
-    }
-
-    mDomainPrefixConfig = aConfig;
-    LogDomainPrefix(kActionSet, kErrorNone);
-
-    if (IsEnabled())
-    {
-        AddDomainPrefixToNetworkData();
-    }
-
-exit:
-    return error;
-}
-
 void Local::ApplyNewMeshLocalPrefix(void)
 {
     VerifyOrExit(IsEnabled());
@@ -381,40 +317,6 @@ void Local::ApplyNewMeshLocalPrefix(void)
 
 exit:
     return;
-}
-
-void Local::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
-{
-    VerifyOrExit(IsEnabled());
-
-    if (aEvent == kDomainPrefixRemoved || aEvent == kDomainPrefixRefreshed)
-    {
-        Get<BackboneTmfAgent>().UnsubscribeMulticast(mAllDomainBackboneRouters);
-    }
-
-    if (aEvent == kDomainPrefixAdded || aEvent == kDomainPrefixRefreshed)
-    {
-        mAllDomainBackboneRouters.SetMulticastNetworkPrefix(*Get<Leader>().GetDomainPrefix());
-        Get<BackboneTmfAgent>().SubscribeMulticast(mAllDomainBackboneRouters);
-    }
-
-    mDomainPrefixCallback.InvokeIfSet(static_cast<otBackboneRouterDomainPrefixEvent>(aEvent),
-                                      Get<Leader>().GetDomainPrefix());
-
-exit:
-    return;
-}
-
-void Local::RemoveDomainPrefixFromNetworkData(void)
-{
-    Error error = kErrorNotFound; // only used for logging.
-
-    if (mDomainPrefixConfig.mPrefix.mLength > 0)
-    {
-        error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.GetPrefix());
-    }
-
-    LogDomainPrefix(kActionRemove, error);
 }
 
 void Local::IncrementSequenceNumber(void)
@@ -435,18 +337,6 @@ void Local::IncrementSequenceNumber(void)
     }
 }
 
-void Local::AddDomainPrefixToNetworkData(void)
-{
-    Error error = kErrorNotFound; // only used for logging.
-
-    if (mDomainPrefixConfig.GetPrefix().GetLength() > 0)
-    {
-        error = Get<NetworkData::Local>().AddOnMeshPrefix(mDomainPrefixConfig);
-    }
-
-    LogDomainPrefix(kActionAdd, error);
-}
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Local::ActionToString(Action aAction)
@@ -459,12 +349,6 @@ const char *Local::ActionToString(Action aAction)
     DefineEnumStringArray(ActionMapList);
 
     return kStrings[aAction];
-}
-
-void Local::LogDomainPrefix(Action aAction, Error aError)
-{
-    LogInfo("%s Domain Prefix: %s, %s", ActionToString(aAction), mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
-            ErrorToString(aError));
 }
 
 void Local::LogService(Action aAction, Error aError)

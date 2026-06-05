@@ -448,7 +448,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 'interface': config.BACKBONE_DOCKER_NETWORK_NAME,
                 'prefix': config.BACKBONE_PREFIX,
             },
-            'domain_prefix': config.DOMAIN_PREFIX,
             'env': {
                 'PORT_OFFSET': config.PORT_OFFSET,
             },

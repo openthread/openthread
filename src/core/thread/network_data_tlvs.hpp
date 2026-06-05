@@ -946,14 +946,6 @@ public:
     bool IsNdDns(void) const { return (BigEndian::HostSwap16(mFlags) & kNdDnsFlag) != 0; }
 
     /**
-     * Indicates whether or not the Domain Prefix flag is set.
-     *
-     * @retval TRUE   If the Domain Prefix flag is set.
-     * @retval FALSE  If the Domain Prefix flag is not set.
-     */
-    bool IsDp(void) const { return (BigEndian::HostSwap16(mFlags) & kDpFlag) != 0; }
-
-    /**
      * Returns a pointer to the next BorderRouterEntry
      *
      * @returns A pointer to the next BorderRouterEntry.
@@ -999,7 +991,7 @@ private:
     static constexpr uint16_t kDefaultRouteFlag = 1 << 9;
     static constexpr uint16_t kOnMeshFlag       = 1 << 8;
     static constexpr uint16_t kNdDnsFlag        = 1 << 7;
-    static constexpr uint16_t kDpFlag           = 1 << 6;
+    // Flag bit 6 (1 << 6) was previously kDpFlag (Domain Prefix)
 
     uint16_t mRloc;
     uint16_t mFlags;

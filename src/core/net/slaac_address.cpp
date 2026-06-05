@@ -118,7 +118,7 @@ Error Slaac::FindDomainIdFor(const Address &aAddress, uint8_t &aDomainId) const
 
 bool Slaac::IsSlaac(const NetworkData::OnMeshPrefixConfig &aConfig) const
 {
-    return aConfig.mSlaac && !aConfig.mDp && (aConfig.GetPrefix().GetLength() == NetworkPrefix::kLength);
+    return aConfig.mSlaac && (aConfig.GetPrefix().GetLength() == NetworkPrefix::kLength);
 }
 
 bool Slaac::IsFiltered(const NetworkData::OnMeshPrefixConfig &aConfig) const

@@ -1305,7 +1305,6 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  *     * `o`: On mesh flag.
  *     * `s`: Stable flag.
  *     * `n`: Nd Dns flag.
- *     * `D`: Domain prefix flag.
  * * Pref: Preference. Values can be either `high`, `med`, or `low`.
  * * RLOC16
  * @sa otHistoryTrackerIterateOnMeshPrefixHistory

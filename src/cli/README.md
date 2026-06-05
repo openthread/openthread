@@ -3543,7 +3543,7 @@ Done
 
 ### prefix
 
-Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceding `-` if backbone functionality is disabled.
+Get the prefix list in the local Network Data.
 
 ```bash
 > prefix
@@ -3556,8 +3556,6 @@ Done
 
 Add a valid prefix to the Network Data.
 
-Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
-
 - p: Preferred flag
 - a: Stateless IPv6 Address Autoconfiguration flag
 - d: DHCPv6 IPv6 Address Configuration flag
@@ -3566,7 +3564,6 @@ Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 - o: On Mesh flag
 - s: Stable flag
 - n: Nd Dns flag
-- D: Domain Prefix flag
 - prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash

@@ -283,7 +283,6 @@ Publish an on-mesh prefix entry.
 - o: On Mesh flag
 - s: Stable flag
 - n: Nd Dns flag
-- D: Domain Prefix flag (only available for Thread 1.2).
 - prf: Preference, which may be 'high', 'med', or 'low'.
 
 ```bash
@@ -352,7 +351,6 @@ On-mesh prefixes are listed under `Prefixes` header:
   - o: On Mesh flag
   - s: Stable flag
   - n: Nd Dns flag
-  - D: Domain Prefix flag (only available for Thread 1.2).
 - Preference `high`, `med`, or `low`
 - RLOC16 of device which added the on-mesh prefix
 

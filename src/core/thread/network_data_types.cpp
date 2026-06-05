@@ -116,13 +116,6 @@ uint16_t OnMeshPrefixConfig::ConvertToTlvFlags(void) const
         flags |= BorderRouterEntry::kNdDnsFlag;
     }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (mDp)
-    {
-        flags |= BorderRouterEntry::kDpFlag;
-    }
-#endif
-
     flags |= (static_cast<uint16_t>(RoutePreferenceToValue(mPreference)) << BorderRouterEntry::kPreferenceOffset);
 
     return flags;
@@ -151,7 +144,7 @@ void OnMeshPrefixConfig::SetFromTlvFlags(uint16_t aFlags)
     mDefaultRoute = ((aFlags & BorderRouterEntry::kDefaultRouteFlag) != 0);
     mOnMesh       = ((aFlags & BorderRouterEntry::kOnMeshFlag) != 0);
     mNdDns        = ((aFlags & BorderRouterEntry::kNdDnsFlag) != 0);
-    mDp           = ((aFlags & BorderRouterEntry::kDpFlag) != 0);
+    mDp           = false;
     mPreference   = RoutePreferenceFromValue(static_cast<uint8_t>(aFlags >> BorderRouterEntry::kPreferenceOffset));
 }
 

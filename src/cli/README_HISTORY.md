@@ -466,7 +466,6 @@ The flags are as follows:
 - `o`: On Mesh flag
 - `s`: Stable flag
 - `n`: Nd Dns flag
-- `D`: Domain Prefix flag
 
 Print the history as a table.
 

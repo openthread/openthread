@@ -116,12 +116,10 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
     // A Backbone TMF message must comply with following rules:
     // The destination must be one of:
     //     1. All Network BBRs (Link-Local scope)
-    //     2. All Domain BBRs (Link-Local scope)
-    //     3. A Backbone Link-Local address
+    //     2. A Backbone Link-Local address
     // The source must be a Backbone Link-local address.
     return (Get<BackboneRouter::Local>().IsEnabled() && src.IsLinkLocalUnicast() &&
-            (dst.IsLinkLocalUnicast() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress() ||
-             dst == Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress()));
+            (dst.IsLinkLocalUnicast() || dst == Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress()));
 }
 
 void BackboneTmfAgent::SubscribeMulticast(const Ip6::Address &aAddress)
