@@ -1934,7 +1934,39 @@ void Server::UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, 
 
     for (const Ip6::Address &address : aHost.mAddresses)
     {
-        Get<AddressResolver>().UpdateSnoopedCacheEntry(address, rloc16, Get<Mle::Mle>().GetRloc16());
+        bool shouldUpdate = true;
+
+        // An SRP update can legitimately refresh the sender's own mesh-local
+        // address, but it should not overwrite an existing mapping for a
+        // different Thread node based only on host AAAA data.
+        if (Get<Mle::Mle>().IsMeshLocalAddress(address))
+        {
+            uint16_t        cachedRloc16 = Get<AddressResolver>().LookUp(address);
+            const Neighbor *neighbor     = nullptr;
+
+            if ((cachedRloc16 != Mle::kInvalidRloc16) && (cachedRloc16 != rloc16))
+            {
+                shouldUpdate = false;
+
+                if (!shouldUpdate)
+                {
+                    neighbor = Get<NeighborTable>().FindNeighbor(address, Neighbor::kInStateValid);
+                    shouldUpdate = (neighbor != nullptr) && (neighbor->GetRloc16() == rloc16);
+                }
+
+                if (!shouldUpdate)
+                {
+                    LogInfo("Ignore SRP host address %s for AddressResolver cache update: cached 0x%04x, sender "
+                            "0x%04x",
+                            address.ToString().AsCString(), cachedRloc16, rloc16);
+                }
+            }
+        }
+
+        if (shouldUpdate)
+        {
+            Get<AddressResolver>().UpdateSnoopedCacheEntry(address, rloc16, Get<Mle::Mle>().GetRloc16());
+        }
     }
 
 exit:
