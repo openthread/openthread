@@ -60,7 +60,7 @@ bool Neighbor::AddressMatcher::Matches(const Neighbor &aNeighbor) const
 {
     bool matches = false;
 
-    VerifyOrExit(aNeighbor.MatchesFilter(mStateFilter));
+    VerifyOrExit(aNeighbor.Matches(mStateFilter));
 
     if (mShortAddress != Mac::kShortAddrInvalid)
     {
@@ -130,7 +130,7 @@ bool Neighbor::IsStateValidOrAttaching(void) const
     return rval;
 }
 
-bool Neighbor::MatchesFilter(StateFilter aFilter) const
+bool Neighbor::Matches(StateFilter aFilter) const
 {
     bool matches = false;
 

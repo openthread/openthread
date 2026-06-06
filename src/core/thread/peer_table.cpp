@@ -51,7 +51,7 @@ void PeerTable::Iterator::Reset(void)
 {
     mItem = &Get<PeerTable>().mPeers[0];
 
-    if (!mItem->MatchesFilter(mFilter))
+    if (!mItem->Matches(mFilter))
     {
         Advance();
     }
@@ -65,7 +65,7 @@ void PeerTable::Iterator::Advance(void)
     {
         mItem++;
         VerifyOrExit(mItem < &Get<PeerTable>().mPeers[Get<PeerTable>().kMaxPeers], mItem = nullptr);
-    } while (!mItem->MatchesFilter(mFilter));
+    } while (!mItem->Matches(mFilter));
 
 exit:
     return;

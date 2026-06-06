@@ -289,7 +289,7 @@ public:
      *
      * @returns TRUE if the neighbor state matches the filter, FALSE otherwise.
      */
-    bool MatchesFilter(StateFilter aFilter) const;
+    bool Matches(StateFilter aFilter) const;
 
     /**
      * Indicates whether neighbor matches a given `AddressMatcher`.

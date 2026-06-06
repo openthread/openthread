@@ -492,6 +492,34 @@ public:
     }
 
     /**
+     * Counts the number of elements in the array matching a given indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     * @returns The number of elements in the array matching @p aIndicator.
+     */
+    template <typename Indicator> SizeType CountMatching(const Indicator &aIndicator) const
+    {
+        SizeType count = 0;
+
+        for (const Type &element : *this)
+        {
+            if (element.Matches(aIndicator))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
      * Removes the first element in the array matching a given indicator.
      *
      * Behaves similar to `Remove()`, i.e., the matched element (if found) is replaced with the last element
@@ -572,17 +600,17 @@ public:
     }
 
     /**
-     * Indicates whether a given entry pointer is from the array buffer.
+     * Indicates whether a given pointer is from the array buffer.
      *
      * Does not check the current length of array and only checks that @p aEntry is pointing to an address
      * contained within underlying C array buffer.
      *
-     * @param[in] aEntry   A pointer to an entry to check.
+     * @param[in] aEntry   A pointer to  check.
      *
      * @retval TRUE  The @p aEntry is from the array.
      * @retval FALSE The @p aEntry is not from the array.
      */
-    bool IsInArrayBuffer(const Type *aEntry) const
+    bool IsInArrayBuffer(const void *aEntry) const
     {
         return (&mElements[0] <= aEntry) && (aEntry < GetArrayEnd(mElements));
     }
