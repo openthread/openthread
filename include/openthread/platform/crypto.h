@@ -750,6 +750,51 @@ otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
                                       uint8_t       *aKey);
 
 /**
+ * @struct otPlatCryptoAesCcmConfig
+ *
+ * Holds the parameters for a one-shot AES-CCM* operation passed to `otPlatCryptoAesCcmProcessOneShot`.
+ */
+typedef struct otPlatCryptoAesCcmConfig
+{
+    otCryptoKey    mKey;             ///< The encryption key.
+    const uint8_t *mNonce;           ///< Pointer to the nonce buffer (IEEE 802.15.4 CCM* format, 13 bytes).
+    uint8_t        mNonceLength;     ///< Length of @p mNonce in bytes.
+    uint8_t        mTagLength;       ///< Authentication tag length in bytes (even)
+    uint32_t       mHeaderLength;    ///< Length of the additional authenticated data (header) in bytes.
+    uint32_t       mPlainTextLength; ///< Payload length in bytes (excluding tag).
+} otPlatCryptoAesCcmConfig;
+
+/**
+ * Performs in-place AES-CCM* authenticated encryption or decryption in a single call.
+ *
+ * For encryption (@p aEncrypt == true):
+ *   - Plaintext at @p aData is replaced with ciphertext in-place.
+ *   - The authentication tag is written to @p aData + @p aConfig->mPlainTextLength.
+ *
+ * For decryption (@p aEncrypt == false):
+ *   - Ciphertext at @p aData is replaced with plaintext in-place.
+ *   - The tag to verify must be at @p aData + @p aConfig->mPlainTextLength.
+ *
+ * Requires `OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE`.
+ *
+ * Default weak mbedTLS and PSA implementations are provided.
+ *
+ * @param[in]      aEncrypt  True to encrypt and generate tag; false to decrypt and verify tag.
+ * @param[in]      aConfig   CCM* parameters (key, nonce, lengths).
+ * @param[in]      aHeader   Additional authenticated data (not encrypted). May be NULL if header length is 0.
+ * @param[in,out]  aData     Payload buffer (plaintext on encrypt entry, ciphertext on decrypt entry).
+ *                           The buffer must hold @p aConfig->mPlainTextLength + @p aConfig->mTagLength bytes.
+ *
+ * @retval OT_ERROR_NONE      Success.
+ * @retval OT_ERROR_SECURITY  Tag mismatch (decrypt only).
+ * @retval OT_ERROR_FAILED    Operation failed.
+ */
+otError otPlatCryptoAesCcmProcessOneShot(bool                            aEncrypt,
+                                         const otPlatCryptoAesCcmConfig *aConfig,
+                                         const uint8_t                  *aHeader,
+                                         uint8_t                        *aData);
+
+/**
  * @}
  */
 

@@ -212,13 +212,11 @@ Error AesCcm::Engine::ProcessOneShot(Operation      aOperation,
                                      const uint8_t *aHeader,
                                      uint8_t       *aData)
 {
-    // This method performs one-shot (single-part) AES-CCM processing.
-    // Currently, it is implemented by calling the multi-part
-    // streaming APIs sequentially. In the future, this can be
-    // optimized to directly call platform-specific one-shot hardware
-    // acceleration APIs if supported by the platform.
+    Error error = kErrorNone;
 
-    Error   error = kErrorNone;
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+    error = otPlatCryptoAesCcmProcessOneShot(aOperation == kEncrypt, &aConfig, aHeader, aData);
+#else
     uint8_t tag[kMaxTagLength];
 
     Start(aConfig);
@@ -236,6 +234,7 @@ Error AesCcm::Engine::ProcessOneShot(Operation      aOperation,
         error = (memcmp(aData + aConfig.mPlainTextLength, tag, aConfig.mTagLength) == 0) ? kErrorNone : kErrorSecurity;
         break;
     }
+#endif
 
     return error;
 }
@@ -249,7 +248,7 @@ void AesCcm::Engine::Start(const Config &aConfig)
 
     OT_ASSERT(aConfig.IsValid());
 
-    mEcb.SetKey(aConfig.mKey);
+    mEcb.SetKey(aConfig.GetKey());
 
     mNonceLength     = aConfig.mNonceLength;
     mTagLength       = aConfig.mTagLength;

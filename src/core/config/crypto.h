@@ -68,6 +68,19 @@
 #define OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+ *
+ * Define to 1 to enable platform one-shot AES-CCM* acceleration.
+ *
+ * When enabled, `AesCcm::Engine::ProcessOneShot()` calls
+ * `otPlatCryptoAesCcmProcessOneShot()` instead of the built-in
+ * software CCM engine.
+ */
+#ifndef OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE
+#define OPENTHREAD_CONFIG_CRYPTO_PLATFORM_CCM_ONE_SHOT_ENABLE 0
+#endif
+
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
 
 /**

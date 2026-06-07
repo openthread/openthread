@@ -196,6 +196,10 @@ build_all_features()
 
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_BLE_TCAT=ON
+
+    # Build with platform CCM one-shot enabled
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_CRYPTO_CCM_ONE_SHOT=ON
 }
 
 build_nest_common()
