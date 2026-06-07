@@ -458,18 +458,7 @@ public:
      */
     template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
     {
-        const Type *matched = nullptr;
-
-        for (const Type &element : *this)
-        {
-            if (element.Matches(aIndicator))
-            {
-                matched = &element;
-                break;
-            }
-        }
-
-        return matched;
+        return Find(MatchEntry<Indicator>, &aIndicator);
     }
 
     /**
@@ -597,6 +586,29 @@ public:
     const Type *end(void) const { return &mElements[mLength]; }
 
 private:
+    typedef bool (&Matcher)(const Type &aEntry, const void *aIndicator);
+
+    template <typename Indicator> static bool MatchEntry(const Type &aEntry, const void *aIndicator)
+    {
+        return aEntry.Matches(*static_cast<const Indicator *>(aIndicator));
+    }
+
+    const Type *Find(Matcher aMatcher, const void *aIndicator) const
+    {
+        const Type *matched = nullptr;
+
+        for (const Type &element : *this)
+        {
+            if (aMatcher(element, aIndicator))
+            {
+                matched = &element;
+                break;
+            }
+        }
+
+        return matched;
+    }
+
     Type      mElements[kMaxSize];
     IndexType mLength;
 };
