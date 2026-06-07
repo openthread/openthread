@@ -134,7 +134,7 @@ class LinkMetricsManager : public InstanceLocator, private NonCopyable
         Subject *mNext;
 
         bool Matches(const Mac::ExtAddress &aExtAddress) const { return mExtAddress == aExtAddress; }
-        bool Matches(const LinkMetricsManager &aLinkMetricsMgr);
+        bool Matches(const LinkMetricsManager &aLinkMetricsMgr) const;
 
         Error ConfigureEap(Instance &aInstance);
         Error UnregisterEap(Instance &aInstance);

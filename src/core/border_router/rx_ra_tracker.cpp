@@ -1630,7 +1630,7 @@ exit:
     return;
 }
 
-bool RxRaTracker::Router::Matches(const EmptyChecker &aChecker)
+bool RxRaTracker::Router::Matches(const EmptyChecker &aChecker) const
 {
     OT_UNUSED_VARIABLE(aChecker);
 

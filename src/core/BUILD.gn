@@ -450,6 +450,7 @@ openthread_core_files = [
   "common/heap_string.cpp",
   "common/heap_string.hpp",
   "common/iterator_utils.hpp",
+  "common/linked_list.cpp",
   "common/linked_list.hpp",
   "common/locator.hpp",
   "common/log.cpp",

@@ -412,7 +412,7 @@ private:
         void ResetReachabilityState(void);
         void DetermineReachabilityTimeout(void);
         bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
-        bool Matches(const EmptyChecker &aChecker);
+        bool Matches(const EmptyChecker &aChecker) const;
         bool IsPeerBr(void) const;
         void CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow, uint32_t aUptime) const;
 

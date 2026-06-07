@@ -270,9 +270,9 @@ exit:
 }
 
 // This special Match method is used for "iterating over list while removing some items"
-bool LinkMetricsManager::Subject::Matches(const LinkMetricsManager &aLinkMetricsMgr)
+bool LinkMetricsManager::Subject::Matches(const LinkMetricsManager &aLinkMetricsMgr) const
 {
-    Error error = UpdateState(aLinkMetricsMgr.GetInstance());
+    Error error = AsNonConst(this)->UpdateState(aLinkMetricsMgr.GetInstance());
 
     return error == kErrorUnknownNeighbor || error == kErrorNotCapable;
 }

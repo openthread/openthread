@@ -124,6 +124,7 @@ set(COMMON_SOURCES
     common/heap.cpp
     common/heap_data.cpp
     common/heap_string.cpp
+    common/linked_list.cpp
     common/log.cpp
     common/message.cpp
     common/notifier.cpp
@@ -314,6 +315,7 @@ set(RADIO_COMMON_SOURCES
     common/binary_search.cpp
     common/error.cpp
     common/frame_builder.cpp
+    common/linked_list.cpp
     common/log.cpp
     common/random.cpp
     common/string.cpp

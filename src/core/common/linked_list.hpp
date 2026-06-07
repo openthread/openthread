@@ -53,6 +53,73 @@ namespace ot {
  * @{
  */
 
+class LinkedListBase
+{
+public:
+    /**
+     * Clears the linked list.
+     */
+    void Clear(void) { mHead = nullptr; }
+
+    /**
+     * Indicates whether the linked list is empty or not.
+     *
+     * @retval TRUE   If the linked list is empty.
+     * @retval FALSE  If the linked list is not empty.
+     */
+    bool IsEmpty(void) const { return (mHead == nullptr); }
+
+    /**
+     * Counts and returns the number of entries in the linked list.
+     *
+     * @returns The number of entries in the linked list.
+     */
+    uint32_t CountAllEntries(void) const;
+
+protected:
+    typedef const void *(*NextGetter)(const void *aEntry);
+    typedef void (*NextSetter)(void *aEntry, void *aNext);
+
+    typedef bool (*Matcher)(const void *aEntry, const void *aArg);
+    typedef bool (*Matcher2)(const void *aEntry, const void *Arg1, const void *aArg2);
+
+    LinkedListBase(NextGetter aNextGetter, NextSetter aNextSetter);
+
+    void       *GetHead(void) { return mHead; }
+    const void *GetHead(void) const { return mHead; }
+    void        SetHead(void *aHead) { mHead = aHead; }
+    void       *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
+    const void *GetTail(void) const;
+    void        Push(void *aEntry);
+    void        PushAfter(void *aEntry, void *aPrev);
+    void        PushAfterTail(void *aEntry);
+    void       *Pop(void);
+    void       *PopAfter(void *aPrev);
+    bool        Contains(const void *aEntry) const;
+    Error       Find(const void *aEntry, const void *&aPrev) const;
+    Error       Find(const void *aEntry, void *&aPrev);
+    Error       Add(void *aEntry);
+    Error       Remove(const void *aEntry);
+    const void *FindMatching(Matcher aMatcher, const void *aArg) const;
+    const void *FindMatchingWithPrev(const void *&aPrev, Matcher aMatcher, const void *aArg) const;
+    void       *RemoveMatching(Matcher aMatcher, const void *aArg);
+    void        RemoveAllMatching(LinkedListBase &aRemoveList, Matcher aMatcher, const void *aArg);
+
+    const void *FindMatching(Matcher2 aMatcher, const void *aArg1, const void *aArg2) const;
+    const void *FindMatchingWithPrev(const void *&aPrev, Matcher2 aMatcher, const void *aArg1, const void *aArg2) const;
+    void       *RemoveMatching(Matcher2 aMatcher, const void *aArg1, const void *aArg2);
+    void        RemoveAllMatching(LinkedListBase &aRemoveList, Matcher2 aMatcher, const void *aArg1, const void *aArg2);
+
+private:
+    void       *GetNext(void *aEntry);
+    const void *GetNext(const void *aEntry) const;
+    void        SetNext(void *aEntry, void *aNext);
+
+    void      *mHead;
+    NextGetter mNextGetter;
+    NextSetter mNextSetter;
+};
+
 /**
  * Represents a linked list entry.
  *
@@ -95,7 +162,7 @@ public:
  * The template type `Type` should provide `GetNext()` and `SetNext()` methods (which can be realized by `Type`
  * inheriting from `LinkedListEntry<Type>` class).
  */
-template <typename Type> class LinkedList
+template <typename Type> class LinkedList : public LinkedListBase
 {
     class Iterator;
     class ConstIterator;
@@ -105,7 +172,7 @@ public:
      * Initializes the linked list.
      */
     LinkedList(void)
-        : mHead(nullptr)
+        : LinkedListBase(GetNextEntry, SetNextEntry)
     {
     }
 
@@ -114,45 +181,28 @@ public:
      *
      * @returns Pointer to the entry at the head of the linked list, or `nullptr` if the list is empty.
      */
-    Type *GetHead(void) { return mHead; }
+    Type *GetHead(void) { return AsEntry(LinkedListBase::GetHead()); }
 
     /**
      * Returns the entry at the head of the linked list.
      *
      * @returns Pointer to the entry at the head of the linked list, or `nullptr` if the list is empty.
      */
-    const Type *GetHead(void) const { return mHead; }
+    const Type *GetHead(void) const { return AsEntry(LinkedListBase::GetHead()); }
 
     /**
      * Sets the head of the linked list to a given entry.
      *
      * @param[in] aHead   A pointer to an entry to set as the head of the linked list.
      */
-    void SetHead(Type *aHead) { mHead = aHead; }
-
-    /**
-     * Clears the linked list.
-     */
-    void Clear(void) { mHead = nullptr; }
-
-    /**
-     * Indicates whether the linked list is empty or not.
-     *
-     * @retval TRUE   If the linked list is empty.
-     * @retval FALSE  If the linked list is not empty.
-     */
-    bool IsEmpty(void) const { return (mHead == nullptr); }
+    void SetHead(Type *aHead) { LinkedListBase::SetHead(aHead); }
 
     /**
      * Pushes an entry at the head of the linked list.
      *
      * @param[in] aEntry   A reference to an entry to push at the head of linked list.
      */
-    void Push(Type &aEntry)
-    {
-        aEntry.SetNext(mHead);
-        mHead = &aEntry;
-    }
+    void Push(Type &aEntry) { LinkedListBase::Push(&aEntry); }
 
     /**
      * Pushes an entry after a given previous existing entry in the linked list.
@@ -160,30 +210,14 @@ public:
      * @param[in] aEntry       A reference to an entry to push into the list.
      * @param[in] aPrevEntry   A reference to a previous entry (new entry @p aEntry will be pushed after this).
      */
-    void PushAfter(Type &aEntry, Type &aPrevEntry)
-    {
-        aEntry.SetNext(aPrevEntry.GetNext());
-        aPrevEntry.SetNext(&aEntry);
-    }
+    void PushAfter(Type &aEntry, Type &aPrevEntry) { LinkedListBase::PushAfter(&aEntry, &aPrevEntry); }
 
     /**
      * Pushes an entry after the tail in the linked list.
      *
      * @param[in] aEntry       A reference to an entry to push into the list.
      */
-    void PushAfterTail(Type &aEntry)
-    {
-        Type *tail = GetTail();
-
-        if (tail == nullptr)
-        {
-            Push(aEntry);
-        }
-        else
-        {
-            PushAfter(aEntry, *tail);
-        }
-    }
+    void PushAfterTail(Type &aEntry) { LinkedListBase::PushAfterTail(&aEntry); }
 
     /**
      * Pops an entry from head of the linked list.
@@ -192,17 +226,7 @@ public:
      *
      * @returns The entry that was popped if the list is not empty, or `nullptr` if the list is empty.
      */
-    Type *Pop(void)
-    {
-        Type *entry = mHead;
-
-        if (mHead != nullptr)
-        {
-            mHead = mHead->GetNext();
-        }
-
-        return entry;
-    }
+    Type *Pop(void) { return AsEntry(LinkedListBase::Pop()); }
 
     /**
      * Pops an entry after a given previous entry.
@@ -214,26 +238,7 @@ public:
      *
      * @returns Pointer to the entry that was popped, or `nullptr` if there is no entry to pop.
      */
-    Type *PopAfter(Type *aPrevEntry)
-    {
-        Type *entry;
-
-        if (aPrevEntry == nullptr)
-        {
-            entry = Pop();
-        }
-        else
-        {
-            entry = aPrevEntry->GetNext();
-
-            if (entry != nullptr)
-            {
-                aPrevEntry->SetNext(entry->GetNext());
-            }
-        }
-
-        return entry;
-    }
+    Type *PopAfter(Type *aPrevEntry) { return AsEntry(LinkedListBase::PopAfter(aPrevEntry)); }
 
     /**
      * Indicates whether the linked list contains a given entry.
@@ -243,12 +248,7 @@ public:
      * @retval TRUE   The linked list contains @p aEntry.
      * @retval FALSE  The linked list does not contain @p aEntry.
      */
-    bool Contains(const Type &aEntry) const
-    {
-        const Type *prev;
-
-        return Find(aEntry, prev) == kErrorNone;
-    }
+    bool Contains(const Type &aEntry) const { return LinkedListBase::Contains(&aEntry); }
 
     /**
      * Indicates whether the linked list contains an entry matching a set of conditions.
@@ -276,21 +276,7 @@ public:
      * @retval kErrorNone     The entry was successfully added at the head of the list.
      * @retval kErrorAlready  The entry is already in the list.
      */
-    Error Add(Type &aEntry)
-    {
-        Error error = kErrorNone;
-
-        if (Contains(aEntry))
-        {
-            error = kErrorAlready;
-        }
-        else
-        {
-            Push(aEntry);
-        }
-
-        return error;
-    }
+    Error Add(Type &aEntry) { return LinkedListBase::Add(&aEntry); }
 
     /**
      * Removes an entry from the linked list.
@@ -303,18 +289,7 @@ public:
      * @retval kErrorNone      The entry was successfully removed from the list.
      * @retval kErrorNotFound  Could not find the entry in the list.
      */
-    Error Remove(const Type &aEntry)
-    {
-        Type *prev;
-        Error error = Find(aEntry, prev);
-
-        if (error == kErrorNone)
-        {
-            PopAfter(prev);
-        }
-
-        return error;
-    }
+    Error Remove(const Type &aEntry) { return LinkedListBase::Remove(&aEntry); }
 
     /**
      * Removes an entry matching a given set of conditions from the linked list.
@@ -332,17 +307,14 @@ public:
      * @returns A pointer to the removed matching entry if one could be found, or `nullptr` if no matching entry is
      *          found.
      */
-    template <typename... Args> Type *RemoveMatching(const Args &...aArgs)
+    template <typename Arg> Type *RemoveMatching(const Arg &aArg)
     {
-        Type *prev;
-        Type *entry = FindMatchingWithPrev(prev, aArgs...);
+        return AsEntry(LinkedListBase::RemoveMatching(MatchEntry<Arg>, &aArg));
+    }
 
-        if (entry != nullptr)
-        {
-            PopAfter(prev);
-        }
-
-        return entry;
+    template <typename Arg1, typename Arg2> Type *RemoveMatching(const Arg1 &aArg1, const Arg2 &aArg2)
+    {
+        return AsEntry(LinkedListBase::RemoveMatching(MatchEntry<Arg1, Arg2>, &aArg1, &aArg2));
     }
 
     /**
@@ -357,29 +329,15 @@ public:
      * @param[in] aRemovedList The list to add the removed entries to.
      * @param[in]  aArgs       The args to pass to `Matches()`.
      */
-    template <typename... Args> void RemoveAllMatching(LinkedList &aRemovedList, const Args &...aArgs)
+    template <typename Arg> void RemoveAllMatching(LinkedList &aRemovedList, const Arg &aArg)
     {
-        Type *entry;
-        Type *prev;
-        Type *next;
+        LinkedListBase::RemoveAllMatching(aRemovedList, MatchEntry<Arg>, &aArg);
+    }
 
-        for (prev = nullptr, entry = GetHead(); entry != nullptr; entry = next)
-        {
-            next = entry->GetNext();
-
-            if (entry->Matches(aArgs...))
-            {
-                PopAfter(prev);
-                aRemovedList.Push(*entry);
-
-                // When the entry is removed from the list
-                // we keep the `prev` pointer same as before.
-            }
-            else
-            {
-                prev = entry;
-            }
-        }
+    template <typename Arg1, typename Arg2>
+    void RemoveAllMatching(LinkedList &aRemovedList, const Arg1 &aArg1, const Arg2 &aArg2)
+    {
+        LinkedListBase::RemoveAllMatching(aRemovedList, MatchEntry<Arg1, Arg2>, &aArg1, &aArg2);
     }
 
     /**
@@ -395,18 +353,11 @@ public:
      */
     Error Find(const Type &aEntry, const Type *&aPrevEntry) const
     {
-        Error error = kErrorNotFound;
+        Error       error;
+        const void *prev;
 
-        aPrevEntry = nullptr;
-
-        for (const Type *entry = mHead; entry != nullptr; aPrevEntry = entry, entry = entry->GetNext())
-        {
-            if (entry == &aEntry)
-            {
-                error = kErrorNone;
-                break;
-            }
-        }
+        error      = LinkedListBase::Find(&aEntry, prev);
+        aPrevEntry = AsEntry(prev);
 
         return error;
     }
@@ -444,21 +395,23 @@ public:
      *
      * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      */
-    template <typename... Args> const Type *FindMatchingWithPrev(const Type *&aPrevEntry, Args &&...aArgs) const
+    template <typename Arg> const Type *FindMatchingWithPrev(const Type *&aPrevEntry, const Arg &aArg) const
     {
-        const Type *entry;
+        const void *prev;
+        const void *entry = LinkedListBase::FindMatchingWithPrev(prev, MatchEntry<Arg>, &aArg);
 
-        aPrevEntry = nullptr;
+        aPrevEntry = AsEntry(prev);
+        return AsEntry(entry);
+    }
 
-        for (entry = mHead; entry != nullptr; aPrevEntry = entry, entry = entry->GetNext())
-        {
-            if (entry->Matches(aArgs...))
-            {
-                break;
-            }
-        }
+    template <typename Arg1, typename Arg2>
+    const Type *FindMatchingWithPrev(const Type *&aPrevEntry, const Arg1 &aArg1, const Arg2 &aArg2) const
+    {
+        const void *prev;
+        const void *entry = LinkedListBase::FindMatchingWithPrev(prev, MatchEntry<Arg1, Arg2>, &aArg1, &aArg2);
 
-        return entry;
+        aPrevEntry = AsEntry(prev);
+        return AsEntry(entry);
     }
 
     /**
@@ -495,11 +448,14 @@ public:
      *
      * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      */
-    template <typename... Args> const Type *FindMatching(const Args &...aArgs) const
+    template <typename Arg> const Type *FindMatching(const Arg &aArg) const
     {
-        const Type *prev;
+        return AsEntry(LinkedListBase::FindMatching(MatchEntry<Arg>, &aArg));
+    }
 
-        return FindMatchingWithPrev(prev, aArgs...);
+    template <typename Arg1, typename Arg2> const Type *FindMatching(const Arg1 &aArg1, const Arg2 &aArg2) const
+    {
+        return AsEntry(LinkedListBase::FindMatching(MatchEntry<Arg1, Arg2>, &aArg1, &aArg2));
     }
 
     /**
@@ -524,20 +480,7 @@ public:
      *
      * @returns A pointer to the tail entry in the linked list or `nullptr` if the list is empty.
      */
-    const Type *GetTail(void) const
-    {
-        const Type *tail = mHead;
-
-        if (tail != nullptr)
-        {
-            while (tail->GetNext() != nullptr)
-            {
-                tail = tail->GetNext();
-            }
-        }
-
-        return tail;
-    }
+    const Type *GetTail(void) const { return AsEntry(LinkedListBase::GetTail()); }
 
     /**
      * Returns the tail of the linked list (i.e., the last entry in the list).
@@ -545,23 +488,6 @@ public:
      * @returns A pointer to the tail entry in the linked list or `nullptr` if the list is empty.
      */
     Type *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
-
-    /**
-     * Counts and returns the number of entries in the linked list.
-     *
-     * @returns The number of entries in the linked list.
-     */
-    uint32_t CountAllEntries(void) const
-    {
-        uint32_t count = 0;
-
-        for (const Type *entry = mHead; entry != nullptr; entry = entry->GetNext())
-        {
-            count++;
-        }
-
-        return count;
-    }
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the linked-list entries and should not be
@@ -604,7 +530,21 @@ private:
         void Advance(void) { mItem = mItem->GetNext(); }
     };
 
-    Type *mHead;
+    static Type       *AsEntry(void *aEntry) { return static_cast<Type *>(aEntry); }
+    static const Type *AsEntry(const void *aEntry) { return static_cast<const Type *>(aEntry); }
+    static const void *GetNextEntry(const void *aEntry) { return AsEntry(aEntry)->GetNext(); }
+    static void        SetNextEntry(void *aEntry, void *aNext) { AsEntry(aEntry)->SetNext(AsEntry(aNext)); }
+
+    template <typename Arg> static bool MatchEntry(const void *aEntry, const void *aArg)
+    {
+        return AsEntry(aEntry)->Matches(*static_cast<const Arg *>(aArg));
+    }
+
+    template <typename Arg1, typename Arg2>
+    static bool MatchEntry(const void *aEntry, const void *aArg1, const void *aArg2)
+    {
+        return AsEntry(aEntry)->Matches(*static_cast<const Arg1 *>(aArg1), *static_cast<const Arg2 *>(aArg2));
+    }
 };
 
 /**
