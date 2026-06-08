@@ -121,7 +121,7 @@ class Nat64InfrastructurePrefix(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(10)
 
-        host.start_radvd_service(prefix=ETH_PREFIX, slaac=True, nat64_prefix=INFRA_NAT64_PREFIX)
+        host.start_pref64_radvd_service(INFRA_NAT64_PREFIX)
         # Give some time for RA discovery and evaluation.
         # RoutingManager evaluates every few seconds or on RA events.
         self.simulator.go(20)
@@ -146,7 +146,7 @@ class Nat64InfrastructurePrefix(thread_cert.TestCase):
         })
 
         # Case 4: Recover infrastructure NAT64 prefix advertisement.
-        host.start_radvd_service(prefix=ETH_PREFIX, slaac=True, nat64_prefix=INFRA_NAT64_PREFIX)
+        host.start_pref64_radvd_service(INFRA_NAT64_PREFIX)
         self.simulator.go(20)
 
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
@@ -157,7 +157,7 @@ class Nat64InfrastructurePrefix(thread_cert.TestCase):
         })
 
         # Case 5: Change infrastructure NAT64 prefix to a smaller one.
-        host.start_radvd_service(prefix=ETH_PREFIX, slaac=True, nat64_prefix=SMALL_NAT64_PREFIX)
+        host.start_pref64_radvd_service(SMALL_NAT64_PREFIX)
         self.simulator.go(20)
 
         self.assertEqual(len(br.get_netdata_nat64_routes()), 1)

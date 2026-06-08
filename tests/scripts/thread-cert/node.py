@@ -4198,8 +4198,9 @@ class LinuxHost():
                 return
         raise Exception("Failed to start radvd service")
 
-    def start_radvd_service(self, prefix, slaac, nat64_prefix=None):
-        config = """interface eth0
+    def start_radvd_service(self, prefix, slaac):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface eth0
 {
     AdvSendAdvert on;
 
@@ -4218,17 +4219,9 @@ class LinuxHost():
         AdvPreferredLifetime 1800;
         AdvValidLifetime 1800;
     };
-""" % (prefix, 'on' if slaac else 'off')
-        if nat64_prefix:
-            config += """
-    nat64prefix %s
-    {
-        AdvNAT64Lifetime 1800;
-    };
-""" % nat64_prefix
-        config += "};\n"
-
-        self.bash("cat >/etc/radvd.conf <<EOF\n%sEOF" % config)
+};
+EOF
+""" % (prefix, 'on' if slaac else 'off'))
         self._start_radvd_and_verify()
 
     def start_pd_radvd_service(self, prefix):
@@ -4273,6 +4266,28 @@ interface eth0
     RDNSS {dns_server_address}
     {{
         AdvRDNSSLifetime 1800;
+    }};
+}};
+EOF
+""")
+        self._start_radvd_and_verify()
+
+    def start_pref64_radvd_service(self, nat64_prefix):
+        self.bash(f"""cat >/etc/radvd.conf <<EOF
+interface eth0
+{{
+    AdvSendAdvert on;
+
+    AdvReachableTime 20;
+    AdvRetransTimer 20;
+    AdvDefaultLifetime 180;
+    MinRtrAdvInterval 120;
+    MaxRtrAdvInterval 180;
+    AdvDefaultPreference low;
+
+    nat64prefix {nat64_prefix}
+    {{
+        AdvValidLifetime 1800;
     }};
 }};
 EOF
@@ -4337,10 +4352,10 @@ class HostNode(LinuxHost, OtbrDocker):
         super().__init__(nodeid, **kwargs)
         self.bash('service otbr-agent stop')
 
-    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False, nat64_prefix=None):
+    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()
         if start_radvd:
-            self.start_radvd_service(prefix, slaac, nat64_prefix=nat64_prefix)
+            self.start_radvd_service(prefix, slaac)
         else:
             self.stop_radvd_service()
 
