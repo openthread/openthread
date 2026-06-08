@@ -254,7 +254,7 @@ Error Server::AppendBrPrefixTlv(uint8_t aTlvType, Message &aMessage)
         ExitNow();
     }
 
-    IgnoreError(netPrefix.SetFrom(prefix));
+    IgnoreError(netPrefix.InitFrom(prefix));
 
 exit:
     return Tlv::AppendTlv(aMessage, aTlvType, &netPrefix, sizeof(netPrefix));

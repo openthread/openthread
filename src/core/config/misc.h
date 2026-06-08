@@ -525,15 +525,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DUA_ENABLE
- *
- * Define as 1 to support Thread 1.2 Domain Unicast Address feature.
- */
-#ifndef OPENTHREAD_CONFIG_DUA_ENABLE
-#define OPENTHREAD_CONFIG_DUA_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MLR_ENABLE
  *
  * Define as 1 to support Thread 1.2 Multicast Listener Registration feature.

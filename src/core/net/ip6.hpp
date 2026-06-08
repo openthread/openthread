@@ -87,6 +87,9 @@ namespace Ip6 {
  * @defgroup core-ip6-mpl MPL
  * @defgroup core-ip6-netif Network Interfaces
  * @defgroup core-ip6-slaac SLAAC
+ * @defgroup core-tcp TCP
+ * @defgroup core-tcp-ext TCP Extension
+ * @defgroup core-udp UDP
  *
  * @}
  */
@@ -357,7 +360,7 @@ private:
     void CleanupFragmentationBuffer(void);
     void HandleTimeTick(void);
     void UpdateReassemblyList(void);
-    void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
+    void SendIcmpError(Message &aMessage, Icmp6Header::Type aIcmpType, Icmp6Header::Code aIcmpCode);
 #endif
     Error ReadHopByHopHeader(const Message &aMessage, OffsetRange &aOffsetRange, HopByHopHeader &aHbhHeader) const;
     Error AddMplOption(Message &aMessage, Header &aHeader);
@@ -525,7 +528,7 @@ public:
      *
      * @returns The UDP header.
      */
-    const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
+    const UdpHeader &GetUdpHeader(void) const { return mHeader.mUdp; }
 
     /**
      * Returns the TCP header.
@@ -534,7 +537,7 @@ public:
      *
      * @returns The TCP header.
      */
-    const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
+    const TcpHeader &GetTcpHeader(void) const { return mHeader.mTcp; }
 
     /**
      * Returns the ICMPv6 header.
@@ -543,7 +546,7 @@ public:
      *
      * @returns The ICMPv6 header.
      */
-    const Icmp::Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
+    const Icmp6Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
 
     /**
      * Returns the source port number if header is UDP or TCP, or zero otherwise
@@ -577,9 +580,9 @@ private:
     Header mIp6Header;
     union
     {
-        Udp::Header  mUdp;
-        Tcp::Header  mTcp;
-        Icmp::Header mIcmp;
+        UdpHeader   mUdp;
+        TcpHeader   mTcp;
+        Icmp6Header mIcmp;
     } mHeader;
 };
 

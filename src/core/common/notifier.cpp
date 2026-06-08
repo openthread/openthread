@@ -143,9 +143,6 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Get<Mlr::Manager>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    Get<DuaManager>().HandleNotifierEvents(events);
-#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Get<Trel::Link>().HandleNotifierEvents(events);
 #endif
@@ -192,6 +189,9 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     Get<Utils::LinkMetricsManager>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    Get<MeshCoP::TcatAgent>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)

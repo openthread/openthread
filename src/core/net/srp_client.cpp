@@ -983,7 +983,7 @@ void Client::SendUpdate(void)
     info.mSingleServiceMode = false;
     SuccessOrExit(error = PrepareUpdateMessage(info));
 
-    length = info.mMessage->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
+    length = info.mMessage->GetLength() + sizeof(Ip6::UdpHeader) + sizeof(Ip6::Header);
 
     if (length >= Ip6::kMaxDatagramLength)
     {

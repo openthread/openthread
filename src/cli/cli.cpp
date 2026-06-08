@@ -1102,70 +1102,6 @@ template <> otError Interpreter::Process<Cmd("domainname")>(Arg aArgs[])
     return ProcessGetSet(aArgs, otThreadGetDomainName, otThreadSetDomainName);
 }
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli dua iid
-     * @code
-     * dua iid
-     * 0004000300020001
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otThreadGetFixedDuaInterfaceIdentifier
-     */
-    if (aArgs[0] == "iid")
-    {
-        if (aArgs[1].IsEmpty())
-        {
-            const otIp6InterfaceIdentifier *iid = otThreadGetFixedDuaInterfaceIdentifier(GetInstancePtr());
-
-            if (iid != nullptr)
-            {
-                OutputBytesLine(iid->mFields.m8);
-            }
-        }
-        /**
-         * @cli dua iid (set,clear)
-         * @code
-         * dua iid 0004000300020001
-         * Done
-         * @endcode
-         * @code
-         * dua iid clear
-         * Done
-         * @endcode
-         * @cparam dua iid @ca{iid|clear}
-         * `dua iid clear` passes a `nullptr` to #otThreadSetFixedDuaInterfaceIdentifier.
-         * Otherwise, you can pass the `iid`.
-         * @par api_copy
-         * #otThreadSetFixedDuaInterfaceIdentifier
-         */
-        else if (aArgs[1] == "clear")
-        {
-            error = otThreadSetFixedDuaInterfaceIdentifier(GetInstancePtr(), nullptr);
-        }
-        else
-        {
-            otIp6InterfaceIdentifier iid;
-
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(iid.mFields.m8));
-            error = otThreadSetFixedDuaInterfaceIdentifier(GetInstancePtr(), &iid);
-        }
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
-
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 /**
@@ -5514,9 +5450,6 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
      * @endcode
      * @par
      * Get the prefix list in the local Network Data.
-     * @note For the Thread 1.2 border router with backbone capability, the local Domain Prefix
-     * is listed as well and includes the `D` flag. If backbone functionality is disabled, a dash
-     * `-` is printed before the local Domain Prefix.
      * @par
      * For more information about #otBorderRouterConfig flags, refer to @overview.
      * @sa otBorderRouterGetNextOnMeshPrefix
@@ -5530,15 +5463,6 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
         {
             mNetworkData.OutputPrefix(config);
         }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        if (otBackboneRouterGetState(GetInstancePtr()) == OT_BACKBONE_ROUTER_STATE_DISABLED)
-        {
-            SuccessOrExit(otBackboneRouterGetDomainPrefix(GetInstancePtr(), &config));
-            OutputFormat("- ");
-            mNetworkData.OutputPrefix(config);
-        }
-#endif
     }
     /**
      * @cli prefix add
@@ -8670,9 +8594,6 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         CmdEntry("domainname"),
-#endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        CmdEntry("dua"),
 #endif
 #if OPENTHREAD_FTD
         CmdEntry("eidcache"),

@@ -109,7 +109,7 @@ void TestChildIp6Address(void)
     const uint8_t            meshLocalIidArray[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
     Ip6::InterfaceIdentifier meshLocalIid;
 
-    meshLocalIid.SetBytes(meshLocalIidArray);
+    meshLocalIid.InitFrom(meshLocalIidArray);
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr);

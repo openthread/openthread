@@ -128,7 +128,6 @@
 #include "thread/anycast_locator.hpp"
 #include "thread/child_supervision.hpp"
 #include "thread/discover_scanner.hpp"
-#include "thread/dua_manager.hpp"
 #include "thread/energy_scan_server.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_metrics.hpp"
@@ -461,7 +460,7 @@ public:
 #endif
 
     /**
-     * Retrieves the the Message Buffer information.
+     * Retrieves the Message Buffer information.
      *
      * @param[out]  aInfo  A `BufferInfo` where information is written.
      */
@@ -767,10 +766,6 @@ private:
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Mlr::Manager mMlrManager;
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-    DuaManager mDuaManager;
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
@@ -1250,10 +1245,6 @@ template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 template <> inline Mlr::Manager &Instance::Get(void) { return mMlrManager; }
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-template <> inline DuaManager &Instance::Get(void) { return mDuaManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE

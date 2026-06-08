@@ -74,7 +74,10 @@ exit:
     return error;
 }
 
-Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage)
+Error Icmp::SendError(Icmp6Header::Type  aType,
+                      Icmp6Header::Code  aCode,
+                      const MessageInfo &aMessageInfo,
+                      const Message     &aMessage)
 {
     Error   error;
     Headers headers;
@@ -86,7 +89,10 @@ exit:
     return error;
 }
 
-Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Headers &aHeaders)
+Error Icmp::SendError(Icmp6Header::Type  aType,
+                      Icmp6Header::Code  aCode,
+                      const MessageInfo &aMessageInfo,
+                      const Headers     &aHeaders)
 {
     Error             error = kErrorNone;
     MessageInfo       messageInfoLocal;

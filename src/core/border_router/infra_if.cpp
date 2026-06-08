@@ -107,25 +107,25 @@ Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination
 
 void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket)
 {
-    Error                    error = kErrorNone;
-    const Ip6::Icmp::Header *icmp6Header;
+    Error                   error = kErrorNone;
+    const Ip6::Icmp6Header *icmp6Header;
 
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorDrop);
     VerifyOrExit(aPacket.GetBytes() != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Icmp::Header), error = kErrorParse);
+    VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Icmp6Header), error = kErrorParse);
 
-    icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
+    icmp6Header = reinterpret_cast<const Ip6::Icmp6Header *>(aPacket.GetBytes());
 
     switch (icmp6Header->GetType())
     {
-    case Ip6::Icmp::Header::kTypeRouterAdvert:
+    case Ip6::Icmp6Header::kTypeRouterAdvert:
         Get<RxRaTracker>().HandleRouterAdvertisement(aPacket, aSource);
         break;
-    case Ip6::Icmp::Header::kTypeNeighborAdvert:
+    case Ip6::Icmp6Header::kTypeNeighborAdvert:
         Get<RxRaTracker>().HandleNeighborAdvertisement(aPacket);
         break;
-    case Ip6::Icmp::Header::kTypeRouterSolicit:
+    case Ip6::Icmp6Header::kTypeRouterSolicit:
         Get<RoutingManager>().HandleRouterSolicit(aPacket, aSource);
         break;
     default:
@@ -278,7 +278,7 @@ Error InfraIf::LinkLayerAddress::ConvertToIid(Ip6::InterfaceIdentifier &aIid) co
         ExitNow(error = kErrorNotCapable);
     }
 
-    aIid.SetFromExtAddress(extAddress);
+    aIid.InitFromExtAddress(extAddress);
 
 exit:
     return error;

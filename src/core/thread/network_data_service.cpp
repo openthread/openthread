@@ -83,7 +83,7 @@ Error Iterator::GetNextDnsSrpAnycastInfo(DnsSrpAnycastInfo &aInfo)
                 const Manager::DnsSrpAnycastServiceData *anycastData =
                     reinterpret_cast<const Manager::DnsSrpAnycastServiceData *>(mServiceTlv->GetServiceData());
 
-                Get<Mle::Mle>().GetServiceAloc(mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
+                Get<Mle::Mle>().ComposeServiceAloc(mServiceTlv->GetServiceId(), aInfo.mAnycastAddress);
                 aInfo.mSequenceNumber = anycastData->GetSequenceNumber();
                 aInfo.mRloc16         = mServerSubTlv->GetServer16();
                 aInfo.mVersion =
@@ -158,8 +158,8 @@ Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastI
                 // contains a port number and use the RLOC as the
                 // IPv6 address.
 
-                aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                                 mServerSubTlv->GetServer16());
+                aInfo.mSockAddr.GetAddress().InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
+                                                                  mServerSubTlv->GetServer16());
                 aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(mServerSubTlv->GetServerData()));
                 aInfo.mVersion = 0;
                 ExitNow();
@@ -552,7 +552,7 @@ exit:
 Manager::ServiceAloc::ServiceAloc(void)
 {
     InitAsThreadOriginMeshLocal();
-    GetAddress().GetIid().SetToLocator(kNotInUse);
+    GetAddress().GetIid().InitAsLocator(kNotInUse);
 }
 
 #endif

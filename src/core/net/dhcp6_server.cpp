@@ -402,7 +402,7 @@ Error Server::AppendIaAddressOption(Message               &aMessage,
 
     option.Init();
     option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
-    option.GetAddress().GetIid().SetFromExtAddress(aClientAddress);
+    option.GetAddress().GetIid().InitFromExtAddress(aClientAddress);
     option.SetPreferredLifetime(IaAddressOption::kDefaultPreferredLifetime);
     option.SetValidLifetime(IaAddressOption::kDefaultValidLifetime);
     SuccessOrExit(error = aMessage.Append(option));

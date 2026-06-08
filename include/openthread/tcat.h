@@ -76,6 +76,58 @@ extern "C" {
 #define OT_TCAT_ENABLE_MAX 600                 ///< TCAT_ENABLE_MAX, default max TMF TCAT enable time,  in seconds.
 
 /**
+ * Represents TCAT command TLV type.
+ */
+typedef enum otTcatCommandTlvType
+{
+    // Command Class General
+    OT_TCAT_TLV_RESPONSE_WITH_STATUS      = 0x01, ///< TCAT response with status value TLV
+    OT_TCAT_TLV_RESPONSE_WITH_PAYLOAD     = 0x02, ///< TCAT response with payload TLV
+    OT_TCAT_TLV_RESPONSE_EVENT            = 0x03, ///< TCAT response event TLV (reserved)
+    OT_TCAT_TLV_GET_NETWORK_NAME          = 0x08, ///< TCAT network name query TLV
+    OT_TCAT_TLV_DISCONNECT                = 0x09, ///< TCAT disconnect request TLV
+    OT_TCAT_TLV_PING                      = 0x0A, ///< TCAT ping request TLV
+    OT_TCAT_TLV_GET_DEVICE_ID             = 0x0B, ///< TCAT device ID query TLV
+    OT_TCAT_TLV_GET_EXTENDED_PAN_ID       = 0x0C, ///< TCAT extended PAN ID query TLV
+    OT_TCAT_TLV_GET_PROVISIONING_URL      = 0x0D, ///< TCAT provisioning URL query TLV
+    OT_TCAT_TLV_PRESENT_PSKD_HASH         = 0x10, ///< TCAT rights elevation request TLV using PSKd hash
+    OT_TCAT_TLV_PRESENT_PSKC_HASH         = 0x11, ///< TCAT rights elevation request TLV using PSKc hash
+    OT_TCAT_TLV_PRESENT_INSTALL_CODE_HASH = 0x12, ///< TCAT rights elevation TLV using install code
+    OT_TCAT_TLV_REQUEST_RANDOM_CHALLENGE  = 0x13, ///< TCAT random number challenge query TLV
+
+    // Command Class Commissioning
+    OT_TCAT_TLV_SET_ACTIVE_OPERATIONAL_DATASET     = 0x20, ///< TCAT active operational dataset TLV
+    OT_TCAT_TLV_SET_ACTIVE_OPERATIONAL_DATASET_ALT = 0x21, ///< TCAT active dataset alt #1 TLV (reserved)
+    OT_TCAT_TLV_GET_COMMISSIONER_CERTIFICATE       = 0x25, ///< TCAT commissioner certificate query TLV
+    OT_TCAT_TLV_GET_DIAGNOSTIC_TLVS                = 0x26, ///< TCAT diagnostics TLVs query TLV
+    OT_TCAT_TLV_START_THREAD_INTERFACE             = 0x27, ///< TCAT start thread interface request TLV
+    OT_TCAT_TLV_STOP_THREAD_INTERFACE              = 0x28, ///< TCAT stop thread interface request TLV
+
+    // Command Class Extraction
+    OT_TCAT_TLV_GET_ACTIVE_OPERATIONAL_DATASET     = 0x40, ///< TCAT active operational dataset query TLV
+    OT_TCAT_TLV_GET_ACTIVE_OPERATIONAL_DATASET_ALT = 0x41, ///< TCAT active dataset alt #1 query TLV (reserved)
+
+    // Command Class Decommissioning
+    OT_TCAT_TLV_DECOMMISSION = 0x60, ///< TCAT decommission request TLV
+
+    // Command Class Application
+    OT_TCAT_TLV_GET_APPLICATION_LAYERS    = 0x80, ///< TCAT get application layers request TLV
+    OT_TCAT_TLV_SEND_APPLICATION_DATA_1   = 0x81, ///< TCAT send application data 1 TLV
+    OT_TCAT_TLV_SEND_APPLICATION_DATA_2   = 0x82, ///< TCAT send application data 2 TLV
+    OT_TCAT_TLV_SEND_APPLICATION_DATA_3   = 0x83, ///< TCAT send application data 3 TLV
+    OT_TCAT_TLV_SEND_APPLICATION_DATA_4   = 0x84, ///< TCAT send application data 4 TLV
+    OT_TCAT_TLV_SERVICE_NAME_UDP          = 0x89, ///< TCAT service name UDP sub-TLV (not used as a command)
+    OT_TCAT_TLV_SERVICE_NAME_TCP          = 0x8A, ///< TCAT service name TCP sub-TLV (not used as a command)
+    OT_TCAT_TLV_SEND_VENDOR_SPECIFIC_DATA = 0x9F, ///< TCAT send vendor specific command or data TLV
+
+    // Command Class CCM
+    OT_TCAT_TLV_SET_LDEV_ID_OPERATIONAL_CERT = 0xA0, ///< TCAT set LDevID certificate TLV (reserved)
+    OT_TCAT_TLV_SET_LDEV_ID_PRIVATE_KEY      = 0xA1, ///< TCAT set LDevID certificate private key TLV (reserved)
+    OT_TCAT_TLV_SET_DOMAIN_CA_CERT           = 0xA2, ///< TCAT set domain CA certificate TLV (reserved)
+
+} otTcatCommandTlvType;
+
+/**
  * Represents TCAT status code.
  */
 typedef enum otTcatStatusCode
@@ -154,35 +206,6 @@ typedef struct otTcatGeneralDeviceId
 } otTcatGeneralDeviceId;
 
 /**
- * This structure represents a TCAT vendor information.
- *
- * The content of this structure MUST persist and remain unchanged while a TCAT session is running.
- */
-typedef struct otTcatVendorInfo
-{
-    const char *mProvisioningUrl; ///< Provisioning URL path string
-    const char *mVendorName;      ///< Vendor name string
-    const char *mVendorModel;     ///< Vendor model string
-    const char *mVendorSwVersion; ///< Vendor software version string
-    const char *mVendorData;      ///< Vendor specific data string
-    const char *mPskdString;      ///< Vendor managed pre-shared key for device
-    const char *mInstallCode;     ///< Vendor managed install code string
-    const otTcatAdvertisedDeviceId
-        *mAdvertisedDeviceIds;                     /** Vendor managed advertised device ID array.
-                                                       Array is terminated like C string with OT_TCAT_DEVICE_ID_EMPTY */
-    const otTcatGeneralDeviceId *mGeneralDeviceId; /** Vendor managed general device ID array.
-                                                       (if NULL: device ID is set to EUI-64 in binary format) */
-    const char *mApplicationServiceName[OT_TCAT_APPLICATION_LAYER_MAX_COUNT]; /** Array with application service names
-                                                                                  as C string with maximum length
-                                                                                  OT_TCAT_SERVICE_NAME_MAX_LENGTH or
-                                                                                  NULL if not supported */
-    bool mApplicationServiceIsTcp[OT_TCAT_APPLICATION_LAYER_MAX_COUNT];       /** Array with boolean values indicating
-                                                                                  if the service is of TCP type (otherwise
-                                                                                  UDP) */
-
-} otTcatVendorInfo;
-
-/**
  * Pointer to call when application data or vendor-specific data was received over a TCAT TLS connection.
  * The application may generate a response to an incoming TCAT application data packet. The TCAT agent
  * automatically responds with status OT_TCAT_STATUS_UNSUPPORTED if no response has been generated or
@@ -201,9 +224,12 @@ typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aIn
                                                    void                     *aContext);
 
 /**
- * Pointer to call to notify the completion of a network join/leave operation performed under
- * guidance of a TCAT Commissioner.
+ * Pointer to call to notify of a network join/leave operation initiated under guidance of a TCAT Commissioner.
  *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aIsJoin          True if the operation was a network join (OT_TCAT_TLV_START_THREAD_INTERFACE),
+ *                              false if it was a network leave (OT_TCAT_TLV_STOP_THREAD_INTERFACE or
+ *                              OT_TCAT_TLV_DECOMMISSION).
  * @param[in]  aError           OT_ERROR_NONE if the network join/leave operation was successfully started.
  *                              OT_ERROR_INVALID_STATE if network join was requested but network credentials
  *                                                     were missing or incomplete.
@@ -213,7 +239,71 @@ typedef void (*otHandleTcatApplicationDataReceive)(otInstance               *aIn
  *                                                credential mismatch.
  * @param[in]  aContext         A pointer to arbitrary context information.
  */
-typedef void (*otHandleTcatJoin)(otError aError, void *aContext);
+typedef void (*otHandleTcatJoin)(otInstance *aInstance, bool aIsJoin, otError aError, void *aContext);
+
+/**
+ * Pointer to call to control if a TCAT TLV of a specific type is supported. The application may allow
+ * or reject processing of a received TCAT command based on an application defined policy.
+ * If no handler is defined, all received TCAT commands will be allowed if the respective command class
+ * is authorized. If a handler is defined and returns false, the TCAT command will be rejected with status
+ * OT_TCAT_STATUS_UNSUPPORTED. If the handler returns true, the TCAT command will be allowed if the respective
+ * command class is authorized.
+ *
+ * @param[in]  aInstance                 A pointer to an OpenThread instance.
+ * @param[in]  aTlvType                  A TLV type to be authorized.
+ * @param[in]  aContext                  A pointer to arbitrary context information.
+ *
+ * @returns a boolean value indicating whether the TLV type is supported, based on current policy.
+ */
+typedef bool (*otHandleTcatTlvSupport)(otInstance *aInstance, otTcatCommandTlvType aTlvType, void *aContext);
+
+/**
+ * This structure represents a TCAT vendor information.
+ *
+ * The content of this structure MUST persist and remain unchanged while a TCAT session is running.
+ */
+typedef struct otTcatVendorInfo
+{
+    const char *mProvisioningUrl; ///< Provisioning URL path string
+    const char *mVendorName;      ///< Vendor name string
+    const char *mVendorModel;     ///< Vendor model string
+    const char *mVendorSwVersion; ///< Vendor software version string
+    const char *mVendorData;      ///< Vendor specific data string
+    const char *mPskdString;      ///< Vendor managed pre-shared key for device
+    const char *mInstallCode;     ///< Vendor managed install code string
+
+    /**
+     * Vendor managed advertised device ID array. Array is terminated like C string with OT_TCAT_DEVICE_ID_EMPTY.
+     */
+    const otTcatAdvertisedDeviceId *mAdvertisedDeviceIds;
+
+    /**
+     * Vendor managed general device ID array (if NULL: device ID is set to EUI-64 in binary format)
+     */
+    const otTcatGeneralDeviceId *mGeneralDeviceId;
+
+    /**
+     * Array with application service names as C string with maximum length OT_TCAT_SERVICE_NAME_MAX_LENGTH or NULL if
+     * not supported.
+     */
+    const char *mApplicationServiceName[OT_TCAT_APPLICATION_LAYER_MAX_COUNT];
+
+    /**
+     * Array with boolean values indicating if the service is of TCP type (otherwise UDP).
+     */
+    bool mApplicationServiceIsTcp[OT_TCAT_APPLICATION_LAYER_MAX_COUNT];
+
+    bool mKeepActiveAfterJoining; ///< Continue advertising after thread interface has joined a network
+
+    /**
+     * Prevent activating advertising indefinitely after the TCAT command OT_TCAT_TLV_STOP_THREAD_INTERFACE or
+     * OT_TCAT_TLV_DECOMMISSION has been received.
+     */
+    bool mDoNotActivateAfterLeaving;
+
+    otHandleTcatTlvSupport mTlvSupportHandler; ///< Optional pointer to a function to control TCAT TLV support
+
+} otTcatVendorInfo;
 
 /**
  * @}

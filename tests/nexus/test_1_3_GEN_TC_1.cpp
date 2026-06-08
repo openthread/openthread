@@ -279,9 +279,8 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
      *   - Pass Criteria (only applies if Device == DUT):
      *     - N/A
      */
-    Ip6::Address br1Rloc;
-    br1Rloc.SetToRoutingLocator(router1.Get<Mle::Mle>().GetMeshLocalPrefix(), br1.Get<Mle::Mle>().GetRloc16());
-    uint8_t tlvTypes[] = {NetDiag::Tlv::kVersion};
+    Ip6::Address br1Rloc    = br1.Get<Mle::Mle>().GetMeshLocalRloc();
+    uint8_t      tlvTypes[] = {NetDiag::Tlv::kVersion};
     SuccessOrQuit(
         router1.Get<NetDiag::Client>().SendDiagnosticGet(br1Rloc, tlvTypes, sizeof(tlvTypes), nullptr, nullptr));
 
@@ -311,8 +310,7 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
      *   - Pass Criteria (only applies if Device == DUT):
      *     - N/A
      */
-    Ip6::Address router1Rloc;
-    router1Rloc.SetToRoutingLocator(br1.Get<Mle::Mle>().GetMeshLocalPrefix(), router1.Get<Mle::Mle>().GetRloc16());
+    Ip6::Address router1Rloc = router1.Get<Mle::Mle>().GetMeshLocalRloc();
     SuccessOrQuit(
         br1.Get<NetDiag::Client>().SendDiagnosticGet(router1Rloc, tlvTypes, sizeof(tlvTypes), nullptr, nullptr));
 
@@ -342,8 +340,7 @@ void Test_1_3_GEN_TC_1(Topology aTopology, const char *aJsonFileName)
      *   - Pass Criteria (only applies if Device == DUT):
      *     - N/A
      */
-    Ip6::Address ed1Rloc;
-    ed1Rloc.SetToRoutingLocator(router1.Get<Mle::Mle>().GetMeshLocalPrefix(), ed1.Get<Mle::Mle>().GetRloc16());
+    Ip6::Address ed1Rloc = ed1.Get<Mle::Mle>().GetMeshLocalRloc();
     SuccessOrQuit(
         router1.Get<NetDiag::Client>().SendDiagnosticGet(ed1Rloc, tlvTypes, sizeof(tlvTypes), nullptr, nullptr));
 

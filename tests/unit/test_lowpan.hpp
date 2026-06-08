@@ -237,11 +237,11 @@ public:
     /**
      * This fields represent uncompressed IPv6 packet.
      */
-    Mac::Addresses   mMacAddrs;
-    Ip6::Header      mIpHeader;
-    Payload          mExtHeader;
-    Ip6::Header      mIpTunneledHeader;
-    Ip6::Udp::Header mUdpHeader;
+    Mac::Addresses mMacAddrs;
+    Ip6::Header    mIpHeader;
+    Payload        mExtHeader;
+    Ip6::Header    mIpTunneledHeader;
+    Ip6::UdpHeader mUdpHeader;
 
     /**
      * This fields represent compressed IPv6 packet.

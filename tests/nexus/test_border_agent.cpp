@@ -1311,6 +1311,10 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode, bool aExpectVendorIn
     static constexpr uint32_t kThreadRoleLeader             = 3 << 9;
     static constexpr uint32_t kFlagEpskcSupported           = 1 << 11;
     static constexpr uint32_t kFlagAdmitterSupported        = 1 << 14;
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    static constexpr uint32_t kFlagBbrIsActive  = 1 << 7;
+    static constexpr uint32_t kFlagBbrIsPrimary = 1 << 8;
+#endif
 
     MeshCoP::BorderAgent::Id id;
     BaTxtData::Info          info;
@@ -1448,6 +1452,35 @@ void ValidateMeshCoPTxtData(TxtData &aTxtData, Node &aNode, bool aExpectVendorIn
         VerifyOrQuit(!(stateBitmap & kFlagAdmitterSupported));
         VerifyOrQuit(!info.mStateBitmap.mAdmitterSupported);
     }
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    {
+        bool bbrEnabled = aNode.Get<Mle::Mle>().IsAttached() && aNode.Get<BackboneRouter::Local>().IsEnabled();
+        bool bbrPrimary = aNode.Get<Mle::Mle>().IsAttached() && aNode.Get<BackboneRouter::Local>().IsPrimary();
+
+        if (bbrEnabled)
+        {
+            VerifyOrQuit(stateBitmap & kFlagBbrIsActive);
+            VerifyOrQuit(info.mStateBitmap.mBbrIsActive);
+        }
+        else
+        {
+            VerifyOrQuit(!(stateBitmap & kFlagBbrIsActive));
+            VerifyOrQuit(!info.mStateBitmap.mBbrIsActive);
+        }
+
+        if (bbrPrimary)
+        {
+            VerifyOrQuit(stateBitmap & kFlagBbrIsPrimary);
+            VerifyOrQuit(info.mStateBitmap.mBbrIsPrimary);
+        }
+        else
+        {
+            VerifyOrQuit(!(stateBitmap & kFlagBbrIsPrimary));
+            VerifyOrQuit(!info.mStateBitmap.mBbrIsPrimary);
+        }
+    }
+#endif
 
     if (aExpectVendorInfo)
     {
@@ -2355,6 +2388,55 @@ void TestBorderAgentServiceRegistration(void)
 
     VerifyOrQuit(foundService);
 
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Enable Backbone Router on node0 and validate state bitmap updates");
+
+    node0.Get<BorderRouter::InfraIf>().Init(kInfraIfIndex, true);
+    node0.Get<BorderRouter::RoutingManager>().Init();
+    SuccessOrQuit(node0.Get<BorderRouter::RoutingManager>().SetEnabled(true));
+    node0.Get<BackboneRouter::Local>().SetEnabled(true);
+
+    nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    foundService = false;
+    while (node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNone)
+    {
+        if (StringMatch(service.mServiceType, "_meshcop._udp"))
+        {
+            VerifyOrQuit(!foundService);
+            foundService = true;
+            ValidateRegisteredServiceData(service, node0);
+        }
+    }
+    VerifyOrQuit(foundService);
+    node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Disable Backbone Router on node0 and validate state bitmap updates");
+
+    node0.Get<BackboneRouter::Local>().SetEnabled(false);
+
+    nexus.AdvanceTime(10 * Time::kOneSecondInMsec);
+
+    iterator = node0.Get<Dns::Multicast::Core>().AllocateIterator();
+    VerifyOrQuit(iterator != nullptr);
+
+    foundService = false;
+    while (node0.Get<Dns::Multicast::Core>().GetNextService(*iterator, service, entryState) == kErrorNone)
+    {
+        if (StringMatch(service.mServiceType, "_meshcop._udp"))
+        {
+            VerifyOrQuit(!foundService);
+            foundService = true;
+            ValidateRegisteredServiceData(service, node0);
+        }
+    }
+    VerifyOrQuit(foundService);
     node0.Get<Dns::Multicast::Core>().FreeIterator(*iterator);
 }
 

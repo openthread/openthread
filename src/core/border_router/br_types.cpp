@@ -284,16 +284,14 @@ bool FavoredOmrPrefix::IsInfrastructureDerived(void) const
 
 void FavoredOmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
-    mPrefix         = aOnMeshPrefixConfig.GetPrefix();
-    mPreference     = aOnMeshPrefixConfig.GetPreference();
-    mIsDomainPrefix = aOnMeshPrefixConfig.mDp;
+    mPrefix     = aOnMeshPrefixConfig.GetPrefix();
+    mPreference = aOnMeshPrefixConfig.GetPreference();
 }
 
 void FavoredOmrPrefix::SetFrom(const OmrPrefix &aOmrPrefix)
 {
-    mPrefix         = aOmrPrefix.GetPrefix();
-    mPreference     = aOmrPrefix.GetPreference();
-    mIsDomainPrefix = aOmrPrefix.IsDomainPrefix();
+    mPrefix     = aOmrPrefix.GetPrefix();
+    mPreference = aOmrPrefix.GetPreference();
 }
 
 bool FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const

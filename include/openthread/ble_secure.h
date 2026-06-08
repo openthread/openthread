@@ -138,6 +138,9 @@ otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorIn
 /**
  * Enables the TCAT protocol over BLE Secure.
  *
+ * Vendor info must be set before calling this function. Depending on the policy defined in the vendor info, TCAT may
+ * start in standby mode if the device is commissioned and Thread is enabled.
+ *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aJoinHandler      A pointer to a function that is called when a network join or leave
  *                               operation is requested under guidance of the TCAT Commissioner.

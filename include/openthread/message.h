@@ -234,7 +234,7 @@ void otMessageSetLoopbackToHostAllowed(otMessage *aMessage, bool aAllowLoopbackT
  * Indicates whether the given message may be looped back in a case of a multicast destination address.
  *
  * If @p aMessage is used along with an `otMessageInfo`, the `mMulticastLoop` field from `otMessageInfo` structure
- * takes precedence and will be used instead of the the value set on @p aMessage.
+ * takes precedence and will be used instead of the value set on @p aMessage.
  *
  * This API is mainly intended for use along with `otIp6Send()` which expects an already prepared IPv6 message.
  *

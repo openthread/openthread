@@ -674,24 +674,20 @@ public:
     static const char *PreferenceToString(signed int aPreference);
 
     /**
-     * Parses the argument as an IP address.
+     * Parses the argument as an IPv6 address or synthesizes it from an IPv4 address.
      *
      * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
      * NAT64 prefix in the network data.
      *
-     * @param[in]  aInstance       A pointer to OpenThread instance.
      * @param[in]  aArg            The argument string to parse.
-     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed IPv6 address.
+     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed/synthesized IPv6 address.
      * @param[out] aSynthesized    Whether @p aAddress is synthesized from an IPv4 address.
      *
-     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_NONE           The argument was parsed/synthesized successfully.
      * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid IP address.
      * @retval OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
      */
-    static otError ParseToIp6Address(otInstance   *aInstance,
-                                     const Arg    &aArg,
-                                     otIp6Address &aAddress,
-                                     bool         &aSynthesized);
+    otError ParseOrSynthesizeIp6Address(const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized);
 
     /**
      * Parses the argument as a Joiner Discerner.

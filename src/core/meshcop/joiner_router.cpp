@@ -168,7 +168,7 @@ template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Msg &aMsg)
 
     SuccessOrExit(error = message->AppendBytesFromMessage(aMsg.mMessage, offsetRange));
 
-    messageInfo.GetPeerAddr().SetToLinkLocalAddress(joinerIid);
+    messageInfo.GetPeerAddr().InitAsLinkLocalAddress(joinerIid);
     messageInfo.SetPeerPort(joinerPort);
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));

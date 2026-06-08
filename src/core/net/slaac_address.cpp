@@ -118,7 +118,7 @@ Error Slaac::FindDomainIdFor(const Address &aAddress, uint8_t &aDomainId) const
 
 bool Slaac::IsSlaac(const NetworkData::OnMeshPrefixConfig &aConfig) const
 {
-    return aConfig.mSlaac && !aConfig.mDp && (aConfig.GetPrefix().GetLength() == NetworkPrefix::kLength);
+    return aConfig.mSlaac && (aConfig.GetPrefix().GetLength() == NetworkPrefix::kLength);
 }
 
 bool Slaac::IsFiltered(const NetworkData::OnMeshPrefixConfig &aConfig) const
@@ -439,7 +439,7 @@ Error Slaac::GenerateIid(Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) 
         sha256.Update(secretKey);
         sha256.Finish(hash);
 
-        aAddress.GetAddress().GetIid().SetBytes(hash.GetBytes());
+        aAddress.GetAddress().GetIid().InitFrom(hash.GetBytes());
 
         // If the IID is reserved, try again with a new dadCounter
         if (aAddress.GetAddress().GetIid().IsReserved())

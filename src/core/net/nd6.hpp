@@ -832,7 +832,7 @@ public:
          * @retval TRUE  The header is valid.
          * @retval FALSE The header is not valid.
          */
-        bool IsValid(void) const { return GetType() == Icmp::Header::kTypeRouterAdvert; }
+        bool IsValid(void) const { return GetType() == Icmp6Header::kTypeRouterAdvert; }
 
         /**
          * Sets the RA message to default values.
@@ -920,7 +920,7 @@ public:
          *
          * @returns The ICMPv6 message type.
          */
-        Icmp::Header::Type GetType(void) const { return static_cast<Icmp::Header::Type>(mType); }
+        Icmp6Header::Type GetType(void) const { return static_cast<Icmp6Header::Type>(mType); }
 
     private:
         // Router Advertisement Message
@@ -989,7 +989,7 @@ public:
         bool IsValid(void) const
         {
             return (mData.GetBytes() != nullptr) && (mData.GetLength() >= sizeof(Header)) &&
-                   (GetHeader().GetType() == Icmp::Header::kTypeRouterAdvert);
+                   (GetHeader().GetType() == Icmp6Header::kTypeRouterAdvert);
         }
 
         /**
@@ -1125,7 +1125,7 @@ public:
     RouterSolicitHeader(void);
 
 private:
-    Icmp::Header mHeader; // The common ICMPv6 header.
+    Icmp6Header mHeader; // The common ICMPv6 header.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouterSolicitHeader) == 8, "invalid RouterSolicitHeader structure");
@@ -1147,7 +1147,7 @@ public:
      * @retval TRUE  If the message header is valid.
      * @retval FALSE If the message header is not valid.
      */
-    bool IsValid(void) const { return (mType == Icmp::Header::kTypeNeighborSolicit) && (mCode == 0); }
+    bool IsValid(void) const { return (mType == Icmp6Header::kTypeNeighborSolicit) && (mCode == 0); }
 
     /**
      * Gets the Target Address field.
@@ -1208,7 +1208,7 @@ public:
      * @retval TRUE  If the message is valid.
      * @retval FALSE If the message is not valid.
      */
-    bool IsValid(void) const { return (mType == Icmp::Header::kTypeNeighborAdvert) && (mCode == 0); }
+    bool IsValid(void) const { return (mType == Icmp6Header::kTypeNeighborAdvert) && (mCode == 0); }
 
     /**
      * Indicates whether or not the Router Flag is set in the NA message.

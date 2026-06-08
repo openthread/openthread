@@ -73,7 +73,7 @@ typedef struct otBorderRouterConfig
     bool        mOnMesh : 1;       ///< Whether this prefix is considered on-mesh.
     bool        mStable : 1;       ///< Whether this configuration is considered Stable Network Data.
     bool        mNdDns : 1;        ///< Whether this border router can supply DNS information via ND.
-    bool        mDp : 1;           ///< Whether prefix is a Thread Domain Prefix (added since Thread 1.2).
+    bool        mDp : 1;           ///< Reserved (previously Thread Domain Prefix flag).
     uint16_t    mRloc16;           ///< The border router's RLOC16 (value ignored on config add).
 } otBorderRouterConfig;
 

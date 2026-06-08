@@ -61,6 +61,7 @@ TcatAgent::TcatAgent(Instance &aInstance)
     , mActiveOrStandbyTimer(aInstance)
     , mTcatActiveDurationMs(0)
     , mHashVerificationAttempts(1)
+    , mLastDeviceRole(Mle::kRoleDisabled)
 {
     ClearCommissionerState();
     mLastHashVerificationTimestamp = Get<UptimeTracker>().GetUptimeInSeconds();
@@ -95,7 +96,15 @@ Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallb
     mState                = kStateActive;
     mNextState            = kStateActive;
     mTcatActiveDurationMs = 0;
+    mLastDeviceRole       = Get<Mle::Mle>().GetRole();
+
     LogInfo("Start");
+
+    if (!mVendorInfo->mKeepActiveAfterJoining && mLastDeviceRole != Mle::kRoleDisabled &&
+        Get<ActiveDatasetManager>().IsCommissioned())
+    {
+        IgnoreError(Standby());
+    }
 
 exit:
     LogWarnOnError(error, "Start");
@@ -400,9 +409,18 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncomingMessage, Message &aOutg
     const uint16_t initialOutgoingMsgLength = aOutgoingMessage.GetLength();
     bool           response                 = false;
 
+    VerifyOrExit(mVendorInfo != nullptr, error = kErrorInvalidState);
     VerifyOrExit(IsConnected(), error = kErrorInvalidState);
 
     SuccessOrExit(error = tlvInfo.ParseFrom(aIncomingMessage, aIncomingMessage.GetOffset()));
+
+    if (mVendorInfo->mTlvSupportHandler != nullptr &&
+        !mVendorInfo->mTlvSupportHandler(&GetInstance(), static_cast<otTcatCommandTlvType>(tlvInfo.GetType()),
+                                         mJoinCallback.GetContext()))
+    {
+        statusCode = kStatusUnsupported;
+        ExitNow();
+    }
 
     switch (tlvInfo.GetType())
     {
@@ -665,13 +683,19 @@ Error TcatAgent::HandleDecommission(void)
 
     VerifyOrExit(IsCommandClassAuthorized(kDecommissioning), error = kErrorRejected);
     SuccessOrExit(error = Get<Ble::BleSecure>().GetPeerCertificateDer(buf, &bufLen, bufLen));
-    Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
 
-    IgnoreReturnValue(otThreadSetEnabled(&GetInstance(), false));
+    Get<Mle::Mle>().Stop();
+
+    if (!mVendorInfo->mDoNotActivateAfterLeaving)
+    {
+        IgnoreError(Activate(0, 0));
+    }
+
     Get<ActiveDatasetManager>().Clear();
     Get<PendingDatasetManager>().Clear();
 
     IgnoreReturnValue(Get<Instance>().ErasePersistentInfo());
+    Get<Settings>().SaveTcatCommissionerCertificate(buf, static_cast<uint16_t>(bufLen));
 
 #if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     {
@@ -681,6 +705,7 @@ Error TcatAgent::HandleDecommission(void)
     }
 #endif
 
+    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
     mIsCommissioned = false; // enable repeated commissioning/decommissioning in a session
 
 exit:
@@ -979,24 +1004,29 @@ Error TcatAgent::HandleStartThreadInterface(void)
 #endif
 
     Get<ThreadNetif>().Up();
-    error = Get<Mle::Mle>().Start();
+    SuccessOrExit(error = Get<Mle::Mle>().Start());
 
 exit:
     // error values for callback MUST be limited to the allowed set, see #JoinCallback
-    mJoinCallback.InvokeIfSet(error);
+    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ true, error);
     return error;
 }
 
 Error TcatAgent::HandleStopThreadInterface(void)
 {
-    Error error;
+    Error error = kErrorNone;
 
     VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
 
-    error = otThreadSetEnabled(&GetInstance(), false);
+    Get<Mle::Mle>().Stop();
+
+    if (!mVendorInfo->mDoNotActivateAfterLeaving)
+    {
+        IgnoreError(Activate(0, 0));
+    }
 
 exit:
-    mJoinCallback.InvokeIfSet(error);
+    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
     return error;
 }
 
@@ -1041,6 +1071,26 @@ void TcatAgent::NotifyStateChange(void)
 {
     Get<Ble::BleSecure>().NotifySendAdvertisements(mState == kStateActive || mState == kStateActiveTemporary ||
                                                    mState == kStateConnected);
+}
+
+void TcatAgent::HandleNotifierEvents(Events aEvents)
+{
+    VerifyOrExit(IsStarted());
+    VerifyOrExit(mVendorInfo != nullptr);
+
+    if (aEvents.ContainsAny(kEventThreadRoleChanged))
+    {
+        if (!mVendorInfo->mKeepActiveAfterJoining && Get<Mle::Mle>().IsAttached() &&
+            (mLastDeviceRole == Mle::kRoleDisabled || mLastDeviceRole == Mle::kRoleDetached))
+        {
+            IgnoreError(Standby());
+        }
+
+        mLastDeviceRole = Get<Mle::Mle>().GetRole();
+    }
+
+exit:
+    return;
 }
 
 template <> void TcatAgent::HandleTmf<kUriTcatEnable>(Coap::Msg &aMsg)

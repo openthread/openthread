@@ -323,6 +323,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 9b: Eth 1 sends mDNS query QTYPE SRV.");
     {
         Dns::Multicast::Core::SrvResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback        = [](otInstance *, const otPlatDnssdSrvResult *) {};
         resolver.mServiceInstance = kSrpInstanceName;
@@ -345,6 +350,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 9c: Eth 1 sends mDNS query QTYPE AAAA.");
     {
         Dns::Multicast::Core::AddressResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback     = [](otInstance *, const otPlatDnssdAddressResult *) {};
         resolver.mHostName     = kSrpHostName;
@@ -464,6 +474,10 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     {
         Dns::Multicast::Core::Browser browser;
 
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(browser);
         browser.mCallback     = [](otInstance *, const otPlatDnssdBrowseResult *) {};
         browser.mServiceType  = kSrpServiceType;
@@ -500,6 +514,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 15b: Eth 1 sends mDNS query QTYPE SRV.");
     {
         Dns::Multicast::Core::SrvResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback        = [](otInstance *, const otPlatDnssdSrvResult *) {};
         resolver.mServiceInstance = kSrpInstanceName;
@@ -523,6 +542,11 @@ void Test_1_3_SRP_TC_1(const char *aJsonFileName)
     Log("Step 15c: Eth 1 sends mDNS query QTYPE AAAA.");
     {
         Dns::Multicast::Core::AddressResolver resolver;
+
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(false, kInfraIfIndex));
+        nexus.AdvanceTime(1000);
+        SuccessOrQuit(eth1.Get<Dns::Multicast::Core>().SetEnabled(true, kInfraIfIndex));
+
         ClearAllBytes(resolver);
         resolver.mCallback     = [](otInstance *, const otPlatDnssdAddressResult *) {};
         resolver.mHostName     = kSrpHostName;

@@ -100,7 +100,7 @@ class Firewall(thread_cert.TestCase):
         self.assertEqual('router', router1.get_state())
         self.assertEqual('router', router2.get_state())
 
-        br1.set_domain_prefix(config.DOMAIN_PREFIX, 'prosD')
+        br1.add_prefix(config.DOMAIN_PREFIX, 'pros')
         br1.register_netdata()
 
         router1.add_ipmaddr(MA1)

@@ -105,7 +105,6 @@ public:
      *
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
-     * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
      * Does not check the current role of device.
      *

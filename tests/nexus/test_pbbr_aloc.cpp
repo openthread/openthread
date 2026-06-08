@@ -86,13 +86,13 @@ void TestPbbrAloc(void)
     Ip6::Address aloc;
 
     // 1. Leader ALOC
-    leader.Get<Mle::Mle>().GetLeaderAloc(aloc);
+    leader.Get<Mle::Mle>().ComposeLeaderAloc(aloc);
     Log("Pinging Leader ALOC %s from ROUTER", aloc.ToString().AsCString());
     nexus.SendAndVerifyEchoRequest(router, aloc);
 
     // 2. PBBR ALOC
     aloc.SetPrefix(leader.Get<Mle::Mle>().GetMeshLocalPrefix());
-    aloc.GetIid().SetToLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
+    aloc.GetIid().InitAsLocator(Mle::Aloc16::ForPrimaryBackboneRouter());
     Log("Pinging PBBR ALOC %s from ROUTER", aloc.ToString().AsCString());
     nexus.SendAndVerifyEchoRequest(router, aloc);
 

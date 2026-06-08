@@ -57,7 +57,7 @@ void InfraIf::AfterInit(void)
     GetLinkLayerAddress(mac);
     SuccessOrQuit(mac.ConvertToIid(iid));
 
-    address.SetToLinkLocalAddress(iid);
+    address.InitAsLinkLocalAddress(iid);
 
     AddAddress(address);
 }
@@ -247,11 +247,11 @@ void InfraIf::ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBu
 
     packet.Init(aBuffer, aBufferLength);
 
-    VerifyOrExit(packet.GetLength() >= sizeof(Ip6::Icmp::Header));
+    VerifyOrExit(packet.GetLength() >= sizeof(Ip6::Icmp6Header));
 
-    switch (reinterpret_cast<const Ip6::Icmp::Header *>(packet.GetBytes())->GetType())
+    switch (reinterpret_cast<const Ip6::Icmp6Header *>(packet.GetBytes())->GetType())
     {
-    case Ip6::Icmp::Header::kTypeRouterAdvert:
+    case Ip6::Icmp6Header::kTypeRouterAdvert:
     {
         Ip6::Nd::RouterAdvert::RxMessage raMessage(packet);
 
@@ -267,12 +267,12 @@ void InfraIf::ProcessIcmp6Nd(const Ip6::Address &aSrcAddress, const uint8_t *aBu
         break;
     }
 
-    case Ip6::Icmp::Header::kTypeRouterSolicit:
+    case Ip6::Icmp6Header::kTypeRouterSolicit:
         HandleRouterSolicitation(aSrcAddress);
         break;
 
-    case Ip6::Icmp::Header::kTypeNeighborAdvert:
-    case Ip6::Icmp::Header::kTypeNeighborSolicit:
+    case Ip6::Icmp6Header::kTypeNeighborAdvert:
+    case Ip6::Icmp6Header::kTypeNeighborSolicit:
         // TODO: Handle other ND messages as needed for the simulation.
         break;
 
@@ -345,24 +345,24 @@ void InfraIf::SendEchoRequest(const Ip6::Address &aSrcAddress,
                               uint16_t            aPayloadSize,
                               uint8_t             aHopLimit)
 {
-    Message          *message;
-    Ip6::Header       ip6Header;
-    Ip6::Icmp::Header icmpHeader;
+    Message         *message;
+    Ip6::Header      ip6Header;
+    Ip6::Icmp6Header icmpHeader;
 
     message = Get<Ip6::Ip6>().NewMessage();
     VerifyOrQuit(message != nullptr);
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();
-    ip6Header.SetPayloadLength(sizeof(Ip6::Icmp::Header) + aPayloadSize);
+    ip6Header.SetPayloadLength(sizeof(Ip6::Icmp6Header) + aPayloadSize);
     ip6Header.SetNextHeader(Ip6::kProtoIcmp6);
     ip6Header.SetHopLimit(aHopLimit);
     ip6Header.SetSource(aSrcAddress);
     ip6Header.SetDestination(aDestAddress);
 
     icmpHeader.Clear();
-    icmpHeader.SetType(Ip6::Icmp::Header::kTypeEchoRequest);
-    icmpHeader.SetCode(static_cast<Ip6::Icmp::Header::Code>(0));
+    icmpHeader.SetType(Ip6::Icmp6Header::kTypeEchoRequest);
+    icmpHeader.SetCode(static_cast<Ip6::Icmp6Header::Code>(0));
     icmpHeader.SetId(aIdentifier);
     icmpHeader.SetSequence(0);
 
@@ -382,12 +382,12 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
                       uint16_t            aDestPort,
                       Message            &aPayload)
 {
-    Ip6::Header      ip6Header;
-    Ip6::Udp::Header udpHeader;
+    Ip6::Header    ip6Header;
+    Ip6::UdpHeader udpHeader;
 
     ip6Header.Clear();
     ip6Header.InitVersionTrafficClassFlow();
-    ip6Header.SetPayloadLength(sizeof(Ip6::Udp::Header) + aPayload.GetLength());
+    ip6Header.SetPayloadLength(sizeof(Ip6::UdpHeader) + aPayload.GetLength());
     ip6Header.SetNextHeader(Ip6::kProtoUdp);
     ip6Header.SetHopLimit(64);
     ip6Header.SetSource(aSrcAddress);
@@ -395,7 +395,7 @@ void InfraIf::SendUdp(const Ip6::Address &aSrcAddress,
 
     udpHeader.SetSourcePort(aSourcePort);
     udpHeader.SetDestinationPort(aDestPort);
-    udpHeader.SetLength(sizeof(Ip6::Udp::Header) + aPayload.GetLength());
+    udpHeader.SetLength(sizeof(Ip6::UdpHeader) + aPayload.GetLength());
     udpHeader.SetChecksum(0);
 
     SuccessOrQuit(aPayload.Prepend(udpHeader));
@@ -435,7 +435,7 @@ void InfraIf::Receive(Message &aMessage)
         Message *payload = aMessage.Clone<kNoReservedHeader>();
 
         VerifyOrQuit(payload != nullptr);
-        payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
         otPlatInfraIfDhcp6PdClientHandleReceived(&GetInstance(), payload, mIfIndex);
         ExitNow();
     }
@@ -446,10 +446,10 @@ void InfraIf::Receive(Message &aMessage)
     {
         switch (headers.GetIcmpHeader().GetType())
         {
-        case Ip6::Icmp::Header::kTypeRouterAdvert:
-        case Ip6::Icmp::Header::kTypeRouterSolicit:
-        case Ip6::Icmp::Header::kTypeNeighborAdvert:
-        case Ip6::Icmp::Header::kTypeNeighborSolicit:
+        case Ip6::Icmp6Header::kTypeRouterAdvert:
+        case Ip6::Icmp6Header::kTypeRouterSolicit:
+        case Ip6::Icmp6Header::kTypeNeighborAdvert:
+        case Ip6::Icmp6Header::kTypeNeighborSolicit:
         {
             Heap::Data payload;
             uint16_t   offset = sizeof(Ip6::Header);
@@ -462,11 +462,11 @@ void InfraIf::Receive(Message &aMessage)
             ExitNow();
         }
 
-        case Ip6::Icmp::Header::kTypeEchoRequest:
+        case Ip6::Icmp6Header::kTypeEchoRequest:
             HandleEchoRequest(headers.GetIp6Header(), aMessage);
             ExitNow();
 
-        case Ip6::Icmp::Header::kTypeEchoReply:
+        case Ip6::Icmp6Header::kTypeEchoReply:
             HandleEchoReply(headers.GetIp6Header(), aMessage);
             ExitNow();
 
@@ -483,7 +483,7 @@ void InfraIf::Receive(Message &aMessage)
             Message          *payload = aMessage.Clone<kNoReservedHeader>();
 
             VerifyOrQuit(payload != nullptr);
-            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+            payload->RemoveHeader(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
 
             senderAddress.mAddress      = headers.GetSourceAddress();
             senderAddress.mPort         = headers.GetSourcePort();
@@ -502,13 +502,13 @@ void InfraIf::Receive(Message &aMessage)
         {
             Ip6::SockAddr senderAddr;
             Heap::Data    payload;
-            uint16_t      offset = sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header);
+            uint16_t      offset = sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader);
 
             senderAddr.SetAddress(headers.GetSourceAddress());
             senderAddr.SetPort(headers.GetSourcePort());
 
             SuccessOrQuit(
-                payload.SetFrom(aMessage, offset, headers.GetUdpHeader().GetLength() - sizeof(Ip6::Udp::Header)));
+                payload.SetFrom(aMessage, offset, headers.GetUdpHeader().GetLength() - sizeof(Ip6::UdpHeader)));
             Get<Trel>().Receive(GetInstance(), payload, senderAddr);
         }
         ExitNow();
@@ -518,7 +518,7 @@ void InfraIf::Receive(Message &aMessage)
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     if (headers.IsUdp() && headers.GetDestinationPort() == UpstreamDns::kDnsPort)
     {
-        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
         if (Get<UpstreamDns>().HandleUpstreamDnsResponse(headers.GetSourceAddress(), aMessage))
         {
             ExitNow();
@@ -540,7 +540,7 @@ void InfraIf::Receive(Message &aMessage)
         messageInfo.SetSockAddr(headers.GetDestinationAddress());
         messageInfo.SetSockPort(headers.GetDestinationPort());
 
-        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+        aMessage.SetOffset(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
         if (mUdpHook(GetInstance(), aMessage, messageInfo))
         {
             ExitNow();
@@ -584,10 +584,10 @@ exit:
 
 void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
 {
-    Message          *replyMessage;
-    Ip6::Header       replyHeader;
-    Ip6::Icmp::Header replyIcmp;
-    uint16_t          payloadLen = aMessage.GetLength() - sizeof(Ip6::Header);
+    Message         *replyMessage;
+    Ip6::Header      replyHeader;
+    Ip6::Icmp6Header replyIcmp;
+    uint16_t         payloadLen = aMessage.GetLength() - sizeof(Ip6::Header);
 
     replyMessage = Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(replyMessage != nullptr);
@@ -604,7 +604,7 @@ void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
     replyHeader.SetSource(aHeader.GetDestination());
     replyHeader.SetDestination(aHeader.GetSource());
 
-    replyIcmp.SetType(Ip6::Icmp::Header::kTypeEchoReply);
+    replyIcmp.SetType(Ip6::Icmp6Header::kTypeEchoReply);
     replyMessage->Write(0, replyIcmp);
 
     // Recalculate ICMPv6 checksum
@@ -619,7 +619,7 @@ void InfraIf::HandleEchoRequest(const Ip6::Header &aHeader, Message &aMessage)
 
 void InfraIf::HandleEchoReply(const Ip6::Header &aHeader, Message &aMessage)
 {
-    Ip6::Icmp::Header icmpHeader;
+    Ip6::Icmp6Header icmpHeader;
 
     SuccessOrQuit(aMessage.Read(sizeof(Ip6::Header), icmpHeader));
     mEchoReplyCallback.InvokeIfSet(aHeader.GetSource(), icmpHeader.GetId(), icmpHeader.GetSequence());

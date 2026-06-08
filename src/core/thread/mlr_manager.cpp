@@ -528,11 +528,12 @@ Error Manager::SendMessage(const Ip6::Address         *aAddresses,
         uint8_t pbbrServiceId;
 
         SuccessOrExit(error = Get<BackboneRouter::Leader>().GetServiceId(pbbrServiceId));
-        Get<Mle::Mle>().GetServiceAloc(pbbrServiceId, destAddr);
+        Get<Mle::Mle>().ComposeServiceAloc(pbbrServiceId, destAddr);
     }
     else
     {
-        destAddr.SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(), Get<BackboneRouter::Leader>().GetServer16());
+        destAddr.InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
+                                      Get<BackboneRouter::Leader>().GetServer16());
     }
 
     error = Get<Tmf::Agent>().SendMessageTo(*message, destAddr, aResponseHandler, this);

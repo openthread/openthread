@@ -224,7 +224,7 @@ void RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
 
         SuccessOrAssert(randomUlaPrefix.GenerateRandomUla());
 
-        mBrUlaPrefix.Set(randomUlaPrefix);
+        mBrUlaPrefix.InitFrom(randomUlaPrefix);
         mBrUlaPrefix.SetSubnetId(0);
         mBrUlaPrefix.SetLength(kBrUlaPrefixLength);
 
@@ -706,8 +706,8 @@ void RoutingManager::CheckReachabilityToSendIcmpError(const Message &aMessage, c
     messageInfo.Clear();
     messageInfo.SetPeerAddr(aIp6Header.GetSource());
 
-    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp::Header::kTypeDstUnreach,
-                                           Ip6::Icmp::Header::kCodeDstUnreachProhibited, messageInfo, aMessage));
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::Icmp6Header::kTypeDstUnreach,
+                                           Ip6::Icmp6Header::kCodeDstUnreachProhibited, messageInfo, aMessage));
 
 exit:
     return;
@@ -1168,11 +1168,6 @@ RoutingManager::OmrPrefixManager::InfoString RoutingManager::OmrPrefixManager::F
     {
         string.Append("%s (prf:%s", aFavoredPrefix.GetPrefix().ToString().AsCString(),
                       RoutePreferenceToString(aFavoredPrefix.GetPreference()));
-
-        if (aFavoredPrefix.IsDomainPrefix())
-        {
-            string.Append(", domain");
-        }
 
         if (aFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
         {
@@ -1909,7 +1904,7 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
     // (2) Favored OMR prefix.
 
-    if (!omrPrefixManager.GetFavoredPrefix().IsEmpty() && !omrPrefixManager.GetFavoredPrefix().IsDomainPrefix())
+    if (!omrPrefixManager.GetFavoredPrefix().IsEmpty())
     {
         mPrefixes.Add(omrPrefixManager.GetFavoredPrefix().GetPrefix());
     }
@@ -1928,11 +1923,6 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
         // it, while it might still be present in the Network Data due to
         // delays in registering changes with the leader.
 
-        if (prefixConfig.mDp)
-        {
-            continue;
-        }
-
         if (IsValidOmrPrefix(prefixConfig) &&
             (prefixConfig.GetPrefix() != omrPrefixManager.GetLocalPrefix().GetPrefix()))
         {
@@ -1940,13 +1930,13 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
         }
     }
 
-    // (4) All other on-mesh prefixes (excluding Domain Prefix).
+    // (4) All other on-mesh prefixes.
 
     iterator = NetworkData::kIteratorInit;
 
     while (Get<NetworkData::Leader>().GetNext(iterator, prefixConfig) == kErrorNone)
     {
-        if (prefixConfig.mOnMesh && !prefixConfig.mDp && !IsValidOmrPrefix(prefixConfig))
+        if (prefixConfig.mOnMesh && !IsValidOmrPrefix(prefixConfig))
         {
             mPrefixes.Add(prefixConfig.GetPrefix());
         }

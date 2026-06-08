@@ -161,7 +161,7 @@ void UnitTester::TestLinkMetricsManager(void)
     }
 
     // subject1 received a response with a success status code
-    linkLocalAddr.SetToLinkLocalAddress(AsCoreType(&mTestChildList[0].mExtAddress));
+    linkLocalAddr.InitAsLinkLocalAddress(AsCoreType(&mTestChildList[0].mExtAddress));
     linkMetricsMgr->HandleMgmtResponse(&linkLocalAddr, MapEnum(LinkMetrics::Status::kStatusSuccess));
     VerifyOrQuit(subject1->mState == LinkMetricsManager::SubjectState::kActive);
 

@@ -52,11 +52,11 @@ void TestTmfOrigin(void)
     VerifyOrQuit(message != nullptr);
 
     // 1. Inner UDP Header
-    Ip6::Udp::Header udpHeader;
+    Ip6::UdpHeader udpHeader;
     udpHeader.Clear();
     udpHeader.SetSourcePort(1234);
     udpHeader.SetDestinationPort(Tmf::kUdpPort);
-    udpHeader.SetLength(sizeof(Ip6::Udp::Header));
+    udpHeader.SetLength(sizeof(Ip6::UdpHeader));
 
     // 2. Inner IPv6 Header
     Ip6::Header innerHeader;
@@ -65,7 +65,7 @@ void TestTmfOrigin(void)
     innerHeader.SetSource(Ip6::Address::GetLinkLocalAllNodesMulticast()); // dummy LL source
     innerHeader.SetDestination(linkLocal);
     innerHeader.SetNextHeader(Ip6::kProtoUdp);
-    innerHeader.SetPayloadLength(sizeof(Ip6::Udp::Header));
+    innerHeader.SetPayloadLength(sizeof(Ip6::UdpHeader));
 
     // 3. Outer IPv6 Header (IP-in-IP)
     Ip6::Header outerHeader;
@@ -74,7 +74,7 @@ void TestTmfOrigin(void)
     outerHeader.SetSource(linkLocal);
     outerHeader.SetDestination(mlEid);
     outerHeader.SetNextHeader(Ip6::kProtoIp6);
-    outerHeader.SetPayloadLength(sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+    outerHeader.SetPayloadLength(sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
 
     // Append all headers to the message
     SuccessOrQuit(message->Append(outerHeader));
@@ -113,11 +113,11 @@ void TestTmfOriginBypassed(void)
     VerifyOrQuit(message != nullptr);
 
     // 1. Inner UDP Header
-    Ip6::Udp::Header udpHeader;
+    Ip6::UdpHeader udpHeader;
     udpHeader.Clear();
     udpHeader.SetSourcePort(1234);
     udpHeader.SetDestinationPort(Tmf::kUdpPort);
-    udpHeader.SetLength(sizeof(Ip6::Udp::Header));
+    udpHeader.SetLength(sizeof(Ip6::UdpHeader));
 
     // 2. Inner IPv6 Header
     Ip6::Header innerHeader;
@@ -126,7 +126,7 @@ void TestTmfOriginBypassed(void)
     innerHeader.SetSource(Ip6::Address::GetLinkLocalAllNodesMulticast()); // dummy LL source
     innerHeader.SetDestination(linkLocal);
     innerHeader.SetNextHeader(Ip6::kProtoUdp);
-    innerHeader.SetPayloadLength(sizeof(Ip6::Udp::Header));
+    innerHeader.SetPayloadLength(sizeof(Ip6::UdpHeader));
 
     // 3. Destination Options Header (containing 6 bytes of padding to make it 8 bytes total)
     Ip6::ExtensionHeader dstHeader;
@@ -143,7 +143,7 @@ void TestTmfOriginBypassed(void)
     outerHeader.SetSource(linkLocal);
     outerHeader.SetDestination(mlEid);
     outerHeader.SetNextHeader(Ip6::kProtoDstOpts);
-    outerHeader.SetPayloadLength(dstHeader.GetSize() + sizeof(Ip6::Header) + sizeof(Ip6::Udp::Header));
+    outerHeader.SetPayloadLength(dstHeader.GetSize() + sizeof(Ip6::Header) + sizeof(Ip6::UdpHeader));
 
     // Append all headers to the message
     SuccessOrQuit(message->Append(outerHeader));

@@ -125,7 +125,6 @@ build_simulation()
     fi
 
     if [[ ${version} != "1.1" ]]; then
-        options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
     fi
 
@@ -184,7 +183,6 @@ build_posix()
     )
 
     if [[ ${version} != "1.1" ]]; then
-        options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
@@ -346,14 +344,12 @@ do_build_otbr_docker()
         "-DOT_ANYCAST_LOCATOR=ON"
         "-DOT_COVERAGE=ON"
         "-DOT_DNS_CLIENT=ON"
-        "-DOT_DUA=ON"
         "-DOT_MLR=ON"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_SLAAC=ON"
         "-DOT_SRP_CLIENT=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
-        "-DOTBR_DUA_ROUTING=ON"
         "-DOTBR_DHCP6_PD=ON"
     )
     local args=(

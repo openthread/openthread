@@ -45,10 +45,10 @@ struct NoEchoReplyContext
 
 void HandleIcmpNoEchoReply(void *aContext, otMessage *, const otMessageInfo *, const otIcmp6Header *aIcmpHeader)
 {
-    NoEchoReplyContext      *ctx    = static_cast<NoEchoReplyContext *>(aContext);
-    const Ip6::Icmp::Header *header = AsCoreTypePtr(aIcmpHeader);
+    NoEchoReplyContext     *ctx    = static_cast<NoEchoReplyContext *>(aContext);
+    const Ip6::Icmp6Header *header = AsCoreTypePtr(aIcmpHeader);
 
-    if (header->GetType() == Ip6::Icmp::Header::kTypeEchoReply && header->GetId() == ctx->mId)
+    if (header->GetType() == Ip6::Icmp6Header::kTypeEchoReply && header->GetId() == ctx->mId)
     {
         ctx->mReceived = true;
     }
@@ -110,8 +110,8 @@ void TestService(void)
     Ip6::Address aloc0;
     Ip6::Address aloc1;
 
-    aloc0.SetToAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(0));
-    aloc1.SetToAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(1));
+    aloc0.InitAsAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(0));
+    aloc1.InitAsAnycastLocator(leader.Get<Mle::Mle>().GetMeshLocalPrefix(), Mle::Aloc16::FromServiceId(1));
 
     // Initial check: no ALOCs
     for (Node &node : nexus.GetNodes())

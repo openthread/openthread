@@ -172,7 +172,7 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
         if (leaderNode->Get<Mle::Mle>().IsLeader())
         {
             Ip6::Address aloc;
-            leaderNode->Get<Mle::Mle>().GetLeaderAloc(aloc);
+            leaderNode->Get<Mle::Mle>().ComposeLeaderAloc(aloc);
             fprintf(file, "  \"leader_aloc\": \"%s\",\n", aloc.ToString().AsCString());
         }
     }
@@ -275,7 +275,8 @@ void Core::SaveTestInfo(const char *aFilename, Node *aLeaderNode)
     if (leaderNode != nullptr)
     {
         Ip6::Prefix prefix;
-        prefix.Set(leaderNode->Get<Mle::Mle>().GetMeshLocalPrefix());
+
+        prefix.InitFrom(leaderNode->Get<Mle::Mle>().GetMeshLocalPrefix());
         fprintf(file, "    \"mesh_local_prefix\": \"%s\"%s\n", prefix.ToString().AsCString(),
                 mTestVars.IsEmpty() ? "" : ",");
     }
@@ -1043,14 +1044,14 @@ void Core::HandleIcmpResponse(void                *aContext,
     OT_UNUSED_VARIABLE(aMessage);
 
     IcmpEchoResponseContext *context     = static_cast<IcmpEchoResponseContext *>(aContext);
-    const Ip6::Icmp::Header *header      = AsCoreTypePtr(aIcmpHeader);
+    const Ip6::Icmp6Header  *header      = AsCoreTypePtr(aIcmpHeader);
     const Ip6::MessageInfo  *messageInfo = AsCoreTypePtr(aMessageInfo);
 
     VerifyOrQuit(context != nullptr);
     VerifyOrQuit(header != nullptr);
     VerifyOrQuit(messageInfo != nullptr);
 
-    if ((header->GetType() == Ip6::Icmp::Header::kTypeEchoReply) && (header->GetId() == context->mIdentifier))
+    if ((header->GetType() == Ip6::Icmp6Header::kTypeEchoReply) && (header->GetId() == context->mIdentifier))
     {
         context->mResponseReceived = true;
 

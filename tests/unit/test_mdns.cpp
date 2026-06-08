@@ -1331,6 +1331,53 @@ static void SendPtrResponse(const char *aName, const char *aPtrName, uint32_t aT
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
 
+static void SendPtrResponseWithEmptyInstanceLabel(const char *aName, uint32_t aTtl)
+{
+    // Sends a PTR response whose target name starts with a single
+    // NUL-byte (empty) label, i.e. the wire label `01 00` followed by
+    // `aName`. The RDLENGTH is computed from the appended target bytes.
+
+    static const uint8_t kEmptyLabel[] = {1, 0};
+
+    Message          *message;
+    Header            header;
+    PtrRecord         ptr;
+    Core::AddressInfo senderAddrInfo;
+    uint16_t          ptrOffset;
+    uint16_t          rdataOffset;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+    header.SetAnswerCount(1);
+
+    SuccessOrQuit(message->Append(header));
+    SuccessOrQuit(Name::AppendName(aName, *message));
+
+    ptr.Init();
+    ptr.SetTtl(aTtl);
+    ptr.SetLength(0);
+    ptrOffset = message->GetLength();
+    SuccessOrQuit(message->Append(ptr));
+
+    rdataOffset = message->GetLength();
+    SuccessOrQuit(message->AppendBytes(kEmptyLabel, sizeof(kEmptyLabel)));
+    SuccessOrQuit(Name::AppendName(aName, *message));
+
+    ptr.SetLength(message->GetLength() - rdataOffset);
+    message->WriteBytes(ptrOffset, &ptr, sizeof(ptr));
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
+
+    Log("Sending PTR response for %s with empty instance label, ttl:%lu", aName, ToUlong(aTtl));
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
 static void SendSrvResponse(const char *aServiceName,
                             const char *aHostName,
                             uint16_t    aPort,
@@ -2271,7 +2318,7 @@ void TestLocalHost(void)
 
     SuccessOrQuit(ip4Address.FromString("200.1.5.6"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     AdvanceTime(4);
@@ -2436,17 +2483,17 @@ void TestLocalHost(void)
 
     SuccessOrQuit(ip4Address.FromString("200.1.5.7"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     SuccessOrQuit(ip4Address.FromString("200.1.2.100"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     SuccessOrQuit(ip4Address.FromString("200.1.4.0"));
     SuccessOrQuit(localHost.mIp4Addrs.PushBack(ip4Address));
-    ip6Address.SetToIp4Mapped(ip4Address);
+    ip6Address.InitAsIp4Mapped(ip4Address);
     otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
 
     Log("Validate the announcements");
@@ -2481,7 +2528,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2510,7 +2557,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2562,7 +2609,7 @@ void TestLocalHost(void)
 
     for (Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ true, kInfraIfIndex);
     }
 
@@ -2589,7 +2636,7 @@ void TestLocalHost(void)
 
     for (const Ip4::Address &ip4Addr : localHost.mIp4Addrs)
     {
-        ip6Address.SetToIp4Mapped(ip4Addr);
+        ip6Address.InitAsIp4Mapped(ip4Addr);
         otPlatMdnsHandleHostAddressEvent(sInstance, &ip6Address, /* aAdded */ false, kInfraIfIndex);
     }
 
@@ -6223,6 +6270,69 @@ void TestBrowser(void)
     testFreeInstance(sInstance);
 }
 
+void TestBrowserMalformedPtrName(void)
+{
+    Core             *mdns = InitTest();
+    Core::Browser     browser;
+    const DnsMessage *dnsMsg;
+    uint16_t          heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestBrowserMalformedPtrName");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    ClearAllBytes(browser);
+    browser.mServiceType  = "_srv._udp";
+    browser.mSubTypeLabel = nullptr;
+    browser.mInfraIfIndex = kInfraIfIndex;
+    browser.mCallback     = HandleBrowseResult;
+
+    sDnsMessages.Clear();
+    sBrowseCallbacks.Clear();
+    SuccessOrQuit(mdns->StartBrowser(browser));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a PTR response whose service-instance label is a single NUL byte");
+
+    SendPtrResponseWithEmptyInstanceLabel("_srv._udp.local.", 120);
+
+    AdvanceTime(1);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate that the malformed record is dropped and no result is reported");
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate that the browser keeps querying with no known-answer for the dropped record");
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitialQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime(DetermineQueryWaitTime(queryCount));
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(browser);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 void TestSrvResolver(void)
 {
     Core              *mdns = InitTest();
@@ -8923,6 +9033,7 @@ int main(void)
     ot::Dns::Multicast::TestServiceConflict();
 
     ot::Dns::Multicast::TestBrowser();
+    ot::Dns::Multicast::TestBrowserMalformedPtrName();
     ot::Dns::Multicast::TestSrvResolver();
     ot::Dns::Multicast::TestTxtResolver();
     ot::Dns::Multicast::TestIp6AddrResolver();
