@@ -110,8 +110,7 @@ Error Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
 
     VerifyOrExit(!mMeshLocalIid.IsUnspecified(), error = kErrorNotFound);
 
-    aAddress.SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
-    aAddress.SetIid(mMeshLocalIid);
+    Get<Mle::Mle>().ComposeMeshLocalAddress(mMeshLocalIid, aAddress);
 
 exit:
     return error;

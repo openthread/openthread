@@ -906,6 +906,12 @@ void Mle::ComposeServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
     ComposeAloc(Aloc16::FromServiceId(aServiceId), aAddress);
 }
 
+void Mle::ComposeMeshLocalAddress(const Ip6::InterfaceIdentifier &aIid, Ip6::Address &aAddress) const
+{
+    aAddress.SetPrefix(mMeshLocalPrefix);
+    aAddress.SetIid(aIid);
+}
+
 const LeaderData &Mle::GetLeaderData(void)
 {
     mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet));

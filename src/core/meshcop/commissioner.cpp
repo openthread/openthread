@@ -858,8 +858,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Msg &aMsg)
     aMsg.mMessage.SetOffset(offsetRange.GetOffset());
     SuccessOrExit(error = aMsg.mMessage.SetLength(offsetRange.GetEndOffset()));
 
-    joinerMessageInfo.SetPeerAddr(Get<Mle::Mle>().GetMeshLocalEid());
-    joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
+    Get<Mle::Mle>().ComposeMeshLocalAddress(mJoinerIid, joinerMessageInfo.GetPeerAddr());
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
     Get<Tmf::SecureAgent>().HandleReceive(aMsg.mMessage, joinerMessageInfo);
