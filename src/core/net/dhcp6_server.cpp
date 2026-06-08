@@ -164,7 +164,8 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, uint8_t aContextId)
 
     VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
 
-    newEntry->Set(aIp6Prefix, Get<Mle::Mle>().GetMeshLocalPrefix(), aContextId);
+    newEntry->SetPrefix(aIp6Prefix);
+    newEntry->ComposeAloc(GetInstance(), aContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 
@@ -409,6 +410,12 @@ Error Server::AppendIaAddressOption(Message               &aMessage,
 
 exit:
     return error;
+}
+
+void Server::PrefixAgent::ComposeAloc(Instance &aInstance, uint8_t aContextId)
+{
+    mAloc.InitAsThreadOriginMeshLocal();
+    aInstance.Get<Mle::Mle>().ComposeAloc((Ip6::Address::kAloc16Mask << 8) + aContextId, mAloc.GetAddress());
 }
 
 } // namespace Dhcp6

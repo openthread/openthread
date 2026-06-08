@@ -848,7 +848,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
         // We can always call `AddUnicastAddress(mMeshLocat16)` and if
         // the address is already added, it will perform no action.
 
-        mMeshLocalRloc.GetAddress().GetIid().SetLocator(aRloc16);
+        ComposeRloc(aRloc16, mMeshLocalRloc.GetAddress());
         Get<ThreadNetif>().AddUnicastAddress(mMeshLocalRloc);
 #if OPENTHREAD_FTD
         Get<AddressResolver>().RestartAddressQueries();
@@ -887,24 +887,23 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     mLeaderData.SetLeaderRouterId(aLeaderRouterId);
 }
 
-void Mle::ComposeLeaderRloc(Ip6::Address &aAddress) const
+void Mle::ComposeRloc(uint16_t aRloc16, Ip6::Address &aAddress) const
 {
-    aAddress.InitAsRoutingLocator(mMeshLocalPrefix, GetLeaderRloc16());
+    aAddress.InitAsRoutingLocator(mMeshLocalPrefix, aRloc16);
 }
 
-void Mle::ComposeLeaderAloc(Ip6::Address &aAddress) const
-{
-    aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::ForLeader());
-}
+void Mle::ComposeLeaderRloc(Ip6::Address &aAddress) const { ComposeRloc(GetLeaderRloc16(), aAddress); }
+
+void Mle::ComposeLeaderAloc(Ip6::Address &aAddress) const { ComposeAloc(Aloc16::ForLeader(), aAddress); }
 
 void Mle::ComposeCommissionerAloc(uint16_t aSessionId, Ip6::Address &aAddress) const
 {
-    aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::FromCommissionerSessionId(aSessionId));
+    ComposeAloc(Aloc16::FromCommissionerSessionId(aSessionId), aAddress);
 }
 
 void Mle::ComposeServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
-    aAddress.InitAsAnycastLocator(mMeshLocalPrefix, Aloc16::FromServiceId(aServiceId));
+    ComposeAloc(Aloc16::FromServiceId(aServiceId), aAddress);
 }
 
 const LeaderData &Mle::GetLeaderData(void)
@@ -2676,7 +2675,7 @@ void Mle::InformPreviousParent(void)
     SuccessOrExit(error = message->SetLength(0));
 
     messageInfo.SetSockAddr(GetMeshLocalEid());
-    messageInfo.GetPeerAddr().InitAsRoutingLocator(mMeshLocalPrefix, mPreviousParentRloc);
+    ComposeRloc(mPreviousParentRloc, messageInfo.GetPeerAddr());
 
     SuccessOrExit(error = Get<Ip6::Ip6>().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
 

@@ -158,8 +158,7 @@ Error Iterator::GetNextDnsSrpUnicastInfo(DnsSrpUnicastType aType, DnsSrpUnicastI
                 // contains a port number and use the RLOC as the
                 // IPv6 address.
 
-                aInfo.mSockAddr.GetAddress().InitAsRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                                                  mServerSubTlv->GetServer16());
+                Get<Mle::Mle>().ComposeRloc(mServerSubTlv->GetServer16(), aInfo.mSockAddr.GetAddress());
                 aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(mServerSubTlv->GetServerData()));
                 aInfo.mVersion = 0;
                 ExitNow();
