@@ -903,7 +903,6 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
     LeaderData      leaderData;
     uint8_t         linkMargin;
     bool            shouldUpdateRoutes = false;
-    Mac::ExtAddress extAddress;
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
@@ -929,8 +928,8 @@ void Mle::HandleLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType)
         break;
 
     case Neighbor::kStateValid:
-        extAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
-        VerifyOrExit(router->GetExtAddress() == extAddress, error = kErrorSecurity);
+        VerifyOrExit(aRxInfo.mMessageInfo.GetPeerAddr().GetIid().MatchesExtAddress(router->GetExtAddress()),
+                     error = kErrorSecurity);
         break;
 
     default:

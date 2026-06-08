@@ -238,6 +238,14 @@ void InterfaceIdentifier::InitFromExtAddress(const Mac::ExtAddress &aExtAddress)
     addr.CopyTo(mFields.m8);
 }
 
+bool InterfaceIdentifier::MatchesExtAddress(const Mac::ExtAddress &aExtAddress) const
+{
+    InterfaceIdentifier iid;
+
+    iid.InitFromExtAddress(aExtAddress);
+    return *this == iid;
+}
+
 void InterfaceIdentifier::InitAsLocator(uint16_t aLocator)
 {
     // Locator IID pattern `0000:00ff:fe00:xxxx`

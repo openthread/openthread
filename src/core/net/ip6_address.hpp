@@ -409,6 +409,16 @@ public:
     void InitFromExtAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
+     * Indicates whether the Interface Identifier matches a given IEEE 802.15.4 Extended Address.
+     *
+     * @param[in] aExtAddress  The Extended Address to match against.
+     *
+     * @retval TRUE   The Interface Identifier matches the @p aExtAddress.
+     * @retval FALSE  The Interface Identifier does not match the @p aExtAddress.
+     */
+    bool MatchesExtAddress(const Mac::ExtAddress &aExtAddress) const;
+
+    /**
      * Initializes the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
      * locator (RLOC16 or ALOC16) value.
      *

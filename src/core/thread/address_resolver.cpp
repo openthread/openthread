@@ -731,10 +731,6 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     Error                    error = kErrorNone;
     Ip6::Address             target;
     Ip6::InterfaceIdentifier meshLocalIid;
-#if OPENTHREAD_FTD
-    Mac::ExtAddress extAddr;
-    Ip6::Address    destination;
-#endif
 
     LogInfo("Received %s", UriToString<kUriAddressError>());
 
@@ -760,8 +756,6 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
     }
 
 #if OPENTHREAD_FTD
-    extAddr.SetFromIid(meshLocalIid);
-
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
         if (child.IsFullThreadDevice())
@@ -769,13 +763,15 @@ template <> void AddressResolver::HandleTmf<kUriAddressError>(Coap::Msg &aMsg)
             continue;
         }
 
-        if (child.GetExtAddress() != extAddr)
+        if (!meshLocalIid.MatchesExtAddress(child.GetExtAddress()))
         {
             // Mesh Local EID differs, so check whether Target EID
             // matches a child address and if so remove it.
 
             if (child.RemoveIp6Address(target) == kErrorNone)
             {
+                Ip6::Address destination;
+
                 Get<Mle::Mle>().ComposeRloc(child.GetRloc16(), destination);
 
                 SendAddressError(target, meshLocalIid, destination);

@@ -5252,7 +5252,6 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     Connectivity     connectivity;
     uint32_t         linkFrameCounter;
     uint32_t         mleFrameCounter;
-    Mac::ExtAddress  extAddress;
     Mac::CslAccuracy cslAccuracy;
 
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -5265,9 +5264,8 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadAndMatchResponseTlvWith(mParentRequestChallenge));
 
-    extAddress.SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
-
-    if (Get<Mle>().IsChild() && Get<Mle>().mParent.GetExtAddress() == extAddress)
+    if (Get<Mle>().IsChild() &&
+        aRxInfo.mMessageInfo.GetPeerAddr().GetIid().MatchesExtAddress(Get<Mle>().mParent.GetExtAddress()))
     {
         mReceivedResponseFromParent = true;
     }
@@ -5299,7 +5297,7 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     {
         otThreadParentResponseInfo parentinfo;
 
-        parentinfo.mExtAddr      = extAddress;
+        AsCoreType(&parentinfo.mExtAddr).SetFromIid(aRxInfo.mMessageInfo.GetPeerAddr().GetIid());
         parentinfo.mRloc16       = sourceAddress;
         parentinfo.mRssi         = rss;
         parentinfo.mPriority     = connectivity.GetParentPriority();
@@ -5353,7 +5351,8 @@ void Mle::Attacher::HandleParentResponse(RxInfo &aRxInfo)
     // Continue to process the "ParentResponse" if it is from current
     // parent candidate to update the challenge and frame counters.
 
-    if (mParentCandidate.IsStateParentResponse() && (mParentCandidate.GetExtAddress() != extAddress))
+    if (mParentCandidate.IsStateParentResponse() &&
+        !aRxInfo.mMessageInfo.GetPeerAddr().GetIid().MatchesExtAddress(mParentCandidate.GetExtAddress()))
     {
         // If already have a candidate parent, only seek a better parent
 

@@ -140,6 +140,7 @@ public:
      * @param[in] aIid   The IPv6 Interface Identifier to convert to Extended Address.
      */
     void SetFromIid(const Ip6::InterfaceIdentifier &aIid);
+
 #endif
 
     /**
