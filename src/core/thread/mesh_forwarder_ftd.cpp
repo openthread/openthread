@@ -180,6 +180,9 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvic
     Error    error = kErrorNotFound;
     Message *evict = nullptr;
 
+    error = RemoveUnsecureReassemblyMessage(aEvictReason);
+    VerifyOrExit(error == kErrorNotFound);
+
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     error = RemoveAgedMessages();
     VerifyOrExit(error == kErrorNotFound);

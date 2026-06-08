@@ -56,10 +56,11 @@ void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 
 Error MeshForwarder::EvictMessage(Message::Priority aPriority, EvictReason aEvictReason)
 {
-    OT_UNUSED_VARIABLE(aEvictReason);
-
     Error    error = kErrorNotFound;
     Message *message;
+
+    error = RemoveUnsecureReassemblyMessage(aEvictReason);
+    VerifyOrExit(error == kErrorNotFound);
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     error = RemoveAgedMessages();
