@@ -889,7 +889,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 
 void Mle::ComposeRloc(uint16_t aRloc16, Ip6::Address &aAddress) const
 {
-    aAddress.InitAsRoutingLocator(mMeshLocalPrefix, aRloc16);
+    aAddress.InitAsLocator(mMeshLocalPrefix, aRloc16);
 }
 
 void Mle::ComposeLeaderRloc(Ip6::Address &aAddress) const { ComposeRloc(GetLeaderRloc16(), aAddress); }

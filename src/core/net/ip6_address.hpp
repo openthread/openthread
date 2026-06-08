@@ -661,28 +661,13 @@ public:
     static const Address &GetRealmLocalAllMplForwarders(void);
 
     /**
-     * Initializes the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Network Prefix and RLOC16
-     * value.
+     * Initializes the IPv6 address to a Routing/Anycast Locator (RLOC/ALOC) IPv6 address with a given Network Prefix
+     * and a locator (RLOC16 or ALOC16) value.
      *
      * @param[in]  aNetworkPrefix    A Network Prefix.
-     * @param[in]  aRloc16           A RLOC16 value.
+     * @param[in]  aLocator          RLOC16 or ALOC16.
      */
-    void InitAsRoutingLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aRloc16)
-    {
-        InitAsLocator(aNetworkPrefix, aRloc16);
-    }
-
-    /**
-     * Initializes the IPv6 address to a Anycast Locator (ALOC) IPv6 address with a given Network Prefix and ALOC16
-     * value.
-     *
-     * @param[in]  aNetworkPrefix    A Network Prefix.
-     * @param[in]  aAloc16           A ALOC16 value.
-     */
-    void InitAsAnycastLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aAloc16)
-    {
-        InitAsLocator(aNetworkPrefix, aAloc16);
-    }
+    void InitAsLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
 
     /**
      * Indicates whether or not the IPv6 address follows the IPv4-mapped format.
@@ -908,7 +893,6 @@ private:
     static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306)
     static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306)
 
-    void InitAsLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
     void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
 
