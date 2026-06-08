@@ -1231,7 +1231,7 @@ exit:
     return;
 }
 
-bool Frame::HasCslIe(void) const { return GetHeaderIe(CslIe::kHeaderIeId) != nullptr; }
+bool Frame::HasCslIe(void) const { return GetCslIe() != nullptr; }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -1266,18 +1266,29 @@ exit:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const
 {
-    const TimeIe  *timeIe = nullptr;
-    const uint8_t *cur    = nullptr;
+    uint16_t      index        = FindHeaderIeIndex();
+    uint16_t      payloadIndex = FindPayloadIndex();
+    const TimeIe *timeIe       = nullptr;
 
-    cur = GetHeaderIe(VendorIeHeader::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
-    VerifyOrExit(reinterpret_cast<const HeaderIe *>(cur)->GetLength() >= TimeIe::kIeContentSize);
+    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
 
-    cur += sizeof(HeaderIe);
+    while (index < payloadIndex)
+    {
+        const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
-    timeIe = reinterpret_cast<const TimeIe *>(cur);
-    VerifyOrExit(timeIe->GetVendorOui() == TimeIe::kVendorOuiNest, timeIe = nullptr);
-    VerifyOrExit(timeIe->GetSubType() == TimeIe::kVendorIeTime, timeIe = nullptr);
+        if ((ie->GetId() == VendorIeHeader::kHeaderIeId) && (ie->GetLength() >= TimeIe::kIeContentSize))
+        {
+            const TimeIe *vendorIe =
+                reinterpret_cast<const TimeIe *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
+            if (vendorIe->GetVendorOui() == TimeIe::kVendorOuiNest && vendorIe->GetSubType() == TimeIe::kVendorIeTime)
+            {
+                timeIe = vendorIe;
+                ExitNow();
+            }
+        }
+
+        index += sizeof(HeaderIe) + ie->GetLength();
+    }
 
 exit:
     return timeIe;
