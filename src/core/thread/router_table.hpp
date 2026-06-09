@@ -277,10 +277,7 @@ public:
      * @retval FALSE if @p aNeighbor is not a `Router` in the router table
      *               (i.e. it can be the parent or parent candidate, or a `Child` of the child table).
      */
-    bool Contains(const Neighbor &aNeighbor) const
-    {
-        return mRouters.IsInArrayBuffer(&static_cast<const Router &>(aNeighbor));
-    }
+    bool Contains(const Neighbor &aNeighbor) const { return mRouters.IsInArrayBuffer(&aNeighbor); }
 
     /**
      * Retains diagnostic information for a given router.
