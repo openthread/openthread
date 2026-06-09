@@ -143,20 +143,6 @@ public:
     void Header(const void *aHeader, uint32_t aHeaderLength);
 
     /**
-     * Processes the header.
-     *
-     * @tparam    ObjectType   The object type.
-     *
-     * @param[in] aObject      A reference to the object to add to header.
-     */
-    template <typename ObjectType> void Header(const ObjectType &aObject)
-    {
-        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
-
-        Header(&aObject, sizeof(ObjectType));
-    }
-
-    /**
      * Processes the payload.
      *
      * When decrypting (`kDecrypt`), @p aPlainText can be `nullptr` if the decrypted plaintext is not needed.
