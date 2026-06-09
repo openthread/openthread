@@ -720,6 +720,8 @@ openthread_core_files = [
   "thread/mle_tlvs.hpp",
   "thread/mle_types.cpp",
   "thread/mle_types.hpp",
+  "thread/mle_vendor_specific_tlv.cpp",
+  "thread/mle_vendor_specific_tlv.hpp",
   "thread/mlr_manager.cpp",
   "thread/mlr_manager.hpp",
   "thread/mlr_types.cpp",

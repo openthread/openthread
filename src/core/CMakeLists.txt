@@ -253,6 +253,7 @@ set(COMMON_SOURCES
     thread/mle_p2p.cpp
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
+    thread/mle_vendor_specific_tlv.cpp
     thread/mlr_manager.cpp
     thread/mlr_types.cpp
     thread/neighbor.cpp

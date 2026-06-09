@@ -148,12 +148,18 @@ public:
     /**
      * Returns the Vendor OUI-24.
      *
+     * For MA-M / MA-S assignments, returns only the 24-bit prefix; use `GetOuiBytes()` to read the full
+     * identifier when `OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE` is set.
+     *
      * @returns The Vendor OUI-24 value. Returns `kUnspecifiedOui` if it is not set.
      */
     uint32_t GetOui(void) const { return mOui; }
 
     /**
      * Sets the Vendor OUI-24.
+     *
+     * Configures an MA-L assignment. Any previously configured MA-M / MA-S extension bytes set via
+     * `SetOuiBytes()` are cleared; use `SetOuiBytes()` to configure MA-M or MA-S.
      *
      * @param[in] aOui  The Vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66 is represented as
      *                  `0x641666`). Must be a 24-bit value.
@@ -163,6 +169,38 @@ public:
      */
     Error SetOui(uint32_t aOui);
 
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    /**
+     * Returns the length in octets of the configured Vendor OUI assignment.
+     *
+     * @returns 3 for MA-L, 4 for MA-M, or 5 for MA-S. Returns 3 (MA-L) when only the 24-bit OUI is configured.
+     */
+    uint8_t GetOuiLength(void) const { return mOuiLength; }
+
+    /**
+     * Copies the configured Vendor OUI bytes (3, 4, or 5 octets) to @p aBytes in network byte order.
+     *
+     * The first three bytes are the 24-bit OUI prefix. For MA-M, the fourth byte carries 4 extra identifier bits
+     * in its upper 4 bits (lower 4 bits zero). For MA-S, the fourth and fifth bytes carry 12 extra identifier
+     * bits in their upper 12 bits (lower 4 bits of the fifth byte zero).
+     *
+     * @param[out] aBytes  Buffer of at least `GetOuiLength()` octets.
+     */
+    void GetOuiBytes(uint8_t *aBytes) const;
+
+    /**
+     * Sets the Vendor OUI assignment bytes for MA-L, MA-M, or MA-S.
+     *
+     * @param[in] aBytes   The OUI bytes in network byte order.
+     * @param[in] aLength  Length in octets: 3 (MA-L), 4 (MA-M), or 5 (MA-S).
+     *
+     * @retval kErrorNone         Successfully set the Vendor OUI.
+     * @retval kErrorInvalidArgs  @p aLength is not 3, 4, or 5, or the lower 4 bits of the last octet for MA-M / MA-S
+     *                            are non-zero.
+     */
+    Error SetOuiBytes(const uint8_t *aBytes, uint8_t aLength);
+#endif
+
 #else
     const char *GetName(void) const { return kName; }
     const char *GetModel(void) const { return kModel; }
@@ -170,7 +208,18 @@ public:
     const char *GetAppUrl(void) const { return kAppUrl; }
     uint32_t    GetOui(void) const { return kOui; }
     bool        IsOuiSpecified(void) const { return kOui != kUnspecifiedOui; }
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    uint8_t GetOuiLength(void) const { return kOuiMaLLength; }
+    void    GetOuiBytes(uint8_t *aBytes) const;
+#endif
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    static constexpr uint8_t kOuiMaLLength = 3; ///< Length of an MA-L (24-bit) OUI in octets.
+    static constexpr uint8_t kOuiMaMLength = 4; ///< Length of an MA-M (28-bit) OUI in octets.
+    static constexpr uint8_t kOuiMaSLength = 5; ///< Length of an MA-S (36-bit) OUI in octets.
+    static constexpr uint8_t kMaxOuiLength = 5; ///< Maximum length of any OUI assignment.
+#endif
 
 private:
     static constexpr uint32_t kOui     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI;
@@ -193,6 +242,10 @@ private:
     SwVersionStringType mSwVersion;
     AppUrlStringType    mAppUrl;
     uint32_t            mOui;
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    uint8_t mOuiExtBytes[2];
+    uint8_t mOuiLength;
+#endif
 #endif
 };
 

@@ -87,6 +87,17 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance)
 
 uint32_t otThreadGetVendorOui(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetOui(); }
 
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+void otThreadGetVendorOuiBytes(otInstance *aInstance, otNetworkDiagVendorOui *aVendorOui)
+{
+    VendorInfo &vendorInfo = AsCoreType(aInstance).Get<VendorInfo>();
+
+    memset(aVendorOui->mBytes, 0, sizeof(aVendorOui->mBytes));
+    aVendorOui->mLength = vendorInfo.GetOuiLength();
+    vendorInfo.GetOuiBytes(aVendorOui->mBytes);
+}
+#endif
+
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
@@ -113,6 +124,13 @@ otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui)
 {
     return AsCoreType(aInstance).Get<VendorInfo>().SetOui(aVendorOui);
 }
+
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+otError otThreadSetVendorOuiBytes(otInstance *aInstance, const uint8_t *aBytes, uint8_t aLength)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetOuiBytes(aBytes, aLength);
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 

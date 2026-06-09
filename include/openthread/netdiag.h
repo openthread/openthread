@@ -94,6 +94,8 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX 41 ///< Border Router DHCPv6-PD OMR Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_DIAG 44            ///< Vendor Diagnostics TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI 45             ///< Vendor OUI TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
@@ -274,6 +276,22 @@ typedef struct otNetworkDiagChildTable
 typedef otBorderRoutingState otNetworkDiagBrState;
 
 /**
+ * Represents a Vendor OUI TLV value (Network Diagnostic TLV 45).
+ *
+ * Carries the IEEE OUI (MA-L, MA-M, or MA-S) of the vendor of the Thread Device.
+ *
+ * The first three bytes are the 24-bit OUI prefix in network byte order. For MA-M (length 4), the upper 4 bits of
+ * the fourth byte carry 4 additional identifier bits and the lower 4 bits MUST be zero. For MA-S (length 5), the
+ * upper 12 bits of the fourth and fifth bytes carry 12 additional identifier bits and the lower 4 bits of the
+ * fifth byte MUST be zero.
+ */
+typedef struct otNetworkDiagVendorOui
+{
+    uint8_t mLength;   ///< OUI length in octets: 3 (MA-L), 4 (MA-M), or 5 (MA-S).
+    uint8_t mBytes[5]; ///< OUI bytes in network byte order.
+} otNetworkDiagVendorOui;
+
+/**
  * Represents a Network Diagnostic TLV.
  */
 typedef struct otNetworkDiagTlv
@@ -310,6 +328,7 @@ typedef struct otNetworkDiagTlv
         otNetworkDiagBrState      mBrState;
         otNetworkDiagIp6AddrList  mBrIfAddrList;
         otIp6NetworkPrefix        mBrPrefix; // This field is shared for various BR prefix TLV (OMR, on-link).
+        otNetworkDiagVendorOui    mVendorOui;
     } mData;
 } otNetworkDiagTlv;
 
@@ -433,6 +452,9 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance);
 /**
  * Get the vendor OUI-24
  *
+ * Returns only the 24-bit MA-L prefix of the configured OUI. For MA-M/MA-S assignments configured via
+ * `otThreadSetVendorOuiBytes()`, use `otThreadGetVendorOuiBytes()` instead to read the full identifier.
+ *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
  * @returns The vendor OUI-24 value in hex format, or `OT_THREAD_UNSPECIFIED_VENDOR_OUI` is not specified.
@@ -513,6 +535,10 @@ otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl
  *
  * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
  *
+ * Configures an MA-L (24-bit) OUI. Any previously configured MA-M / MA-S extension bytes set via
+ * `otThreadSetVendorOuiBytes()` are cleared. To configure an MA-M or MA-S assignment, call
+ * `otThreadSetVendorOuiBytes()` instead.
+ *
  * @param[in] aInstance    A pointer to an OpenThread instance.
  * @param[in] aVendorOui   The vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66 is represented as
  *                         `0x641666`). Must be a 24-bit value.
@@ -521,6 +547,39 @@ otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl
  * @retval OT_ERROR_INVALID_ARGS  @p aVendorOui is not a valid 24-bit value.
  */
 otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui);
+
+/**
+ * Gets the vendor OUI bytes (MA-L, MA-M, or MA-S assignment).
+ *
+ * Returns the same underlying OUI as `otThreadGetVendorOui()`, plus the MA-M / MA-S extension bytes when
+ * configured.
+ *
+ * Requires `OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE`.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[out] aVendorOui  A pointer to where the vendor OUI value will be placed. The `mLength` field is set to
+ *                         3 (MA-L), 4 (MA-M), or 5 (MA-S), and `mBytes` are populated in network byte order.
+ */
+void otThreadGetVendorOuiBytes(otInstance *aInstance, otNetworkDiagVendorOui *aVendorOui);
+
+/**
+ * Sets the vendor OUI bytes (MA-L, MA-M, or MA-S assignment).
+ *
+ * Configures the same underlying OUI as `otThreadSetVendorOui()`, with optional MA-M / MA-S extension bytes.
+ * Calling this overrides any value previously set by `otThreadSetVendorOui()`.
+ *
+ * Requires `OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE` and
+ * `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aBytes     OUI bytes in network byte order.
+ * @param[in] aLength    OUI length in octets: 3 (MA-L), 4 (MA-M), or 5 (MA-S).
+ *
+ * @retval OT_ERROR_NONE          Successfully set the vendor OUI bytes.
+ * @retval OT_ERROR_INVALID_ARGS  @p aLength is not 3/4/5, or the lower 4 bits of the last octet for MA-M / MA-S
+ *                                are non-zero.
+ */
+otError otThreadSetVendorOuiBytes(otInstance *aInstance, const uint8_t *aBytes, uint8_t aLength);
 
 /**
  * Callback function pointer to notify when a Network Diagnostic Reset request message is received for the
