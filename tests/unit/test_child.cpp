@@ -123,9 +123,7 @@ void TestChildIp6Address(void)
     numAddresses = 0;
 
     // First addresses uses the mesh local prefix (mesh-local address).
-    addresses[numAddresses] = sInstance->Get<Mle::Mle>().GetMeshLocalEid();
-    addresses[numAddresses].SetIid(meshLocalIid);
-
+    sInstance->Get<Mle::Mle>().ComposeMeshLocalAddress(meshLocalIid, addresses[numAddresses]);
     numAddresses++;
 
     for (const char *ip6Address : ip6Addresses)

@@ -123,8 +123,7 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
         VerifyOrExit(entry->IsLastTransactionTimeValid());
 
         aInfo.mLastTransTime = entry->GetLastTransactionTime();
-        AsCoreType(&aInfo.mMeshLocalEid).SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
-        AsCoreType(&aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
+        Get<Mle::Mle>().ComposeMeshLocalAddress(entry->GetMeshLocalIid(), AsCoreType(&aInfo.mMeshLocalEid));
 
         ExitNow();
     }

@@ -612,6 +612,14 @@ public:
     void ComposeServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
 
     /**
+     * Composes a Mesh-Local IPv6 Address from a given Interface Identifier.
+     *
+     * @param[in]   aIid       The Interface Identifier to use.
+     * @param[out]  aAddress   A reference to the IPv6 Address to populate.
+     */
+    void ComposeMeshLocalAddress(const Ip6::InterfaceIdentifier &aIid, Ip6::Address &aAddress) const;
+
+    /**
      * Returns the most recently received Leader Data.
      *
      * @returns  A reference to the most recently received Leader Data.
