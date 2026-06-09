@@ -51,6 +51,7 @@ void TestCompactRouteTlv(void)
     Log("Form topology - leader + %u routers", kNumRouters);
 
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(32);
+    leader.Get<Mle::Mle>().SetLeaderUpgradeThreshold(32);
     leader.Get<Mle::Mle>().SetRouterDowngradeThreshold(33);
 
     leader.Form();

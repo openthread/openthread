@@ -3457,7 +3457,7 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
     switch (aInfo.mReason)
     {
     case kReasonTooFewRouters:
-        VerifyOrExit(mRoleTransitioner.IsRouterCountBelowUpgradeThreshold());
+        VerifyOrExit(Get<RouterTable>().GetActiveRouterCount() < mLeaderUpgradeThreshold);
         break;
 
     case kReasonHaveChildIdRequest:
@@ -3465,7 +3465,7 @@ void Mle::ProcessAddressSolicit(AddrSolicitInfo &aInfo)
         break;
 
     case kReasonBorderRouterRequest:
-        if (!mRoleTransitioner.IsRouterCountBelowUpgradeThreshold() &&
+        if ((Get<RouterTable>().GetActiveRouterCount() >= mLeaderUpgradeThreshold) &&
             (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
              kRouterUpgradeBorderRouterRequestThreshold))
         {
