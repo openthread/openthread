@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/encoding.hpp"
 #include "common/error.hpp"
 #include "common/type_traits.hpp"
 #include "mac/mac_types.hpp"
@@ -119,44 +120,19 @@ public:
     Error AppendUint8(uint8_t aUint8);
 
     /**
-     * Appends an `uint16_t` value assuming big endian encoding to the `FrameBuilder`.
+     * Appends an integer value with a specified encoding to the `FrameBuilder`.
      *
-     * @param[in] aUint16    The `uint16_t` value to append.
+     * The value is converted to the specified @p kEncoding byte order before being appended.
      *
-     * @retval kErrorNone    Successfully appended the value.
-     * @retval kErrorNoBufs  Insufficient available buffers.
-     */
-    Error AppendBigEndianUint16(uint16_t aUint16);
-
-    /**
-     * Appends an `uint32_t` value assuming big endian encoding to the `FrameBuilder`.
+     * @tparam  kEncoding  The encoding to use (big or little endian).
+     * @tparam  UintType   The unsigned integer type.
      *
-     * @param[in] aUint32    The `uint32_t` value to append.
+     * @param[in] aUint      The integer value to append.
      *
      * @retval kErrorNone    Successfully appended the value.
      * @retval kErrorNoBufs  Insufficient available buffers.
      */
-    Error AppendBigEndianUint32(uint32_t aUint32);
-
-    /**
-     * Appends an `uint16_t` value assuming little endian encoding to the `FrameBuilder`.
-     *
-     * @param[in] aUint16    The `uint16_t` value to append.
-     *
-     * @retval kErrorNone    Successfully appended the value.
-     * @retval kErrorNoBufs  Insufficient available buffers.
-     */
-    Error AppendLittleEndianUint16(uint16_t aUint16);
-
-    /**
-     * Appends an `uint32_t` value assuming little endian encoding to the `FrameBuilder`.
-     *
-     * @param[in] aUint32    The `uint32_t` value to append.
-     *
-     * @retval kErrorNone    Successfully appended the value.
-     * @retval kErrorNoBufs  Insufficient available buffers.
-     */
-    Error AppendLittleEndianUint32(uint32_t aUint32);
+    template <Encoding kEncoding, typename UintType> Error AppendUint(UintType aUint);
 
     /**
      * Appends bytes from a given buffer to the `FrameBuilder`.

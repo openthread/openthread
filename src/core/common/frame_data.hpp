@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/data.hpp"
+#include "common/encoding.hpp"
 #include "common/type_traits.hpp"
 
 namespace ot {
@@ -74,52 +75,22 @@ public:
     Error ReadUint8(uint8_t &aUint8);
 
     /**
-     * Reads an `uint16_t` value assuming big endian encoding from the `FrameData`.
+     * Reads an integer value with a specified encoding from the `FrameData`.
+     *
+     * The value is read from the frame data, converted from the specified @p kEncoding byte order to
+     * host byte order, and returned in @p aUint.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
-     * @param[out] aUint16   A reference to an `uint16_t` to return the read value.
+     * @tparam  kEncoding  The encoding of the integer in the frame data (big or little endian).
+     * @tparam  UintType   The unsigned integer type.
      *
-     * @retval kErrorNone   Successfully read `uint16_t` value and skipped over it.
-     * @retval kErrorParse  Not enough bytes remaining to read.
+     * @param[out] aUint     A reference to the integer to return the read value.
+     *
+     * @retval kErrorNone    Successfully read the value and skipped over it.
+     * @retval kErrorParse   Not enough bytes remaining to read.
      */
-    Error ReadBigEndianUint16(uint16_t &aUint16);
-
-    /**
-     * Reads an `uint32_t` value assuming big endian encoding from the `FrameData`.
-     *
-     * If read successfully, the `FrameData` is updated to skip over the read content.
-     *
-     * @param[out] aUint32   A reference to an `uint32_t` to return the read value.
-     *
-     * @retval kErrorNone   Successfully read `uint32_t` value and skipped over it.
-     * @retval kErrorParse  Not enough bytes remaining to read.
-     */
-    Error ReadBigEndianUint32(uint32_t &aUint32);
-
-    /**
-     * Reads an `uint16_t` value assuming little endian encoding from the `FrameData`.
-     *
-     * If read successfully, the `FrameData` is updated to skip over the read content.
-     *
-     * @param[out] aUint16   A reference to an `uint16_t` to return the read value.
-     *
-     * @retval kErrorNone   Successfully read `uint16_t` value and skipped over it.
-     * @retval kErrorParse  Not enough bytes remaining to read.
-     */
-    Error ReadLittleEndianUint16(uint16_t &aUint16);
-
-    /**
-     * Reads an `uint32_t` value assuming little endian encoding from the `FrameData`.
-     *
-     * If read successfully, the `FrameData` is updated to skip over the read content.
-     *
-     * @param[out] aUint32   A reference to an `uint32_t` to return the read value.
-     *
-     * @retval kErrorNone   Successfully read `uint32_t` value and skipped over it.
-     * @retval kErrorParse  Not enough bytes remaining to read.
-     */
-    Error ReadLittleEndianUint32(uint32_t &aUint32);
+    template <Encoding kEncoding, typename UintType> Error ReadUint(UintType &aUint);
 
     /**
      * Reads a given number of bytes from the `FrameData`.
