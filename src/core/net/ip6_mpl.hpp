@@ -1,0 +1,171 @@
+/*
+ *  Copyright (c) 2016, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef OT_CORE_NET_IP6_MPL_HPP_
+#define OT_CORE_NET_IP6_MPL_HPP_
+
+/**
+ * @file
+ *   This file includes definitions for MPL.
+ */
+
+#include "openthread-core-config.h"
+
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/non_copyable.hpp"
+#include "common/time_ticker.hpp"
+#include "common/timer.hpp"
+#include "net/ip6_headers.hpp"
+
+namespace ot {
+namespace Ip6 {
+
+/**
+ * @addtogroup core-ip6-mpl
+ *
+ * @brief
+ *   This module includes definitions for MPL.
+ *
+ * @{
+ */
+
+/**
+ * Implements MPL message processing.
+ */
+class Mpl : public InstanceLocator, private NonCopyable
+{
+    friend class ot::TimeTicker;
+
+public:
+    /**
+     * Initializes the MPL object.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     */
+    explicit Mpl(Instance &aInstance);
+
+    /**
+     * Initializes the MPL option.
+     *
+     * @param[in]  aOption   A reference to the MPL header to initialize.
+     * @param[in]  aAddress  A reference to the IPv6 Source Address.
+     */
+    void InitOption(MplOption &aOption, const Address &aAddress);
+
+    /**
+     * Reads and validates an MPL option from a given message.
+     *
+     * @param[in]  aMessage      The message from which to read the option.
+     * @param[in]  aOffsetRange  The offset range within @p aMessage to read from.
+     * @param[in]  aAddress      A reference to the IPv6 source address.
+     * @param[out] aOption       An `MplOption` object to populate with the read option.
+     *
+     * @retval kErrorNone   Successfully read and validated the MPL option.
+     * @retval kErrorParse  Failed to parse the option. Invalid format.
+     */
+    Error ReadAndValidateOption(Message           &aMessage,
+                                const OffsetRange &aOffsetRange,
+                                const Address     &aAddress,
+                                MplOption         &aOption);
+
+    /**
+     * Processes a previously read and validated MPL option.
+     *
+     * @param[in]  aMessage      The message.
+     * @param[in]  aOption       The MPL option.
+     * @param[out] aReceive      Set to FALSE if the MPL message is a duplicate and must not
+     *                           go through the receiving process again, untouched otherwise.
+     *
+     * @retval kErrorNone  Successfully processed the MPL option.
+     * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
+     */
+    Error ProcessOption(Message &aMessage, const MplOption &aOption, bool &aReceive);
+
+#if OPENTHREAD_FTD
+    /**
+     * Retrieves information about the message queue containing buffered message set.
+     *
+     * @param[out] aQueueInfo    A `MessageQueue::Info` to populate with info about the queue.
+     */
+    void GetBufferedMessageSetInfo(MessageQueue::Info &aQueueInfo) { mBufferedMessageSet.GetInfo(aQueueInfo); }
+#endif
+
+private:
+    static constexpr uint16_t kNumSeedEntries      = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES;
+    static constexpr uint32_t kSeedEntryLifetime   = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME;
+    static constexpr uint32_t kSeedEntryLifetimeDt = 1000;
+    static constexpr uint8_t  kDataMessageInterval = 64;
+
+    struct SeedEntry
+    {
+        uint16_t mSeedId;
+        uint8_t  mSequence;
+        uint8_t  mLifetime;
+    };
+
+    void  HandleTimeTick(void);
+    Error UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
+
+    SeedEntry mSeedSet[kNumSeedEntries];
+    uint8_t   mSequence;
+
+#if OPENTHREAD_FTD
+    static constexpr uint8_t kChildRetransmissions  = 0; // MPL retransmissions for Children.
+    static constexpr uint8_t kRouterRetransmissions = 2; // MPL retransmissions for Routers.
+
+    struct Metadata : public Message::FooterData<Metadata>
+    {
+        void GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
+
+        TimeMilli mTransmissionTime;
+        uint16_t  mSeedId;
+        uint8_t   mSequence;
+        uint8_t   mTransmissionCount;
+        uint8_t   mIntervalOffset;
+    };
+
+    uint8_t DetermineMaxRetransmissions(void) const;
+    void    HandleRetransmissionTimer(void);
+    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence);
+
+    using RetxTimer = TimerMilliIn<Mpl, &Mpl::HandleRetransmissionTimer>;
+
+    MessageQueue mBufferedMessageSet;
+    RetxTimer    mRetransmissionTimer;
+#endif // OPENTHREAD_FTD
+};
+
+/**
+ * @}
+ */
+
+} // namespace Ip6
+} // namespace ot
+
+#endif // OT_CORE_NET_IP6_MPL_HPP_

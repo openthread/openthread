@@ -1,0 +1,12 @@
+# This file contains X509v3 extension definitions for OpenSSL
+# certificate generation. 
+
+[ CommCert1 ]
+subjectKeyIdentifier = none
+authorityKeyIdentifier = keyid
+
+# Include TCAT specified fields
+# Because ASN1:OCTETSTRING doesn't work with hex input, we use raw DER here. Tag 0x04 is OCTETSTRING.
+# See https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+#
+1.3.6.1.4.1.44970.3 = DER:04:05:21:01:01:01:01

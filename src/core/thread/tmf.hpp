@@ -1,0 +1,315 @@
+/*
+ *  Copyright (c) 2020, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file includes definitions for TMF functionality.
+ */
+
+#ifndef OT_CORE_THREAD_TMF_HPP_
+#define OT_CORE_THREAD_TMF_HPP_
+
+#include "openthread-core-config.h"
+
+#include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
+#include "common/as_core_type.hpp"
+#include "common/callback.hpp"
+#include "common/locator.hpp"
+
+namespace ot {
+namespace Tmf {
+
+/**
+ * Declares a TMF handler (a full template specialization of `HandleTmf<Uri>` method) in a given `Type`.
+ *
+ * The class `Type` MUST declare a template method of the following format:
+ *
+ *  template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
+ *
+ * @param[in] Type      The `Type` in which the TMF handler is declared.
+ * @param[in] kUri      The `Uri` which is handled.
+ */
+#define DeclareTmfHandler(Type, kUri) template <> void Type::HandleTmf<kUri>(Coap::Msg & aMsg)
+
+/**
+ * Declares a TMF/CoAP response handler method in a given class `Type`.
+ *
+ * This macro simplifies the definition of a TMF/CoAP response handler. It defines a `static` handler method which
+ * can be used as a callback function pointer (`Coap::ResponseHandler`). The `static` handler acts as a wrapper,
+ * casting the `aContext` pointer back to a `Type` object and invoking its member method with the same `MethodName`.
+ *
+ * This macro is intended for cases where the response handler method does not require the `aMessageInfo`.
+ *
+ * The `Type` class MUST implement the following member method which will be invoked by the `static` handler:
+ *
+ *   void MethodName(Coap::Msg *aMsg, Error aResult);
+ *
+ * @param[in] Type        The class `Type` in which the TMF response handler is declared.
+ * @param[in] MethodName  The handler method name.
+ */
+#define DeclareTmfResponseHandlerIn(Type, MethodName)                      \
+    static void MethodName(void *aContext, Coap::Msg *aMsg, Error aResult) \
+    {                                                                      \
+        static_cast<Type *>(aContext)->MethodName(aMsg, aResult);          \
+    }                                                                      \
+                                                                           \
+    void MethodName(Coap::Msg *aMsg, Error aResult)
+
+constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
+
+typedef Coap::Message         Message;         ///< A TMF message.
+typedef Coap::Msg             Msg;             ///< A TMF message along with its `Ip6::MessageInfo`.
+typedef Coap::ResponseHandler ResponseHandler; ///< A TMF message response handler function pointer.
+
+/**
+ * Implements functionality of the Thread TMF agent.
+ */
+class Agent : public Coap::Coap
+{
+public:
+    /**
+     * Initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     */
+    explicit Agent(Instance &aInstance);
+
+    /**
+     * Starts the TMF agent.
+     *
+     * @retval kErrorNone    Successfully started the CoAP service.
+     * @retval kErrorFailed  Failed to start the TMF agent.
+     */
+    Error Start(void);
+
+    /**
+     * Indicates whether or not a message meets TMF addressing rules.
+     *
+     * A TMF message MUST comply with following rules:
+     *
+     * - The destination port is `Tmf::kUdpPort`.
+     * - Both source and destination addresses are Link-Local, or
+     * - Source is Mesh Local and then destination is Mesh Local or Link-Local Multicast or Realm-Local Multicast.
+     *
+     * @param[in] aSourceAddress   Source IPv6 address.
+     * @param[in] aDestAddress     Destination IPv6 address.
+     * @param[in] aDestPort        Destination port number.
+     *
+     * @retval TRUE   if TMF addressing rules are met.
+     * @retval FALSE  if TMF addressing rules are not met.
+     */
+    bool IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const;
+
+    /**
+     * Sends a TMF message to a given destination address.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageTo(Message &aMessage, const Ip6::Address &aDest);
+
+    /**
+     * Sends a TMF message to a given destination address.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageTo(Message &aMessage, const Ip6::Address &aDest, ResponseHandler aHandler, void *aContext);
+
+    /**
+     * Sends a TMF message to a given destination address and allows multicast loop.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageAllowMulticastLoop(Message &aMessage, const Ip6::Address &aDest);
+
+    /**
+     * Sends a TMF message to a given destination address and allows multicast loop.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aDest         The destination IPv6 address.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageAllowMulticastLoop(Message            &aMessage,
+                                        const Ip6::Address &aDest,
+                                        ResponseHandler     aHandler,
+                                        void               *aContext);
+
+    /**
+     * Sends a TMF message to a router RLOC based on a given RLOC16.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aRloc16       The RLOC16 to use for peer address.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToRloc(Message &aMessage, uint16_t aRloc16);
+
+    /**
+     * Sends a TMF message to a router RLOC based on a given RLOC16.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aRloc16       The RLOC16 to use for peer address.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToRloc(Message &aMessage, uint16_t aRloc16, ResponseHandler aHandler, void *aContext);
+
+    /**
+     * Sends a TMF message to the Leader ALOC.
+     *
+     * @param[in]  aMessage      The message to send.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToLeaderAloc(Message &aMessage);
+
+    /**
+     * Sends a TMF message to the Leader ALOC.
+     *
+     * @param[in]  aMessage      The message to send.
+     * @param[in]  aHandler      The `ResponseHandler` callback function.
+     * @param[in]  aContext      A pointer to arbitrary context information used with @p aHandler.
+     *
+     * @retval kErrorNone    Successfully sent the message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the message.
+     */
+    Error SendMessageToLeaderAloc(Message &aMessage, ResponseHandler aHandler, void *aContext);
+
+    /**
+     * Converts a TMF message priority to IPv6 header DSCP value.
+     *
+     * @param[in] aPriority  The message priority to convert.
+     *
+     * @returns The DSCP value corresponding to @p aPriority.
+     */
+    static uint8_t PriorityToDscp(Message::Priority aPriority);
+
+    /**
+     * Converts a IPv6 header DSCP value to message priority for TMF message.
+     *
+     * @param[in] aDscp      The IPv6 header DSCP value in a TMF message.
+     *
+     * @returns The message priority corresponding to the @p aDscp.
+     */
+    static Message::Priority DscpToPriority(uint8_t aDscp);
+
+private:
+    template <Uri kUri> void HandleTmf(Msg &aMsg);
+
+    void         PrepareMessageInfo(Ip6::MessageInfo &aMessageInfo) const;
+    Error        Send(Message            &aMessage,
+                      const Ip6::Address &aDest,
+                      bool                aAllowMulticastLoop,
+                      ResponseHandler     aHandler,
+                      void               *aContext);
+    static bool  HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool         HandleResource(const char *aUriPath, Msg &aMsg);
+    static Error Filter(void *aContext, const Msg &aRxMsg);
+    Error        Filter(const Msg &aRxMsg) const;
+};
+
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
+
+/**
+ * Implements functionality of the secure TMF agent.
+ */
+class SecureAgent : public Coap::Dtls::Transport, public Coap::SecureSession
+{
+public:
+    /**
+     * Initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     */
+    explicit SecureAgent(Instance &aInstance);
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    /**
+     * Represents a resource handler callback function.
+     *
+     * @param[in] aContext      An arbitrary context (provided when callback is registered).
+     * @param[in] aUriPath      The URI.
+     * @param[in] aMsg          The received message.
+     *
+     * @retval TRUE   Indicates that the URI was known and the message was processed by the handler.
+     * @retval FALSE  Indicates that the URI was not known and the message was not processed by the handler.
+     */
+    typedef bool (*ResourceHandler)(void *aContext, Uri aUri, Msg &aMsg);
+
+    /**
+     * Registers a resource handler callback.
+     *
+     * @param[in] aHandler  The handler function pointer.
+     * @param[in] aContext  An arbitrary context (passed to the @p aHandler when it is invoked).
+     */
+    void RegisterResourceHandler(ResourceHandler aHandler, void *aContext) { mResourceHandler.Set(aHandler, aContext); }
+#endif
+
+private:
+    static MeshCoP::SecureSession *HandleDtlsAccept(void *aContext, const Ip6::MessageInfo &aMessageInfo);
+    Coap::SecureSession           *HandleDtlsAccept(void);
+
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE) || OPENTHREAD_PLATFORM_NEXUS
+    static bool HandleResource(CoapBase &aCoapBase, const char *aUriPath, Msg &aMsg);
+    bool        HandleResource(const char *aUriPath, Msg &aMsg);
+#endif
+
+#if OPENTHREAD_PLATFORM_NEXUS
+    Callback<ResourceHandler> mResourceHandler;
+#endif
+};
+
+#endif
+
+} // namespace Tmf
+} // namespace ot
+
+#endif // OT_CORE_THREAD_TMF_HPP_

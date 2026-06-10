@@ -1,0 +1,3 @@
+buildconfig = "//etc/gn/BUILDCONFIG.gn"
+
+check_system_includes = true

@@ -1,0 +1,296 @@
+/*
+ *  Copyright (c) 2022, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file includes definitions for infrastructure network interface.
+ */
+
+#ifndef OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_
+#define OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_
+
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#include <openthread/platform/infra_if.h>
+
+#include "common/as_core_type.hpp"
+#include "common/data.hpp"
+#include "common/error.hpp"
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/string.hpp"
+#include "net/ip6.hpp"
+
+namespace ot {
+namespace BorderRouter {
+
+extern "C" void    otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
+                                            uint32_t            aInfraIfIndex,
+                                            const otIp6Address *aSrcAddress,
+                                            const uint8_t      *aBuffer,
+                                            uint16_t            aBufferLength);
+extern "C" otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
+extern "C" void    otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
+                                                        uint32_t           aInfraIfIndex,
+                                                        const otIp6Prefix *aIp6Prefix);
+extern "C" void    otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                            otMessage  *aMessage,
+                                                            uint32_t    aInfraIfIndex);
+
+class RoutingManager;
+
+/**
+ * Represents the infrastructure network interface on a border router.
+ */
+class InfraIf : public InstanceLocator
+{
+    friend class RoutingManager;
+    friend void    otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
+                                            uint32_t            aInfraIfIndex,
+                                            const otIp6Address *aSrcAddress,
+                                            const uint8_t      *aBuffer,
+                                            uint16_t            aBufferLength);
+    friend otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
+    friend void    otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
+                                                        uint32_t           aInfraIfIndex,
+                                                        const otIp6Prefix *aIp6Prefix);
+    friend void    otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                            otMessage  *aMessage,
+                                                            uint32_t    aInfraIfIndex);
+
+public:
+    static constexpr uint16_t kInfoStringSize = 20; ///< Max chars for the info string (`ToString()`).
+
+    typedef String<kInfoStringSize> InfoString;  ///< String type returned from `ToString()`.
+    typedef Data<kWithUint16Length> Icmp6Packet; ///< An IMCPv6 packet (data containing the IP payload)
+
+    /**
+     * Represents a link-layer address.
+     */
+    class LinkLayerAddress : public otPlatInfraIfLinkLayerAddress, public Clearable<LinkLayerAddress>
+    {
+    public:
+        static constexpr uint8_t kMaxLength = OT_PLAT_INFRA_IF_MAX_LINK_LAYER_ADDR_LENGTH; ///< Max length
+
+        static constexpr uint16_t kInfoStringSize = 50; ///< `InfoString` size
+
+        typedef String<kInfoStringSize> InfoString; //< String type returned from `ToString()`.
+
+        /**
+         * Gets the link-layer address's length (number of bytes).
+         *
+         * @return The link-layer address's length (in bytes).
+         */
+        uint8_t GetLength(void) const { return mLength; }
+
+        /**
+         * Gets the address bytes (as a pointer to a byte array).
+         *
+         * @returns A pointer to a byte array containing the link layer address
+         */
+        const uint8_t *GetBytes(void) const { return mAddress; };
+
+        /**
+         * Converts the link-layer address to an IPv6 Interface Identifier (IID).
+         *
+         * Currently supports link-layer addresses of length 5 (40-bit), 6 (48-bit), and 8 (64-bit) bytes.
+         *
+         * @param[out] aIid  A reference to an `InterfaceIdentifier` to output the converted IID.
+         *
+         * @retval kErrorNone        Successfully converted to an IID and updated @p aIid.
+         * @retval kErrorNotCapable  The link-layer address length is not supported for conversion.
+         */
+        Error ConvertToIid(Ip6::InterfaceIdentifier &aIid) const;
+
+        /**
+         * Converts the link-layer address to a human-readable string.
+         *
+         * The address is represented as a sequence of hex digits (lower case) separated by `:`, e.g., `01:ab:7c:d2:38`.
+         *
+         * @returns The string representation of the link-layer address.
+         */
+        InfoString ToString(void) const;
+    };
+
+    /**
+     * Initializes the `InfraIf`.
+     *
+     * @param[in]  aInstance  A OpenThread instance.
+     */
+    explicit InfraIf(Instance &aInstance);
+
+    /**
+     * Initializes the `InfraIf`.
+     *
+     * This method can also be used to re-initialize and switch the infrastructure interface index to a new one.
+     * Switching the interface index will trigger all components running on the previous interface (Border Routing,
+     * mDNS, etc) to be stopped (as if the previous if-index is no longer running) before restarting operations on the
+     * new interface.
+     *
+     * @param[in]  aInfraIfIndex      The infrastructure network interface index.
+     * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure interface is running.
+     */
+    void Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
+
+    /**
+     * Deinitilaizes the `InfraIf`.
+     */
+    void Deinit(void);
+
+    /**
+     * Indicates whether or not the `InfraIf` is initialized.
+     *
+     * @retval TRUE    The `InfraIf` is initialized.
+     * @retval FALSE   The `InfraIf` is not initialized.
+     */
+    bool IsInitialized(void) const { return mInitialized; }
+
+    /**
+     * Indicates whether or not the infra interface is running.
+     *
+     * @retval TRUE   The infrastructure interface is running.
+     * @retval FALSE  The infrastructure interface is not running.
+     */
+    bool IsRunning(void) const { return mIsRunning; }
+
+    /**
+     * Returns the infrastructure interface index.
+     *
+     * @returns The interface index or zero if not initialized.
+     */
+    uint32_t GetIfIndex(void) const { return mIfIndex; }
+
+    /**
+     * Sets the infrastructure interface index.
+     *
+     * @param[in]  aIfIndex        The infrastructure interface index.
+     */
+    void SetIfIndex(uint32_t aIfIndex) { mIfIndex = aIfIndex; }
+
+    /**
+     * Gets the infrastructure interface link-layer address.
+     *
+     * @param[out]  aLinkLayerAddress     A reference to return the interface link-layer address.
+     *
+     * @retval  kErrorNone    Successfully get the infrastructure interface link-layer address.
+     * @retval  kErrorFailed  Failed to get the infrastructure interface link-layer address.
+     */
+    Error GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress);
+
+    /**
+     * Indicates whether or not the infra interface has the given IPv6 address assigned.
+     *
+     * MUST be used when interface is initialized.
+     *
+     * @param[in]  aAddress       The IPv6 address.
+     *
+     * @retval TRUE   The infrastructure interface has @p aAddress.
+     * @retval FALSE  The infrastructure interface does not have @p aAddress.
+     */
+    bool HasAddress(const Ip6::Address &aAddress) const;
+
+    /**
+     * Sends an ICMPv6 Neighbor Discovery packet on the infrastructure interface.
+     *
+     * MUST be used when interface is initialized.
+     *
+     * @param[in]  aPacket        The ICMPv6 packet to send.
+     * @param[in]  aDestination   The destination address.
+     *
+     * @retval kErrorNone    Successfully sent the ICMPv6 message.
+     * @retval kErrorFailed  Failed to send the ICMPv6 message.
+     */
+    Error Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const;
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    /**
+     * Sends a request to discover the NAT64 prefix on the infrastructure interface.
+     *
+     * @note  This method MUST be used when interface is initialized.
+     *
+     * @retval  kErrorNone    Successfully request NAT64 prefix discovery.
+     * @retval  kErrorFailed  Failed to request NAT64 prefix discovery.
+     */
+    Error DiscoverNat64Prefix(void) const;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+    /**
+     * Enables or disables listening for DHCPv6 Prefix Delegation (PD) messages on client (on DHCPv6 client port 546).
+     *
+     * @param[in] aEnable        A boolean to enable (`true`) or disable (`false`) listening.
+     */
+    void SetDhcp6ListeningEnabled(bool aEnable);
+
+    /**
+     * Sends a DHCPv6 message to a unicast or multicast destination address.
+     *
+     * The message must be sent from the DHCPv6 client UDP port 546 to the server port 547.
+     *
+     * @param[in] aMessage       The `Message` containing the DHCPv6 payload. Ownership is transferred.
+     * @param[in] aDestAddress   The IPv6 destination address.
+     */
+    void SendDhcp6(Message &aMessage, Ip6::Address &aDestAddress);
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+    /**
+     * Converts the `InfraIf` to a human-readable string.
+     *
+     * @returns The string representation of `InfraIf`.
+     */
+    InfoString ToString(void) const;
+
+private:
+    // Callbacks from platform
+    void  HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
+    Error HandleStateChanged(uint32_t aIfIndex, bool aIsRunning);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+    void HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex);
+#endif
+
+    bool     mInitialized : 1;
+    bool     mIsRunning : 1;
+    uint32_t mIfIndex;
+};
+
+} // namespace BorderRouter
+
+DefineCoreType(otPlatInfraIfLinkLayerAddress, BorderRouter::InfraIf::LinkLayerAddress);
+
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#endif // OT_CORE_BORDER_ROUTER_INFRA_IF_HPP_

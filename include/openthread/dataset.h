@@ -1,0 +1,644 @@
+/*
+ *  Copyright (c) 2016, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ * @brief
+ *  This file defines the OpenThread Operational Dataset API (for both FTD and MTD).
+ */
+
+#ifndef OPENTHREAD_DATASET_H_
+#define OPENTHREAD_DATASET_H_
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
+#include <openthread/platform/crypto.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/toolchain.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup api-operational-dataset
+ *
+ * @{
+ *
+ * For FTD and MTD builds, the Operational Dataset API includes functions to manage Active and Pending datasets
+ * and dataset TLVs.
+ */
+
+#define OT_NETWORK_KEY_SIZE 16 ///< Size of the Thread Network Key (bytes)
+
+/**
+ * @struct otNetworkKey
+ *
+ * Represents a Thread Network Key.
+ */
+OT_TOOL_PACKED_BEGIN
+struct otNetworkKey
+{
+    uint8_t m8[OT_NETWORK_KEY_SIZE]; ///< Byte values
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents a Thread Network Key.
+ */
+typedef struct otNetworkKey otNetworkKey;
+
+/**
+ * This datatype represents KeyRef to NetworkKey.
+ */
+typedef otCryptoKeyRef otNetworkKeyRef; ///< Reference to Key
+
+#define OT_NETWORK_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Network Name field (bytes)
+
+/**
+ * Represents a Network Name.
+ *
+ * The `otNetworkName` is a null terminated C string (i.e., `m8` char array MUST end with null char `\0`).
+ */
+typedef struct otNetworkName
+{
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1]; ///< Byte values. The `+ 1` is for null char.
+} otNetworkName;
+
+#define OT_EXT_PAN_ID_SIZE 8 ///< Size of a Thread PAN ID (bytes)
+
+/**
+ * Represents an Extended PAN ID.
+ */
+OT_TOOL_PACKED_BEGIN
+struct otExtendedPanId
+{
+    uint8_t m8[OT_EXT_PAN_ID_SIZE]; ///< Byte values
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents an Extended PAN ID.
+ */
+typedef struct otExtendedPanId otExtendedPanId;
+
+#define OT_MESH_LOCAL_PREFIX_SIZE OT_IP6_PREFIX_SIZE ///< Size of the Mesh Local Prefix (bytes)
+
+/**
+ * Represents a Mesh Local Prefix.
+ */
+typedef otIp6NetworkPrefix otMeshLocalPrefix;
+
+#define OT_PSKC_MAX_SIZE 16 ///< Maximum size of the PSKc (bytes)
+
+/**
+ * Represents PSKc.
+ */
+OT_TOOL_PACKED_BEGIN
+struct otPskc
+{
+    uint8_t m8[OT_PSKC_MAX_SIZE]; ///< Byte values
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents a PSKc.
+ */
+typedef struct otPskc otPskc;
+
+/**
+ * This datatype represents KeyRef to PSKc.
+ */
+typedef otCryptoKeyRef otPskcRef; ///< Reference to Key
+
+/**
+ * Represent Security Policy.
+ */
+typedef struct otSecurityPolicy
+{
+    uint16_t mRotationTime; ///< The value for thrKeyRotation in units of hours.
+
+    bool    mObtainNetworkKeyEnabled : 1;        ///< Obtaining the Network Key for out-of-band commissioning is enabled
+    bool    mNativeCommissioningEnabled : 1;     ///< Native Commissioning using PSKc is allowed
+    bool    mRoutersEnabled : 1;                 ///< Thread 1.0/1.1.x Routers are enabled
+    bool    mExternalCommissioningEnabled : 1;   ///< External Commissioner authentication is allowed
+    bool    mCommercialCommissioningEnabled : 1; ///< Commercial Commissioning is enabled
+    bool    mAutonomousEnrollmentEnabled : 1;    ///< Autonomous Enrollment is enabled
+    bool    mNetworkKeyProvisioningEnabled : 1;  ///< Network Key Provisioning is enabled
+    bool    mTobleLinkEnabled : 1;               ///< ToBLE link is enabled
+    bool    mNonCcmRoutersEnabled : 1;           ///< Non-CCM Routers enabled
+    uint8_t mVersionThresholdForRouting : 3;     ///< Version-threshold for Routing
+} otSecurityPolicy;
+
+/**
+ * Represents a Channel Mask.
+ *
+ * The least significant bit (LSB), also referred to as bit 0, corresponds to channel number 0, and so on.
+ */
+typedef uint32_t otChannelMask;
+
+#define OT_CHANNEL_1_MASK (1 << 1)   ///< Channel 1
+#define OT_CHANNEL_2_MASK (1 << 2)   ///< Channel 2
+#define OT_CHANNEL_3_MASK (1 << 3)   ///< Channel 3
+#define OT_CHANNEL_4_MASK (1 << 4)   ///< Channel 4
+#define OT_CHANNEL_5_MASK (1 << 5)   ///< Channel 5
+#define OT_CHANNEL_6_MASK (1 << 6)   ///< Channel 6
+#define OT_CHANNEL_7_MASK (1 << 7)   ///< Channel 7
+#define OT_CHANNEL_8_MASK (1 << 8)   ///< Channel 8
+#define OT_CHANNEL_9_MASK (1 << 9)   ///< Channel 9
+#define OT_CHANNEL_10_MASK (1 << 10) ///< Channel 10
+#define OT_CHANNEL_11_MASK (1 << 11) ///< Channel 11
+#define OT_CHANNEL_12_MASK (1 << 12) ///< Channel 12
+#define OT_CHANNEL_13_MASK (1 << 13) ///< Channel 13
+#define OT_CHANNEL_14_MASK (1 << 14) ///< Channel 14
+#define OT_CHANNEL_15_MASK (1 << 15) ///< Channel 15
+#define OT_CHANNEL_16_MASK (1 << 16) ///< Channel 16
+#define OT_CHANNEL_17_MASK (1 << 17) ///< Channel 17
+#define OT_CHANNEL_18_MASK (1 << 18) ///< Channel 18
+#define OT_CHANNEL_19_MASK (1 << 19) ///< Channel 19
+#define OT_CHANNEL_20_MASK (1 << 20) ///< Channel 20
+#define OT_CHANNEL_21_MASK (1 << 21) ///< Channel 21
+#define OT_CHANNEL_22_MASK (1 << 22) ///< Channel 22
+#define OT_CHANNEL_23_MASK (1 << 23) ///< Channel 23
+#define OT_CHANNEL_24_MASK (1 << 24) ///< Channel 24
+#define OT_CHANNEL_25_MASK (1 << 25) ///< Channel 25
+#define OT_CHANNEL_26_MASK (1 << 26) ///< Channel 26
+
+/**
+ * Represents presence of different components in Active or Pending Operational Dataset.
+ */
+typedef struct otOperationalDatasetComponents
+{
+    bool mIsActiveTimestampPresent;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
+    bool mIsPendingTimestampPresent; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
+    bool mIsNetworkKeyPresent;       ///< TRUE if Network Key is present, FALSE otherwise.
+    bool mIsNetworkNamePresent;      ///< TRUE if Network Name is present, FALSE otherwise.
+    bool mIsExtendedPanIdPresent;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
+    bool mIsMeshLocalPrefixPresent;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
+    bool mIsDelayPresent;            ///< TRUE if Delay Timer is present, FALSE otherwise.
+    bool mIsPanIdPresent;            ///< TRUE if PAN ID is present, FALSE otherwise.
+    bool mIsChannelPresent;          ///< TRUE if Channel is present, FALSE otherwise.
+    bool mIsPskcPresent;             ///< TRUE if PSKc is present, FALSE otherwise.
+    bool mIsSecurityPolicyPresent;   ///< TRUE if Security Policy is present, FALSE otherwise.
+    bool mIsChannelMaskPresent;      ///< TRUE if Channel Mask is present, FALSE otherwise.
+    bool mIsWakeupChannelPresent;    ///< TRUE if Wake-up Channel is present, FALSE otherwise.
+} otOperationalDatasetComponents;
+
+/**
+ * Represents a Thread Dataset timestamp component.
+ */
+typedef struct otTimestamp
+{
+    uint64_t mSeconds;
+    uint16_t mTicks;
+    bool     mAuthoritative;
+} otTimestamp;
+
+/**
+ * Represents an Active or Pending Operational Dataset.
+ *
+ * Components in Dataset are optional. `mComponents` structure specifies which components are present in the Dataset.
+ */
+typedef struct otOperationalDataset
+{
+    otTimestamp                    mActiveTimestamp;  ///< Active Timestamp
+    otTimestamp                    mPendingTimestamp; ///< Pending Timestamp
+    otNetworkKey                   mNetworkKey;       ///< Network Key
+    otNetworkName                  mNetworkName;      ///< Network Name
+    otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID
+    otMeshLocalPrefix              mMeshLocalPrefix;  ///< Mesh Local Prefix
+    uint32_t                       mDelay;            ///< Delay Timer
+    otPanId                        mPanId;            ///< PAN ID
+    uint16_t                       mChannel;          ///< Channel
+    uint16_t                       mWakeupChannel;    ///< Wake-up Channel
+    otPskc                         mPskc;             ///< PSKc
+    otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
+    otChannelMask                  mChannelMask;      ///< Channel Mask
+    otOperationalDatasetComponents mComponents;       ///< Specifies which components are set in the Dataset.
+} otOperationalDataset;
+
+/**
+ * Maximum length of Operational Dataset in bytes.
+ */
+#define OT_OPERATIONAL_DATASET_MAX_LENGTH 254
+
+/**
+ * Represents an Active or Pending Operational Dataset.
+ *
+ * The Operational Dataset is TLV encoded as specified by Thread.
+ */
+typedef struct otOperationalDatasetTlvs
+{
+    uint8_t mTlvs[OT_OPERATIONAL_DATASET_MAX_LENGTH]; ///< Operational Dataset TLVs.
+    uint8_t mLength;                                  ///< Size of Operational Dataset in bytes.
+} otOperationalDatasetTlvs;
+
+/**
+ * Represents meshcop TLV types.
+ */
+typedef enum otMeshcopTlvType
+{
+    OT_MESHCOP_TLV_CHANNEL                  = 0,   ///< meshcop Channel TLV
+    OT_MESHCOP_TLV_PANID                    = 1,   ///< meshcop Pan Id TLV
+    OT_MESHCOP_TLV_EXTPANID                 = 2,   ///< meshcop Extended Pan Id TLV
+    OT_MESHCOP_TLV_NETWORKNAME              = 3,   ///< meshcop Network Name TLV
+    OT_MESHCOP_TLV_PSKC                     = 4,   ///< meshcop PSKc TLV
+    OT_MESHCOP_TLV_NETWORKKEY               = 5,   ///< meshcop Network Key TLV
+    OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE     = 6,   ///< meshcop Network Key Sequence TLV
+    OT_MESHCOP_TLV_MESHLOCALPREFIX          = 7,   ///< meshcop Mesh Local Prefix TLV
+    OT_MESHCOP_TLV_STEERING_DATA            = 8,   ///< meshcop Steering Data TLV
+    OT_MESHCOP_TLV_BORDER_AGENT_RLOC        = 9,   ///< meshcop Border Agent Locator TLV
+    OT_MESHCOP_TLV_COMMISSIONER_ID          = 10,  ///< meshcop Commissioner ID TLV
+    OT_MESHCOP_TLV_COMM_SESSION_ID          = 11,  ///< meshcop Commissioner Session ID TLV
+    OT_MESHCOP_TLV_SECURITYPOLICY           = 12,  ///< meshcop Security Policy TLV
+    OT_MESHCOP_TLV_GET                      = 13,  ///< meshcop Get TLV
+    OT_MESHCOP_TLV_ACTIVETIMESTAMP          = 14,  ///< meshcop Active Timestamp TLV
+    OT_MESHCOP_TLV_COMMISSIONER_UDP_PORT    = 15,  ///< meshcop Commissioner UDP Port TLV
+    OT_MESHCOP_TLV_STATE                    = 16,  ///< meshcop State TLV
+    OT_MESHCOP_TLV_JOINER_DTLS              = 17,  ///< meshcop Joiner DTLS Encapsulation TLV
+    OT_MESHCOP_TLV_JOINER_UDP_PORT          = 18,  ///< meshcop Joiner UDP Port TLV
+    OT_MESHCOP_TLV_JOINER_IID               = 19,  ///< meshcop Joiner IID TLV
+    OT_MESHCOP_TLV_JOINER_RLOC              = 20,  ///< meshcop Joiner Router Locator TLV
+    OT_MESHCOP_TLV_JOINER_ROUTER_KEK        = 21,  ///< meshcop Joiner Router KEK TLV
+    OT_MESHCOP_TLV_DURATION                 = 23,  ///< meshcop Duration TLV
+    OT_MESHCOP_TLV_PROVISIONING_URL         = 32,  ///< meshcop Provisioning URL TLV
+    OT_MESHCOP_TLV_VENDOR_NAME_TLV          = 33,  ///< meshcop Vendor Name TLV
+    OT_MESHCOP_TLV_VENDOR_MODEL_TLV         = 34,  ///< meshcop Vendor Model TLV
+    OT_MESHCOP_TLV_VENDOR_SW_VERSION_TLV    = 35,  ///< meshcop Vendor SW Version TLV
+    OT_MESHCOP_TLV_VENDOR_DATA_TLV          = 36,  ///< meshcop Vendor Data TLV
+    OT_MESHCOP_TLV_VENDOR_STACK_VERSION_TLV = 37,  ///< meshcop Vendor Stack Version TLV
+    OT_MESHCOP_TLV_UDP_ENCAPSULATION_TLV    = 48,  ///< meshcop UDP encapsulation TLV
+    OT_MESHCOP_TLV_IPV6_ADDRESS_TLV         = 49,  ///< meshcop IPv6 address TLV
+    OT_MESHCOP_TLV_PENDINGTIMESTAMP         = 51,  ///< meshcop Pending Timestamp TLV
+    OT_MESHCOP_TLV_DELAYTIMER               = 52,  ///< meshcop Delay Timer TLV
+    OT_MESHCOP_TLV_CHANNELMASK              = 53,  ///< meshcop Channel Mask TLV
+    OT_MESHCOP_TLV_COUNT                    = 54,  ///< meshcop Count TLV
+    OT_MESHCOP_TLV_PERIOD                   = 55,  ///< meshcop Period TLV
+    OT_MESHCOP_TLV_SCAN_DURATION            = 56,  ///< meshcop Scan Duration TLV
+    OT_MESHCOP_TLV_ENERGY_LIST              = 57,  ///< meshcop Energy List TLV
+    OT_MESHCOP_TLV_THREAD_DOMAIN_NAME       = 59,  ///< meshcop Thread Domain Name TLV
+    OT_MESHCOP_TLV_WAKEUP_CHANNEL           = 74,  ///< meshcop Wake-up Channel TLV
+    OT_MESHCOP_TLV_ADMITTER_STATE           = 90,  ///< meshcop Admitter State TLV
+    OT_MESHCOP_TLV_ENROLLER_ID              = 91,  ///< meshcop Enroller ID TLV
+    OT_MESHCOP_TLV_ENROLLER_MODE            = 92,  ///< meshcop Enroller Mode TLV
+    OT_MESHCOP_TLV_DISCOVERYREQUEST         = 128, ///< meshcop Discovery Request TLV
+    OT_MESHCOP_TLV_DISCOVERYRESPONSE        = 129, ///< meshcop Discovery Response TLV
+    OT_MESHCOP_TLV_JOINERADVERTISEMENT      = 241, ///< meshcop Joiner Advertisement TLV (experimental)
+} otMeshcopTlvType;
+
+/**
+ * Pointer is called when a response to a MGMT_SET request is received or times out.
+ *
+ * @param[in]  aResult   A result of the operation.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ * @retval  OT_ERROR_NONE              The request was accepted by the leader.
+ * @retval  OT_ERROR_REJECTED          The request was rejected by the leader.
+ * @retval  OT_ERROR_PARSE             An error occurred during parsing the response.
+ * @retval  OT_ERROR_ABORT             The request was reset by peer.
+ * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
+ */
+typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
+
+/**
+ * Indicates whether a valid network is present in the Active Operational Dataset or not.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if a valid network is present in the Active Operational Dataset, FALSE otherwise.
+ */
+bool otDatasetIsCommissioned(otInstance *aInstance);
+
+/**
+ * Gets the Active Operational Dataset.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
+ */
+otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
+ * Gets the Active Operational Dataset.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
+ */
+otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset);
+
+/**
+ * Sets the Active Operational Dataset.
+ *
+ * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
+ *
+ * If Thread is enabled on a device that has a partially complete Active Dataset, the device will attempt to attach to
+ * an existing Thread network using any existing information in the dataset. Only the Thread Network Key is needed to
+ * attach to a network.
+ *
+ * If channel is not included in the dataset, the device will send MLE Announce messages across different channels to
+ * find neighbors on other channels.
+ *
+ * If the device successfully attaches to a Thread network, the device will then retrieve the full Active Dataset from
+ * its Parent. Note that a router-capable device will not transition to the Router or Leader roles until it has a
+ * complete Active Dataset.
+ *
+ * This function consistently returns `OT_ERROR_NONE` and can effectively be treated as having a `void` return type.
+ * Previously, other errors (e.g., `OT_ERROR_NOT_IMPLEMENTED`) were allowed for legacy reasons. However, as
+ * non-volatile storage is now mandatory for Thread operation, any failure to save the dataset will trigger an
+ * assertion. The `otError` return type is retained for backward compatibility.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDataset  A pointer to the Active Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE    Successfully set the Active Operational Dataset.
+ */
+otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
+
+/**
+ * Sets the Active Operational Dataset.
+ *
+ * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
+ *
+ * If Thread is enabled on a device that has a partially complete Active Dataset, the device will attempt to attach to
+ * an existing Thread network using any existing information in the dataset. Only the Thread Network Key is needed to
+ * attach to a network.
+ *
+ * If channel is not included in the dataset, the device will send MLE Announce messages across different channels to
+ * find neighbors on other channels.
+ *
+ * If the device successfully attaches to a Thread network, the device will then retrieve the full Active Dataset from
+ * its Parent. Note that a router-capable device will not transition to the Router or Leader roles until it has a
+ * complete Active Dataset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDataset  A pointer to the Active Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the Active Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aDataset is invalid. It is too long or contains incorrect TLV formatting.
+ */
+otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
+
+/**
+ * Gets the Pending Operational Dataset.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
+ */
+otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
+ * Gets the Pending Operational Dataset.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
+ * @retval OT_ERROR_NOT_FOUND     No corresponding value in the setting store.
+ */
+otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset);
+
+/**
+ * Sets the Pending Operational Dataset.
+ *
+ * This function consistently returns `OT_ERROR_NONE` and can effectively be treated as having a `void` return type.
+ * Previously, other errors (e.g., `OT_ERROR_NOT_IMPLEMENTED`) were allowed for legacy reasons. However, as
+ * non-volatile storage is now mandatory for Thread operation, any failure to save the dataset will trigger an
+ * assertion. The `otError` return type is retained for backward compatibility.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE    Successfully set the Pending Operational Dataset.
+ */
+otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
+
+/**
+ * Sets the Pending Operational Dataset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the Pending Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aDataset is invalid. It is too long or contains incorrect TLV formatting.
+ */
+otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
+
+/**
+ * Sends MGMT_ACTIVE_GET.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDatasetComponents  A pointer to a Dataset Components structure specifying which components to request.
+ * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+ * @param[in]  aLength             The length of @p aTlvTypes.
+ * @param[in]  aAddress            A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ */
+otError otDatasetSendMgmtActiveGet(otInstance                           *aInstance,
+                                   const otOperationalDatasetComponents *aDatasetComponents,
+                                   const uint8_t                        *aTlvTypes,
+                                   uint8_t                               aLength,
+                                   const otIp6Address                   *aAddress);
+
+/**
+ * Sends MGMT_ACTIVE_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ * @param[in]  aCallback  A pointer to a function that is called on response reception or timeout.
+ * @param[in]  aContext   A pointer to application-specific context for @p aCallback.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ * @retval OT_ERROR_BUSY          A previous request is ongoing.
+ */
+otError otDatasetSendMgmtActiveSet(otInstance                 *aInstance,
+                                   const otOperationalDataset *aDataset,
+                                   const uint8_t              *aTlvs,
+                                   uint8_t                     aLength,
+                                   otDatasetMgmtSetCallback    aCallback,
+                                   void                       *aContext);
+
+/**
+ * Sends MGMT_PENDING_GET.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDatasetComponents  A pointer to a Dataset Components structure specifying which components to request.
+ * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+ * @param[in]  aLength             The length of @p aTlvTypes.
+ * @param[in]  aAddress            A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ */
+otError otDatasetSendMgmtPendingGet(otInstance                           *aInstance,
+                                    const otOperationalDatasetComponents *aDatasetComponents,
+                                    const uint8_t                        *aTlvTypes,
+                                    uint8_t                               aLength,
+                                    const otIp6Address                   *aAddress);
+
+/**
+ * Sends MGMT_PENDING_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ * @param[in]  aCallback  A pointer to a function that is called on response reception or timeout.
+ * @param[in]  aContext   A pointer to application-specific context for @p aCallback.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ * @retval OT_ERROR_BUSY          A previous request is ongoing.
+ */
+otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
+                                    const otOperationalDataset *aDataset,
+                                    const uint8_t              *aTlvs,
+                                    uint8_t                     aLength,
+                                    otDatasetMgmtSetCallback    aCallback,
+                                    void                       *aContext);
+
+/**
+ * Generates PSKc from a given pass-phrase, network name, and extended PAN ID.
+ *
+ * PSKc is used to establish the Commissioner Session.
+ *
+ * @param[in]  aPassPhrase   The commissioning pass-phrase.
+ * @param[in]  aNetworkName  The network name for PSKc computation.
+ * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
+ * @param[out] aPskc         A pointer to variable to output the generated PSKc.
+ *
+ * @retval OT_ERROR_NONE          Successfully generate PSKc.
+ * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
+ */
+otError otDatasetGeneratePskc(const char            *aPassPhrase,
+                              const otNetworkName   *aNetworkName,
+                              const otExtendedPanId *aExtPanId,
+                              otPskc                *aPskc);
+
+/**
+ * Sets an `otNetworkName` instance from a given null terminated C string.
+ *
+ * @p aNameString must follow UTF-8 encoding and the Network Name length must not be longer than
+ * `OT_NETWORK_NAME_MAX_SIZE`.
+ *
+ * @param[out] aNetworkName        A pointer to the `otNetworkName` to set.
+ * @param[in]  aNameString         A name C string.
+ *
+ * @retval OT_ERROR_NONE           Successfully set @p aNetworkName from @p aNameString.
+ * @retval OT_ERROR_INVALID_ARGS   @p aNameStrng is invalid (too long or does not follow UTF-8 encoding).
+ */
+otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
+
+/**
+ * Indicates whether or not the given Operational Dataset TLVs is a valid Active or Pending Dataset.
+ *
+ * A valid Active Dataset MUST contain all the required TLVs (Active Timestamp, Channel, Channel Mask, Extended PAN ID,
+ * Mesh-Local Prefix, Network Key, Network Name, PAN ID, PSKc, and Security Policy).
+ *
+ * A valid Pending Dataset MUST contain all the required TLVs for an Active Dataset and additionally MUST contain
+ * Pending Timestamp and Delay Timer TLVs.
+ *
+ * This method also checks whether there are duplicated TLVs or the TLVs are not well-formed in the @p aDatasetTlvs.
+ *
+ * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
+ * @param[in]  aActive       TRUE for Active Dataset, FALSE for Pending Dataset.
+ *
+ * @returns TRUE if @p aDatasetTlvs is a valid Dataset, FALSE otherwise.
+ */
+bool otDatasetIsValid(const otOperationalDatasetTlvs *aDatasetTlvs, bool aActive);
+
+/**
+ * Parses an Operational Dataset from a given `otOperationalDatasetTlvs`.
+ *
+ * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
+ * @param[out] aDataset      A pointer to where the dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully set @p aDataset from @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`.
+ */
+otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
+
+/**
+ * Compares two Operational Dataset TLVs to determine if they contain the same set of TLVs.
+ *
+ * This function performs a deep comparison. It parses both @p aDatasetTlvsA and @p aDatasetTlvsB and checks if
+ * they contain the exact same set of TLVs (same type and same value). The order of TLVs within the
+ * `otOperationalDatasetTlvs` does not matter.
+ *
+ * @param[in]  aDatasetTlvsA  A pointer to dataset TLVs A. Must not be NULL.
+ * @param[in]  aDatasetTlvsB  A pointer to dataset TLVs B. Must not be NULL.
+ *
+ * @returns TRUE if the two Operational Dataset TLVs match, FALSE otherwise (e.g., if any TLV differs,
+ *          is missing, or if the TLVs are not well-formed).
+ */
+bool otDatasetTlvsCompare(const otOperationalDatasetTlvs *aDatasetTlvsA, const otOperationalDatasetTlvs *aDatasetTlvsB);
+
+/**
+ * Converts a given Operational Dataset to `otOperationalDatasetTlvs`.
+ *
+ * @param[in]  aDataset      An Operational dataset to convert to TLVs.
+ * @param[out] aDatasetTlvs  A pointer to dataset TLVs to return the result.
+ */
+void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
+
+/**
+ * Updates a given Operational Dataset.
+ *
+ * @p aDataset contains the fields to be updated and their new value.
+ *
+ * @param[in]     aDataset      Specifies the set of types and values to update.
+ * @param[in,out] aDatasetTlvs  A pointer to dataset TLVs to update.
+ *
+ * @retval OT_ERROR_NONE          Successfully updated @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset contains invalid values.
+ * @retval OT_ERROR_NO_BUFS       Not enough space space in @p aDatasetTlvs to apply the update.
+ */
+otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_DATASET_H_

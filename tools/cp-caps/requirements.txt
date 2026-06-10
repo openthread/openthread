@@ -1,0 +1,7 @@
+adb_shell>=0.4.4
+adb_shell[usb]>=0.4.4
+build>=1.2.1
+openthread-otci
+paramiko>=3.4.0
+pyserial>=3.5
+pyspinel>=1.0.3

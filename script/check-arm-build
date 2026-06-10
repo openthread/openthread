@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euxo pipefail
+
+OT_TMP_DIR=/tmp/ot-arm-build-cmake
+readonly OT_TMP_DIR
+
+OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
+readonly OT_SHA_NEW
+
+build_nrf52840()
+{
+    local options=(
+        "-DOT_ANYCAST_LOCATOR=ON"
+        "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_BORDER_AGENT=ON"
+        "-DOT_BORDER_ROUTER=ON"
+        "-DOT_CHANNEL_MANAGER=ON"
+        "-DOT_CHANNEL_MONITOR=ON"
+        "-DOT_COAP=ON"
+        "-DOT_COAPS=ON"
+        "-DOT_COMMISSIONER=ON"
+        "-DOT_CSL_RECEIVER=ON"
+        "-DOT_DATASET_UPDATER=ON"
+        "-DOT_DHCP6_CLIENT=ON"
+        "-DOT_DHCP6_SERVER=ON"
+        "-DOT_DIAGNOSTIC=ON"
+        "-DOT_DNSSD_SERVER=ON"
+        "-DOT_DNS_CLIENT=ON"
+        "-DOT_DUA=ON"
+        "-DOT_ECDSA=ON"
+        "-DOT_FULL_LOGS=ON"
+        "-DOT_JAM_DETECTION=ON"
+        "-DOT_JOINER=ON"
+        "-DOT_LINK_METRICS_INITIATOR=ON"
+        "-DOT_LINK_METRICS_SUBJECT=ON"
+        "-DOT_LINK_RAW=ON"
+        "-DOT_MAC_FILTER=ON"
+        "-DOT_MESSAGE_USE_HEAP=ON"
+        "-DOT_MLR=ON"
+        "-DOT_NETDATA_PUBLISHER=ON"
+        "-DOT_NETDIAG_CLIENT=ON"
+        "-DOT_PING_SENDER=ON"
+        "-DOT_SERVICE=ON"
+        "-DOT_SLAAC=ON"
+        "-DOT_SNTP_CLIENT=ON"
+        "-DOT_SRP_CLIENT=ON"
+        "-DOT_SRP_SERVER=ON"
+        "-DOT_THREAD_VERSION=1.4"
+        "-DOT_TIME_SYNC=ON"
+        "-DOT_UDP_FORWARD=ON"
+        "-DOT_UPTIME=ON"
+    )
+
+    rm -rf "${OT_TMP_DIR}"
+
+    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}"
+    rm -rf "${OT_TMP_DIR}/openthread/*"
+    git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/openthread"
+
+    cd "${OT_TMP_DIR}"
+    script/build nrf52840 UART_trans "${options[@]}"
+}
+
+main()
+{
+    export CPPFLAGS="${CPPFLAGS-} -DNDEBUG"
+
+    if [[ $# == 0 ]]; then
+        build_nrf52840
+        return 0
+    fi
+
+    while [[ $# != 0 ]]; do
+        "build_$1"
+        shift
+    done
+}
+
+main "$@"

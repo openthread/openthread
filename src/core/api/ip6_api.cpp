@@ -1,0 +1,326 @@
+/*
+ *  Copyright (c) 2016, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements the OpenThread IPv6 API.
+ */
+
+#include "openthread-core-config.h"
+
+#include "instance/instance.hpp"
+
+using namespace ot;
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+otError otIp6Init(otInstance              *aInstance,
+                  otNetifAddress          *aUnicastAddrPool,
+                  uint16_t                 aUnicastAddrPoolSize,
+                  otNetifMulticastAddress *aMulticastAddrPool,
+                  uint16_t                 aMulticastAddrPoolSize)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().Init(AsCoreTypePtr(aUnicastAddrPool), aUnicastAddrPoolSize,
+                                                         AsCoreTypePtr(aMulticastAddrPool), aMulticastAddrPoolSize);
+}
+#endif
+
+otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE
+    VerifyOrExit(instance.Get<ThreadNetif>().IsInitialized(), error = kErrorInvalidState);
+#endif
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
+#endif
+
+    if (aEnabled)
+    {
+        instance.Get<ThreadNetif>().Up();
+    }
+    else
+    {
+        instance.Get<ThreadNetif>().Down();
+    }
+
+    ExitNow();
+
+exit:
+    return error;
+}
+
+bool otIp6IsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<ThreadNetif>().IsUp(); }
+
+const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().GetUnicastAddresses().GetHead();
+}
+
+bool otIp6HasUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().HasUnicastAddress(AsCoreType(aAddress));
+}
+
+otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().AddExternalUnicastAddress(AsCoreType(aAddress));
+}
+
+otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().RemoveExternalUnicastAddress(AsCoreType(aAddress));
+}
+
+const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().GetMulticastAddresses().GetHead();
+}
+
+otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().SubscribeExternalMulticast(AsCoreType(aAddress));
+}
+
+otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().UnsubscribeExternalMulticast(AsCoreType(aAddress));
+}
+
+void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveCallback(aCallback, aCallbackContext);
+}
+
+void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallback, void *aCallbackContext)
+{
+    AsCoreType(aInstance).Get<ThreadNetif>().SetAddressCallback(aCallback, aCallbackContext);
+}
+
+bool otIp6IsReceiveFilterEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().IsReceiveIp6FilterEnabled();
+}
+
+void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetReceiveIp6FilterEnabled(aEnabled);
+}
+
+otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
+{
+    otError error;
+
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(AsCoreTypePtr(aMessage)));
+
+exit:
+    return error;
+}
+
+otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
+{
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(Message::Settings::From(aSettings));
+}
+
+otMessage *otIp6NewMessageFromBuffer(otInstance              *aInstance,
+                                     const uint8_t           *aData,
+                                     uint16_t                 aDataLength,
+                                     const otMessageSettings *aSettings)
+{
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessageFromData(aData, aDataLength,
+                                                                    Message::Settings::From(aSettings));
+}
+
+otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)
+{
+    return AsCoreType(aInstance).Get<Ip6::Filter>().AddUnsecurePort(aPort);
+}
+
+otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort)
+{
+    return AsCoreType(aInstance).Get<Ip6::Filter>().RemoveUnsecurePort(aPort);
+}
+
+void otIp6RemoveAllUnsecurePorts(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Ip6::Filter>().RemoveAllUnsecurePorts();
+}
+
+const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
+{
+    AssertPointerIsNotNull(aNumEntries);
+
+    return AsCoreType(aInstance).Get<Ip6::Filter>().GetUnsecurePorts(*aNumEntries);
+}
+
+bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
+{
+    return AsCoreType(aFirst) == AsCoreType(aSecond);
+}
+
+bool otIp6IsLinkLocalUnicast(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsLinkLocalUnicast(); }
+
+void otIp6FormLinkLocalAddressFromExtAddress(const otExtAddress *aExtAddress, otIp6Address *aAddress)
+{
+    AsCoreType(aAddress).SetToLinkLocalAddress(AsCoreType(aExtAddress));
+}
+
+void otIp6ExtractExtAddressFromIp6AddressIid(const otIp6Address *aAddress, otExtAddress *aExtAddress)
+{
+    AsCoreType(aExtAddress).SetFromIid(AsCoreType(aAddress).GetIid());
+}
+
+bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond)
+{
+    return AsCoreType(aFirst) == AsCoreType(aSecond);
+}
+
+otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
+{
+    return AsCoreType(aAddress).FromString(aString);
+}
+
+otError otIp6PrefixFromString(const char *aString, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aPrefix).FromString(aString);
+}
+
+void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
+{
+    AssertPointerIsNotNull(aBuffer);
+
+    AsCoreType(aAddress).ToString(aBuffer, aSize);
+}
+
+void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize)
+{
+    AssertPointerIsNotNull(aBuffer);
+
+    AsCoreType(aSockAddr).ToString(aBuffer, aSize);
+}
+
+void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
+{
+    AssertPointerIsNotNull(aBuffer);
+
+    AsCoreType(aPrefix).ToString(aBuffer, aSize);
+}
+
+uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
+{
+    return AsCoreType(aFirst).PrefixMatch(AsCoreType(aSecond));
+}
+
+void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *aPrefix)
+{
+    AsCoreType(aAddress).GetPrefix(aLength, AsCoreType(aPrefix));
+}
+
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsUnspecified(); }
+
+otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
+{
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().SelectSourceAddress(AsCoreType(aMessageInfo));
+}
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+otError otIp6RegisterMulticastListeners(otInstance                             *aInstance,
+                                        const otIp6Address                     *aAddresses,
+                                        uint8_t                                 aAddressNum,
+                                        const uint32_t                         *aTimeout,
+                                        otIp6RegisterMulticastListenersCallback aCallback,
+                                        void                                   *aContext)
+{
+    return AsCoreType(aInstance).Get<Mlr::Manager>().RegisterMulticastListeners(AsCoreTypePtr(aAddresses), aAddressNum,
+                                                                                aTimeout, aCallback, aContext);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
+bool otIp6IsSlaacEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ip6::Slaac>().IsEnabled(); }
+
+void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Instance &instance = AsCoreType(aInstance);
+
+    if (aEnabled)
+    {
+        instance.Get<Ip6::Slaac>().Enable();
+    }
+    else
+    {
+        instance.Get<Ip6::Slaac>().Disable();
+    }
+}
+
+void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFilter)
+{
+    AsCoreType(aInstance).Get<Ip6::Slaac>().SetFilter(aFilter);
+}
+
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SetMeshLocalIid(AsCoreType(aIid));
+}
+
+#endif
+
+const char *otIp6ProtoToString(uint8_t aIpProto) { return Ip6::Ip6::IpProtoToString(aIpProto); }
+
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<Ip6::Ip6>().GetBorderRoutingCounters();
+}
+
+void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otIp6SetAllowUnsecureWhenDisabled(otInstance *aInstance, bool aAllow)
+{
+    AsCoreType(aInstance).Get<Ip6::Filter>().SetAllowUnsecureWhenDisabled(aAllow);
+}
+
+bool otIp6IsUnsecureAllowedWhenDisabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Filter>().IsUnsecureAllowedWhenDisabled();
+}
+#endif

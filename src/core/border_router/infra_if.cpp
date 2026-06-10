@@ -1,0 +1,368 @@
+/*
+ *    Copyright (c) 2022, The OpenThread Authors.
+ *    All rights reserved.
+ *
+ *    Redistribution and use in source and binary forms, with or without
+ *    modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. Neither the name of the copyright holder nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+ *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements infrastructure network interface.
+ */
+
+#include "infra_if.hpp"
+#include "common/num_utils.hpp"
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#include "instance/instance.hpp"
+
+namespace ot {
+namespace BorderRouter {
+
+RegisterLogModule("InfraIf");
+
+InfraIf::InfraIf(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mInitialized(false)
+    , mIsRunning(false)
+    , mIfIndex(0)
+{
+}
+
+void InfraIf::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
+{
+    if (mInitialized)
+    {
+        VerifyOrExit(aInfraIfIndex != mIfIndex);
+
+        LogInfo("Switching previously configured %s to %lu", ToString().AsCString(), ToUlong(aInfraIfIndex));
+
+        // When switching interface index, we `Deinit()` to signal
+        // that the previous `mIfIndex` is down so that all modules
+        // operating on this interface are stopped before restarting
+        // operation on the new interface.
+
+        Deinit();
+    }
+
+    mIfIndex     = aInfraIfIndex;
+    mInitialized = true;
+
+    LogInfo("Init %s", ToString().AsCString());
+
+    Get<RoutingManager>().Init();
+
+exit:
+    IgnoreError(HandleStateChanged(mIfIndex, aInfraIfIsRunning));
+}
+
+void InfraIf::Deinit(void)
+{
+    VerifyOrExit(mInitialized);
+
+    LogInfo("Deinit %s", ToString().AsCString());
+
+    IgnoreError(HandleStateChanged(mIfIndex, /* aIsRunning */ false));
+
+    mInitialized = false;
+
+exit:
+    return;
+}
+
+bool InfraIf::HasAddress(const Ip6::Address &aAddress) const
+{
+    OT_ASSERT(mInitialized);
+
+    return otPlatInfraIfHasAddress(&GetInstance(), mIfIndex, &aAddress);
+}
+
+Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const
+{
+    OT_ASSERT(mInitialized);
+
+    return otPlatInfraIfSendIcmp6Nd(&GetInstance(), mIfIndex, &aDestination, aPacket.GetBytes(), aPacket.GetLength());
+}
+
+void InfraIf::HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket)
+{
+    Error                    error = kErrorNone;
+    const Ip6::Icmp::Header *icmp6Header;
+
+    VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
+    VerifyOrExit(aIfIndex == mIfIndex, error = kErrorDrop);
+    VerifyOrExit(aPacket.GetBytes() != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Icmp::Header), error = kErrorParse);
+
+    icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
+
+    switch (icmp6Header->GetType())
+    {
+    case Ip6::Icmp::Header::kTypeRouterAdvert:
+        Get<RxRaTracker>().HandleRouterAdvertisement(aPacket, aSource);
+        break;
+    case Ip6::Icmp::Header::kTypeNeighborAdvert:
+        Get<RxRaTracker>().HandleNeighborAdvertisement(aPacket);
+        break;
+    case Ip6::Icmp::Header::kTypeRouterSolicit:
+        Get<RoutingManager>().HandleRouterSolicit(aPacket, aSource);
+        break;
+    default:
+        break;
+    }
+
+exit:
+    LogDebgOnError(error, "process ICMPv6 msg");
+}
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+Error InfraIf::DiscoverNat64Prefix(void) const
+{
+    OT_ASSERT(mInitialized);
+
+    return otPlatInfraIfDiscoverNat64Prefix(&GetInstance(), mIfIndex);
+}
+
+void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
+    VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
+
+    Get<RoutingManager>().HandlePlatformDiscoveredNat64PrefixDone(aPrefix);
+
+exit:
+    LogDebgOnError(error, "handle discovered NAT64 synthetic addresses");
+}
+
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+Error InfraIf::GetLinkLayerAddress(LinkLayerAddress &aLinkLayerAddress)
+{
+    return otPlatGetInfraIfLinkLayerAddress(&GetInstance(), mIfIndex, &aLinkLayerAddress);
+}
+
+Error InfraIf::HandleStateChanged(uint32_t aIfIndex, bool aIsRunning)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mInitialized, error = kErrorInvalidState);
+    VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
+
+    VerifyOrExit(aIsRunning != mIsRunning);
+    LogInfo("State changed: %sRUNNING -> %sRUNNING", mIsRunning ? "" : "NOT ", aIsRunning ? "" : "NOT ");
+
+    mIsRunning = aIsRunning;
+
+    Get<RxRaTracker>().HandleInfraIfStateChanged();
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    Get<MultiAilDetector>().HandleInfraIfStateChanged();
+#endif
+
+    Get<RoutingManager>().HandleInfraIfStateChanged();
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    Get<Srp::AdvertisingProxy>().HandleInfraIfStateChanged();
+#endif
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().HandleInfraIfStateChanged();
+#endif
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    Get<Dns::Multicast::Core>().HandleInfraIfStateChanged();
+#endif
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+void InfraIf::SetDhcp6ListeningEnabled(bool aEnable)
+{
+    otPlatInfraIfDhcp6PdClientSetListeningEnabled(&GetInstance(), aEnable, mIfIndex);
+}
+
+void InfraIf::SendDhcp6(Message &aMessage, Ip6::Address &aDestAddress)
+{
+    otPlatInfraIfDhcp6PdClientSend(&GetInstance(), &aMessage, &aDestAddress, mIfIndex);
+}
+
+void InfraIf::HandleDhcp6Received(Message &aMessage, uint32_t aInfraIfIndex)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
+    VerifyOrExit(aInfraIfIndex == mIfIndex, error = kErrorDrop);
+
+    Get<Dhcp6PdClient>().HandleReceived(aMessage);
+
+exit:
+    LogDebgOnError(error, "process DHCPv6 msg");
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+
+InfraIf::InfoString InfraIf::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("infra netif %lu", ToUlong(mIfIndex));
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// InfraIf::LinkLayerAddress
+
+Error InfraIf::LinkLayerAddress::ConvertToIid(Ip6::InterfaceIdentifier &aIid) const
+{
+    Error           error = kErrorNone;
+    Mac::ExtAddress extAddress;
+
+    switch (mLength)
+    {
+    case 5:
+        // EUI-40 - [AA BB] + [FF FF FE] + [CC DD EE]
+        extAddress.m8[0] = mAddress[0];
+        extAddress.m8[1] = mAddress[1];
+        extAddress.m8[2] = 0xff;
+        extAddress.m8[3] = 0xff;
+        extAddress.m8[4] = 0xfe;
+        extAddress.m8[5] = mAddress[2];
+        extAddress.m8[6] = mAddress[3];
+        extAddress.m8[7] = mAddress[4];
+        break;
+
+    case 6:
+        // EUI-48 - [AA BB CC] + [FF FE] + [DD EE FF]
+        extAddress.m8[0] = mAddress[0];
+        extAddress.m8[1] = mAddress[1];
+        extAddress.m8[2] = mAddress[2];
+        extAddress.m8[3] = 0xff;
+        extAddress.m8[4] = 0xfe;
+        extAddress.m8[5] = mAddress[3];
+        extAddress.m8[6] = mAddress[4];
+        extAddress.m8[7] = mAddress[5];
+        break;
+
+    case 8:
+        extAddress.Set(mAddress);
+        break;
+
+    default:
+        ExitNow(error = kErrorNotCapable);
+    }
+
+    aIid.SetFromExtAddress(extAddress);
+
+exit:
+    return error;
+}
+
+InfraIf::LinkLayerAddress::InfoString InfraIf::LinkLayerAddress::ToString(void) const
+{
+    InfoString string;
+
+    for (uint8_t i = 0; i < GetLength(); i++)
+    {
+        if (i > 0)
+        {
+            string.Append(":");
+        }
+
+        string.Append("%02x", mAddress[i]);
+    }
+
+    return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
+                                         uint32_t            aInfraIfIndex,
+                                         const otIp6Address *aSrcAddress,
+                                         const uint8_t      *aBuffer,
+                                         uint16_t            aBufferLength)
+{
+    InfraIf::Icmp6Packet packet;
+
+    packet.Init(aBuffer, aBufferLength);
+    AsCoreType(aInstance).Get<InfraIf>().HandledReceived(aInfraIfIndex, AsCoreType(aSrcAddress), packet);
+}
+
+extern "C" otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning)
+{
+    return AsCoreType(aInstance).Get<InfraIf>().HandleStateChanged(aInfraIfIndex, aIsRunning);
+}
+
+extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
+                                                     uint32_t           aInfraIfIndex,
+                                                     const otIp6Prefix *aIp6Prefix)
+{
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    AsCoreType(aInstance).Get<InfraIf>().DiscoverNat64PrefixDone(aInfraIfIndex, AsCoreType(aIp6Prefix));
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aIp6Prefix);
+#endif
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE
+extern "C" void otPlatInfraIfDhcp6PdClientHandleReceived(otInstance *aInstance,
+                                                         otMessage  *aMessage,
+                                                         uint32_t    aInfraIfIndex)
+{
+    AsCoreType(aInstance).Get<InfraIf>().HandleDhcp6Received(AsCoreType(aMessage), aInfraIfIndex);
+}
+#endif
+
+} // namespace BorderRouter
+} // namespace ot
+
+//---------------------------------------------------------------------------------------------------------------------
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
+OT_TOOL_WEAK bool otPlatInfraIfHasAddress(otInstance *, uint32_t, const otIp6Address *) { return false; }
+
+OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(otInstance *, uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_FAILED;
+}
+
+OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(otInstance *, uint32_t) { return OT_ERROR_FAILED; }
+#endif
+
+extern "C" OT_TOOL_WEAK otError otPlatGetInfraIfLinkLayerAddress(otInstance *,
+                                                                 uint32_t,
+                                                                 otPlatInfraIfLinkLayerAddress *)
+{
+    return OT_ERROR_FAILED;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

@@ -1,0 +1,249 @@
+/*
+ *  Copyright (c) 2016, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ * @brief
+ *  This file defines the top-level functions for the OpenThread CLI server.
+ */
+
+#ifndef OPENTHREAD_CLI_H_
+#define OPENTHREAD_CLI_H_
+
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup api-cli
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ */
+
+/**
+ * Opaque type for a CLI interpreter.
+ */
+typedef struct otCliInterpreter otCliInterpreter;
+
+/**
+ * Pointer is called to notify about CLI interpreter output.
+ *
+ * @param[out] aContext    A user context pointer.
+ * @param[in]  aFormat     The format string.
+ * @param[in]  aArguments  The format string arguments.
+ *
+ * @returns                Number of bytes written by the callback.
+ */
+typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list aArguments)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
+
+/**
+ * Gets the size of the CLI interpreter object.
+ *
+ * @returns The size of the CLI interpreter object in bytes.
+ */
+size_t otCliInterpreterGetSize(void);
+
+/**
+ * Initializes a CLI interpreter.
+ *
+ * @param[in]  aBuffer    A pointer to a memory buffer for the CLI interpreter.
+ * @param[in]  aSize      The size of the memory buffer.
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aCallback  A callback method called to process CLI output.
+ * @param[in]  aContext   A user context pointer.
+ *
+ * @returns A pointer to the initialized CLI interpreter, or `NULL` if @p aSize is too small.
+ */
+otCliInterpreter *otCliInterpreterInit(void               *aBuffer,
+                                       size_t              aSize,
+                                       otInstance         *aInstance,
+                                       otCliOutputCallback aCallback,
+                                       void               *aContext);
+
+/**
+ * Configures whether or not the CLI interpreter outputs the prompt string.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE`.
+ *
+ * It is enabled by default.
+ *
+ * @param[in]  aInterpreter  A pointer to a CLI interpreter.
+ * @param[in]  aEnable       TRUE to enable outputting the prompt, FALSE to disable.
+ */
+void otCliInterpreterSetPromptConfig(otCliInterpreter *aInterpreter, bool aEnable);
+
+/**
+ * Feeds input to the CLI interpreter.
+ *
+ * @param[in]  aInterpreter  A pointer to a CLI interpreter.
+ * @param[in]  aLine         A pointer to a null-terminated string.
+ */
+void otCliInterpreterInputLine(otCliInterpreter *aInterpreter, char *aLine);
+
+/**
+ * Finalizes the CLI interpreter.
+ *
+ * @param[in]  aInterpreter  A pointer to a CLI interpreter.
+ */
+void otCliInterpreterFinalize(otCliInterpreter *aInterpreter);
+
+//--------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Initialize the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aCallback   A callback method called to process CLI output.
+ * @param[in]  aContext    A user context pointer.
+ */
+void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
+
+/**
+ * Gets the pointer to the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * @returns A pointer to the static CLI interpreter.
+ */
+otCliInterpreter *otCliGetStaticInterpreter(void);
+
+/**
+ * Feeds input to the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * @param[in]  aLine        A pointer to a null-terminated string.
+ */
+void otCliInputLine(char *aLine);
+
+/**
+ * Represents a user provided CLI command entry.
+ */
+typedef struct otCliCommand
+{
+    const char *mName;                                                       ///< The command string.
+    otError (*mCommand)(void *aContext, uint8_t aArgsLength, char *aArgs[]); ///< Command handler function pointer.
+} otCliCommand;
+
+/**
+ * Set a user command table on the static CLI interpreter.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * @param[in]  aUserCommands  A pointer to an array with user commands.
+ * @param[in]  aLength        The @p aUserCommands length.
+ * @param[in]  aContext       The context passed to the handler.
+ *
+ * @retval OT_ERROR_NONE     Successfully updated command table with commands from @p aUserCommands.
+ * @retval OT_ERROR_NO_BUFS  Maximum number of command entries have already been set.
+ */
+otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext);
+
+/**
+ * Write a number of bytes to the static CLI interpreter output as a hex string.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * This is intended for use by user-provided CLI command handlers.
+ *
+ * @param[in]  aBytes   A pointer to data which should be printed.
+ * @param[in]  aLength  @p aBytes length.
+ */
+void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
+
+/**
+ * Write formatted string to the static CLI interpreter output.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * This is intended for use by user-provided CLI command handlers.
+ *
+ * @param[in]  aFmt   A pointer to the format string.
+ * @param[in]  ...    A matching list of arguments.
+ */
+void otCliOutputFormat(const char *aFmt, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+
+/**
+ * Write a given error code as the result of previous command to the static CLI interpreter output.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ *
+ * This is intended for use by user-provided CLI command handlers.
+ *
+ * If the @p aError is `OT_ERROR_PENDING` nothing will be outputted.
+ *
+ * @param[in]  aError Error code value.
+ */
+void otCliAppendResult(otError aError);
+
+/**
+ * Callback to write the OpenThread Log to the static CLI interpreter output.
+ *
+ * @param[in]  aLogLevel   The log level.
+ * @param[in]  aLogRegion  The log region.
+ * @param[in]  aFormat     A pointer to the format string.
+ * @param[in]  aArgs       va_list matching aFormat.
+ */
+void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 0);
+
+/**
+ * Callback to allow vendor specific commands to be added to the user command table.
+ *
+ * Available when `OPENTHREAD_CONFIG_CLI_VENDOR_COMMANDS_ENABLE` is enabled and
+ * `OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES` is greater than 1.
+ *
+ * Requires `OPENTHREAD_CONFIG_CLI_STATIC_INTERPRETER_ENABLE`.
+ */
+extern void otCliVendorSetUserCommands(void);
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_CLI_H_

@@ -1,0 +1,20 @@
+# Auto normalize all files which appear to be text files.
+*        text=auto
+
+# Auto normalize files which are explicitly text
+*.[ch]   text
+*.[ch]pp text
+*.txt    text
+*.md     text
+*.yml    text
+*.html   text
+*.py     text
+
+# Files which are explicitly binary
+*.gz     binary !eol
+*.xz     binary !eol
+*.bz2    binary !eol
+*.tar    binary !eol
+*.png    binary !eol
+*.jpg    binary !eol
+*.gif    binary !eol

@@ -1,0 +1,61 @@
+*.a
+*.a.*
+*.bak
+*.flash
+*.gcda
+*.gcno
+*.log
+*.o
+*.ninja*
+*.orig
+*.pcap
+*.pyc
+*.swn
+*.swo
+*.swp
+*.trs
+*.bak
+*.map
+*~
+.DS_Store
+.vagrant
+build
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+doc/Doxyfile
+doc/html
+output
+/tmp/
+
+# OT exectuables
+ot-cli-ftd
+ot-cli-mtd
+ot-cli-radio
+ot-ncp-ftd
+ot-ncp-mtd
+ot-rcp
+
+# IDE / editor files
+.idea/**
+.vscode/**
+cmake-build-*/**
+/tags
+
+# Python bytecodes
+__pycache__
+
+# Python environments
+.venv
+venv/
+
+# Unit test files
+CTestTestfile.cmake
+ot-test-*
+ot_testing/
+Testing/
+tests/nexus/nexus_*
+
+# Misc
+DartConfiguration.tcl
+third_party/mbedtls/openthread-mbedtls-config.h

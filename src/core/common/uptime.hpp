@@ -1,0 +1,147 @@
+/*
+ *  Copyright (c) 2021, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file includes definitions for tracking device's uptime.
+ */
+
+#ifndef OT_CORE_COMMON_UPTIME_HPP_
+#define OT_CORE_COMMON_UPTIME_HPP_
+
+#include "openthread-core-config.h"
+
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for FTD or MTD builds"
+#endif
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "common/string.hpp"
+#include "common/time.hpp"
+#include "common/timer.hpp"
+
+namespace ot {
+
+constexpr uint16_t kUptimeStringSize = OT_UPTIME_STRING_SIZE; ///< Recommended string size to represent uptime.
+
+typedef uint64_t UptimeMsec; ///< Uptime in milliseconds.
+
+typedef uint32_t UptimeSec; ///< Uptime in seconds.
+
+typedef String<kUptimeStringSize> UptimeString; ///< A string representation of `UptimeMsec`
+
+/**
+ * Represents the flags used by `UptimeToString` to customize the string representation of uptime.
+ */
+enum UptimeStringFlag : uint8_t
+{
+    kUptimeStringIncludeMsec     = 1 << 0, ///< Include `.<mmm>` milliseconds in the string.
+    kUptimeStringSkipHoursIfZero = 1 << 1, ///< Skip the `<hh>:` part if hours (and days) are zero.
+};
+
+/**
+ * Represents a set of `UptimeStringFlag` values.
+ */
+typedef uint8_t UptimeStringFlags;
+
+/**
+ * Converts an uptime value (number of milliseconds) to a human-readable string.
+ *
+ * The string follows the format "<hh>:<mm>:<ss>" or "<dd>d.<hh>:<mm>:<ss>" (if uptime is longer than a day).
+ * @p aFlags can be used to include milliseconds and/or skip the `<hh>:` part if hours/days are zero.
+ *
+ * @param[in]     aUptime  The uptime to convert.
+ * @param[in,out] aWriter  A `StringWriter` to append the converted string to.
+ * @param[in]     aFlags   Flags to customize the string representation.
+ */
+void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, UptimeStringFlags aFlags);
+
+/**
+ * Converts an uptime value (number of milliseconds) to a human-readable string.
+ *
+ * The string follows the format "<hh>:<mm>:<ss>" or "<dd>d.<hh>:<mm>:<ss>" (if uptime is longer than a day).
+ * @p aFlags can be used to include milliseconds and/or skip the `<hh>:` part if hours/days are zero.
+ *
+ * @param[in]     aUptime  The uptime to convert.
+ * @param[in]     aFlags   Flags to customize the string representation.
+ *
+ * @returns An `UptimeString` containing the human-readable string.
+ */
+UptimeString UptimeToString(UptimeMsec aUptime, UptimeStringFlags aFlags);
+
+/**
+ * Implements tracking of device uptime.
+ */
+class UptimeTracker : public InstanceLocator, private NonCopyable
+{
+public:
+    /**
+     * Initializes an `UptimeTracker` instance.
+     *
+     * @param[in] aInstance   The OpenThread instance.
+     */
+    explicit UptimeTracker(Instance &aInstance);
+
+    /**
+     * Returns the current device uptime (in msec).
+     *
+     * The uptime is maintained as number of milliseconds since OpenThread instance was initialized.
+     *
+     * @returns The uptime (number of milliseconds).
+     */
+    UptimeMsec GetUptime(void) const;
+
+    /**
+     * Returns the current device uptime in seconds.
+     *
+     * @returns The uptime in seconds.
+     */
+    UptimeSec GetUptimeInSeconds(void) const;
+
+private:
+    static constexpr uint32_t kTimerInterval = (1 << 30);
+
+    static_assert(static_cast<uint32_t>(4 * kTimerInterval) == 0, "kTimerInterval is not correct");
+
+    void HandleTimer(void);
+
+    using UptimeTimer = TimerMilliIn<UptimeTracker, &UptimeTracker::HandleTimer>;
+
+    TimeMilli   mStartTime;
+    uint32_t    mOverflowCount;
+    UptimeTimer mTimer;
+};
+
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_UPTIME_ENABLE
+
+#endif // OT_CORE_COMMON_UPTIME_HPP_

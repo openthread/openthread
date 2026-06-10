@@ -1,0 +1,8 @@
+<DEVICE_FIELDS>
+    <DEVICE name="OpenThread_Sim" thumbnail="OpenThread.png" description = "OpenThread Simulation" THCI="OpenThread_Sim">
+        <ITEM type="text" forParam="SerialPort">UNSPECIFIED</ITEM>
+    </DEVICE>
+    <DEVICE name="OpenThread_BR_Sim" thumbnail="OpenThread_BR.png" description = "OpenThread BR Simulation" THCI="OpenThread_BR_Sim">
+        <ITEM type="text" forParam="SerialPort">UNSPECIFIED</ITEM>
+    </DEVICE>
+</DEVICE_FIELDS>

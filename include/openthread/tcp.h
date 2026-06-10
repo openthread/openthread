@@ -1,0 +1,757 @@
+/*
+ *  Copyright (c) 2021, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ * @brief
+ *   This file defines the OpenThread TCP API.
+ */
+
+#ifndef OPENTHREAD_TCP_H_
+#define OPENTHREAD_TCP_H_
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup api-tcp
+ *
+ * @brief
+ *   This module includes functions that control TCP communication.
+ *
+ * @{
+ */
+
+/**
+ * A linked buffer structure for use with TCP.
+ *
+ * A single otLinkedBuffer structure references an array of bytes in memory,
+ * via mData and mLength. The mNext field is used to form a chain of
+ * otLinkedBuffer structures.
+ */
+typedef struct otLinkedBuffer
+{
+    struct otLinkedBuffer *mNext;   ///< Pointer to the next linked buffer in the chain, or NULL if it is the end.
+    const uint8_t         *mData;   ///< Pointer to data referenced by this linked buffer.
+    size_t                 mLength; ///< Length of this linked buffer (number of bytes).
+} otLinkedBuffer;
+
+typedef struct otTcpEndpoint otTcpEndpoint;
+
+/**
+ * This callback informs the application that the TCP 3-way handshake is
+ * complete and that the connection is now established.
+ *
+ * @param[in]  aEndpoint  The TCP endpoint whose connection is now established.
+ */
+typedef void (*otTcpEstablished)(otTcpEndpoint *aEndpoint);
+
+/**
+ * This callback informs the application that data in the provided
+ * @p aData have been acknowledged by the connection peer and that @p aData and
+ * the data it contains can be reclaimed by the application.
+ *
+ * The @p aData are guaranteed to be identical to those passed in to TCP via
+ * otTcpSendByReference(), including any extensions effected via
+ * otTcpSendByExtension().
+ *
+ * @param[in]  aEndpoint  The TCP endpoint for the connection.
+ * @param[in]  aData      A pointer to the otLinkedBuffer that can be reclaimed.
+ */
+typedef void (*otTcpSendDone)(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+
+/**
+ * This callback informs the application if forward progress has been made in
+ * transferring data from the send buffer to the recipient. This callback is
+ * not necessary for correct TCP operation. Most applications can just rely on
+ * the otTcpSendDone() callback to reclaim linked buffers once the TCP stack is
+ * done using them. The purpose of this callback is to support advanced
+ * applications that benefit from finer-grained information about how the
+ * the connection is making forward progress in transferring data to the
+ * connection peer.
+ *
+ * This callback's operation is closely tied to TCP's send buffer. The send
+ * buffer can be understood as having two regions. First, there is the
+ * "in-flight" region at the head (front) of the send buffer. It corresponds
+ * to data which has been sent to the recipient, but is not yet acknowledged.
+ * Second, there is the "backlog" region, which consists of all data in the
+ * send buffer that is not in the "in-flight" region. The "backlog" region
+ * corresponds to data that is queued for sending, but has not yet been sent.
+ *
+ * The callback is invoked in response to two types of events. First, the
+ * "in-flight" region of the send buffer may shrink (e.g., when the recipient
+ * acknowledges data that we sent earlier). Second, the "backlog" region of the
+ * send buffer may shrink (e.g., new data was sent out). These two conditions
+ * often occur at the same time, in response to an ACK segment from the
+ * connection peer, which is why they are combined in a single callback.
+ *
+ * The TCP stack only uses the @p aInSendBuffer bytes at the tail of the send
+ * buffer; when @p aInSendBuffer decreases by an amount x, it means that x
+ * additional bytes that were formerly at the head of the send buffer are no
+ * longer part of the send buffer and can now be reclaimed (i.e., overwritten)
+ * by the application. Note that the otLinkedBuffer structure itself can only
+ * be reclaimed once all bytes that it references are no longer part of the
+ * send buffer.
+ *
+ * This callback subsumes otTcpSendDone(), in the following sense: applications
+ * can determine when linked buffers can be reclaimed by comparing
+ * @p aInSendBuffer with how many bytes are in each linked buffer. However, we
+ * expect otTcpSendDone(), which directly conveys which otLinkedBuffers can be
+ * reclaimed, to be much simpler to use. If both callbacks are registered and
+ * are triggered by the same event (e.g., the same ACK segment received), then
+ * the otTcpSendDone() callback will be triggered first, followed by this
+ * callback.
+ *
+ * Additionally, this callback provides @p aBacklog, which indicates how many
+ * bytes of data in the send buffer are not yet in flight. For applications
+ * that only want to add data to the send buffer when there is an assurance
+ * that it will be sent out soon, it may be desirable to only send out data
+ * when @p aBacklog is suitably small (0 or close to 0). For example, an
+ * application may use @p aBacklog so that it can react to queue buildup by
+ * dropping or aggregating data to avoid creating a backlog of data.
+ *
+ * After a call to otTcpSendByReference() or otTcpSendByExtension() with a
+ * positive number of bytes, the otTcpForwardProgress() callback is guaranteed
+ * to be called, to indicate when the bytes that were added to the send buffer
+ * are sent out. The call to otTcpForwardProgress() may be made immediately
+ * after the bytes are added to the send buffer (if some of those bytes are
+ * immediately sent out, reducing the backlog), or sometime in the future (once
+ * the connection sends out some or all of the data, reducing the backlog). By
+ * "immediately," we mean that the callback is immediately scheduled for
+ * execution in a tasklet; to avoid reentrancy-related complexity, the
+ * otTcpForwardProgress() callback is never directly called from the
+ * otTcpSendByReference() or otTcpSendByExtension() functions.
+ *
+ * @param[in]  aEndpoint      The TCP endpoint for the connection.
+ * @param[in]  aInSendBuffer  The number of bytes in the send buffer (sum of "in-flight" and "backlog" regions).
+ * @param[in]  aBacklog       The number of bytes that are queued for sending but have not yet been sent (the "backlog"
+ *                            region).
+ */
+typedef void (*otTcpForwardProgress)(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog);
+
+/**
+ * This callback indicates the number of bytes available for consumption from
+ * the receive buffer.
+ *
+ * It is called whenever bytes are added to the receive buffer and when the
+ * end of stream is reached. If the end of the stream has been reached (i.e.,
+ * if no more data will become available to read because the connection peer
+ * has closed their end of the connection for writing), then @p aEndOfStream is
+ * true. Finally, @p aBytesRemaining indicates how much capacity is left in the
+ * receive buffer to hold additional data that arrives.
+ *
+ * @param[in]  aEndpoint        The TCP endpoint for the connection.
+ * @param[in]  aBytesAvailable  The number of bytes in the connection's receive buffer.
+ * @param[in]  aEndOfStream     Indicates if additional data, beyond what is already in the connection's receive buffer,
+ *                              can be received.
+ * @param[in]  aBytesRemaining  The number of additional bytes that can be received before the receive buffer becomes
+ *                              full.
+ */
+typedef void (*otTcpReceiveAvailable)(otTcpEndpoint *aEndpoint,
+                                      size_t         aBytesAvailable,
+                                      bool           aEndOfStream,
+                                      size_t         aBytesRemaining);
+
+typedef enum otTcpDisconnectedReason
+{
+    OT_TCP_DISCONNECTED_REASON_NORMAL,
+    OT_TCP_DISCONNECTED_REASON_REFUSED,
+    OT_TCP_DISCONNECTED_REASON_RESET,
+    OT_TCP_DISCONNECTED_REASON_TIME_WAIT,
+    OT_TCP_DISCONNECTED_REASON_TIMED_OUT,
+} otTcpDisconnectedReason;
+
+/**
+ * This callback indicates that the connection was broken and should no longer
+ * be used, or that a connection has entered the TIME-WAIT state.
+ *
+ * It can occur if a connection establishment attempt (initiated by calling
+ * otTcpConnect()) fails, or any point thereafter (e.g., if the connection
+ * times out or an RST segment is received from the connection peer). Once this
+ * callback fires, all resources that the application provided for this
+ * connection (i.e., any `otLinkedBuffers` and memory they reference, but not
+ * the TCP endpoint itself or space for the receive buffers) can be reclaimed.
+ * In the case of a connection entering the TIME-WAIT state, this callback is
+ * called twice, once upon entry into the TIME-WAIT state (with
+ * OT_TCP_DISCONNECTED_REASON_TIME_WAIT, and again when the TIME-WAIT state
+ * expires (with OT_TCP_DISCONNECTED_REASON_NORMAL).
+ *
+ * @param[in]  aEndpoint  The TCP endpoint whose connection has been lost.
+ * @param[in]  aReason    The reason why the connection was lost.
+ */
+typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
+
+/**
+ * OT_TCP_ENDPOINT_TCB_SIZE_BASE and OT_TCP_ENDPOINT_TCB_NUM_POINTERS are
+ * chosen such that the mTcb field of otTcpEndpoint has the same size as
+ * struct tcpcb in TCPlp. This is necessary because the mTcb field, although
+ * opaque in its declaration, is treated as struct tcpcb in the TCP
+ * implementation.
+ */
+#define OT_TCP_ENDPOINT_TCB_SIZE_BASE 392
+#define OT_TCP_ENDPOINT_TCB_NUM_PTR 36
+
+/**
+ * Represents a TCP endpoint.
+ *
+ * A TCP endpoint acts an endpoint of TCP connection. It can be used to
+ * initiate TCP connections, and, once a TCP connection is established, send
+ * data to and receive data from the connection peer.
+ *
+ * The application should not inspect the fields of this structure directly; it
+ * should only interact with it via the TCP API functions whose signatures are
+ * provided in this file.
+ */
+struct otTcpEndpoint
+{
+    union
+    {
+        uint8_t  mSize[OT_TCP_ENDPOINT_TCB_SIZE_BASE + OT_TCP_ENDPOINT_TCB_NUM_PTR * sizeof(void *)];
+        uint64_t mAlign;
+    } mTcb;
+
+    struct otTcpEndpoint *mNext;    ///< A pointer to the next TCP endpoint (internal use only)
+    void                 *mContext; ///< A pointer to application-specific context
+
+    otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
+    otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
+    otTcpForwardProgress  mForwardProgressCallback;  ///< "Forward progress" callback function
+    otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
+    otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
+
+    uint32_t mTimers[4];
+
+    otLinkedBuffer mReceiveLinks[2];
+    otSockAddr     mSockAddr;
+
+    uint8_t mPendingCallbacks;
+};
+
+/**
+ * Contains arguments to the otTcpEndpointInitialize() function.
+ */
+typedef struct otTcpEndpointInitializeArgs
+{
+    void *mContext; ///< Pointer to application-specific context
+
+    otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
+    otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
+    otTcpForwardProgress  mForwardProgressCallback;  ///< "Forward progress" callback function
+    otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
+    otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
+
+    void  *mReceiveBuffer;     ///< Pointer to memory provided to the system for the TCP receive buffer
+    size_t mReceiveBufferSize; ///< Size of memory provided to the system for the TCP receive buffer
+} otTcpEndpointInitializeArgs;
+
+/**
+ * @def OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS
+ *
+ * Recommended buffer size for TCP connections that traverse about 3 wireless
+ * hops or fewer.
+ *
+ * On platforms where memory is particularly constrained and in situations
+ * where high bandwidth is not necessary, it may be desirable to manually
+ * select a smaller buffer size.
+ */
+#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2598
+
+/**
+ * @def OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS
+ *
+ * Recommended buffer size for TCP connections that traverse many wireless
+ * hops.
+ *
+ * If the TCP connection traverses a very large number of hops (more than 6 or
+ * so), then it may be advisable to select a large buffer size manually.
+ */
+#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4157
+
+/**
+ * Initializes a TCP endpoint.
+ *
+ * Calling this function causes OpenThread to keep track of the TCP endpoint
+ * and store and retrieve TCP data inside the @p aEndpoint. The application
+ * should refrain from directly accessing or modifying the fields in
+ * @p aEndpoint. If the application needs to reclaim the memory backing
+ * @p aEndpoint, it should call otTcpEndpointDeinitialize().
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEndpoint  A pointer to a TCP endpoint structure.
+ * @param[in]  aArgs      A pointer to a structure of arguments.
+ *
+ * @retval OT_ERROR_NONE    Successfully opened the TCP endpoint.
+ * @retval OT_ERROR_FAILED  Failed to open the TCP endpoint.
+ */
+otError otTcpEndpointInitialize(otInstance                        *aInstance,
+                                otTcpEndpoint                     *aEndpoint,
+                                const otTcpEndpointInitializeArgs *aArgs);
+
+/**
+ * Obtains the otInstance that was associated with @p aEndpoint upon
+ * initialization.
+ *
+ * @param[in]  aEndpoint  The TCP endpoint whose instance to obtain.
+ *
+ * @returns  The otInstance pointer associated with @p aEndpoint.
+ */
+otInstance *otTcpEndpointGetInstance(otTcpEndpoint *aEndpoint);
+
+/**
+ * Obtains the context pointer that was associated with @p aEndpoint upon
+ * initialization.
+ *
+ * @param[in]  aEndpoint  The TCP endpoint whose context to obtain.
+ *
+ * @returns  The context pointer associated with @p aEndpoint.
+ */
+void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint);
+
+/**
+ * Obtains a pointer to a TCP endpoint's local host and port.
+ *
+ * The contents of the host and port may be stale if this socket is not in a
+ * connected state and has not been bound after it was last disconnected.
+ *
+ * @param[in]  aEndpoint  The TCP endpoint whose local host and port to obtain.
+ *
+ * @returns  The local host and port of @p aEndpoint.
+ */
+const otSockAddr *otTcpGetLocalAddress(const otTcpEndpoint *aEndpoint);
+
+/**
+ * Obtains a pointer to a TCP endpoint's peer's host and port.
+ *
+ * The contents of the host and port may be stale if this socket is not in a
+ * connected state.
+ *
+ * @param[in]  aEndpoint  The TCP endpoint whose peer's host and port to obtain.
+ *
+ * @returns  The host and port of the connection peer of @p aEndpoint.
+ */
+const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint);
+
+/**
+ * Binds the TCP endpoint to an IP address and port.
+ *
+ * @param[in]  aEndpoint   A pointer to the TCP endpoint structure to bind.
+ * @param[in]  aSockName   The address and port to which to bind this TCP endpoint.
+ *
+ * @retval OT_ERROR_NONE    Successfully bound the TCP endpoint.
+ * @retval OT_ERROR_FAILED  Failed to bind the TCP endpoint.
+ */
+otError otTcpBind(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName);
+
+/**
+ * Defines flags passed to otTcpConnect().
+ */
+enum
+{
+    OT_TCP_CONNECT_NO_FAST_OPEN = 1 << 0,
+};
+
+/**
+ * Records the remote host and port for this connection.
+ *
+ * TCP Fast Open must be enabled or disabled using @p aFlags. If it is
+ * disabled, then the TCP connection establishment handshake is initiated
+ * immediately. If it is enabled, then this function merely records the
+ * the remote host and port, and the TCP connection establishment handshake
+ * only happens on the first call to `otTcpSendByReference()`.
+ *
+ * If TCP Fast Open is disabled, then the caller must wait for the
+ * `otTcpEstablished` callback indicating that TCP connection establishment
+ * handshake is done before it can start sending data e.g., by calling
+ * `otTcpSendByReference()`.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure to connect.
+ * @param[in]  aSockName  The IP address and port of the host to which to connect.
+ * @param[in]  aFlags     Flags specifying options for this operation (see enumeration above).
+ *
+ * @retval OT_ERROR_NONE    Successfully completed the operation.
+ * @retval OT_ERROR_FAILED  Failed to complete the operation.
+ */
+otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint32_t aFlags);
+
+/**
+ * Defines flags passed to @p otTcpSendByReference.
+ */
+enum
+{
+    OT_TCP_SEND_MORE_TO_COME = 1 << 0,
+};
+
+/**
+ * Adds data referenced by the linked buffer pointed to by @p aBuffer to the
+ * send buffer.
+ *
+ * Upon a successful call to this function, the linked buffer and data it
+ * references are owned by the TCP stack; they should not be modified by the
+ * application until a "send done" callback returns ownership of those objects
+ * to the application. It is acceptable to call this function to add another
+ * linked buffer to the send queue, even if the "send done" callback for a
+ * previous invocation of this function has not yet fired.
+ *
+ * Note that @p aBuffer should not be chained; its mNext field should be
+ * NULL. If additional data will be added right after this call, then the
+ * OT_TCP_SEND_MORE_TO_COME flag should be used as a hint to the TCP
+ * implementation.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint on which to send data.
+ * @param[in]  aBuffer    A pointer to the linked buffer chain referencing data to add to the send buffer.
+ * @param[in]  aFlags     Flags specifying options for this operation (see enumeration above).
+ *
+ * @retval OT_ERROR_NONE    Successfully added data to the send buffer.
+ * @retval OT_ERROR_FAILED  Failed to add data to the send buffer.
+ */
+otError otTcpSendByReference(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer, uint32_t aFlags);
+
+/**
+ * Adds data to the send buffer by extending the length of the final
+ * otLinkedBuffer in the send buffer by the specified amount.
+ *
+ * If the send buffer is empty, then the operation fails.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint on which to send data.
+ * @param[in]  aNumBytes  The number of bytes by which to extend the length of the final linked buffer.
+ * @param[in]  aFlags     Flags specifying options for this operation (see enumeration above).
+ *
+ * @retval OT_ERROR_NONE    Successfully added data to the send buffer.
+ * @retval OT_ERROR_FAILED  Failed to add data to the send buffer.
+ */
+otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags);
+
+/**
+ * Provides the application with a linked buffer chain referencing data
+ * currently in the TCP receive buffer.
+ *
+ * The linked buffer chain is valid until the "receive ready" callback is next
+ * invoked, or until the next call to otTcpReceiveContiguify() or
+ * otTcpCommitReceive().
+ *
+ * @param[in]   aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint on which to receive
+ *                         data.
+ * @param[out]  aBuffer    A pointer to the linked buffer chain referencing data currently in the receive buffer.
+ *
+ * @retval OT_ERROR_NONE    Successfully completed the operation.
+ * @retval OT_ERROR_FAILED  Failed to complete the operation.
+ */
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
+
+/**
+ * Reorganizes the receive buffer to be entirely contiguous in memory.
+ *
+ * This is optional; an application can simply traverse the linked buffer
+ * chain obtained by calling @p otTcpReceiveByReference. Some
+ * applications may wish to call this function to make the receive buffer
+ * contiguous to simplify their data processing, but this comes at the expense
+ * of CPU time to reorganize the data in the receive buffer.
+ *
+ * @param[in]   aEndpoint  A pointer to the TCP endpoint whose receive buffer to reorganize.
+ *
+ * @retval OT_ERROR_NONE    Successfully completed the operation.
+ * @retval OT_ERROR_FAILED  Failed to complete the operation.
+ */
+otError otTcpReceiveContiguify(otTcpEndpoint *aEndpoint);
+
+/**
+ * Informs the TCP stack that the application has finished processing
+ * @p aNumBytes bytes of data at the start of the receive buffer and that the
+ * TCP stack need not continue maintaining those bytes in the receive buffer.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint on which to receive
+ *                        data.
+ * @param[in]  aNumBytes  The number of bytes consumed.
+ * @param[in]  aFlags     Flags specifying options for this operation (none yet).
+ *
+ * @retval OT_ERROR_NONE    Successfully completed the receive operation.
+ * @retval OT_ERROR_FAILED  Failed to complete the receive operation.
+ */
+otError otTcpCommitReceive(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags);
+
+/**
+ * Informs the connection peer that this TCP endpoint will not send more data.
+ *
+ * This should be used when the application has no more data to send to the
+ * connection peer. For this connection, future reads on the connection peer
+ * will result in the "end of stream" condition, and future writes on this
+ * connection endpoint will fail.
+ *
+ * The "end of stream" condition only applies after any data previously
+ * provided to the TCP stack to send out has been received by the connection
+ * peer.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint to shut down.
+ *
+ * @retval OT_ERROR_NONE    Successfully queued the "end of stream" condition for transmission.
+ * @retval OT_ERROR_FAILED  Failed to queue the "end of stream" condition for transmission.
+ */
+otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint);
+
+/**
+ * Forcibly ends the TCP connection associated with this TCP endpoint.
+ *
+ * This immediately makes the TCP endpoint free for use for another connection
+ * and empties the send and receive buffers, transferring ownership of any data
+ * provided by the application in otTcpSendByReference() and
+ * otTcpSendByExtension() calls back to the application. The TCP endpoint's
+ * callbacks and memory for the receive buffer remain associated with the
+ * TCP endpoint.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint to abort.
+ *
+ * @retval OT_ERROR_NONE    Successfully aborted the TCP endpoint's connection.
+ * @retval OT_ERROR_FAILED  Failed to abort the TCP endpoint's connection.
+ */
+otError otTcpAbort(otTcpEndpoint *aEndpoint);
+
+/**
+ * Deinitializes this TCP endpoint.
+ *
+ * This means that OpenThread no longer keeps track of this TCP endpoint and
+ * deallocates all resources it has internally allocated for this TCP endpoint.
+ * The application can reuse the memory backing the TCP endpoint as it sees fit.
+ *
+ * If it corresponds to a live TCP connection, the connection is terminated
+ * unceremoniously (as in otTcpAbort()). All resources the application has
+ * provided for this TCP endpoint (linked buffers for the send buffer, memory
+ * for the receive buffer, the @p aEndpoint structure itself, etc.) are
+ * immediately returned to the application.
+ *
+ * @param[in]  aEndpoint  A pointer to the TCP endpoint structure to deinitialize.
+ *
+ * @retval OT_ERROR_NONE    Successfully deinitialized the TCP endpoint.
+ * @retval OT_ERROR_FAILED  Failed to deinitialize the TCP endpoint.
+ */
+otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint);
+
+typedef struct otTcpListener otTcpListener;
+
+/**
+ * Defines incoming connection actions.
+ *
+ * This is used in otTcpAcceptReady() callback.
+ */
+typedef enum otTcpIncomingConnectionAction
+{
+    OT_TCP_INCOMING_CONNECTION_ACTION_ACCEPT, ///< Accept the incoming connection.
+    OT_TCP_INCOMING_CONNECTION_ACTION_DEFER,  ///< Defer (silently ignore) the incoming connection.
+    OT_TCP_INCOMING_CONNECTION_ACTION_REFUSE, ///< Refuse the incoming connection.
+} otTcpIncomingConnectionAction;
+
+/**
+ * This callback indicates that an incoming connection that matches this TCP
+ * listener has arrived.
+ *
+ * The typical response is for the application to accept the incoming
+ * connection. It does so by populating @p aAcceptInto with a pointer to the
+ * otTcpEndpoint into which to accept the incoming connection. This
+ * otTcpEndpoint must already be initialized using otTcpEndpointInitialize().
+ * Then, the application returns OT_TCP_INCOMING_CONNECTION_ACTION_ACCEPT.
+ *
+ * Alternatively, the application can decline to accept the incoming
+ * connection. There are two ways for the application to do this. First, if the
+ * application returns OT_TCP_INCOMING_CONNECTION_ACTION_DEFER, then OpenThread
+ * silently ignores the connection establishment request; the connection peer
+ * will likely retransmit the request, at which point the callback will be
+ * called again. This is valuable if resources are not presently available to
+ * accept the connection, but they may be available when the connection peer
+ * retransmits its connection establishment attempt. Second, if the application
+ * returns OT_TCP_INCOMING_CONNECTION_ACTION_REFUSE, then OpenThread sends a
+ * "connection refused" message to the host that attempted to establish a
+ * connection. If the application declines the incoming connection, it is not
+ * required to populate @p aAcceptInto.
+ *
+ * @param[in]   aListener    The TCP listener that matches the incoming connection.
+ * @param[in]   aPeer        The host and port from which the incoming connection originates.
+ * @param[out]  aAcceptInto  The TCP endpoint into which to accept the incoming connection.
+ *
+ * @returns  Description of how to handle the incoming connection.
+ */
+typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener    *aListener,
+                                                          const otSockAddr *aPeer,
+                                                          otTcpEndpoint   **aAcceptInto);
+
+/**
+ * This callback indicates that the TCP connection is now ready for two-way
+ * communication.
+ *
+ * In the case of TCP Fast Open, this may be before the TCP
+ * connection handshake has actually completed. The application is provided
+ * with the context pointers both for the TCP listener that accepted the
+ * connection and the TCP endpoint into which it was accepted. The provided
+ * context is the one associated with the TCP listener.
+ *
+ * @param[in]  aListener  The TCP listener that matches the incoming connection.
+ * @param[in]  aEndpoint  The TCP endpoint into which the incoming connection was accepted.
+ * @param[in]  aPeer      the host and port from which the incoming connection originated.
+ */
+typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
+
+/**
+ * OT_TCP_LISTENER_TCB_SIZE_BASE and OT_TCP_LISTENER_TCB_NUM_POINTERS are
+ * chosen such that the mTcbListener field of otTcpListener has the same size
+ * as struct tcpcb_listen in TCPlp. This is necessary because the mTcbListen
+ * field, though opaque in its declaration, is treated as struct tcpcb in the
+ * TCP implementation.
+ */
+#define OT_TCP_LISTENER_TCB_SIZE_BASE 16
+#define OT_TCP_LISTENER_TCB_NUM_PTR 3
+
+/**
+ * Represents a TCP listener.
+ *
+ * A TCP listener is used to listen for and accept incoming TCP connections.
+ *
+ * The application should not inspect the fields of this structure directly; it
+ * should only interact with it via the TCP API functions whose signatures are
+ * provided in this file.
+ */
+struct otTcpListener
+{
+    union
+    {
+        uint8_t mSize[OT_TCP_LISTENER_TCB_SIZE_BASE + OT_TCP_LISTENER_TCB_NUM_PTR * sizeof(void *)];
+        void   *mAlign;
+    } mTcbListen;
+
+    struct otTcpListener *mNext;    ///< A pointer to the next TCP listener (internal use only)
+    void                 *mContext; ///< A pointer to application-specific context
+
+    otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
+    otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
+};
+
+/**
+ * Contains arguments to the otTcpListenerInitialize() function.
+ */
+typedef struct otTcpListenerInitializeArgs
+{
+    void *mContext; ///< Pointer to application-specific context
+
+    otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
+    otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
+} otTcpListenerInitializeArgs;
+
+/**
+ * Initializes a TCP listener.
+ *
+ * Calling this function causes OpenThread to keep track of the TCP listener
+ * and store and retrieve TCP data inside @p aListener. The application should
+ * refrain from directly accessing or modifying the fields in @p aListener. If
+ * the application needs to reclaim the memory backing @p aListener, it should
+ * call otTcpListenerDeinitialize().
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aListener  A pointer to a TCP listener structure.
+ * @param[in]  aArgs      A pointer to a structure of arguments.
+ *
+ * @retval OT_ERROR_NONE    Successfully opened the TCP listener.
+ * @retval OT_ERROR_FAILED  Failed to open the TCP listener.
+ */
+otError otTcpListenerInitialize(otInstance                        *aInstance,
+                                otTcpListener                     *aListener,
+                                const otTcpListenerInitializeArgs *aArgs);
+
+/**
+ * Obtains the otInstance that was associated with @p aListener upon
+ * initialization.
+ *
+ * @param[in]  aListener  The TCP listener whose instance to obtain.
+ *
+ * @returns  The otInstance pointer associated with @p aListener.
+ */
+otInstance *otTcpListenerGetInstance(otTcpListener *aListener);
+
+/**
+ * Obtains the context pointer that was associated with @p aListener upon
+ * initialization.
+ *
+ * @param[in]  aListener  The TCP listener whose context to obtain.
+ *
+ * @returns  The context pointer associated with @p aListener.
+ */
+void *otTcpListenerGetContext(otTcpListener *aListener);
+
+/**
+ * Causes incoming TCP connections that match the specified IP address and port
+ * to trigger this TCP listener's callbacks.
+ *
+ * @param[in]  aListener  A pointer to the TCP listener structure that should begin listening.
+ * @param[in]  aSockName  The address and port on which to listen for incoming connections.
+ *
+ * @retval OT_ERROR_NONE    Successfully initiated listening on the TCP listener.
+ * @retval OT_ERROR_FAILED  Failed to initiate listening on the TCP listener.
+ */
+otError otTcpListen(otTcpListener *aListener, const otSockAddr *aSockName);
+
+/**
+ * Causes this TCP listener to stop listening for incoming connections.
+ *
+ * @param[in]  aListener  A pointer to the TCP listener structure that should stop listening.
+ *
+ * @retval OT_ERROR_NONE    Successfully stopped listening on the TCP listener.
+ * @retval OT_ERROR_FAILED  Failed to stop listening on the TCP listener.
+ */
+otError otTcpStopListening(otTcpListener *aListener);
+
+/**
+ * Deinitializes this TCP listener.
+ *
+ * This means that OpenThread no longer keeps track of this TCP listener and
+ * deallocates all resources it has internally allocated for this TCP listener.
+ * The application can reuse the memory backing the TCP listener as it sees
+ * fit.
+ *
+ * If the TCP listener is currently listening, it stops listening.
+ *
+ * @param[in]  aListener  A pointer to the TCP listener structure to deinitialize.
+ *
+ * @retval OT_ERROR_NONE    Successfully deinitialized the TCP listener.
+ * @retval OT_ERROR_FAILED  Failed to deinitialize the TCP listener.
+ */
+otError otTcpListenerDeinitialize(otTcpListener *aListener);
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_TCP_H_

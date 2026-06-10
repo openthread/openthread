@@ -1,0 +1,18 @@
+--- script/server	2022-08-15 11:41:53.915673348 +0800
++++ script/server2	2022-08-15 11:43:12.387100651 +0800
+@@ -50,6 +50,7 @@
+         systemctl is-active avahi-daemon || sudo systemctl start avahi-daemon || die 'Failed to start avahi!'
+         without WEB_GUI || systemctl is-active otbr-web || sudo systemctl start otbr-web || die 'Failed to start otbr-web!'
+         systemctl is-active otbr-agent || sudo systemctl start otbr-agent || die 'Failed to start otbr-agent!'
++        systemctl is-active commissionerd || sudo systemctl start commissionerd || die 'Failed to start commissionerd!'
+     elif have service; then
+         sudo service rsyslog status || sudo service rsyslog start || die 'Failed to start rsyslog!'
+         sudo service dbus status || sudo service dbus start || die 'Failed to start dbus!'
+@@ -58,6 +59,7 @@
+         sudo service avahi-daemon status || sudo service avahi-daemon start || die 'Failed to start avahi!'
+         sudo service otbr-agent status || sudo service otbr-agent start || die 'Failed to start otbr-agent!'
+         without WEB_GUI || sudo service otbr-web status || sudo service otbr-web start || die 'Failed to start otbr-web!'
++        sudo service commissionerd status || sudo service commissionerd start || die 'Failed to start commissionerd!'
+     else
+         die 'Unable to find service manager. Try script/console to start in console mode!'
+     fi

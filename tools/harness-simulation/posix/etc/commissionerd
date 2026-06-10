@@ -1,0 +1,100 @@
+#!/bin/sh
+#
+#  Copyright (c) 2022, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+### BEGIN INIT INFO
+# Provides:          commissionerd
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: OT-commissioner daemon
+# Description: OT-commissioner daemon
+### END INIT INFO
+
+set -e
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="OT-commissioner daemon"
+NAME=commissionerd
+DAEMON=/usr/bin/python2
+PIDFILE=/var/run/commissionerd.pid
+
+# shellcheck source=/dev/null
+. /lib/lsb/init-functions
+# shellcheck source=/dev/null
+. /lib/init/vars.sh
+
+start_commissionerd()
+{
+    if [ -e $PIDFILE ]; then
+        if $0 status >/dev/null; then
+            log_success_msg "$DESC already started; not starting."
+            return
+        else
+            log_success_msg "Removing stale PID file $PIDFILE."
+            rm -f $PIDFILE
+        fi
+    fi
+
+    log_daemon_msg "Starting $DESC" "$NAME"
+    start-stop-daemon --start --quiet \
+        --pidfile $PIDFILE --make-pidfile \
+        -b --exec $DAEMON -- \
+        -u /usr/local/bin/commissionerd.py -c /usr/local/bin/commissioner-cli
+    log_end_msg $?
+}
+
+stop_commissionerd()
+{
+    log_daemon_msg "Stopping $DESC" "$NAME"
+    start-stop-daemon --stop --retry 5 --quiet --oknodo \
+        --pidfile $PIDFILE --remove-pidfile
+    log_end_msg $?
+}
+
+case "$1" in
+    start)
+        start_commissionerd
+        ;;
+    restart | reload | force-reload)
+        stop_commissionerd
+        start_commissionerd
+        ;;
+    stop | force-stop)
+        stop_commissionerd
+        ;;
+    status)
+        status_of_proc -p $PIDFILE $DAEMON $NAME && exit 0 || exit $?
+        ;;
+    *)
+        log_action_msg "Usage: /etc/init.d/$NAME {start | stop | status | restart | reload | force-reload}"
+        exit 2
+        ;;
+esac

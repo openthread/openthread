@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+#
+#  Copyright (c) 2021, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+import logging
+import unittest
+from ipaddress import IPv6Network
+
+import config
+import thread_cert
+
+# Test description:
+#   This test verifies on-link prefix configuration.
+#
+# Topology:
+#    -------------(eth)----------------------------
+#           |               |           |
+#          BR1             BR2         HOST
+#           |               |
+#        ROUTER1         ROUTER2
+#
+#     Thread Net1       Thread Net2
+#
+
+BR1 = 1
+ROUTER1 = 2
+BR2 = 3
+ROUTER2 = 4
+HOST = 5
+
+CHANNEL1 = 18
+CHANNEL2 = 19
+
+
+class MultiThreadNetworks(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
+    TOPOLOGY = {
+        BR1: {
+            'name': 'BR_1',
+            'allowlist': [ROUTER1],
+            'is_otbr': True,
+            'version': '1.2',
+            'channel': CHANNEL1,
+            'router_selection_jitter': 1,
+            'extended_panid': '0001020304050607'
+        },
+        ROUTER1: {
+            'name': 'Router_1',
+            'allowlist': [BR1],
+            'version': '1.2',
+            'channel': CHANNEL1,
+            'router_selection_jitter': 1,
+            'extended_panid': '0001020304050607'
+        },
+        BR2: {
+            'name': 'BR_2',
+            'allowlist': [ROUTER2],
+            'is_otbr': True,
+            'version': '1.2',
+            'channel': CHANNEL2,
+            'router_selection_jitter': 1,
+            'extended_panid': '08090a0b0c0d0e0f'
+        },
+        ROUTER2: {
+            'name': 'Router_2',
+            'allowlist': [BR2],
+            'version': '1.2',
+            'channel': CHANNEL2,
+            'router_selection_jitter': 1,
+            'extended_panid': '08090a0b0c0d0e0f'
+        },
+        HOST: {
+            'name': 'Host',
+            'is_host': True
+        },
+    }
+
+    def test(self):
+        ON_LINK_PREFIX = 'fd00::/64'
+        br1 = self.nodes[BR1]
+        router1 = self.nodes[ROUTER1]
+        br2 = self.nodes[BR2]
+        router2 = self.nodes[ROUTER2]
+        host = self.nodes[HOST]
+
+        host.start(start_radvd=True, prefix=ON_LINK_PREFIX, slaac=True)
+        self.simulator.go(5)
+
+        br1.start()
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.assertEqual('leader', br1.get_state())
+
+        router1.start()
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.assertEqual('router', router1.get_state())
+
+        self.simulator.go(10)
+        self.collect_ipaddrs()
+
+        logging.info("BR1     addrs: %r", br1.get_addrs())
+        logging.info("ROUTER1 addrs: %r", router1.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
+
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
+
+        host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
+        self.assertTrue(router1.ping(host_on_link_addr))
+        self.assertTrue(
+            host.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True, interface=host_on_link_addr))
+
+        # Force kill the radvd host so that BR2 will start advertising its own on-link prefix.
+        host.kill_radvd_service()
+
+        br2.start()
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.assertEqual('leader', br2.get_state())
+
+        router2.start()
+        self.simulator.go(5)
+        self.assertEqual('router', router2.get_state())
+
+        self.simulator.go(25)
+        self.collect_ipaddrs()
+
+        logging.info("BR1     addrs: %r", br1.get_addrs())
+        logging.info("ROUTER1 addrs: %r", router1.get_addrs())
+        logging.info("BR2     addrs: %r", br2.get_addrs())
+        logging.info("ROUTER2 addrs: %r", router2.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
+
+        self.assertTrue(len(br1.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(router1.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(br2.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(router2.get_netdata_omr_prefixes()) == 1)
+
+        br1_omr_prefix = br1.get_br_omr_prefix()
+        br2_omr_prefix = br2.get_br_omr_prefix()
+        self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
+
+        # Verify that the Border Routers starts advertising new on-link prefix
+        # but don't remove the external routes for the radvd on-link prefix
+        # immediately, because the SLAAC addresses are still valid.
+
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 1)
+
+        br2_on_link_prefix = br2.get_br_on_link_prefix()
+
+        router1_omr_addr = router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+        router2_omr_addr = router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+
+        # Make sure that addresses of both the deprecated radvd `ON_LINK_PREFIX`
+        # and preferred Border Router on-link prefix can be reached by Thread
+        # devices in network of Border Router 1.
+        for host_on_link_addr in [
+                host.get_matched_ula_addresses(br2_on_link_prefix)[0],
+                host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
+        ]:
+            self.assertTrue(router1.ping(host_on_link_addr))
+            self.assertTrue(host.ping(router1_omr_addr, backbone=True, interface=host_on_link_addr))
+
+        host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
+
+
+if __name__ == '__main__':
+    unittest.main()

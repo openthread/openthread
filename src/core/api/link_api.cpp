@@ -1,0 +1,530 @@
+/*
+ *  Copyright (c) 2016, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements the OpenThread Link API.
+ */
+
+#include "openthread-core-config.h"
+
+#include "instance/instance.hpp"
+
+using namespace ot;
+
+uint8_t otLinkGetChannel(otInstance *aInstance)
+{
+    Instance &instance = AsCoreType(aInstance);
+    uint8_t   channel;
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (instance.Get<Mac::LinkRaw>().IsEnabled())
+    {
+        channel = instance.Get<Mac::LinkRaw>().GetChannel();
+    }
+    else
+#endif
+    {
+        channel = instance.Get<Mac::Mac>().GetPanChannel();
+    }
+
+    return channel;
+}
+
+otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
+{
+    Error     error;
+    Instance &instance = AsCoreType(aInstance);
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (instance.Get<Mac::LinkRaw>().IsEnabled())
+    {
+        error = instance.Get<Mac::LinkRaw>().SetChannel(aChannel);
+        ExitNow();
+    }
+#endif
+
+    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+
+    SuccessOrExit(error = instance.Get<Mac::Mac>().SetPanChannel(aChannel));
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+uint8_t otLinkGetWakeupChannel(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupChannel();
+}
+
+otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+
+    SuccessOrExit(error = instance.Get<Mac::Mac>().SetWakeupChannel(aChannel));
+
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
+}
+
+otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+
+    instance.Get<Mac::Mac>().SetSupportedChannelMask(Mac::ChannelMask(aChannelMask));
+
+exit:
+    return error;
+}
+
+const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<Mac::Mac>().GetExtAddress();
+}
+
+otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+
+    instance.Get<Mac::Mac>().SetExtAddress(AsCoreType(aExtAddress));
+
+    instance.Get<Mle::Mle>().UpdateLinkLocalAddress();
+
+exit:
+    return error;
+}
+
+void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
+{
+    AsCoreType(aInstance).Get<Radio>().GetIeeeEui64(AsCoreType(aEui64));
+}
+
+otPanId otLinkGetPanId(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId(); }
+
+otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+
+    instance.Get<Mac::Mac>().SetPanId(aPanId);
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
+
+exit:
+    return error;
+}
+
+uint32_t otLinkGetPollPeriod(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<DataPollSender>().GetKeepAlivePollPeriod();
+}
+
+otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
+{
+    return AsCoreType(aInstance).Get<DataPollSender>().SetExternalPollPeriod(aPollPeriod);
+}
+
+otError otLinkSendDataRequest(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<DataPollSender>().SendDataPoll();
+}
+
+otShortAddress otLinkGetShortAddress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetShortAddress();
+}
+
+otShortAddress otLinkGetAlternateShortAddress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetAlternateShortAddress();
+}
+
+uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetMaxFrameRetriesDirect();
+}
+
+void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetriesDirect)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().SetMaxFrameRetriesDirect(aMaxFrameRetriesDirect);
+}
+
+#if OPENTHREAD_FTD
+
+uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetMaxFrameRetriesIndirect();
+}
+
+void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRetriesIndirect)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().SetMaxFrameRetriesIndirect(aMaxFrameRetriesIndirect);
+}
+
+#endif // OPENTHREAD_FTD
+
+uint32_t otLinkGetFrameCounter(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::SubMac>().GetFrameCounter();
+}
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance)
+{
+    return MapEnum(AsCoreType(aInstance).Get<Mac::Filter>().GetMode());
+}
+
+void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode)
+{
+    AsCoreType(aInstance).Get<Mac::Filter>().SetMode(MapEnum(aMode));
+}
+
+otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    return AsCoreType(aInstance).Get<Mac::Filter>().AddAddress(AsCoreType(aExtAddress));
+}
+
+void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    AsCoreType(aInstance).Get<Mac::Filter>().RemoveAddress(AsCoreType(aExtAddress));
+}
+
+void otLinkFilterClearAddresses(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Filter>().ClearAddresses();
+}
+
+otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
+}
+
+otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss)
+{
+    return AsCoreType(aInstance).Get<Mac::Filter>().AddRssIn(AsCoreType(aExtAddress), aRss);
+}
+
+void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    AsCoreType(aInstance).Get<Mac::Filter>().RemoveRssIn(AsCoreType(aExtAddress));
+}
+
+void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss)
+{
+    AsCoreType(aInstance).Get<Mac::Filter>().SetDefaultRssIn(aRss);
+}
+
+void otLinkFilterClearDefaultRssIn(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Mac::Filter>().ClearDefaultRssIn();
+}
+
+void otLinkFilterClearAllRssIn(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Filter>().ClearAllRssIn(); }
+
+otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
+    return AsCoreType(aInstance).Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
+}
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+void otLinkSetRadioFilterEnabled(otInstance *aInstance, bool aFilterEnabled)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetRadioFilterEnabled(aFilterEnabled);
+}
+
+bool otLinkIsRadioFilterEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsRadioFilterEnabled();
+}
+#endif
+
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
+{
+    return LinkQualityForLinkMargin(AsCoreType(aInstance).Get<Mac::Mac>().ComputeLinkMargin(aRss));
+}
+
+int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality)
+{
+    return GetTypicalRssForLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
+                                       static_cast<LinkQuality>(aLinkQuality));
+}
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    AssertPointerIsNotNull(aNumberOfEntries);
+
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aNumberOfEntries);
+}
+
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    const uint32_t *histogram = nullptr;
+
+    AssertPointerIsNotNull(aNumberOfEntries);
+
+#if OPENTHREAD_FTD
+    histogram = AsCoreType(aInstance).Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    *aNumberOfEntries = 0;
+#endif
+
+    return histogram;
+}
+
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().ResetRetrySuccessHistogram();
+}
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
+void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().SetPcapCallback(aPcapCallback, aCallbackContext);
+}
+
+bool otLinkIsPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsPromiscuous(); }
+
+otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    // cannot enable IEEE 802.15.4 promiscuous mode if the Thread interface is enabled
+    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
+
+    instance.Get<Mac::Mac>().SetPromiscuous(aPromiscuous);
+
+exit:
+    return error;
+}
+
+otError otLinkSetEnabled(otInstance *aInstance, bool aEnable)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = AsCoreType(aInstance);
+
+    // cannot disable the link layer if the Thread interface is enabled
+    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
+
+    instance.Get<Mac::Mac>().SetEnabled(aEnable);
+
+exit:
+    return error;
+}
+
+bool otLinkIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled(); }
+
+const otMacCounters *otLinkGetCounters(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<Mac::Mac>().GetCounters();
+}
+
+void otLinkResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Mac>().ResetCounters(); }
+
+otError otLinkActiveScan(otInstance              *aInstance,
+                         uint32_t                 aScanChannels,
+                         uint16_t                 aScanDuration,
+                         otHandleActiveScanResult aCallback,
+                         void                    *aCallbackContext)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
+}
+
+bool otLinkIsActiveScanInProgress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsActiveScanInProgress();
+}
+
+otError otLinkEnergyScan(otInstance              *aInstance,
+                         uint32_t                 aScanChannels,
+                         uint16_t                 aScanDuration,
+                         otHandleEnergyScanResult aCallback,
+                         void                    *aCallbackContext)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
+}
+
+bool otLinkIsEnergyScanInProgress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsEnergyScanInProgress();
+}
+
+bool otLinkIsInTransmitState(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsInTransmitState();
+}
+
+uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().GetCcaFailureRate();
+}
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+bool otLinkIsCslEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsCslEnabled(); }
+
+bool otLinkIsCslSupported(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::Mle>().IsCslSupported(); }
+
+uint8_t otLinkGetCslChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel(); }
+
+otError otLinkSetCslChannel(otInstance *aInstance, uint8_t aChannel)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = kErrorInvalidArgs);
+
+    AsCoreType(aInstance).Get<Mac::Mac>().SetCslChannel(aChannel);
+
+exit:
+    return error;
+}
+
+uint32_t otLinkGetCslPeriod(otInstance *aInstance)
+{
+    return Mac::Mac::CslPeriodToUsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
+}
+
+otError otLinkSetCslPeriod(otInstance *aInstance, uint32_t aPeriod)
+{
+    Error    error = kErrorNone;
+    uint16_t periodInTenSymbolsUnit;
+
+    if (aPeriod == 0)
+    {
+        periodInTenSymbolsUnit = 0;
+    }
+    else
+    {
+        VerifyOrExit((aPeriod % kUsPerTenSymbols) == 0, error = kErrorInvalidArgs);
+        periodInTenSymbolsUnit = ClampToUint16(aPeriod / kUsPerTenSymbols);
+        VerifyOrExit(periodInTenSymbolsUnit >= kMinCslPeriod, error = kErrorInvalidArgs);
+    }
+
+    AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(periodInTenSymbolsUnit);
+
+exit:
+    return error;
+}
+
+uint32_t otLinkGetCslTimeout(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::Mle>().GetCslTimeout(); }
+
+otError otLinkSetCslTimeout(otInstance *aInstance, uint32_t aTimeout)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
+    AsCoreType(aInstance).Get<Mle::Mle>().SetCslTimeout(aTimeout);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError otLinkSendEmptyData(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshForwarder>().SendEmptyMessage();
+}
+#endif
+
+otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetRegion(aRegionCode);
+}
+
+otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
+{
+    Error error;
+
+    if (aRegionCode == nullptr)
+    {
+        error = kErrorInvalidArgs;
+    }
+    else
+    {
+        error = AsCoreType(aInstance).Get<Mac::Mac>().GetRegion(*aRegionCode);
+    }
+
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenEnabled(aEnable);
+}
+
+bool otLinkIsWakeupListenEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsWakeupListenEnabled();
+}
+
+void otLinkGetWakeupListenParameters(otInstance *aInstance, uint32_t *aInterval, uint32_t *aDuration)
+{
+    AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupListenParameters(*aInterval, *aDuration);
+}
+
+otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterval, uint32_t aDuration)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
+}
+#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE

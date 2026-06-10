@@ -1,0 +1,150 @@
+/*
+ *  Copyright (c) 2021, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements mechanism to track device's uptime.
+ */
+
+#include "uptime.hpp"
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+
+#include "instance/instance.hpp"
+
+namespace ot {
+
+UptimeTracker::UptimeTracker(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mStartTime(TimerMilli::GetNow())
+    , mOverflowCount(0)
+    , mTimer(aInstance)
+{
+    mTimer.FireAt(mStartTime + kTimerInterval);
+}
+
+UptimeMsec UptimeTracker::GetUptime(void) const
+{
+    TimeMilli now           = TimerMilli::GetNow();
+    uint32_t  overflowCount = mOverflowCount;
+
+    // `mTimer` is scheduled with duration `kTimerInterval = (1 << 30)`
+    // so it takes four timer fires for us to go over the entire 32-bit
+    // range and get back to `mStartTime` (at which point we increment
+    // the `mOverflowCount` in `HandleTimer()`).
+    //
+    // Here, we handle the corner case where we may have reached or
+    // passed beyond the `mStartTime` but the `mTimer` is not yet
+    // handled. In this case we increment `overflowCount` (which is
+    // our copy of the current `mOverflowCount` value). We use the
+    // check `(mTimer.GetFireTime() == mStartTime)` to determine if
+    // we are in the last of the four timer fires before overflow.
+
+    if ((mTimer.GetFireTime() == mStartTime) && (now >= mStartTime))
+    {
+        overflowCount++;
+    }
+
+    // The uptime is returned as a `uint64_t`. The `overflowCount`
+    // gives the higher 32 bits, and `(now - mStartTime)` gives the
+    // lower 32 bits (which is always correct even under the corner
+    // case where the `HandleTimer()` is not yet handled).
+
+    return (static_cast<UptimeMsec>(overflowCount) << 32) + (now - mStartTime);
+}
+
+UptimeSec UptimeTracker::GetUptimeInSeconds(void) const
+{
+    return static_cast<UptimeSec>(GetUptime() / Time::kOneSecondInMsec);
+}
+
+void UptimeTracker::HandleTimer(void)
+{
+    if (mTimer.GetFireTime() == mStartTime)
+    {
+        mOverflowCount++;
+    }
+
+    mTimer.FireAt(mTimer.GetFireTime() + kTimerInterval);
+}
+
+static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
+{
+    // Returns the quotient of division `aDividend / aDivisor` and updates
+    // `aDividend` to the remainder
+
+    uint32_t quotient = aDividend / aDivisor;
+
+    aDividend -= quotient * aDivisor;
+
+    return static_cast<uint16_t>(quotient);
+}
+
+UptimeString UptimeToString(UptimeMsec aUptime, UptimeStringFlags aFlags)
+{
+    UptimeString string;
+
+    UptimeToString(aUptime, string, aFlags);
+    return string;
+}
+
+void UptimeToString(UptimeMsec aUptime, StringWriter &aWriter, UptimeStringFlags aFlags)
+{
+    uint64_t days = aUptime / Time::kOneDayInMsec;
+    uint32_t remainder;
+    uint16_t hours;
+    uint16_t minutes;
+    uint16_t seconds;
+
+    if (days > 0)
+    {
+        aWriter.Append("%lud.", static_cast<unsigned long>(days));
+        aUptime -= days * Time::kOneDayInMsec;
+    }
+
+    remainder = static_cast<uint32_t>(aUptime);
+    hours     = DivideAndGetRemainder(remainder, Time::kOneHourInMsec);
+    minutes   = DivideAndGetRemainder(remainder, Time::kOneMinuteInMsec);
+    seconds   = DivideAndGetRemainder(remainder, Time::kOneSecondInMsec);
+
+    if ((days > 0) || (hours > 0) || !(aFlags & kUptimeStringSkipHoursIfZero))
+    {
+        aWriter.Append("%02u:", hours);
+    }
+
+    aWriter.Append("%02u:%02u", minutes, seconds);
+
+    if (aFlags & kUptimeStringIncludeMsec)
+    {
+        aWriter.Append(".%03u", static_cast<uint16_t>(remainder));
+    }
+}
+
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_UPTIME_ENABLE

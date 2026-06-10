@@ -1,0 +1,333 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+proc skip_on_macos {} {
+    set OSTYPE [lindex $::tcl_platform(os) 0]
+
+    if { $OSTYPE == "Darwin" } {
+        exit 77
+    }
+}
+
+proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
+    set timeout 1
+    for {set i 0} {$i < 40} {incr i} {
+        if {$command != ""} {
+            send "$command\n"
+        }
+
+        expect {
+            -re $success {
+                return 0
+            }
+            -re $failure {
+                fail "Failed due to '$failure' found"
+            }
+            timeout {
+                # Do nothing
+            }
+        }
+    }
+    fail "Failed due to '$success' not found"
+}
+
+proc expect_line {line} {
+    set timeout 10
+    expect -re "\[\r\n \]($line)(?=\[\r\n>\])"
+    return $expect_out(1,string)
+}
+
+proc spawn_node {id {type ""} {args ""}} {
+    global spawn_id
+    global spawn_ids
+    global argv0
+
+    if {${type} == ""} {
+        if {[info exists ::env(OT_NODE_TYPE)]} {
+            set type $::env(OT_NODE_TYPE)
+        } else {
+            set type "cli"
+        }
+    }
+
+    if {[info exists ::env(OT_POSIX_APPS)]} {
+        set ot_posix_apps $::env(OT_POSIX_APPS)
+    } else {
+        set ot_posix_apps "build/posix/src/posix"
+    }
+
+    if {[info exists ::env(OT_SIMULATION_APPS)]} {
+        set ot_simulation_apps $::env(OT_SIMULATION_APPS)
+    } else {
+        set ot_simulation_apps "build/simulation/examples/apps"
+    }
+
+    send_user "\n# ${id} ${type}\n"
+
+    if {[info exists ::env(CC)] && $::env(CC) == "clang"} {
+        set gcov_prefix ""
+    } else {
+        set gcov_prefix "ot-run/$argv0/ot-gcda.$id"
+    }
+
+    if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
+        set ot_simulation_local_host $::env(OT_SIMULATION_LOCAL_HOST)
+    } else {
+        set ot_simulation_local_host "127.0.0.1"
+    }
+
+    switch -regexp ${type} {
+        {rcp|rcp-cli} {
+            if {${args} == ""} {
+                set radio_url "spinel+hdlc+uart://$ot_simulation_apps/ncp/ot-rcp?forkpty-arg=$id"
+            } else {
+                if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
+                    set radio_url "$args&forkpty-arg=-L$ot_simulation_local_host"
+                } else {
+                    set radio_url "$args"
+                }
+            }
+
+            # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
+            # avoid the error: "bind(sTxFd): Address already in use"
+            sleep 0.2
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_posix_apps/ot-cli $radio_url
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect_line "Done"
+            send "routerselectionjitter 1\n"
+            expect_line "Done"
+        }
+        cli {
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-ftd \
+                -L$ot_simulation_local_host $id
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect_line "Done"
+            send "routerselectionjitter 1\n"
+            expect_line "Done"
+        }
+        mtd {
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $ot_simulation_apps/cli/ot-cli-mtd \
+                -L$ot_simulation_local_host $id
+            send "factoryreset\n"
+            wait_for "state" "disabled"
+            expect_line "Done"
+        }
+        adb {
+            set adb_cmd [list /usr/bin/env adb]
+
+            if {${args} != ""} {
+                lappend adb_cmd -s $args
+            }
+
+            set adb_root_cmd [concat $adb_cmd root]
+            set adb_ot_ctl_cmd [concat $adb_cmd shell ot-ctl]
+
+            # restart adb with root permissions
+            spawn {*}$adb_root_cmd
+            expect eof
+
+            sleep 0.1
+
+            spawn {*}$adb_ot_ctl_cmd
+            send "factoryreset\n"
+            expect eof
+
+            sleep 0.5
+
+            # The ot-ctl connection will be broken after running the factoryreset command.
+            # Here re-starts the ot-ctl.
+            spawn {*}$adb_ot_ctl_cmd
+            wait_for "state" "disabled"
+            expect_line "Done"
+        }
+    }
+
+    expect_after {
+        timeout { fail "Timed out" }
+    }
+
+    set spawn_ids($id) $spawn_id
+
+    return $spawn_id
+}
+
+proc switch_node {id} {
+    global spawn_ids
+    global spawn_id
+
+    send_user "\n# ${id}\n"
+    set spawn_id $spawn_ids($id)
+}
+
+proc attach {{role "leader"}} {
+    send "ifconfig up\n"
+    expect_line "Done"
+    send "thread start\n"
+    expect_line "Done"
+    wait_for "state" $role
+    expect_line "Done"
+}
+
+proc setup_leader {} {
+    send "dataset init new\n"
+    expect_line "Done"
+    send "dataset networkkey 00112233445566778899aabbccddeeff\n"
+    expect_line "Done"
+    send "dataset commit active\n"
+    expect_line "Done"
+    attach
+}
+
+proc dispose_node {id} {
+    switch_node $id
+    send "\x04"
+    expect eof
+}
+
+proc dispose_all {} {
+    global spawn_ids
+    set max_node [array size spawn_ids]
+    for {set i 1} {$i <= $max_node} {incr i} {
+        dispose_node $i
+    }
+    array unset spawn_ids
+}
+
+proc get_ipaddr {type} {
+    send "ipaddr $type\n"
+    expect "ipaddr $type"
+    set rval [expect_line {([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}}]
+    expect_line "Done"
+
+    return $rval
+}
+
+proc get_extaddr {} {
+    send "extaddr\n"
+    set rval [expect_line {[0-9a-fA-F]{16}}]
+    expect_line "Done"
+
+    return $rval
+}
+
+proc get_extpanid {} {
+    send "extpanid\n"
+    set rval [expect_line {[0-9a-fA-F]{16}}]
+    expect_line "Done"
+
+    return $rval
+}
+
+proc get_panid {} {
+    send "panid\n"
+    expect -re {0x([0-9a-fA-F]{4})}
+    set rval $expect_out(1,string)
+    expect_line "Done"
+
+    return $rval
+}
+
+proc get_meshlocal_prefix {} {
+    send "prefix meshlocal\n"
+    expect -re {[\r\n ](([0-9a-fA-F]{1,4}:){3}[0-9a-fA-f]{1,4})::/64(?=[\r\n>])}
+    set rval $expect_out(1,string)
+    expect_line "Done"
+
+    return $rval
+}
+
+proc get_rloc16 {} {
+    send "rloc16\n"
+    expect "rloc16"
+    set rval [expect_line {[0-9a-fA-F]{4}}]
+    expect_line "Done"
+
+    return $rval
+}
+
+proc setup_default_network {} {
+    send "dataset init new\n"
+    expect_line "Done"
+    send "dataset channel 11\n"
+    expect_line "Done"
+    send "dataset extpanid 000db80000000000\n"
+    expect_line "Done"
+    send "dataset meshlocalprefix fd00:db8::\n"
+    expect_line "Done"
+    send "dataset networkkey 00112233445566778899aabbccddeeff\n"
+    expect_line "Done"
+    send "dataset networkname OpenThread-face\n"
+    expect_line "Done"
+    send "dataset panid 0xface\n"
+    expect_line "Done"
+    send "dataset pskc c23a76e98f1a6483639b1ac1271e2e27\n"
+    expect_line "Done"
+    send "dataset commit active\n"
+    expect_line "Done"
+}
+
+proc fail {message} {
+    dispose_all
+    error $message
+}
+
+proc spawn_tcat_client_for_node {id {cert_path "tools/tcat_ble_client/auth"}} {
+    global tcat_ids
+    global spawn_id
+
+    switch_node $id
+
+    send "tcat start\n"
+    expect_line "Done"
+
+    spawn python "tools/tcat_ble_client/bbtc.py" --simulation $id --cert_path $cert_path
+    expect_line "Done"
+
+    set tcat_ids($id) $spawn_id
+
+    return $spawn_id
+}
+
+proc switch_tcat_client_for_node {id} {
+    global tcat_ids
+    global spawn_id
+
+    send_user "\n# ${id}\n"
+    set spawn_id $tcat_ids($id)
+}
+
+proc dispose_tcat_client {id} {
+    switch_tcat_client_for_node $id
+    send "exit\n"
+    expect eof
+}
+
+set timeout 10

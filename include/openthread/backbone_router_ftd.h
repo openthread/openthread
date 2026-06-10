@@ -1,0 +1,342 @@
+/*
+ *  Copyright (c) 2019, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ * @brief
+ *  This file defines the OpenThread Backbone Router API (for Thread 1.2 FTD with
+ *  `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`).
+ */
+
+#ifndef OPENTHREAD_BACKBONE_ROUTER_FTD_H_
+#define OPENTHREAD_BACKBONE_ROUTER_FTD_H_
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <openthread/backbone_router.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
+#include <openthread/netdata.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup api-backbone-router
+ *
+ * @{
+ */
+
+/**
+ * Represents the Backbone Router Status.
+ */
+typedef enum
+{
+    OT_BACKBONE_ROUTER_STATE_DISABLED  = 0, ///< Backbone function is disabled.
+    OT_BACKBONE_ROUTER_STATE_SECONDARY = 1, ///< Secondary Backbone Router.
+    OT_BACKBONE_ROUTER_STATE_PRIMARY   = 2, ///< The Primary Backbone Router.
+} otBackboneRouterState;
+
+/**
+ * Enables or disables Backbone functionality.
+ *
+ * If enabled, a Server Data Request message `SRV_DATA.ntf` is triggered for the attached
+ * device if there is no Backbone Router Service in the Thread Network Data.
+ *
+ * If disabled, `SRV_DATA.ntf` is triggered if the Backbone Router is in the Primary state.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aEnable   TRUE to enable Backbone functionality, FALSE otherwise.
+ *
+ * @sa otBackboneRouterGetState
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterSetConfig
+ * @sa otBackboneRouterRegister
+ */
+void otBackboneRouterSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Gets the Backbone Router #otBackboneRouterState.
+ *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
+ *
+ * @retval OT_BACKBONE_ROUTER_STATE_DISABLED   Backbone functionality is disabled.
+ * @retval OT_BACKBONE_ROUTER_STATE_SECONDARY  Secondary Backbone Router.
+ * @retval OT_BACKBONE_ROUTER_STATE_PRIMARY    The Primary Backbone Router.
+ *
+ * @sa otBackboneRouterSetEnabled
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterSetConfig
+ * @sa otBackboneRouterRegister
+ */
+otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance);
+
+/**
+ * Gets the local Backbone Router configuration.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+ *
+ * @param[in]   aInstance            A pointer to an OpenThread instance.
+ * @param[out]  aConfig              A pointer where to put local Backbone Router configuration.
+ *
+ *
+ * @sa otBackboneRouterSetEnabled
+ * @sa otBackboneRouterGetState
+ * @sa otBackboneRouterSetConfig
+ * @sa otBackboneRouterRegister
+ */
+void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig);
+
+/**
+ * Sets the local Backbone Router configuration #otBackboneRouterConfig.
+ *
+ * A Server Data Request message `SRV_DATA.ntf` is initiated automatically if BBR Dataset changes for Primary
+ * Backbone Router.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aConfig               A pointer to the Backbone Router configuration to take effect.
+ *
+ * @retval OT_ERROR_NONE          Successfully updated configuration.
+ * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
+ *
+ * @sa otBackboneRouterSetEnabled
+ * @sa otBackboneRouterGetState
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterRegister
+ */
+otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
+
+/**
+ * Explicitly registers local Backbone Router configuration.
+ *
+ * A Server Data Request message `SRV_DATA.ntf` is triggered for the attached device.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NO_BUFS           Insufficient space to add the Backbone Router service.
+ * @retval OT_ERROR_NONE              Successfully queued a Server Data Request message for delivery.
+ *
+ * @sa otBackboneRouterSetEnabled
+ * @sa otBackboneRouterGetState
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterSetConfig
+ */
+otError otBackboneRouterRegister(otInstance *aInstance);
+
+/**
+ * Returns the Backbone Router registration jitter value.
+ *
+ * @returns The Backbone Router registration jitter value.
+ *
+ * @sa otBackboneRouterSetRegistrationJitter
+ */
+uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance);
+
+/**
+ * Sets the Backbone Router registration jitter value.
+ *
+ * @param[in]  aJitter the Backbone Router registration jitter value to set.
+ *
+ * @sa otBackboneRouterGetRegistrationJitter
+ */
+void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitter);
+
+/**
+ * Gets the local Domain Prefix configuration.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[out] aConfig   A pointer to the Domain Prefix configuration.
+ *
+ * @retval OT_ERROR_NONE       Successfully got the Domain Prefix configuration.
+ * @retval OT_ERROR_NOT_FOUND  No Domain Prefix was configured.
+ */
+otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig);
+
+/**
+ * Configures the response status for the next Multicast Listener Registration.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`,
+ * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE`, and
+ * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are enabled.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aStatus    The status to respond.
+ */
+void otBackboneRouterConfigNextMulticastListenerRegistrationResponse(otInstance *aInstance, uint8_t aStatus);
+
+/**
+ * Represents the Multicast Listener events.
+ */
+typedef enum
+{
+    OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED   = 0, ///< Multicast Listener was added.
+    OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED = 1, ///< Multicast Listener was removed or expired.
+} otBackboneRouterMulticastListenerEvent;
+
+/**
+ * Pointer is called whenever the Multicast Listeners change.
+ *
+ * @param[in] aContext  The user context pointer.
+ * @param[in] aEvent    The Multicast Listener event.
+ * @param[in] aAddress  The IPv6 multicast address of the Multicast Listener.
+ */
+typedef void (*otBackboneRouterMulticastListenerCallback)(void                                  *aContext,
+                                                          otBackboneRouterMulticastListenerEvent aEvent,
+                                                          const otIp6Address                    *aAddress);
+
+/**
+ * Sets the Backbone Router Multicast Listener callback.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to the Multicast Listener callback.
+ * @param[in] aContext   A user context pointer.
+ */
+void otBackboneRouterSetMulticastListenerCallback(otInstance                               *aInstance,
+                                                  otBackboneRouterMulticastListenerCallback aCallback,
+                                                  void                                     *aContext);
+
+/**
+ * Clears the Multicast Listeners.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`,
+ * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE`, and
+ * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @sa otBackboneRouterMulticastListenerAdd
+ * @sa otBackboneRouterMulticastListenerGetNext
+ */
+void otBackboneRouterMulticastListenerClear(otInstance *aInstance);
+
+/**
+ * Adds a Multicast Listener with a timeout value, in seconds.
+ *
+ * Pass `0` to use the default MLR timeout.
+ *
+ * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`,
+ * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE`, and
+ * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are enabled.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aAddress   The Multicast Listener address.
+ * @param[in] aTimeout   The timeout (in seconds) of the Multicast Listener, or 0 to use the default MLR timeout.
+ *
+ * @retval OT_ERROR_NONE          If the Multicast Listener was successfully added.
+ * @retval OT_ERROR_INVALID_ARGS  If the Multicast Listener address was invalid.
+ * @retval OT_ERROR_NO_BUFS       No space available to save the Multicast Listener.
+ *
+ * @sa otBackboneRouterMulticastListenerClear
+ * @sa otBackboneRouterMulticastListenerGetNext
+ */
+otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aTimeout);
+
+#define OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT \
+    0 ///< Initializer for otBackboneRouterMulticastListenerIterator
+
+typedef uint16_t otBackboneRouterMulticastListenerIterator; ///< Used to iterate through Multicast Listeners.
+
+/**
+ * Represents a Backbone Router Multicast Listener info.
+ */
+typedef struct otBackboneRouterMulticastListenerInfo
+{
+    otIp6Address mAddress; // Multicast Listener address.
+    uint32_t     mTimeout; // Timeout (in seconds).
+} otBackboneRouterMulticastListenerInfo;
+
+/**
+ * Gets the next Multicast Listener info (using an iterator).
+ *
+ * @param[in]      aInstance      A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
+ *                                Multicast Listener. To get the first entry the iterator should be set to
+ *                                OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
+ * @param[out]     aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
+ *                                Multicast Listener is placed (on success).
+ *
+ * @retval OT_ERROR_NONE       Successfully found the next Multicast Listener info (@p aListenerInfo was successfully
+ *                             updated).
+ * @retval OT_ERROR_NOT_FOUND  No subsequent Multicast Listener info was found.
+ *
+ * @sa otBackboneRouterMulticastListenerClear
+ * @sa otBackboneRouterMulticastListenerAdd
+ */
+otError otBackboneRouterMulticastListenerGetNext(otInstance                                *aInstance,
+                                                 otBackboneRouterMulticastListenerIterator *aIterator,
+                                                 otBackboneRouterMulticastListenerInfo     *aListenerInfo);
+
+/**
+ * Represents the Domain Prefix events.
+ */
+typedef enum
+{
+    OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED   = 0, ///< Domain Prefix was added.
+    OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED = 1, ///< Domain Prefix was removed.
+    OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED = 2, ///< Domain Prefix was changed.
+} otBackboneRouterDomainPrefixEvent;
+
+/**
+ * Pointer is called whenever the Domain Prefix changed.
+ *
+ * @param[in] aContext       The user context pointer.
+ * @param[in] aEvent         The Domain Prefix event.
+ * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, NULL otherwise.
+ */
+typedef void (*otBackboneRouterDomainPrefixCallback)(void                             *aContext,
+                                                     otBackboneRouterDomainPrefixEvent aEvent,
+                                                     const otIp6Prefix                *aDomainPrefix);
+/**
+ * Sets the Backbone Router Domain Prefix callback.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to the Domain Prefix callback.
+ * @param[in] aContext   A user context pointer.
+ */
+void otBackboneRouterSetDomainPrefixCallback(otInstance                          *aInstance,
+                                             otBackboneRouterDomainPrefixCallback aCallback,
+                                             void                                *aContext);
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_BACKBONE_ROUTER_FTD_H_

@@ -1,0 +1,91 @@
+ot_path: "/home/pi/repo/openthread"
+ot_build:
+  max_number: 64
+  ot:
+  - tag: OT11
+    version: '1.1'
+    number: 33
+    subpath: build/ot11/simulation
+    cflags:
+    - "-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8"
+    options:
+    - "-DOT_REFERENCE_DEVICE=ON"
+    - "-DOT_COMMISSIONER=ON"
+    - "-DOT_JOINER=ON"
+  - tag: OT12
+    version: '1.2'
+    number: 10
+    subpath: build/ot12/simulation
+    cflags:
+    - "-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8"
+    options:
+    - "-DOT_REFERENCE_DEVICE=ON"
+    - "-DOT_DUA=ON"
+    - "-DOT_MLR=ON"
+    - "-DOT_COMMISSIONER=ON"
+    - "-DOT_JOINER=ON"
+    - "-DOT_CSL_RECEIVER=ON"
+    - "-DOT_LINK_METRICS_SUBJECT=ON"
+    - "-DOT_LINK_METRICS_INITIATOR=ON"
+  - tag: OT13
+    version: '1.3'
+    number: 10
+    subpath: build/ot13/simulation
+    cflags:
+    - "-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8"
+    options:
+    - "-DOT_REFERENCE_DEVICE=ON"
+    - "-DOT_DUA=ON"
+    - "-DOT_MLR=ON"
+    - "-DOT_COMMISSIONER=ON"
+    - "-DOT_JOINER=ON"
+    - "-DOT_CSL_RECEIVER=ON"
+    - "-DOT_LINK_METRICS_SUBJECT=ON"
+    - "-DOT_LINK_METRICS_INITIATOR=ON"
+  otbr:
+  - tag: OTBR12
+    version: '1.2'
+    number: 4
+    docker_image: otbr-reference-device-1.2
+    build_args:
+    - REFERENCE_DEVICE=1
+    - BORDER_ROUTING=0
+    - BACKBONE_ROUTER=1
+    - NAT64=0
+    - WEB_GUI=0
+    - REST_API=0
+    - OT_COMMISSIONER=1
+    options:
+    - "-DOTBR_DUA_ROUTING=ON"
+    - "-DOT_DUA=ON"
+    - "-DOT_MLR=ON"
+    rcp_subpath: build/ot12/simulation
+    rcp_options:
+    - "-DOT_LINK_METRICS_SUBJECT=ON"
+  - tag: OTBR13
+    version: '1.3'
+    number: 4
+    docker_image: otbr-reference-device-1.3
+    build_args:
+    - REFERENCE_DEVICE=1
+    - BORDER_ROUTING=1
+    - BACKBONE_ROUTER=1
+    - NAT64=0
+    - WEB_GUI=0
+    - REST_API=0
+    - EXTERNAL_COMMISSIONER=1
+    options:
+    - "-DOTBR_DUA_ROUTING=ON"
+    - "-DOT_DUA=ON"
+    - "-DOT_MLR=ON"
+    rcp_subpath: build/ot13/simulation
+    rcp_options:
+    - "-DOT_LINK_METRICS_SUBJECT=ON"
+ssh:
+  username: pi
+  password: raspberry
+  port: 22
+sniffer:
+  number: 2
+  server_port_base: 50051
+discovery_ifname: eth0

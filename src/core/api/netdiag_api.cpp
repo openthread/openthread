@@ -1,0 +1,134 @@
+/*
+ *  Copyright (c) 2020, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements the OpenThread Network Diagnostic API.
+ */
+
+#include "openthread-core-config.h"
+
+#include "instance/instance.hpp"
+
+using namespace ot;
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
+                                     otNetworkDiagIterator *aIterator,
+                                     otNetworkDiagTlv      *aNetworkDiagTlv)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aNetworkDiagTlv);
+
+    return NetworkDiagnostic::Client::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
+}
+
+otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
+                                  const otIp6Address            *aDestination,
+                                  const uint8_t                  aTlvTypes[],
+                                  uint8_t                        aCount,
+                                  otReceiveDiagnosticGetCallback aCallback,
+                                  void                          *aCallbackContext)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Client>().SendDiagnosticGet(
+        AsCoreType(aDestination), aTlvTypes, aCount, aCallback, aCallbackContext);
+}
+
+otError otThreadSendDiagnosticReset(otInstance         *aInstance,
+                                    const otIp6Address *aDestination,
+                                    const uint8_t       aTlvTypes[],
+                                    uint8_t             aCount)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Client>().SendDiagnosticReset(AsCoreType(aDestination),
+                                                                                      aTlvTypes, aCount);
+}
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+const char *otThreadGetVendorName(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetName(); }
+
+const char *otThreadGetVendorModel(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetModel(); }
+
+const char *otThreadGetVendorSwVersion(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().GetSwVersion();
+}
+
+const char *otThreadGetVendorAppUrl(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().GetAppUrl();
+}
+
+uint32_t otThreadGetVendorOui(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetOui(); }
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetName(aVendorName);
+}
+
+otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetModel(aVendorModel);
+}
+
+otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetSwVersion(aVendorSwVersion);
+}
+
+otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetAppUrl(aVendorAppUrl);
+}
+
+otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetOui(aVendorOui);
+}
+
+#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+void otThreadSetNonPreferredChannels(otInstance *aInstance, otChannelMask aChannelMask)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannels(aChannelMask);
+}
+
+otChannelMask otThreadGetNonPreferredChannels(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetNonPreferredChannels();
+}
+
+void otThreadSetNonPreferredChannelsResetCallback(otInstance                               *aInstance,
+                                                  otThreadNonPreferredChannelsResetCallback aCallback,
+                                                  void                                     *aContext)
+{
+    AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetNonPreferredChannelsResetCallback(aCallback, aContext);
+}
