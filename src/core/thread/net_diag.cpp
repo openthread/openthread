@@ -985,7 +985,13 @@ exit:
 
 template <> void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Msg &aMsg)
 {
+    uint16_t queryId = 0;
     VerifyOrExit(aMsg.IsConfirmable());
+    if (Tlv::Find<QueryIdTlv>(aMsg.mMessage, queryId) == kErrorNone && queryId != mQueryId)
+    {
+        IgnoreError(Get<Tmf::Agent>().SendAckResponse(aMsg));
+        ExitNow();
+    }
 
     LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
             aMsg.mMessageInfo.GetPeerAddr().ToString().AsCString());
