@@ -436,6 +436,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         break;
 
     case Tlv::kEnhancedRoute:
+        VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
         error = AppendEnhancedRoute(aMessage);
         break;
 
