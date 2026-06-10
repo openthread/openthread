@@ -636,6 +636,8 @@ openthread_core_files = [
   "net/nd_agent.hpp",
   "net/netif.cpp",
   "net/netif.hpp",
+  "net/plat_tcp.cpp",
+  "net/plat_tcp.hpp",
   "net/slaac_address.cpp",
   "net/slaac_address.hpp",
   "net/sntp_client.cpp",

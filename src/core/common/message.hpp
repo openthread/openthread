@@ -81,6 +81,10 @@ class HmacSha256;
 
 } // namespace Crypto
 
+namespace Ip6 {
+class PlatTcp;
+} // namespace Ip6
+
 /**
  * @addtogroup core-message
  *
@@ -293,6 +297,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
     friend class Crypto::AesCcm;
+    friend class Ip6::PlatTcp;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -1713,6 +1718,14 @@ public:
      */
     ~MessageQueue(void) { DequeueAndFreeAll(); }
 #endif
+
+    /**
+     * Indicates whether the message queue is empty.
+     *
+     * @retval TRUE   The message queue is empty.
+     * @retval FALSE  The message queue is not empty.
+     */
+    bool IsEmpty(void) const { return GetHead() == nullptr; }
 
     /**
      * Returns a pointer to the first message.

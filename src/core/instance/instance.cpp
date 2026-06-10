@@ -110,6 +110,9 @@ Instance::Instance(void)
     , mIp6(*this)
     , mThreadNetif(*this)
     , mTmfAgent(*this)
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+    , mPlatTcp(*this)
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     , mDhcp6Client(*this)
 #endif

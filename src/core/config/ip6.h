@@ -199,6 +199,15 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+ *
+ * Define as 1 to enable TCP support via platform `otPlatTcp*` APIs and `Ip6::PlatTcp`.
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TCP_ENABLE
  *
  * Define as 1 to enable TCP.

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,48 +26,46 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_UNIT_TEST_PLATFORM_H_
-#define OT_UNIT_TEST_PLATFORM_H_
+#include "platform-simulation.h"
 
-#include <string.h>
-
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/diag.h>
-#include <openthread/platform/dns.h>
-#include <openthread/platform/dnssd.h>
-#include <openthread/platform/dso_transport.h>
-#include <openthread/platform/entropy.h>
-#include <openthread/platform/logging.h>
-#include <openthread/platform/mdns_socket.h>
-#include <openthread/platform/misc.h>
-#include <openthread/platform/multipan.h>
-#include <openthread/platform/radio.h>
 #include <openthread/platform/tcp.h>
-#include <openthread/platform/trel.h>
 
-#include "common/code_utils.hpp"
-#include "instance/instance.hpp"
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
 
-#include "test_util.h"
+otError otPlatTcpEnableListener(otPlatTcpListener *aListener, const otPlatTcpSockAddr *aLocalSockAddr)
+{
+    OT_UNUSED_VARIABLE(aListener);
+    OT_UNUSED_VARIABLE(aLocalSockAddr);
 
-ot::Instance *testInitInstance(void);
-ot::Instance *testResetInstance(ot::Instance *aInstance);
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
-ot::Instance *testInitAdditionalInstance(uint8_t id);
-#endif
-void testFreeInstance(otInstance *aInstance);
-
-#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
-#include <openthread/tcat.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
-extern uint16_t sPlatBleLastAdvSetDataLen;
-#ifdef __cplusplus
+    return OT_ERROR_FAILED;
 }
-#endif
-#endif
 
-#endif // OT_UNIT_TEST_PLATFORM_H_
+void otPlatTcpDisableListener(otPlatTcpListener *aListener) { OT_UNUSED_VARIABLE(aListener); }
+
+otError otPlatTcpConnect(otPlatTcpConnection     *aConn,
+                         const otPlatTcpSockAddr *aPeerSockAddr,
+                         const otPlatTcpSockAddr *aLocalSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConn);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+    OT_UNUSED_VARIABLE(aLocalSockAddr);
+
+    return OT_ERROR_FAILED;
+}
+
+void otPlatTcpNotifyTxPending(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+uint16_t otPlatTcpSend(otPlatTcpConnection *aConn, const uint8_t *aBuffer, uint16_t aLength)
+{
+    OT_UNUSED_VARIABLE(aConn);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aLength);
+
+    return 0;
+}
+
+void otPlatTcpClose(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+void otPlatTcpAbort(otPlatTcpConnection *aConn) { OT_UNUSED_VARIABLE(aConn); }
+
+#endif // #if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE
