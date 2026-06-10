@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -43,42 +44,221 @@ namespace Crypto {
 //---------------------------------------------------------------------------------------------------------------------
 // AesCcm
 
-static_assert(sizeof(AesCcm::Nonce) == 13, "Nonce format is not valid");
-
-void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
+AesCcm::AesCcm(void)
 {
-    Key cryptoKey;
-
-    cryptoKey.Set(aKey, aKeyLength);
-    SetKey(cryptoKey);
+    mConfig.Clear();
+    mAuthData = nullptr;
 }
 
-void AesCcm::SetKey(const Mac::KeyMaterial &aMacKey)
+void AesCcm::SetNonce(const void *aNonce, uint8_t aLength)
 {
-    Key cryptoKey;
-
-    aMacKey.ConvertToCryptoKey(cryptoKey);
-    SetKey(cryptoKey);
+    mConfig.mNonce       = reinterpret_cast<const uint8_t *>(aNonce);
+    mConfig.mNonceLength = aLength;
 }
 
-void AesCcm::Init(uint32_t    aHeaderLength,
-                  uint32_t    aPlainTextLength,
-                  uint8_t     aTagLength,
-                  const void *aNonce,
-                  uint8_t     aNonceLength)
+void AesCcm::SetTagLength(uint8_t aTagLength)
 {
-    const uint8_t *nonceBytes  = reinterpret_cast<const uint8_t *>(aNonce);
-    uint8_t        blockLength = 0;
-    uint32_t       len;
-    uint8_t        L;
-    uint8_t        i;
+    OT_ASSERT(((aTagLength & 0x1) == 0) && IsValueInRange(aTagLength, kMinTagLength, kMaxTagLength));
 
-    // Tag length must be even and within [kMinTagLength, kMaxTagLength]
-    OT_ASSERT(((aTagLength & 0x1) == 0) && (kMinTagLength <= aTagLength) && (aTagLength <= kMaxTagLength));
+    mConfig.mTagLength = aTagLength;
+}
+
+void AesCcm::SetAuthData(const void *aAuthData, uint32_t aLength)
+{
+    mAuthData             = reinterpret_cast<const uint8_t *>(aAuthData);
+    mConfig.mHeaderLength = aLength;
+}
+
+Error AesCcm::Process(Operation aOperation, uint8_t *aData, uint32_t aLength)
+{
+    Engine engine;
+
+    mConfig.mPlainTextLength = aLength;
+
+    return engine.ProcessOneShot(aOperation, mConfig, mAuthData, aData);
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+Error AesCcm::Process(Operation aOperation, Message &aMessage, uint16_t aOffset)
+{
+    Error                 error = kErrorNone;
+    Engine                engine;
+    Message::MutableChunk chunk;
+    uint16_t              remainingLength;
+    uint8_t               tag[kMaxTagLength];
+
+    VerifyOrExit(aOffset <= aMessage.GetLength(), error = kErrorInvalidArgs);
+
+    switch (aOperation)
+    {
+    case kEncrypt:
+        SuccessOrExit(error = aMessage.IncreaseLength(mConfig.mTagLength));
+        break;
+    case kDecrypt:
+        VerifyOrExit(aMessage.GetLength() - aOffset >= mConfig.mTagLength, error = kErrorSecurity);
+        break;
+    }
+
+    mConfig.mPlainTextLength = aMessage.GetLength() - aOffset - mConfig.mTagLength;
+
+    // First, check if the entire payload and tag are present in
+    // a single chunk (i.e., in one contiguous buffer).
+
+    remainingLength = aMessage.GetLength() - aOffset;
+
+    aMessage.GetFirstChunk(aOffset, remainingLength, chunk);
+
+    if (chunk.GetLength() == mConfig.mPlainTextLength + mConfig.mTagLength)
+    {
+        error = engine.ProcessOneShot(aOperation, mConfig, mAuthData, chunk.GetBytes());
+        ExitNow();
+    }
+
+    // The payload content spans multiple chunks. We need to process
+    // it iteratively using multi-part `engine` methods.
+
+    remainingLength = aMessage.GetLength() - aOffset - mConfig.mTagLength;
+
+    engine.Start(mConfig);
+    engine.AddHeader(mAuthData, mConfig.mHeaderLength);
+
+    aMessage.GetFirstChunk(aOffset, remainingLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        engine.AddPayload(chunk.GetBytes(), chunk.GetBytes(), chunk.GetLength(), aOperation);
+        aMessage.GetNextChunk(remainingLength, chunk);
+    }
+
+    engine.Finalize(tag);
+
+    switch (aOperation)
+    {
+    case kEncrypt:
+        aMessage.WriteBytes(aMessage.GetLength() - mConfig.mTagLength, tag, mConfig.mTagLength);
+        break;
+
+    case kDecrypt:
+        VerifyOrExit(aMessage.CompareBytes(aMessage.GetLength() - mConfig.mTagLength, tag, mConfig.mTagLength),
+                     error = kErrorSecurity);
+        break;
+    }
+
+exit:
+    if ((aOperation == kDecrypt) && (error == kErrorNone))
+    {
+        aMessage.RemoveFooter(mConfig.mTagLength);
+    }
+
+    return error;
+}
+#endif //  OPENTHREAD_FTD || OPENTHREAD_MTD
+
+void AesCcm::Perform(Operation   aOperation,
+                     const Key  &aKey,
+                     uint8_t     aTagLength,
+                     const void *aNonce,
+                     uint8_t     aNonceLength,
+                     const void *aAuthData,
+                     uint32_t    aAuthDataLength,
+                     void       *aPlainText,
+                     void       *aCipherText,
+                     uint32_t    aLength,
+                     void       *aTag)
+{
+    Config config;
+    Engine engine;
+
+    config.mKey             = aKey;
+    config.mTagLength       = aTagLength;
+    config.mNonce           = reinterpret_cast<const uint8_t *>(aNonce);
+    config.mNonceLength     = aNonceLength;
+    config.mHeaderLength    = aAuthDataLength;
+    config.mPlainTextLength = aLength;
+
+    engine.Start(config);
+    engine.AddHeader(reinterpret_cast<const uint8_t *>(aAuthData), aAuthDataLength);
+    engine.AddPayload(aPlainText, aCipherText, aLength, aOperation);
+    engine.Finalize(aTag);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// AesCcm::Config
+
+bool AesCcm::Config::IsValid(void) const
+{
+    bool isValid = false;
+
+    if (mNonceLength > 0)
+    {
+        VerifyOrExit(mNonce != nullptr);
+    }
+
+    VerifyOrExit((mTagLength % 2) == 0);
+    VerifyOrExit(IsValueInRange(mTagLength, kMinTagLength, kMaxTagLength));
+
+    isValid = true;
+
+exit:
+    return isValid;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// AesCcm::Engine
+
+Error AesCcm::Engine::ProcessOneShot(Operation      aOperation,
+                                     const Config  &aConfig,
+                                     const uint8_t *aHeader,
+                                     uint8_t       *aData)
+{
+    // This method performs one-shot (single-part) AES-CCM processing.
+    // Currently, it is implemented by calling the multi-part
+    // streaming APIs sequentially. In the future, this can be
+    // optimized to directly call platform-specific one-shot hardware
+    // acceleration APIs if supported by the platform.
+
+    Error   error = kErrorNone;
+    uint8_t tag[kMaxTagLength];
+
+    Start(aConfig);
+    AddHeader(aHeader, aConfig.mHeaderLength);
+    AddPayload(aData, aData, aConfig.mPlainTextLength, aOperation);
+    Finalize(tag);
+
+    switch (aOperation)
+    {
+    case kEncrypt:
+        memcpy(aData + aConfig.mPlainTextLength, tag, aConfig.mTagLength);
+        break;
+
+    case kDecrypt:
+        error = (memcmp(aData + aConfig.mPlainTextLength, tag, aConfig.mTagLength) == 0) ? kErrorNone : kErrorSecurity;
+        break;
+    }
+
+    return error;
+}
+
+void AesCcm::Engine::Start(const Config &aConfig)
+{
+    uint8_t  blockLength = 0;
+    uint32_t len;
+    uint8_t  L;
+    uint8_t  i;
+
+    OT_ASSERT(aConfig.IsValid());
+
+    mEcb.SetKey(aConfig.mKey);
+
+    mNonceLength     = aConfig.mNonceLength;
+    mTagLength       = aConfig.mTagLength;
+    mHeaderLength    = aConfig.mHeaderLength;
+    mPlainTextLength = aConfig.mPlainTextLength;
 
     L = 0;
 
-    for (len = aPlainTextLength; len; len >>= 8)
+    for (len = mPlainTextLength; len; len >>= 8)
     {
         L++;
     }
@@ -88,36 +268,36 @@ void AesCcm::Init(uint32_t    aHeaderLength,
         L = 2;
     }
 
-    if (aNonceLength > 13)
+    if (mNonceLength > 13)
     {
-        aNonceLength = 13;
+        mNonceLength = 13;
     }
 
     // increase L to match nonce len
-    if (L < (15 - aNonceLength))
+    if (L < (15 - mNonceLength))
     {
-        L = 15 - aNonceLength;
+        L = 15 - mNonceLength;
     }
 
     // decrease nonceLength to match L
-    if (aNonceLength > (15 - L))
+    if (mNonceLength > (15 - L))
     {
-        aNonceLength = 15 - L;
+        mNonceLength = 15 - L;
     }
 
     // setup initial block
 
     // write flags
-    mBlock[0] = (static_cast<uint8_t>((aHeaderLength != 0) << 6) | static_cast<uint8_t>(((aTagLength - 2) >> 1) << 3) |
+    mBlock[0] = (static_cast<uint8_t>((mHeaderLength != 0) << 6) | static_cast<uint8_t>(((mTagLength - 2) >> 1) << 3) |
                  static_cast<uint8_t>(L - 1));
 
     // write nonce
-    memcpy(&mBlock[1], nonceBytes, aNonceLength);
+    memcpy(&mBlock[1], aConfig.mNonce, mNonceLength);
 
     // write len
-    len = aPlainTextLength;
+    len = mPlainTextLength;
 
-    for (i = sizeof(mBlock) - 1; i > aNonceLength; i--)
+    for (i = sizeof(mBlock) - 1; i > mNonceLength; i--)
     {
         mBlock[i] = len & 0xff;
         len >>= 8;
@@ -127,44 +307,41 @@ void AesCcm::Init(uint32_t    aHeaderLength,
     mEcb.Encrypt(mBlock, mBlock);
 
     // process header
-    if (aHeaderLength > 0)
+    if (mHeaderLength > 0)
     {
         // process length
-        if (aHeaderLength < (65536U - 256U))
+        if (mHeaderLength < (65536U - 256U))
         {
-            mBlock[blockLength++] ^= aHeaderLength >> 8;
-            mBlock[blockLength++] ^= aHeaderLength >> 0;
+            mBlock[blockLength++] ^= mHeaderLength >> 8;
+            mBlock[blockLength++] ^= mHeaderLength >> 0;
         }
         else
         {
             mBlock[blockLength++] ^= 0xff;
             mBlock[blockLength++] ^= 0xfe;
-            mBlock[blockLength++] ^= aHeaderLength >> 24;
-            mBlock[blockLength++] ^= aHeaderLength >> 16;
-            mBlock[blockLength++] ^= aHeaderLength >> 8;
-            mBlock[blockLength++] ^= aHeaderLength >> 0;
+            mBlock[blockLength++] ^= mHeaderLength >> 24;
+            mBlock[blockLength++] ^= mHeaderLength >> 16;
+            mBlock[blockLength++] ^= mHeaderLength >> 8;
+            mBlock[blockLength++] ^= mHeaderLength >> 0;
         }
     }
 
     // init counter
     mCtr[0] = L - 1;
-    memcpy(&mCtr[1], nonceBytes, aNonceLength);
-    memset(&mCtr[aNonceLength + 1], 0, sizeof(mCtr) - aNonceLength - 1);
+    memcpy(&mCtr[1], aConfig.mNonce, mNonceLength);
+    memset(&mCtr[mNonceLength + 1], 0, sizeof(mCtr) - mNonceLength - 1);
 
-    mNonceLength     = aNonceLength;
-    mHeaderLength    = aHeaderLength;
-    mHeaderCur       = 0;
-    mPlainTextLength = aPlainTextLength;
-    mPlainTextCur    = 0;
-    mBlockLength     = blockLength;
-    mCtrLength       = sizeof(mCtrPad);
-    mTagLength       = aTagLength;
+    mHeaderCur    = 0;
+    mPlainTextCur = 0;
+    mBlockLength  = blockLength;
+    mCtrLength    = sizeof(mCtrPad);
 }
 
-void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
+void AesCcm::Engine::AddHeader(const void *aHeader, uint32_t aHeaderLength)
 {
     const uint8_t *headerBytes = reinterpret_cast<const uint8_t *>(aHeader);
 
+    OT_ASSERT((aHeaderLength == 0) || aHeader != nullptr);
     OT_ASSERT(mHeaderCur + aHeaderLength <= mHeaderLength);
 
     // process header
@@ -193,7 +370,7 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
     }
 }
 
-void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode aMode)
+void AesCcm::Engine::AddPayload(void *aPlainText, void *aCipherText, uint32_t aLength, Operation aOperation)
 {
     uint8_t *plaintextBytes  = reinterpret_cast<uint8_t *>(aPlainText);
     uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(aCipherText);
@@ -217,7 +394,7 @@ void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode
             mCtrLength = 0;
         }
 
-        if (aMode == kEncrypt)
+        if (aOperation == kEncrypt)
         {
             byte = plaintextBytes[i];
 
@@ -259,22 +436,7 @@ void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode
     }
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-void AesCcm::Payload(Message &aMessage, uint16_t aOffset, uint16_t aLength, Mode aMode)
-{
-    Message::MutableChunk chunk;
-
-    aMessage.GetFirstChunk(aOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
-    {
-        Payload(chunk.GetBytes(), chunk.GetBytes(), chunk.GetLength(), aMode);
-        aMessage.GetNextChunk(aLength, chunk);
-    }
-}
-#endif
-
-void AesCcm::Finalize(void *aTag)
+void AesCcm::Engine::Finalize(void *aTag)
 {
     uint8_t *tagBytes = reinterpret_cast<uint8_t *>(aTag);
 

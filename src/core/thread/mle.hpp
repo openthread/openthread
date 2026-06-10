@@ -2403,10 +2403,10 @@ private:
     bool       HasUnregisteredAddress(void) const;
     bool       ShouldRegisterUnicastAddrWithParent(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
     bool       ShouldRegisterMulticastAddrsWithParent(void) const;
-    Error      ProcessMessageSecurity(Crypto::AesCcm::Mode  aMode,
-                                      Message              &aMessage,
-                                      uint16_t              aCmdOffset,
-                                      const AesCcmAuthData &aAuthData);
+    Error      ProcessMessageSecurity(Crypto::AesCcm::Operation aOperation,
+                                      Message                  &aMessage,
+                                      uint16_t                  aCmdOffset,
+                                      const AesCcmAuthData     &aAuthData);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     void InformPreviousParent(void);

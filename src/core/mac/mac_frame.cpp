@@ -1390,7 +1390,6 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 #if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     uint32_t              frameCounter = 0;
     uint8_t               securityLevel;
-    uint8_t               tagLength;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
@@ -1402,12 +1401,11 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(GetAesKey());
-    tagLength = GetFooterLength() - GetFcsSize();
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
+    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, &nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kEncrypt);
-    aesCcm.Finalize(GetFooter());
+    SuccessOrExit(aesCcm.Process(Crypto::AesCcm::kEncrypt, GetPayload(), GetPayloadLength()));
 
     SetIsSecurityProcessed(true);
 
@@ -1423,7 +1421,6 @@ void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
 {
     uint32_t              frameCounter = 0;
     uint8_t               securityLevel;
-    uint8_t               tagLength;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
@@ -1435,13 +1432,13 @@ void TxFrame::DecryptTransmitAesCcm(const ExtAddress &aExtAddress)
     nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(GetAesKey());
-    tagLength = GetFooterLength() - GetFcsSize();
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
+    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, &nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-    // Note: We skip aesCcm.Finalize() checking because we are only decrypting back to plaintext,
+    // We expect success because we are only decrypting back to plaintext,
     // and we know the ciphertext was generated correctly by us previously.
+    IgnoreError(aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength()));
 
     SetIsSecurityProcessed(false);
     SetIsHeaderUpdated(false);
@@ -1640,8 +1637,6 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
     Error                 error        = kErrorSecurity;
     uint32_t              frameCounter = 0;
     uint8_t               securityLevel;
-    uint8_t               tag[kMaxMicSize];
-    uint8_t               tagLength;
     Crypto::AesCcm        aesCcm;
     Crypto::AesCcm::Nonce nonce;
 
@@ -1653,23 +1648,16 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
     nonce.InitFrom(aExtAddress, frameCounter, securityLevel);
 
     aesCcm.SetKey(aMacKey);
-    tagLength = GetFooterLength() - GetFcsSize();
+    aesCcm.SetNonce(nonce);
+    aesCcm.SetAuthData(GetHeader(), GetHeaderLength());
+    aesCcm.SetTagLength(GetFooterLength() - GetFcsSize());
 
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, &nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#else
-    // For fuzz tests, execute AES but do not alter the payload. A large
-    aesCcm.Payload(nullptr, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#endif
-    aesCcm.Finalize(tag);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0);
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    // Do not decrypt when fuzzing
+    ExitNow(error = kErrorNone);
 #endif
 
-    error = kErrorNone;
+    error = aesCcm.Process(Crypto::AesCcm::kDecrypt, GetPayload(), GetPayloadLength());
 
 exit:
     return error;
