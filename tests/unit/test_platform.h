@@ -65,6 +65,7 @@ extern "C" {
 #endif
 extern uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
 extern uint16_t sPlatBleLastAdvSetDataLen;
+extern bool     sPlatBleAdvertising;
 #ifdef __cplusplus
 }
 #endif
