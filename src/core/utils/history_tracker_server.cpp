@@ -60,34 +60,6 @@ template <> void Server::HandleTmf<kUriHistoryQuery>(Coap::Msg &aMsg)
     PrepareAndSendAnswers(aMsg.mMessageInfo.GetPeerAddr(), aMsg.mMessage);
 }
 
-Error Server::AllocateAnswer(Coap::Message *&aAnswer, AnswerInfo &aInfo)
-{
-    // Allocates an `Answer` message, adds it to `mAnswerQueue`,
-    // updates the `aInfo.mFirstAnswer` if it is the first allocated
-    // messages, and appends `QueryIdTlv` to the message (if needed).
-
-    Error error = kErrorNone;
-
-    aAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriHistoryAnswer);
-    VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
-    IgnoreError(aAnswer->SetPriority(aInfo.mPriority));
-
-    mAnswerQueue.Enqueue(*aAnswer);
-
-    if (aInfo.mFirstAnswer == nullptr)
-    {
-        aInfo.mFirstAnswer = aAnswer;
-    }
-
-    if (aInfo.mHasQueryId)
-    {
-        SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*aAnswer, aInfo.mQueryId));
-    }
-
-exit:
-    return error;
-}
-
 bool Server::IsLastAnswer(const Coap::Message &aAnswer) const
 {
     // Indicates whether `aAnswer` is the last one associated with
@@ -122,24 +94,17 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
     }
 }
 
-void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Message &aRequest)
+void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest)
 {
-    Coap::Message *answer;
     Error          error;
-    AnswerInfo     info;
+    AnswerBuilder  answerBuilder(GetInstance(), NetDiag::kAnswerTypeHistoryTracker);
     OffsetRange    offsetRange;
     Tlv::Info      tlvInfo;
     RequestTlv     requestTlv;
-    AnswerTlvValue answerTlvValue;
+    TimeMilli      now = TimerMilli::GetNow();
+    Coap::Message *firstAnswer;
 
-    if (Tlv::Find<QueryIdTlv>(aRequest, info.mQueryId) == kErrorNone)
-    {
-        info.mHasQueryId = true;
-    }
-
-    info.mPriority = aRequest.GetPriority();
-
-    SuccessOrExit(error = AllocateAnswer(answer, info));
+    SuccessOrExit(error = answerBuilder.Start(aRequest));
 
     offsetRange.InitFromMessageOffsetToEnd(aRequest);
 
@@ -160,48 +125,26 @@ void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Messa
             switch (requestTlv.GetTlvType())
             {
             case Tlv::kNetworkInfo:
-                SuccessOrExit(error = AppendNetworkInfo(answer, info, requestTlv));
+                SuccessOrExit(error = AppendNetworkInfo(answerBuilder, requestTlv, now));
                 break;
 
             default:
                 break;
             }
 
-            SuccessOrExit(error = CheckAnswerLength(answer, info));
+            SuccessOrExit(error = answerBuilder.CheckAnswerLength());
         }
     }
 
-    answerTlvValue.Init(info.mAnswerIndex, AnswerTlvValue::kIsLast);
-    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*answer, answerTlvValue));
+    SuccessOrExit(error = answerBuilder.Finish());
 
-    SendNextAnswer(*info.mFirstAnswer, aDestination);
+    firstAnswer = answerBuilder.GetAnswers().GetHead();
+    mAnswerQueue.EnqueueAllFrom(answerBuilder.GetAnswers());
 
-exit:
-    if ((error != kErrorNone) && (info.mFirstAnswer != nullptr))
-    {
-        FreeAllRelatedAnswers(*info.mFirstAnswer);
-    }
-}
-
-Error Server::CheckAnswerLength(Coap::Message *&aAnswer, AnswerInfo &aInfo)
-{
-    // Checks the length of the `aAnswer` message and if it is above
-    // the threshold, it enqueues the message for transmission after
-    // appending an Answer TLV with the current index to the message.
-    // In this case, it will also allocate a new answer message.
-
-    Error          error = kErrorNone;
-    AnswerTlvValue answerTlvValue;
-
-    VerifyOrExit(aAnswer->GetLength() >= kAnswerMessageLengthThreshold);
-
-    answerTlvValue.Init(aInfo.mAnswerIndex++, AnswerTlvValue::kMoreToFollow);
-    SuccessOrExit(error = Tlv::Append<AnswerTlv>(*aAnswer, answerTlvValue));
-
-    error = AllocateAnswer(aAnswer, aInfo);
+    SendNextAnswer(*firstAnswer, aDestination);
 
 exit:
-    return error;
+    return;
 }
 
 void Server::SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination)
@@ -259,14 +202,14 @@ exit:
     }
 }
 
-Error Server::AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, const RequestTlv &aRequestTlv)
+Error Server::AppendNetworkInfo(AnswerBuilder &aAnswerBuilder, const RequestTlv &aRequestTlv, TimeMilli aNow)
 {
     Error    error = kErrorNone;
     Iterator iterator;
     uint32_t maxEntryAge = aRequestTlv.GetMaxEntryAge();
     uint16_t maxCount    = aRequestTlv.GetNumEntries();
 
-    iterator.Init(aInfo.mNow);
+    iterator.Init(aNow);
 
     for (uint16_t count = 0; (maxCount == 0) || (count < maxCount); count++)
     {
@@ -288,11 +231,11 @@ Error Server::AppendNetworkInfo(Coap::Message *&aAnswer, AnswerInfo &aInfo, cons
 
         networkInfoTlv.InitFrom(*networkInfo, entryAge);
 
-        SuccessOrExit(error = aAnswer->Append(networkInfoTlv));
-        SuccessOrExit(error = CheckAnswerLength(aAnswer, aInfo));
+        SuccessOrExit(error = aAnswerBuilder.GetAnswer().Append(networkInfoTlv));
+        SuccessOrExit(error = aAnswerBuilder.CheckAnswerLength());
     }
 
-    SuccessOrExit(error = Tlv::AppendEmpty<NetworkInfoTlv>(*aAnswer));
+    SuccessOrExit(error = Tlv::AppendEmpty<NetworkInfoTlv>(aAnswerBuilder.GetAnswer()));
 
 exit:
     return error;
