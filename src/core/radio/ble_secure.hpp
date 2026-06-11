@@ -347,6 +347,7 @@ private:
         kAdvertising    = 1, // Ble secure is advertising.
         kConnected      = 2, // Ble secure is connected (so not advertising).
         kNotAdvertising = 3, // Ble secure is started but not advertising.
+        kClosing        = 4, // Ble secure connection is closing (so not advertising).
     };
 
     typedef otBleRadioPacket RadioPacket;
