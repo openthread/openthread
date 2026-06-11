@@ -844,6 +844,7 @@ OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowe
 
 uint8_t  sPlatBleLastAdvSetData[OT_TCAT_ADVERTISEMENT_MAX_LEN];
 uint16_t sPlatBleLastAdvSetDataLen = 0;
+bool     sPlatBleAdvertising       = false;
 
 otError otPlatBleEnable(otInstance *aInstance)
 {
@@ -854,6 +855,7 @@ otError otPlatBleEnable(otInstance *aInstance)
 otError otPlatBleDisable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    sPlatBleAdvertising = false;
     return OT_ERROR_NONE;
 }
 
@@ -871,12 +873,14 @@ otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aInterval);
+    sPlatBleAdvertising = true;
     return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    sPlatBleAdvertising = false;
     return OT_ERROR_NONE;
 }
 
