@@ -324,6 +324,31 @@ static void AdvanceTime(Instance *aInstance, uint32_t aDuration)
     otTaskletsProcess(aInstance);
 }
 
+// Observer for the TCAT join callback (`otHandleTcatJoin`), counting join (Start) vs. leave (Stop) invocations.
+struct TcatJoinCounters
+{
+    uint32_t mJoinCount;  // invocations reporting aIsJoin == true  (StartThreadInterface)
+    uint32_t mLeaveCount; // invocations reporting aIsJoin == false (StopThreadInterface / Decommission)
+    Error    mLastError;
+};
+
+static void HandleTcatJoin(otInstance *aInstance, bool aIsJoin, otError aError, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    TcatJoinCounters &counters = *static_cast<TcatJoinCounters *>(aContext);
+
+    if (aIsJoin)
+    {
+        counters.mJoinCount++;
+    }
+    else
+    {
+        counters.mLeaveCount++;
+    }
+    counters.mLastError = static_cast<Error>(aError);
+}
+
 static Instance *TestInitInstanceTcat(void)
 {
     Instance *instance = testInitInstance();
@@ -1093,6 +1118,47 @@ public:
         testFreeInstance(instance);
     }
 
+    static void TestTcatRepeatedCommandActivation(void)
+    {
+        Instance        *instance = TestInitInstanceTcat();
+        TcatAgent       *agent    = &instance->Get<TcatAgent>();
+        TcatJoinCounters counters = {};
+
+        // Set up a commissioned device: Commissioning class authorized, a full Active Dataset present, and the
+        // Thread interface initially down. Observe the TCAT join callback throughout.
+        MockCommissionerConnected(agent, sCommAuth, sDeviceAuth, /* aIsCommissionedAtStart */ false);
+        MockWriteActiveDataset(instance, sFullDataset);
+        agent->mJoinCallback.Set(HandleTcatJoin, &counters);
+        VerifyOrQuit(instance->Get<ActiveDatasetManager>().IsCommissioned());
+        VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+
+        // First StartThreadInterface brings the interface up and reports a successful join.
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        VerifyOrQuit(!instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mJoinCount == 1 && counters.mLastError == kErrorNone);
+
+        // Repeated StartThreadInterface while already started is an idempotent success (TCAT spec): the interface
+        // stays up and the successful-join response is repeated on each invocation.
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        SuccessOrQuit(agent->HandleStartThreadInterface());
+        VerifyOrQuit(!instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mJoinCount == 1 && counters.mLeaveCount == 0 && counters.mLastError == kErrorNone);
+
+        // First StopThreadInterface brings the interface back down and reports a successful leave.
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mLeaveCount == 1 && counters.mLastError == kErrorNone && counters.mJoinCount == 1);
+
+        // Repeated StopThreadInterface while already stopped is an idempotent success (TCAT spec), but the
+        // 'already stopped' case does NOT re-invoke the join callback.
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        SuccessOrQuit(agent->HandleStopThreadInterface());
+        VerifyOrQuit(instance->Get<Mle::Mle>().IsDisabled());
+        VerifyOrQuit(counters.mLeaveCount == 1 && counters.mLastError == kErrorNone && counters.mJoinCount == 1);
+
+        testFreeInstance(instance);
+    }
+
 }; // class UnitTester
 
 } // namespace MeshCoP
@@ -1114,6 +1180,7 @@ int main(void)
     ot::MeshCoP::UnitTester::TestTcatCommissioner4AuthWithExistingPartialDataset();
     ot::MeshCoP::UnitTester::TestTcatAttemptDatasetOverwrite();
     ot::MeshCoP::UnitTester::TestTcatAttemptDatasetOverwriteAfterAttach();
+    ot::MeshCoP::UnitTester::TestTcatRepeatedCommandActivation();
     printf("All tests passed\n");
 #else
     printf("TCAT feature is not enabled\n");
