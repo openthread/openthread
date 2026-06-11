@@ -1011,6 +1011,7 @@ Error TcatAgent::HandleStartThreadInterface(void)
     VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
     VerifyOrExit(Get<ActiveDatasetManager>().Read(datasetInfo) == kErrorNone, error = kErrorInvalidState);
     VerifyOrExit(datasetInfo.IsPresent<Dataset::kNetworkKey>(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::Mle>().IsDisabled(), error = kErrorAlready);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
@@ -1020,8 +1021,16 @@ Error TcatAgent::HandleStartThreadInterface(void)
     SuccessOrExit(error = Get<Mle::Mle>().Start());
 
 exit:
-    // error values for callback MUST be limited to the allowed set, see #JoinCallback
-    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ true, error);
+    if (error != kErrorAlready)
+    {
+        // error values for callback MUST be limited to the allowed set, see #JoinCallback
+        mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ true, error);
+    }
+    else
+    {
+        error = kErrorNone; // TCAT spec: success resp if already started. No callback in this case.
+    }
+
     return error;
 }
 
@@ -1030,6 +1039,7 @@ Error TcatAgent::HandleStopThreadInterface(void)
     Error error = kErrorNone;
 
     VerifyOrExit(IsCommandClassAuthorized(kCommissioning), error = kErrorRejected);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorAlready);
 
     Get<Mle::Mle>().Stop();
 
@@ -1039,7 +1049,14 @@ Error TcatAgent::HandleStopThreadInterface(void)
     }
 
 exit:
-    mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
+    if (error != kErrorAlready)
+    {
+        mJoinCallback.InvokeIfSet(&GetInstance(), /* aIsJoin */ false, error);
+    }
+    else
+    {
+        error = kErrorNone; // TCAT spec: success resp if already stopped. No callback in this case.
+    }
     return error;
 }
 
