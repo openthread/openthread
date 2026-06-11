@@ -411,7 +411,7 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
     VerifyOrExit(!otMacFrameIsSecurityEnabled(aFrame) || !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
+    if (static_cast<Mac::Frame *>(aFrame)->HasCslIe()) // CSL IE should be filled for every transmit attempt
     {
         otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
     }

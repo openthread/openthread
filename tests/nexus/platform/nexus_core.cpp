@@ -740,8 +740,7 @@ void Core::ProcessRadio(Node &aNode)
         dstPanId = Mac::kPanIdBroadcast;
     }
 
-    ackRequested                           = aNode.mRadio.mTxFrame.GetAckRequest();
-    aNode.mRadio.mRadioContext.mCslPresent = aNode.mRadio.mTxFrame.mInfo.mTxInfo.mCslPresent;
+    ackRequested = aNode.mRadio.mTxFrame.GetAckRequest();
 
     SuccessOrQuit(otMacFrameProcessTxSfd(&aNode.mRadio.mTxFrame, mNow, &aNode.mRadio.mRadioContext));
     static_cast<Radio::Frame &>(aNode.mRadio.mTxFrame).UpdateFcs();
@@ -856,11 +855,8 @@ void Core::ProcessRadio(Node &aNode)
             uint8_t ackIeDataLength = 0;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-            ackNode->mRadio.mRadioContext.mCslPresent =
-                (ackNode->mRadio.mRadioContext.mCslPeriod > 0) &&
-                otMacFrameSrcAddrMatchCslReceiverPeer(&aNode.mRadio.mTxFrame, &ackNode->mRadio.mRadioContext);
-
-            if (ackNode->mRadio.mRadioContext.mCslPresent)
+            if ((ackNode->mRadio.mRadioContext.mCslPeriod > 0) &&
+                otMacFrameSrcAddrMatchCslReceiverPeer(&aNode.mRadio.mTxFrame, &ackNode->mRadio.mRadioContext))
             {
                 ackIeDataLength = otMacFrameGenerateCslIeTemplate(ackIeData);
             }
