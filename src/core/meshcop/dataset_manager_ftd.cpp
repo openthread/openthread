@@ -202,20 +202,11 @@ exit:
 
 void DatasetManager::SendSetOrReplaceResponse(const Coap::Msg &aMsg, StateTlv::State aState)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
-
-    message = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMsg.mMessage);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMsg.mMessageInfo));
-
+    SuccessOrExit(Get<Tmf::Agent>().SendResponseWithStateTlv(aMsg, aState));
     LogInfo("sent dataset set/replace response");
 
 exit:
-    FreeMessageOnError(message, error);
+    return;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
