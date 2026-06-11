@@ -49,6 +49,7 @@ static uint8_t sBleBuffer[PLAT_BLE_MSG_DATA_MAX];
 static int  sFd              = -1;
 static bool sIsConnected     = false;
 static bool sIsDisconnecting = false;
+static bool sIsAdvertising   = false;
 static bool sIsEnabled       = false;
 
 static const uint16_t kPortBase = 10000;
@@ -115,6 +116,7 @@ otError otPlatBleEnable(otInstance *aInstance)
         sIsEnabled       = true;
         sIsConnected     = false;
         sIsDisconnecting = false;
+        sIsAdvertising   = false;
     }
     return OT_ERROR_NONE;
 }
@@ -138,6 +140,7 @@ otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
         return OT_ERROR_INVALID_STATE;
     }
     otLogDebgPlat("BLE adv start (interval %u)", aInterval);
+    sIsAdvertising = true;
     return OT_ERROR_NONE;
 }
 
@@ -149,6 +152,7 @@ otError otPlatBleGapAdvStop(otInstance *aInstance)
         return OT_ERROR_INVALID_STATE;
     }
     otLogDebgPlat("BLE adv stop");
+    sIsAdvertising = false;
     return OT_ERROR_NONE;
 }
 
@@ -242,7 +246,12 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
 
             if (!sIsConnected)
             {
-                sIsConnected = true;
+                // Only accept a new connection while advertising. This helps to ignore trailing data from a
+                // closing TCAT session until the device is ready again for a new session.
+                otEXPECT(sIsAdvertising);
+
+                sIsConnected   = true;
+                sIsAdvertising = false; // per API contract, advertising stops once a client connects
                 otLogDebgPlat("BLE client connected");
                 otPlatBleGapOnConnected(aInstance, 0);
             }
@@ -309,7 +318,7 @@ otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementDat
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAdvertisementData);
     OT_UNUSED_VARIABLE(aAdvertisementLen);
-    if (!sIsEnabled)
+    if (!sIsEnabled || sIsAdvertising)
     {
         return OT_ERROR_INVALID_STATE;
     }
@@ -321,7 +330,7 @@ otError otPlatBleGapAdvUpdateData(otInstance *aInstance, uint8_t *aAdvertisement
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAdvertisementData);
     OT_UNUSED_VARIABLE(aAdvertisementLen);
-    if (!sIsEnabled)
+    if (!sIsEnabled || !sIsAdvertising)
     {
         return OT_ERROR_INVALID_STATE;
     }
