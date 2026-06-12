@@ -256,8 +256,13 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
         }
         else if (rval == 0)
         {
-            // socket is closed, which should not happen
-            assert(false);
+            // A zero-length datagram: simulates Commissioner suddenly disconnected the BLE link.
+            if (sIsConnected)
+            {
+                sIsConnected = false;
+                otLogDebgPlat("BLE client link disconnected");
+                otPlatBleGapOnDisconnected(aInstance, 0);
+            }
         }
         else if (errno != EINTR && errno != EAGAIN)
         {

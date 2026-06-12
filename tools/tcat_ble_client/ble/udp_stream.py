@@ -60,6 +60,11 @@ class UdpStream:
         else:
             return b''
 
+    async def simulation_ble_disconnect(self):
+        # Simulate a BLE link break (e.g. peer out of range) by sending a zero-length UDP
+        # datagram. Unlike `disconnect`, this does not send a Disconnect TLV and does not
+        # perform a clean TLS shutdown.
+        self.socket.sendto(b'', self.address)
+
     async def disconnect(self):
-        if self.socket is not None:
-            self.socket.close()
+        self.socket.close()
