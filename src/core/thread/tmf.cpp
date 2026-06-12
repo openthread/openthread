@@ -275,6 +275,22 @@ void Agent::PrepareMessageInfo(Ip6::MessageInfo &aMessageInfo) const
                                  : Get<Mle::Mle>().GetMeshLocalRloc());
 }
 
+Error Agent::SendResponseWithStateTlv(const Msg &aRequest, uint8_t aState)
+{
+    Error    error = kErrorNone;
+    Message *message;
+
+    message = AllocateAndInitPriorityResponseFor(aRequest.mMessage);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
+    SuccessOrExit(error = SendMessage(*message, aRequest.mMessageInfo));
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
+}
+
 uint8_t Agent::PriorityToDscp(Message::Priority aPriority)
 {
     uint8_t dscp = Ip6::kDscpTmfNormalPriority;
