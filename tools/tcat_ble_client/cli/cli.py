@@ -38,7 +38,7 @@ from cli.base_commands import (DisconnectCommand, HelpCommand, HelloCommand, Com
                                GetRandomNumberChallenge, ThreadStateCommand, ScanCommand, PresentHash,
                                DiagnosticTlvsCommand, GetApplicationLayersCommand, SendVendorData,
                                SendApplicationData1, SendApplicationData2, SendApplicationData3, SendApplicationData4,
-                               SimulationCommand, connect_helper, disconnect_helper)
+                               SimulationCommand, SimulationBleDisconnectCommand, connect_helper, disconnect_helper)
 from .command import CommandResultNone, CommandResult
 from .tlv_commands import TlvCommand
 from cli.dataset_commands import (DatasetCommand)
@@ -72,6 +72,7 @@ class CLI:
             'thread': ThreadStateCommand(),
             'scan': ScanCommand(),
             'simulation': SimulationCommand(),
+            'simulation_ble_disconnect': SimulationBleDisconnectCommand(),
             'random_challenge': GetRandomNumberChallenge(),
             'present_hash': PresentHash(),
             'tlv': TlvCommand(),
