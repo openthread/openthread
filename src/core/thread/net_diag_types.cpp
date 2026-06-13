@@ -38,6 +38,9 @@
 namespace ot {
 namespace NetDiag {
 
+//---------------------------------------------------------------------------------------------------------------------
+// AnswerBuilder
+
 AnswerBuilder::AnswerBuilder(Instance &aInstance, AnswerType aType)
     : InstanceLocator(aInstance)
     , mAnswer(nullptr)
@@ -148,6 +151,165 @@ Error AnswerBuilder::CheckAnswerLength(void)
 
 exit:
     return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// AnswerSender
+
+AnswerSender::AnswerSender(Instance &aInstance, AnswerType aType)
+    : InstanceLocator(aInstance)
+    , mType(aType)
+{
+}
+
+void AnswerSender::Send(AnswerBuilder &aAnswerBuilder, const Ip6::Address &aDestination)
+{
+    Coap::Message *firstAnswer = aAnswerBuilder.GetAnswers().GetHead();
+
+    VerifyOrExit(firstAnswer != nullptr);
+
+    mQueue.EnqueueAllFrom(aAnswerBuilder.GetAnswers());
+    SendNext(*firstAnswer, aDestination);
+
+exit:
+    return;
+}
+
+bool AnswerSender::IsLast(const Coap::Message &aAnswer) const
+{
+    // Indicates whether `aAnswer` is the last one associated with
+    // the same query.
+
+    bool           isLast = true;
+    Error          error  = kErrorNotFound;
+    AnswerTlvValue answerTlvValue;
+
+    switch (mType)
+    {
+    case kAnswerTypeNetDiag:
+        error = Tlv::Find<AnswerTlv>(aAnswer, answerTlvValue);
+        break;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    case kAnswerTypeHistoryTracker:
+        error = Tlv::Find<HistoryTracker::AnswerTlv>(aAnswer, answerTlvValue);
+        break;
+#endif
+    }
+
+    // If there is no Answer TLV, we assume it is the last answer.
+
+    SuccessOrExit(error);
+
+    isLast = answerTlvValue.IsLast();
+
+exit:
+    return isLast;
+}
+
+void AnswerSender::FreeAllRelated(Coap::Message &aAnswer)
+{
+    // This method dequeues and frees all answer messages related to
+    // same query as `aAnswer`. Note that related answers are always
+    // enqueued in order.
+
+    Coap::Message *answer = &aAnswer;
+
+    while (answer != nullptr)
+    {
+        Coap::Message *next = IsLast(*answer) ? nullptr : answer->GetNextCoapMessage();
+
+        mQueue.DequeueAndFree(*answer);
+        answer = next;
+    }
+}
+
+void AnswerSender::SendNext(Coap::Message &aAnswer, const Ip6::Address &aDestination)
+{
+    // This method sends the given next `aAnswer` associated with
+    // a query to the  `aDestination`.
+
+    Error                 error           = kErrorFailed;
+    Coap::Message        *nextAnswer      = IsLast(aAnswer) ? nullptr : aAnswer.GetNextCoapMessage();
+    Coap::ResponseHandler responseHandler = nullptr;
+
+    mQueue.Dequeue(aAnswer);
+
+    switch (mType)
+    {
+    case kAnswerTypeNetDiag:
+#if OPENTHREAD_FTD
+        responseHandler = AnswerSender::HandleResponse<kAnswerTypeNetDiag>;
+#endif
+        break;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    case kAnswerTypeHistoryTracker:
+        responseHandler = AnswerSender::HandleResponse<kAnswerTypeHistoryTracker>;
+        break;
+#endif
+    }
+
+    VerifyOrExit(responseHandler != nullptr);
+
+    // When sending the message, we pass `nextAnswer` as `aContext`
+    // to be used when invoking callback `responseHandler`
+
+    error = Get<Tmf::Agent>().SendMessageAllowMulticastLoop(aAnswer, aDestination, responseHandler, nextAnswer);
+
+exit:
+    if (error != kErrorNone)
+    {
+        // If the `SendMessage()` fails, we `Free` the dequeued
+        // `aAnswer` and all the related next answers in the queue.
+
+        aAnswer.Free();
+
+        if (nextAnswer != nullptr)
+        {
+            FreeAllRelated(*nextAnswer);
+        }
+    }
+}
+
+#if OPENTHREAD_FTD
+template <> AnswerSender &AnswerSender::GetSender<kAnswerTypeNetDiag>(Instance &aInstance)
+{
+    return aInstance.Get<Server>().mAnswerSender;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+template <> AnswerSender &AnswerSender::GetSender<kAnswerTypeHistoryTracker>(Instance &aInstance)
+{
+    return aInstance.Get<HistoryTracker::Server>().mAnswerSender;
+}
+#endif
+
+template <AnswerType kType> void AnswerSender::HandleResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
+{
+    Coap::Message *nextAnswer = static_cast<Coap::Message *>(aContext);
+
+    VerifyOrExit(nextAnswer != nullptr);
+    GetSender<kType>(nextAnswer->GetInstance()).HandleResponse(*nextAnswer, aMsg, aResult);
+
+exit:
+    return;
+}
+
+void AnswerSender::HandleResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult)
+{
+    Error error = aResult;
+
+    SuccessOrExit(error);
+    VerifyOrExit(aResponse != nullptr, error = kErrorDrop);
+    VerifyOrExit(aResponse->GetCode() == Coap::kCodeChanged, error = kErrorDrop);
+
+    SendNext(aNextAnswer, aResponse->mMessageInfo.GetPeerAddr());
+
+exit:
+    if (error != kErrorNone)
+    {
+        FreeAllRelated(aNextAnswer);
+    }
 }
 
 } // namespace NetDiag
