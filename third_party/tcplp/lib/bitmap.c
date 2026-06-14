@@ -53,7 +53,8 @@ static inline size_t bmp_clamp_range(size_t start, size_t len, size_t buflen)
 {
     size_t max_bits = (size_t)buflen * 8;
     if (start >= max_bits) return 0;
-    if (start + len > max_bits) return max_bits - start;
+    size_t remaining = max_bits - start;
+    if (len > remaining) return remaining;
     return len;
 }
 
@@ -196,6 +197,18 @@ static inline void bmp_write_byte(uint8_t* buf, size_t buflen, size_t i, uint8_t
 }
 
 void bmp_swap(uint8_t* buf, size_t buflen, size_t start_1, size_t start_2, size_t len) {
+    size_t max_bits = (size_t)buflen * 8;
+
+    if (start_1 >= max_bits || start_2 >= max_bits) {
+        return;
+    }
+    if (len > max_bits - start_1) {
+        len = max_bits - start_1;
+    }
+    if (len > max_bits - start_2) {
+        len = max_bits - start_2;
+    }
+
     while ((len & 0x7) != 0) {
         uint8_t bit_1 = bmp_read_bit(buf, start_1);
         uint8_t bit_2 = bmp_read_bit(buf, start_2);
