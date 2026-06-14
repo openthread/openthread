@@ -49,12 +49,24 @@ void bmp_init(uint8_t* buf, size_t numbytes) {
         last_bit_id &= 0x7; \
     } while (0)
 
-void bmp_setrange(uint8_t* buf, size_t start, size_t len) {
+static inline size_t bmp_clamp_range(size_t start, size_t len, size_t buflen)
+{
+    size_t max_bits = (size_t)buflen * 8;
+    if (start >= max_bits) return 0;
+    if (start + len > max_bits) return max_bits - start;
+    return len;
+}
+
+void bmp_setrange(uint8_t* buf, size_t buflen, size_t start, size_t len) {
     uint8_t first_bit_id;
     uint8_t* first_byte_set;
     uint8_t last_bit_id;
     uint8_t* last_byte_set;
     uint8_t first_byte_mask, last_byte_mask;
+
+    len = bmp_clamp_range(start, len, buflen);
+    if (len == 0) return;
+
     _bmp_getrangeinfo(buf, start, len, first_bit_id, first_byte_set,
                       last_bit_id, last_byte_set);
 
@@ -73,12 +85,16 @@ void bmp_setrange(uint8_t* buf, size_t start, size_t len) {
     }
 }
 
-void bmp_clrrange(uint8_t* buf, size_t start, size_t len) {
+void bmp_clrrange(uint8_t* buf, size_t buflen, size_t start, size_t len) {
     uint8_t first_bit_id;
     uint8_t* first_byte_clear;
     uint8_t last_bit_id;
     uint8_t* last_byte_clear;
     uint8_t first_byte_mask, last_byte_mask;
+
+    len = bmp_clamp_range(start, len, buflen);
+    if (len == 0) return;
+
     _bmp_getrangeinfo(buf, start, len, first_bit_id, first_byte_clear,
                       last_bit_id, last_byte_clear);
 
@@ -148,27 +164,38 @@ static inline void bmp_write_bit(uint8_t* buf, size_t i, uint8_t bit) {
     buf[byte_index] = (buf[byte_index] & ~(1 << bit_shift)) | (bit << bit_shift);
 }
 
-static inline uint8_t bmp_read_byte(uint8_t* buf, size_t i) {
+static inline uint8_t bmp_read_byte(uint8_t* buf, size_t buflen, size_t i) {
     size_t byte_index = i >> 3;
     size_t bit_index = i & 0x7; // Amount to left shift to get bit in MSB
+    if (byte_index >= buflen) {
+        return 0;
+    }
     if (bit_index == 0) {
         return buf[byte_index];
+    }
+    if (byte_index + 1 >= buflen) {
+        return (uint8_t)(buf[byte_index] << bit_index);
     }
     return (buf[byte_index] << bit_index) | (buf[byte_index + 1] >> (8 - bit_index));
 }
 
-static inline void bmp_write_byte(uint8_t* buf, size_t i, uint8_t byte) {
+static inline void bmp_write_byte(uint8_t* buf, size_t buflen, size_t i, uint8_t byte) {
     size_t byte_index = i >> 3;
     size_t bit_index = i & 0x7; // Amount to left shift to get bit in MSB
+    if (byte_index >= buflen) {
+        return;
+    }
     if (bit_index == 0) {
         buf[byte_index] = byte;
         return;
     }
     buf[byte_index] = (buf[byte_index] & (0xFF << (8 - bit_index))) | (byte >> bit_index);
-    buf[byte_index + 1] = (buf[byte_index + 1] & (0xFF >> bit_index)) | (byte << (8 - bit_index));
+    if (byte_index + 1 < buflen) {
+        buf[byte_index + 1] = (buf[byte_index + 1] & (0xFF >> bit_index)) | (byte << (8 - bit_index));
+    }
 }
 
-void bmp_swap(uint8_t* buf, size_t start_1, size_t start_2, size_t len) {
+void bmp_swap(uint8_t* buf, size_t buflen, size_t start_1, size_t start_2, size_t len) {
     while ((len & 0x7) != 0) {
         uint8_t bit_1 = bmp_read_bit(buf, start_1);
         uint8_t bit_2 = bmp_read_bit(buf, start_2);
@@ -183,11 +210,11 @@ void bmp_swap(uint8_t* buf, size_t start_1, size_t start_2, size_t len) {
     }
 
     while (len != 0) {
-        uint8_t byte_1 = bmp_read_byte(buf, start_1);
-        uint8_t byte_2 = bmp_read_byte(buf, start_2);
+        uint8_t byte_1 = bmp_read_byte(buf, buflen, start_1);
+        uint8_t byte_2 = bmp_read_byte(buf, buflen, start_2);
         if (byte_1 != byte_2) {
-            bmp_write_byte(buf, start_1, byte_2);
-            bmp_write_byte(buf, start_2, byte_1);
+            bmp_write_byte(buf, buflen, start_1, byte_2);
+            bmp_write_byte(buf, buflen, start_2, byte_1);
         }
 
         start_1 += 8;

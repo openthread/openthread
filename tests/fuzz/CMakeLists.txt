@@ -86,6 +86,26 @@ endmacro()
 
 #----------------------------------------------------------------------------------------------------------------------
 
+#----------------------------------------------------------------------------------------------------------------------
+# TCPlp bitmap standalone fuzzer (no Nexus dependency)
+
+add_executable(tcplp-bitmap-fuzzer
+    fuzz_tcplp_bitmap.cpp
+    ${PROJECT_SOURCE_DIR}/third_party/tcplp/lib/bitmap.c
+)
+
+target_include_directories(tcplp-bitmap-fuzzer
+PRIVATE
+    ${PROJECT_SOURCE_DIR}/third_party/tcplp/lib
+)
+
+target_link_libraries(tcplp-bitmap-fuzzer
+PRIVATE
+    $ENV{LIB_FUZZING_ENGINE}
+)
+
+#----------------------------------------------------------------------------------------------------------------------
+
 ot_nexus_test(cli)
 ot_nexus_test(icmp6)
 ot_nexus_test(ip6)
