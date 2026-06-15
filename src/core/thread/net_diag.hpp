@@ -203,6 +203,7 @@ public:
     typedef otNetworkDiagIterator          Iterator;    ///< Iterator to go through TLVs in `GetNextDiagTlv()`.
     typedef otNetworkDiagTlv               DiagTlv;     ///< Parse info from a Network Diagnostic TLV.
     typedef otNetworkDiagChildEntry        ChildInfo;   ///< Parsed info for child table entry.
+    typedef otNetworkDiagEnhRoute          EnhRoute;    ///< Parsed info for Enhanced Route TLV.
     typedef otReceiveDiagnosticGetCallback GetCallback; ///< Diagnostic Get callback function pointer type.
 
     static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
@@ -283,9 +284,11 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
+    static Error ParseDiagTlv(const Message &aMessage, const Tlv::Info &aTlvInfo, DiagTlv &aDiagTlv);
     static void  ReadDiagData(DiagData &aDiagData, const Message &aMessage, const Tlv::Info &aTlvInfo);
     static Error ParseChildTable(ChildTable &aChildTable, const Message &aMessage, OffsetRange aOffsetRange);
     static void  ParseIp6AddrList(Ip6AddrList &aIp6Addrs, const Message &aMessage, OffsetRange aOffsetRange);
+    static Error ParseEnhancedRoute(EnhRoute &aEnhRoute, const Message &aMessage, OffsetRange aOffsetRange);
     static void  GetRouteInfo(const RouteTlv::Data &aRouteTlvData, RouteInfo &aNetDiagRouteInfo);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
