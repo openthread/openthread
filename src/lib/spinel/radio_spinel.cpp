@@ -2073,6 +2073,7 @@ void RadioSpinel::RecoverFromRcpFailure(void)
         mWaitingTid = 0;
         LogDebg("RCP supports crash dump logging. Requesting crash dump.");
         IgnoreReturnValue(Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
+        mRcpFailure = kRcpFailureNone;
     }
 
     LogWarn("Trying to recover (%d/%d)", mRcpFailureCount, kMaxFailureCount);
