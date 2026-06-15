@@ -451,6 +451,26 @@ public:
      */
     const Mac::KeyMaterial &GetDefaultWakeKey(void);
 
+    /**
+     * Stores or removes a pre-provisioned guest Wake Key.
+     *
+     * Guest keys use key indices in [OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN,
+     * OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX] (130-192). Passing @p aKey as nullptr
+     * removes any previously stored key at @p aKeyIndex.
+     *
+     * @param[in] aKeyIndex  Guest key index (130-192).
+     * @param[in] aKey       Key material to store, or nullptr to remove.
+     */
+    Error SetGuestWakeKey(uint8_t aKeyIndex, const Mac::KeyMaterial *aKey);
+
+    /**
+     * Looks up a pre-provisioned guest Wake Key by index.
+     *
+     * @param[in] aKeyIndex  Guest key index (130-192).
+     *
+     * @returns A pointer to the stored key material, or nullptr if not found.
+     */
+    const Mac::KeyMaterial *FindGuestWakeKey(uint8_t aKeyIndex) const;
 #endif
 
     /**
@@ -638,8 +658,19 @@ private:
     Mle::KeyMaterial mTemporaryMleKey;
 
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-    Mac::KeyMaterial mWakeKeyMaterial;
-    bool             mWakeKeyValid : 1;
+    // Guest wake keys keyed by Aux Security Header index (130-192).
+    // mKeyIndex == 0 marks an empty slot.
+    struct GuestWakeKeyEntry
+    {
+        uint8_t          mKeyIndex;
+        Mac::KeyMaterial mKey;
+    };
+
+    static constexpr uint8_t kMaxGuestWakeKeys = OPENTHREAD_CONFIG_THREAD_DIRECT_MAX_DIRECT_PEERS;
+
+    Mac::KeyMaterial  mWakeKeyMaterial;
+    bool              mWakeKeyValid : 1;
+    GuestWakeKeyEntry mGuestWakeKeys[kMaxGuestWakeKeys];
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

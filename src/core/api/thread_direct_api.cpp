@@ -87,6 +87,13 @@ otError otThreadDirectWakeup(otInstance            *aInstance,
             IgnoreError(AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().ApplyConfiguration());
         }
 
+        if (effectiveKeyIndex >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN &&
+            effectiveKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX)
+        {
+            VerifyOrExit(AsCoreType(aInstance).Get<ot::Mac::SubMac>().IsGuestWakeKeyRegistered(effectiveKeyIndex),
+                         error = OT_ERROR_INVALID_STATE);
+        }
+
         error = AsCoreType(aInstance).Get<WakeupTxScheduler>().StartWakeup(
             AsCoreType(aExtAddress), static_cast<Mac::Frame::WakeFrameType>(aWakeType), intervalUs, durationMs,
             effectiveKeyIndex);
@@ -124,5 +131,40 @@ bool otThreadDirectIsWakeListenerEnabled(otInstance *aInstance)
 }
 
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+otError otThreadDirectSetGuestWakeKey(otInstance *aInstance, uint8_t aKeyIndex, const otThreadDirectWakeKey *aKey)
+{
+    otError              error = OT_ERROR_NONE;
+    ot::Mac::KeyMaterial material;
+
+    VerifyOrExit(aKey != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aKeyIndex >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN &&
+                     aKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX,
+                 error = OT_ERROR_INVALID_ARGS);
+
+    // Import the raw 16-byte key into a PSA-aware KeyMaterial. kExportable ensures
+    // the platform security layer can export the key bytes for hardware AES-CCM use.
+    material.SetFrom(*reinterpret_cast<const ot::Mac::Key *>(aKey),
+                     OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE);
+
+    error = AsCoreType(aInstance).Get<ot::Mac::SubMac>().SetWakeKey(aKeyIndex, &material);
+
+exit:
+    return error;
+}
+
+otError otThreadDirectRemoveGuestWakeKey(otInstance *aInstance, uint8_t aKeyIndex)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aKeyIndex >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN &&
+                     aKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX,
+                 error = OT_ERROR_INVALID_ARGS);
+
+    IgnoreError(AsCoreType(aInstance).Get<ot::Mac::SubMac>().SetWakeKey(aKeyIndex, nullptr));
+
+exit:
+    return error;
+}
 
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

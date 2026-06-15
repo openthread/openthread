@@ -442,6 +442,13 @@ public:
     void    SetActiveBurstWakeKeyIndex(uint8_t aKeyIndex) { mActiveBurstWakeKeyIndex = aKeyIndex; }
     uint8_t GetActiveBurstWakeKeyIndex(void) const { return mActiveBurstWakeKeyIndex; }
 
+    /**
+     * Returns true if a guest Wake Key has been provisioned at @p aKeyIndex via SetWakeKey().
+     *
+     * Used by the wake API to return OT_ERROR_INVALID_STATE before starting a burst with an
+     * unprovisioned guest key index, rather than silently dropping every frame in the burst.
+     */
+    bool IsGuestWakeKeyRegistered(uint8_t aKeyIndex) const;
 #endif
 
     /**

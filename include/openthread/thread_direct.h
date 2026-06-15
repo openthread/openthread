@@ -229,6 +229,37 @@ bool otThreadDirectIsWakeListenerEnabled(otInstance *aInstance);
 bool otThreadDirectIsWakeBurstActive(otInstance *aInstance);
 
 /**
+ * Adds or replaces a guest Wake Key at the given key index.
+ *
+ * Guest Wake Keys are raw 16-byte keys provisioned out-of-band and used by WI devices
+ * that do not hold the Thread Network Key.  Valid key indices: [130, 192].
+ * Key Index 129 is reserved for the default (network-derived) Wake Key.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aKeyIndex   Key Index in [130, 192].
+ * @param[in] aKey        16-byte key material.
+ *
+ * @retval OT_ERROR_NONE              Key stored.
+ * @retval OT_ERROR_INVALID_ARGS      @p aKeyIndex is outside [130, 192].
+ * @retval OT_ERROR_NO_BUFS           Guest key table is full.
+ * @retval OT_ERROR_DISABLED_FEATURE  OPENTHREAD_CONFIG_THREAD_DIRECT_GUEST_WAKE_KEY_ENABLE = 0.
+ */
+otError otThreadDirectSetGuestWakeKey(otInstance *aInstance, uint8_t aKeyIndex, const otThreadDirectWakeKey *aKey);
+
+/**
+ * Removes a previously configured guest Wake Key.
+ *
+ * No-op if no key is registered at @p aKeyIndex.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ * @param[in] aKeyIndex  Key Index of the guest key to remove.
+ *
+ * @retval OT_ERROR_NONE          Key removed (or was not present).
+ * @retval OT_ERROR_INVALID_ARGS  @p aKeyIndex is outside [130, 192].
+ */
+otError otThreadDirectRemoveGuestWakeKey(otInstance *aInstance, uint8_t aKeyIndex);
+
+/**
  * @}
  *
  */

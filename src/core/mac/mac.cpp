@@ -1555,7 +1555,8 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
                 }
                 else
                 {
-                    ExitNow();
+                    macKey = keyManager.FindGuestWakeKey(maybeWakeKeyId);
+                    VerifyOrExit(macKey != nullptr); // drop frame if key not provisioned
                 }
 
                 extAddress = &aSrcAddr.GetExtended();

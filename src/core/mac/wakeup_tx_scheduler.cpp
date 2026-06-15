@@ -71,6 +71,11 @@ Error WakeupTxScheduler::StartWakeup(const Mac::ExtAddress    &aWlExtAddress,
                                                             aKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX),
                  error = kErrorInvalidArgs);
 
+    if (aKeyIndex >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN && aKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX)
+    {
+        VerifyOrExit(Get<Mac::SubMac>().IsGuestWakeKeyRegistered(aKeyIndex), error = kErrorInvalidState);
+    }
+
     mKeyIndex = aKeyIndex;
 
     // Inform SubMac of the key index so ProcessTransmitSecurity stamps the correct key ID.

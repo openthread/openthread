@@ -176,6 +176,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeySequence(0)
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     , mWakeKeyValid(false)
+    , mGuestWakeKeys()
 #endif
     , mMleFrameCounter(0)
     , mStoredMacFrameCounter(0)
@@ -349,6 +350,60 @@ const Mac::KeyMaterial &KeyManager::GetDefaultWakeKey(void)
     }
 
     return mWakeKeyMaterial;
+}
+
+Error KeyManager::SetGuestWakeKey(uint8_t aKeyIndex, const Mac::KeyMaterial *aKey)
+{
+    Error error = kErrorNone;
+
+    for (GuestWakeKeyEntry &entry : mGuestWakeKeys)
+    {
+        if (entry.mKeyIndex == aKeyIndex)
+        {
+            if (aKey != nullptr)
+            {
+                entry.mKey = *aKey;
+            }
+            else
+            {
+                entry.mKeyIndex = 0;
+                entry.mKey.Clear();
+            }
+
+            ExitNow();
+        }
+    }
+
+    if (aKey != nullptr)
+    {
+        for (GuestWakeKeyEntry &entry : mGuestWakeKeys)
+        {
+            if (entry.mKeyIndex == 0)
+            {
+                entry.mKeyIndex = aKeyIndex;
+                entry.mKey      = *aKey;
+                ExitNow();
+            }
+        }
+
+        error = kErrorNoBufs;
+    }
+
+exit:
+    return error;
+}
+
+const Mac::KeyMaterial *KeyManager::FindGuestWakeKey(uint8_t aKeyIndex) const
+{
+    for (const GuestWakeKeyEntry &entry : mGuestWakeKeys)
+    {
+        if (entry.mKeyIndex == aKeyIndex)
+        {
+            return &entry.mKey;
+        }
+    }
+
+    return nullptr;
 }
 
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

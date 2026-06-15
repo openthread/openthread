@@ -437,7 +437,17 @@ void SubMac::ProcessTransmitSecurity(void)
     {
         extAddress = &GetExtAddress();
 
-        mTransmitFrame.SetAesKey(Get<KeyManager>().GetDefaultWakeKey());
+        if (mActiveBurstWakeKeyIndex == Frame::kWakeKeyIndex)
+        {
+            mTransmitFrame.SetAesKey(Get<KeyManager>().GetDefaultWakeKey());
+        }
+        else
+        {
+            const KeyMaterial *guestKey = Get<KeyManager>().FindGuestWakeKey(mActiveBurstWakeKeyIndex);
+
+            VerifyOrExit(guestKey != nullptr); // no key registered for this index; drop frame
+            mTransmitFrame.SetAesKey(*guestKey);
+        }
 
         mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
         ExitNow();
@@ -1024,6 +1034,12 @@ Error SubMac::SetWakeKey(uint8_t aKeyIndex, const KeyMaterial *aWakeKey)
 {
     Error error = kErrorNone;
 
+    // Guest keys (130-192) are stored in KeyManager for RX decryption on all platforms.
+    if (aKeyIndex >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN && aKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX)
+    {
+        SuccessOrExit(error = Get<KeyManager>().SetGuestWakeKey(aKeyIndex, aWakeKey));
+    }
+
     if (!ShouldHandleTransmitSecurity())
     {
         Get<Radio>().SetWakeKey(aKeyIndex, aWakeKey);
@@ -1036,8 +1052,16 @@ Error SubMac::SetWakeKey(uint8_t aKeyIndex, const KeyMaterial *aWakeKey)
     }
 #endif
 
+exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+bool SubMac::IsGuestWakeKeyRegistered(uint8_t aKeyIndex) const
+{
+    return Get<KeyManager>().FindGuestWakeKey(aKeyIndex) != nullptr;
+}
+#endif
 
 #endif
 
