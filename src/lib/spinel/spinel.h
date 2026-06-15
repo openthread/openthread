@@ -3310,6 +3310,73 @@ enum
      */
     SPINEL_PROP_THREAD_DIRECT_WAKE_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 63,
 
+    /// Thread Direct Wake Listener Enable
+    /** Format: `b` - Read-write
+     *
+     * Indicates whether the Wake Listener scheduled receive window is enabled.
+     * When enabled the device opens periodic listen windows on the wake channel
+     * according to the configured listen parameters.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_LISTEN_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 64,
+
+    /// Thread Direct Wake Listener Parameters
+    /** Format: `LL` - Read-write
+     *
+     * Configures the Wake Listener scheduled receive window timing:
+     *   `L` - Listen interval in microseconds.
+     *   `L` - Listen window duration in microseconds.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_LISTEN_PARAMS = SPINEL_PROP_THREAD_EXT__BEGIN + 65,
+
+    /// Thread Direct Wake (start wake burst)
+    /** Format: `ECSSCd` - Write only
+     *
+     * Starts a Thread Direct wake burst targeting the specified WL:
+     *   `E` - WL extended address.
+     *   `C` - Wake type (0=link, 1=poweroutage, 2=connectionless).
+     *   `S` - Inter-frame interval in us (0 = default).
+     *   `S` - Burst duration in ms (0 = default).
+     *   `C` - Key index (0 or 129 = default key; 130-192 = guest key provisioned via
+     *         SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY).
+     *   `d` - Inline key (legacy field; must be zero-length; ignored).
+     *
+     * The result is reported asynchronously via SPINEL_PROP_THREAD_DIRECT_LINK_EVENT.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE = SPINEL_PROP_THREAD_EXT__BEGIN + 68,
+
+    /// Thread Direct Guest Wake Key
+    /** Format: `Cd` - Insert, `C` - Remove
+     *
+     * Manages the out-of-band guest wake key table:
+     *   Insert (`SPINEL_CMD_PROP_VALUE_INSERT`): `C` key index, `d` 16-byte key material.
+     *   Remove (`SPINEL_CMD_PROP_VALUE_REMOVE`): `C` key index.
+     */
+    SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY = SPINEL_PROP_THREAD_EXT__BEGIN + 71,
+
+    /// Thread Direct Link Event Notification
+    /** Format: `CEb` - Unsolicited notify (PROP_VALUE_IS)
+     *
+     * Reports Thread Direct link events (`otThreadDirectEvent`):
+     *   `C` - Event: 0 = linked, 1 = link failed, 2 = unlinked, 3 = wake received.
+     *   `E` - Peer extended address (zero if none, e.g. some link-failed cases).
+     *   `b` - Success indicator: false only for event 1 (link failed); true otherwise.
+     */
+    SPINEL_PROP_THREAD_DIRECT_LINK_EVENT = SPINEL_PROP_THREAD_EXT__BEGIN + 72,
+
+    /// Thread Direct - WI wake burst active
+    /** Format: `b` - Read only
+     *
+     * TRUE when the WI has an active wake burst or open connection window.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_BURST_ACTIVE = SPINEL_PROP_THREAD_EXT__BEGIN + 73,
+
+    /// Thread Direct Wake Frame Counter
+    /** Format: `L` - Read-write
+     *
+     * The current Thread Direct wake frame counter.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_FRAME_COUNTER = SPINEL_PROP_THREAD_EXT__BEGIN + 75,
+
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN = 0x60,

@@ -43,6 +43,9 @@
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/network_time.h>
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+#include <openthread/thread_direct.h>
+#endif
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
@@ -360,6 +363,9 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    otThreadDirectSetEventCallback(mInstance, &NcpBase::HandleThreadDirectEvent, this);
+#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     otUdpForwardSetForwarder(mInstance, &NcpBase::HandleUdpForwardStream, this);
 #endif
