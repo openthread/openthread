@@ -349,7 +349,6 @@ typedef struct otRadioContext
     uint16_t         mCslPeriod;       ///< In unit of 10 symbols.
     otShortAddress   mCslShortAddress; ///< The short address of the CSL receiver's peer.
     otExtAddress     mCslExtAddress;   ///< The extended address of the CSL receiver's peer.
-    bool             mCslPresent : 1;  ///< Indicates whether the CSL header IE is present.
     otShortAddress   mShortAddress;
     otShortAddress   mAlternateShortAddress;
     otRadioKeyType   mKeyType;
