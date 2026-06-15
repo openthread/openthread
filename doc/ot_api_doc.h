@@ -182,8 +182,6 @@
  *
  * @{
  *
- * @defgroup api-provisional-link        Link
- *
  * @}
  *
  * @}

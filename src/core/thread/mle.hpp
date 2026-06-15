@@ -52,7 +52,6 @@
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
-#include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -2435,10 +2434,6 @@ private:
 #endif
 
 #endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    WakeupTxScheduler mWakeupTxScheduler;
-#endif
 };
 
 #if OPENTHREAD_FTD

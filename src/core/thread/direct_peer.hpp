@@ -28,62 +28,52 @@
 
 /**
  * @file
- * @brief
- *  This file defines the OpenThread provisional IEEE 802.15.4 Link Layer API.
+ *   This file includes definitions for a Thread Direct `DirectPeer`.
  */
-#ifndef OPENTHREAD_PROVISIONAL_LINK_H_
-#define OPENTHREAD_PROVISIONAL_LINK_H_
 
-#include <openthread/link.h>
-#include <openthread/platform/radio.h>
+#ifndef OT_CORE_THREAD_DIRECT_PEER_HPP_
+#define OT_CORE_THREAD_DIRECT_PEER_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-/**
- * @addtogroup api-provisional-link
- *
- * @brief
- *   This module includes provisional functions that control link-layer configuration.
- *
- * @{
- */
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#include "thread/neighbor.hpp"
+
+namespace ot {
 
 /**
- * Represents the wake-up identifier.
+ * Represents a Thread Direct peer and its link state established during the
+ * TD handshake.
  */
-typedef uint64_t otWakeupId;
-
-/**
- * Represents the wake-up request type.
- */
-typedef enum otWakeupType
+class DirectPeer : public CslNeighbor
 {
-    OT_WAKEUP_TYPE_EXT_ADDRESS      = 0, ///< Wake up the peer by the extended address.
-    OT_WAKEUP_TYPE_IDENTIFIER       = 1, ///< Wake up the peer by the wake-up identifier.
-    OT_WAKEUP_TYPE_GROUP_IDENTIFIER = 2, ///< Wake up peers by the group wake-up identifier.
-} otWakeupType;
+public:
+    /**
+     * Initializes the `DirectPeer` object.
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     */
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
-/**
- * Represents the request to wake up the peer.
- */
-typedef struct otWakeupRequest
-{
-    union
+    /**
+     * Clears the peer entry.
+     */
+    void Clear(void);
+
+    /**
+     * Gets the link-local IPv6 address of the peer.
+     *
+     * @returns The link-local IPv6 address of the peer.
+     */
+    void GetLinkLocalIp6Address(Ip6::Address &aIp6Address) const
     {
-        otWakeupId   mWakeupId;   ///< Wake-up identifier of the Wake-up Listener.
-        otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address of the Wake-up Listener.
-    } mShared;
+        aIp6Address.InitAsLinkLocalAddress(GetExtAddress());
+    }
+};
 
-    otWakeupType mType; ///< Indicates the wake-up request type (`OT_WAKEUP_TYPE_*` enumeration).
-} otWakeupRequest;
+} // namespace ot
 
-/**
- * @}
- */
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-#endif // OPENTHREAD_PROVISIONAL_LINK_H_
+#endif // OT_CORE_THREAD_DIRECT_PEER_HPP_

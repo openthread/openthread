@@ -162,7 +162,7 @@ set(COMMON_SOURCES
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
-    mac/sub_mac_wed.cpp
+    mac/sub_mac_wl.cpp
     mac/wakeup_tx_scheduler.cpp
     meshcop/border_agent.cpp
     meshcop/border_agent_admitter.cpp
@@ -236,6 +236,8 @@ set(COMMON_SOURCES
     thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
+    thread/direct_peer.cpp
+    thread/direct_peer_table.cpp
     thread/discover_scanner.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp
@@ -331,7 +333,7 @@ set(RADIO_COMMON_SOURCES
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
-    mac/sub_mac_wed.cpp
+    mac/sub_mac_wl.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp

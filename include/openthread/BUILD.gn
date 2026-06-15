@@ -117,7 +117,6 @@ source_set("openthread") {
     "platform/toolchain.h",
     "platform/trel.h",
     "platform/udp.h",
-    "provisional/link.h",
     "radio_stats.h",
     "random_crypto.h",
     "random_noncrypto.h",

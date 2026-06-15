@@ -93,9 +93,6 @@ Mle::Mle(Instance &aInstance)
     , mRouterTable(aInstance)
     , mRoleTransitioner(aInstance)
 #endif // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    , mWakeupTxScheduler(aInstance)
-#endif
 {
     mParent.Init(aInstance);
 

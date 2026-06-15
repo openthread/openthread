@@ -483,25 +483,6 @@ uint32_t otThreadGetStoreFrameCounterAhead(otInstance *aInstance)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-otError otThreadWakeup(otInstance         *aInstance,
-                       const otExtAddress *aWedAddress,
-                       uint16_t            aWakeupIntervalUs,
-                       uint16_t            aWakeupDurationMs,
-                       otWakeupCallback    aCallback,
-                       void               *aCallbackContext)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aWedAddress);
-    OT_UNUSED_VARIABLE(aWakeupIntervalUs);
-    OT_UNUSED_VARIABLE(aWakeupDurationMs);
-    OT_UNUSED_VARIABLE(aCallback);
-    OT_UNUSED_VARIABLE(aCallbackContext);
-
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-#endif
-
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
 {

@@ -8213,7 +8213,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -8240,7 +8240,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
     {
         error = ProcessGetSet(aArgs + 1, otLinkGetWakeupChannel, otLinkSetWakeupChannel);
     }
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     /**
      * @cli wakeup parameters (get,set)
      * @code
@@ -8303,34 +8303,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
     {
         error = ProcessEnableDisable(aArgs + 1, otLinkIsWakeupListenEnabled, otLinkSetWakeUpListenEnabled);
     }
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    /**
-     * @cli wakeup wake
-     * @code
-     * wakeup wake 1ece0a6c4653a7c1 7500 1090
-     * Done
-     * @endcode
-     * @cparam wakeup wake @ca{extaddr} @ca{wakeup-interval} @ca{wakeup-duration}
-     * @par
-     * Wakes a Wake-up End Device identified by its MAC extended address, using the provided wake-up interval (in the
-     * units of microseconds), and wake-up duration (in the units of milliseconds).
-     */
-    else if (aArgs[0] == "wake")
-    {
-        otExtAddress extAddress;
-        uint16_t     wakeupIntervalUs;
-        uint16_t     wakeupDurationMs;
-
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
-        SuccessOrExit(error = aArgs[2].ParseAsUint16(wakeupIntervalUs));
-        SuccessOrExit(error = aArgs[3].ParseAsUint16(wakeupDurationMs));
-
-        SuccessOrExit(error = otThreadWakeup(GetInstancePtr(), &extAddress, wakeupIntervalUs, wakeupDurationMs,
-                                             HandleWakeupResult, this));
-        error = OT_ERROR_PENDING;
-    }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -8339,16 +8312,7 @@ template <> otError Interpreter::Process<Cmd("wakeup")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-void Interpreter::HandleWakeupResult(otError aError, void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleWakeupResult(aError);
-}
-
-void Interpreter::HandleWakeupResult(otError aError) { OutputResult(aError); }
-#endif
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -8702,7 +8666,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
         CmdEntry("wakeup"),
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

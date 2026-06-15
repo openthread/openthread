@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2024, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,25 @@
 
 /**
  * @file
- *   This file implements IEEE 802.15.4 header IE generation and parsing.
+ *   This file implements the Thread Direct `DirectPeer`.
  */
 
-#include "mac_header_ie.hpp"
+#include "direct_peer.hpp"
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#include "instance/instance.hpp"
 
 namespace ot {
-namespace Mac {
 
-void HeaderIe::Init(uint16_t aId, uint8_t aLen)
+void DirectPeer::Clear(void)
 {
-    Init();
-    SetId(aId);
-    SetLength(aLen);
+    Instance &instance = GetInstance();
+
+    ClearAllBytes(*this);
+    Init(instance);
 }
 
-} // namespace Mac
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

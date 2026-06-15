@@ -286,7 +286,7 @@ public:
     static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
 };
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 /**
  * This class implements Rendezvous Time IE data structure.
  *
@@ -378,26 +378,6 @@ public:
     void SetRetryCount(uint8_t aRetryCount) { WriteBits<uint8_t, kRetryCountMask>(mConnectionWindow, aRetryCount); }
 
     /**
-     * Sets the Wake-up Identifier.
-     *
-     * @param[in]  aWakeupId  The Wake-up Identifier.
-     *
-     * @retval kErrorNone   Successfully set the Wake-up Identifier.
-     * @retval kErrorParse  The length of the given Wake-up Identifier didn't match the reserved length.
-     */
-    Error SetWakeupId(WakeupId aWakeupId);
-
-    /**
-     * Gets the Wake-up Identifier.
-     *
-     * @param[out]  aWakeupId  A reference to the Wake-up Identifier.
-     *
-     * @retval kErrorNone    Successfully got the Wake-up Identifier.
-     * @retval kErrorParse   Failed to parse the Wake-up Identifier from the Connection IE.
-     */
-    Error GetWakeupId(WakeupId &aWakeupId) const;
-
-    /**
      * Gets the pointer to the HeaderIe of this ConnectionIe.
      *
      * @returns A pointer to the HeaderIe.
@@ -417,7 +397,7 @@ private:
 
     uint8_t mConnectionWindow;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 /**
  * @}

@@ -90,6 +90,13 @@ Neighbor *NeighborTable::FindNeighbor(const Neighbor::AddressMatcher &aMatcher)
         neighbor = FindParent(aMatcher);
     }
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    if (neighbor == nullptr)
+    {
+        neighbor = FindPeer(aMatcher);
+    }
+#endif
+
     return neighbor;
 }
 
@@ -113,6 +120,13 @@ Neighbor *NeighborTable::FindNeighbor(const Mac::Address &aMacAddress, Neighbor:
 {
     return FindNeighbor(Neighbor::AddressMatcher(aMacAddress, aFilter));
 }
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+Neighbor *NeighborTable::FindPeer(const Neighbor::AddressMatcher &aMatcher)
+{
+    return Get<DirectPeerTable>().FindPeer(aMatcher);
+}
+#endif
 
 #if OPENTHREAD_FTD
 

@@ -186,7 +186,7 @@ public:
      */
     bool IsMacCommand(void) const { return GetType() == kTypeMacCmd; }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     /**
      * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
      *
@@ -237,7 +237,7 @@ public:
                    ? reinterpret_cast<const ConnectionIe *>(ie + sizeof(HeaderIe))
                    : nullptr;
     }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
     /**
      * Returns the IEEE 802.15.4 Frame Version.
@@ -1362,20 +1362,6 @@ public:
      * @retval  kErrorParse          @p aRxFrame has incorrect format.
      */
     Error GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    /**
-     * Generate IEE 802.15.4 Wake-up frame.
-     *
-     * @param[in]    aPanId          A destination PAN identifier
-     * @param[in]    aWakeupRequest  A const reference to the wake-up request.
-     * @param[in]    aSource         A source address (short or extended)
-     *
-     * @retval  kErrorNone        Successfully generated Wake-up frame.
-     * @retval  kErrorInvalidArgs @p aDest or @p aSource have incorrect type.
-     */
-    Error GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource);
-#endif
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
