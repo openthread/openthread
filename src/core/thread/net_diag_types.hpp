@@ -47,11 +47,25 @@ namespace ot {
 namespace NetDiag {
 
 /**
- * Represents an object for tracking and managing Network Diagnostic answer messages.
+ * Represents an Answer type (used in `AnswerBuilder`).
+ */
+enum AnswerType : uint8_t
+{
+    kAnswerTypeNetDiag, ///< A `NetDiag` answer.
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    kAnswerTypeHistoryTracker, ///< A `HistoryTracker` answer.
+#endif
+};
+
+/**
+ * Represents an object for tracking and managing `NetDiag` or `HistoryTracker` answer messages.
  *
- * This class is used when the response to a Network Diagnostic query requires multiple CoAP answer messages . It
- * manages the inclusion of the Query ID and the Answer TLV (providing message indexing and "more-to-follow" flags)
- * in each allocated answer message, while maintaining all answer messages in a queue.
+ * This class is used when the response to a query requires multiple CoAP answer messages. It manages the inclusion of
+ * the Query ID and the Answer TLV (providing message indexing and "more-to-follow" flags) in each allocated answer
+ * message, while maintaining all answer messages in a queue.
+ *
+ * The `AnswerType` determines the specific TLV types and the CoAP URI used for the allocated answer messages, either
+ * the Network Diagnostics TLVs or the History Tracker TLVs are used.
  */
 class AnswerBuilder : public InstanceLocator
 {
@@ -60,8 +74,9 @@ public:
      * Initializes the `AnswerBuilder`.
      *
      * @param[in] aInstance  The OpenThread instance.
+     * @param[in] aType      The `AnswerType`.
      */
-    explicit AnswerBuilder(Instance &aInstance);
+    AnswerBuilder(Instance &aInstance, AnswerType aType);
 
     /**
      * Destructor for `AnswerBuilder`.
@@ -71,13 +86,13 @@ public:
     ~AnswerBuilder(void);
 
     /**
-     * Starts the building of answer messages based on a given Network Diagnostic request.
+     * Starts the building of answer messages based on a given request.
      *
      * This method searches for a Query ID TLV within @p aRequest. If present, the Query ID is captured and
      * automatically included in all allocated answer messages. It also captures the priority from @p aRequest and
      * uses it for all answer messages.
      *
-     * @param[in] aRequest  The Network Diagnostic request message.
+     * @param[in] aRequest  The request message.
      *
      * @retval kErrorNone   Successfully started.
      * @retval kErrorNoBufs Insufficient message buffers to allocate the first answer.
@@ -129,8 +144,9 @@ private:
     Coap::MessageQueue mAnswers;
     uint16_t           mAnswerIndex;
     uint16_t           mQueryId;
-    bool               mHasQueryId;
+    AnswerType         mType;
     Message::Priority  mPriority;
+    bool               mHasQueryId;
 };
 
 } // namespace NetDiag

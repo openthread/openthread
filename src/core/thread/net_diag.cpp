@@ -569,7 +569,7 @@ void Server::FreeAllRelatedAnswers(Coap::Message &aFirstAnswer)
 
 void Server::PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest)
 {
-    AnswerBuilder  answerBuilder(GetInstance());
+    AnswerBuilder  answerBuilder(GetInstance(), kAnswerTypeNetDiag);
     Coap::Message *firstAnswer;
 
     SuccessOrExit(PrepareAnswers(aRequest, answerBuilder));

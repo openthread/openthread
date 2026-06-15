@@ -38,13 +38,14 @@
 namespace ot {
 namespace NetDiag {
 
-AnswerBuilder::AnswerBuilder(Instance &aInstance)
+AnswerBuilder::AnswerBuilder(Instance &aInstance, AnswerType aType)
     : InstanceLocator(aInstance)
     , mAnswer(nullptr)
     , mAnswerIndex(0)
     , mQueryId(0)
-    , mHasQueryId(false)
+    , mType(aType)
     , mPriority(Message::kPriorityNormal)
+    , mHasQueryId(false)
 {
 }
 
@@ -53,9 +54,24 @@ AnswerBuilder::~AnswerBuilder(void) { mAnswers.DequeueAndFreeAll(); }
 Error AnswerBuilder::Start(const Coap::Message &aRequest)
 {
     mAnswerIndex = 0;
-    mHasQueryId  = (Tlv::Find<QueryIdTlv>(aRequest, mQueryId) == kErrorNone);
     mPriority    = aRequest.GetPriority();
+    mHasQueryId  = false;
 
+    switch (mType)
+    {
+    case kAnswerTypeNetDiag:
+        SuccessOrExit(Tlv::Find<QueryIdTlv>(aRequest, mQueryId));
+        break;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    case kAnswerTypeHistoryTracker:
+        SuccessOrExit(Tlv::Find<HistoryTracker::QueryIdTlv>(aRequest, mQueryId));
+        break;
+#endif
+    }
+
+    mHasQueryId = true;
+
+exit:
     return Allocate();
 }
 
@@ -64,17 +80,34 @@ Error AnswerBuilder::Finish(void) { return AppendAnswerTlv(AnswerTlvValue::kIsLa
 Error AnswerBuilder::Allocate(void)
 {
     Error error = kErrorNone;
+    Uri   uri   = kUriDiagnosticGetAnswer;
 
-    mAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(kUriDiagnosticGetAnswer);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    if (mType == kAnswerTypeHistoryTracker)
+    {
+        uri = kUriHistoryAnswer;
+    }
+#endif
+
+    mAnswer = Get<Tmf::Agent>().AllocateAndInitConfirmablePostMessage(uri);
     VerifyOrExit(mAnswer != nullptr, error = kErrorNoBufs);
 
     IgnoreError(mAnswer->SetPriority(mPriority));
 
     mAnswers.Enqueue(*mAnswer);
 
-    if (mHasQueryId)
+    VerifyOrExit(mHasQueryId);
+
+    switch (mType)
     {
+    case kAnswerTypeNetDiag:
         SuccessOrExit(error = Tlv::Append<QueryIdTlv>(*mAnswer, mQueryId));
+        break;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    case kAnswerTypeHistoryTracker:
+        SuccessOrExit(error = Tlv::Append<HistoryTracker::QueryIdTlv>(*mAnswer, mQueryId));
+        break;
+#endif
     }
 
 exit:
@@ -83,11 +116,24 @@ exit:
 
 Error AnswerBuilder::AppendAnswerTlv(AnswerTlvValue::IsLastFlag aFlag)
 {
+    Error          error = kErrorNone;
     AnswerTlvValue value;
 
     value.Init(mAnswerIndex++, aFlag);
 
-    return Tlv::Append<AnswerTlv>(*mAnswer, value);
+    switch (mType)
+    {
+    case kAnswerTypeNetDiag:
+        error = Tlv::Append<AnswerTlv>(*mAnswer, value);
+        break;
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE && OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE
+    case kAnswerTypeHistoryTracker:
+        error = Tlv::Append<HistoryTracker::AnswerTlv>(*mAnswer, value);
+        break;
+#endif
+    }
+
+    return error;
 }
 
 Error AnswerBuilder::CheckAnswerLength(void)
