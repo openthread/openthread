@@ -782,6 +782,183 @@ void TestMacFrameAckGeneration(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
+void TestTdWakeCommandGeneration(void)
+{
+    // Thread Direct Wake Frame
+    //   Frame Control Field: 0xec0b
+    //     .... .... .... .011 = Frame Type: MAC Command (0x3)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //   Sequence Number: 0x00 (placeholder, filled by SubMac)
+    //   Destination PAN: 0xface
+    //   Destination: f0:e1:d2:c3:b4:a5:96:87
+    //   Source:      01:02:03:04:05:06:07:08
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    //       .... .101 = Security Level: Encryption with 32-bit MIC (0x5)
+    //       ...0 1... = Key Identifier Mode: Key Index (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 0x00000000 (placeholder, filled by SubMac)
+    //     Key Identifier
+    //       Key Index: 0x81 (Wake Key, index 129; placeholder, filled by SubMac)
+    //   Command ID: 0x54 (kMacCmdDirect)
+    //   Thread Payload:
+    //     [0] 0x54  kMacCmdDirect
+    //     [1] 0x01  kThreadMacCmdWake
+    //     [2] 0x00  Wake Type: Direct Link
+    //     [3]       Rendezvous Time 0xc8 (200 in 10-symbol units)
+    //     [4]       Retry byte: (interval=3, count=10) -> 0x3a
+    //   MIC-32 (placeholder, filled during AES-CCM processing)
+
+    constexpr uint8_t  kRendezvousTimeTenSym = 0xC8;
+    constexpr uint8_t  kRetryInterval        = 3;
+    constexpr uint8_t  kRetryCount           = 10;
+    constexpr uint16_t kPanId                = 0xFACE;
+
+    constexpr uint8_t kSrcExtaddr[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+    constexpr uint8_t kDstExtaddr[] = {0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87};
+
+    uint8_t         psdu[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame    txFrame;
+    Mac::ExtAddress srcExt;
+    Mac::ExtAddress dstExt;
+    Mac::Address    src;
+    Mac::Address    dst;
+    Mac::Address    addr;
+    uint8_t         commandId;
+    const uint8_t  *payload;
+
+    memcpy(srcExt.m8, kSrcExtaddr, sizeof(srcExt.m8));
+    memcpy(dstExt.m8, kDstExtaddr, sizeof(dstExt.m8));
+    src.SetExtended(srcExt);
+    dst.SetExtended(dstExt);
+
+    txFrame.mPsdu      = psdu;
+    txFrame.mLength    = 0;
+    txFrame.mRadioType = 0;
+
+    SuccessOrQuit(txFrame.GenerateThreadDirectWakeCommand(kPanId, dstExt, srcExt, Mac::Frame::kWakeFrameTypeDirectLink,
+                                                          kRendezvousTimeTenSym, kRetryInterval, kRetryCount));
+
+    VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMacCmd);
+    VerifyOrQuit(txFrame.GetVersion() == Mac::Frame::kVersion2015);
+    VerifyOrQuit(!txFrame.GetAckRequest());
+    VerifyOrQuit(txFrame.GetSecurityEnabled());
+
+    {
+        uint8_t keyIdMode;
+        SuccessOrQuit(txFrame.GetKeyIdMode(keyIdMode));
+        VerifyOrQuit(keyIdMode == Mac::Frame::kKeyIdMode1);
+    }
+
+    VerifyOrQuit(txFrame.IsTdWakeCommand());
+
+    SuccessOrQuit(txFrame.GetSrcAddr(addr));
+    VerifyOrQuit(CompareAddresses(src, addr));
+    SuccessOrQuit(txFrame.GetDstAddr(addr));
+    VerifyOrQuit(CompareAddresses(dst, addr));
+
+    SuccessOrQuit(txFrame.GetCommandId(commandId));
+    VerifyOrQuit(commandId == Mac::Frame::kMacCmdDirect);
+
+    payload = txFrame.GetPayload();
+    VerifyOrQuit(payload != nullptr);
+    VerifyOrQuit(txFrame.GetPayloadLength() >= 5);
+    VerifyOrQuit(payload[0] == Mac::Frame::kMacCmdDirect);
+    VerifyOrQuit(payload[1] == Mac::Frame::kThreadMacCmdWake);
+    VerifyOrQuit(payload[2] == 0x00);
+    VerifyOrQuit(payload[3] == kRendezvousTimeTenSym);
+    VerifyOrQuit(payload[4] == (((kRetryInterval & 0x0f) << 4) | (kRetryCount & 0x0f)));
+}
+
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+void TestTdWakeCommandDetectionNegative(void)
+{
+    Mac::Frame frame;
+
+    // IEEE 802.15.4-2015 Data Frame (not a MAC Command) - should not be detected as TD Wake Command
+    //   Frame Control Field: 0xec09
+    //     .... .... .... .001 = Frame Type: Data (0x1)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //   Sequence Number: 0x01
+    //   Destination PAN: 0xface
+    //   Destination: dd:dd:dd:dd:dd:dd:dd:dd
+    //   Source:      55:55:55:55:55:55:55:55
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    //       .... .101 = Security Level: Encryption with 32-bit MIC (0x5)
+    //       ...0 1... = Key Identifier Mode: Key Index (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 0x00000001
+    //     Key Identifier
+    //       Key Index: 0x81
+    uint8_t data_psdu[] = {0x09, 0xec, 0x01, 0xce, 0xfa, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd,
+                           0xdd, 0xdd, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x0d,
+                           0x01, 0x00, 0x00, 0x00, 0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    frame.mPsdu         = data_psdu;
+    frame.mLength       = sizeof(data_psdu);
+    VerifyOrQuit(!frame.IsTdWakeCommand());
+
+    // IEEE 802.15.4-2015 MAC Command Frame - Command ID 0x04 (Data Request), not 0x54
+    //   Frame Control Field: 0xec0b
+    //     .... .... .... .011 = Frame Type: MAC Command (0x3)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //   Sequence Number: 0x01
+    //   Destination PAN: 0xface
+    //   Destination: dd:dd:dd:dd:dd:dd:dd:dd
+    //   Source:      55:55:55:55:55:55:55:55
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    //       .... .101 = Security Level: Encryption with 32-bit MIC (0x5)
+    //       ...0 1... = Key Identifier Mode: Key Index (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 0x00000001
+    //     Key Identifier
+    //       Key Index: 0x81
+    //   Command Identifier: Data Request (0x04)
+    uint8_t mac_cmd_psdu[] = {0x0b, 0xec, 0x01, 0xce, 0xfa, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd,
+                              0xdd, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x0d, 0x01, 0x00,
+                              0x00, 0x00, 0x81, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    frame.mPsdu            = mac_cmd_psdu;
+    frame.mLength          = sizeof(mac_cmd_psdu);
+    VerifyOrQuit(!frame.IsTdWakeCommand());
+}
+#endif
+
 } // namespace ot
 
 int main(void)
@@ -791,6 +968,12 @@ int main(void)
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    ot::TestTdWakeCommandGeneration();
+#endif
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    ot::TestTdWakeCommandDetectionNegative();
+#endif
     printf("All tests passed\n");
     return 0;
 }

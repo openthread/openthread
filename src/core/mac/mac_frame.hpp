@@ -129,7 +129,31 @@ public:
         kMacCmdBeaconRequest              = 7,
         kMacCmdCoordinatorRealignment     = 8,
         kMacCmdGtsRequest                 = 9,
+        kMacCmdDirect                     = 0x54, ///< Thread Direct MAC Command (IEEE 802.15.4 vendor-specific command)
     };
+
+    /**
+     * Thread MAC Command IDs - byte 1 of the kMacCmdDirect (0x54) payload.
+     */
+    enum ThreadMacCmdId : uint8_t
+    {
+        kThreadMacCmdAdvertisement = 0x00,
+        kThreadMacCmdWake          = 0x01,
+        kThreadMacCmdDirectLink    = 0x02,
+    };
+
+    /**
+     * Wake Frame Type - byte 2 of the Thread Wake Command payload.
+     */
+    enum WakeFrameType : uint8_t
+    {
+        kWakeFrameTypeDirectLink     = 0x00,
+        kWakeFrameTypePowerOutage    = 0x01,
+        kWakeFrameTypeConnectionless = 0x02,
+    };
+
+    static constexpr uint8_t kWakeKeyIndex =
+        129; ///< Key index for the TD Wake Key. Must equal OT_MAC_FRAME_WAKE_KEY_INDEX.
 
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
@@ -187,6 +211,14 @@ public:
     bool IsMacCommand(void) const { return GetType() == kTypeMacCmd; }
 
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    /**
+     * Returns whether the frame is a Thread Direct Wake Command (MAC Command 0x54 / Thread Cmd 0x01).
+     *
+     * @retval TRUE   If this is a Thread Direct Wake Command.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsTdWakeCommand(void) const;
+
     /**
      * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
      *
@@ -1341,6 +1373,30 @@ public:
      */
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    /**
+     * Generates a Thread Direct Wake Command frame (MAC Command 0x54 / Thread Cmd 0x01).
+     *
+     * @param[in] aPanId                 The Thread network PAN ID.
+     * @param[in] aDstExtAddress         Extended address of the target Wake Listener.
+     * @param[in] aSrcExtAddress         Extended address of this Wake Initiator.
+     * @param[in] aWakeType              Wake Frame Type byte.
+     * @param[in] aRendezvousTimeTenSym  Remaining wake sequence duration in 10-symbol units (0-255).
+     * @param[in] aRetryInterval         Connection retry interval (4-bit value).
+     * @param[in] aRetryCount            Connection retry count (4-bit value).
+     *
+     * @retval kErrorNone         Frame generated successfully.
+     * @retval kErrorInvalidArgs  Source address is not set.
+     */
+    Error GenerateThreadDirectWakeCommand(PanId             aPanId,
+                                          const ExtAddress &aDstExtAddress,
+                                          const ExtAddress &aSrcExtAddress,
+                                          WakeFrameType     aWakeType,
+                                          uint8_t           aRendezvousTimeTenSym,
+                                          uint8_t           aRetryInterval,
+                                          uint8_t           aRetryCount);
+#endif
 
     /**
      * Generate Imm-Ack in this frame object.
