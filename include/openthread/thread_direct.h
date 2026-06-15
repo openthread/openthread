@@ -91,8 +91,10 @@ typedef struct otThreadDirectPeerInfo
  */
 typedef enum otThreadDirectEvent
 {
-    OT_THREAD_DIRECT_EVENT_LINK_FAILED   = 0, ///< Wake attempt failed (timeout or authentication failure).
-    OT_THREAD_DIRECT_EVENT_WAKE_RECEIVED = 1, ///< WL received a TD Wake Command from a WI peer.
+    OT_THREAD_DIRECT_EVENT_LINKED        = 0, ///< Thread Direct link successfully established.
+    OT_THREAD_DIRECT_EVENT_LINK_FAILED   = 1, ///< Wake attempt failed (timeout or authentication failure).
+    OT_THREAD_DIRECT_EVENT_UNLINKED      = 2, ///< Thread Direct link torn down (supervision timeout or teardown frame).
+    OT_THREAD_DIRECT_EVENT_WAKE_RECEIVED = 3, ///< WL received a TD Wake Command from a WI peer.
 } otThreadDirectEvent;
 
 /**
@@ -141,7 +143,8 @@ typedef enum
  * Transmits Wake Frames of type @p aWakeType at @p aIntervalUs for @p aDurationMs.
  * When @p aWakeType is OT_THREAD_DIRECT_WAKE_TYPE_LINK, a connection window is opened
  * after the burst; the registered event callback (see otThreadDirectSetEventCallback())
- * fires OT_THREAD_DIRECT_EVENT_LINK_FAILED if the window expires without a response.
+ * fires OT_THREAD_DIRECT_EVENT_LINKED on receipt of a TD Link Command, or
+ * OT_THREAD_DIRECT_EVENT_LINK_FAILED if the window expires without a response.
  *
  * Pass @p aIntervalUs = 0 to use OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INTERVAL_US.
  * Pass @p aDurationMs = 0 to use OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_DURATION_MS.
@@ -229,6 +232,127 @@ bool otThreadDirectIsWakeListenerEnabled(otInstance *aInstance);
 bool otThreadDirectIsWakeBurstActive(otInstance *aInstance);
 
 /**
+ * Configures the Scheduled Listen Window (SLW) period this device advertises to
+ * its peer in the SCA LTV.  Both WI and WL may call this function.
+ *
+ * Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or
+ * `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+ *
+ * Phase is a dynamic, stack-computed value (time until the next SLW window at
+ * frame-build time) and is not configurable by the application.
+ *
+ * Passing @p aSlwPeriodSlots = 0 clears the schedule and causes a teardown SCA LTV
+ * (empty payload) to be sent in the next frame to each peer.
+ *
+ * @param[in] aInstance        The OpenThread instance.
+ * @param[in] aSlwPeriodSlots  SLW period in 160 us slots (0 = clear schedule).
+ *
+ * @retval OT_ERROR_NONE          Schedule updated.
+ * @retval OT_ERROR_INVALID_ARGS  @p aSlwPeriodSlots is non-zero and below the minimum.
+ */
+otError otThreadDirectSetSlwSchedule(otInstance *aInstance, uint16_t aSlwPeriodSlots);
+
+/**
+ * Represents the Radio Availability Mask (RAM) parameters this device will
+ * advertise in outgoing SCA LTVs.
+ *
+ * RAM Duration semantics (valid stored values):
+ *   1    - device has no CoEx constraints (no bitmap transmitted); this is the default.
+ *   2-31 - CoEx bitmap present; (mDuration + 1) bits are valid in mBits.
+ *
+ * Note: mDuration = 0 ("no change to prior RAM") is a wire-encoding sentinel and
+ * is NOT a valid value for otThreadDirectSetRamOverride().
+ */
+typedef struct otThreadDirectRamParams
+{
+    int16_t mOffsetUs; ///< RAM Offset in us, signed [-1024, 1023].
+    uint8_t mDuration; ///< RAM Duration code (1 = no constraints, 2-31 = CoEx bitmap).
+    uint8_t mBits[4];  ///< RAM bitmap bytes (used when mDuration >= 2).
+} otThreadDirectRamParams;
+
+/**
+ * Represents the full local SCA state as advertised in outgoing SCA LTVs.
+ */
+typedef struct otThreadDirectLocalSca
+{
+    uint16_t                mSlwPeriodSlots; ///< SLW period in 160 us slots (0 = not configured).
+    otThreadDirectRamParams mRam;            ///< RAM parameters.
+} otThreadDirectLocalSca;
+
+/**
+ * Overrides the RAM parameters this device advertises in outgoing SCA LTVs.
+ *
+ * Intended for testing and for platforms where the CoEx schedule is managed at
+ * the application layer.  When `OPENTHREAD_CONFIG_THREAD_DIRECT_COEX_ENABLE`
+ * is enabled, the stack obtains RAM parameters from the platform radio driver
+ * at SCA LTV build time; this override does not apply.
+ *
+ * Pass @p aParams->mDuration = 1 to explicitly clear CoEx constraints.
+ * @p aParams->mDuration = 0 is invalid (wire-encoding sentinel; not storable).
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ * @param[in] aParams    RAM parameters to store.
+ *
+ * @retval OT_ERROR_NONE          Parameters stored.
+ * @retval OT_ERROR_INVALID_ARGS  @p aParams is NULL, @p aParams->mDuration is 0,
+ *                                @p aParams->mDuration is outside [1, 31], or
+ *                                @p aParams->mOffsetUs is outside [-1024, 1023].
+ */
+otError otThreadDirectSetRamOverride(otInstance *aInstance, const otThreadDirectRamParams *aParams);
+
+/**
+ * Gets the local SCA state (SLW schedule and RAM parameters) this device advertises.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[out] aLocalSca   Populated with the local SCA state.
+ *
+ * @retval OT_ERROR_NONE  @p aLocalSca populated.
+ */
+otError otThreadDirectGetLocalSca(otInstance *aInstance, otThreadDirectLocalSca *aLocalSca);
+
+/**
+ * Returns the SLW link inactivity timeout in seconds.
+ *
+ * The timeout is the number of seconds without receiving a unicast frame from
+ * a WI peer before the stack tears down the TD link and stops the SLW schedule.
+ * 0 means the timeout has not been explicitly set and the default from
+ * OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT applies.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ *
+ * @returns The current SLW timeout in seconds.
+ */
+uint32_t otThreadDirectGetSlwTimeout(otInstance *aInstance);
+
+/**
+ * Sets the SLW link inactivity timeout in seconds.
+ *
+ * @param[in] aInstance  The OpenThread instance.
+ * @param[in] aTimeout   Timeout in seconds.  0 restores the compile-time
+ *                       default (OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT).
+ *
+ * @retval OT_ERROR_NONE          Timeout updated.
+ * @retval OT_ERROR_INVALID_ARGS  @p aTimeout exceeds
+ *                                OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MAX_TIMEOUT.
+ */
+otError otThreadDirectSetSlwTimeout(otInstance *aInstance, uint32_t aTimeout);
+
+/**
+ * Gets the current SLW schedule and link state of an established Thread Direct peer.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[in]  aExtAddress  Extended address of the peer.
+ * @param[out] aPeerInfo    Output structure populated with peer state.
+ *
+ * @retval OT_ERROR_NONE             @p aPeerInfo populated.
+ * @retval OT_ERROR_NOT_FOUND        No established link to @p aExtAddress.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Feature is not implemented.
+ */
+otError otThreadDirectGetPeerInfo(otInstance             *aInstance,
+                                  const otExtAddress     *aExtAddress,
+                                  otThreadDirectPeerInfo *aPeerInfo);
+
+/**
  * Adds or replaces a guest Wake Key at the given key index.
  *
  * Guest Wake Keys are raw 16-byte keys provisioned out-of-band and used by WI devices
@@ -243,6 +367,7 @@ bool otThreadDirectIsWakeBurstActive(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS      @p aKeyIndex is outside [130, 192].
  * @retval OT_ERROR_NO_BUFS           Guest key table is full.
  * @retval OT_ERROR_DISABLED_FEATURE  OPENTHREAD_CONFIG_THREAD_DIRECT_GUEST_WAKE_KEY_ENABLE = 0.
+ * @retval OT_ERROR_NOT_IMPLEMENTED   Feature is not implemented.
  */
 otError otThreadDirectSetGuestWakeKey(otInstance *aInstance, uint8_t aKeyIndex, const otThreadDirectWakeKey *aKey);
 

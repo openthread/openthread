@@ -35,6 +35,8 @@
 
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
+#include <string.h>
+
 #include <openthread/link.h>
 #include <openthread/thread_direct.h>
 
@@ -154,9 +156,19 @@ void ThreadDirect::HandleDirectEvent(otThreadDirectEvent aEvent, const otThreadD
         }
         break;
 
+    case OT_THREAD_DIRECT_EVENT_LINKED:
+        otThreadDirectSetEventCallback(GetInstancePtr(), nullptr, nullptr);
+        OutputLine("TD link established");
+        OutputResult(OT_ERROR_NONE);
+        break;
+
     case OT_THREAD_DIRECT_EVENT_LINK_FAILED:
         otThreadDirectSetEventCallback(GetInstancePtr(), nullptr, nullptr);
         OutputResult(OT_ERROR_FAILED);
+        break;
+
+    case OT_THREAD_DIRECT_EVENT_UNLINKED:
+        OutputLine("TD link unlinked");
         break;
     }
 }
@@ -174,7 +186,17 @@ otError ThreadDirect::ProcessLink(Arg aArgs[])
 
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    if (aArgs[0] == "key")
+    if (aArgs[0] == "slw")
+        error = ProcessLinkSlw(aArgs + 1);
+    else if (aArgs[0] == "ram")
+        error = ProcessLinkRam(aArgs + 1);
+    else if (aArgs[0] == "state")
+        error = ProcessLinkState(aArgs + 1);
+    else if (aArgs[0] == "peers")
+        error = ProcessLinkPeers(aArgs + 1);
+    else if (aArgs[0] == "timeout")
+        error = ProcessLinkTimeout(aArgs + 1);
+    else if (aArgs[0] == "key")
         error = ProcessLinkKey(aArgs + 1);
     else if (aArgs[0] == "keyremove")
         error = ProcessLinkKeyRemove(aArgs + 1);
@@ -192,6 +214,176 @@ otError ThreadDirect::ProcessUnlink(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
     return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError ThreadDirect::ProcessLinkSlw(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        otThreadDirectLocalSca sca;
+
+        SuccessOrExit(error = otThreadDirectGetLocalSca(GetInstancePtr(), &sca));
+        OutputLine("period: %u slots", sca.mSlwPeriodSlots);
+    }
+    else
+    {
+        uint16_t period;
+
+        SuccessOrExit(error = aArgs[0].ParseAsUint16(period));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        error = otThreadDirectSetSlwSchedule(GetInstancePtr(), period);
+    }
+
+exit:
+    return error;
+}
+
+otError ThreadDirect::ProcessLinkRam(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        otThreadDirectLocalSca sca;
+
+        SuccessOrExit(error = otThreadDirectGetLocalSca(GetInstancePtr(), &sca));
+        OutputLine("duration: %u", sca.mRam.mDuration);
+        OutputLine("offset:   %d us", static_cast<int>(sca.mRam.mOffsetUs));
+
+        if (sca.mRam.mDuration >= 2)
+        {
+            uint8_t numBytes = static_cast<uint8_t>(((sca.mRam.mDuration + 1) + 7) / 8);
+
+            OutputFormat("bits:     0x");
+
+            for (uint8_t i = 0; i < numBytes && i < 4; i++)
+            {
+                OutputFormat("%02x", sca.mRam.mBits[i]);
+            }
+
+            OutputNewLine();
+        }
+    }
+    else if (aArgs[0] == "clear")
+    {
+        otThreadDirectRamParams params;
+
+        memset(&params, 0, sizeof(params));
+        params.mDuration = 1;
+        error            = otThreadDirectSetRamOverride(GetInstancePtr(), &params);
+    }
+    else if (aArgs[0] == "set")
+    {
+        otThreadDirectRamParams params;
+        uint8_t                 duration;
+        int16_t                 offsetUs;
+        uint8_t                 hexBuf[4];
+        uint16_t                hexLen = sizeof(hexBuf);
+
+        memset(&params, 0, sizeof(params));
+
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(hexLen, hexBuf));
+        SuccessOrExit(error = aArgs[2].ParseAsInt16(offsetUs));
+        SuccessOrExit(error = aArgs[3].ParseAsUint8(duration));
+        VerifyOrExit(aArgs[4].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        memcpy(params.mBits, hexBuf, hexLen);
+        params.mOffsetUs = offsetUs;
+        params.mDuration = duration;
+
+        error = otThreadDirectSetRamOverride(GetInstancePtr(), &params);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+otError ThreadDirect::ProcessLinkState(Arg aArgs[])
+{
+    otError                error = OT_ERROR_NONE;
+    otThreadDirectLocalSca sca;
+
+    OT_UNUSED_VARIABLE(aArgs);
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    OutputLine("role:  wi");
+    if (otThreadDirectIsWakeBurstActive(GetInstancePtr()))
+    {
+        OutputLine("state: waking");
+    }
+    else
+    {
+        OutputLine("state: idle");
+    }
+#elif OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    OutputLine("role:  wl");
+    if (otThreadDirectIsWakeListenerEnabled(GetInstancePtr()))
+    {
+        OutputLine("state: listening");
+    }
+    else
+    {
+        OutputLine("state: disabled");
+    }
+#endif
+
+    SuccessOrExit(error = otThreadDirectGetLocalSca(GetInstancePtr(), &sca));
+
+    OutputLine("slw-period:  %u slots", sca.mSlwPeriodSlots);
+    OutputLine("slw-timeout: %lu s", static_cast<unsigned long>(otThreadDirectGetSlwTimeout(GetInstancePtr())));
+    OutputLine("ram-duration: %u", sca.mRam.mDuration);
+    OutputLine("ram-offset:   %d us", static_cast<int>(sca.mRam.mOffsetUs));
+
+    if (sca.mRam.mDuration >= 2)
+    {
+        uint8_t numBytes = static_cast<uint8_t>(((sca.mRam.mDuration + 1) + 7) / 8);
+
+        OutputFormat("ram-bits:     0x");
+
+        for (uint8_t i = 0; i < numBytes && i < 4; i++)
+        {
+            OutputFormat("%02x", sca.mRam.mBits[i]);
+        }
+
+        OutputNewLine();
+    }
+
+exit:
+    return error;
+}
+
+otError ThreadDirect::ProcessLinkPeers(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError ThreadDirect::ProcessLinkTimeout(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%lu", static_cast<unsigned long>(otThreadDirectGetSlwTimeout(GetInstancePtr())));
+    }
+    else
+    {
+        uint32_t timeout;
+
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(timeout));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        error = otThreadDirectSetSlwTimeout(GetInstancePtr(), timeout);
+    }
+
+exit:
+    return error;
 }
 
 otError ThreadDirect::ProcessLinkKey(Arg aArgs[])

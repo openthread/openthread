@@ -1062,7 +1062,6 @@ bool SubMac::IsGuestWakeKeyRegistered(uint8_t aKeyIndex) const
     return Get<KeyManager>().FindGuestWakeKey(aKeyIndex) != nullptr;
 }
 #endif
-
 #endif
 
 void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId)

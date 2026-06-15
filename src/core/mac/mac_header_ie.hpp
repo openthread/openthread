@@ -323,6 +323,15 @@ struct ScaParams
     uint8_t  mRamBits[kRamBitsMaxBytes]; ///< RAM bitmap (valid bytes: ceil((mRamDuration+1)/8) when mRamDuration >= 2).
 };
 
+/**
+ * Holds the 16-byte challenge value carried in a Thread Direct Challenge LTV.
+ */
+struct ChallengeLtv
+{
+    static constexpr uint8_t kLength = 16; ///< Challenge value length in bytes (truncated HMAC-SHA256).
+    uint8_t                  mChallenge[kLength];
+};
+
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 /**

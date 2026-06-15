@@ -40,6 +40,7 @@
 #include <openthread/platform/crypto.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/thread_direct.h>
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -388,7 +389,73 @@ public:
         otPlatRadioSetWakeKey(GetInstancePtr(), aKeyIndex, aWakeKey);
     }
 
+    /**
+     * Retrieves the current Radio Availability Mask (RAM) parameters from the platform radio driver.
+     *
+     * @param[out] aParams  Filled with current CoEx constraints.
+     *
+     * @retval kErrorNone            @p aParams populated.
+     * @retval kErrorNotImplemented  Feature is not implemented.
+     */
+    Error GetThreadDirectRamParams(otThreadDirectRamParams &aParams);
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    /**
+     * Pre-configures the IE payload to inject into the Enh-ACK sent in response to a TD Link
+     * Command from @p aWiExtAddress.
+     *
+     * Pass @p aIeData = nullptr / @p aIeLength = 0 to remove a previously registered entry.
+     *
+     * @param[in] aWiExtAddress  Extended address of the WI peer.
+     * @param[in] aIeData        IE payload bytes to inject, or nullptr to remove.
+     * @param[in] aIeLength      Length of @p aIeData in bytes (0 to remove).
+     *
+     * @retval kErrorNone            Registered or removed successfully.
+     * @retval kErrorNoBufs          Platform Enh-ACK IE table is full.
+     * @retval kErrorNotFound        @p aIeData is nullptr and no entry exists for @p aWiExtAddress.
+     * @retval kErrorNotImplemented  Feature is not implemented.
+     */
+    Error ConfigureThreadDirectEnhAckIe(const Mac::ExtAddress &aWiExtAddress,
+                                        const uint8_t         *aIeData,
+                                        uint16_t               aIeLength);
+
+    /**
+     * Enables or disables the Scheduled Listen Window (SLW) receive schedule for the TD link with
+     * @p aWiExtAddress.
+     *
+     * @param[in] aSlwPeriod     SLW period in 160 us slots (0 = disable).
+     * @param[in] aWiExtAddress  WI peer extended address.
+     *
+     * @retval kErrorNone            SLW schedule updated.
+     * @retval kErrorNotImplemented  Feature is not implemented.
+     */
+    Error EnableThreadDirectSlw(uint16_t aSlwPeriod, const Mac::ExtAddress &aWiExtAddress);
+
+    /**
+     * Updates the next SLW sample time for the TD link with @p aWiExtAddress.
+     *
+     * @param[in] aWiExtAddress   WI peer extended address.
+     * @param[in] aSlwSampleTime  Next expected frame arrival time in us.
+     */
+    void UpdateThreadDirectSlwSampleTime(const Mac::ExtAddress &aWiExtAddress, uint32_t aSlwSampleTime);
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    /**
+     * Returns the worst-case clock accuracy in PPM for Thread Direct SLW transmit scheduling.
+     *
+     * @returns Worst-case clock accuracy in PPM.
+     */
+    uint8_t GetThreadDirectSlwAccuracy(void);
+
+    /**
+     * Returns the fixed arrival-time uncertainty for Thread Direct SLW frames in units of 10 us.
+     *
+     * @returns SLW arrival-time uncertainty in units of 10 us.
+     */
+    uint8_t GetThreadDirectSlwUncertainty(void);
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
     /**
      * Sets the current MAC Frame Counter value.
@@ -1042,6 +1109,44 @@ inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(Ge
 inline uint8_t Radio::GetCslUncertainty(void) { return otPlatRadioGetCslUncertainty(GetInstancePtr()); }
 #endif
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+inline Error Radio::GetThreadDirectRamParams(otThreadDirectRamParams &aParams)
+{
+    return otPlatRadioGetThreadDirectRamParams(GetInstancePtr(), &aParams);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+inline Error Radio::ConfigureThreadDirectEnhAckIe(const Mac::ExtAddress &aWiExtAddress,
+                                                  const uint8_t         *aIeData,
+                                                  uint16_t               aIeLength)
+{
+    return otPlatRadioConfigureThreadDirectEnhAckIe(GetInstancePtr(), &aWiExtAddress, aIeData, aIeLength);
+}
+
+inline Error Radio::EnableThreadDirectSlw(uint16_t aSlwPeriod, const Mac::ExtAddress &aWiExtAddress)
+{
+    return otPlatRadioEnableThreadDirectSlw(GetInstancePtr(), aSlwPeriod, &aWiExtAddress);
+}
+
+inline void Radio::UpdateThreadDirectSlwSampleTime(const Mac::ExtAddress &aWiExtAddress, uint32_t aSlwSampleTime)
+{
+    otPlatRadioUpdateThreadDirectSlwSampleTime(GetInstancePtr(), &aWiExtAddress, aSlwSampleTime);
+}
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+inline uint8_t Radio::GetThreadDirectSlwAccuracy(void)
+{
+    return otPlatRadioGetThreadDirectSlwAccuracy(GetInstancePtr());
+}
+
+inline uint8_t Radio::GetThreadDirectSlwUncertainty(void)
+{
+    return otPlatRadioGetThreadDirectSlwUncertainty(GetInstancePtr());
+}
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
 inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
 {
     return *static_cast<Mac::TxFrame *>(otPlatRadioGetTransmitBuffer(GetInstancePtr()));
@@ -1152,6 +1257,27 @@ inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax
 
 inline uint8_t Radio::GetCslUncertainty(void) { return NumericLimits<uint8_t>::kMax; }
 #endif
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+inline Error Radio::GetThreadDirectRamParams(otThreadDirectRamParams &) { return kErrorNotImplemented; }
+#endif
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+inline Error Radio::ConfigureThreadDirectEnhAckIe(const Mac::ExtAddress &, const uint8_t *, uint16_t)
+{
+    return kErrorNotImplemented;
+}
+
+inline Error Radio::EnableThreadDirectSlw(uint16_t, const Mac::ExtAddress &) { return kErrorNotImplemented; }
+
+inline void Radio::UpdateThreadDirectSlwSampleTime(const Mac::ExtAddress &, uint32_t) {}
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+inline uint8_t Radio::GetThreadDirectSlwAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
+
+inline uint8_t Radio::GetThreadDirectSlwUncertainty(void) { return NumericLimits<uint8_t>::kMax; }
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
 inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
 {

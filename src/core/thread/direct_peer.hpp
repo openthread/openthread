@@ -38,6 +38,8 @@
 
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
+#include "common/random.hpp"
+#include "mac/mac_header_ie.hpp"
 #include "thread/neighbor.hpp"
 
 namespace ot {
@@ -50,11 +52,20 @@ class DirectPeer : public CslNeighbor
 {
 public:
     /**
+     * Maximum number of re-transmitted TD link teardown frames.
+     */
+    static constexpr uint8_t kMaxRetransmitLinkTearDowns = 4;
+
+    /**
      * Initializes the `DirectPeer` object.
      *
      * @param[in] aInstance  The OpenThread instance.
      */
-    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
+    void Init(Instance &aInstance)
+    {
+        Neighbor::Init(aInstance);
+        mTearDownCount = 0;
+    }
 
     /**
      * Clears the peer entry.
@@ -70,6 +81,38 @@ public:
     {
         aIp6Address.InitAsLinkLocalAddress(GetExtAddress());
     }
+
+    /**
+     * Generates a new challenge value for the TD handshake.
+     */
+    void GenerateChallenge(void) { Random::NonCrypto::FillBuffer(mChallenge.mChallenge, Mac::ChallengeLtv::kLength); }
+
+    /**
+     * Gets the current challenge value.
+     *
+     * @returns The current challenge value.
+     */
+    const Mac::ChallengeLtv &GetChallenge(void) const { return mChallenge; }
+
+    /**
+     * Increments the count of re-transmitted link teardown frames.
+     */
+    void IncrementTearDownCount(void) { mTearDownCount++; }
+
+    /**
+     * Resets the teardown re-transmit count to zero.
+     */
+    void ResetTearDownCount(void) { mTearDownCount = 0; }
+
+    /**
+     * Returns the current teardown re-transmit count.
+     */
+    uint8_t GetTearDownCount(void) const { return mTearDownCount; }
+
+private:
+    Mac::ChallengeLtv mChallenge;
+
+    uint8_t mTearDownCount : 3; // Re-transmitted teardown frame count.
 };
 
 } // namespace ot

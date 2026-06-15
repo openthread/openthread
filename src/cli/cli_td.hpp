@@ -70,6 +70,13 @@ private:
 #endif
     otError ProcessLink(Arg aArgs[]);
     otError ProcessUnlink(Arg aArgs[]);
+
+    // Helpers dispatched from ProcessLink.
+    otError ProcessLinkSlw(Arg aArgs[]);
+    otError ProcessLinkRam(Arg aArgs[]);
+    otError ProcessLinkState(Arg aArgs[]);
+    otError ProcessLinkPeers(Arg aArgs[]);
+    otError ProcessLinkTimeout(Arg aArgs[]);
     otError ProcessLinkKey(Arg aArgs[]);
     otError ProcessLinkKeyRemove(Arg aArgs[]);
 

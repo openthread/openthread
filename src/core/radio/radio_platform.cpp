@@ -32,6 +32,7 @@
 
 #include <openthread/instance.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/thread_direct.h>
 #include <openthread/platform/time.h>
 
 #include "instance/instance.hpp"
@@ -394,4 +395,60 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetWakeKey(otInstance             *aInst
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIndex);
     OT_UNUSED_VARIABLE(aWakeKey);
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioConfigureThreadDirectEnhAckIe(otInstance         *aInstance,
+                                                                         const otExtAddress *aWiExtAddress,
+                                                                         const uint8_t      *aIeData,
+                                                                         uint16_t            aIeLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aWiExtAddress);
+    OT_UNUSED_VARIABLE(aIeData);
+    OT_UNUSED_VARIABLE(aIeLength);
+
+    return kErrorNotImplemented;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioEnableThreadDirectSlw(otInstance         *aInstance,
+                                                                 uint16_t            aSlwPeriod,
+                                                                 const otExtAddress *aWiExtAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aSlwPeriod);
+    OT_UNUSED_VARIABLE(aWiExtAddress);
+
+    return kErrorNotImplemented;
+}
+
+extern "C" OT_TOOL_WEAK void otPlatRadioUpdateThreadDirectSlwSampleTime(otInstance         *aInstance,
+                                                                        const otExtAddress *aWiExtAddress,
+                                                                        uint32_t            aSlwSampleTime)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aWiExtAddress);
+    OT_UNUSED_VARIABLE(aSlwSampleTime);
+}
+
+extern "C" OT_TOOL_WEAK uint8_t otPlatRadioGetThreadDirectSlwAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return NumericLimits<uint8_t>::kMax;
+}
+
+extern "C" OT_TOOL_WEAK uint8_t otPlatRadioGetThreadDirectSlwUncertainty(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return NumericLimits<uint8_t>::kMax;
+}
+
+extern "C" OT_TOOL_WEAK otError otPlatRadioGetThreadDirectRamParams(otInstance              *aInstance,
+                                                                    otThreadDirectRamParams *aParams)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aParams);
+
+    return kErrorNotImplemented;
 }

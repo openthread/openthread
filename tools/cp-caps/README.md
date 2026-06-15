@@ -105,6 +105,7 @@ Test cases:
   test_frame_formats       test whether the RCP supports 802.15.4 frames of all formats
   test_link_metrics        test whether the RCP supports link metrics
   test_radio_frame_tx_info test mTxInfo field of the radio frame
+  test_thread_direct       test whether the RCP supports Thread Direct wake initiator and listener
   test_throughput          test Thread network 1-hop throughput
 
 Examples:
@@ -166,6 +167,16 @@ diag stats ----------------------------------------------- OK
 diag stats clear ----------------------------------------- OK
 diag stream start ---------------------------------------- NotSupported
 diag stream stop ----------------------------------------- NotSupported
+```
+
+### Test Thread Direct
+
+The test case `test_thread_direct` tests whether the RCP supports Thread Direct wake initiator and wake listener operation.
+
+```bash
+tools/cp-caps$ DUT_ADB_USB=TW69UCKFZTGM95OR REF_CLI_SERIAL=/dev/ttyACM0 python3 -m unittest -q test_thread_direct
+Thread Direct Wake Initiator ----------------------------- OK
+Thread Direct Wake Listener ------------------------------ OK
 ```
 
 ### Test CSL Transmitter

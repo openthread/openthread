@@ -38,6 +38,7 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "instance/instance.hpp"
+#include "mac/direct_handler.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
@@ -131,6 +132,75 @@ bool otThreadDirectIsWakeListenerEnabled(otInstance *aInstance)
 }
 
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+otError otThreadDirectSetSlwSchedule(otInstance *aInstance, uint16_t aSlwPeriodSlots)
+{
+    return AsCoreType(aInstance).Get<DirectHandler>().SetSlwSchedule(aSlwPeriodSlots);
+}
+
+otError otThreadDirectSetRamOverride(otInstance *aInstance, const otThreadDirectRamParams *aParams)
+{
+    otError        error = OT_ERROR_NONE;
+    Mac::ScaParams params;
+
+    VerifyOrExit(aParams != nullptr, error = OT_ERROR_INVALID_ARGS);
+    // mDuration = 0 is a wire-encoding sentinel ("no change to prior RAM"); reject it as
+    // a stored state since it has no meaning outside of a per-frame codec context.
+    VerifyOrExit(aParams->mDuration >= 1 && aParams->mDuration <= Mac::ScaParams::kRamDurationMax,
+                 error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aParams->mOffsetUs >= Mac::ScaParams::kRamOffsetUsMin &&
+                     aParams->mOffsetUs <= Mac::ScaParams::kRamOffsetUsMax,
+                 error = OT_ERROR_INVALID_ARGS);
+
+    params.mRamDuration = aParams->mDuration;
+    params.mRamOffsetUs = aParams->mOffsetUs;
+    memcpy(params.mRamBits, aParams->mBits, sizeof(params.mRamBits));
+
+    error = AsCoreType(aInstance).Get<DirectHandler>().SetRamMask(params);
+
+exit:
+    return error;
+}
+
+uint32_t otThreadDirectGetSlwTimeout(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<DirectHandler>().GetSlwTimeout();
+}
+
+otError otThreadDirectSetSlwTimeout(otInstance *aInstance, uint32_t aTimeout)
+{
+    return AsCoreType(aInstance).Get<DirectHandler>().SetSlwTimeout(aTimeout);
+}
+
+otError otThreadDirectGetLocalSca(otInstance *aInstance, otThreadDirectLocalSca *aLocalSca)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aLocalSca != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    {
+        const Mac::ScaParams &params = AsCoreType(aInstance).Get<DirectHandler>().GetLocalSca();
+
+        aLocalSca->mSlwPeriodSlots = params.mSlwPeriodSlots;
+        aLocalSca->mRam.mDuration  = params.mRamDuration;
+        aLocalSca->mRam.mOffsetUs  = params.mRamOffsetUs;
+        memcpy(aLocalSca->mRam.mBits, params.mRamBits, sizeof(aLocalSca->mRam.mBits));
+    }
+
+exit:
+    return error;
+}
+
+otError otThreadDirectGetPeerInfo(otInstance             *aInstance,
+                                  const otExtAddress     *aExtAddress,
+                                  otThreadDirectPeerInfo *aPeerInfo)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddress);
+    OT_UNUSED_VARIABLE(aPeerInfo);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
 otError otThreadDirectSetGuestWakeKey(otInstance *aInstance, uint8_t aKeyIndex, const otThreadDirectWakeKey *aKey)
 {

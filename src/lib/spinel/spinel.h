@@ -3328,21 +3328,62 @@ enum
      */
     SPINEL_PROP_THREAD_DIRECT_WAKE_LISTEN_PARAMS = SPINEL_PROP_THREAD_EXT__BEGIN + 65,
 
+    /// Thread Direct SLW Schedule
+    /** Format: `S` - Read-write
+     *
+     * The local Scheduled Listen Window (SLW) period advertised in the SCA LTV,
+     * in units of 160 us slot periods.  0 clears the schedule.
+     */
+    SPINEL_PROP_THREAD_DIRECT_SLW_SCHEDULE = SPINEL_PROP_THREAD_EXT__BEGIN + 66,
+
+    /// Thread Direct RAM Parameters
+    /** Format: `DsC` - Read-write
+     *
+     * The local Radio Availability Mask (RAM) parameters advertised in the SCA LTV:
+     *   `D` - RAM bitmap (4 bytes, length-prefixed).
+     *   `s` - RAM offset in microseconds (signed, range [-1024, 1023]).
+     *   `C` - RAM duration code (1-31 on write; 0 is rejected).  On read, 1 means no
+     *         CoEx constraints (default).  In on-wire SCA LTVs, 0 is a per-frame
+     *         sentinel meaning "no change to prior RAM".
+     *
+     */
+    SPINEL_PROP_THREAD_DIRECT_RAM_PARAMS = SPINEL_PROP_THREAD_EXT__BEGIN + 67,
+
     /// Thread Direct Wake (start wake burst)
     /** Format: `ECSSCd` - Write only
      *
-     * Starts a Thread Direct wake burst targeting the specified WL:
-     *   `E` - WL extended address.
-     *   `C` - Wake type (0=link, 1=poweroutage, 2=connectionless).
-     *   `S` - Inter-frame interval in us (0 = default).
-     *   `S` - Burst duration in ms (0 = default).
-     *   `C` - Key index (0 or 129 = default key; 130-192 = guest key provisioned via
-     *         SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY).
-     *   `d` - Inline key (legacy field; must be zero-length; ignored).
+     * Initiates a TD Wake Command burst toward the addressed peer:
+     *   `E` - Peer extended address.
+     *   `C` - Wake type: 0 = Direct Link, 1 = Power Outage, 2 = Connectionless.
+     *   `S` - Inter-frame interval in microseconds.
+     *   `S` - Burst duration in milliseconds.
+     *   `C` - Key index: 0 or 129 for the network-derived wake key; 130-192 for a
+     *         guest key provisioned via `SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY`.
+     *   `d` - Key bytes (ignored; pass empty).  Inline keys are not supported.
      *
-     * The result is reported asynchronously via SPINEL_PROP_THREAD_DIRECT_LINK_EVENT.
+     * The result is reported asynchronously via `SPINEL_PROP_THREAD_DIRECT_LINK_EVENT`.
      */
     SPINEL_PROP_THREAD_DIRECT_WAKE = SPINEL_PROP_THREAD_EXT__BEGIN + 68,
+
+    /// Thread Direct Unlink
+    /** Format: `E` - Write only
+     *
+     * Tears down an established Thread Direct link with the given peer:
+     *   `E` - Peer extended address.
+     */
+    SPINEL_PROP_THREAD_DIRECT_UNLINK = SPINEL_PROP_THREAD_EXT__BEGIN + 69,
+
+    /// Thread Direct Peer Table
+    /** Format: array of `ESCCC` entries - Read only
+     *
+     * Each entry describes one established Thread Direct peer:
+     *   `E` - Peer extended address.
+     *   `S` - Peer TD short address (0xFFFE if not yet assigned).
+     *   `C` - Wake key index in use for this link.
+     *   `C` - Link state (0 = idle, 1 = linking, 2 = linked).
+     *   `C` - Role at this end: 0 = WI, 1 = WL.
+     */
+    SPINEL_PROP_THREAD_DIRECT_PEERS = SPINEL_PROP_THREAD_EXT__BEGIN + 70,
 
     /// Thread Direct Guest Wake Key
     /** Format: `Cd` - Insert, `C` - Remove
@@ -3369,6 +3410,16 @@ enum
      * TRUE when the WI has an active wake burst or open connection window.
      */
     SPINEL_PROP_THREAD_DIRECT_WAKE_BURST_ACTIVE = SPINEL_PROP_THREAD_EXT__BEGIN + 73,
+
+    /// Thread Direct SLW Timeout
+    /** Format: `L` - Read-write
+     *
+     * The SLW link inactivity timeout in seconds.  After a Thread Direct link
+     * is established, if no unicast frame is received from the peer within this
+     * many seconds the stack tears down the link.  0 on write restores the
+     * compile-time default (OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT).
+     */
+    SPINEL_PROP_THREAD_DIRECT_SLW_TIMEOUT = SPINEL_PROP_THREAD_EXT__BEGIN + 74,
 
     /// Thread Direct Wake Frame Counter
     /** Format: `L` - Read-write

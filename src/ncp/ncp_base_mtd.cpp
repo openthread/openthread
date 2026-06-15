@@ -4838,6 +4838,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_WAKE_CH
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint8(wakeChannel));
+
     error = otLinkSetWakeupChannel(mInstance, wakeChannel);
 
 exit:
@@ -4873,6 +4874,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_WAKE_LI
     uint32_t duration;
 
     otLinkGetWakeupListenParameters(mInstance, &interval, &duration);
+
     SuccessOrExit(mEncoder.WriteUint32(interval));
     SuccessOrExit(mEncoder.WriteUint32(duration));
 
@@ -4895,6 +4897,60 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_SLW_SCHEDULE>(void)
+{
+    otThreadDirectLocalSca localSca;
+
+    SuccessOrExit(otThreadDirectGetLocalSca(mInstance, &localSca));
+    SuccessOrExit(mEncoder.WriteUint16(localSca.mSlwPeriodSlots));
+
+exit:
+    return OT_ERROR_NONE;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_SLW_SCHEDULE>(void)
+{
+    uint16_t period;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(period));
+    error = otThreadDirectSetSlwSchedule(mInstance, period);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_RAM_PARAMS>(void)
+{
+    otThreadDirectLocalSca localSca;
+
+    SuccessOrExit(otThreadDirectGetLocalSca(mInstance, &localSca));
+    SuccessOrExit(mEncoder.WriteDataWithLen(localSca.mRam.mBits, sizeof(localSca.mRam.mBits)));
+    SuccessOrExit(mEncoder.WriteInt16(localSca.mRam.mOffsetUs));
+    SuccessOrExit(mEncoder.WriteUint8(localSca.mRam.mDuration));
+
+exit:
+    return OT_ERROR_NONE;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_RAM_PARAMS>(void)
+{
+    otThreadDirectRamParams ramParams;
+    const uint8_t          *bitmapData;
+    uint16_t                bitmapLength;
+    otError                 error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(bitmapData, bitmapLength));
+    VerifyOrExit(bitmapLength == sizeof(ramParams.mBits), error = OT_ERROR_PARSE);
+    memcpy(ramParams.mBits, bitmapData, sizeof(ramParams.mBits));
+    SuccessOrExit(error = mDecoder.ReadInt16(ramParams.mOffsetUs));
+    SuccessOrExit(error = mDecoder.ReadUint8(ramParams.mDuration));
+    error = otThreadDirectSetRamOverride(mInstance, &ramParams);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_WAKE>(void)
 {
@@ -4912,8 +4968,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_WAKE>(v
     SuccessOrExit(error = mDecoder.ReadUint16(intervalUs));
     SuccessOrExit(error = mDecoder.ReadUint16(durationMs));
     SuccessOrExit(error = mDecoder.ReadUint8(keyIndex));
-    // Consume the inline-key data field for wire compatibility; guest keys must be
-    // provisioned via SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY before calling this property.
+    // Consume the inline-key data field for wire compatibility; inline keys are no
+    // longer supported.  Guest keys must be provisioned via
+    // SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY before calling this property.
     SuccessOrExit(error = mDecoder.ReadDataWithLen(keyData, keyLength));
     OT_UNUSED_VARIABLE(keyData);
     OT_UNUSED_VARIABLE(keyLength);
@@ -4925,6 +4982,18 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_UNLINK>(void)
+{
+    otExtAddress extAddress;
+    otError      error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
+    error = otThreadDirectUnlink(mInstance, &extAddress);
+
+exit:
+    return error;
+}
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY>(void)
 {
@@ -4956,12 +5025,36 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_PEERS>(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_WAKE_BURST_ACTIVE>(void)
 {
     return mEncoder.WriteBool(otThreadDirectIsWakeBurstActive(mInstance));
 }
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_SLW_TIMEOUT>(void)
+{
+    return mEncoder.WriteUint32(otThreadDirectGetSlwTimeout(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_SLW_TIMEOUT>(void)
+{
+    uint32_t timeout;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(timeout));
+    error = otThreadDirectSetSlwTimeout(mInstance, timeout);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_WAKE_FRAME_COUNTER>(void)
 {
     return mEncoder.WriteUint32(mInstance->Get<Mac::SubMac>().GetWakeFrameCounter());
@@ -5004,7 +5097,7 @@ void NcpBase::HandleThreadDirectEvent(otThreadDirectEvent aEvent, const otThread
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || ...WAKE_LISTENER_ENABLE
+#endif
 
 } // namespace Ncp
 } // namespace ot
