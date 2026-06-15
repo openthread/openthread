@@ -28,12 +28,12 @@
 
 /**
  * @file
- *   This file implements the Wake-up End Device of the subset of IEEE 802.15.4 MAC primitives.
+ *   This file implements the Wake Listener (WL) subset of IEEE 802.15.4 MAC primitives.
  */
 
 #include "sub_mac.hpp"
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 #include "instance/instance.hpp"
 
@@ -42,12 +42,12 @@ namespace Mac {
 
 RegisterLogModule("SubMac");
 
-void SubMac::WedInit(void)
+void SubMac::WlInit(void)
 {
-    mIsWedSampling        = false;
-    mIsWedEnabled         = false;
+    mIsWlSampling         = false;
+    mIsWlEnabled          = false;
     mWakeupListenInterval = 0;
-    mWedTimer.Stop();
+    mWlTimer.Stop();
 }
 
 void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel)
@@ -55,17 +55,17 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
     mWakeupListenInterval = aInterval;
     mWakeupListenDuration = aDuration;
     mWakeupChannel        = aChannel;
-    mIsWedSampling        = false;
-    mIsWedEnabled         = aEnable;
+    mIsWlSampling         = false;
+    mIsWlEnabled          = aEnable;
 
-    mWedTimer.Stop();
+    mWlTimer.Stop();
 
     if (aEnable)
     {
-        mWedSampleTime      = TimerMicro::GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
-        mWedSampleTimeRadio = Get<Radio>().GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
+        mWlSampleTime      = TimerMicro::GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
+        mWlSampleTimeRadio = Get<Radio>().GetNow() + kCslReceiveTimeAhead - mWakeupListenInterval;
 
-        HandleWedTimer();
+        HandleWlTimer();
     }
     else if (!RadioSupportsReceiveTiming())
     {
@@ -73,54 +73,54 @@ void SubMac::UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aD
     }
 }
 
-void SubMac::HandleWedTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWedTimer(); }
+void SubMac::HandleWlTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleWlTimer(); }
 
-void SubMac::HandleWedTimer(void)
+void SubMac::HandleWlTimer(void)
 {
     if (RadioSupportsReceiveTiming())
     {
-        HandleWedReceiveAt();
+        HandleWlReceiveAt();
     }
     else
     {
-        HandleWedReceiveOrSleep();
+        HandleWlReceiveOrSleep();
     }
 }
 
-void SubMac::HandleWedReceiveAt(void)
+void SubMac::HandleWlReceiveAt(void)
 {
-    mWedSampleTime += mWakeupListenInterval;
-    mWedSampleTimeRadio += mWakeupListenInterval;
-    mWedTimer.FireAt(mWedSampleTime + mWakeupListenDuration + kWedReceiveTimeAfter);
+    mWlSampleTime += mWakeupListenInterval;
+    mWlSampleTimeRadio += mWakeupListenInterval;
+    mWlTimer.FireAt(mWlSampleTime + mWakeupListenDuration + kWlReceiveTimeAfter);
 
     if (mState != kStateDisabled)
     {
         IgnoreError(
-            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWedSampleTimeRadio), mWakeupListenDuration));
+            Get<Radio>().ReceiveAt(mWakeupChannel, static_cast<uint32_t>(mWlSampleTimeRadio), mWakeupListenDuration));
     }
 }
 
-void SubMac::HandleWedReceiveOrSleep(void)
+void SubMac::HandleWlReceiveOrSleep(void)
 {
     TimeMilli fireTime;
 
-    mIsWedSampling = !mIsWedSampling;
+    mIsWlSampling = !mIsWlSampling;
 
-    if (mIsWedSampling)
+    if (mIsWlSampling)
     {
-        fireTime = mWedSampleTime + mWakeupListenDuration + kMinReceiveOnAfter;
+        fireTime = mWlSampleTime + mWakeupListenDuration + kMinReceiveOnAfter;
     }
     else
     {
-        mWedSampleTime += mWakeupListenInterval;
-        fireTime = mWedSampleTime - kMinReceiveOnAhead;
+        mWlSampleTime += mWakeupListenInterval;
+        fireTime = mWlSampleTime - kMinReceiveOnAhead;
     }
 
-    mWedTimer.FireAt(fireTime);
+    mWlTimer.FireAt(fireTime);
 
     UpdateRadioSampleState();
 }
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

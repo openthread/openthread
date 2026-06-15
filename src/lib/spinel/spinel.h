@@ -3302,14 +3302,131 @@ enum
      */
     SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 62,
 
-    /// Wake-up Channel
-    /** Format: `C`
+    /// Thread Direct Wake Channel
+    /** Format: `C` - Read-write
      *
-     * The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
-     * which means the device will use the PAN channel) or within the range [1, 10] (if 915-MHz
-     * supported) and [11, 26] (if 2.4 GHz supported).
+     * The Thread Direct Wake Channel.  The Thread Direct specification mandates
+     * channel 20 as the sole Wake Channel; only the value 20 is accepted on write.
      */
-    SPINEL_PROP_THREAD_WAKEUP_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 63,
+    SPINEL_PROP_THREAD_DIRECT_WAKE_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 63,
+
+    /// Thread Direct Wake Listener Enable
+    /** Format: `b` - Read-write
+     *
+     * Indicates whether the Wake Listener scheduled receive window is enabled.
+     * When enabled the device opens periodic listen windows on the wake channel
+     * according to the configured listen parameters.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_LISTEN_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 64,
+
+    /// Thread Direct Wake Listener Parameters
+    /** Format: `LL` - Read-write
+     *
+     * Configures the Wake Listener scheduled receive window timing:
+     *   `L` - Listen interval in microseconds.
+     *   `L` - Listen window duration in microseconds.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_LISTEN_PARAMS = SPINEL_PROP_THREAD_EXT__BEGIN + 65,
+
+    /// Thread Direct SLW Schedule
+    /** Format: `S` - Read-write
+     *
+     * The local Scheduled Listen Window (SLW) period advertised in the SCA LTV,
+     * in units of 160 us slot periods.  0 clears the schedule.
+     */
+    SPINEL_PROP_THREAD_DIRECT_SLW_SCHEDULE = SPINEL_PROP_THREAD_EXT__BEGIN + 66,
+
+    /// Thread Direct RAM Parameters
+    /** Format: `DsC` - Read-write
+     *
+     * The local Radio Availability Mask (RAM) parameters advertised in the SCA LTV:
+     *   `D` - RAM bitmap (4 bytes, length-prefixed).
+     *   `s` - RAM offset in microseconds (signed, range [-1024, 1023]).
+     *   `C` - RAM duration code (1-31 on write; 0 is rejected).  On read, 1 means no
+     *         CoEx constraints (default).  In on-wire SCA LTVs, 0 is a per-frame
+     *         sentinel meaning "no change to prior RAM".
+     *
+     */
+    SPINEL_PROP_THREAD_DIRECT_RAM_PARAMS = SPINEL_PROP_THREAD_EXT__BEGIN + 67,
+
+    /// Thread Direct Wake (start wake burst)
+    /** Format: `ECSSCd` - Write only
+     *
+     * Initiates a TD Wake Command burst toward the addressed peer:
+     *   `E` - Peer extended address.
+     *   `C` - Wake type: 0 = Direct Link, 1 = Power Outage, 2 = Connectionless.
+     *   `S` - Inter-frame interval in microseconds.
+     *   `S` - Burst duration in milliseconds.
+     *   `C` - Key index: 0 or 129 for the network-derived wake key; 130-192 for a
+     *         guest key provisioned via `SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY`.
+     *   `d` - Key bytes (ignored; pass empty).  Inline keys are not supported.
+     *
+     * The result is reported asynchronously via `SPINEL_PROP_THREAD_DIRECT_LINK_EVENT`.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE = SPINEL_PROP_THREAD_EXT__BEGIN + 68,
+
+    /// Thread Direct Unlink
+    /** Format: `E` - Write only
+     *
+     * Tears down an established Thread Direct link with the given peer:
+     *   `E` - Peer extended address.
+     */
+    SPINEL_PROP_THREAD_DIRECT_UNLINK = SPINEL_PROP_THREAD_EXT__BEGIN + 69,
+
+    /// Thread Direct Peer Table
+    /** Format: array of `ESCCC` entries - Read only
+     *
+     * Each entry describes one established Thread Direct peer:
+     *   `E` - Peer extended address.
+     *   `S` - Peer TD short address (0xFFFE if not yet assigned).
+     *   `C` - Wake key index in use for this link.
+     *   `C` - Link state (0 = idle, 1 = linking, 2 = linked).
+     *   `C` - Role at this end: 0 = WI, 1 = WL.
+     */
+    SPINEL_PROP_THREAD_DIRECT_PEERS = SPINEL_PROP_THREAD_EXT__BEGIN + 70,
+
+    /// Thread Direct Guest Wake Key
+    /** Format: `Cd` - Insert, `C` - Remove
+     *
+     * Manages the out-of-band guest wake key table:
+     *   Insert (`SPINEL_CMD_PROP_VALUE_INSERT`): `C` key index, `d` 16-byte key material.
+     *   Remove (`SPINEL_CMD_PROP_VALUE_REMOVE`): `C` key index.
+     */
+    SPINEL_PROP_THREAD_DIRECT_GUEST_WAKE_KEY = SPINEL_PROP_THREAD_EXT__BEGIN + 71,
+
+    /// Thread Direct Link Event Notification
+    /** Format: `CEb` - Unsolicited notify (PROP_VALUE_IS)
+     *
+     * Reports Thread Direct link events (`otThreadDirectEvent`):
+     *   `C` - Event: 0 = linked, 1 = link failed, 2 = unlinked, 3 = wake received.
+     *   `E` - Peer extended address (zero if none, e.g. some link-failed cases).
+     *   `b` - Success indicator: false only for event 1 (link failed); true otherwise.
+     */
+    SPINEL_PROP_THREAD_DIRECT_LINK_EVENT = SPINEL_PROP_THREAD_EXT__BEGIN + 72,
+
+    /// Thread Direct - WI wake burst active
+    /** Format: `b` - Read only
+     *
+     * TRUE when the WI has an active wake burst or open connection window.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_BURST_ACTIVE = SPINEL_PROP_THREAD_EXT__BEGIN + 73,
+
+    /// Thread Direct SLW Timeout
+    /** Format: `L` - Read-write
+     *
+     * The SLW link inactivity timeout in seconds.  After a Thread Direct link
+     * is established, if no unicast frame is received from the peer within this
+     * many seconds the stack tears down the link.  0 on write restores the
+     * compile-time default (OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT).
+     */
+    SPINEL_PROP_THREAD_DIRECT_SLW_TIMEOUT = SPINEL_PROP_THREAD_EXT__BEGIN + 74,
+
+    /// Thread Direct Wake Frame Counter
+    /** Format: `L` - Read-write
+     *
+     * The current Thread Direct wake frame counter.
+     */
+    SPINEL_PROP_THREAD_DIRECT_WAKE_FRAME_COUNTER = SPINEL_PROP_THREAD_EXT__BEGIN + 75,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

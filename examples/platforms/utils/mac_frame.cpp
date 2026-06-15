@@ -318,11 +318,7 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
     uint32_t          frameCounter;
     bool              processKeyId;
 
-    processKeyId =
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        otMacFrameIsKeyIdMode2(aFrame) ||
-#endif
-        otMacFrameIsKeyIdMode1(aFrame);
+    processKeyId = otMacFrameIsKeyIdMode1(aFrame);
 
     VerifyOrExit(otMacFrameIsSecurityEnabled(aFrame) && processKeyId && !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
 
@@ -455,3 +451,23 @@ bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otR
 exit:
     return matches;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
+bool otMacFrameIsTdWakeCommand(otRadioFrame *aFrame)
+{
+    uint8_t keyId;
+
+    if (!otMacFrameIsCommand(aFrame) || otMacFrameIsAckRequested(aFrame) || !otMacFrameIsSecurityEnabled(aFrame) ||
+        !otMacFrameIsKeyIdMode1(aFrame))
+    {
+        return false;
+    }
+
+    keyId = otMacFrameGetKeyId(aFrame);
+
+    return keyId == OT_MAC_FRAME_WAKE_KEY_INDEX ||
+           (keyId >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN && keyId <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX);
+}
+
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE

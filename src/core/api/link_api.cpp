@@ -79,7 +79,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 uint8_t otLinkGetWakeupChannel(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().GetWakeupChannel();
@@ -100,7 +100,7 @@ otError otLinkSetWakeupChannel(otInstance *aInstance, uint8_t aChannel)
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
 {
@@ -507,7 +507,7 @@ otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
     return error;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 otError otLinkSetWakeUpListenEnabled(otInstance *aInstance, bool aEnable)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenEnabled(aEnable);
@@ -527,4 +527,4 @@ otError otLinkSetWakeupListenParameters(otInstance *aInstance, uint32_t aInterva
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().SetWakeupListenParameters(aInterval, aDuration);
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

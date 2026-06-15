@@ -47,6 +47,7 @@ Done
 - [detach](#detach)
 - [deviceprops](#deviceprops)
 - [diag](#diag)
+- [direct](#direct-channel)
 - [discover](#discover-channel)
 - [dns](#dns-config)
 - [domainname](#domainname)
@@ -89,7 +90,6 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
-- [p2p](#p2p-link-extaddr-extaddr)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -137,7 +137,6 @@ Done
 - [vendor](#vendor-name)
 - [verhoeff](#verhoeff-calculate)
 - [version](#version)
-- [wakeup](#wakeup-channel)
 
 ## OpenThread Command Details
 
@@ -1632,6 +1631,224 @@ Done
 
 > leaderweight
 51
+Done
+```
+
+### direct channel
+
+Get the Thread Direct wake channel.
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct channel
+20
+Done
+```
+
+### direct channel \<channel\>
+
+Set the Thread Direct wake channel.
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct channel 20
+Done
+```
+
+### direct link key \<index\> \<key\>
+
+Register a guest wake key at the given index (130-192, 32 hex chars).
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct link key 130 00112233445566778899aabbccddeeff
+Done
+```
+
+### direct link keyremove \<index\>
+
+Remove the guest wake key at the given index (130-192).
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct link keyremove 130
+Done
+```
+
+### direct link peers
+
+List active Thread Direct peer entries.
+
+```bash
+> direct link peers
+Done
+```
+
+### direct link ram
+
+Get the current Radio Availability Mask (RAM) parameters advertised in SCA IEs.
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct link ram
+duration: 1
+offset:   0 us
+Done
+```
+
+### direct link ram clear
+
+Reset RAM parameters to no-constraints (duration=1).
+
+```bash
+> direct link ram clear
+Done
+```
+
+### direct link ram set \<bits-hex\> \<offset-us\> \<duration\>
+
+Set RAM parameters. `bits-hex` is up to 4 bytes of bitmap (hex), `offset-us` is the signed offset in microseconds, `duration` is the RAM duration code (1=no constraints, 2-31=bitmap active bits).
+
+```bash
+> direct link ram set 1f000000 0 6
+Done
+```
+
+### direct link slw
+
+Get the Scheduled Listen Window (SLW) period in slots.
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct link slw
+period: 47
+Done
+```
+
+### direct link slw \<period-slots\>
+
+Set the SLW period in 160 us slots (0 disables SLW).
+
+```bash
+> direct link slw 47
+Done
+```
+
+### direct link state
+
+Print the current Thread Direct link state including role, SLW period, SLW timeout, and RAM parameters.
+
+```bash
+> direct link state
+role:  wl
+state: listening
+slw-period:  47 slots
+slw-timeout: 30 s
+ram-duration: 1
+ram-offset:   0 us
+Done
+```
+
+### direct link timeout
+
+Get the SLW supervision timeout in seconds.
+
+```bash
+> direct link timeout
+30
+Done
+```
+
+### direct link timeout \<seconds\>
+
+Set the SLW supervision timeout in seconds.
+
+```bash
+> direct link timeout 30
+Done
+```
+
+### direct unlink
+
+Unlink all active Thread Direct peers.
+
+```bash
+> direct unlink
+Done
+```
+
+### direct wake \<extaddr\> \[key-index \[type \[interval-us \[duration-ms\]\]\]\]
+
+Initiate a Thread Direct wake burst toward the given extended address.
+
+- `extaddr`: 64-bit extended address (16 hex chars)
+- `key-index`: 0 or 129 (default network-derived wake key) or 130-192 (pre-registered guest key). Default: 0.
+- `type`: wake type (0=link, 1=power-outage, 2=connectionless). Default: 0.
+- `interval-us`: inter-frame gap in microseconds (0 = config default).
+- `duration-ms`: burst duration in milliseconds (0 = config default).
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE`.
+
+```bash
+> direct wake ab8967452301cdef
+Done
+> direct wake ab8967452301cdef 130 0 7500 1090
+Done
+```
+
+### direct wakelisten
+
+Get the state of Thread Direct wake listening.
+
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
+
+```bash
+> direct wakelisten
+Disabled
+Done
+```
+
+### direct wakelisten enable
+
+Enable Thread Direct wake listening.
+
+```bash
+> direct wakelisten enable
+Done
+```
+
+### direct wakelisten disable
+
+Disable Thread Direct wake listening.
+
+```bash
+> direct wakelisten disable
+Done
+```
+
+### direct wakelisten params
+
+Get the wake listen interval and duration.
+
+```bash
+> direct wakelisten params
+interval: 7500 us
+duration: 8000 us
+Done
+```
+
+### direct wakelisten params \<interval-us\> \<duration-us\>
+
+Set the wake listen interval and duration in microseconds.
+
+```bash
+> direct wakelisten params 7500 8000
 Done
 ```
 
@@ -3296,28 +3513,6 @@ nexthop 0x8001
 Done
 ```
 
-### p2p link extaddr \<extaddr\>
-
-Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
-
-`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
-
-```bash
-> p2p link extaddr dead00beef00cafe
-Done
-```
-
-### p2p unlink \<extaddress\>
-
-Tears down the P2P link identified by the extended address.
-
-`OPENTHREAD_CONFIG_P2P_ENABLE` is required.
-
-```bash
-> p2p unlink dead00beef00cafe
-Done
-```
-
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.
@@ -4839,84 +5034,3 @@ Done
 Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option. Go [diagnostics module][diag] for more information.
 
 [diag]: ../../src/core/diags/README.md
-
-### wakeup channel
-
-Get the wake-up channel.
-
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
-
-```bash
-> wakeup channel
-12
-Done
-```
-
-### wakeup channel \<channel\>
-
-Set the wake-up channel.
-
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
-
-```bash
-> wakeup channel 12
-Done
-```
-
-### wakeup parameters
-
-Get the wake-up listen interval and duration.
-
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
-
-```bash
-> wakeup parameters
-interval: 1000000us
-duration: 8000us
-Done
-```
-
-### wakeup parameters \<interval\> \<duration\>
-
-Set the wake-up listen interval and duration.
-
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
-
-```bash
-> wakeup parameters 1000000 8000
-Done
-```
-
-### wakeup listen
-
-Show the state of wake-up listening feature.
-
-`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
-
-```bash
-> wakeup listen
-Enabled
-Done
-```
-
-### wakeup listen \[enable|disable\]
-
-Enable/disable listening for wake-up frames.
-
-`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
-
-```bash
-> wakeup listen enable
-Done
-```
-
-### wakeup wake \<extaddr\> \<wakeup-interval\> \<wakeup-duration\>
-
-Wakes a Wake-up End Device.
-
-`OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` is required.
-
-```bash
-> wakeup wake 1ece0a6c4653a7c1 7500 1090
-Done
-```

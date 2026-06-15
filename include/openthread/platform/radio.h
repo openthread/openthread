@@ -745,6 +745,44 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
+ * IEEE 802.15.4 key index reserved for the default Thread Direct Wake Key (network-derived).
+ *
+ * This value (129) is outside the range used for standard Thread MAC keys (1-128). It is
+ * carried in the key index field of TD Wake Frames that use the network-derived wake key.
+ */
+#define OT_MAC_FRAME_WAKE_KEY_INDEX 129
+
+/**
+ * Lowest key index valid for a Thread Direct guest Wake Key.
+ */
+#define OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN 130
+
+/**
+ * Highest key index valid for a Thread Direct guest Wake Key.
+ */
+#define OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX 192
+
+/**
+ * Registers or removes a Thread Direct Wake Key at the given key index.
+ *
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability. When the platform
+ * processes a TX frame whose key index matches `aKeyIndex`, it uses `aWakeKey` to perform
+ * AES-CCM encryption rather than the standard Thread MAC key set registered via
+ * `otPlatRadioSetMacKey`.
+ *
+ * `aKeyIndex` must be `OT_MAC_FRAME_WAKE_KEY_INDEX` (129) for the default network-derived
+ * wake key, or in [`OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN`,
+ * `OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX`] (130-192) for a guest wake key.
+ *
+ * Passing `aWakeKey` as NULL removes any previously registered key at `aKeyIndex`.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[in]   aKeyIndex   Key index (129 for default, 130-192 for guest keys).
+ * @param[in]   aWakeKey    Key material to register, or NULL to remove.
+ */
+void otPlatRadioSetWakeKey(otInstance *aInstance, uint8_t aKeyIndex, const otMacKeyMaterial *aWakeKey);
+
+/**
  * Get the current time in microseconds referenced to a continuous monotonic
  * local radio clock (64 bits width).
  *
