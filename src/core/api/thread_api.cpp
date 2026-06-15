@@ -491,8 +491,14 @@ otError otThreadWakeup(otInstance         *aInstance,
                        otWakeupCallback    aCallback,
                        void               *aCallbackContext)
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().Wakeup(AsCoreType(aWedAddress), aWakeupIntervalUs, aWakeupDurationMs,
-                                                        aCallback, aCallbackContext);
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aWedAddress);
+    OT_UNUSED_VARIABLE(aWakeupIntervalUs);
+    OT_UNUSED_VARIABLE(aWakeupDurationMs);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aCallbackContext);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 #endif
 

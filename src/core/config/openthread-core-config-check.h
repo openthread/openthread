@@ -702,4 +702,10 @@
 #error "OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER is removed. All addresses are now registered."
 #endif
 
+// Thread Direct - P2P predecessor removed
+
+#ifdef OPENTHREAD_CONFIG_P2P_ENABLE
+#error "OPENTHREAD_CONFIG_P2P_ENABLE is removed."
+#endif
+
 #endif // OT_CORE_CONFIG_OPENTHREAD_CORE_CONFIG_CHECK_H_

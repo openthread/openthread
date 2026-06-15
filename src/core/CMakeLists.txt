@@ -76,7 +76,6 @@ set(COMMON_SOURCES
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
-    api/p2p_api.cpp
     api/ping_sender_api.cpp
     api/radio_stats_api.cpp
     api/random_crypto_api.cpp
@@ -251,7 +250,6 @@ set(COMMON_SOURCES
     thread/message_framer.cpp
     thread/mle.cpp
     thread/mle_ftd.cpp
-    thread/mle_p2p.cpp
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
@@ -271,8 +269,6 @@ set(COMMON_SOURCES
     thread/network_data_tlvs.cpp
     thread/network_data_types.cpp
     thread/panid_query_server.cpp
-    thread/peer.cpp
-    thread/peer_table.cpp
     thread/radio_selector.cpp
     thread/router.cpp
     thread/router_table.cpp
