@@ -2597,8 +2597,6 @@ private:
     uint8_t  mRouterId;
     uint8_t  mPreviousRouterId;
     uint8_t  mNetworkIdTimeout;
-    uint8_t  mRouterUpgradeThreshold;
-    uint8_t  mRouterDowngradeThreshold;
     uint8_t  mLeaderWeight;
     uint8_t  mPreviousPartitionRouterIdSequence;
     uint8_t  mPreviousPartitionIdTimeout;
