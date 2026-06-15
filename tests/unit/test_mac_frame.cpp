@@ -890,7 +890,7 @@ void TestTdWakeCommandDetectionNegative(void)
 {
     Mac::Frame frame;
 
-    // IEEE 802.15.4-2015 Data Frame (not a MAC Command) - should not be detected as TD Wake Command
+    // IEEE 802.15.4-2015 Data Frame
     //   Frame Control Field: 0xec09
     //     .... .... .... .001 = Frame Type: Data (0x1)
     //     .... .... .... 1... = Security Enabled: True
@@ -958,7 +958,6 @@ void TestTdWakeCommandDetectionNegative(void)
     VerifyOrQuit(!frame.IsTdWakeCommand());
 }
 #endif
-
 } // namespace ot
 
 int main(void)

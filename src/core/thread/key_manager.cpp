@@ -33,6 +33,8 @@
 
 #include "key_manager.hpp"
 
+#include <openthread/platform/radio.h>
+
 #include "crypto/hkdf_sha256.hpp"
 #include "crypto/storage.hpp"
 #include "instance/instance.hpp"
@@ -172,6 +174,9 @@ exit:
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mKeySequence(0)
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    , mWakeKeyValid(false)
+#endif
     , mMleFrameCounter(0)
     , mStoredMacFrameCounter(0)
     , mStoredMleFrameCounter(0)
@@ -184,10 +189,6 @@ KeyManager::KeyManager(Instance &aInstance)
     , mIsKekSet(false)
 {
     otPlatCryptoInit();
-
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-    mWakeKeyValid = false;
-#endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
@@ -291,9 +292,6 @@ void KeyManager::SetNetworkKey(const NetworkKey &aNetworkKey)
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
 
     mKeySequence = 0;
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-    mWakeKeyValid = false;
-#endif
     UpdateKeyMaterial();
     ResetFrameCounters();
 
@@ -322,6 +320,39 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys) const
     hmac.Finish(aHashKeys.mHash);
 }
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+const Mac::KeyMaterial &KeyManager::GetDefaultWakeKey(void)
+{
+    if (!mWakeKeyValid)
+    {
+        Crypto::HmacSha256       hmac;
+        Crypto::HmacSha256::Hash hash;
+        Crypto::Key              cryptoKey;
+        Mac::Key                 wakeKey;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        cryptoKey.SetAsKeyRef(mNetworkKeyRef);
+#else
+        cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
+#endif
+
+        hmac.Start(cryptoKey);
+        hmac.Update(kWakeKeyString);
+        hmac.Finish(hash);
+
+        // Use the first 16 bytes of the HMAC-SHA256 output as the Wake Key
+        static_assert(Mac::Key::kSize <= Crypto::HmacSha256::Hash::kSize, "Wake Key size exceeds HMAC output size");
+        memcpy(wakeKey.m8, hash.m8, Mac::Key::kSize);
+
+        mWakeKeyMaterial.SetFrom(wakeKey, kExportableMacKeys);
+        mWakeKeyValid = true;
+    }
+
+    return mWakeKeyMaterial;
+}
+
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const
 {
@@ -343,40 +374,16 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const
 }
 #endif
 
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-const Mac::KeyMaterial &KeyManager::GetDefaultWakeKey(void)
-{
-    if (!mWakeKeyValid)
-    {
-        Crypto::HmacSha256       hmac;
-        Crypto::HmacSha256::Hash hash;
-        Crypto::Key              cryptoKey;
-        Mac::Key                 wakeKey;
-
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        cryptoKey.SetAsKeyRef(mNetworkKeyRef);
-#else
-        cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
-#endif
-
-        hmac.Start(cryptoKey);
-        hmac.Update(kWakeKeyString);
-        hmac.Finish(hash);
-
-        static_assert(Mac::Key::kSize <= Crypto::HmacSha256::Hash::kSize, "Wake Key size exceeds HMAC output size");
-        memcpy(wakeKey.m8, hash.m8, Mac::Key::kSize);
-
-        mWakeKeyMaterial.SetFrom(wakeKey, kExportableMacKeys);
-        mWakeKeyValid = true;
-    }
-
-    return mWakeKeyMaterial;
-}
-#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-
 void KeyManager::UpdateKeyMaterial(void)
 {
     HashKeys hashKeys;
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    mWakeKeyValid = false; // Invalidate cached Wake Key whenever the Network Key changes
+    // Re-derive and push the wake key to the platform radio driver so that platforms with
+    // OT_RADIO_CAPS_TRANSMIT_SEC can encrypt TD Wake Frames (key index 129) in hardware.
+    IgnoreError(Get<Mac::SubMac>().SetWakeKey(Mac::Frame::kWakeKeyIndex, &GetDefaultWakeKey()));
+#endif
 
     ComputeKeys(mKeySequence, hashKeys);
 
@@ -472,18 +479,6 @@ const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 
     return mTemporaryMleKey;
 }
-
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-const Mle::KeyMaterial &KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
-{
-    HashKeys hashKeys;
-
-    ComputeKeys(aKeySequence, hashKeys);
-    mTemporaryMacKey.SetFrom(hashKeys.GetMacKey());
-
-    return mTemporaryMacKey;
-}
-#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 const Mac::KeyMaterial &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
@@ -736,9 +731,6 @@ void KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
     Get<Notifier>().Signal(kEventNetworkKeyChanged);
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
     mKeySequence = 0;
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-    mWakeKeyValid = false;
-#endif
     UpdateKeyMaterial();
     ResetFrameCounters();
 

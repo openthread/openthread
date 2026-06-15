@@ -43,7 +43,6 @@
  * @{
  */
 
-#include "config/thread_direct.h"
 #include "config/time_sync.h"
 
 /**
@@ -415,8 +414,7 @@
  * Define to 1 to enable support for IEEE 802.15.4 MAC Multipurpose frame format.
  */
 #ifndef OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-#define OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME \
-    (OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE)
+#define OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME 0
 #endif
 
 /**

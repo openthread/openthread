@@ -367,15 +367,6 @@ public:
      */
     const Mle::KeyMaterial &GetTemporaryMleKey(uint32_t aKeySequence);
 
-    /**
-     * Returns a temporary MAC key Material computed from the given key sequence.
-     *
-     * @param[in]  aKeySequence  The key sequence value.
-     *
-     * @returns The temporary MAC key.
-     */
-    const Mle::KeyMaterial &GetTemporaryMacKey(uint32_t aKeySequence);
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
      * Returns the current MAC Frame Counter value for 15.4 radio link.
@@ -459,6 +450,7 @@ public:
      * @returns A reference to the cached Wake Key material.
      */
     const Mac::KeyMaterial &GetDefaultWakeKey(void);
+
 #endif
 
     /**
@@ -648,10 +640,6 @@ private:
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     Mac::KeyMaterial mWakeKeyMaterial;
     bool             mWakeKeyValid : 1;
-#endif
-
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-    Mle::KeyMaterial mTemporaryMacKey;
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

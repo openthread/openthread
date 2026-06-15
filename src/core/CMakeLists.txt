@@ -91,6 +91,7 @@ set(COMMON_SOURCES
     api/tcp_api.cpp
     api/tcp_ext_api.cpp
     api/thread_api.cpp
+    api/thread_direct_api.cpp
     api/thread_ftd_api.cpp
     api/trel_api.cpp
     api/udp_api.cpp
@@ -151,6 +152,7 @@ set(COMMON_SOURCES
     mac/channel_mask.cpp
     mac/data_poll_handler.cpp
     mac/data_poll_sender.cpp
+    mac/direct_handler.cpp
     mac/link_raw.cpp
     mac/mac.cpp
     mac/mac_filter.cpp

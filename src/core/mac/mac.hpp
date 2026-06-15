@@ -56,6 +56,9 @@
 #include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+#include <openthread/thread_direct.h>
+#endif
 
 namespace ot {
 
@@ -760,7 +763,40 @@ public:
      * @retval FALSE  If listening for wake-up frames is not enabled.
      */
     bool IsWakeupListenEnabled(void) const { return mWakeupListenEnabled; }
+
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    /**
+     * Registers a callback for Thread Direct link events.  Valid for both WI and WL roles.
+     *
+     * @param[in] aCallback  The callback function, or `nullptr` to deregister.
+     * @param[in] aContext   Application context passed to the callback.
+     */
+    void SetDirectEventCallback(otThreadDirectEventCallback aCallback, void *aContext)
+    {
+        mDirectEventCallback.Set(aCallback, aContext);
+    }
+
+    /**
+     * Invokes the registered Thread Direct event callback.
+     *
+     * @param[in] aEvent     The event type.
+     * @param[in] aPeerInfo  Peer info, or nullptr.
+     */
+    void InvokeDirectEvent(otThreadDirectEvent aEvent, const otThreadDirectPeerInfo *aPeerInfo)
+    {
+        mDirectEventCallback.InvokeIfSet(aEvent, aPeerInfo);
+    }
+
+    /**
+     * Returns whether a Thread Direct wake burst or WL sampling is currently active.
+     *
+     * @retval TRUE   Thread Direct wake activity is in progress.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsThreadDirectLinkActive(void) const;
+#endif
 
     /**
      * Calculates the radio bus transfer time (in microseconds) for a given frame size based on `Radio::GetBusSpeed()`
@@ -870,11 +906,15 @@ private:
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     Error HandleWakeupFrame(const RxFrame &aFrame);
     void  UpdateWakeupListening(void);
+    void  HandleRelistenTimer(void);
 #endif
     static const char *OperationToString(Operation aOperation);
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
     using MacTimer      = TimerMilliIn<Mac, &Mac::HandleTimer>;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    using RelistenTimer = TimerMilliIn<Mac, &Mac::HandleRelistenTimer>;
+#endif
 
     static const otExtAddress sMode2ExtAddress;
 
@@ -918,9 +958,13 @@ private:
     uint16_t mCslPeriod;
 #endif
     uint8_t mWakeupChannel;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    Callback<otThreadDirectEventCallback> mDirectEventCallback;
+#endif
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
-    uint32_t mWakeupListenInterval;
-    uint32_t mWakeupListenDuration;
+    uint32_t      mWakeupListenInterval;
+    uint32_t      mWakeupListenDuration;
+    RelistenTimer mRelistenTimer;
 #endif
     union
     {

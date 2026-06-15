@@ -88,6 +88,7 @@
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "crypto/storage.hpp"
+#include "mac/direct_handler.hpp"
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
@@ -694,6 +695,7 @@ private:
     Mle::DiscoverScanner           mDiscoverScanner;
     AddressResolver                mAddressResolver;
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    DirectHandler   mDirectHandler;
     DirectPeerTable mDirectPeerTable;
 #endif
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
@@ -979,7 +981,9 @@ template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; 
 
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 template <> inline DirectPeerTable &Instance::Get(void) { return mDirectPeerTable; }
+template <> inline DirectHandler   &Instance::Get(void) { return mDirectHandler; }
 #endif
+
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 template <> inline WakeupTxScheduler &Instance::Get(void) { return mWakeupTxScheduler; }
 #endif

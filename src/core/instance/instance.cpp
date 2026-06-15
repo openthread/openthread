@@ -159,6 +159,7 @@ Instance::Instance(void)
     , mDiscoverScanner(*this)
     , mAddressResolver(*this)
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    , mDirectHandler(*this)
     , mDirectPeerTable(*this)
 #endif
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE

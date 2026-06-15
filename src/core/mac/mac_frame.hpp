@@ -212,63 +212,13 @@ public:
 
 #if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     /**
-     * Returns whether the frame is a Thread Direct Wake Command (MAC Command 0x54 / Thread Cmd 0x01).
-     *
-     * @retval TRUE   If this is a Thread Direct Wake Command.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsTdWakeCommand(void) const;
-
-    /**
      * This method returns whether the frame is an IEEE 802.15.4 Wake-up frame.
      *
      * @retval TRUE   If this is a Wake-up frame.
      * @retval FALSE  If this is not a Wake-up frame.
      */
-    bool IsWakeupFrame(void) const;
+    bool IsTdWakeCommand(void) const;
 
-    /**
-     * This method returns the Rendezvous Time IE of a wake-up frame.
-     *
-     * @returns Pointer to the Rendezvous Time IE.
-     */
-    RendezvousTimeIe *GetRendezvousTimeIe(void) { return AsNonConst(AsConst(this)->GetRendezvousTimeIe()); }
-
-    /**
-     * This method returns the Rendezvous Time IE of a wake-up frame.
-     *
-     * @returns Const pointer to the Rendezvous Time IE.
-     */
-    const RendezvousTimeIe *GetRendezvousTimeIe(void) const
-    {
-        const uint8_t *ie = GetHeaderIe(RendezvousTimeIe::kHeaderIeId);
-
-        return (ie != nullptr &&
-                reinterpret_cast<const HeaderIe *>(ie)->GetLength() >= RendezvousTimeIe::kIeContentSize)
-                   ? reinterpret_cast<const RendezvousTimeIe *>(ie + sizeof(HeaderIe))
-                   : nullptr;
-    }
-
-    /**
-     * This method returns the Connection IE of a wake-up frame.
-     *
-     * @returns Pointer to the Connection IE.
-     */
-    ConnectionIe *GetConnectionIe(void) { return AsNonConst(AsConst(this)->GetConnectionIe()); }
-
-    /**
-     * This method returns the Connection IE of a wake-up frame.
-     *
-     * @returns Const pointer to the Connection IE.
-     */
-    const ConnectionIe *GetConnectionIe(void) const
-    {
-        const uint8_t *ie = GetThreadIe(ConnectionIe::kThreadIeSubtype);
-
-        return (ie != nullptr && reinterpret_cast<const HeaderIe *>(ie)->GetLength() >= ConnectionIe::kIeContentSize)
-                   ? reinterpret_cast<const ConnectionIe *>(ie + sizeof(HeaderIe))
-                   : nullptr;
-    }
 #endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
     /**
@@ -1381,7 +1331,6 @@ public:
      * @param[in] aPanId                 The Thread network PAN ID.
      * @param[in] aDstExtAddress         Extended address of the target Wake Listener.
      * @param[in] aSrcExtAddress         Extended address of this Wake Initiator.
-     * @param[in] aWakeType              Wake Frame Type byte.
      * @param[in] aRendezvousTimeTenSym  Remaining wake sequence duration in 10-symbol units (0-255).
      * @param[in] aRetryInterval         Connection retry interval (4-bit value).
      * @param[in] aRetryCount            Connection retry count (4-bit value).

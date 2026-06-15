@@ -37,8 +37,15 @@
 
 #include <openthread/platform/time.h>
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+#include <openthread/platform/radio.h>
+#endif
+
 #include "common/code_utils.hpp"
 #include "instance/instance.hpp"
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+#include "thread/key_manager.hpp"
+#endif
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -97,6 +104,10 @@ void SubMac::Init(void)
     mKeyId        = 0;
     mTimer.Stop();
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    mActiveBurstWakeKeyIndex = Frame::kWakeKeyIndex;
+    mWakeFrameCounter        = 0;
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
 #endif
@@ -375,39 +386,65 @@ void SubMac::ProcessTransmitSecurity(void)
 {
     const ExtAddress *extAddress = nullptr;
     uint8_t           keyIdMode;
+    uint8_t           keyId = mKeyId;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    bool isTdWake = false;
+#endif
 
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
 
     SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    if (mTransmitFrame.IsTdWakeCommand())
+    {
+        isTdWake = true;
+        keyId    = mActiveBurstWakeKeyIndex;
+    }
+#endif
 
     if (!mTransmitFrame.IsHeaderUpdated())
     {
-        mTransmitFrame.SetKeyId(mKeyId);
+        mTransmitFrame.SetKeyId(keyId);
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
 
-#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
-    if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
-    {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
-    }
-    else
-#endif
-    {
-        VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
-    }
-
-    mTransmitFrame.SetAesKey(GetCurrentMacKey());
-
     if (!mTransmitFrame.IsHeaderUpdated())
     {
-        uint32_t frameCounter = GetFrameCounter();
+        uint32_t frameCounter;
 
-        mTransmitFrame.SetFrameCounter(frameCounter);
-        SignalFrameCounterUsed(frameCounter, mKeyId);
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+        if (isTdWake)
+        {
+            frameCounter = GetWakeFrameCounter();
+            mTransmitFrame.SetFrameCounter(frameCounter);
+            SetWakeFrameCounter(frameCounter + 1, /* aSetIfLarger */ false);
+        }
+        else
+#endif
+        {
+            frameCounter = GetFrameCounter();
+            mTransmitFrame.SetFrameCounter(frameCounter);
+            SignalFrameCounterUsed(frameCounter, mKeyId);
+        }
     }
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    if (isTdWake)
+    {
+        extAddress = &GetExtAddress();
+
+        mTransmitFrame.SetAesKey(Get<KeyManager>().GetDefaultWakeKey());
+
+        mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
+        ExitNow();
+    }
+#endif
+
+    mTransmitFrame.SetAesKey(GetCurrentMacKey());
 
     extAddress = &GetExtAddress();
 
@@ -679,6 +716,15 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 
     VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
     VerifyOrExit(aFrame.GetKeyId(keyId) == kErrorNone, OT_ASSERT(allowError));
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    if (keyId == Frame::kWakeKeyIndex ||
+        (keyId >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN && keyId <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX))
+    {
+        SetWakeFrameCounter(frameCounter + 1, /* aSetIfLarger */ false);
+        ExitNow();
+    }
+#endif
 
     SignalFrameCounterUsed(frameCounter, keyId);
 
@@ -973,6 +1019,28 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+Error SubMac::SetWakeKey(uint8_t aKeyIndex, const KeyMaterial *aWakeKey)
+{
+    Error error = kErrorNone;
+
+    if (!ShouldHandleTransmitSecurity())
+    {
+        Get<Radio>().SetWakeKey(aKeyIndex, aWakeKey);
+    }
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    if (aKeyIndex == Frame::kWakeKeyIndex)
+    {
+        SetWakeFrameCounter(0, /* aSetIfLarger */ false);
+    }
+#endif
+
+    return error;
+}
+
+#endif
+
 void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId)
 {
     VerifyOrExit(aKeyId == mKeyId);
@@ -1015,6 +1083,16 @@ void SubMac::SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+void SubMac::SetWakeFrameCounter(uint32_t aWakeFrameCounter, bool aSetIfLarger)
+{
+    if (!aSetIfLarger || (aWakeFrameCounter > mWakeFrameCounter))
+    {
+        mWakeFrameCounter = aWakeFrameCounter;
+    }
+}
+#endif
 
 void SubMac::StartTimer(uint32_t aDelayUs)
 {
@@ -1070,33 +1148,24 @@ bool SubMac::IsRadioSampleEnabled(void) const
 }
 
 /*
- * The radio state (receive/sleep) is determined by the request from both CSL and WED:
- * 1. If both CSL and WED request to enter sleep state, the radio is set to sleep state.
- * 2. If either CSL or WED requests to enter the receive state and the other requests to enter sleep state, the radio
- *    is set to receive state using the channel that is requested to enter the receive state.
- * 3. If both CSL and WED request to enter the receive state, the radio is set to the receive state using the CSL
- *    channel.
- *
- * The diagram below illustrates how to set the radio state based on the request of WED and CSL.
+ * Radio state is governed by the union of CSL and WL sampling requests.
+ * CSL wins channel priority when both are active simultaneously.
  *
  * CSL   ------========------------========------------========------------========---
  *             ^       ^
- *             |       |
- *             | mIsCslSampling=false
- *     mIsCslSampling=true
+ *             |       mIsCslSampling=false
+ *             mIsCslSampling=true
  *
- * WED   -----------++++++++----------------++++++++----------------++++++++----------
+ * WL    -----------++++++++----------------++++++++----------------++++++++----------
  *                  ^       ^
- *                  |       |
- *                  | mIsWlSampling=false
- *         mIsWlSampling=true
+ *                  |       mIsWlSampling=false
+ *                  mIsWlSampling=true
  *
  * Radio ------========+++++-------========-++++++++---========-----+++++++========---
  *             ^       ^    ^
- *             |       |    |
- *             |       | Radio::Sleep()
- *             |  Radio::Receive(WedCh)
- *      Radio::Receive(CslCh)
+ *             |       |    Radio::Sleep()
+ *             |       Radio::Receive(WlCh)
+ *             Radio::Receive(CslCh)
  */
 void SubMac::UpdateRadioSampleState(void)
 {

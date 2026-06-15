@@ -980,6 +980,7 @@ struct WakeupInfo
     uint8_t    mRetryCount : 4;    ///< Retry Count (RC field from Wake Frame, 4-bit wire value).
 };
 #endif
+
 /**
  * @}
  */

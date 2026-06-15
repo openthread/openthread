@@ -93,7 +93,14 @@ void MeshForwarder::Start(void)
 {
     if (!mEnabled)
     {
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+        // For Thread Direct WL and WI, do not turn on the receiver by default if the device is
+        // configured as rx-off-when-idle. This keeps sleepy TD devices sleeping on start-up
+        // when they are not in the network and sampling for / transmitting wake frames.
+        Get<Mac::Mac>().SetRxOnWhenIdle(Get<Mle::Mle>().IsRxOnWhenIdle());
+#else
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
+#endif
 #if OPENTHREAD_FTD
         mIndirectSender.Start();
 #endif
@@ -635,14 +642,37 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     Get<Mac::Mac>().SetRxOnWhenIdle(aRxOnWhenIdle);
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    // Both WL and WI are sleepy MTDs operating without a Thread parent.  Data
+    // polling is not applicable while a Thread Direct link is active; the
+    // wake-listen schedule (WL) or wake burst (WI) drives the session instead.
+    if (!Get<Mac::Mac>().IsThreadDirectLinkActive())
+#endif
+    {
+        if (aRxOnWhenIdle)
+        {
+            mDataPollSender.StopPolling();
+        }
+        else
+        {
+            mDataPollSender.StartPolling();
+        }
+    }
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    else
+    {
+        // TD link active - stop polling so it does not disrupt wake-listen or
+        // wake-burst receive windows.
+        mDataPollSender.StopPolling();
+    }
+#endif
+
     if (aRxOnWhenIdle)
     {
-        mDataPollSender.StopPolling();
         Get<SupervisionListener>().Stop();
     }
     else
     {
-        mDataPollSender.StartPolling();
         Get<SupervisionListener>().Start();
     }
 }

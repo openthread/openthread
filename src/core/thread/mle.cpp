@@ -576,7 +576,13 @@ void Mle::SetStateDetached(void)
     mDelayedSender.RemoveScheduledChildUpdateRequestToParent();
     mRetxTracker.Stop();
     mInitiallyAttachedAsSleepy = false;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    // For Thread Direct WL and WI, respect the configured rx-on-when-idle setting so the device
+    // can sleep while detached and still sample wake-up frames or transmit wake bursts.
+    Get<MeshForwarder>().SetRxOnWhenIdle(IsRxOnWhenIdle());
+#else
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
+#endif
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
     mRoleTransitioner.SetDowngradeBlocked(false);

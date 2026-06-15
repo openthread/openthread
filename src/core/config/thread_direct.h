@@ -124,6 +124,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_INTERVAL
+ *
+ * The Connection Retry Interval encoded in the Wake Frame Rendezvous Time field.
+ * Specifies how frequently a WL should retry sending the TD Link Command after
+ * receiving a Wake Frame, in units of Wake Intervals (7.5 ms by default).
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_INTERVAL
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_INTERVAL 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_COUNT
+ *
+ * The Connection Retry Count encoded in the Wake Frame.  Specifies the maximum number
+ * of times the WL retries sending the TD Link Command after receiving a Wake Frame.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_COUNT
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_COUNT 12
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL
  *
  * The Thread Direct Wake Channel.  The Thread Direct feature mandates channel 20
@@ -131,6 +152,69 @@
  */
 #ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL
 #define OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL 20
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MIN_DURATION_SLOTS
+ *
+ * Minimum advertised Scheduled Listen Window (SLW) duration in 160 us slots
+ *  8 slots * 160 us = 1.28 ms.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MIN_DURATION_SLOTS
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MIN_DURATION_SLOTS 8
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT
+ *
+ * Default SLW link inactivity timeout in seconds.
+ *
+ * After a TD link is established, if no unicast frame is received from the WI
+ * peer within this many seconds the stack tears down the link and stops the
+ * WL's SLW schedule.  Overridable at runtime via `otThreadDirectSetSlwTimeout()`.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_TIMEOUT 100
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MAX_TIMEOUT
+ *
+ * Maximum value accepted by `otThreadDirectSetSlwTimeout()`, in seconds.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MAX_TIMEOUT
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_SLW_MAX_TIMEOUT 10000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_COEX_ENABLE
+ *
+ * Define to 1 to enable CoEx support in Thread Direct.
+ *
+ * When enabled, the SCA LTV includes a Radio Availability Mask (RAM) bitmap
+ * advertising the local device's CoEx constraints.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_COEX_ENABLE
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_COEX_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_GUEST_WAKE_KEY_ENABLE
+ *
+ * Define to 1 to support out-of-band-provisioned guest Wake Keys (key indices 130-192).
+ * Enabled by default.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_GUEST_WAKE_KEY_ENABLE
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_GUEST_WAKE_KEY_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_THREAD_DIRECT_MAX_GUEST_WAKE_KEYS
+ *
+ * Maximum number of guest Wake Keys that can be stored simultaneously.
+ */
+#ifndef OPENTHREAD_CONFIG_THREAD_DIRECT_MAX_GUEST_WAKE_KEYS
+#define OPENTHREAD_CONFIG_THREAD_DIRECT_MAX_GUEST_WAKE_KEYS 4
 #endif
 
 /**

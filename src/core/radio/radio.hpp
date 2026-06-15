@@ -376,6 +376,20 @@ public:
                    const Mac::KeyMaterial &aCurrKey,
                    const Mac::KeyMaterial &aNextKey);
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    /**
+     * Registers or removes a Thread Direct Wake Key at the given key index on the radio platform.
+     *
+     * @param[in] aKeyIndex  Key index (OT_MAC_FRAME_WAKE_KEY_INDEX for default, 130-192 for guest).
+     * @param[in] aWakeKey   Key material, or nullptr to remove the key at @p aKeyIndex.
+     */
+    void SetWakeKey(uint8_t aKeyIndex, const Mac::KeyMaterial *aWakeKey)
+    {
+        otPlatRadioSetWakeKey(GetInstancePtr(), aKeyIndex, aWakeKey);
+    }
+
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
     /**
      * Sets the current MAC Frame Counter value.
      *
@@ -559,8 +573,9 @@ public:
     Error ResetCsl(void);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
-    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE ||   \
+    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || \
+    OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     /**
      * Get the current radio time in microseconds referenced to a continuous monotonic local radio clock (64 bits
      * width).
@@ -568,7 +583,11 @@ public:
      * @returns The current radio clock time.
      */
     uint64_t GetNow(void);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE ||
+       // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE ||
+       // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
      *
@@ -1011,10 +1030,13 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, Mac::ShortAddress aShortAddr,
 inline Error Radio::ResetCsl(void) { return otPlatRadioResetCsl(GetInstancePtr()); }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
-    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE ||   \
+    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || \
+    OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 inline uint64_t Radio::GetNow(void) { return otPlatRadioGetNow(GetInstancePtr()); }
+#endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 inline uint8_t Radio::GetCslAccuracy(void) { return otPlatRadioGetCslAccuracy(GetInstancePtr()); }
 
 inline uint8_t Radio::GetCslUncertainty(void) { return otPlatRadioGetCslUncertainty(GetInstancePtr()); }
@@ -1119,10 +1141,13 @@ inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress, const Mac::ExtAddress
 inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || \
-    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE ||   \
+    OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || \
+    OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 inline uint64_t Radio::GetNow(void) { return NumericLimits<uint64_t>::kMax; }
+#endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
 
 inline uint8_t Radio::GetCslUncertainty(void) { return NumericLimits<uint8_t>::kMax; }
