@@ -77,6 +77,7 @@
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcat.hpp"
 #include "cli/cli_tcp.hpp"
+#include "cli/cli_td.hpp"
 #include "cli/cli_udp.hpp"
 #include "cli/cli_utils.hpp"
 
@@ -124,6 +125,7 @@ class Interpreter : public otCliInterpreter, public OutputImplementer, public Ut
     friend class PingSender;
     friend class SrpClient;
     friend class SrpServer;
+    friend class ThreadDirect;
 #endif
     friend class Utils;
 
@@ -462,6 +464,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
     Tcat mTcat;
+#endif
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    ThreadDirect mThreadDirect;
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     PingSender mPing;
