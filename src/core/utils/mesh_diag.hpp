@@ -61,6 +61,10 @@ struct otMeshDiagChildIterator
 {
 };
 
+struct otMeshDiagTlvIterator
+{
+};
+
 namespace ot {
 namespace Utils {
 
@@ -75,6 +79,7 @@ public:
     static constexpr uint16_t kVersionUnknown = OT_MESH_DIAG_VERSION_UNKNOWN; ///< Unknown version.
 
     typedef otMeshDiagDiscoverConfig                   DiscoverConfig;              ///< Discovery configuration.
+    typedef otMeshDiagTlvInfo                          DiagTlvInfo;                 ///< Diagnostic TLV Info.
     typedef otMeshDiagDiscoverCallback                 DiscoverCallback;            ///< Discovery callback.
     typedef otMeshDiagQueryChildTableCallback          QueryChildTableCallback;     ///< Query Child Table callback.
     typedef otMeshDiagChildIp6AddrsCallback            ChildIp6AddrsCallback;       ///< Child IPv6 addresses callback.
@@ -147,6 +152,31 @@ public:
         const Message *mMessage;
         OffsetRange    mOffsetRange;
         uint16_t       mParentRloc16;
+    };
+
+    /**
+     * Represents an iterator to iterate over extra/custom Network Diagnostic TLVs returned by a router.
+     */
+    class TlvIterator : public otMeshDiagTlvIterator
+    {
+        friend class MeshDiag;
+
+    public:
+        /**
+         * Iterates to the next extra Network Diagnostic TLV.
+         *
+         * @param[out] aTlvInfo  A reference to a `DiagTlvInfo` to return the next extra TLV info.
+         *
+         * @retval kErrorNone      Successfully retrieved the next extra TLV.
+         * @retval kErrorNotFound  No more extra TLVs.
+         */
+        Error GetNextTlvInfo(DiagTlvInfo &aTlvInfo);
+
+    private:
+        void InitFrom(const Message &aMessage);
+
+        const Message            *mMessage;
+        NetDiag::Client::Iterator mIter;
     };
 
     /**
@@ -247,6 +277,7 @@ private:
     static constexpr uint32_t kResponseTimeout    = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
     static constexpr uint32_t kMinResponseTimeout = 50;
     static constexpr uint32_t kMaxResponseTimeout = 10 * Time::kOneMinuteInMsec;
+    static constexpr uint16_t kMaxTlvTypes        = 32;
 
     enum State : uint8_t
     {
@@ -297,6 +328,15 @@ private:
         void SetFrom(const NetDiag::RouterNeighborTlvValue &aTlvValue);
     };
 
+    class TlvList : public Array<uint8_t, kMaxTlvTypes>
+    {
+    public:
+        TlvList(void) = default;
+        Error Add(uint8_t aTlvType);
+        Error AddAll(const uint8_t *aTlvTypes, uint8_t aLength);
+        void  Remove(uint8_t aTlvType);
+    };
+
     Error SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
     void  Finalize(Error aError);
     void  HandleTimer(void);
@@ -309,6 +349,8 @@ private:
     DeclareTmfResponseHandlerIn(MeshDiag, HandleDiagGetResponse);
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
+
+    static const uint8_t kDiscoverTopologyTlvs[];
 
     State        mState;
     uint16_t     mExpectedQueryId;
@@ -331,6 +373,7 @@ DefineCoreType(otMeshDiagIp6AddrIterator, Utils::MeshDiag::Ip6AddrIterator);
 DefineCoreType(otMeshDiagRouterInfo, Utils::MeshDiag::RouterInfo);
 DefineCoreType(otMeshDiagChildInfo, Utils::MeshDiag::ChildInfo);
 DefineCoreType(otMeshDiagChildIterator, Utils::MeshDiag::ChildIterator);
+DefineCoreType(otMeshDiagTlvIterator, Utils::MeshDiag::TlvIterator);
 
 } // namespace ot
 

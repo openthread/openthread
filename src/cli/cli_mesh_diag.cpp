@@ -125,6 +125,7 @@ template <> otError MeshDiag::Process<Cmd("topology")>(Arg aArgs[])
     otError                  error = OT_ERROR_NONE;
     otMeshDiagDiscoverConfig config;
 
+    ClearAllBytes(config);
     config.mDiscoverIp6Addresses = false;
     config.mDiscoverChildTable   = false;
 
