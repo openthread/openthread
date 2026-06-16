@@ -271,6 +271,7 @@ ot_unit_test(tlv)
 ot_unit_test(toolchain test_toolchain_c.c)
 ot_unit_test(trickle_timer)
 ot_unit_test(url)
+ot_unit_test(vendor_oui)
 
 ot_unit_ncp_test(cli)
 ot_unit_ncp_test(dnssd)

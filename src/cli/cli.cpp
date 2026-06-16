@@ -753,8 +753,8 @@ void Interpreter::OutputBorderAgentTxtDataInfo(uint8_t aIndentSize, const otBord
 
     if (aInfo.mHasVendorOui)
     {
-        OutputLine(aIndentSize, "VendorOui: %02X-%02X-%02X", aInfo.mVendorOui[0], aInfo.mVendorOui[1],
-                   aInfo.mVendorOui[2]);
+        OutputFormat(aIndentSize, "VendorOui: ");
+        OutputVendorOuiLine(aInfo.mVendorOui);
     }
 
     if (aInfo.mHasStateBitmap)
@@ -7593,23 +7593,16 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
      * Done
      * @endcode
      * @par api_copy
-     * #otThreadGetVendorOui
+     * #otThreadGetVendorOuiInfo
      */
     else if (aArgs[0] == "oui")
     {
         if (aArgs[1].IsEmpty())
         {
-            uint32_t oui = otThreadGetVendorOui(GetInstancePtr());
+            otThreadVendorOui oui;
 
-            if (oui == OT_THREAD_UNSPECIFIED_VENDOR_OUI)
-            {
-                OutputLine("unspecified");
-            }
-            else
-            {
-                OutputLine("%02X-%02X-%02X", static_cast<uint8_t>((oui >> 16) & 0xff),
-                           static_cast<uint8_t>((oui >> 8) & 0xff), static_cast<uint8_t>(oui & 0xff));
-            }
+            otThreadGetVendorOuiInfo(GetInstancePtr(), &oui);
+            OutputVendorOuiLine(oui);
 
             error = OT_ERROR_NONE;
         }

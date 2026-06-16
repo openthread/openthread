@@ -125,6 +125,7 @@ public:
         static bool ReadValue(const Dns::TxtEntry &aEntry, void *aBuffer, uint16_t aSize);
         static void ReadStringValue(const Dns::TxtEntry &aEntry, char *aString, uint16_t aStringSize);
         static bool ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPrefix);
+        static bool ReadVendorOui(const Dns::TxtEntry &aEntry, VendorInfo::Oui &aOui);
 
         template <typename ObjectType> bool ReadValue(const Dns::TxtEntry &aEntry, ObjectType &aObject)
         {
@@ -279,7 +280,6 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 private:
-    static constexpr uint8_t  kVendorOuiSize       = OT_BORDER_AGENT_VENDOR_OUI_SIZE;
     static constexpr uint16_t kMaxSizeNoVendorData = OT_BORDER_AGENT_MESHCOP_SERVICE_TXT_DATA_MAX_LENGTH;
 
     static const char kRecordVersion[];

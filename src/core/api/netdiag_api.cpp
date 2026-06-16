@@ -85,7 +85,24 @@ const char *otThreadGetVendorAppUrl(otInstance *aInstance)
     return AsCoreType(aInstance).Get<VendorInfo>().GetAppUrl();
 }
 
-uint32_t otThreadGetVendorOui(otInstance *aInstance) { return AsCoreType(aInstance).Get<VendorInfo>().GetOui(); }
+void otThreadGetVendorOuiInfo(otInstance *aInstance, otThreadVendorOui *aOui)
+{
+    AssertPointerIsNotNull(aOui);
+
+    *aOui = AsCoreType(aInstance).Get<VendorInfo>().GetOui();
+}
+
+void otThreadVendorOuiToString(const otThreadVendorOui *aOui, char *aBuffer, uint16_t aSize)
+{
+    AsCoreType(aOui).ToString(aBuffer, aSize);
+}
+
+uint32_t otThreadGetVendorOui(otInstance *aInstance)
+{
+    // This API is deprecated. Use `otThreadGetVendorOuiInfo()` instead
+
+    return AsCoreType(aInstance).Get<VendorInfo>().GetOui().GetAsOui24();
+}
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
@@ -109,9 +126,28 @@ otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl
     return AsCoreType(aInstance).Get<VendorInfo>().SetAppUrl(aVendorAppUrl);
 }
 
+otError otThreadSetVendorOuiInfo(otInstance *aInstance, const otThreadVendorOui *aOui)
+{
+    return AsCoreType(aInstance).Get<VendorInfo>().SetOui(AsCoreType(aOui));
+}
+
 otError otThreadSetVendorOui(otInstance *aInstance, uint32_t aVendorOui)
 {
-    return AsCoreType(aInstance).Get<VendorInfo>().SetOui(aVendorOui);
+    // This API is deprecated, use `otThreadSetVendorOuiInfo()` instead
+
+    Error           error;
+    VendorInfo::Oui oui;
+
+    VerifyOrExit(aVendorOui <= 0xffffff, error = kErrorInvalidArgs);
+
+    oui.Clear();
+    oui.mBitLength = 24;
+    BigEndian::WriteUint24(aVendorOui, oui.mBytes);
+
+    error = AsCoreType(aInstance).Get<VendorInfo>().SetOui(oui);
+
+exit:
+    return error;
 }
 
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
