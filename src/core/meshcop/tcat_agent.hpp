@@ -339,8 +339,8 @@ public:
      * The state transitions to kStateActive or kStateActiveTemporary. In these states, TCAT Advertisements
      * are actively sent and TCAT Commissioners are able to connect. From here, TCAT can be set to standby
      * again using Standby().
-     * If a connection is ongoing and aDurationMs==0, this call will ensure that kStateActive will
-     * be kept after this connection is finished.
+     * If a connection is ongoing and aDelayMs==0 and aDurationMs==0, this call will ensure that kStateActive will
+     * be kept after this connection is finished. Any non-zero parameters are not supported while in kStateConnected.
      * This function will override any ongoing temporary activation of TCAT, or any
      * previously scheduled activation for a future time.
      *
