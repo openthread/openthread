@@ -105,6 +105,8 @@ public:
         kBrDhcp6PdOmrPrefix    = OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX,
         kBrLocalOnlinkPrefix   = OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX,
         kBrFavoredOnLinkPrefix = OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX,
+        kVendorDiag            = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_DIAG,
+        kVendorOui             = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI,
     };
 
     /**

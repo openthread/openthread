@@ -65,6 +65,10 @@ VendorInfo::VendorInfo(Instance &aInstance)
     memcpy(mSwVersion, kSwVersion, sizeof(kSwVersion));
     memcpy(mAppUrl, kAppUrl, sizeof(kAppUrl));
     mOui = kOui;
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    memset(mOuiExtBytes, 0, sizeof(mOuiExtBytes));
+    mOuiLength = kOuiMaLLength;
+#endif
 #endif
 }
 
@@ -119,8 +123,17 @@ Error VendorInfo::SetOui(uint32_t aOui)
 
     VerifyOrExit((aOui & ~kOuiMask) == 0, error = kErrorInvalidArgs);
 
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    VerifyOrExit(aOui != mOui || mOuiLength != kOuiMaLLength);
+#else
     VerifyOrExit(aOui != mOui);
+#endif
     mOui = aOui;
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    mOuiExtBytes[0] = 0;
+    mOuiExtBytes[1] = 0;
+    mOuiLength      = kOuiMaLLength;
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Get<MeshCoP::BorderAgent::TxtData>().HandleVendorOuiChange();
@@ -130,6 +143,69 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+
+void VendorInfo::GetOuiBytes(uint8_t *aBytes) const
+{
+    aBytes[0] = static_cast<uint8_t>((mOui >> 16) & 0xff);
+    aBytes[1] = static_cast<uint8_t>((mOui >> 8) & 0xff);
+    aBytes[2] = static_cast<uint8_t>(mOui & 0xff);
+
+    if (mOuiLength >= kOuiMaMLength)
+    {
+        aBytes[3] = mOuiExtBytes[0];
+    }
+    if (mOuiLength >= kOuiMaSLength)
+    {
+        aBytes[4] = mOuiExtBytes[1];
+    }
+}
+
+Error VendorInfo::SetOuiBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength == kOuiMaLLength || aLength == kOuiMaMLength || aLength == kOuiMaSLength,
+                 error = kErrorInvalidArgs);
+
+    // The lower 4 bits of the last octet for MA-M / MA-S MUST be zero on transmission.
+    if (aLength == kOuiMaMLength)
+    {
+        VerifyOrExit((aBytes[3] & 0x0f) == 0, error = kErrorInvalidArgs);
+    }
+    else if (aLength == kOuiMaSLength)
+    {
+        VerifyOrExit((aBytes[4] & 0x0f) == 0, error = kErrorInvalidArgs);
+    }
+
+    mOui = (static_cast<uint32_t>(aBytes[0]) << 16) | (static_cast<uint32_t>(aBytes[1]) << 8) |
+           static_cast<uint32_t>(aBytes[2]);
+
+    mOuiExtBytes[0] = (aLength >= kOuiMaMLength) ? aBytes[3] : 0;
+    mOuiExtBytes[1] = (aLength >= kOuiMaSLength) ? aBytes[4] : 0;
+    mOuiLength      = aLength;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
+    Get<MeshCoP::BorderAgent::TxtData>().HandleVendorOuiChange();
+#endif
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE && !OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+void VendorInfo::GetOuiBytes(uint8_t *aBytes) const
+{
+    aBytes[0] = static_cast<uint8_t>((kOui >> 16) & 0xff);
+    aBytes[1] = static_cast<uint8_t>((kOui >> 8) & 0xff);
+    aBytes[2] = static_cast<uint8_t>(kOui & 0xff);
+}
+
+#endif
 
 } // namespace ot

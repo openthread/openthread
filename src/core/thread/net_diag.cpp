@@ -403,6 +403,19 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         error = Tlv::Append<VendorAppUrlTlv>(aMessage, Get<VendorInfo>().GetAppUrl());
         break;
 
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+    case Tlv::kVendorOui:
+    {
+        VendorInfo &vendorInfo = Get<VendorInfo>();
+        uint8_t     ouiBytes[VendorInfo::kMaxOuiLength];
+
+        VerifyOrExit(vendorInfo.IsOuiSpecified(), error = kErrorInvalidState);
+        vendorInfo.GetOuiBytes(ouiBytes);
+        error = Tlv::AppendTlv(aMessage, Tlv::kVendorOui, ouiBytes, vendorInfo.GetOuiLength());
+        break;
+    }
+#endif
+
     case Tlv::kThreadStackVersion:
         error = Tlv::Append<ThreadStackVersionTlv>(aMessage, otGetVersionString());
         break;
@@ -1283,6 +1296,22 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
         case Tlv::kBrDhcp6PdOmrPrefix:
             SuccessOrExit(error = aMessage.Read(tlvInfo.GetValueOffsetRange(), aDiagTlv.mData.mBrPrefix));
             break;
+
+#if OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+        case Tlv::kVendorOui:
+        {
+            uint16_t length = tlvInfo.GetValueOffsetRange().GetLength();
+
+            VerifyOrExit(length == VendorInfo::kOuiMaLLength || length == VendorInfo::kOuiMaMLength ||
+                             length == VendorInfo::kOuiMaSLength,
+                         error = kErrorParse);
+            memset(aDiagTlv.mData.mVendorOui.mBytes, 0, sizeof(aDiagTlv.mData.mVendorOui.mBytes));
+            SuccessOrExit(error = aMessage.Read(tlvInfo.GetValueOffsetRange().GetOffset(),
+                                                aDiagTlv.mData.mVendorOui.mBytes, length));
+            aDiagTlv.mData.mVendorOui.mLength = static_cast<uint8_t>(length);
+            break;
+        }
+#endif
 
         default:
             // Skip unrecognized TLVs.

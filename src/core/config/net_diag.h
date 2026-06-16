@@ -119,6 +119,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+ *
+ * Define as 1 to enable the Vendor OUI Network Diagnostic TLV (type 45) and the Vendor Specific Data MLE TLV
+ * (type 92) format helpers.
+ */
+#ifndef OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE
+#define OPENTHREAD_CONFIG_VENDOR_SPECIFIC_EXTENSIONS_ENABLE 0
+#endif
+
+/**
  * @}
  */
 
