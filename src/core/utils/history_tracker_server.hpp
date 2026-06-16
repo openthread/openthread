@@ -58,6 +58,7 @@ namespace HistoryTracker {
 class Server : public InstanceLocator
 {
     friend class Tmf::Agent;
+    friend class NetDiag::AnswerSender;
 
 public:
     explicit Server(Instance &aInstance);
@@ -65,18 +66,12 @@ public:
 private:
     typedef NetDiag::AnswerBuilder AnswerBuilder;
 
-    bool  IsLastAnswer(const Coap::Message &aAnswer) const;
-    void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
     void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest);
-    void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
     Error AppendNetworkInfo(AnswerBuilder &aAnswerBuilder, const RequestTlv &aRequestTlv, TimeMilli aNow);
-
-    static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);
-    void        HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
-    Coap::MessageQueue mAnswerQueue;
+    NetDiag::AnswerSender mAnswerSender;
 };
 
 DeclareTmfHandler(Server, kUriHistoryQuery);

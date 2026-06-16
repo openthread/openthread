@@ -80,6 +80,7 @@ class Server : public InstanceLocator, private NonCopyable
     friend class Tmf::Agent;
     friend class MeshCoP::TcatAgent;
     friend class Client;
+    friend class AnswerSender;
 
 public:
     /**
@@ -150,26 +151,19 @@ private:
 #if OPENTHREAD_MTD
     void SendAnswer(const Ip6::Address &aDestination, const Message &aRequest);
 #elif OPENTHREAD_FTD
-    bool  IsLastAnswer(const Coap::Message &aAnswer) const;
-    void  FreeAllRelatedAnswers(Coap::Message &aFirstAnswer);
     void  PrepareAndSendAnswers(const Ip6::Address &aDestination, const Coap::Message &aRequest);
     Error PrepareAnswers(const Coap::Message &aRequest, AnswerBuilder &aAnswerBuilder);
-    void  SendNextAnswer(Coap::Message &aAnswer, const Ip6::Address &aDestination);
     Error AppendChildTable(Message &aMessage);
     Error AppendChildTableAsChildTlvs(AnswerBuilder &aAnswerBuilder);
     Error AppendRouterNeighborTlvs(AnswerBuilder &aAnswerBuilder);
     Error AppendChildTableIp6AddressList(AnswerBuilder &aAnswerBuilder);
     Error AppendChildIp6AddressListTlv(Message &aAnswer, const Child &aChild);
     Error AppendEnhancedRoute(Message &aMessage);
-
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
     Error AppendChildTableAsChildTlvs(Message &aMessage);
     Error AppendRouterNeighborTlvs(Message &aMessage);
     Error AppendChildTableIp6AddressList(Message &aMessage);
 #endif
-
-    static void HandleAnswerResponse(void *aContext, Coap::Msg *aMsg, Error aResult);
-    void        HandleAnswerResponse(Coap::Message &aNextAnswer, Coap::Msg *aResponse, Error aResult);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Error AppendBorderRouterIfAddrs(Message &aMessage);
@@ -179,7 +173,7 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Msg &aMsg);
 
 #if OPENTHREAD_FTD
-    Coap::MessageQueue mAnswerQueue;
+    AnswerSender mAnswerSender;
 #endif
     uint32_t                                    mNonPreferredChannels;
     Callback<NonPreferredChannelsResetCallback> mNonPreferredChannelsResetCallback;
