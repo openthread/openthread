@@ -150,18 +150,24 @@ Error TcatAgent::Activate(const uint32_t aDelayMs, const uint32_t aDurationMs)
     Error error = kErrorNone;
 
     VerifyOrExit(IsStarted(), error = kErrorInvalidState);
-    VerifyOrExit(mState != kStateActive);
+    // while connected, activation is limited to one case as defined by the API:
+    VerifyOrExit(mState != kStateConnected || aDurationMs == 0, error = kErrorInvalidState);
+    VerifyOrExit(mState != kStateActive); // an existing permanent activation is already in place
 
     mTcatActiveDurationMs = aDurationMs;
     mTimerSetsToActive    = true;
-    if (aDelayMs > 0)
+    mActiveOrStandbyTimer.Stop();
+    if (mState == kStateConnected)
+    {
+        mNextState = kStateActive; // applied later, after disconnection
+    }
+    else if (aDelayMs > 0)
     {
         mActiveOrStandbyTimer.Start(aDelayMs);
     }
     else
     {
-        mActiveOrStandbyTimer.Stop();
-        HandleTimer();
+        HandleTimer(); // reuse existing activation logic
     }
 
 exit:
