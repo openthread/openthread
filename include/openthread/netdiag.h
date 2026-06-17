@@ -94,6 +94,8 @@ extern "C" {
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_DHCP6_PD_OMR_PREFIX 41 ///< Border Router DHCPv6-PD OMR Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_LOCAL_OL_PREFIX 42     ///< Border Router Local On-link Prefix TLV
 #define OT_NETWORK_DIAGNOSTIC_TLV_BR_FAVORED_OL_PREFIX 43   ///< Border Router Favored On-link Prefix TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_DIAG 44            ///< Vendor Diagnostics TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_OUI 45             ///< Vendor OUI TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
