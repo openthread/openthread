@@ -44,6 +44,7 @@
 #include "common/equatable.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
+#include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/string.hpp"
 #include "thread/net_diag_tlvs.hpp"
@@ -139,6 +140,19 @@ public:
          * @retval kErrorInvalidArgs  The @p aSize is not valid and not within valid range [kMinSize, kMaxSize].
          */
         Error SetFrom(const uint8_t *aData, uint16_t aSize);
+
+        /**
+         * Parses the OUI from a message.
+         *
+         * If @p aOffsetRange is longer than `kMaxSize`, the additional bytes beyond `kMaxSize` are ignored.
+         *
+         * @param[in] aMessage       The message to read from.
+         * @param[in] aOffsetRange   The offset range in @p aMessage to read from.
+         *
+         * @retval kErrorNone   Successfully parsed the OUI from @p aMessage.
+         * @retval kErrorParse  Failed to parse the OUI from @p aMessage.
+         */
+        Error ParseFrom(const Message &aMessage, OffsetRange aOffsetRange);
 
         /**
          * Returns the OUI as a 24-bit OUI value.

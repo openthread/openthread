@@ -406,6 +406,15 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         error = Tlv::Append<VendorAppUrlTlv>(aMessage, Get<VendorInfo>().GetAppUrl());
         break;
 
+    case Tlv::kVendorOui:
+    {
+        const VendorInfo::Oui &oui = Get<VendorInfo>().GetOui();
+
+        VerifyOrExit(oui.IsValid());
+        error = Tlv::Append<VendorOuiTlv>(aMessage, oui.GetBytes(), oui.GetSize());
+        break;
+    }
+
     case Tlv::kThreadStackVersion:
         error = Tlv::Append<ThreadStackVersionTlv>(aMessage, otGetVersionString());
         break;
@@ -1180,6 +1189,10 @@ Error Client::ParseDiagTlv(const Message &aMessage, const Tlv::Info &aTlvInfo, D
 
     case Tlv::kVendorAppUrl:
         error = aTlvInfo.Read<VendorAppUrlTlv>(aMessage, aDiagTlv.mData.mVendorAppUrl);
+        break;
+
+    case Tlv::kVendorOui:
+        error = AsCoreType(&aDiagTlv.mData.mVendorOui).ParseFrom(aMessage, aTlvInfo.GetValueOffsetRange());
         break;
 
     case Tlv::kThreadStackVersion:

@@ -421,6 +421,12 @@ class Node(object):
     def set_vendor_app_url(self, url):
         return self._cli_no_output('vendor appurl', url)
 
+    def get_vendor_oui(self):
+        return self._cli_single_output('vendor oui')
+
+    def set_vendor_oui(self, oui):
+        return self._cli_no_output('vendor oui', oui)
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata
 
