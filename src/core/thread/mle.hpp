@@ -1939,6 +1939,8 @@ private:
 
     class Attacher : public InstanceLocator
     {
+        friend class ot::UnitTester;
+
     public:
         explicit Attacher(Instance &aInstance);
 
