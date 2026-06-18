@@ -55,6 +55,7 @@ set(COMMON_SOURCES
     cli_srp_server.cpp
     cli_tcat.cpp
     cli_tcp.cpp
+    cli_td.cpp
     cli_udp.cpp
     cli_utils.cpp
 )

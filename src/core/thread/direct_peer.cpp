@@ -28,18 +28,18 @@
 
 /**
  * @file
- *   This file includes definitions for a Thread P2P `Peer`.
+ *   This file implements the Thread Direct `DirectPeer`.
  */
 
-#include "peer.hpp"
+#include "direct_peer.hpp"
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 #include "instance/instance.hpp"
 
 namespace ot {
 
-void Peer::Clear(void)
+void DirectPeer::Clear(void)
 {
     Instance &instance = GetInstance();
 
@@ -47,18 +47,6 @@ void Peer::Clear(void)
     Init(instance);
 }
 
-void Peer::SetDeviceMode(Mle::DeviceMode aMode)
-{
-    VerifyOrExit(aMode != GetDeviceMode());
-
-    Neighbor::SetDeviceMode(aMode);
-
-    VerifyOrExit(IsStateValid());
-
-exit:
-    return;
-}
-
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

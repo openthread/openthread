@@ -88,6 +88,7 @@
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "crypto/storage.hpp"
+#include "mac/direct_handler.hpp"
 #include "mac/mac.hpp"
 #include "mac/wakeup_tx_scheduler.hpp"
 #include "meshcop/border_agent.hpp"
@@ -128,6 +129,7 @@
 #include "thread/announce_sender.hpp"
 #include "thread/anycast_locator.hpp"
 #include "thread/child_supervision.hpp"
+#include "thread/direct_peer_table.hpp"
 #include "thread/discover_scanner.hpp"
 #include "thread/energy_scan_server.hpp"
 #include "thread/key_manager.hpp"
@@ -692,6 +694,13 @@ private:
     Mle::Mle                       mMle;
     Mle::DiscoverScanner           mDiscoverScanner;
     AddressResolver                mAddressResolver;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    DirectHandler   mDirectHandler;
+    DirectPeerTable mDirectPeerTable;
+#endif
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    WakeupTxScheduler mWakeupTxScheduler;
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioSelector mRadioSelector;
@@ -970,12 +979,13 @@ template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
 #endif
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-template <> inline PeerTable &Instance::Get(void) { return mMle.mP2p.mPeerTable; }
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+template <> inline DirectPeerTable &Instance::Get(void) { return mDirectPeerTable; }
+template <> inline DirectHandler   &Instance::Get(void) { return mDirectHandler; }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+template <> inline WakeupTxScheduler &Instance::Get(void) { return mWakeupTxScheduler; }
 #endif
 
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }

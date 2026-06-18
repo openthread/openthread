@@ -65,8 +65,9 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     mActiveTimestamp.mAuthoritative = false;
     mChannel                        = preferredChannels.ChooseRandomChannel();
     mChannelMask                    = supportedChannels.GetMask();
-    mWakeupChannel                  = supportedChannels.ChooseRandomChannel();
-    mPanId                          = Mac::GenerateRandomPanId();
+    // The Thread Direct feature mandates channel 20 as the Wake Channel.
+    mWakeupChannel = OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL;
+    mPanId         = Mac::GenerateRandomPanId();
     AsCoreType(&mSecurityPolicy).SetToDefault();
 
     SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());

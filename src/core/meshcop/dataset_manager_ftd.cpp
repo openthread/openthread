@@ -243,6 +243,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
     {
         ChannelTlvValue channelValue;
 
+        // GetWakeupChannel() always returns OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL (20).
         channelValue.SetChannelAndPage(Get<Mac::Mac>().GetWakeupChannel());
         IgnoreError(dataset.Write<WakeupChannelTlv>(channelValue));
     }

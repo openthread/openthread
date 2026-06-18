@@ -28,33 +28,36 @@
 
 /**
  * @file
- *   This file includes definitions for a Thread P2P `Peer`.
+ *   This file includes definitions for a Thread Direct `DirectPeer`.
  */
 
-#ifndef OT_CORE_THREAD_PEER_HPP_
-#define OT_CORE_THREAD_PEER_HPP_
+#ifndef OT_CORE_THREAD_DIRECT_PEER_HPP_
+#define OT_CORE_THREAD_DIRECT_PEER_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
+#include "common/random.hpp"
+#include "mac/mac_header_ie.hpp"
 #include "thread/neighbor.hpp"
 
 namespace ot {
 
 /**
- * Represents a P2P Peer.
+ * Represents a Thread Direct peer and its link state established during the
+ * TD handshake.
  */
-class Peer : public CslNeighbor
+class DirectPeer : public CslNeighbor
 {
 public:
     /**
-     * Max number of re-transmitted the P2P link tear down messages.
+     * Maximum number of re-transmitted TD link teardown frames.
      */
     static constexpr uint8_t kMaxRetransmitLinkTearDowns = 4;
 
     /**
-     * Initializes the `Peer` object.
+     * Initializes the `DirectPeer` object.
      *
      * @param[in] aInstance  The OpenThread instance.
      */
@@ -70,16 +73,9 @@ public:
     void Clear(void);
 
     /**
-     * Sets the device mode flags.
+     * Gets the link-local IPv6 address of the peer.
      *
-     * @param[in]  aMode  The device mode flags.
-     */
-    void SetDeviceMode(Mle::DeviceMode aMode);
-
-    /**
-     * Gets the link local IPv6 address of the peer.
-     *
-     * @returns The link local IPv6 address of the peer.
+     * @returns The link-local IPv6 address of the peer.
      */
     void GetLinkLocalIp6Address(Ip6::Address &aIp6Address) const
     {
@@ -87,40 +83,40 @@ public:
     }
 
     /**
-     * Generates a new challenge value to use during a child attach.
+     * Generates a new challenge value for the TD handshake.
      */
-    void GenerateChallenge(void) { mAttachChallenge.GenerateRandom(); }
+    void GenerateChallenge(void) { Random::NonCrypto::FillBuffer(mChallenge.mChallenge, Mac::ChallengeLtv::kLength); }
 
     /**
-     * Gets the current challenge value used during attach.
+     * Gets the current challenge value.
      *
      * @returns The current challenge value.
      */
-    const Mle::TxChallenge &GetChallenge(void) const { return mAttachChallenge; }
+    const Mac::ChallengeLtv &GetChallenge(void) const { return mChallenge; }
 
     /**
-     * Increments the count of re-transmitted link tear down messages.
+     * Increments the count of re-transmitted link teardown frames.
      */
     void IncrementTearDownCount(void) { mTearDownCount++; }
 
     /**
-     * Resets the count of re-transmitted link tear down messages to zero.
+     * Resets the teardown re-transmit count to zero.
      */
     void ResetTearDownCount(void) { mTearDownCount = 0; }
 
     /**
-     * Returns the count of re-transmitted link tear down messages.
+     * Returns the current teardown re-transmit count.
      */
     uint8_t GetTearDownCount(void) const { return mTearDownCount; }
 
 private:
-    Mle::TxChallenge mAttachChallenge;
+    Mac::ChallengeLtv mChallenge;
 
-    uint8_t mTearDownCount : 3; // The count of re-transmitted link tear down messages.
+    uint8_t mTearDownCount : 3; // Re-transmitted teardown frame count.
 };
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
-#endif // OT_CORE_THREAD_PEER_HPP_
+#endif // OT_CORE_THREAD_DIRECT_PEER_HPP_

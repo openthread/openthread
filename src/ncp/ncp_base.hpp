@@ -53,6 +53,9 @@
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 #include <openthread/srp_client.h>
 #endif
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+#include <openthread/thread_direct.h>
+#endif
 #include <openthread/platform/dnssd.h>
 
 #include "changed_props_set.hpp"
@@ -473,6 +476,13 @@ protected:
 
     static void HandleTimeSyncUpdate(void *aContext);
     void        HandleTimeSyncUpdate(void);
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    static void HandleThreadDirectEvent(otThreadDirectEvent           aEvent,
+                                        const otThreadDirectPeerInfo *aPeerInfo,
+                                        void                         *aContext);
+    void        HandleThreadDirectEvent(otThreadDirectEvent aEvent, const otThreadDirectPeerInfo *aPeerInfo);
+#endif
 
 #if OPENTHREAD_FTD
     static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
