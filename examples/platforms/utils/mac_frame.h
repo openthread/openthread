@@ -400,6 +400,21 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
  */
 bool otMacFrameSrcAddrMatchCslReceiverPeer(const otRadioFrame *aFrame, const otRadioContext *aRadioContext);
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+/**
+ * Tell if @p aFrame is a Thread Direct Wake Command frame.
+ *
+ * A TD Wake Command is a MAC Command with no ACK request and wake key index 129 or 130-192
+ * in the Auxiliary Security Header (stamped by the stack before transmit).
+ *
+ * @param[in] aFrame  A pointer to the frame.
+ *
+ * @retval true   The frame is a TD Wake Command.
+ * @retval false  The frame is not a TD Wake Command.
+ */
+bool otMacFrameIsTdWakeCommand(otRadioFrame *aFrame);
+#endif
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

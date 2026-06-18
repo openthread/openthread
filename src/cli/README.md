@@ -89,7 +89,6 @@ Done
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [nexthop](#nexthop)
-- [p2p](#p2p-link-extaddr-extaddr)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -3296,28 +3295,6 @@ nexthop 0x8001
 Done
 ```
 
-### p2p link extaddr \<extaddr\>
-
-Wakes up the peer identified by the extended address and establishes a peer-to-peer link with the peer.
-
-`OPENTHREAD_CONFIG_P2P_ENABLE` and `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` are required.
-
-```bash
-> p2p link extaddr dead00beef00cafe
-Done
-```
-
-### p2p unlink \<extaddress\>
-
-Tears down the P2P link identified by the extended address.
-
-`OPENTHREAD_CONFIG_P2P_ENABLE` is required.
-
-```bash
-> p2p unlink dead00beef00cafe
-Done
-```
-
 ### panid
 
 Get the IEEE 802.15.4 PAN ID value.
@@ -4844,7 +4821,7 @@ Factory Diagnostics module is enabled only when building OpenThread with `OPENTH
 
 Get the wake-up channel.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup channel
@@ -4856,7 +4833,7 @@ Done
 
 Set the wake-up channel.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` or `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` or `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup channel 12
@@ -4867,7 +4844,7 @@ Done
 
 Get the wake-up listen interval and duration.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup parameters
@@ -4880,7 +4857,7 @@ Done
 
 Set the wake-up listen interval and duration.
 
-Requires `OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE`.
+Requires `OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE`.
 
 ```bash
 > wakeup parameters 1000000 8000
@@ -4891,7 +4868,7 @@ Done
 
 Show the state of wake-up listening feature.
 
-`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+`OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE` is required.
 
 ```bash
 > wakeup listen
@@ -4903,7 +4880,7 @@ Done
 
 Enable/disable listening for wake-up frames.
 
-`OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE` is required.
+`OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE` is required.
 
 ```bash
 > wakeup listen enable
@@ -4914,7 +4891,7 @@ Done
 
 Wakes a Wake-up End Device.
 
-`OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE` is required.
+`OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE` is required.
 
 ```bash
 > wakeup wake 1ece0a6c4653a7c1 7500 1090
