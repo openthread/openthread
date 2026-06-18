@@ -970,14 +970,6 @@ template <> inline ChildTable &Instance::Get(void) { return mMle.mChildTable; }
 template <> inline RouterTable &Instance::Get(void) { return mMle.mRouterTable; }
 #endif
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-template <> inline PeerTable &Instance::Get(void) { return mMle.mP2p.mPeerTable; }
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
-#endif
-
 template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }
 
 template <> inline ThreadNetif &Instance::Get(void) { return mThreadNetif; }
@@ -987,6 +979,10 @@ template <> inline Ip6::Ip6 &Instance::Get(void) { return mIp6; }
 template <> inline Mac::Mac &Instance::Get(void) { return mMac; }
 
 template <> inline Mac::SubMac &Instance::Get(void) { return mMac.mLinks.mSubMac; }
+
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+template <> inline WakeupTxScheduler &Instance::Get(void) { return mMle.mWakeupTxScheduler; }
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> inline Trel::Link &Instance::Get(void) { return mMac.mLinks.mTrel; }

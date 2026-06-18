@@ -2637,53 +2637,25 @@ void Mac::UpdateWakeupListening(void)
 
 Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 {
-    Error               error = kErrorNone;
-    const ConnectionIe *connectionIe;
-    Address             srcAddress;
-    WakeupInfo          wakeupInfo;
-    uint32_t            rvTimeUs;
-    uint64_t            rvTimestampUs;
-    uint64_t            radioNowUs;
+    Error   error = kErrorNone;
+    Address srcAddress;
 
     VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
 
     SuccessOrExit(error = aFrame.GetSrcAddr(srcAddress));
     VerifyOrExit(srcAddress.IsExtended(), error = kErrorDrop);
 
-    wakeupInfo.mExtAddress    = srcAddress.GetExtended();
-    connectionIe              = aFrame.GetConnectionIe();
-    wakeupInfo.mRetryInterval = connectionIe->GetRetryInterval();
-    wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
-    VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
-
-    radioNowUs    = otPlatRadioGetNow(&GetInstance());
-    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
-    rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
-
-    if (rvTimestampUs > radioNowUs + kCslRequestAhead)
-    {
-        wakeupInfo.mAttachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
-        wakeupInfo.mAttachDelayMs = wakeupInfo.mAttachDelayMs / Time::kOneMsecInUsec;
-    }
-    else
-    {
-        wakeupInfo.mAttachDelayMs = 0;
-    }
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     {
         uint32_t frameCounter;
 
         IgnoreError(aFrame.GetFrameCounter(frameCounter));
-        LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
-                ToUlong(rvTimeUs), wakeupInfo.mRetryCount, wakeupInfo.mRetryInterval);
+        LogInfo("Received wake-up frame from %s, fc:%lu", srcAddress.GetExtended().ToString().AsCString(),
+                ToUlong(frameCounter));
     }
 #endif
 
-    // Stop receiving more wake up frames
     IgnoreError(SetWakeupListenEnabled(false));
-
-    Get<Mle::Mle>().HandleWakeupFrame(wakeupInfo);
 
 exit:
     return error;

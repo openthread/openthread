@@ -37,8 +37,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread_ftd.h>
-#include <openthread/provisional/p2p.h>
-
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"
 #include "common/callback.hpp"
@@ -70,8 +68,6 @@
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
 #include "thread/network_data_types.hpp"
-#include "thread/peer.hpp"
-#include "thread/peer_table.hpp"
 #include "thread/router.hpp"
 #include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -136,11 +132,6 @@ class Mle : public InstanceLocator, private NonCopyable
 
 public:
     typedef otDetachGracefullyCallback DetachCallback; ///< Callback to signal end of graceful detach.
-    typedef otP2pLinkDoneCallback P2pLinkDoneCallback; ///< Callback to inform the result of establishing P2P links.
-    typedef otP2pUnlinkDoneCallback
-                               P2pUnlinkDoneCallback; ///< Callback to inform the result of tearing down the P2P link.
-    typedef otP2pEventCallback P2pEventCallback;      ///< Callback to signal events of the P2P link.
-    typedef otWakeupCallback   WakeupCallback; ///< Callback to communicate the result of waking a Wake-up End Device.
 
     /**
      * Initializes the MLE object.
@@ -762,27 +753,6 @@ public:
     bool IsCslSupported(void) const;
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    /**
-     * Attempts to wake a Wake-up End Device.
-     *
-     * @param[in] aWedAddress The extended address of the Wake-up End Device.
-     * @param[in] aIntervalUs An interval between consecutive wake-up frames (in microseconds).
-     * @param[in] aDurationMs Duration of the wake-up sequence (in milliseconds).
-     * @param[in] aCallback   A pointer to function that is called when the wake-up succeeds or fails.
-     * @param[in] aContext    A pointer to callback application-specific context.
-     *
-     * @retval kErrorNone         Successfully started the wake-up.
-     * @retval kErrorInvalidState Another wake-up request is still in progress.
-     * @retval kErrorInvalidArgs  The wake-up interval or duration are invalid.
-     */
-    Error Wakeup(const Mac::ExtAddress &aWedAddress,
-                 uint16_t               aIntervalUs,
-                 uint16_t               aDurationMs,
-                 WakeupCallback         aCallback,
-                 void                  *aCallbackContext);
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-
 #if OPENTHREAD_FTD
     /**
      * Sets whether or not the device is router-eligible.
@@ -1204,65 +1174,6 @@ public:
 
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    /**
-     * Attempts to wake up peers and establish P2P links with peers.
-     *
-     * If the @p aP2pRequest indicates a group identifier, this method establishes multiple P2P links with peers.
-     * Otherwise, it establishes at most one P2P link.
-     *
-     * @param[in] aP2pRequest  A constant reference to the P2P request.
-     * @param[in] aCallback    A pointer to the function that is called when the P2P link succeeds or fails.
-     * @param[in] aContext     A pointer to the callback application-specific context.
-     *
-     * @retval kErrorNone          Successfully started to establish P2P links.
-     * @retval kErrorBusy          Establishing a P2P link in progress.
-     * @retval kErrorInvalidState  Device was disabled or not fully configured.
-     * @retval kErrorNoBufs        Insufficient buffer space to establish a P2P link.
-     */
-    Error P2pWakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback aCallback, void *aContext)
-    {
-        return mP2p.WakeupAndLink(aP2pRequest, aCallback, aContext);
-    }
-#endif
-
-    /**
-     * Tears down the P2P link specified by the Extended Address.
-     *
-     * @param[in] aExtAddress  A constant reference to the P2P peer's Extended Address.
-     * @param[in] aCallback    A pointer to function that is called when the P2P link tear down process has ended.
-     * @param[in] aContext     A pointer to callback application-specific context.
-     *
-     * @retval OT_ERROR_NONE       Successfully started to tear down the P2P link.
-     * @retval OT_ERROR_BUSY       Tearing down or establishing a P2P link process is in progress.
-     * @retval OT_ERROR_NOT_FOUND  The P2P link identified by the @p aExtAddress was not found.
-     */
-    Error P2pUnlink(const Mac::ExtAddress &aExtAddress, P2pUnlinkDoneCallback aCallback, void *aContext)
-    {
-        return mP2p.Unlink(aExtAddress, aCallback, aContext);
-    }
-
-    /**
-     * Sets the callback function to notify event changes of P2P links.
-     *
-     * A subsequent call to this function will replace any previously set callback.
-     *
-     * @param[in] aCallback  The callback function pointer.
-     * @param[in] aContext   A pointer to the callback application-specific context.
-     */
-    void P2pSetEventCallback(P2pEventCallback aCallback, void *aContext) { mP2p.SetEventCallback(aCallback, aContext); }
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    /**
-     * Notifies MLE that a wake-up frame was received successfully.
-     *
-     * @param[in]  aWakeupInfo  A reference to the wake-up frame information.
-     */
-    void HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo);
-#endif
-
 private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
@@ -1526,23 +1437,7 @@ private:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         kTypeTimeSync,
 #endif
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-        kTypeP2pLinkRequest,
-        kTypeP2pLinkAcceptAndRequest,
-        kTypeP2pLinkAccept,
-        kTypeP2pLinkTearDown,
-#endif
     };
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    enum WedAttachState : uint8_t
-    {
-        kWedDetached,
-        kWedAttaching,
-        kWedAttached,
-        kWedDetaching,
-    };
-#endif
 
     //------------------------------------------------------------------------------------------------------------------
     // Nested types
@@ -1702,7 +1597,7 @@ private:
     };
 #endif
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_FTD
     struct LinkAcceptInfo
     {
         Mac::ExtAddress mExtAddress;       // The neighbor/router extended address.
@@ -2293,78 +2188,6 @@ private:
 #endif // OPENTHREAD_FTD
 
     //------------------------------------------------------------------------------------------------------------------
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    void HandleP2pLinkTimer(void) { mP2p.HandleLinkTimer(); }
-
-    class P2p : public InstanceLocator
-    {
-        friend class ot::Instance;
-
-    public:
-        P2p(Instance &aInstance);
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        Error WakeupAndLink(const P2pRequest &aP2pRequest, P2pLinkDoneCallback aCallback, void *aContext);
-        void  HandleP2pLinkRequest(RxInfo &aRxInfo);
-        void  HandleP2pLinkAccept(RxInfo &aRxInfo);
-#endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        void HandleP2pWakeup(const Mac::WakeupInfo &aWakeupInfo);
-        void HandleP2pLinkAcceptAndRequest(RxInfo &aRxInfo);
-#endif
-
-        Error Unlink(const Mac::ExtAddress &aExtAddress, P2pUnlinkDoneCallback aCallback, void *aContext);
-        void  HandleP2pLinkTearDown(RxInfo &aRxInfo);
-        void  SetEventCallback(P2pEventCallback aCallback, void *aContext);
-        void  HandleLinkTimer(void);
-
-    private:
-        static constexpr uint16_t kWakeupMaxDuration         = OPENTHREAD_CONFIG_WAKEUP_MAX_DURATION;
-        static constexpr uint16_t kWakeupTxInterval          = OPENTHREAD_CONFIG_WAKEUP_TX_INTERVAL;
-        static constexpr uint32_t kEstablishP2pLinkTimeoutUs = 500000;
-
-        enum State : uint8_t
-        {
-            kStateIdle,
-            kStateWakingUp,
-            kStateWaitingLinkAccept,
-            kStateAttachDelay,
-            kStateWaitingLinkAcceptAndRequest,
-            kStateTearingDown,
-        };
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        void  SendP2pLinkRequest(Peer *aPeer);
-        Error SendP2pLinkAccept(const LinkAcceptInfo &aInfo);
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        Error SendP2pLinkAcceptAndRequest(const LinkAcceptInfo &aInfo);
-#endif
-
-        static void HandleLinkTearDownTxDone(const otMessage *aMessage, otError aError, void *aContext);
-        void        HandleLinkTearDownTxDone(const Message &aMessage);
-
-        Error SendP2pLinkAcceptVariant(const LinkAcceptInfo &aInfo, bool aIsLinkAcceptorRequest);
-        void  HandleP2pLinkAcceptVariant(RxInfo &aRxInfo, MessageType aMessageType);
-        void  SetWakeupListenerEnabled(void);
-        void  ClearPeersInLinkRequestState(void);
-        Error SendLinkTearDown(Peer &aPeer);
-        void  PeerUnlinked(Peer &aPeer);
-
-        using P2pLinkTimer = TimerMicroIn<Mle, &Mle::HandleP2pLinkTimer>;
-
-        State                           mState;
-        PeerTable                       mPeerTable;
-        P2pLinkTimer                    mTimer;
-        Callback<P2pLinkDoneCallback>   mLinkDoneCallback;
-        Callback<P2pUnlinkDoneCallback> mUnlinkDoneCallback;
-        Callback<P2pEventCallback>      mEventCallback;
-        Peer                           *mPeer;
-    };
-#endif
-
-    //------------------------------------------------------------------------------------------------------------------
     // Methods
 
     Error      Start(StartMode aMode);
@@ -2450,10 +2273,6 @@ private:
 #else
     static void Log(MessageAction, MessageType, const Ip6::Address &) {}
     static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    void HandleWedAttachTimer(void);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
@@ -2542,9 +2361,6 @@ private:
     // Variables
 
     using MleSocket = Ip6::Udp::SocketIn<Mle, &Mle::HandleUdpReceive>;
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    using WedAttachTimer = TimerMicroIn<Mle, &Mle::HandleWedAttachTimer>;
-#endif
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
@@ -2585,13 +2401,6 @@ private:
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    WakeupTxScheduler        mWakeupTxScheduler;
-    WedAttachState           mWedAttachState;
-    WedAttachTimer           mWedAttachTimer;
-    Callback<WakeupCallback> mWakeupCallback;
-#endif
-
 #if OPENTHREAD_FTD
 
     bool     mAddressSolicitPending : 1;
@@ -2627,8 +2436,8 @@ private:
 
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    P2p mP2p;
+#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+    WakeupTxScheduler mWakeupTxScheduler;
 #endif
 };
 
