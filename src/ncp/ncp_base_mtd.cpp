@@ -4828,8 +4828,8 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DIRECT_WAKE_CHANNEL>(void)
 {
     uint8_t wakeupChannel;
     otError error = OT_ERROR_NONE;
@@ -4842,7 +4842,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DIRECT_WAKE_CHANNEL>(void)
 {
     return mEncoder.WriteUint8(otLinkGetWakeupChannel(mInstance));
 }

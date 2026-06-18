@@ -319,7 +319,7 @@ otError otMacFrameProcessTransmitSecurity(otRadioFrame *aFrame, otRadioContext *
     bool              processKeyId;
 
     processKeyId =
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
         otMacFrameIsKeyIdMode2(aFrame) ||
 #endif
         otMacFrameIsKeyIdMode1(aFrame);

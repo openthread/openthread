@@ -429,7 +429,7 @@ const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryMleKey;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 const Mle::KeyMaterial &KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
 {
     HashKeys hashKeys;

@@ -74,11 +74,6 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    , mWakeupTxScheduler(aInstance)
-    , mWedAttachState(kWedDetached)
-    , mWedAttachTimer(aInstance)
-#endif
 #if OPENTHREAD_FTD
     , mAddressSolicitPending(false)
     , mAddressSolicitRejected(false)
@@ -98,9 +93,6 @@ Mle::Mle(Instance &aInstance)
     , mRouterTable(aInstance)
     , mRoleTransitioner(aInstance)
 #endif // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    , mP2p(aInstance)
-#endif
 {
     mParent.Init(aInstance);
 
@@ -1800,28 +1792,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 #endif
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    case kCommandP2pLinkRequest:
-        mP2p.HandleP2pLinkRequest(rxInfo);
-        break;
-
-    case kCommandP2pLinkAccept:
-        mP2p.HandleP2pLinkAccept(rxInfo);
-        break;
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case kCommandP2pLinkAcceptAndRequest:
-        mP2p.HandleP2pLinkAcceptAndRequest(rxInfo);
-        break;
-#endif
-
-    case kCommandP2pLinkTearDown:
-        mP2p.HandleP2pLinkTearDown(rxInfo);
-        break;
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
-
     default:
         ExitNow(error = kErrorDrop);
     }
@@ -2952,15 +2922,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
 #define TimeSyncMessageTypeMapList(_)
 #endif
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-#define P2pMessageTypeMapList(_)                                   \
-    _(kTypeP2pLinkRequest, "P2P Link Request")                     \
-    _(kTypeP2pLinkAcceptAndRequest, "P2P Link Accept and Request") \
-    _(kTypeP2pLinkAccept, "P2P Link Accept")                       \
-    _(kTypeP2pLinkTearDown, "P2P Link Tear Down")
-#else
 #define P2pMessageTypeMapList(_)
-#endif
 
     DefineEnumStringArray(MessageTypeMapList);
 
@@ -3039,67 +3001,6 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 
     return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
            aCslAccuracy.GetUncertaintyInMicrosec() * k;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-void Mle::HandleWedAttachTimer(void)
-{
-    switch (mWedAttachState)
-    {
-    case kWedAttaching:
-        // Connection timeout
-        if (!IsRxOnWhenIdle())
-        {
-            Get<MeshForwarder>().SetRxOnWhenIdle(false);
-        }
-
-        LogInfo("Connection window closed");
-
-        mWedAttachState = kWedDetached;
-        mWakeupCallback.InvokeAndClearIfSet(kErrorFailed);
-        break;
-    default:
-        break;
-    }
-}
-
-Error Mle::Wakeup(const Mac::ExtAddress &aWedAddress,
-                  uint16_t               aIntervalUs,
-                  uint16_t               aDurationMs,
-                  WakeupCallback         aCallback,
-                  void                  *aCallbackContext)
-{
-    Error              error = kErrorNone;
-    Mac::WakeupRequest wakeupRequest;
-
-    VerifyOrExit((aIntervalUs > 0) && (aDurationMs > 0), error = kErrorInvalidArgs);
-    VerifyOrExit(aIntervalUs < aDurationMs * Time::kOneMsecInUsec, error = kErrorInvalidArgs);
-    VerifyOrExit(mWedAttachState == kWedDetached, error = kErrorInvalidState);
-
-    wakeupRequest.SetExtAddress(aWedAddress);
-    SuccessOrExit(error = mWakeupTxScheduler.WakeUp(wakeupRequest, aIntervalUs, aDurationMs));
-
-    mWedAttachState = kWedAttaching;
-    mWakeupCallback.Set(aCallback, aCallbackContext);
-    Get<MeshForwarder>().SetRxOnWhenIdle(true);
-    mWedAttachTimer.FireAt(mWakeupTxScheduler.GetTxEndTime() + mWakeupTxScheduler.GetConnectionWindowUs());
-
-    LogInfo("Connection window open");
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-void Mle::HandleWakeupFrame(const Mac::WakeupInfo &aWakeupInfo)
-{
-    OT_UNUSED_VARIABLE(aWakeupInfo);
-
-#if OPENTHREAD_CONFIG_P2P_ENABLE
-    mP2p.HandleP2pWakeup(aWakeupInfo);
-#endif
 }
 #endif
 
