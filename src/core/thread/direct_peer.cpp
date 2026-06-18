@@ -28,62 +28,25 @@
 
 /**
  * @file
- * @brief
- *  This file defines the OpenThread provisional IEEE 802.15.4 Link Layer API.
- */
-#ifndef OPENTHREAD_PROVISIONAL_LINK_H_
-#define OPENTHREAD_PROVISIONAL_LINK_H_
-
-#include <openthread/link.h>
-#include <openthread/platform/radio.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-/**
- * @addtogroup api-provisional-link
- *
- * @brief
- *   This module includes provisional functions that control link-layer configuration.
- *
- * @{
+ *   This file implements the Thread Direct `DirectPeer`.
  */
 
-/**
- * Represents the wake-up identifier.
- */
-typedef uint64_t otWakeupId;
+#include "direct_peer.hpp"
 
-/**
- * Represents the wake-up request type.
- */
-typedef enum otWakeupType
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#include "instance/instance.hpp"
+
+namespace ot {
+
+void DirectPeer::Clear(void)
 {
-    OT_WAKEUP_TYPE_EXT_ADDRESS      = 0, ///< Wake up the peer by the extended address.
-    OT_WAKEUP_TYPE_IDENTIFIER       = 1, ///< Wake up the peer by the wake-up identifier.
-    OT_WAKEUP_TYPE_GROUP_IDENTIFIER = 2, ///< Wake up peers by the group wake-up identifier.
-} otWakeupType;
+    Instance &instance = GetInstance();
 
-/**
- * Represents the request to wake up the peer.
- */
-typedef struct otWakeupRequest
-{
-    union
-    {
-        otWakeupId   mWakeupId;   ///< Wake-up identifier of the Wake-up Listener.
-        otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address of the Wake-up Listener.
-    } mShared;
+    ClearAllBytes(*this);
+    Init(instance);
+}
 
-    otWakeupType mType; ///< Indicates the wake-up request type (`OT_WAKEUP_TYPE_*` enumeration).
-} otWakeupRequest;
+} // namespace ot
 
-/**
- * @}
- */
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-#endif // OPENTHREAD_PROVISIONAL_LINK_H_
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE

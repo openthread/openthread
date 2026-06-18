@@ -286,138 +286,44 @@ public:
     static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
 };
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 /**
- * This class implements Rendezvous Time IE data structure.
+ * Defines the Thread Header IE Element ID and LTV type codes.
  *
- * IEEE 802.15.4 Rendezvous Time IE contains two fields, Rendezvous Time and
- * Wake-up Interval, but the Wake-up Interval is not used in Thread, so it is
- * not included in this class.
+ * The Thread Header IE is an IEEE 802.15.4 Header IE with Element ID 0x2d.
+ * Its payload is a sequence of LTV (Length-Type-Value) encoded elements.
  */
-OT_TOOL_PACKED_BEGIN
-class RendezvousTimeIe
+struct ThreadHeaderIe
 {
-public:
-    static constexpr uint8_t kHeaderIeId    = 0x1d;
-    static constexpr uint8_t kIeContentSize = sizeof(uint16_t);
-
-    /**
-     * This method returns the Rendezvous Time.
-     *
-     * @returns the Rendezvous Time in the units of 10 symbols.
-     */
-    uint16_t GetRendezvousTime(void) const { return LittleEndian::HostSwap16(mRendezvousTime); }
-
-    /**
-     * This method sets the Rendezvous Time.
-     *
-     * @param[in]  aRendezvousTime  The Rendezvous Time in the units of 10 symbols.
-     */
-    void SetRendezvousTime(uint16_t aRendezvousTime) { mRendezvousTime = LittleEndian::HostSwap16(aRendezvousTime); }
-
-private:
-    uint16_t mRendezvousTime;
-} OT_TOOL_PACKED_END;
+    static constexpr uint8_t kElementId     = 0x2d; ///< IEEE 802.15.4 Header IE Element ID for Thread Group.
+    static constexpr uint8_t kTypeTargetId  = 0x01; ///< Target ID LTV - Wake Identifier filter.
+    static constexpr uint8_t kTypeSca       = 0x02; ///< Scheduled Channel Access LTV.
+    static constexpr uint8_t kTypeChallenge = 0x03; ///< Thread Challenge LTV.
+};
 
 /**
- * Implements Connection IE data structure.
+ * In-memory representation of SCA LTV parameters.
+ *
+ * RAM Duration encoding: 0 = no change to prior RAM, 1 = no CoEx constraints,
+ * 2-31 = CoEx bitmap with (mRamDuration + 1) valid bits in mRamBits.
  */
-OT_TOOL_PACKED_BEGIN
-class ConnectionIe : public VendorIeHeader
+struct ScaParams
 {
-public:
-    static constexpr uint8_t kHeaderIeId      = ThreadIe::kHeaderIeId;
-    static constexpr uint8_t kIeContentSize   = ThreadIe::kIeContentSize + sizeof(uint8_t);
-    static constexpr uint8_t kThreadIeSubtype = 0x01;
+    static constexpr uint8_t kRamBitsMaxBytes          = 4;  ///< Maximum RAM bitmap size in bytes.
+    static constexpr uint8_t kRamDurationNoChange      = 0;  ///< RAM Duration: no change to prior RAM.
+    static constexpr uint8_t kRamDurationNoConstraints = 1;  ///< RAM Duration: device has no CoEx constraints.
+    static constexpr uint8_t kRamDurationMax           = 31; ///< Maximum valid RAM Duration value.
+    static constexpr int16_t kRamOffsetUsMin           = -1024;
+    static constexpr int16_t kRamOffsetUsMax           = 1023;
 
-    /**
-     * Initializes the Connection IE.
-     */
-    void Init(void)
-    {
-        SetVendorOui(ThreadIe::kVendorOuiThreadCompanyId);
-        SetSubType(kThreadIeSubtype);
-        mConnectionWindow = 0;
-    }
+    uint16_t mSlwPeriodSlots;            ///< SLW Period in 160 us slots (0 = no SLW schedule configured).
+    uint16_t mSlwPhaseSlots;             ///< SLW Phase in 160 us slots.
+    int16_t  mRamOffsetUs;               ///< RAM Offset in us, signed [-1024, 1023].
+    uint8_t  mRamDuration;               ///< RAM Duration code (see above).
+    uint8_t  mRamBits[kRamBitsMaxBytes]; ///< RAM bitmap (valid bytes: ceil((mRamDuration+1)/8) when mRamDuration >= 2).
+};
 
-    /**
-     * Returns the Retry Interval.
-     *
-     * The Retry Interval defines how frequently the Wake-up End Device is
-     * supposed to retry sending the Parent Request to the Wake-up Coordinator.
-     *
-     * @returns the Retry Interval in the units of Wake-up Intervals (7.5ms by default).
-     */
-    uint8_t GetRetryInterval(void) const { return ReadBits<uint8_t, kRetryIntervalMask>(mConnectionWindow); }
-
-    /**
-     * Sets the Retry Interval.
-     *
-     * @param[in]  aRetryInterval  The Retry Interval in the units of Wake-up Intervals (7.5ms by default).
-     */
-    void SetRetryInterval(uint8_t aRetryInterval)
-    {
-        WriteBits<uint8_t, kRetryIntervalMask>(mConnectionWindow, aRetryInterval);
-    }
-
-    /**
-     * Returns the Retry Count.
-     *
-     * The Retry Count defines how many times the Wake-up End Device is supposed
-     * to retry sending the Parent Request to the Wakeup Coordinator.
-     *
-     * @returns the Retry Count.
-     */
-    uint8_t GetRetryCount(void) const { return ReadBits<uint8_t, kRetryCountMask>(mConnectionWindow); }
-
-    /**
-     * Sets the Retry Count
-     *
-     * @param[in]  aRetryCount  The Retry Count.
-     */
-    void SetRetryCount(uint8_t aRetryCount) { WriteBits<uint8_t, kRetryCountMask>(mConnectionWindow, aRetryCount); }
-
-    /**
-     * Sets the Wake-up Identifier.
-     *
-     * @param[in]  aWakeupId  The Wake-up Identifier.
-     *
-     * @retval kErrorNone   Successfully set the Wake-up Identifier.
-     * @retval kErrorParse  The length of the given Wake-up Identifier didn't match the reserved length.
-     */
-    Error SetWakeupId(WakeupId aWakeupId);
-
-    /**
-     * Gets the Wake-up Identifier.
-     *
-     * @param[out]  aWakeupId  A reference to the Wake-up Identifier.
-     *
-     * @retval kErrorNone    Successfully got the Wake-up Identifier.
-     * @retval kErrorParse   Failed to parse the Wake-up Identifier from the Connection IE.
-     */
-    Error GetWakeupId(WakeupId &aWakeupId) const;
-
-    /**
-     * Gets the pointer to the HeaderIe of this ConnectionIe.
-     *
-     * @returns A pointer to the HeaderIe.
-     */
-    const HeaderIe *GetHeaderIe(void) const
-    {
-        return reinterpret_cast<const HeaderIe *>(reinterpret_cast<const uint8_t *>(this) - sizeof(HeaderIe));
-    }
-
-private:
-    static constexpr uint8_t kRetryIntervalOffset = 4;
-    static constexpr uint8_t kRetryIntervalMask   = 0x3 << kRetryIntervalOffset;
-    static constexpr uint8_t kRetryCountMask      = 0xf;
-
-    const uint8_t *GetWakeupIdData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
-    uint8_t       *GetWakeupIdData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
-
-    uint8_t mConnectionWindow;
-} OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 /**
  * @}

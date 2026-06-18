@@ -26,13 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file includes definitions for the Thread Direct Wake Initiator TX scheduler.
+ */
+
 #ifndef OT_CORE_MAC_WAKEUP_TX_SCHEDULER_HPP_
 #define OT_CORE_MAC_WAKEUP_TX_SCHEDULER_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
+#include <openthread/thread_direct.h>
+
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -40,10 +48,12 @@
 
 namespace ot {
 
-class Child;
-
 /**
- * Implements wake-up sequence TX scheduling functionality.
+ * Implements Wake Initiator (WI) wake frame TX scheduling.
+ *
+ * Transmits periodic IEEE 802.15.4 MAC Command Wake Frames on the configured wake
+ * channel at a fixed interval for the specified burst duration, then opens a
+ * connection window during which a TD Link Command from the Wake Listener is expected.
  */
 class WakeupTxScheduler : public InstanceLocator, private NonCopyable
 {
@@ -51,87 +61,104 @@ class WakeupTxScheduler : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * Initializes the wake-up sequence TX scheduler object.
+     * Initializes the Wake Frame TX scheduler.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      */
     explicit WakeupTxScheduler(Instance &aInstance);
 
     /**
-     * Initiates the wake-up sequence to a Wake-up End Device.
+     * Starts a Thread Direct wake burst targeting @p aWlExtAddress.
      *
-     * @param[in] aWakeupRequest  The wake-up request.
-     * @param[in] aIntervalUs     An interval between consecutive wake-up frames (in microseconds).
-     * @param[in] aDurationMs     Duration of the wake-up sequence (in milliseconds).
+     * When @p aWakeType is Frame::kWakeFrameTypeDirectLink, a connection window opens after
+     * the burst; OT_THREAD_DIRECT_EVENT_LINK_FAILED fires on expiry without a response.
      *
-     * @retval kErrorNone         Successfully started the wake-up sequence.
-     * @retval kErrorInvalidState This or another device is currently being woken-up.
+     * @param[in] aWlExtAddress  Extended address of the Wake Listener.
+     * @param[in] aWakeType      Wake frame type.
+     * @param[in] aIntervalUs    Interval between consecutive Wake Frames in us.
+     * @param[in] aDurationMs    Wake burst duration in ms.
+     * @param[in] aKeyIndex      Key index for Wake Frame security.
+     *
+     * @retval kErrorNone          Wake burst started.
+     * @retval kErrorInvalidArgs   @p aIntervalUs or @p aDurationMs is invalid.
+     * @retval kErrorInvalidState  A wake burst is already in progress.
      */
-    Error WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16_t aIntervalUs, uint16_t aDurationMs);
+    Error StartWakeup(const Mac::ExtAddress    &aWlExtAddress,
+                      Mac::Frame::WakeFrameType aWakeType,
+                      uint16_t                  aIntervalUs,
+                      uint16_t                  aDurationMs,
+                      uint8_t                   aKeyIndex);
 
     /**
-     * Returns the connection window used by this device.
+     * Stops the running wake burst and cancels the connection window.
      *
-     * The connection window is amount of time that this device waits for an initial link establishment message after
-     * sending the last wake-up frame.
-     *
-     * @returns Connection window in the units of microseconds.
-     */
-    uint32_t GetConnectionWindowUs(void) const
-    {
-        return mIntervalUs * kConnectionRetryInterval * kConnectionRetryCount;
-    }
-
-    /**
-     * Returns the end of the wake-up sequence time.
-     *
-     * @returns End of the wake-up sequence time.
-     */
-    TimeMicro GetTxEndTime(void) const { return mTxEndTimeUs; }
-
-    /**
-     * Stops the ongoing wake-up sequence.
+     * The completion callback is not invoked.
      */
     void Stop(void);
 
+    bool IsRunning(void) const { return mIsRunning || (mTdWakeState != kTdWakeIdle); }
+
     /**
-     * Updates the value of `mTxRequestAheadTimeUs`, based on bus speed, bus latency and `Mac::kCslRequestAhead`.
+     * Updates `mTxRequestAheadTimeUs` based on bus speed and latency.
      */
     void UpdateFrameRequestAhead(void);
 
-    /**
-     * Returns the wake-up request.
-     */
-    const Mac::WakeupRequest &GetWakeupRequest(void) const { return mWakeupRequest; }
-
 private:
-    constexpr static uint8_t  kConnectionRetryInterval = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL;
-    constexpr static uint8_t  kConnectionRetryCount    = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT;
-    constexpr static uint32_t kWakeupFrameLength       = 54; // Includes SHR
-    constexpr static bool     kWakeupFrameTxCca        = OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE;
-    constexpr static uint32_t kParentRequestLength     = 78; // Includes SHR
+    constexpr static uint16_t kDefaultWakeIntervalUs   = OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INTERVAL_US;
+    constexpr static uint16_t kDefaultWakeDurationMs   = OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_DURATION_MS;
+    constexpr static uint8_t  kConnectionRetryInterval = OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_INTERVAL;
+    constexpr static uint8_t  kConnectionRetryCount    = OPENTHREAD_CONFIG_THREAD_DIRECT_CONNECTION_RETRY_COUNT;
+    constexpr static bool     kWakeFrameTxCca          = OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_FRAME_TX_CCA_ENABLE;
 
-    // Called by the MAC layer when a wake-up frame transmission is about to be started.
+    // Returns the connection window duration in microseconds.
+    // The WI keeps the connection window open long enough for the WL to send
+    // its TD Link Command across all configured retry attempts.
+    static constexpr uint32_t GetConnectionWindowUs(void)
+    {
+        return static_cast<uint32_t>(kConnectionRetryCount + 1) * kConnectionRetryInterval * kDefaultWakeIntervalUs;
+    }
+
+    enum TdWakeState : uint8_t
+    {
+        kTdWakeIdle, ///< No wake burst in progress.
+        kTdWaking,   ///< Burst done; connection window open, awaiting WL TD Link Command.
+    };
+
+    // Starts the Wake Frame burst timer without opening the connection window.
+    Error WakeUp(const Mac::ExtAddress    &aPeerExtAddress,
+                 Mac::Frame::WakeFrameType aWakeType,
+                 uint16_t                  aIntervalUs,
+                 uint16_t                  aDurationMs);
+
+    // Called by the MAC layer when a Wake Frame TX is about to start.
     Mac::TxFrame *PrepareWakeupFrame(Mac::TxFrames &aTxFrames);
 
-    // Called at the beginning of a wake-up sequence and right after a wake-up frame has been prepared for transmission.
+    // Called at the start of a sequence and after each Wake Frame is prepared.
     void ScheduleTimer(void);
 
     void RequestWakeupFrameTransmission(void);
 
-    using WakeupTimer = TimerMicroIn<WakeupTxScheduler, &WakeupTxScheduler::RequestWakeupFrameTransmission>;
+    // Fires when the connection window expires without a TD Link Command from the WL.
+    void HandleConnectionWindowTimer(void);
 
-    Mac::WakeupRequest mWakeupRequest;
-    TimeMicro          mTxTimeUs;             // Point in time when the next TX occurs.
-    TimeMicro          mTxEndTimeUs;          // Point in time when the wake-up sequence is over.
-    uint32_t           mTxRequestAheadTimeUs; // How much ahead the TX MAC operation needs to be requested.
-    uint16_t           mIntervalUs;           // Interval between consecutive wake-up frames.
-    WakeupTimer        mTimer;
-    bool               mIsRunning;
+    using WakeupTimer           = TimerMicroIn<WakeupTxScheduler, &WakeupTxScheduler::RequestWakeupFrameTransmission>;
+    using ConnectionWindowTimer = TimerMicroIn<WakeupTxScheduler, &WakeupTxScheduler::HandleConnectionWindowTimer>;
+
+    Mac::ExtAddress           mPeerExtAddress;       // Extended address of the WL being woken.
+    Mac::Frame::WakeFrameType mWakeFrameType;        // Wake Frame type for the current burst.
+    TimeMicro                 mTxTimeUs;             // Time of the next Wake Frame TX.
+    TimeMicro                 mTxEndTimeUs;          // Time at which the burst ends.
+    uint32_t                  mTxRequestAheadTimeUs; // How far ahead the MAC TX request must be issued.
+    uint16_t                  mIntervalUs;           // Interval between consecutive Wake Frames.
+    uint8_t                   mKeyIndex;             // Key index used for Wake Frame security in this burst.
+    WakeupTimer               mTimer;
+    ConnectionWindowTimer     mConnectionWindowTimer;
+    TdWakeState               mTdWakeState;
+    bool                      mIsRunning;
 };
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
 #endif // OT_CORE_MAC_WAKEUP_TX_SCHEDULER_HPP_
