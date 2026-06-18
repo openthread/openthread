@@ -62,7 +62,7 @@ void Radio::Callbacks::HandleBusLatencyChanged(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     Get<CslTxScheduler>().UpdateFrameRequestAhead();
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     Get<WakeupTxScheduler>().UpdateFrameRequestAhead();
 #endif
 }

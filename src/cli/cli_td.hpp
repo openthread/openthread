@@ -28,37 +28,62 @@
 
 /**
  * @file
- *   This file implements the OpenThread Peer-to-Peer API.
+ *   This file includes definitions for the `direct` CLI command group.
  */
+
+#ifndef OT_CLI_CLI_TD_HPP_
+#define OT_CLI_CLI_TD_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
-#include "instance/instance.hpp"
+#include <openthread/thread_direct.h>
 
-using namespace ot;
+#include "cli/cli_utils.hpp"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-otError otP2pWakeupAndLink(otInstance           *aInstance,
-                           const otP2pRequest   *aP2pRequest,
-                           otP2pLinkDoneCallback aCallback,
-                           void                 *aContext)
+namespace ot {
+namespace Cli {
+
+/**
+ * Implements the `direct` CLI command group for Thread Direct.
+ */
+class ThreadDirect : private Utils
 {
-    return AsCoreType(aInstance).Get<Mle::Mle>().P2pWakeupAndLink(AsCoreType(aP2pRequest), aCallback, aContext);
-}
+public:
+    ThreadDirect(otInstance *aInstance, OutputImplementer &aOutputImplementer);
+
+    otError Process(Arg aArgs[]);
+
+private:
+    using Command = CommandEntry<ThreadDirect>;
+
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
+
+    otError ProcessHelp(Arg aArgs[]);
+    otError ProcessChannel(Arg aArgs[]);
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    otError ProcessWake(Arg aArgs[]);
 #endif
-
-void otP2pSetEventCallback(otInstance *aInstance, otP2pEventCallback aCallback, void *aContext)
-{
-    AsCoreType(aInstance).Get<Mle::Mle>().P2pSetEventCallback(aCallback, aContext);
-}
-
-otError otP2pUnlink(otInstance             *aInstance,
-                    const otExtAddress     *aExtAddress,
-                    otP2pUnlinkDoneCallback aCallback,
-                    void                   *aContext)
-{
-    return AsCoreType(aInstance).Get<Mle::Mle>().P2pUnlink(AsCoreType(aExtAddress), aCallback, aContext);
-}
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    otError ProcessWakeListen(Arg aArgs[]);
 #endif
+    otError ProcessLink(Arg aArgs[]);
+    otError ProcessUnlink(Arg aArgs[]);
+    otError ProcessLinkKey(Arg aArgs[]);
+    otError ProcessLinkKeyRemove(Arg aArgs[]);
+
+    static void HandleDirectEvent(otThreadDirectEvent aEvent, const otThreadDirectPeerInfo *aPeerInfo, void *aContext);
+    void        HandleDirectEvent(otThreadDirectEvent aEvent, const otThreadDirectPeerInfo *aPeerInfo);
+
+    void OutputResult(otError aError);
+
+    static const Command sCommands[];
+};
+
+} // namespace Cli
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#endif // OT_CLI_CLI_TD_HPP_

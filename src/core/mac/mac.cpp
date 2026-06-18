@@ -38,6 +38,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
+#include "meshcop/dataset_manager.hpp"
 #include "utils/static_counter.hpp"
 
 namespace ot {
@@ -61,7 +62,7 @@ Mac::Mac(Instance &aInstance)
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     , mWakeupListenEnabled(false)
 #endif
     , mOperation(kOperationIdle)
@@ -88,10 +89,11 @@ Mac::Mac(Instance &aInstance)
     , mCslChannel(0)
     , mCslPeriod(0)
 #endif
-    , mWakeupChannel(OPENTHREAD_CONFIG_DEFAULT_WAKEUP_CHANNEL)
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    , mWakeupListenInterval(kDefaultWedListenInterval)
-    , mWakeupListenDuration(kDefaultWedListenDuration)
+    , mWakeupChannel(OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL)
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    , mWakeupListenInterval(kDefaultWlListenInterval)
+    , mWakeupListenDuration(kDefaultWlListenDuration)
+    , mRelistenTimer(aInstance)
 #endif
     , mActiveScanCallback()
     , mLinks(aInstance)
@@ -206,7 +208,7 @@ bool Mac::IsInTransmitState(void) const
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
 #endif
         retval = true;
@@ -480,7 +482,7 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 void Mac::RequestWakeupFrameTransmission(void)
 {
     VerifyOrExit(IsEnabled());
@@ -604,7 +606,7 @@ void Mac::PerformNextOperation(void)
     {
         mOperation = kOperationWaitingForData;
     }
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     else if (IsPending(kOperationTransmitWakeup))
     {
         mOperation = kOperationTransmitWakeup;
@@ -681,7 +683,7 @@ void Mac::PerformNextOperation(void)
     case kOperationTransmitDataCsl:
 #endif
     case kOperationTransmitPoll:
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
 #endif
         BeginTransmit();
@@ -875,15 +877,6 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     {
         uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        if (aFrame.IsWakeupFrame())
-        {
-            // Just set the key source here, further security processing will happen in SubMac
-            BigEndian::WriteUint32(keyManager.GetCurrentKeySequence(), keySource);
-            aFrame.SetKeySource(keySource);
-            ExitNow();
-        }
-#endif
         aFrame.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
@@ -1004,7 +997,7 @@ void Mac::BeginTransmit(void)
 
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
         frame = Get<WakeupTxScheduler>().PrepareWakeupFrame(txFrames);
         VerifyOrExit(frame != nullptr);
@@ -1454,7 +1447,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         break;
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     case kOperationTransmitWakeup:
         FinishOperation();
         PerformNextOperation();
@@ -1542,6 +1535,35 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode1:
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+        // Key index 129 is reserved for the TD Wake Key. The key index field lives
+        // in the Auxiliary Security Header, which is transmitted in the clear, so it
+        // is readable before decryption. IsTdWakeCommand() reads the MAC Command ID
+        // from the encrypted payload and cannot be used here.
+        {
+            uint8_t maybeWakeKeyId;
+
+            if (aFrame.GetKeyId(maybeWakeKeyId) == kErrorNone && maybeWakeKeyId >= Frame::kWakeKeyIndex &&
+                maybeWakeKeyId <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX)
+            {
+                // The sender need not be in the neighbor table for TD Wake Frames.
+                // Key index 129 uses the network-derived wake key; 130-192 use a
+                // pre-provisioned guest key stored in KeyManager.
+                if (maybeWakeKeyId == Frame::kWakeKeyIndex)
+                {
+                    macKey = &keyManager.GetDefaultWakeKey();
+                }
+                else
+                {
+                    macKey = keyManager.FindGuestWakeKey(maybeWakeKeyId);
+                    VerifyOrExit(macKey != nullptr); // drop frame if key not provisioned
+                }
+
+                extAddress = &aSrcAddr.GetExtended();
+                break;
+            }
+        }
+#endif
         VerifyOrExit(aNeighbor != nullptr);
 
         IgnoreError(aFrame.GetKeyId(keyid));
@@ -1598,27 +1620,8 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-        if (aFrame.IsWakeupFrame())
-        {
-            uint32_t sequence;
-
-            // TODO: Avoid generating a new key if a wake-up frame was recently received already
-
-            IgnoreError(aFrame.GetKeyId(keyid));
-            sequence = BigEndian::ReadUint32(aFrame.GetKeySource());
-            VerifyOrExit(((sequence & 0x7f) + 1) == keyid, error = kErrorSecurity);
-
-            macKey     = (sequence == keyManager.GetCurrentKeySequence()) ? mLinks.GetCurrentMacKey(aFrame)
-                                                                          : &keyManager.GetTemporaryMacKey(sequence);
-            extAddress = &aSrcAddr.GetExtended();
-        }
-        else
-#endif
-        {
-            macKey     = &mMode2KeyMaterial;
-            extAddress = &AsCoreType(&sMode2ExtAddress);
-        }
+        macKey     = &mMode2KeyMaterial;
+        extAddress = &AsCoreType(&sMode2ExtAddress);
         break;
 
     default:
@@ -1627,7 +1630,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
     SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
 
-    if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
+    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor != nullptr) && aNeighbor->IsStateValid())
     {
         if (aNeighbor->GetKeySequence() != keySequence)
         {
@@ -2014,6 +2017,13 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     switch (aFrame->GetType())
     {
     case Frame::kTypeMacCmd:
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+        if (aFrame->IsTdWakeCommand())
+        {
+            IgnoreError(HandleWakeupFrame(*aFrame));
+            ExitNow();
+        }
+#endif
         if (HandleMacCommand(*aFrame)) // returns `true` when handled
         {
             ExitNow(error = kErrorNone);
@@ -2028,12 +2038,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     case Frame::kTypeData:
         mCounters.mRxData++;
         break;
-
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    case Frame::kTypeMultipurpose:
-        SuccessOrExit(error = HandleWakeupFrame(*aFrame));
-        OT_FALL_THROUGH;
-#endif
 
     default:
         mCounters.mRxOther++;
@@ -2270,7 +2274,7 @@ const char *Mac::OperationToString(Operation aOperation)
 #define CslTxOperationMapList(_)
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 #define WakeupOperationMapList(_) _(kOperationTransmitWakeup, "TransmitWakeup")
 #else
 #define WakeupOperationMapList(_)
@@ -2399,7 +2403,7 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
     VerifyOrExit(mCslPeriod != aPeriod);
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     if (IsWakeupListenEnabled() && aPeriod != 0)
     {
         IgnoreError(SetWakeupListenEnabled(false));
@@ -2555,21 +2559,15 @@ void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 Error Mac::SetWakeupChannel(uint8_t aChannel)
 {
     Error error = kErrorNone;
 
-    if (aChannel == 0)
-    {
-        mWakeupChannel = GetPanChannel();
-        ExitNow();
-    }
-
-    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
+    VerifyOrExit(aChannel == OPENTHREAD_CONFIG_THREAD_DIRECT_DEFAULT_WAKE_CHANNEL, error = kErrorInvalidArgs);
     mWakeupChannel = aChannel;
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     UpdateWakeupListening();
 #endif
 
@@ -2578,7 +2576,26 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+bool Mac::IsThreadDirectLinkActive(void) const
+{
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    if (mWakeupListenEnabled)
+    {
+        return true;
+    }
+#endif
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    if (Get<WakeupTxScheduler>().IsRunning())
+    {
+        return true;
+    }
+#endif
+    return false;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 void Mac::GetWakeupListenParameters(uint32_t &aInterval, uint32_t &aDuration) const
 {
     aInterval = mWakeupListenInterval;
@@ -2618,6 +2635,19 @@ Error Mac::SetWakeupListenEnabled(bool aEnable)
         ExitNow();
     }
 
+    if (aEnable)
+    {
+        // Ensure the network key is loaded from the active dataset before
+        // any Wake Frame arrives, regardless of whether Thread has started.
+        IgnoreError(Get<MeshCoP::ActiveDatasetManager>().ApplyConfiguration());
+    }
+    else
+    {
+        // Cancel any pending auto-relisten so an explicit 'wakelisten disable'
+        // does not bring listening back on behind the user's back.
+        mRelistenTimer.Stop();
+    }
+
     mWakeupListenEnabled = aEnable;
     UpdateWakeupListening();
 
@@ -2637,58 +2667,108 @@ void Mac::UpdateWakeupListening(void)
 
 Error Mac::HandleWakeupFrame(const RxFrame &aFrame)
 {
-    Error               error = kErrorNone;
-    const ConnectionIe *connectionIe;
-    Address             srcAddress;
-    WakeupInfo          wakeupInfo;
-    uint32_t            rvTimeUs;
-    uint64_t            rvTimestampUs;
-    uint64_t            radioNowUs;
+    // Wake Command payload (after decryption):
+    //   [0] MAC Cmd ID  [1] Thread Cmd ID  [2] Wake Type
+    //   [3] Rendezvous Time (10-symbol units)  [4] RetryInterval[7:4] | RetryCount[3:0]
+    static constexpr uint8_t kPayloadWakeTypeOffset  = 2;
+    static constexpr uint8_t kPayloadRvTimeOffset    = 3;
+    static constexpr uint8_t kPayloadRetryByteOffset = 4;
+    static constexpr uint8_t kMinPayloadLength       = 5;
 
-    VerifyOrExit(mWakeupListenEnabled && aFrame.IsWakeupFrame());
+    Error          error = kErrorNone;
+    const uint8_t *payload;
+    Address        srcAddress;
+    WakeupInfo     wakeupInfo;
+    uint32_t       rvTimeUs;
+    uint64_t       rvTimestampUs;
+    uint64_t       radioNowUs;
+
+    VerifyOrExit(mWakeupListenEnabled && aFrame.IsTdWakeCommand());
 
     SuccessOrExit(error = aFrame.GetSrcAddr(srcAddress));
     VerifyOrExit(srcAddress.IsExtended(), error = kErrorDrop);
 
-    wakeupInfo.mExtAddress    = srcAddress.GetExtended();
-    connectionIe              = aFrame.GetConnectionIe();
-    wakeupInfo.mRetryInterval = connectionIe->GetRetryInterval();
-    wakeupInfo.mRetryCount    = connectionIe->GetRetryCount();
+    payload = aFrame.GetPayload();
+    VerifyOrExit(aFrame.GetPayloadLength() >= kMinPayloadLength, error = kErrorParse);
+
+    {
+        uint8_t retryByte = payload[kPayloadRetryByteOffset];
+
+        wakeupInfo.mExtAddress    = srcAddress.GetExtended();
+        wakeupInfo.mRetryInterval = (retryByte >> 4) & 0x0f;
+        wakeupInfo.mRetryCount    = retryByte & 0x0f;
+    }
+
     VerifyOrExit(wakeupInfo.mRetryInterval > 0 && wakeupInfo.mRetryCount > 0, error = kErrorInvalidArgs);
 
+    rvTimeUs = static_cast<uint32_t>(payload[kPayloadRvTimeOffset]) * kUsPerTenSymbols;
+
     radioNowUs    = otPlatRadioGetNow(&GetInstance());
-    rvTimeUs      = aFrame.GetRendezvousTimeIe()->GetRendezvousTime() * kUsPerTenSymbols;
     rvTimestampUs = aFrame.GetTimestamp() + kRadioHeaderPhrDuration + aFrame.GetLength() * kOctetDuration + rvTimeUs;
 
-    if (rvTimestampUs > radioNowUs + kCslRequestAhead)
-    {
-        wakeupInfo.mAttachDelayMs = static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead);
-        wakeupInfo.mAttachDelayMs = wakeupInfo.mAttachDelayMs / Time::kOneMsecInUsec;
-    }
-    else
-    {
-        wakeupInfo.mAttachDelayMs = 0;
-    }
+    wakeupInfo.mAttachDelayUs = (rvTimestampUs > radioNowUs + kCslRequestAhead)
+                                    ? static_cast<uint32_t>(rvTimestampUs - radioNowUs - kCslRequestAhead)
+                                    : 0;
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     {
         uint32_t frameCounter;
 
         IgnoreError(aFrame.GetFrameCounter(frameCounter));
-        LogInfo("Received wake-up frame, fc:%lu, rendezvous:%luus, retries:%u/%u", ToUlong(frameCounter),
-                ToUlong(rvTimeUs), wakeupInfo.mRetryCount, wakeupInfo.mRetryInterval);
+        LogInfo("TD Wake Command received from %s, fc:%lu, rendezvous:%luus, retries:%u/%u",
+                srcAddress.GetExtended().ToString().AsCString(), ToUlong(frameCounter), ToUlong(rvTimeUs),
+                wakeupInfo.mRetryCount, wakeupInfo.mRetryInterval);
     }
 #endif
 
-    // Stop receiving more wake up frames
     IgnoreError(SetWakeupListenEnabled(false));
 
-    Get<Mle::Mle>().HandleWakeupFrame(wakeupInfo);
+    // Suppress further wake channel sampling until the WI's burst and connection window
+    // have elapsed.  The rv-time field encodes remaining burst duration in units of
+    // 10 symbols (160 us) but saturates at 255; when saturated the configured burst
+    // duration is used as the fallback.  The connection window is
+    // (retryCount+1)*retryInterval*wakeInterval, where retryInterval is in units of the
+    // WI's wake interval.
+    {
+        static constexpr uint32_t kWakeIntervalUs = OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INTERVAL_US;
+        static constexpr uint32_t kRvTimeMaxUs    = 255 * kUsPerTenSymbols; // saturation point
+        static constexpr uint32_t kBurstDurationUs =
+            OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_DURATION_MS * Time::kOneMsecInUsec;
+
+        uint32_t remainingBurstUs = (rvTimeUs >= kRvTimeMaxUs) ? kBurstDurationUs : rvTimeUs;
+        uint32_t connectionWindowUs =
+            static_cast<uint32_t>(wakeupInfo.mRetryCount + 1) * wakeupInfo.mRetryInterval * kWakeIntervalUs;
+        uint32_t delayMs = (remainingBurstUs + connectionWindowUs + Time::kOneMsecInUsec - 1) / Time::kOneMsecInUsec;
+
+        mRelistenTimer.FireAt(TimerMilli::GetNow() + delayMs);
+        LogInfo("TD relisten timer started: %lums (rv:%luus + cw:%luus)", ToUlong(delayMs), ToUlong(rvTimeUs),
+                ToUlong(connectionWindowUs));
+    }
+
+    {
+        otThreadDirectPeerInfo peerInfo;
+
+        ClearAllBytes(peerInfo);
+        static_cast<otExtAddress &>(peerInfo.mExtAddress) = wakeupInfo.mExtAddress;
+        peerInfo.mWakeType                                = payload[kPayloadWakeTypeOffset];
+        peerInfo.mWakeRvTimeUs                            = rvTimeUs;
+        peerInfo.mWakeRetryCount                          = wakeupInfo.mRetryCount;
+        peerInfo.mWakeRetryInterval                       = wakeupInfo.mRetryInterval;
+        mDirectEventCallback.InvokeIfSet(OT_THREAD_DIRECT_EVENT_WAKE_RECEIVED, &peerInfo);
+    }
 
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+
+void Mac::HandleRelistenTimer(void)
+{
+    // Connection window has expired without a TD link being established.
+    // Resume periodic wake-frame listening so the next burst can be received.
+    LogInfo("TD relisten timer fired - re-enabling wake frame listening");
+    IgnoreError(SetWakeupListenEnabled(true));
+}
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 uint32_t Mac::CalculateRadioBusTransferTime(uint16_t aFrameSize) const
 {
