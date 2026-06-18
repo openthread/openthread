@@ -58,6 +58,7 @@ enum Uri : uint8_t
     kUriActiveReplace,         ///< MGMT_ACTIVE_REPLACE ("c/ar")
     kUriActiveSet,             ///< MGMT_ACTIVE_SET ("c/as")
     kUriCommissionerKeepAlive, ///< Commissioner Keep Alive ("c/ca")
+    kUriCommissionerEpskc,     ///< Commissioner ePSKc ("c/ce")
     kUriCommissionerGet,       ///< MGMT_COMMISSIONER_GET ("c/cg")
     kUriCommissionerPetition,  ///< Commissioner Petition ("c/cp")
     kUriCommissionerSet,       ///< MGMT_COMMISSIONER_SET ("c/cs")
@@ -133,6 +134,7 @@ template <> const char *UriToString<kUriActiveGet>(void);
 template <> const char *UriToString<kUriActiveReplace>(void);
 template <> const char *UriToString<kUriActiveSet>(void);
 template <> const char *UriToString<kUriCommissionerKeepAlive>(void);
+template <> const char *UriToString<kUriCommissionerEpskc>(void);
 template <> const char *UriToString<kUriCommissionerGet>(void);
 template <> const char *UriToString<kUriCommissionerPetition>(void);
 template <> const char *UriToString<kUriCommissionerSet>(void);

@@ -826,6 +826,185 @@ void TestBorderAgentEphemeralKeyTapGeneration(void)
     VerifyOrQuit(tap.Validate() == kErrorInvalidArgs);
 }
 
+struct EpskcResponseContext : public Clearable<EpskcResponseContext>
+{
+    static void HandleResponse(void *aContext, Coap::Msg *aMsg, Error aResult)
+    {
+        static_cast<EpskcResponseContext *>(aContext)->HandleResponse(aMsg, aResult);
+    }
+
+    void HandleResponse(Coap::Msg *aMsg, Error aResult)
+    {
+        VerifyOrQuit(!mReceived);
+
+        mReceived = true;
+        mError    = aResult;
+
+        SuccessOrExit(aResult);
+
+        VerifyOrQuit(aMsg != nullptr);
+
+        SuccessOrQuit(Tlv::Find<MeshCoP::StateTlv>(aMsg->mMessage, mResponseState));
+
+        switch (Tlv::Find<MeshCoP::EpskcKeyTlv>(aMsg->mMessage, mKeyString))
+        {
+        case kErrorNone:
+            mHasKey = true;
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            VerifyOrQuit(false);
+        }
+
+    exit:
+        return;
+    }
+
+    bool                             mReceived;
+    bool                             mHasKey;
+    Error                            mError;
+    uint8_t                          mResponseState;
+    MeshCoP::EpskcKeyTlv::StringType mKeyString;
+};
+
+void TestBorderAgentCommissionerEpskcTmfCommand(void)
+{
+    static constexpr uint8_t kAppendKeyFlag     = 1 << 0;
+    static constexpr uint8_t kAppendTimeoutFlag = 1 << 1;
+    static constexpr uint8_t kAppendPortFlag    = 1 << 2;
+
+    static const char     kKey[]   = "ephemeral_key";
+    static const uint32_t kTimeout = 7 * Time::kOneMinuteInMsec;
+    static const uint16_t kPort    = 12346;
+
+    Core                 nexus;
+    Node                &node0 = nexus.CreateNode();
+    Node                &node1 = nexus.CreateNode();
+    Ip6::SockAddr        sockAddr;
+    Pskc                 pskc;
+    Coap::Message       *message;
+    EpskcResponseContext context;
+
+    Log("------------------------------------------------------------------------------------------------------");
+    Log("TestBorderAgentCommissionerEpskcTmfCommand");
+
+    nexus.AdvanceTime(0);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Log("Form topology");
+
+    node0.Form();
+    nexus.AdvanceTime(50 * Time::kOneSecondInMsec);
+    VerifyOrQuit(node0.Get<Mle::Mle>().IsLeader());
+
+    SuccessOrQuit(node1.Get<Mac::Mac>().SetPanChannel(node0.Get<Mac::Mac>().GetPanChannel()));
+    node1.Get<Mac::Mac>().SetPanId(node0.Get<Mac::Mac>().GetPanId());
+    node1.Get<ThreadNetif>().Up();
+
+    for (uint16_t iter = 0; iter <= 7; iter++)
+    {
+        bool appendKey     = (iter & kAppendKeyFlag);
+        bool appendTimeout = (iter & kAppendTimeoutFlag);
+        bool appendPort    = (iter & kAppendPortFlag);
+
+        Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - ");
+        Log("Starting iter %u (appendKey:%u, appendTimeout:%u, appendPort:%u)", iter, appendKey, appendTimeout,
+            appendPort);
+
+        Log("Establish a DTLS session using PSKc from `node1` to `node0` (Border Agent)");
+
+        sockAddr.SetAddress(node0.Get<Mle::Mle>().GetLinkLocalAddress());
+        sockAddr.SetPort(node0.Get<Manager>().GetUdpPort());
+
+        node0.Get<KeyManager>().GetPskc(pskc);
+        SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SetPsk(pskc.m8, Pskc::kSize));
+        SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Open(0));
+        SuccessOrQuit(node1.Get<Tmf::SecureAgent>().Connect(sockAddr));
+
+        nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+        VerifyOrQuit(node1.Get<Tmf::SecureAgent>().IsConnected());
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Send `kUriCommissionerPetition` TMF command to become full commissioner.");
+
+        message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerPetition);
+        VerifyOrQuit(message != nullptr);
+        SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerIdTlv>(*message, "node1"));
+        SuccessOrQuit(node1.Get<Tmf::SecureAgent>().SendMessage(*message));
+
+        nexus.AdvanceTime(1 * Time::kOneSecondInMsec);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Send TMF command `kUriCommissionerEpskc` to start ephemeral key session");
+
+        context.Clear();
+
+        message = node1.Get<Tmf::SecureAgent>().AllocateAndInitPriorityConfirmablePostMessage(kUriCommissionerEpskc);
+        VerifyOrQuit(message != nullptr);
+
+        if (appendKey)
+        {
+            SuccessOrQuit(Tlv::Append<MeshCoP::EpskcKeyTlv>(*message, kKey));
+        }
+
+        if (appendTimeout)
+        {
+            SuccessOrQuit(Tlv::Append<MeshCoP::EpskcTimeoutTlv>(*message, kTimeout));
+        }
+
+        if (appendPort)
+        {
+            SuccessOrQuit(Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, kPort));
+        }
+
+        SuccessOrQuit(
+            node1.Get<Tmf::SecureAgent>().SendMessage(*message, EpskcResponseContext::HandleResponse, &context));
+
+        nexus.AdvanceTime(Time::kOneSecondInMsec);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Validate the `kUriCommissionerEpskc` response");
+
+        VerifyOrQuit(context.mReceived);
+
+        SuccessOrQuit(context.mError);
+        VerifyOrQuit(context.mResponseState == MeshCoP::StateTlv::kAccept);
+
+        VerifyOrQuit(context.mHasKey == !appendKey);
+
+        if (context.mHasKey)
+        {
+            Log("  TAP in response: %s", context.mKeyString);
+        }
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Validate the port number used by `EphemeralKeyManager`");
+
+        Log("  UdpPort: %u", node0.Get<EphemeralKeyManager>().GetUdpPort());
+
+        if (appendPort)
+        {
+            VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetUdpPort() == kPort);
+        }
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Check that EphemeralKeyManager is active for the requested timeout interval");
+
+        VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStarted);
+        nexus.AdvanceTime(appendTimeout ? kTimeout : EphemeralKeyManager::kDefaultTimeout);
+        nexus.AdvanceTime(5);
+        VerifyOrQuit(node0.Get<EphemeralKeyManager>().GetState() == EphemeralKeyManager::kStateStopped);
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Log("Disconnect");
+
+        node1.Get<Tmf::SecureAgent>().Close();
+        nexus.AdvanceTime(3 * Time::kOneSecondInMsec);
+        VerifyOrQuit(!node1.Get<Tmf::SecureAgent>().IsConnected());
+    }
+}
+
 EpskcEvent GetNewestEpskcEvent(Node &aNode)
 {
     const EpskcEvent *epskcEvent = nullptr;
@@ -2795,6 +2974,7 @@ int main(void)
     ot::Nexus::TestBorderAgent();
     ot::Nexus::TestBorderAgentEphemeralKey();
     ot::Nexus::TestBorderAgentEphemeralKeyTapGeneration();
+    ot::Nexus::TestBorderAgentCommissionerEpskcTmfCommand();
     ot::Nexus::TestHistoryTrackerBorderAgentEpskcEvent();
     ot::Nexus::TestBorderAgentTxtDataCallback();
     ot::Nexus::TestBorderAgentServiceRegistration();
