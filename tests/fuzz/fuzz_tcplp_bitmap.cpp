@@ -20,10 +20,10 @@ extern "C" {
 
 static size_t read_size(const uint8_t *data, size_t size, size_t *offset, size_t max_val)
 {
-    if (*offset + sizeof(size_t) > size) return 0;
+    if (*offset + sizeof(size_t) > size)
+        return 0;
     size_t val = 0;
-    for (size_t i = 0; i < sizeof(size_t) && *offset < size; i++, (*offset)++)
-        val = (val << 8) | data[*offset];
+    for (size_t i = 0; i < sizeof(size_t) && *offset < size; i++, (*offset)++) val = (val << 8) | data[*offset];
     return val % (max_val + 1);
 }
 
@@ -31,7 +31,8 @@ static size_t read_size(const uint8_t *data, size_t size, size_t *offset, size_t
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    if (size < 9) return 0;
+    if (size < 9)
+        return 0;
 
     size_t offset = 0;
 
@@ -40,10 +41,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     size_t max_bits = buflen * 8;
 
     // Clamp remaining data
-    if (offset + buflen > size) buflen = size - offset;
+    if (offset + buflen > size)
+        buflen = size - offset;
 
     uint8_t *buf = (uint8_t *)malloc(buflen);
-    if (!buf) return 0;
+    if (!buf)
+        return 0;
     memcpy(buf, data + offset, buflen);
     offset += buflen;
 
