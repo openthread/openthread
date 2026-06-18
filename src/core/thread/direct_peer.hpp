@@ -28,37 +28,52 @@
 
 /**
  * @file
- *   This file includes definitions for a Thread P2P `Peer`.
+ *   This file includes definitions for a Thread Direct `DirectPeer`.
  */
 
-#include "peer.hpp"
+#ifndef OT_CORE_THREAD_DIRECT_PEER_HPP_
+#define OT_CORE_THREAD_DIRECT_PEER_HPP_
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+#include "openthread-core-config.h"
 
-#include "instance/instance.hpp"
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#include "thread/neighbor.hpp"
 
 namespace ot {
 
-void Peer::Clear(void)
+/**
+ * Represents a Thread Direct peer and its link state established during the
+ * TD handshake.
+ */
+class DirectPeer : public CslNeighbor
 {
-    Instance &instance = GetInstance();
+public:
+    /**
+     * Initializes the `DirectPeer` object.
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     */
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
-    ClearAllBytes(*this);
-    Init(instance);
-}
+    /**
+     * Clears the peer entry.
+     */
+    void Clear(void);
 
-void Peer::SetDeviceMode(Mle::DeviceMode aMode)
-{
-    VerifyOrExit(aMode != GetDeviceMode());
-
-    Neighbor::SetDeviceMode(aMode);
-
-    VerifyOrExit(IsStateValid());
-
-exit:
-    return;
-}
+    /**
+     * Gets the link-local IPv6 address of the peer.
+     *
+     * @returns The link-local IPv6 address of the peer.
+     */
+    void GetLinkLocalIp6Address(Ip6::Address &aIp6Address) const
+    {
+        aIp6Address.InitAsLinkLocalAddress(GetExtAddress());
+    }
+};
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#endif // OT_CORE_THREAD_DIRECT_PEER_HPP_

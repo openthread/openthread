@@ -28,11 +28,9 @@
 
 #include "wakeup_tx_scheduler.hpp"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
-#include "common/code_utils.hpp"
 #include "common/log.hpp"
-#include "common/num_utils.hpp"
 #include "common/time.hpp"
 #include "core/instance/instance.hpp"
 #include "radio/radio.hpp"
@@ -51,89 +49,9 @@ WakeupTxScheduler::WakeupTxScheduler(Instance &aInstance)
     UpdateFrameRequestAhead();
 }
 
-Error WakeupTxScheduler::WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16_t aIntervalUs, uint16_t aDurationMs)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(!mIsRunning, error = kErrorInvalidState);
-    // TODO: Add support for wake-up identifiers.
-    VerifyOrExit(aWakeupRequest.IsWakeupByExtAddress(), error = kErrorInvalidState);
-
-    mWakeupRequest = aWakeupRequest;
-    mTxTimeUs      = TimerMicro::GetNow() + mTxRequestAheadTimeUs;
-    mTxEndTimeUs   = mTxTimeUs + aDurationMs * Time::kOneMsecInUsec + aIntervalUs;
-    mIntervalUs    = aIntervalUs;
-    mIsRunning     = true;
-
-    LogInfo("Started wake-up sequence to %s", aWakeupRequest.GetExtAddress().ToString().AsCString());
-
-    ScheduleTimer();
-
-exit:
-    return error;
-}
-
 void WakeupTxScheduler::RequestWakeupFrameTransmission(void) { Get<Mac::Mac>().RequestWakeupFrameTransmission(); }
 
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-
-Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
-{
-    Mac::TxFrame      *frame = nullptr;
-    Mac::Address       source;
-    uint32_t           radioTxDelay;
-    uint32_t           rendezvousTimeUs;
-    TimeMicro          nowUs = TimerMicro::GetNow();
-    Mac::ConnectionIe *connectionIe;
-
-    VerifyOrExit(mIsRunning);
-
-    source.SetExtended(Get<Mac::Mac>().GetExtAddress());
-    VerifyOrExit(mTxTimeUs >= nowUs);
-    radioTxDelay = mTxTimeUs - nowUs;
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    frame = &aTxFrames.GetTxFrame(Mac::kRadioTypeIeee802154);
-#else
-    frame = &aTxFrames.GetTxFrame();
-#endif
-
-    VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), mWakeupRequest, source) == kErrorNone,
-                 frame = nullptr);
-    frame->SetTxDelayBaseTime(static_cast<uint32_t>(Get<Radio>().GetNow()));
-    frame->SetTxDelay(radioTxDelay);
-    frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
-    frame->SetMaxCsmaBackoffs(0);
-    frame->SetMaxFrameRetries(0);
-
-    // Rendezvous Time is the time between the end of a wake-up frame and the start of the first payload frame.
-    // For the n-th wake-up frame, set the Rendezvous Time so that the expected reception of a Parent Request happens in
-    // the "free space" between the "n+1"-th and "n+2"-th wake-up frame.
-    rendezvousTimeUs = mIntervalUs;
-    rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * kOctetDuration) / 2;
-
-    frame->GetRendezvousTimeIe()->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / kUsPerTenSymbols));
-
-    connectionIe = frame->GetConnectionIe();
-    connectionIe->SetRetryInterval(kConnectionRetryInterval);
-    connectionIe->SetRetryCount(kConnectionRetryCount);
-
-    // Advance to the time of the next wake-up frame.
-    mTxTimeUs = Max(mTxTimeUs + mIntervalUs, TimerMicro::GetNow() + mTxRequestAheadTimeUs);
-
-    // Schedule the next timer right away before waiting for the transmission completion
-    // to keep up with the high rate of wake-up frames in the RCP architecture.
-    ScheduleTimer();
-
-exit:
-    return frame;
-}
-
-#else // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-
 Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &) { return nullptr; }
-
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 void WakeupTxScheduler::ScheduleTimer(void)
 {
@@ -158,8 +76,6 @@ void WakeupTxScheduler::Stop(void)
 
 void WakeupTxScheduler::UpdateFrameRequestAhead(void)
 {
-    // A rough estimate of the size of data that has to be exchanged with the radio to schedule a wake-up frame TX.
-    // This is used to make sure that a wake-up frame is received by the radio early enough to be transmitted on time.
     constexpr uint32_t kWakeupFrameSize = 100;
 
     mTxRequestAheadTimeUs = Mac::kCslRequestAhead + Get<Mac::Mac>().CalculateRadioBusTransferTime(kWakeupFrameSize);
@@ -167,4 +83,4 @@ void WakeupTxScheduler::UpdateFrameRequestAhead(void)
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE

@@ -189,11 +189,12 @@ Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
 
         case Tlv::kWakeupChannel:
         {
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+            // The Thread Direct feature mandates channel 20 for the Wake Channel.
             uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<WakeupChannelTlv>().GetChannel());
             error           = Get<Mac::Mac>().SetWakeupChannel(channel);
 
-            LogCritOnError(error, "set wake-up channel to %u when applying dataset", channel);
+            LogCritOnError(error, "wake channel in dataset (%u) is not the required channel 20", channel);
 #endif
             break;
         }

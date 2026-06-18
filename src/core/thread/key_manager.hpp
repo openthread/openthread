@@ -449,6 +449,18 @@ public:
      */
     void IncrementMleFrameCounter(void);
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    /**
+     * Returns the default Thread Direct Wake Key as `Mac::KeyMaterial`.
+     *
+     * The Wake Key is derived as HMAC-SHA256(NetworkKey, "Thread-Wake") and cached.
+     * The cache is invalidated whenever the Network Key changes.
+     *
+     * @returns A reference to the cached Wake Key material.
+     */
+    const Mac::KeyMaterial &GetDefaultWakeKey(void);
+#endif
+
     /**
      * Returns the KEK as `KekKeyMaterial`
      *
@@ -614,6 +626,10 @@ private:
 
     static const uint8_t kThreadString[];
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    static const uint8_t kWakeKeyString[];
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     static const uint8_t kHkdfExtractSaltString[];
     static const uint8_t kTrelInfoString[];
@@ -629,7 +645,12 @@ private:
     Mle::KeyMaterial mMleKey;
     Mle::KeyMaterial mTemporaryMleKey;
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    Mac::KeyMaterial mWakeKeyMaterial;
+    bool             mWakeKeyValid : 1;
+#endif
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     Mle::KeyMaterial mTemporaryMacKey;
 #endif
 

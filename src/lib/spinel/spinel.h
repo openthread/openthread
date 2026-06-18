@@ -3302,14 +3302,13 @@ enum
      */
     SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 62,
 
-    /// Wake-up Channel
-    /** Format: `C`
+    /// Thread Direct Wake Channel
+    /** Format: `C` - Read-write
      *
-     * The Wake-up sample channel. Channel value should be `0` (Set Wake-up Channel unspecified,
-     * which means the device will use the PAN channel) or within the range [1, 10] (if 915-MHz
-     * supported) and [11, 26] (if 2.4 GHz supported).
+     * The Thread Direct Wake Channel.  The Thread Direct specification mandates
+     * channel 20 as the sole Wake Channel; only the value 20 is accepted on write.
      */
-    SPINEL_PROP_THREAD_WAKEUP_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 63,
+    SPINEL_PROP_THREAD_DIRECT_WAKE_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 63,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

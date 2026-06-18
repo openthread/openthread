@@ -297,7 +297,31 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+bool Frame::IsTdWakeCommand(void) const
+{
+    bool    isTdWake = false;
+    uint8_t commandId;
+    uint8_t index;
+
+    VerifyOrExit(IsMacCommand() && IsVersion2015());
+    SuccessOrExit(GetCommandId(commandId));
+    VerifyOrExit(commandId == kMacCmdDirect);
+
+    // The Thread Cmd ID immediately follows the Command ID byte in the payload.
+    index = FindPayloadIndex();
+    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index + 1 < mLength - GetFooterLength());
+    VerifyOrExit(mPsdu[index + 1] == kThreadMacCmdWake);
+
+    isTdWake = true;
+
+exit:
+    return isTdWake;
+}
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 bool Frame::IsWakeupFrame(void) const
 {
     const uint16_t      fcf    = GetFrameControlField();
@@ -334,7 +358,7 @@ bool Frame::IsWakeupFrame(void) const
 exit:
     return result;
 }
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 void Frame::SetAckRequest(bool aAckRequest)
 {
@@ -1181,7 +1205,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE || \
-    OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+    OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 {
     uint16_t       index        = FindHeaderIeIndex();
@@ -1214,7 +1238,7 @@ exit:
     return header;
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE ||
-       // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+       // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -1448,6 +1472,61 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_SOFTWARE_RETX_SECURITY_ENABLE
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+Error TxFrame::GenerateThreadDirectWakeCommand(PanId             aPanId,
+                                               const ExtAddress &aDstExtAddress,
+                                               const ExtAddress &aSrcExtAddress,
+                                               WakeFrameType     aWakeType,
+                                               uint8_t           aRendezvousTimeTenSym,
+                                               uint8_t           aRetryInterval,
+                                               uint8_t           aRetryCount)
+{
+    uint16_t     fcf;
+    uint8_t      secCtl;
+    FrameBuilder builder;
+    Address      dst;
+    Address      src;
+
+    dst.SetExtended(aDstExtAddress);
+    src.SetExtended(aSrcExtAddress);
+
+    // 2015 MAC Command frame, extended dst+src, Dest PAN ID present,
+    // security enabled. No ACK requested - wake frames are sent as a burst without per-frame ACK.
+    fcf = kTypeMacCmd | kVersion2015 | kFcfSecurityEnabled;
+    fcf |= DetermineFcfAddrType(dst, kFcfDstAddrShift);
+    fcf |= DetermineFcfAddrType(src, kFcfSrcAddrShift);
+
+    ClearAllBytes(mInfo.mTxInfo);
+    builder.Init(mPsdu, GetMtu());
+
+    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
+    IgnoreError(builder.AppendUint8(0));                    // Sequence number (filled by SubMac)
+    IgnoreError(builder.AppendUint<kLittleEndian>(aPanId)); // Destination PAN ID
+    IgnoreError(builder.AppendMacAddress(dst));             // Destination extended address
+    IgnoreError(builder.AppendMacAddress(src));             // Source extended address
+
+    // Auxiliary Security Header: Enc-Mic-32, Key ID Mode 1 (1-byte key index for Wake Key)
+    secCtl = kKeyIdMode1 | kSecurityEncMic32;
+    IgnoreError(builder.AppendUint8(secCtl));
+    builder.AppendLength(CalculateSecurityHeaderSize(secCtl) -
+                         sizeof(secCtl)); // Frame counter + key ID (filled by SubMac)
+
+    // Encrypted payload: Thread Direct MAC Command bytes
+    IgnoreError(builder.AppendUint8(kMacCmdDirect));                   // 0x54
+    IgnoreError(builder.AppendUint8(kThreadMacCmdWake));               // 0x01
+    IgnoreError(builder.AppendUint8(static_cast<uint8_t>(aWakeType))); // Wake Frame Type
+    IgnoreError(builder.AppendUint8(aRendezvousTimeTenSym));           // Rendezvous time
+    IgnoreError(builder.AppendUint8(static_cast<uint8_t>(((aRetryInterval & 0x0f) << 4) | (aRetryCount & 0x0f))));
+
+    // Reserve space for MIC and FCS (filled during AES-CCM processing)
+    builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
+
+    mLength = builder.GetLength();
+
+    return kErrorNone;
+}
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {
     uint16_t fcf = static_cast<uint16_t>(kTypeAck) | aFrame.GetVersion();
@@ -1548,62 +1627,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupRequest, const Address &aSource)
-{
-    Error        error = kErrorNone;
-    uint16_t     fcf;
-    uint8_t      secCtl;
-    uint8_t      wakeupIdLength;
-    FrameBuilder builder;
-    Address      dest;
-
-    fcf = kTypeMultipurpose | kMpFcfLongFrame | kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression |
-          kMpFcfIePresent;
-
-    VerifyOrExit(!aSource.IsNone(), error = kErrorInvalidArgs);
-
-    if (aWakeupRequest.IsWakeupByExtAddress())
-    {
-        wakeupIdLength = 0;
-        dest.SetExtended(aWakeupRequest.GetExtAddress());
-    }
-    else
-    {
-        wakeupIdLength = GetWakeupIdLength(aWakeupRequest.GetWakeupId());
-        dest.SetNone();
-    }
-
-    fcf |= DetermineFcfAddrType(dest, kMpFcfDstAddrShift);
-    fcf |= DetermineFcfAddrType(aSource, kMpFcfSrcAddrShift);
-
-    builder.Init(mPsdu, GetMtu());
-
-    IgnoreError(builder.AppendUint<kLittleEndian>(fcf));
-    IgnoreError(builder.AppendUint<kLittleEndian>(aPanId));
-    IgnoreError(builder.AppendMacAddress(dest));
-    IgnoreError(builder.AppendMacAddress(aSource));
-
-    secCtl = kKeyIdMode2 | kSecurityEncMic32;
-    IgnoreError(builder.AppendUint8(secCtl));
-    builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
-
-    builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
-    builder.Append<RendezvousTimeIe>();
-
-    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe) + wakeupIdLength);
-    builder.Append<ConnectionIe>()->Init();
-    builder.AppendLength(wakeupIdLength);
-
-    builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
-
-    mLength = builder.GetLength();
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
 
 bool RxFrame::IsSecuredWith(KeyIdModeFlags aFlags) const
 {

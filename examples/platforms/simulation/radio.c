@@ -1157,6 +1157,15 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
     sRadioContext.mMacFrameCounter = aMacFrameCounter;
 }
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+void otPlatRadioSetWakeKey(otInstance *aInstance, uint8_t aKeyIndex, const otMacKeyMaterial *aWakeKey)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeyIndex);
+    OT_UNUSED_VARIABLE(aWakeKey);
+}
+#endif
+
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
 {
     OT_UNUSED_VARIABLE(aInstance);

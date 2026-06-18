@@ -782,288 +782,183 @@ void TestMacFrameAckGeneration(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-constexpr uint16_t kMpFcfLongFrame           = 1 << 3;
-constexpr uint16_t kMpFcfDstAddrShift        = 4;
-constexpr uint16_t kMpFcfDstAddrNone         = 0 << kMpFcfDstAddrShift;
-constexpr uint16_t kMpFcfDstAddrExt          = 3 << kMpFcfDstAddrShift;
-constexpr uint16_t kMpFcfSrcAddrShift        = 6;
-constexpr uint16_t kMpFcfSrcAddrShort        = 2 << kMpFcfSrcAddrShift;
-constexpr uint16_t kMpFcfSrcAddrExt          = 3 << kMpFcfSrcAddrShift;
-constexpr uint16_t kMpFcfPanidPresent        = 1 << 8;
-constexpr uint16_t kMpFcfSecurityEnabled     = 1 << 9;
-constexpr uint16_t kMpFcfSequenceSuppression = 1 << 10;
-constexpr uint16_t kMpFcfAckRequest          = 1 << 14;
-constexpr uint16_t kMpFcfIePresent           = 1 << 15;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
-void TestMacWakeupFrameGeneration(void)
+void TestTdWakeCommandGeneration(void)
 {
-    constexpr static Mac::WakeupId kWakeupId     = 0x1020;
-    constexpr static uint8_t       kSrcExtaddr[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-    constexpr static uint8_t       kDstExtaddr[] = {0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87};
-    constexpr static uint8_t       kKeySource[]  = {0, 0, 0, 0x1c};
+    // Thread Direct Wake Frame
+    //   Frame Control Field: 0xec0b
+    //     .... .... .... .011 = Frame Type: MAC Command (0x3)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //   Sequence Number: 0x00 (placeholder, filled by SubMac)
+    //   Destination PAN: 0xface
+    //   Destination: f0:e1:d2:c3:b4:a5:96:87
+    //   Source:      01:02:03:04:05:06:07:08
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    //       .... .101 = Security Level: Encryption with 32-bit MIC (0x5)
+    //       ...0 1... = Key Identifier Mode: Key Index (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 0x00000000 (placeholder, filled by SubMac)
+    //     Key Identifier
+    //       Key Index: 0x81 (Wake Key, index 129; placeholder, filled by SubMac)
+    //   Command ID: 0x54 (kMacCmdDirect)
+    //   Thread Payload:
+    //     [0] 0x54  kMacCmdDirect
+    //     [1] 0x01  kThreadMacCmdWake
+    //     [2] 0x00  Wake Type: Direct Link
+    //     [3]       Rendezvous Time 0xc8 (200 in 10-symbol units)
+    //     [4]       Retry byte: (interval=3, count=10) -> 0x3a
+    //   MIC-32 (placeholder, filled during AES-CCM processing)
 
-    constexpr static uint8_t kWakeupPsdu[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrExt | kMpFcfSrcAddrExt,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
-        // PAN ID
-        0xce, 0xfa,
-        // Destination Address
-        0x87, 0x96, 0xa5, 0xb4, 0xc3, 0xd2, 0xe1, 0xf0,
-        // Source Address
-        0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
-        // Security Header
-        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xfc, 0xfc, 0xfc, 0xfc, 0x00, 0x00, 0x00, 0x1c, 0x1d,
-        // Rendezvous Time IE
-        0x82, 0x0e, 0xcd, 0xab,
-        // Connection IE
-        0x05, 0x00, 0x9b, 0xb8, 0xea, 0x01, 0x1c};
+    constexpr uint8_t  kRendezvousTimeTenSym = 0xC8;
+    constexpr uint8_t  kRetryInterval        = 3;
+    constexpr uint8_t  kRetryCount           = 10;
+    constexpr uint16_t kPanId                = 0xFACE;
 
-    constexpr static uint8_t kWakeupPsdu2[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrNone | kMpFcfSrcAddrExt,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
-        // PAN ID
-        0xce, 0xfa,
-        // No Destination Address
-        // Source Address
-        0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
-        // Security Header
-        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xfc, 0xfc, 0xfc, 0xfc, 0x00, 0x00, 0x00, 0x1c, 0x1d,
-        // Rendezvous Time IE
-        0x82, 0x0e, 0xcd, 0xab,
-        // Connection IE
-        0x07, 0x00, 0x9b, 0xb8, 0xea, 0x01, 0x1c, 0x20, 0x10};
+    constexpr uint8_t kSrcExtaddr[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+    constexpr uint8_t kDstExtaddr[] = {0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87};
 
-    uint8_t            psdu[OT_RADIO_FRAME_MAX_SIZE];
-    Mac::Address       src;
-    Mac::Address       dst;
-    Mac::Address       addr;
-    Mac::WakeupId      wakeupId;
-    Mac::WakeupRequest wakeupRequest;
-    Mac::TxFrame       txFrame;
-    Mac::Frame         rxFrame;
-    Mac::ConnectionIe *connectionIe;
+    uint8_t         psdu[OT_RADIO_FRAME_MAX_SIZE];
+    Mac::TxFrame    txFrame;
+    Mac::ExtAddress srcExt;
+    Mac::ExtAddress dstExt;
+    Mac::Address    src;
+    Mac::Address    dst;
+    Mac::Address    addr;
+    uint8_t         commandId;
+    const uint8_t  *payload;
 
-    printf("TestMacWakeupFrameGeneration\n");
+    memcpy(srcExt.m8, kSrcExtaddr, sizeof(srcExt.m8));
+    memcpy(dstExt.m8, kDstExtaddr, sizeof(dstExt.m8));
+    src.SetExtended(srcExt);
+    dst.SetExtended(dstExt);
 
-    src.SetExtended(kSrcExtaddr);
-    dst.SetExtended(kDstExtaddr);
-    wakeupRequest.SetExtAddress(dst.GetExtended());
     txFrame.mPsdu      = psdu;
     txFrame.mLength    = 0;
     txFrame.mRadioType = 0;
 
-    SuccessOrQuit(txFrame.GenerateWakeupFrame(0xface, wakeupRequest, src));
+    SuccessOrQuit(txFrame.GenerateThreadDirectWakeCommand(kPanId, dstExt, srcExt, Mac::Frame::kWakeFrameTypeDirectLink,
+                                                          kRendezvousTimeTenSym, kRetryInterval, kRetryCount));
 
-    // Validate that the frame satisfies the wake-up frame definition
-    VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMultipurpose);
+    VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMacCmd);
+    VerifyOrQuit(txFrame.GetVersion() == Mac::Frame::kVersion2015);
     VerifyOrQuit(!txFrame.GetAckRequest());
-    VerifyOrQuit(txFrame.GetRendezvousTimeIe() != nullptr);
-    VerifyOrQuit(txFrame.GetConnectionIe() != nullptr);
-    VerifyOrQuit(txFrame.GetPayloadLength() == 0);
+    VerifyOrQuit(txFrame.GetSecurityEnabled());
+
+    {
+        uint8_t keyIdMode;
+        SuccessOrQuit(txFrame.GetKeyIdMode(keyIdMode));
+        VerifyOrQuit(keyIdMode == Mac::Frame::kKeyIdMode1);
+    }
+
+    VerifyOrQuit(txFrame.IsTdWakeCommand());
+
     SuccessOrQuit(txFrame.GetSrcAddr(addr));
     VerifyOrQuit(CompareAddresses(src, addr));
     SuccessOrQuit(txFrame.GetDstAddr(addr));
     VerifyOrQuit(CompareAddresses(dst, addr));
 
-    // Initialize remaining fields and check if the frame has the expected contents
-    txFrame.SetFrameCounter(0xfcfcfcfc);
-    txFrame.SetKeySource(kKeySource);
-    txFrame.SetKeyId(0x1d);
-    txFrame.GetRendezvousTimeIe()->SetRendezvousTime(0xabcd);
-    connectionIe = txFrame.GetConnectionIe();
-    connectionIe->SetRetryInterval(1);
-    connectionIe->SetRetryCount(12);
-    VerifyOrQuit(connectionIe->SetWakeupId(kWakeupId) == kErrorParse);
+    SuccessOrQuit(txFrame.GetCommandId(commandId));
+    VerifyOrQuit(commandId == Mac::Frame::kMacCmdDirect);
 
-    VerifyOrQuit(txFrame.GetRendezvousTimeIe()->GetRendezvousTime() == 0xabcd);
-    VerifyOrQuit(connectionIe->GetRetryInterval() == 1);
-    VerifyOrQuit(connectionIe->GetRetryCount() == 12);
-    VerifyOrQuit(connectionIe->GetWakeupId(wakeupId) == kErrorParse);
-    VerifyOrQuit(txFrame.GetLength() == sizeof(kWakeupPsdu) + txFrame.GetFooterLength());
-    VerifyOrQuit(memcmp(psdu, kWakeupPsdu, sizeof(kWakeupPsdu)) == 0);
-
-    // Initialize RX Frame with the same PSDU and check if it's recognized as wake-up frame
-    rxFrame.mPsdu      = psdu;
-    rxFrame.mLength    = txFrame.GetLength();
-    rxFrame.mRadioType = 0;
-
-    SuccessOrQuit(rxFrame.ValidatePsdu());
-    VerifyOrQuit(rxFrame.IsWakeupFrame());
-
-    // Validate the wake-up frame using the wake-up identifier.
-    src.SetExtended(kSrcExtaddr);
-    wakeupRequest.SetWakeupId(kWakeupId);
-    txFrame.mPsdu      = psdu;
-    txFrame.mLength    = 0;
-    txFrame.mRadioType = 0;
-
-    SuccessOrQuit(txFrame.GenerateWakeupFrame(0xface, wakeupRequest, src));
-
-    // Validate that the frame satisfies the wake-up frame definition
-    VerifyOrQuit(txFrame.GetType() == Mac::Frame::kTypeMultipurpose);
-    VerifyOrQuit(!txFrame.GetAckRequest());
-    VerifyOrQuit(txFrame.GetRendezvousTimeIe() != nullptr);
-    VerifyOrQuit(txFrame.GetConnectionIe() != nullptr);
-    VerifyOrQuit(txFrame.GetPayloadLength() == 0);
-    SuccessOrQuit(txFrame.GetSrcAddr(addr));
-    VerifyOrQuit(CompareAddresses(src, addr));
-    SuccessOrQuit(txFrame.GetDstAddr(addr));
-    VerifyOrQuit(addr.IsNone());
-
-    // Initialize remaining fields and check if the frame has the expected contents
-    txFrame.SetFrameCounter(0xfcfcfcfc);
-    txFrame.SetKeySource(kKeySource);
-    txFrame.SetKeyId(0x1d);
-    txFrame.GetRendezvousTimeIe()->SetRendezvousTime(0xabcd);
-    connectionIe = txFrame.GetConnectionIe();
-    connectionIe->SetRetryInterval(1);
-    connectionIe->SetRetryCount(12);
-    SuccessOrQuit(connectionIe->SetWakeupId(kWakeupId));
-
-    VerifyOrQuit(txFrame.GetRendezvousTimeIe()->GetRendezvousTime() == 0xabcd);
-    VerifyOrQuit(connectionIe->GetRetryInterval() == 1);
-    VerifyOrQuit(connectionIe->GetRetryCount() == 12);
-    SuccessOrQuit(connectionIe->GetWakeupId(wakeupId));
-    VerifyOrQuit(wakeupId == kWakeupId);
-    VerifyOrQuit(wakeupRequest.GetWakeupId() == kWakeupId);
-    VerifyOrQuit(txFrame.GetLength() == sizeof(kWakeupPsdu2) + txFrame.GetFooterLength());
-    VerifyOrQuit(memcmp(psdu, kWakeupPsdu2, sizeof(kWakeupPsdu2)) == 0);
-
-    // Initialize RX Frame with the same PSDU and check if it's recognized as wake-up frame
-    rxFrame.mPsdu      = psdu;
-    rxFrame.mLength    = txFrame.GetLength();
-    rxFrame.mRadioType = 0;
-
-    SuccessOrQuit(rxFrame.ValidatePsdu());
-    VerifyOrQuit(rxFrame.IsWakeupFrame());
+    payload = txFrame.GetPayload();
+    VerifyOrQuit(payload != nullptr);
+    VerifyOrQuit(txFrame.GetPayloadLength() >= 5);
+    VerifyOrQuit(payload[0] == Mac::Frame::kMacCmdDirect);
+    VerifyOrQuit(payload[1] == Mac::Frame::kThreadMacCmdWake);
+    VerifyOrQuit(payload[2] == 0x00);
+    VerifyOrQuit(payload[3] == kRendezvousTimeTenSym);
+    VerifyOrQuit(payload[4] == (((kRetryInterval & 0x0f) << 4) | (kRetryCount & 0x0f)));
 }
 
-void TestMacWakeupFrameDetectionNegative(void)
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+
+void TestTdWakeCommandDetectionNegative(void)
 {
-    struct TestCase
-    {
-        uint8_t *mPsdu;
-        uint8_t  mLength;
-    };
+    Mac::Frame frame;
 
-    uint8_t ackRequestedPsdu[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrExt | kMpFcfSrcAddrExt,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfAckRequest | kMpFcfIePresent) >>
-            8,
-        // PAN ID
-        0xCE, 0xFA,
-        // Destination Address
-        0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
-        // Source Address
-        0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
-        // Security Header
-        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xFC, 0xFC, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x1C, 0x1D,
-        // Rendezvous Time IE
-        0x82, 0x0E, 0xCD, 0xAB,
-        // Connection IE
-        0x05, 0x00, 0x9B, 0xB8, 0xEA, 0x01, 0x1C,
-        // Footer
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // IEEE 802.15.4-2015 Data Frame (not a MAC Command) - should not be detected as TD Wake Command
+    //   Frame Control Field: 0xec09
+    //     .... .... .... .001 = Frame Type: Data (0x1)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //   Sequence Number: 0x01
+    //   Destination PAN: 0xface
+    //   Destination: dd:dd:dd:dd:dd:dd:dd:dd
+    //   Source:      55:55:55:55:55:55:55:55
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    //       .... .101 = Security Level: Encryption with 32-bit MIC (0x5)
+    //       ...0 1... = Key Identifier Mode: Key Index (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 0x00000001
+    //     Key Identifier
+    //       Key Index: 0x81
+    uint8_t data_psdu[] = {0x09, 0xec, 0x01, 0xce, 0xfa, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd,
+                           0xdd, 0xdd, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x0d,
+                           0x01, 0x00, 0x00, 0x00, 0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    frame.mPsdu         = data_psdu;
+    frame.mLength       = sizeof(data_psdu);
+    VerifyOrQuit(!frame.IsTdWakeCommand());
 
-    uint8_t shortAddressPsdu[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrExt | kMpFcfSrcAddrShort,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
-        // PAN ID
-        0xCE, 0xFA,
-        // Destination Address
-        0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
-        // Source Address
-        0x55, 0x55,
-        // Security Header
-        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xFC, 0xFC, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x1C, 0x1D,
-        // Rendezvous Time IE
-        0x82, 0x0E, 0xCD, 0xAB,
-        // Connection IE
-        0x05, 0x00, 0x9B, 0xB8, 0xEA, 0x01, 0x1C,
-        // Footer
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    uint8_t noRendezvousIePsdu[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrExt | kMpFcfSrcAddrExt,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
-        // PAN ID
-        0xCE, 0xFA,
-        // Destination Address
-        0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
-        // Source Address
-        0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
-        // Security Header
-        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xFC, 0xFC, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x1C, 0x1D,
-        // Connection IE
-        0x05, 0x00, 0x9B, 0xB8, 0xEA, 0x01, 0x1C,
-        // Footer
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    uint8_t noConnectionIePsdu[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrExt | kMpFcfSrcAddrExt,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
-        // PAN ID
-        0xCE, 0xFA,
-        // Destination Address
-        0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
-        // Source Address
-        0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
-        // Security Header
-        Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecurityEncMic32, 0xFC, 0xFC, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x1C, 0x1D,
-        // Rendezvous Time IE
-        0x82, 0x0E, 0xCD, 0xAB,
-        // Connection IE
-        0x05, 0x00, 0x9B, 0xB8, 0xEA, 0x02, 0x1C,
-        // Footer
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    uint8_t keyIdMode1Psdu[] = {
-        // Frame Control
-        Mac::Frame::kTypeMultipurpose | kMpFcfLongFrame | kMpFcfDstAddrExt | kMpFcfSrcAddrExt,
-        (kMpFcfPanidPresent | kMpFcfSecurityEnabled | kMpFcfSequenceSuppression | kMpFcfIePresent) >> 8,
-        // PAN ID
-        0xCE, 0xFA,
-        // Destination Address
-        0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
-        // Source Address
-        0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
-        // Security Header
-        Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecurityEncMic32, 0xFC, 0xFC, 0xFC, 0xFC, 0x1D,
-        // Rendezvous Time IE
-        0x82, 0x0E, 0xCD, 0xAB,
-        // Connection IE
-        0x05, 0x00, 0x9B, 0xB8, 0xEA, 0x01, 0x1C,
-        // Footer
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    const TestCase testCases[] = {
-        {ackRequestedPsdu, sizeof(ackRequestedPsdu)},     {shortAddressPsdu, sizeof(shortAddressPsdu)},
-        {noRendezvousIePsdu, sizeof(noRendezvousIePsdu)}, {noConnectionIePsdu, sizeof(noConnectionIePsdu)},
-        {keyIdMode1Psdu, sizeof(keyIdMode1Psdu)},
-    };
-
-    Mac::Frame rxFrame;
-
-    printf("TestMacWakeupFrameDetectionNegative\n");
-
-    for (const TestCase &testCase : testCases)
-    {
-        rxFrame.mPsdu      = testCase.mPsdu;
-        rxFrame.mLength    = testCase.mLength;
-        rxFrame.mRadioType = 0;
-
-        SuccessOrQuit(rxFrame.ValidatePsdu());
-        VerifyOrQuit(!rxFrame.IsWakeupFrame());
-    }
+    // IEEE 802.15.4-2015 MAC Command Frame - Command ID 0x04 (Data Request), not 0x54
+    //   Frame Control Field: 0xec0b
+    //     .... .... .... .011 = Frame Type: MAC Command (0x3)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //   Sequence Number: 0x01
+    //   Destination PAN: 0xface
+    //   Destination: dd:dd:dd:dd:dd:dd:dd:dd
+    //   Source:      55:55:55:55:55:55:55:55
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    //       .... .101 = Security Level: Encryption with 32-bit MIC (0x5)
+    //       ...0 1... = Key Identifier Mode: Key Index (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 0x00000001
+    //     Key Identifier
+    //       Key Index: 0x81
+    //   Command Identifier: Data Request (0x04)
+    uint8_t mac_cmd_psdu[] = {0x0b, 0xec, 0x01, 0xce, 0xfa, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd, 0xdd,
+                              0xdd, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x0d, 0x01, 0x00,
+                              0x00, 0x00, 0x81, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    frame.mPsdu            = mac_cmd_psdu;
+    frame.mLength          = sizeof(mac_cmd_psdu);
+    VerifyOrQuit(!frame.IsTdWakeCommand());
 }
 #endif
+
 } // namespace ot
 
 int main(void)
@@ -1073,9 +968,11 @@ int main(void)
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-    ot::TestMacWakeupFrameGeneration();
-    ot::TestMacWakeupFrameDetectionNegative();
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    ot::TestTdWakeCommandGeneration();
+#endif
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    ot::TestTdWakeCommandDetectionNegative();
 #endif
     printf("All tests passed\n");
     return 0;

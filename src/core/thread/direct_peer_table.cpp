@@ -28,18 +28,18 @@
 
 /**
  * @file
- *   This file includes definitions for the Thread Peer table.
+ *   This file implements the Thread Direct peer table.
  */
 
-#include "peer_table.hpp"
+#include "direct_peer_table.hpp"
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 #include "instance/instance.hpp"
 
 namespace ot {
 
-PeerTable::Iterator::Iterator(Instance &aInstance, Peer::StateFilter aFilter)
+DirectPeerTable::Iterator::Iterator(Instance &aInstance, DirectPeer::StateFilter aFilter)
     : InstanceLocator(aInstance)
     , ItemPtrIterator(nullptr)
     , mFilter(aFilter)
@@ -47,9 +47,9 @@ PeerTable::Iterator::Iterator(Instance &aInstance, Peer::StateFilter aFilter)
     Reset();
 }
 
-void PeerTable::Iterator::Reset(void)
+void DirectPeerTable::Iterator::Reset(void)
 {
-    mItem = &Get<PeerTable>().mPeers[0];
+    mItem = &Get<DirectPeerTable>().mPeers[0];
 
     if (!mItem->Matches(mFilter))
     {
@@ -57,41 +57,41 @@ void PeerTable::Iterator::Reset(void)
     }
 }
 
-void PeerTable::Iterator::Advance(void)
+void DirectPeerTable::Iterator::Advance(void)
 {
     VerifyOrExit(mItem != nullptr);
 
     do
     {
         mItem++;
-        VerifyOrExit(mItem < &Get<PeerTable>().mPeers[Get<PeerTable>().kMaxPeers], mItem = nullptr);
+        VerifyOrExit(mItem < &Get<DirectPeerTable>().mPeers[Get<DirectPeerTable>().kMaxPeers], mItem = nullptr);
     } while (!mItem->Matches(mFilter));
 
 exit:
     return;
 }
 
-PeerTable::PeerTable(Instance &aInstance)
+DirectPeerTable::DirectPeerTable(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
-    for (Peer &peer : mPeers)
+    for (DirectPeer &peer : mPeers)
     {
         peer.Init(aInstance);
         peer.Clear();
     }
 }
 
-void PeerTable::Clear(void)
+void DirectPeerTable::Clear(void)
 {
-    for (Peer &peer : mPeers)
+    for (DirectPeer &peer : mPeers)
     {
         peer.Clear();
     }
 }
 
-Peer *PeerTable::GetNewPeer(void)
+DirectPeer *DirectPeerTable::GetNewPeer(void)
 {
-    Peer *peer = FindPeer(Peer::AddressMatcher(Peer::kInStateInvalid));
+    DirectPeer *peer = FindPeer(DirectPeer::AddressMatcher(DirectPeer::kInStateInvalid));
 
     VerifyOrExit(peer != nullptr);
     peer->Clear();
@@ -100,9 +100,9 @@ exit:
     return peer;
 }
 
-const Peer *PeerTable::FindPeer(const Peer::AddressMatcher &aMatcher) const
+const DirectPeer *DirectPeerTable::FindPeer(const DirectPeer::AddressMatcher &aMatcher) const
 {
-    const Peer *peer = mPeers;
+    const DirectPeer *peer = mPeers;
 
     for (uint16_t num = kMaxPeers; num != 0; num--, peer++)
     {
@@ -118,18 +118,21 @@ exit:
     return peer;
 }
 
-Peer *PeerTable::FindPeer(const Mac::ExtAddress &aExtAddress, Peer::StateFilter aFilter)
+DirectPeer *DirectPeerTable::FindPeer(const Mac::ExtAddress &aExtAddress, DirectPeer::StateFilter aFilter)
 {
-    return FindPeer(Peer::AddressMatcher(aExtAddress, aFilter));
+    return FindPeer(DirectPeer::AddressMatcher(aExtAddress, aFilter));
 }
 
-bool PeerTable::HasPeers(Peer::StateFilter aFilter) const
+bool DirectPeerTable::HasPeers(DirectPeer::StateFilter aFilter) const
 {
-    return (FindPeer(Peer::AddressMatcher(aFilter)) != nullptr);
+    return (FindPeer(DirectPeer::AddressMatcher(aFilter)) != nullptr);
 }
 
-bool PeerTable::IsFull(void) const { return FindPeer(Peer::AddressMatcher(Peer::kInStateInvalid)) == nullptr; }
+bool DirectPeerTable::IsFull(void) const
+{
+    return FindPeer(DirectPeer::AddressMatcher(DirectPeer::kInStateInvalid)) == nullptr;
+}
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
