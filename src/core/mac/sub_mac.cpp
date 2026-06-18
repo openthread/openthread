@@ -55,8 +55,8 @@ SubMac::SubMac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    , mWedTimer(aInstance, SubMac::HandleWedTimer)
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    , mWlTimer(aInstance, SubMac::HandleWlTimer)
 #endif
 {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -100,8 +100,8 @@ void SubMac::Init(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     CslInit();
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    WedInit();
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    WlInit();
 #endif
 }
 
@@ -227,8 +227,8 @@ Error SubMac::Disable(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslTimer.Stop();
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    mWedTimer.Stop();
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    mWlTimer.Stop();
 #endif
 
     mTimer.Stop();
@@ -244,7 +244,7 @@ Error SubMac::Sleep(void)
 {
     Error error = kErrorNone;
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     if (IsRadioSampleEnabled())
     {
         RadioSample();
@@ -339,7 +339,7 @@ Error SubMac::Send(void)
 #endif
     case kStateSleep:
     case kStateReceive:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     case kStateRadioSample:
 #endif
         break;
@@ -388,7 +388,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
     if (mTransmitFrame.GetType() == Frame::kTypeMultipurpose)
     {
         VerifyOrExit(keyIdMode == Frame::kKeyIdMode2);
@@ -726,7 +726,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     case kStateReceive:
     case kStateSleep:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     case kStateRadioSample:
 #endif
         break;
@@ -1034,7 +1034,7 @@ void SubMac::StartTimerAt(Time aStartTime, uint32_t aDelayUs)
 #endif
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 void SubMac::RadioSample(void)
 {
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -1062,8 +1062,8 @@ bool SubMac::IsRadioSampleEnabled(void) const
     ret = IsCslEnabled();
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    ret = ret || mIsWedEnabled;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    ret = ret || mIsWlEnabled;
 #endif
 
     return ret;
@@ -1088,8 +1088,8 @@ bool SubMac::IsRadioSampleEnabled(void) const
  * WED   -----------++++++++----------------++++++++----------------++++++++----------
  *                  ^       ^
  *                  |       |
- *                  | mIsWedSampling=false
- *         mIsWedSampling=true
+ *                  | mIsWlSampling=false
+ *         mIsWlSampling=true
  *
  * Radio ------========+++++-------========-++++++++---========-----+++++++========---
  *             ^       ^    ^
@@ -1110,8 +1110,8 @@ void SubMac::UpdateRadioSampleState(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    if (mIsWedSampling)
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    if (mIsWlSampling)
     {
         IgnoreError(Get<Radio>().Receive(mWakeupChannel));
         ExitNow();
@@ -1125,7 +1125,7 @@ void SubMac::UpdateRadioSampleState(void)
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 // LCOV_EXCL_START
 
@@ -1152,7 +1152,7 @@ const char *SubMac::StateToString(State aState)
 #define ClsTxStateMapList(_)
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 #define RadioSampleMapList(_) _(kStateRadioSample, "RadioSample")
 #else
 #define RadioSampleMapList(_)

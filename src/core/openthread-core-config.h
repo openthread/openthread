@@ -99,7 +99,6 @@
 #include "config/nat64.h"
 #include "config/net_diag.h"
 #include "config/netdata_publisher.h"
-#include "config/p2p.h"
 #include "config/parent_search.h"
 #include "config/ping_sender.h"
 #include "config/platform.h"
@@ -109,10 +108,10 @@
 #include "config/sntp_client.h"
 #include "config/srp_client.h"
 #include "config/srp_server.h"
+#include "config/thread_direct.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"
 #include "config/trel.h"
-#include "config/wakeup.h"
 // IWYU pragma: end_exports
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN

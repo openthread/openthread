@@ -28,39 +28,39 @@
 
 /**
  * @file
- *   This file includes definitions for the Thread Peer table.
+ *   This file includes definitions for the Thread Direct peer table.
  */
 
-#ifndef OT_CORE_THREAD_PEER_TABLE_HPP_
-#define OT_CORE_THREAD_PEER_TABLE_HPP_
+#ifndef OT_CORE_THREAD_DIRECT_PEER_TABLE_HPP_
+#define OT_CORE_THREAD_DIRECT_PEER_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_P2P_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
 #include "common/const_cast.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "thread/peer.hpp"
+#include "thread/direct_peer.hpp"
 
 namespace ot {
 
 /**
- * Represents the Thread Peer table.
+ * Represents the Thread Direct peer table.
  */
-class PeerTable : public InstanceLocator, private NonCopyable
+class DirectPeerTable : public InstanceLocator, private NonCopyable
 {
     friend class NeighborTable;
     class IteratorBuilder;
 
 public:
     /**
-     * Represents an iterator for iterating through the peer entries in the peer table.
+     * Represents an iterator for iterating through entries in the peer table.
      */
-    class Iterator : public InstanceLocator, public ItemPtrIterator<Peer, Iterator>
+    class Iterator : public InstanceLocator, public ItemPtrIterator<DirectPeer, Iterator>
     {
-        friend class ItemPtrIterator<Peer, Iterator>;
+        friend class ItemPtrIterator<DirectPeer, Iterator>;
         friend class IteratorBuilder;
 
     public:
@@ -70,7 +70,7 @@ public:
          * @param[in] aInstance  The OpenThread instance.
          * @param[in] aFilter    A peer state filter.
          */
-        Iterator(Instance &aInstance, Peer::StateFilter aFilter);
+        Iterator(Instance &aInstance, DirectPeer::StateFilter aFilter);
 
         /**
          * Resets the iterator to start over.
@@ -78,30 +78,30 @@ public:
         void Reset(void);
 
         /**
-         * Gets the `Peer` entry to which the iterator is currently pointing.
+         * Gets the `DirectPeer` entry to which the iterator is currently pointing.
          *
-         * @returns A pointer to the `Peer` entry, or `nullptr` if the iterator is done and/or empty.
+         * @returns A pointer to the `DirectPeer` entry, or `nullptr` if done / empty.
          */
-        Peer *GetPeer(void) { return mItem; }
+        DirectPeer *GetPeer(void) { return mItem; }
 
     private:
         explicit Iterator(Instance &aInstance)
             : InstanceLocator(aInstance)
-            , mFilter(Peer::StateFilter::kInStateValid)
+            , mFilter(DirectPeer::StateFilter::kInStateValid)
         {
         }
 
         void Advance(void);
 
-        Peer::StateFilter mFilter;
+        DirectPeer::StateFilter mFilter;
     };
 
     /**
-     * Initializes a `PeerTable` instance.
+     * Initializes a `DirectPeerTable` instance.
      *
-     * @param[in]  aInstance     A reference to the OpenThread instance.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      */
-    explicit PeerTable(Instance &aInstance);
+    explicit DirectPeerTable(Instance &aInstance);
 
     /**
      * Clears the peer table.
@@ -109,47 +109,45 @@ public:
     void Clear(void);
 
     /**
-     * Gets a new/unused `Peer` entry from the peer table.
+     * Gets a new/unused `DirectPeer` entry from the peer table.
      *
-     * @note The returned peer entry will be cleared (`memset` to zero).
-     *
-     * @returns A pointer to a new `Peer` entry, or `nullptr` if all `Peer` entries are in use.
+     * @returns A pointer to a new `DirectPeer` entry, or `nullptr` if all entries are in use.
      */
-    Peer *GetNewPeer(void);
+    DirectPeer *GetNewPeer(void);
 
     /**
-     * Searches the peer table for a `Peer` with a given extended address also matching a given state
-     * filter.
+     * Searches the peer table for a `DirectPeer` with a given extended address and
+     * state filter.
      *
-     * @param[in]  aExtAddress A reference to an extended address.
-     * @param[in]  aFilter     A peer state filter.
+     * @param[in]  aExtAddress  A reference to an extended address.
+     * @param[in]  aFilter      A peer state filter.
      *
-     * @returns  A pointer to the `Peer` entry if one is found, or `nullptr` otherwise.
+     * @returns  A pointer to the matching `DirectPeer`, or `nullptr` if not found.
      */
-    Peer *FindPeer(const Mac::ExtAddress &aExtAddress, Peer::StateFilter aFilter);
+    DirectPeer *FindPeer(const Mac::ExtAddress &aExtAddress, DirectPeer::StateFilter aFilter);
 
     /**
      * Indicates whether the peer table contains any peer matching a given state filter.
      *
      * @param[in]  aFilter  A peer state filter.
      *
-     * @returns  TRUE if the table contains at least one peer table matching the given filter, FALSE otherwise.
+     * @returns  TRUE if the table contains at least one matching peer, FALSE otherwise.
      */
-    bool HasPeers(Peer::StateFilter aFilter) const;
+    bool HasPeers(DirectPeer::StateFilter aFilter) const;
 
     /**
-     * Enables range-based `for` loop iteration over all peer entries in the peer table matching a given
+     * Enables range-based `for` loop iteration over all peer entries matching a given
      * state filter.
      *
      * Should be used as follows:
      *
-     *     for (Peer &peer : aPeerTable.Iterate(aFilter)) { ... }
+     *     for (DirectPeer &peer : aTable.Iterate(aFilter)) { ... }
      *
      * @param[in] aFilter  A peer state filter.
      *
      * @returns An IteratorBuilder instance.
      */
-    IteratorBuilder Iterate(Peer::StateFilter aFilter) { return IteratorBuilder(GetInstance(), aFilter); }
+    IteratorBuilder Iterate(DirectPeer::StateFilter aFilter) { return IteratorBuilder(GetInstance(), aFilter); }
 
     /**
      * Indicates whether the peer table is full.
@@ -159,12 +157,12 @@ public:
     bool IsFull(void) const;
 
 private:
-    static constexpr uint16_t kMaxPeers = OPENTHREAD_CONFIG_P2P_MAX_PEERS;
+    static constexpr uint16_t kMaxPeers = OPENTHREAD_CONFIG_THREAD_DIRECT_MAX_DIRECT_PEERS;
 
     class IteratorBuilder : public InstanceLocator
     {
     public:
-        IteratorBuilder(Instance &aInstance, Peer::StateFilter aFilter)
+        IteratorBuilder(Instance &aInstance, DirectPeer::StateFilter aFilter)
             : InstanceLocator(aInstance)
             , mFilter(aFilter)
         {
@@ -174,17 +172,20 @@ private:
         Iterator end(void) { return Iterator(GetInstance()); }
 
     private:
-        Peer::StateFilter mFilter;
+        DirectPeer::StateFilter mFilter;
     };
 
-    Peer       *FindPeer(const Peer::AddressMatcher &aMatcher) { return AsNonConst(AsConst(this)->FindPeer(aMatcher)); }
-    const Peer *FindPeer(const Peer::AddressMatcher &aMatcher) const;
+    DirectPeer *FindPeer(const DirectPeer::AddressMatcher &aMatcher)
+    {
+        return AsNonConst(AsConst(this)->FindPeer(aMatcher));
+    }
+    const DirectPeer *FindPeer(const DirectPeer::AddressMatcher &aMatcher) const;
 
-    Peer mPeers[kMaxPeers];
+    DirectPeer mPeers[kMaxPeers];
 };
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_P2P_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
 
-#endif // OT_CORE_THREAD_PEER_TABLE_HPP_
+#endif // OT_CORE_THREAD_DIRECT_PEER_TABLE_HPP_

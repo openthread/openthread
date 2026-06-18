@@ -31,7 +31,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -58,31 +58,6 @@ public:
     explicit WakeupTxScheduler(Instance &aInstance);
 
     /**
-     * Initiates the wake-up sequence to a Wake-up End Device.
-     *
-     * @param[in] aWakeupRequest  The wake-up request.
-     * @param[in] aIntervalUs     An interval between consecutive wake-up frames (in microseconds).
-     * @param[in] aDurationMs     Duration of the wake-up sequence (in milliseconds).
-     *
-     * @retval kErrorNone         Successfully started the wake-up sequence.
-     * @retval kErrorInvalidState This or another device is currently being woken-up.
-     */
-    Error WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16_t aIntervalUs, uint16_t aDurationMs);
-
-    /**
-     * Returns the connection window used by this device.
-     *
-     * The connection window is amount of time that this device waits for an initial link establishment message after
-     * sending the last wake-up frame.
-     *
-     * @returns Connection window in the units of microseconds.
-     */
-    uint32_t GetConnectionWindowUs(void) const
-    {
-        return mIntervalUs * kConnectionRetryInterval * kConnectionRetryCount;
-    }
-
-    /**
      * Returns the end of the wake-up sequence time.
      *
      * @returns End of the wake-up sequence time.
@@ -100,38 +75,33 @@ public:
     void UpdateFrameRequestAhead(void);
 
     /**
-     * Returns the wake-up request.
+     * Returns true if a wake-up sequence is currently running.
      */
-    const Mac::WakeupRequest &GetWakeupRequest(void) const { return mWakeupRequest; }
+    bool IsRunning(void) const { return mIsRunning; }
 
 private:
-    constexpr static uint8_t  kConnectionRetryInterval = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_INTERVAL;
-    constexpr static uint8_t  kConnectionRetryCount    = OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_CONNECTION_RETRY_COUNT;
-    constexpr static uint32_t kWakeupFrameLength       = 54; // Includes SHR
-    constexpr static bool     kWakeupFrameTxCca        = OPENTHREAD_CONFIG_WAKEUP_FRAME_TX_CCA_ENABLE;
-    constexpr static uint32_t kParentRequestLength     = 78; // Includes SHR
+    constexpr static bool kWakeFrameTxCca = OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_FRAME_TX_CCA_ENABLE;
 
     // Called by the MAC layer when a wake-up frame transmission is about to be started.
     Mac::TxFrame *PrepareWakeupFrame(Mac::TxFrames &aTxFrames);
 
-    // Called at the beginning of a wake-up sequence and right after a wake-up frame has been prepared for transmission.
+    // Called at the start of a sequence and after each Wake Frame is prepared.
     void ScheduleTimer(void);
 
     void RequestWakeupFrameTransmission(void);
 
     using WakeupTimer = TimerMicroIn<WakeupTxScheduler, &WakeupTxScheduler::RequestWakeupFrameTransmission>;
 
-    Mac::WakeupRequest mWakeupRequest;
-    TimeMicro          mTxTimeUs;             // Point in time when the next TX occurs.
-    TimeMicro          mTxEndTimeUs;          // Point in time when the wake-up sequence is over.
-    uint32_t           mTxRequestAheadTimeUs; // How much ahead the TX MAC operation needs to be requested.
-    uint16_t           mIntervalUs;           // Interval between consecutive wake-up frames.
-    WakeupTimer        mTimer;
-    bool               mIsRunning;
+    TimeMicro   mTxTimeUs;             // Time of the next Wake Frame TX.
+    TimeMicro   mTxEndTimeUs;          // Time at which the burst ends.
+    uint32_t    mTxRequestAheadTimeUs; // How far ahead the MAC TX request must be issued.
+    uint16_t    mIntervalUs;           // Interval between consecutive Wake Frames.
+    WakeupTimer mTimer;
+    bool        mIsRunning;
 };
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
 #endif // OT_CORE_MAC_WAKEUP_TX_SCHEDULER_HPP_

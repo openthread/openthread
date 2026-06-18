@@ -182,9 +182,6 @@
  *
  * @{
  *
- * @defgroup api-provisional-link        Link
- * @defgroup api-provisional-p2p         Peer-to-Peer
- *
  * @}
  *
  * @}
