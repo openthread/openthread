@@ -5480,7 +5480,12 @@ void Mle::Attacher::HandleChildIdResponse(RxInfo &aRxInfo)
 
     Get<Mle>().mParent.SetRloc16(sourceAddress);
 
-    IgnoreError(aRxInfo.mMessage.ReadAndSetNetworkDataTlv(leaderData));
+    error = aRxInfo.mMessage.ReadAndSetNetworkDataTlv(leaderData);
+    if (error != kErrorNone)
+    {
+        IgnoreError(Get<Mle>().BecomeDetached());
+        ExitNow();
+    }
 
     Get<Mle>().SetStateChild(shortAddress);
 
