@@ -418,6 +418,32 @@ public:
                    const KeyMaterial &aCurrKey,
                    const KeyMaterial &aNextKey);
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    /**
+     * Registers or removes a Thread Direct Wake Key at the given key index.
+     *
+     * @param[in] aKeyIndex  Key index (OT_MAC_FRAME_WAKE_KEY_INDEX for default, 130-192 for guest).
+     * @param[in] aWakeKey   Key material, or nullptr to remove the key at @p aKeyIndex.
+     */
+    Error SetWakeKey(uint8_t aKeyIndex, const KeyMaterial *aWakeKey);
+
+    /**
+     * Sets the key index used to secure Wake Frames in the active burst.
+     *
+     * Called by WakeupTxScheduler when a burst starts or stops so that
+     * `ProcessTransmitSecurity` stamps the correct key index in each Wake Frame's
+     * Auxiliary Security Header.
+     *
+     * @param[in] aKeyIndex  Key index for the active burst, or OT_MAC_FRAME_WAKE_KEY_INDEX (129) when idle.
+     */
+#endif
+
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    void    SetActiveBurstWakeKeyIndex(uint8_t aKeyIndex) { mActiveBurstWakeKeyIndex = aKeyIndex; }
+    uint8_t GetActiveBurstWakeKeyIndex(void) const { return mActiveBurstWakeKeyIndex; }
+
+#endif
+
     /**
      * Returns a reference to the current MAC key.
      *
@@ -465,6 +491,24 @@ public:
      */
     void SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger);
 
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    /**
+     * Returns the current Thread Direct wake frame counter value.
+     *
+     * @returns The current wake frame counter value.
+     */
+    uint32_t GetWakeFrameCounter(void) const { return mWakeFrameCounter; }
+
+    /**
+     * Sets the Thread Direct wake frame counter value.
+     *
+     * @param[in] aWakeFrameCounter  The wake frame counter value.
+     * @param[in] aSetIfLarger       If `true`, set only if @p aWakeFrameCounter is larger than the current value.
+     *                               If `false`, set the new value independent of the current value.
+     */
+    void SetWakeFrameCounter(uint32_t aWakeFrameCounter, bool aSetIfLarger);
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     /**
      * Enables/disables the radio filter.
@@ -486,14 +530,14 @@ public:
     bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     /**
-     * Configures wake-up listening parameters in all radios.
+     * Configures Wake Listener (WL) listen parameters.
      *
-     * @param[in]  aEnable    Whether to enable or disable wake-up listening.
-     * @param[in]  aInterval  The wake-up listen interval in microseconds.
-     * @param[in]  aDuration  The wake-up listen duration in microseconds.
-     * @param[in]  aChannel   The wake-up channel.
+     * @param[in]  aEnable    Whether to enable or disable WL listening.
+     * @param[in]  aInterval  The WL listen interval in microseconds
+     * @param[in]  aDuration  The WL listen window duration in microseconds
+     * @param[in]  aChannel   The Wake Channel (default: channel 20).
      */
     void UpdateWakeupListening(bool aEnable, uint32_t aInterval, uint32_t aDuration, uint8_t aChannel);
 #endif
@@ -517,12 +561,12 @@ private:
     void HandleCslReceiveOrSleep(uint32_t aTimeAhead, uint32_t aTimeAfter);
     void LogCslWindow(uint32_t aWinStart, uint32_t aWinDuration);
 #endif
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    void        WedInit(void);
-    static void HandleWedTimer(Timer &aTimer);
-    void        HandleWedTimer(void);
-    void        HandleWedReceiveAt(void);
-    void        HandleWedReceiveOrSleep(void);
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    void        WlInit(void);
+    static void HandleWlTimer(Timer &aTimer);
+    void        HandleWlTimer(void);
+    void        HandleWlReceiveAt(void);
+    void        HandleWlReceiveOrSleep(void);
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;                  // macMinBE (IEEE 802.15.4-2006).
@@ -556,26 +600,25 @@ private:
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, // CSL transmission.
 #endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
         kStateRadioSample, // Mac layer has requested the SubMac to enter sleep state, but the SubMac is in the periodic
                            // sample state.
 #endif
     };
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     // Radio on times needed before and after MHR time for proper frame detection
     static constexpr uint32_t kMinReceiveOnAhead = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD;
     static constexpr uint32_t kMinReceiveOnAfter = OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER;
 
-    // CSL/wake-up listening receivers would wake up `kCslReceiveTimeAhead` earlier
-    // than expected sample window. The value is in usec.
+    // CSL / WL listen receivers wake up `kCslReceiveTimeAhead` earlier than the expected sample window.
+    // The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    // Margin to be applied after the end of a wake-up listen duration to schedule the next listen interval.
-    // The value is in usec.
-    static constexpr uint32_t kWedReceiveTimeAfter = OPENTHREAD_CONFIG_WED_RECEIVE_TIME_AFTER;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    // Margin applied after the end of a WL listen window before scheduling the next listen interval, in usec.
+    static constexpr uint32_t kWlReceiveTimeAfter = OPENTHREAD_CONFIG_THREAD_DIRECT_LISTEN_RECEIVE_TIME_AFTER;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -632,7 +675,7 @@ private:
     void               SetState(State aState);
     static const char *StateToString(State aState);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
     bool IsRadioSampleEnabled(void) const;
     void UpdateRadioSampleState(void);
     void RadioSample(void);
@@ -666,6 +709,10 @@ private:
     KeyMaterial                  mNextKey;
     uint32_t                     mFrameCounter;
     uint8_t                      mKeyId;
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
+    uint8_t  mActiveBurstWakeKeyIndex; // Key index stamped in Wake Frames for the active burst.
+    uint32_t mWakeFrameCounter;        // Wake key frame counter (key index 129+), not mFrameCounter / mKeyId.
+#endif
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
 #endif
@@ -684,16 +731,16 @@ private:
     TimerMicro  mCslTimer;
 #endif
 
-#if OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-    bool mIsWedSampling : 1;          // Indicates that the current time is in WED's sample window
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_LISTENER_ENABLE
+    bool mIsWlSampling : 1;           // Indicates that the current time is in the WL sample window
                                       // for platforms not supporting `Radio::ReceiveAt()`.
-    bool       mIsWedEnabled : 1;     // Indicates if the WED is enabled.
-    uint32_t   mWakeupListenInterval; // The wake-up listen interval, in microseconds.
-    uint32_t   mWakeupListenDuration; // The wake-up listen duration, in microseconds.
-    uint8_t    mWakeupChannel;        // The wake-up sample channel.
-    TimeMicro  mWedSampleTime;        // The WED sample time of the current interval in local time.
-    uint64_t   mWedSampleTimeRadio;   // The WED sample time of the current interval in radio time.
-    TimerMicro mWedTimer;
+    bool       mIsWlEnabled : 1;      // Indicates if WL listen mode is enabled.
+    uint32_t   mWakeupListenInterval; // WL listen interval, in microseconds.
+    uint32_t   mWakeupListenDuration; // WL listen window duration, in microseconds.
+    uint8_t    mWakeupChannel;        // Wake Channel (spec ; default channel 20).
+    TimeMicro  mWlSampleTime;         // WL sample time of the current interval in local time.
+    uint64_t   mWlSampleTimeRadio;    // WL sample time of the current interval in radio time.
+    TimerMicro mWlTimer;
 #endif
 };
 

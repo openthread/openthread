@@ -44,7 +44,6 @@
  */
 
 #include "config/time_sync.h"
-#include "config/wakeup.h"
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
@@ -415,8 +414,7 @@
  * Define to 1 to enable support for IEEE 802.15.4 MAC Multipurpose frame format.
  */
 #ifndef OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME
-#define OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME \
-    (OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE)
+#define OPENTHREAD_CONFIG_MAC_MULTIPURPOSE_FRAME 0
 #endif
 
 /**

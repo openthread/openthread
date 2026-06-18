@@ -76,7 +76,6 @@ set(COMMON_SOURCES
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
-    api/p2p_api.cpp
     api/ping_sender_api.cpp
     api/radio_stats_api.cpp
     api/random_crypto_api.cpp
@@ -92,6 +91,7 @@ set(COMMON_SOURCES
     api/tcp_api.cpp
     api/tcp_ext_api.cpp
     api/thread_api.cpp
+    api/thread_direct_api.cpp
     api/thread_ftd_api.cpp
     api/trel_api.cpp
     api/udp_api.cpp
@@ -152,6 +152,7 @@ set(COMMON_SOURCES
     mac/channel_mask.cpp
     mac/data_poll_handler.cpp
     mac/data_poll_sender.cpp
+    mac/direct_handler.cpp
     mac/link_raw.cpp
     mac/mac.cpp
     mac/mac_filter.cpp
@@ -163,7 +164,7 @@ set(COMMON_SOURCES
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
-    mac/sub_mac_wed.cpp
+    mac/sub_mac_wl.cpp
     mac/wakeup_tx_scheduler.cpp
     meshcop/border_agent.cpp
     meshcop/border_agent_admitter.cpp
@@ -237,6 +238,8 @@ set(COMMON_SOURCES
     thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
+    thread/direct_peer.cpp
+    thread/direct_peer_table.cpp
     thread/discover_scanner.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp
@@ -251,7 +254,6 @@ set(COMMON_SOURCES
     thread/message_framer.cpp
     thread/mle.cpp
     thread/mle_ftd.cpp
-    thread/mle_p2p.cpp
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
@@ -271,8 +273,6 @@ set(COMMON_SOURCES
     thread/network_data_tlvs.cpp
     thread/network_data_types.cpp
     thread/panid_query_server.cpp
-    thread/peer.cpp
-    thread/peer_table.cpp
     thread/radio_selector.cpp
     thread/router.cpp
     thread/router_table.cpp
@@ -335,7 +335,7 @@ set(RADIO_COMMON_SOURCES
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
     mac/sub_mac_csl_receiver.cpp
-    mac/sub_mac_wed.cpp
+    mac/sub_mac_wl.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp

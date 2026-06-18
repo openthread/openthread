@@ -28,13 +28,14 @@
 
 #include "wakeup_tx_scheduler.hpp"
 
-#if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#if OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "common/time.hpp"
 #include "core/instance/instance.hpp"
+#include "mac/sub_mac.hpp"
 #include "radio/radio.hpp"
 
 namespace ot {
@@ -43,29 +44,85 @@ RegisterLogModule("WakeupTxSched");
 
 WakeupTxScheduler::WakeupTxScheduler(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mWakeFrameType(Mac::Frame::kWakeFrameTypeDirectLink)
     , mTxTimeUs(0)
     , mTxEndTimeUs(0)
+    , mKeyIndex(Mac::Frame::kWakeKeyIndex)
     , mTimer(aInstance)
+    , mConnectionWindowTimer(aInstance)
+    , mTdWakeState(kTdWakeIdle)
     , mIsRunning(false)
 {
     UpdateFrameRequestAhead();
 }
 
-Error WakeupTxScheduler::WakeUp(const Mac::WakeupRequest &aWakeupRequest, uint16_t aIntervalUs, uint16_t aDurationMs)
+Error WakeupTxScheduler::StartWakeup(const Mac::ExtAddress    &aWlExtAddress,
+                                     Mac::Frame::WakeFrameType aWakeType,
+                                     uint16_t                  aIntervalUs,
+                                     uint16_t                  aDurationMs,
+                                     uint8_t                   aKeyIndex)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit((aIntervalUs > 0) && (aDurationMs > 0), error = kErrorInvalidArgs);
+    VerifyOrExit(aIntervalUs < aDurationMs * Time::kOneMsecInUsec, error = kErrorInvalidArgs);
+    VerifyOrExit(mTdWakeState == kTdWakeIdle, error = kErrorInvalidState);
+    VerifyOrExit(aKeyIndex == Mac::Frame::kWakeKeyIndex || (aKeyIndex >= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MIN &&
+                                                            aKeyIndex <= OT_MAC_FRAME_GUEST_WAKE_KEY_INDEX_MAX),
+                 error = kErrorInvalidArgs);
+
+    mKeyIndex = aKeyIndex;
+
+    // Inform SubMac of the key index so ProcessTransmitSecurity stamps the correct key ID.
+    Get<Mac::SubMac>().SetActiveBurstWakeKeyIndex(aKeyIndex);
+
+    SuccessOrExit(error = WakeUp(aWlExtAddress, aWakeType, aIntervalUs, aDurationMs));
+
+    mTdWakeState = kTdWaking;
+
+    if (aWakeType == Mac::Frame::kWakeFrameTypeDirectLink)
+    {
+        // Open the connection window: WI waits for the WL's TD Link Command.
+        mConnectionWindowTimer.FireAt(mTxEndTimeUs + GetConnectionWindowUs());
+        LogInfo("TD connection window open");
+    }
+    else
+    {
+        // Non-link wake: no connection window needed.
+        mTdWakeState = kTdWakeIdle;
+    }
+
+exit:
+    return error;
+}
+
+void WakeupTxScheduler::HandleConnectionWindowTimer(void)
+{
+    if (mTdWakeState == kTdWaking)
+    {
+        LogInfo("TD connection window closed without response");
+        mTdWakeState = kTdWakeIdle;
+        Get<Mac::Mac>().InvokeDirectEvent(OT_THREAD_DIRECT_EVENT_LINK_FAILED, nullptr);
+    }
+}
+
+Error WakeupTxScheduler::WakeUp(const Mac::ExtAddress    &aPeerExtAddress,
+                                Mac::Frame::WakeFrameType aWakeType,
+                                uint16_t                  aIntervalUs,
+                                uint16_t                  aDurationMs)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(!mIsRunning, error = kErrorInvalidState);
-    // TODO: Add support for wake-up identifiers.
-    VerifyOrExit(aWakeupRequest.IsWakeupByExtAddress(), error = kErrorInvalidState);
 
-    mWakeupRequest = aWakeupRequest;
-    mTxTimeUs      = TimerMicro::GetNow() + mTxRequestAheadTimeUs;
-    mTxEndTimeUs   = mTxTimeUs + aDurationMs * Time::kOneMsecInUsec + aIntervalUs;
-    mIntervalUs    = aIntervalUs;
-    mIsRunning     = true;
+    mPeerExtAddress = aPeerExtAddress;
+    mWakeFrameType  = aWakeType;
+    mTxTimeUs       = TimerMicro::GetNow() + mTxRequestAheadTimeUs;
+    mTxEndTimeUs    = mTxTimeUs + aDurationMs * Time::kOneMsecInUsec + aIntervalUs;
+    mIntervalUs     = aIntervalUs;
+    mIsRunning      = true;
 
-    LogInfo("Started wake-up sequence to %s", aWakeupRequest.GetExtAddress().ToString().AsCString());
+    LogInfo("Started Wake Frame sequence to %s", aPeerExtAddress.ToString().AsCString());
 
     ScheduleTimer();
 
@@ -79,18 +136,11 @@ void WakeupTxScheduler::RequestWakeupFrameTransmission(void) { Get<Mac::Mac>().R
 
 Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
 {
-    Mac::TxFrame      *frame = nullptr;
-    Mac::Address       source;
-    uint32_t           radioTxDelay;
-    uint32_t           rendezvousTimeUs;
-    TimeMicro          nowUs = TimerMicro::GetNow();
-    Mac::ConnectionIe *connectionIe;
+    Mac::TxFrame *frame = nullptr;
+    uint32_t      remainingUs;
+    uint8_t       rendezvousTimeTenSym;
 
     VerifyOrExit(mIsRunning);
-
-    source.SetExtended(Get<Mac::Mac>().GetExtAddress());
-    VerifyOrExit(mTxTimeUs >= nowUs);
-    radioTxDelay = mTxTimeUs - nowUs;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     frame = &aTxFrames.GetTxFrame(Mac::kRadioTypeIeee802154);
@@ -98,31 +148,19 @@ Mac::TxFrame *WakeupTxScheduler::PrepareWakeupFrame(Mac::TxFrames &aTxFrames)
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    VerifyOrExit(frame->GenerateWakeupFrame(Get<Mac::Mac>().GetPanId(), mWakeupRequest, source) == kErrorNone,
-                 frame = nullptr);
-    frame->SetTxDelayBaseTime(static_cast<uint32_t>(Get<Radio>().GetNow()));
-    frame->SetTxDelay(radioTxDelay);
-    frame->SetCsmaCaEnabled(kWakeupFrameTxCca);
+    remainingUs          = (mTxEndTimeUs > mTxTimeUs) ? static_cast<uint32_t>(mTxEndTimeUs - mTxTimeUs) : 0;
+    rendezvousTimeTenSym = static_cast<uint8_t>(Min(remainingUs / kUsPerTenSymbols, static_cast<uint32_t>(0xffu)));
+
+    IgnoreError(frame->GenerateThreadDirectWakeCommand(
+        Get<Mac::Mac>().GetPanId(), mPeerExtAddress, Get<Mac::Mac>().GetExtAddress(), mWakeFrameType,
+        rendezvousTimeTenSym, kConnectionRetryInterval, kConnectionRetryCount));
+
+    frame->SetChannel(Get<Mac::Mac>().GetWakeupChannel());
+    frame->SetCsmaCaEnabled(kWakeFrameTxCca);
     frame->SetMaxCsmaBackoffs(0);
     frame->SetMaxFrameRetries(0);
 
-    // Rendezvous Time is the time between the end of a wake-up frame and the start of the first payload frame.
-    // For the n-th wake-up frame, set the Rendezvous Time so that the expected reception of a Parent Request happens in
-    // the "free space" between the "n+1"-th and "n+2"-th wake-up frame.
-    rendezvousTimeUs = mIntervalUs;
-    rendezvousTimeUs += (mIntervalUs - (kWakeupFrameLength + kParentRequestLength) * kOctetDuration) / 2;
-
-    frame->GetRendezvousTimeIe()->SetRendezvousTime(ClampToUint16(rendezvousTimeUs / kUsPerTenSymbols));
-
-    connectionIe = frame->GetConnectionIe();
-    connectionIe->SetRetryInterval(kConnectionRetryInterval);
-    connectionIe->SetRetryCount(kConnectionRetryCount);
-
-    // Advance to the time of the next wake-up frame.
     mTxTimeUs = Max(mTxTimeUs + mIntervalUs, TimerMicro::GetNow() + mTxRequestAheadTimeUs);
-
-    // Schedule the next timer right away before waiting for the transmission completion
-    // to keep up with the high rate of wake-up frames in the RCP architecture.
     ScheduleTimer();
 
 exit:
@@ -140,7 +178,11 @@ void WakeupTxScheduler::ScheduleTimer(void)
     if (mTxTimeUs >= mTxEndTimeUs)
     {
         mIsRunning = false;
-        LogInfo("Stopped wake-up sequence");
+        LogInfo("Stopped Wake Frame sequence");
+
+        // After a burst, reset active key index to default kWakeKeyIndex.
+        Get<Mac::SubMac>().SetActiveBurstWakeKeyIndex(Mac::Frame::kWakeKeyIndex);
+
         ExitNow();
     }
 
@@ -152,19 +194,23 @@ exit:
 
 void WakeupTxScheduler::Stop(void)
 {
-    mIsRunning = false;
+    mIsRunning   = false;
+    mTdWakeState = kTdWakeIdle;
     mTimer.Stop();
+    mConnectionWindowTimer.Stop();
+
+    // Reset active key index to default kWakeKeyIndex.
+    Get<Mac::SubMac>().SetActiveBurstWakeKeyIndex(Mac::Frame::kWakeKeyIndex);
 }
 
 void WakeupTxScheduler::UpdateFrameRequestAhead(void)
 {
-    // A rough estimate of the size of data that has to be exchanged with the radio to schedule a wake-up frame TX.
-    // This is used to make sure that a wake-up frame is received by the radio early enough to be transmitted on time.
-    constexpr uint32_t kWakeupFrameSize = 100;
+    // Rough estimate of data exchanged with the radio to schedule a Wake Frame TX.
+    constexpr uint32_t kWakeFrameSize = 100;
 
-    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + Get<Mac::Mac>().CalculateRadioBusTransferTime(kWakeupFrameSize);
+    mTxRequestAheadTimeUs = Mac::kCslRequestAhead + Get<Mac::Mac>().CalculateRadioBusTransferTime(kWakeFrameSize);
 }
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_DIRECT_WAKE_INITIATOR_ENABLE
