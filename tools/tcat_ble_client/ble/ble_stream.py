@@ -37,6 +37,8 @@ from bleak.backends.characteristic import BleakGATTCharacteristic
 
 logger = logging.getLogger(__name__)
 
+class BleConnectionClosed(Exception):
+    pass
 
 class BleStream:
 
@@ -77,6 +79,8 @@ class BleStream:
 
     async def send(self, data):
         logger.debug(f'tx {len(data)} bytes')
+        if not self.client.is_connected:
+            raise BleConnectionClosed('BLE connection was closed')
         services = self.client.services.get_service(self.service_uuid)
         rx_char = services.get_characteristic(self.rx_char_uuid)
         for s in BleStream.__sliced(data, rx_char.max_write_without_response_size):
@@ -84,6 +88,8 @@ class BleStream:
         return len(data)
 
     async def recv(self, bufsize, recv_timeout=0.200):
+        if not self.client.is_connected:
+            raise BleConnectionClosed('BLE connection was closed')
         if not self.__receive_buffer:
             return b''
 
@@ -98,3 +104,7 @@ class BleStream:
     async def disconnect(self):
         if self.client.is_connected:
             await self.client.disconnect()
+
+    @property
+    def is_connected(self):
+        return self.client.is_connected

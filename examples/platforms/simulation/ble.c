@@ -97,6 +97,19 @@ static void deinitFds(void)
     }
 }
 
+// Notify the simulated BLE peer (TCAT Commissioner) that the link is being dropped, by
+// sending a 0-length UDP datagram.
+static void sendDisconnectSignal(void)
+{
+    if (sFd != -1)
+    {
+        if (sendto(sFd, sBleBuffer, 0, 0, (struct sockaddr *)&sSockaddr, sizeof(sSockaddr)) == -1)
+        {
+            perror("BLE simulation sendDisconnectSignal() sendto failed.");
+        }
+    }
+}
+
 otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvertisementBuffer)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -126,6 +139,11 @@ otError otPlatBleDisable(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     if (sIsEnabled)
     {
+        if (sIsConnected)
+        {
+            sendDisconnectSignal();
+            sIsConnected = false;
+        }
         deinitFds();
         sIsEnabled = false;
     }
@@ -230,6 +248,7 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
     if (sIsDisconnecting)
     {
         sIsConnected = false;
+        sendDisconnectSignal();
         otPlatBleGapOnDisconnected(aInstance, 0);
         sIsDisconnecting = false;
     }

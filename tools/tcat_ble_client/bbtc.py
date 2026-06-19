@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024-2025, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,12 @@ import logging
 
 from bleak import BLEDevice
 
+from ble.ble_stream import BleConnectionClosed
 from ble.ble_stream_secure import BleStreamSecure
 from ble.udp_stream import UdpStream
 from ble import ble_scanner
 from cli.cli import CLI
+from cli.base_commands import connection_closed_helper
 from dataset.dataset import ThreadDataset
 from cli.command import CommandResult
 from tlv.tcat_tlv import TcatTLVType
@@ -92,6 +94,8 @@ async def main():
         try:
             result: CommandResult = await cli.evaluate_input(user_input)
             result.pretty_print()
+        except BleConnectionClosed:
+            await connection_closed_helper(cli.context)
         except Exception as e:
             logger.error(e)
             logger.debug(e, exc_info=True)
@@ -112,7 +116,17 @@ async def receive_loop(cli_context: dict):
     while True:
         bless: BleStreamSecure = cli_context['ble_sstream']
         if bless is not None:
-            data = await bless.recv_unsolicited_event()
+            try:
+                data = await bless.recv_unsolicited_event()
+            except BleConnectionClosed:
+                await connection_closed_helper(cli_context)
+                continue
+
+            # The link can also drop without raising BleConnectionClosed.
+            if not bless.stream.is_connected:
+                await connection_closed_helper(cli_context)
+                continue
+
             if data:
                 logger.info('Received event data from TCAT Device:\n' + hexdump_ot("Event", data))
                 tlv = TLV.from_bytes(data)
