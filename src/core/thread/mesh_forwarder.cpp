@@ -766,7 +766,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (aFrame.HasCslIe() && aIsDataPoll)
+    if (aFrame.Has<Mac::CslIe>() && aIsDataPoll)
     {
         failLimit = kFailedCslDataPollTransmissions;
     }
