@@ -52,6 +52,10 @@ DataPollSender::DataPollSender(Instance &aInstance)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    , mPendingFastPolls(0)
+    , mPollAccelerator(aInstance)
+#endif
 {
 }
 
@@ -85,6 +89,11 @@ void DataPollSender::StopPolling(void)
     mRemainingFastPolls   = 0;
     mFastPollsUsers       = 0;
     mEnabled              = false;
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    mPendingFastPolls = 0;
+    StopPollAccelerator();
+#endif
 }
 
 Error DataPollSender::SendDataPoll(void)
@@ -190,7 +199,13 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
+void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame,
+                                    Error         aError
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+                                    ,
+                                    uint32_t aIterationsDone
+#endif
+)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
@@ -201,6 +216,42 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         IgnoreError(aFrame.GetDstAddr(macDest));
+    }
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    // the poll accelerator did several successful iterations
+    if (aIterationsDone && !aFrame.IsEmpty())
+    {
+        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, kErrorNone, macDest, /* aIsDataPoll */ true);
+    }
+
+    if (mRemainingFastPolls || mPendingFastPolls)
+    {
+        if (mRemainingFastPolls > aIterationsDone)
+        {
+            mRemainingFastPolls -= aIterationsDone;
+        }
+        else
+        {
+            mRemainingFastPolls = 0;
+        }
+
+        mRemainingFastPolls = Max(mRemainingFastPolls, mPendingFastPolls);
+        mPendingFastPolls   = 0;
+
+        if (mRemainingFastPolls == 0)
+        {
+            shouldRecalculatePollPeriod = true;
+            mFastPollsUsers             = 0;
+        }
+    }
+
+    // the last Poll timestamp is in the frame metadata
+    RestartPollTimer(static_cast<uint32_t>(aFrame.mInfo.mTxInfo.mTimestamp));
+#endif
+
+    if (!aFrame.IsEmpty())
+    {
         Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest, /* aIsDataPoll */ true);
     }
 
@@ -395,8 +446,23 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
         aNumFastPolls = kDefaultFastPolls;
     }
 
-    aNumFastPolls       = Min(aNumFastPolls, kMaxFastPolls);
-    mRemainingFastPolls = Max(mRemainingFastPolls, aNumFastPolls);
+    aNumFastPolls = Min(aNumFastPolls, kMaxFastPolls);
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if (!mPollAccelerator.IsRunning())
+    {
+#endif
+
+        mRemainingFastPolls = Max(mRemainingFastPolls, aNumFastPolls);
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    }
+    else
+    {
+        mPendingFastPolls           = Max(mPendingFastPolls, aNumFastPolls);
+        shouldRecalculatePollPeriod = true;
+    }
+#endif
 
     if (mEnabled && shouldRecalculatePollPeriod)
     {
@@ -417,6 +483,11 @@ void DataPollSender::StopFastPolls(void)
     VerifyOrExit(mFastPollsUsers == 0);
 
     mRemainingFastPolls = 0;
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    mPendingFastPolls = 0;
+#endif
+
     ScheduleNextPoll(kRecalculatePollPeriod);
 
 exit:
@@ -443,6 +514,19 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 
     now = TimerMilli::GetNow();
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if (mPollAccelerator.IsRunning())
+    {
+        if ((oldPeriod != mPollPeriod) || mPendingFastPolls)
+        {
+            // indirect request for the poll accelerator to stop.
+            // SendDataPoll() calls Mac::StartOperation() which calls StopPollAccelerator()
+            mTimer.StartAt(now, kMinPollPeriod);
+        }
+        return;
+    }
+#endif
 
     if (mTimer.IsRunning())
     {
@@ -581,5 +665,61 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
 exit:
     return frame;
 }
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+bool DataPollSender::StartPollAccelerator(Mac::TxFrame &aFrame, bool aOneIteration)
+{
+    // poll accelerator doesn't verify Enh-ACK integrity by checking its MIC and
+    // it works only when there are no radio activity requests from other layers
+    if (aFrame.IsVersion2015() || Get<Mac::Mac>().IsCslEnabled() || Get<Mac::Mac>().GetRxOnWhenIdle() ||
+        Get<Mac::Mac>().IsPromiscuous())
+    {
+        return false;
+    }
+
+    uint32_t cnt = mRemainingFastPolls;
+
+    if (aOneIteration || mRetxMode || mPollTimeoutCounter)
+    {
+        cnt = 1;
+    }
+
+    if (mPollAccelerator.Start(aFrame, mPollPeriod, cnt, mTimerStartTime) == kErrorNone)
+    {
+        mTimer.Stop();
+        return true;
+    }
+
+    return false;
+}
+
+void DataPollSender::StopPollAccelerator(void) { IgnoreError(mPollAccelerator.Stop()); }
+
+void DataPollSender::RestartPollTimer(uint32_t aLastPollTimestamp)
+{
+    if (!mTimer.IsRunning())
+    {
+        // update the start time to account for poll accelerator iterations
+        TimeMilli now = TimerMilli::GetNow();
+
+        mTimerStartTime = TimeMilli(aLastPollTimestamp);
+
+        // check it's a valid start time
+        if (mTimerStartTime >= now)
+        {
+            mTimerStartTime = now - mPollPeriod;
+        }
+
+        if (mTimerStartTime + mPollPeriod < now + kMinPollPeriod)
+        {
+            mTimer.StartAt(now, kMinPollPeriod);
+        }
+        else
+        {
+            mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        }
+    }
+}
+#endif
 
 } // namespace ot
