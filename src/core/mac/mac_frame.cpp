@@ -1081,12 +1081,13 @@ uint8_t Frame::FindPayloadIndex(void) const
 
         do
         {
-            const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
+            const HeaderIe *ie;
 
-            index += sizeof(HeaderIe);
-            VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
+            VerifyOrExit(index + footerLength + sizeof(HeaderIe) <= mLength, index = kInvalidIndex);
 
-            index += ie->GetLength();
+            ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
+            index += ie->GetSize();
+
             VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
 
             if (ie->GetId() == Termination2Ie::kHeaderIeId)
@@ -1173,7 +1174,7 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
             ExitNow();
         }
 
-        index += sizeof(HeaderIe) + ie->GetLength();
+        index += ie->GetSize();
     }
 
 exit:
@@ -1198,8 +1199,8 @@ const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 
         if ((ie->GetId() == VendorIeHeader::kHeaderIeId) && (ie->GetLength() >= VendorIeHeader::kIeContentSize))
         {
-            const VendorIeHeader *vendorIe =
-                reinterpret_cast<const VendorIeHeader *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
+            const VendorIeHeader *vendorIe = reinterpret_cast<const VendorIeHeader *>(ie->GetContent());
+
             if (vendorIe->GetVendorOui() == ThreadIe::kVendorOuiThreadCompanyId && vendorIe->GetSubType() == aSubType)
             {
                 header = &mPsdu[index];
@@ -1207,7 +1208,7 @@ const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
             }
         }
 
-        index += sizeof(HeaderIe) + ie->GetLength();
+        index += ie->GetSize();
     }
 
 exit:
@@ -1278,8 +1279,8 @@ const TimeIe *Frame::GetTimeIe(void) const
 
         if ((ie->GetId() == VendorIeHeader::kHeaderIeId) && (ie->GetLength() >= TimeIe::kIeContentSize))
         {
-            const TimeIe *vendorIe =
-                reinterpret_cast<const TimeIe *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
+            const TimeIe *vendorIe = reinterpret_cast<const TimeIe *>(ie->GetContent());
+
             if (vendorIe->GetVendorOui() == TimeIe::kVendorOuiNest && vendorIe->GetSubType() == TimeIe::kVendorIeTime)
             {
                 timeIe = vendorIe;
@@ -1287,7 +1288,7 @@ const TimeIe *Frame::GetTimeIe(void) const
             }
         }
 
-        index += sizeof(HeaderIe) + ie->GetLength();
+        index += ie->GetSize();
     }
 
 exit:

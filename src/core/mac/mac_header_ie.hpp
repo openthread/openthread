@@ -38,6 +38,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/bit_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"
@@ -52,73 +53,73 @@ namespace Mac {
  */
 
 /**
- * Implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
+ * Implements IEEE 802.15.4 IE (Information Element) generation and parsing.
  */
 OT_TOOL_PACKED_BEGIN
 class HeaderIe
 {
 public:
     /**
-     * Initializes the Header IE.
-     */
-    void Init(void) { mFields.m16 = 0; }
-
-    /**
-     * Initializes the Header IE with Id and Length.
+     * Initializes the Header IE with a given ID and Length.
      *
-     * @param[in]  aId   The IE Element Id.
+     * @param[in]  aId   The IE Element ID.
      * @param[in]  aLen  The IE content length.
      */
-    void Init(uint16_t aId, uint8_t aLen);
+    void Init(uint8_t aId, uint8_t aLen);
 
     /**
-     * Returns the IE Element Id.
+     * Returns the IE Element ID.
      *
-     * @returns the IE Element Id.
+     * @returns the IE Element ID.
      */
-    uint16_t GetId(void) const { return ReadBitsLittleEndian<uint16_t, kIdMask>(mFields.m16); }
-
-    /**
-     * Sets the IE Element Id.
-     *
-     * @param[in]  aId  The IE Element Id.
-     */
-    void SetId(uint16_t aId) { mFields.m16 = UpdateBitsLittleEndian<uint16_t, kIdMask>(mFields.m16, aId); }
+    uint8_t GetId(void) const { return static_cast<uint8_t>(ReadBitsLittleEndian<uint16_t, kIdMask>(mLenIdType)); }
 
     /**
      * Returns the IE content length.
      *
      * @returns the IE content length.
      */
-    uint8_t GetLength(void) const { return ReadBits<uint8_t, kLengthMask>(mFields.m8[0]); }
+    uint8_t GetLength(void) const { return static_cast<uint8_t>(ReadBitsLittleEndian<uint16_t, kLenMask>(mLenIdType)); }
 
     /**
-     * Sets the IE content length.
+     * Returns the total size of the Header IE (descriptor header plus content length) in bytes.
      *
-     * @param[in]  aLength  The IE content length.
+     * @note The total size fits in a `uint8_t` since the content length is limited to 7 bits (max 127 bytes).
+     *
+     * @returns The total size of the Header IE in bytes.
      */
-    void SetLength(uint8_t aLength) { WriteBits<uint8_t, kLengthMask>(mFields.m8[0], aLength); }
+    uint8_t GetSize(void) const { return GetLength() + sizeof(HeaderIe); }
+
+    /**
+     * Returns a pointer to the IE content bytes.
+     *
+     * @returns A pointer to the IE content bytes.
+     */
+    const uint8_t *GetContent(void) const { return GetBytes() + sizeof(HeaderIe); }
+
+    /**
+     * Returns a pointer to the IE content bytes.
+     *
+     * @returns A pointer to the IE content bytes.
+     */
+    uint8_t *GetContent(void) { return AsNonConst(AsConst(this)->GetContent()); }
 
 private:
-    // Header IE format:
+    // IEEE 802.15.4 Header IE descriptor (2 bytes, little-endian):
     //
-    // +-----------+------------+--------+
-    // | Bits: 0-6 |    7-14    |   15   |
-    // +-----------+------------+--------+
-    // | Length    | Element ID | Type=0 |
-    // +-----------+------------+--------+
+    // Bits 0-6  (7 bits) : Length of IE content in bytes (max 127).
+    // Bits 7-14 (8 bits) : Element ID.
+    // Bit 15    (1 bit)  : Type (0 for Header IE).
 
-    static constexpr uint8_t  kSize       = 2;
-    static constexpr uint8_t  kIdOffset   = 7;
-    static constexpr uint8_t  kLengthMask = 0x7f;
-    static constexpr uint16_t kIdMask     = 0x00ff << kIdOffset;
+    static constexpr uint16_t kLenMask = 0x007f << 0;
+    static constexpr uint16_t kIdMask  = 0x00ff << 7;
 
-    union OT_TOOL_PACKED_FIELD
-    {
-        uint8_t  m8[kSize];
-        uint16_t m16;
-    } mFields;
+    void SetId(uint8_t aId) { mLenIdType = UpdateBitsLittleEndian<uint16_t, kIdMask>(mLenIdType, aId); }
+    void SetLength(uint8_t aLength) { mLenIdType = UpdateBitsLittleEndian<uint16_t, kLenMask>(mLenIdType, aLength); }
 
+    const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(this); }
+
+    uint16_t mLenIdType;
 } OT_TOOL_PACKED_END;
 
 /**
