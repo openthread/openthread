@@ -1,5 +1,5 @@
 """
-  Copyright (c) 2024-2025, The OpenThread Authors.
+  Copyright (c) 2024-2026, The OpenThread Authors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,8 @@ import logging
 import socket
 import select
 
+from ble.ble_stream import BleConnectionClosed
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,7 @@ class UdpStream:
     def __init__(self, address, node_id):
         self.__receive_buffer = b''
         self.__last_recv_time = None
+        self.__connected = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setblocking(False)
         self.address = (address, self.BASE_PORT + node_id)
@@ -49,12 +52,21 @@ class UdpStream:
 
     async def send(self, data):
         logger.debug(f'tx {len(data)} bytes')
+        if not self.__connected:
+            raise BleConnectionClosed('BLE connection (simulation) was closed')
         return self.socket.sendto(data, self.address)
 
     async def recv(self, bufsize):
+        if not self.__connected:
+            raise BleConnectionClosed('BLE connection (simulation) was closed')
         ready = select.select([self.socket], [], [], self.MAX_SERVER_TIMEOUT_SEC)
         if ready[0]:
             data = self.socket.recv(bufsize)
+            # A received 0-byte datagram simulates the peer dropping the BLE link
+            if len(data) == 0:
+                logger.debug('rx: BLE link disconnection was simulated (0-byte UDP packet)')
+                self.__connected = False
+                return b''
             logger.debug(f'rx {len(data)} bytes')
             return data
         else:
@@ -67,4 +79,10 @@ class UdpStream:
         self.socket.sendto(b'', self.address)
 
     async def disconnect(self):
-        self.socket.close()
+        self.__connected = False
+        if self.socket is not None:
+            self.socket.close()
+
+    @property
+    def is_connected(self):
+        return self.__connected and self.socket is not None

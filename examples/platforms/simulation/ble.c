@@ -48,7 +48,7 @@ static uint8_t sBleBuffer[PLAT_BLE_MSG_DATA_MAX];
 
 static int  sFd              = -1;
 static bool sIsConnected     = false;
-static bool sIsDisconnecting = false;
+static bool sIsDisconnecting = false; // value only relevant when sIsConnected is true
 static bool sIsAdvertising   = false;
 static bool sIsEnabled       = false;
 
@@ -97,6 +97,19 @@ static void deinitFds(void)
     }
 }
 
+// Notify the simulated BLE peer (TCAT Commissioner) that the link is being dropped, by
+// sending a 0-length UDP datagram.
+static void sendDisconnectSignal(void)
+{
+    if (sFd != -1 && sIsConnected)
+    {
+        if (sendto(sFd, sBleBuffer, 0, 0, (struct sockaddr *)&sSockaddr, sizeof(sSockaddr)) == -1)
+        {
+            perror("BLE simulation sendDisconnectSignal() sendto failed.");
+        }
+    }
+}
+
 otError otPlatBleGetAdvertisementBuffer(otInstance *aInstance, uint8_t **aAdvertisementBuffer)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -113,10 +126,9 @@ otError otPlatBleEnable(otInstance *aInstance)
     if (!sIsEnabled)
     {
         initFds();
-        sIsEnabled       = true;
-        sIsConnected     = false;
-        sIsDisconnecting = false;
-        sIsAdvertising   = false;
+        sIsEnabled     = true;
+        sIsConnected   = false;
+        sIsAdvertising = false;
     }
     return OT_ERROR_NONE;
 }
@@ -126,6 +138,11 @@ otError otPlatBleDisable(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     if (sIsEnabled)
     {
+        if (sIsConnected)
+        {
+            sendDisconnectSignal();
+            sIsConnected = false;
+        }
         deinitFds();
         sIsEnabled = false;
     }
@@ -185,7 +202,7 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, con
     ssize_t rval;
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sFd != -1, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sFd != -1 && sIsConnected, error = OT_ERROR_INVALID_STATE);
     rval = sendto(sFd, (const char *)aPacket->mValue, aPacket->mLength, 0, (struct sockaddr *)&sSockaddr,
                   sizeof(sSockaddr));
     if (rval == -1)
@@ -214,7 +231,7 @@ void platformBleUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct time
     }
 
     // A pending disconnection must be delivered promptly; ensure the main loop does not block.
-    if (sIsDisconnecting && aTimeout != NULL)
+    if (sFd != -1 && sIsConnected && sIsDisconnecting && aTimeout != NULL)
     {
         aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
@@ -227,23 +244,25 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
 
     otEXPECT(sFd != -1);
 
-    // Deliver a pending disconnection (requested earlier via otPlatBleGapDisconnect).
-    if (sIsDisconnecting)
+    // Deliver a pending disconnection (requested earlier via otPlatBleGapDisconnect)
+    if (sIsDisconnecting && sIsConnected)
     {
         // Drain any remaining data and drop it: prevent stale data from triggering a new connection later on.
         while (recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), MSG_DONTWAIT, NULL, NULL) >= 0)
         {
         }
-
-        sIsConnected     = false;
-        sIsDisconnecting = false;
+        sendDisconnectSignal();
+        sIsConnected = false;
         otPlatBleGapOnDisconnected(aInstance, 0);
     }
     else if (FD_ISSET(sFd, aReadFdSet))
     {
         socklen_t len = sizeof(sSockaddr);
         ssize_t   rval;
-        memset(&sSockaddr, 0, sizeof(sSockaddr));
+        if (!sIsConnected)
+        {
+            memset(&sSockaddr, 0, sizeof(sSockaddr));
+        }
         rval = recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), 0, (struct sockaddr *)&sSockaddr, &len);
         if (rval > 0)
         {
@@ -255,8 +274,9 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
                 // closing TCAT session until the device is ready again for a new session.
                 otEXPECT(sIsAdvertising);
 
-                sIsConnected   = true;
-                sIsAdvertising = false; // per API contract, advertising stops once a client connects
+                sIsConnected     = true;
+                sIsDisconnecting = false;
+                sIsAdvertising   = false; // per API contract, advertising stops once a client connects
                 otLogDebgPlat("BLE client connected");
                 otPlatBleGapOnConnected(aInstance, 0);
             }
