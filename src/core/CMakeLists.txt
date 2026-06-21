@@ -224,6 +224,7 @@ set(COMMON_SOURCES
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
+    radio/radio_types.cpp
     radio/trel_interface.cpp
     radio/trel_link.cpp
     radio/trel_packet.cpp
@@ -339,6 +340,7 @@ set(RADIO_COMMON_SOURCES
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
+    radio/radio_types.cpp
     thread/link_quality.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp

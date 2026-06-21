@@ -281,7 +281,7 @@ extern "C" OT_TOOL_WEAK void otPlatRadioSetMacFrameCounterIfLarger(otInstance *a
 
 extern "C" OT_TOOL_WEAK uint64_t otPlatTimeGet(void) { return UINT64_MAX; }
 
-extern "C" OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
+extern "C" OT_TOOL_WEAK otRadioTime64 otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -366,10 +366,10 @@ extern "C" OT_TOOL_WEAK otError otPlatRadioGetRegion(otInstance *aInstance, uint
     return kErrorNotImplemented;
 }
 
-extern "C" OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance *aInstance,
-                                                     uint8_t     aChannel,
-                                                     uint32_t    aStart,
-                                                     uint32_t    aDuration)
+extern "C" OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance   *aInstance,
+                                                     uint8_t       aChannel,
+                                                     otRadioTime32 aStart,
+                                                     uint32_t      aDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);

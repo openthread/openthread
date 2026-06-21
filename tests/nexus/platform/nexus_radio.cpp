@@ -156,7 +156,7 @@ exit:
     return error;
 }
 
-uint64_t otPlatRadioGetNow(otInstance *aInstance)
+otRadioTime64 otPlatRadioGetNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -332,7 +332,7 @@ otError otPlatRadioResetCsl(otInstance *aInstance)
     return kErrorNone;
 }
 
-void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, otRadioTime32 aCslSampleTime)
 {
     AsNode(aInstance).mRadio.mRadioContext.mCslSampleTime = aCslSampleTime;
 }
