@@ -703,9 +703,9 @@ void Mac::FinishOperation(void)
     mOperation = kOperationIdle;
 }
 
-TxFrame *Mac::PrepareBeaconRequest(void)
+TxFrame *Mac::PrepareBeaconRequest(TxFrames &aTxFrames)
 {
-    TxFrame      &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame      &frame = aTxFrames.GetBroadcastTxFrame();
     TxFrame::Info frameInfo;
 
     frameInfo.mAddrs.mSource.SetNone();
@@ -723,7 +723,7 @@ TxFrame *Mac::PrepareBeaconRequest(void)
     return &frame;
 }
 
-TxFrame *Mac::PrepareBeacon(void)
+TxFrame *Mac::PrepareBeacon(TxFrames &aTxFrames)
 {
     TxFrame      *frame;
     TxFrame::Info frameInfo;
@@ -735,10 +735,10 @@ TxFrame *Mac::PrepareBeacon(void)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
-    frame = &mLinks.GetTxFrames().GetTxFrame(mTxBeaconRadioLinks);
+    frame = &aTxFrames.GetTxFrame(mTxBeaconRadioLinks);
     mTxBeaconRadioLinks.Clear();
 #else
-    frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
+    frame = &aTxFrames.GetBroadcastTxFrame();
 #endif
 
     frameInfo.mAddrs.mSource.SetExtended(GetExtAddress());
@@ -917,10 +917,8 @@ exit:
 void Mac::BeginTransmit(void)
 {
     TxFrame  *frame    = nullptr;
-    TxFrames &txFrames = mLinks.GetTxFrames();
+    TxFrames &txFrames = mLinks.InitTxFrames();
     Address   dstAddr;
-
-    txFrames.Clear();
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mTxPendingRadioLinks.Clear();
@@ -933,7 +931,7 @@ void Mac::BeginTransmit(void)
     {
     case kOperationActiveScan:
         mLinks.SetPanId(kPanIdBroadcast);
-        frame = PrepareBeaconRequest();
+        frame = PrepareBeaconRequest(txFrames);
         VerifyOrExit(frame != nullptr);
         frame->SetChannel(mScanChannel);
         frame->SetSequence(0);
@@ -942,7 +940,7 @@ void Mac::BeginTransmit(void)
         break;
 
     case kOperationTransmitBeacon:
-        frame = PrepareBeacon();
+        frame = PrepareBeacon(txFrames);
         VerifyOrExit(frame != nullptr);
         frame->SetChannel(mRadioChannel);
         frame->SetSequence(mBeaconSequence++);
@@ -1319,7 +1317,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         RadioType  radio          = aFrame.GetRadioType();
-        RadioTypes requiredRadios = mLinks.GetTxFrames().GetRequiredRadioTypes();
+        RadioTypes requiredRadios = mLinks.GetTxFramesRequiredRadioTypes();
 
         Get<RadioSelector>().UpdateOnSendDone(aFrame, aError);
 

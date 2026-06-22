@@ -832,8 +832,8 @@ private:
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);
-    TxFrame *PrepareBeaconRequest(void);
-    TxFrame *PrepareBeacon(void);
+    TxFrame *PrepareBeaconRequest(TxFrames &aTxFrames);
+    TxFrame *PrepareBeacon(TxFrames &aTxFrames);
     bool     ShouldSendBeacon(void) const;
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
