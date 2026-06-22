@@ -36,11 +36,11 @@
 namespace ot {
 namespace Mac {
 
-void HeaderIe::Init(uint16_t aId, uint8_t aLen)
+void HeaderIe::Init(uint8_t aId, uint8_t aLen)
 {
-    Init();
-    SetId(aId);
+    mLenIdType = 0;
     SetLength(aLen);
+    SetId(aId);
 }
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
