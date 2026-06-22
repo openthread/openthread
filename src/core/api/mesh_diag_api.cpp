@@ -60,6 +60,11 @@ otError otMeshDiagGetNextChildInfo(otMeshDiagChildIterator *aIterator, otMeshDia
     return AsCoreType(aIterator).GetNextChildInfo(AsCoreType(aChildInfo));
 }
 
+otError otMeshDiagGetNextTlvInfo(otMeshDiagTlvIterator *aIterator, otMeshDiagTlvInfo *aTlvInfo)
+{
+    return AsCoreType(aIterator).GetNextTlvInfo(*aTlvInfo);
+}
+
 otError otMeshDiagQueryChildTable(otInstance                       *aInstance,
                                   uint16_t                          aRloc16,
                                   otMeshDiagQueryChildTableCallback aCallback,
