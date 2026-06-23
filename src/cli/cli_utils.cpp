@@ -231,6 +231,20 @@ void Utils::OutputSockAddrLine(const otSockAddr &aSockAddr)
     OutputNewLine();
 }
 
+void Utils::OutputVendorOui(const otThreadVendorOui &aOui)
+{
+    char string[OT_THREAD_VENDOR_OUI_STRING_SIZE];
+
+    otThreadVendorOuiToString(&aOui, string, sizeof(string));
+    OutputFormat("%s", string);
+}
+
+void Utils::OutputVendorOuiLine(const otThreadVendorOui &aOui)
+{
+    OutputVendorOui(aOui);
+    OutputNewLine();
+}
+
 void Utils::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
     OutputDnsTxtData(/* aKeyValuePerLine */ false, 0, aTxtData, aTxtDataLength);

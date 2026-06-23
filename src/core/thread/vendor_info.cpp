@@ -37,6 +37,9 @@
 
 namespace ot {
 
+//----------------------------------------------------------------------------------------------------------------------
+// VendorInfo
+
 const char VendorInfo::kName[]      = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME;
 const char VendorInfo::kModel[]     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL;
 const char VendorInfo::kSwVersion[] = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION;
@@ -49,6 +52,19 @@ static_assert(CheckConstStringPrefix(OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME, kNa
               "VENDOR_NAME MUST start with 'RD:' prefix for a reference device.");
 #endif
 
+static constexpr uint64_t kDefaultOuiConfig = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI;
+
+const otThreadVendorOui VendorInfo::kOui = {
+    OuiParser<kDefaultOuiConfig>::GetBitLength(),
+    {
+        OuiParser<kDefaultOuiConfig>::GetByte0(),
+        OuiParser<kDefaultOuiConfig>::GetByte1(),
+        OuiParser<kDefaultOuiConfig>::GetByte2(),
+        OuiParser<kDefaultOuiConfig>::GetByte3(),
+        OuiParser<kDefaultOuiConfig>::GetByte4(),
+    },
+};
+
 VendorInfo::VendorInfo(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
@@ -57,14 +73,15 @@ VendorInfo::VendorInfo(Instance &aInstance)
     static_assert(sizeof(kSwVersion) <= sizeof(SwVersionStringType), "VENDOR_SW_VERSION is too long");
     static_assert(sizeof(kAppUrl) <= sizeof(AppUrlStringType), "VENDOR_APP_URL is too long");
 
-    static_assert((kOui == kUnspecifiedOui) || ((kOui & ~kOuiMask) == 0), "VENDOR_OUI is invalid, MUST be 24-bit");
+    static_assert(OuiParser<OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI>::IsValid(),
+                  "VENDOR_OUI format is not valid - see the config documentation");
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     memcpy(mName, kName, sizeof(kName));
     memcpy(mModel, kModel, sizeof(kModel));
     memcpy(mSwVersion, kSwVersion, sizeof(kSwVersion));
     memcpy(mAppUrl, kAppUrl, sizeof(kAppUrl));
-    mOui = kOui;
+    mOui = AsCoreType(&kOui);
 #endif
 }
 
@@ -113,14 +130,14 @@ Error VendorInfo::SetSwVersion(const char *aSwVersion)
 
 Error VendorInfo::SetAppUrl(const char *aAppUrl) { return StringCopy(mAppUrl, aAppUrl, kStringCheckUtf8Encoding); }
 
-Error VendorInfo::SetOui(uint32_t aOui)
+Error VendorInfo::SetOui(const Oui &aOui)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit((aOui & ~kOuiMask) == 0, error = kErrorInvalidArgs);
+    VerifyOrExit(aOui.IsValid(), error = kErrorInvalidArgs);
 
-    VerifyOrExit(aOui != mOui);
-    mOui = aOui;
+    VerifyOrExit(mOui != aOui);
+    mOui.SetFrom(aOui);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_MESHCOP_SERVICE_ENABLE
     Get<MeshCoP::BorderAgent::TxtData>().HandleVendorOuiChange();
@@ -131,5 +148,148 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+//----------------------------------------------------------------------------------------------------------------------
+// VendorInfo::Oui
+
+const uint8_t VendorInfo::Oui::kValidBitLengths[] = {24, 28, 36};
+
+bool VendorInfo::Oui::IsValid(void) const { return DoesArrayContain(kValidBitLengths, GetBitLength()); }
+
+void VendorInfo::Oui::SetFrom(const Oui &aOther)
+{
+    *this = aOther;
+    Tidy();
+}
+
+Error VendorInfo::Oui::SetBitLengthFromSize(uint16_t aSize)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsValueInRange<uint16_t>(aSize, kMinSize, kMaxSize), error = kErrorInvalidArgs);
+
+    Clear();
+    mBitLength = kValidBitLengths[aSize - kMinSize];
+
+exit:
+    return error;
+}
+
+Error VendorInfo::Oui::SetFrom(const uint8_t *aData, uint16_t aSize)
+{
+    Error error;
+
+    SuccessOrExit(error = SetBitLengthFromSize(aSize));
+    memcpy(mBytes, aData, aSize);
+    Tidy();
+
+exit:
+    return error;
+}
+
+void VendorInfo::Oui::Tidy(void)
+{
+    uint8_t index;
+
+    if (!IsValid())
+    {
+        Clear();
+        ExitNow();
+    }
+
+    index = GetBitLength() / kBitsPerByte;
+
+    if (GetBitLength() > index * kBitsPerByte)
+    {
+        mBytes[index] &= kTopNibbleMask;
+        index++;
+    }
+
+    for (; index < kMaxSize; index++)
+    {
+        mBytes[index] = 0;
+    }
+
+exit:
+    return;
+}
+
+uint32_t VendorInfo::Oui::GetAsOui24(void) const
+{
+    uint32_t oui24;
+
+    if (!IsValid())
+    {
+        oui24 = VendorInfo::Oui::kUnspecified;
+        ExitNow();
+    }
+
+    oui24 = BigEndian::ReadUint24(GetBytes());
+
+exit:
+    return oui24;
+}
+
+bool VendorInfo::Oui::operator==(const Oui &aOther) const
+{
+    bool isEqual = false;
+    Oui  tidyOther;
+
+    VerifyOrExit(GetBitLength() == aOther.GetBitLength());
+
+    tidyOther = aOther;
+    tidyOther.Tidy();
+
+    VerifyOrExit(memcmp(GetBytes(), tidyOther.GetBytes(), GetSize()) == 0);
+    isEqual = true;
+
+exit:
+    return isEqual;
+}
+
+VendorInfo::Oui::InfoString VendorInfo::Oui::ToString(void) const
+{
+    InfoString string;
+
+    ToString(string);
+
+    return string;
+}
+
+void VendorInfo::Oui::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+    ToString(writer);
+}
+
+void VendorInfo::Oui::ToString(StringWriter &aWriter) const
+{
+    uint8_t index        = 0;
+    uint8_t numFullBytes = GetBitLength() / kBitsPerByte;
+
+    if (!IsValid())
+    {
+        aWriter.Append("unspecified");
+        ExitNow();
+    }
+
+    for (index = 0; index < numFullBytes; index++)
+    {
+        if (index != 0)
+        {
+            aWriter.Append("-");
+        }
+
+        aWriter.Append("%02X", mBytes[index]);
+    }
+
+    if (GetBitLength() > numFullBytes * kBitsPerByte)
+    {
+        aWriter.Append("-%1X", ReadBits<uint8_t, kTopNibbleMask>(mBytes[index]));
+    }
+
+exit:
+    return;
+}
 
 } // namespace ot

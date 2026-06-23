@@ -42,6 +42,7 @@
 #include <openthread/border_routing.h>
 #include <openthread/cli.h>
 #include <openthread/joiner.h>
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
 
 #include "cli_config.h"
@@ -430,6 +431,20 @@ public:
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
      */
     void OutputSockAddrLine(const otSockAddr &aSockAddr);
+
+    /**
+     * Outputs the Vendor OUI to the CLI console.
+     *
+     * @param[in] aOui  A reference to the Vendor OUI.
+     */
+    void OutputVendorOui(const otThreadVendorOui &aOui);
+
+    /**
+     * Outputs the Vendor OUI to the CLI console and appends a newline.
+     *
+     * @param[in] aOui  A reference to the Vendor OUI.
+     */
+    void OutputVendorOuiLine(const otThreadVendorOui &aOui);
 
     /**
      * Outputs DNS TXT data to the CLI console.

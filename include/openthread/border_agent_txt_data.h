@@ -42,6 +42,7 @@
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/ip6.h>
+#include <openthread/netdiag.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -61,7 +62,6 @@ extern "C" {
 #define OT_BORDER_AGENT_THREAD_VERSION_SIZE (16) ///< Max size of Thread Version string in `otBorderAgentTxtDataInfo`.
 #define OT_BORDER_AGENT_VENDOR_NAME_SIZE (32)    ///< Max size of Vendor Name string in `otBorderAgentTxtDataInfo`.
 #define OT_BORDER_AGENT_MODEL_NAME_SIZE (32)     ///< Max size of Model Name string in `otBorderAgentTxtDataInfo`.
-#define OT_BORDER_AGENT_VENDOR_OUI_SIZE (3)      ///< Size of Vendor OUI (in bytes) in `otBorderAgentTxtDataInfo`.
 
 /**
  * Represents the Connection Mode in a Border Agent State Bitmap.
@@ -169,7 +169,7 @@ typedef struct otBorderAgentTxtDataInfo
     otExtAddress             mExtAddress;                                         ///< Extended Address.
     char                     mVendorName[OT_BORDER_AGENT_VENDOR_NAME_SIZE];       ///< Vendor Name string.
     char                     mModelName[OT_BORDER_AGENT_MODEL_NAME_SIZE];         ///< Model Name string.
-    uint8_t                  mVendorOui[OT_BORDER_AGENT_VENDOR_OUI_SIZE];         ///< Vendor OUI (24-bit).
+    otThreadVendorOui        mVendorOui;                                          ///< Vendor OUI.
 } otBorderAgentTxtDataInfo;
 
 /**

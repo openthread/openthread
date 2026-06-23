@@ -91,10 +91,22 @@
 /**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI
  *
- * Specifies the default Vendor OUI-24 value in Hexadecimal representation (e.g., OUI 64-16-66  is represented as
- * `0x641666`).
+ * Specifies the default Vendor OUI (Organizationally Unique Identifier) value.
  *
- * The value of `0xffffffff` (UINT32_MAX) is used to indicate OUI is not specified.
+ * This configuration supports multiple layout formats to maintain backward compatibility:
+ *
+ * - 24-bit OUI (MA-L): Hexadecimal representation of a 24-bit value (e.g., OUI 64-16-66 is represented as
+ *   `0x641666`). Values <= `0xffffff` are implicitly treated as a 24-bit OUI.
+ *
+ * - Explicit OUI with various lengths (24, 28, or 36 bits): A 48-bit hexadecimal value where the most significant
+ *   byte (bits 40-47) represents the prefix bit-length, and the lower 5 bytes (bits 0-39) represent the OUI bytes
+ *   in big-endian order:
+ *   - 28-bit OUI `00-1A-2B-3` is represented as    `0x1c001a2b3000ULL`.
+ *   - 36-bit OUI `00-1A-2B-3C-4` is represented as `0x24001a2b3c40ULL`.
+ *
+ * The value of `0xffffffff` (UINT32_MAX) is used to indicate the Vendor OUI is not specified.
+ *
+ * The configured value is validated at compile-time to ensure it conforms to one of the supported prefix lengths.
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_OUI (0xffffffff)

@@ -171,12 +171,11 @@ Error TxtData::Prepare(uint8_t  *aBuffer,
         SuccessOrExit(error = encoder.AppendStringEntry(Key::kModelName, Get<VendorInfo>().GetModel()));
     }
 
-    if (aAddVendorOui && Get<VendorInfo>().IsOuiSpecified())
+    if (aAddVendorOui && Get<VendorInfo>().GetOui().IsValid())
     {
-        uint8_t ouiData[kVendorOuiSize];
+        const VendorInfo::Oui &oui = Get<VendorInfo>().GetOui();
 
-        BigEndian::WriteUint24(Get<VendorInfo>().GetOui(), ouiData);
-        SuccessOrExit(error = encoder.AppendEntry(Key::kVendorOui, ouiData));
+        SuccessOrExit(error = encoder.AppendBytesEntry(Key::kVendorOui, oui.GetBytes(), oui.GetSize()));
     }
 
     aLength = encoder.GetLength();
@@ -248,7 +247,7 @@ void TxtData::PrepareWithVendorData(Heap::Data &aTxtData)
 
     if (mShouldAddVendorOui)
     {
-        size += kVendorOuiSize + sizeof(Key::kVendorOui) + sizeof('=');
+        size += VendorInfo::Oui::kMaxSize + sizeof(Key::kVendorOui) + sizeof('=');
     }
 
     buffer = reinterpret_cast<uint8_t *>(Heap::CAlloc(size, sizeof(uint8_t)));
@@ -509,7 +508,7 @@ void TxtData::Info::ProcessTxtEntry(const Dns::TxtEntry &aEntry)
     }
     else if (aEntry.MatchesKey(Key::kVendorOui))
     {
-        mHasVendorOui = ReadValue(aEntry, mVendorOui);
+        mHasVendorOui = ReadVendorOui(aEntry, AsCoreType(&mVendorOui));
     }
 }
 
@@ -549,6 +548,11 @@ bool TxtData::Info::ReadOmrPrefix(const Dns::TxtEntry &aEntry, Ip6::Prefix &aPre
 
 exit:
     return didRead;
+}
+
+bool TxtData::Info::ReadVendorOui(const Dns::TxtEntry &aEntry, VendorInfo::Oui &aOui)
+{
+    return (aOui.SetFrom(aEntry.mValue, aEntry.mValueLength) == kErrorNone);
 }
 
 void TxtData::StateBitmap::Parse(uint32_t aBitmap, Info &aInfo)
