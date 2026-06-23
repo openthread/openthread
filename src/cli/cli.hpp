@@ -73,6 +73,7 @@
 #include "cli/cli_mesh_diag.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_ping.hpp"
+#include "cli/cli_plat_tcp.hpp"
 #include "cli/cli_srp_client.hpp"
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcat.hpp"
@@ -443,6 +444,10 @@ private:
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     TcpExample mTcp;
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+    PlatTcp mPlatTcp;
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE

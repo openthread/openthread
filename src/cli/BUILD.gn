@@ -63,6 +63,8 @@ openthread_cli_sources = [
   "cli_network_data.hpp",
   "cli_ping.cpp",
   "cli_ping.hpp",
+  "cli_plat_tcp.cpp",
+  "cli_plat_tcp.hpp",
   "cli_srp_client.cpp",
   "cli_srp_client.hpp",
   "cli_srp_server.cpp",

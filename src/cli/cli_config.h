@@ -98,6 +98,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+ *
+ * Indicates whether the plat-tcp CLI commands are enabled.
+ *
+ * These CLI commands are intended primarily for testing and evaluation of the `otPlatTcp` API implementations.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+#define OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_TCP_ENABLE
  *
  * Indicates whether TCP should be enabled in the CLI tool.

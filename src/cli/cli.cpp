@@ -108,6 +108,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     , mTcp(aInstance, *this)
 #endif
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+    , mPlatTcp(aInstance, *this)
+#endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(aInstance, *this)
 #endif
@@ -6935,6 +6938,10 @@ template <> otError Interpreter::Process<Cmd("tcat")>(Arg aArgs[]) { return mTca
 template <> otError Interpreter::Process<Cmd("tcp")>(Arg aArgs[]) { return mTcp.Process(aArgs); }
 #endif
 
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+template <> otError Interpreter::Process<Cmd("plattcp")>(Arg aArgs[]) { return mPlatTcp.Process(aArgs); }
+#endif
+
 template <> otError Interpreter::Process<Cmd("udp")>(Arg aArgs[]) { return mUdp.Process(aArgs); }
 
 template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
@@ -8695,6 +8702,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("ping"),
 #endif
         CmdEntry("platform"),
+#if OPENTHREAD_CONFIG_PLATFORM_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_PLAT_TCP_ENABLE
+        CmdEntry("plattcp"),
+#endif
         CmdEntry("pollperiod"),
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("preferrouterid"),

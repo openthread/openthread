@@ -509,6 +509,15 @@ public:
          */
         static const char *EventToString(Event aEvent);
 
+        /**
+         * Converts a `DisconnectReason` to a human-readable string.
+         *
+         * @param[in] aReason  The disconnect reason.
+         *
+         * @returns A string representation of @p aReason.
+         */
+        static const char *DisconnectReasonToString(DisconnectReason aReason);
+
     private:
         bool  Matches(State aState) const { return mState == aState; }
         void  SetState(State aState);
