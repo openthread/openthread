@@ -853,10 +853,6 @@ private:
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText) const;
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    uint8_t GetTimeIeOffset(const Frame &aFrame);
-#endif
-
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif

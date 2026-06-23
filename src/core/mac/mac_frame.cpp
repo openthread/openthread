@@ -223,7 +223,6 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mAppendTimeIe)
     {
-        builder.Append<HeaderIe>()->Init(TimeIe::kHeaderIeId, sizeof(TimeIe));
         builder.Append<TimeIe>()->Init();
     }
 #endif
@@ -231,15 +230,14 @@ void TxFrame::Info::PrepareHeadersIn(TxFrame &aTxFrame) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (mAppendCslIe)
     {
-        builder.Append<HeaderIe>()->Init(CslIe::kHeaderIeId, sizeof(CslIe));
-        builder.Append<CslIe>();
+        builder.Append<CslIe>()->Init();
         aTxFrame.SetCslIePresent(true);
     }
 #endif
 
     if ((fcf & kFcfIePresent) && ((mType == kTypeMacCmd) || !mEmptyPayload))
     {
-        builder.Append<HeaderIe>()->Init(Termination2Ie::kHeaderIeId, Termination2Ie::kIeContentSize);
+        builder.Append<Termination2Ie>()->Init();
     }
 
 #endif //  OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -320,14 +318,12 @@ bool Frame::IsWakeupFrame(void) const
     VerifyOrExit(keyIdMode == kKeyIdMode2);
 
     // ... that has Rendezvous Time IE and Connection IE...
-    VerifyOrExit(GetRendezvousTimeIe() != nullptr);
-    VerifyOrExit((connectionIe = GetConnectionIe()) != nullptr);
+    VerifyOrExit(Has<RendezvousTimeIe>());
+    VerifyOrExit((connectionIe = Find<ConnectionIe>()) != nullptr);
 
     // ... but no other IEs nor payload.
     firstIeIndex = FindHeaderIeIndex();
-    VerifyOrExit(mPsdu + firstIeIndex + sizeof(HeaderIe) + RendezvousTimeIe::kIeContentSize + sizeof(HeaderIe) +
-                     connectionIe->GetHeaderIe()->GetLength() ==
-                 GetFooter());
+    VerifyOrExit(mPsdu + firstIeIndex + sizeof(RendezvousTimeIe) + connectionIe->GetSize() == GetFooter());
 
     result = true;
 
@@ -1090,7 +1086,7 @@ uint8_t Frame::FindPayloadIndex(void) const
 
             VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
 
-            if (ie->GetId() == Termination2Ie::kHeaderIeId)
+            if (ie->GetId() == Termination2Ie::kId)
             {
                 break;
             }
@@ -1141,6 +1137,7 @@ exit:
 const uint8_t *Frame::GetFooter(void) const { return mPsdu + mLength - GetFooterLength(); }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
 uint8_t Frame::FindHeaderIeIndex(void) const
 {
     uint8_t index;
@@ -1153,11 +1150,11 @@ exit:
     return index;
 }
 
-const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
+const HeaderIe *Frame::FindHeaderIe(HeaderIeMatcher aMatcher) const
 {
-    uint16_t       index        = FindHeaderIeIndex();
-    uint16_t       payloadIndex = FindPayloadIndex();
-    const uint8_t *header       = nullptr;
+    uint16_t        index        = FindHeaderIeIndex();
+    uint16_t        payloadIndex = FindPayloadIndex();
+    const HeaderIe *matchedIe    = nullptr;
 
     // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
     // are well-formed.
@@ -1168,9 +1165,9 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
     {
         const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
-        if (ie->GetId() == aIeId)
+        if (aMatcher(*ie))
         {
-            header = &mPsdu[index];
+            matchedIe = ie;
             ExitNow();
         }
 
@@ -1178,123 +1175,40 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
     }
 
 exit:
-    return header;
+    return matchedIe;
 }
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE || \
-    OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
-{
-    uint16_t       index        = FindHeaderIeIndex();
-    uint16_t       payloadIndex = FindPayloadIndex();
-    const uint8_t *header       = nullptr;
-
-    // `FindPayloadIndex()` verifies that Header IE(s) in frame (if present)
-    // are well-formed.
-    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
-
-    while (index < payloadIndex)
-    {
-        const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
-
-        if ((ie->GetId() == VendorIeHeader::kHeaderIeId) && (ie->GetLength() >= VendorIeHeader::kIeContentSize))
-        {
-            const VendorIeHeader *vendorIe = reinterpret_cast<const VendorIeHeader *>(ie->GetContent());
-
-            if (vendorIe->GetVendorOui() == ThreadIe::kVendorOuiThreadCompanyId && vendorIe->GetSubType() == aSubType)
-            {
-                header = &mPsdu[index];
-                ExitNow();
-            }
-        }
-
-        index += ie->GetSize();
-    }
-
-exit:
-    return header;
-}
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE ||
-       // OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
-
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
+void Frame::UpdateCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    CslIe *csl = GetCslIe();
+    CslIe *csl = Find<CslIe>();
 
     VerifyOrExit(csl != nullptr);
+
     csl->SetPeriod(aCslPeriod);
     csl->SetPhase(aCslPhase);
 
 exit:
     return;
 }
-
-bool Frame::HasCslIe(void) const { return GetCslIe() != nullptr; }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-const CslIe *Frame::GetCslIe(void) const
-{
-    const uint8_t *cur;
-    const CslIe   *csl = nullptr;
-
-    cur = GetHeaderIe(CslIe::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
-    VerifyOrExit(reinterpret_cast<const HeaderIe *>(cur)->GetLength() >= CslIe::kIeContentSize);
-    csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
-
-exit:
-    return csl;
-}
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
+void Frame::UpdateEnhAckProbingIe(const uint8_t *aData, uint8_t aLen)
 {
-    uint8_t *cur = GetThreadIe(ThreadIe::kEnhAckProbingIe);
+    LinkMetricsProbingIe *probingIe = Find<LinkMetricsProbingIe>();
 
-    VerifyOrExit(cur != nullptr);
-    memcpy(cur + sizeof(HeaderIe) + sizeof(VendorIeHeader), aValue, aLen);
+    VerifyOrExit(probingIe != nullptr);
+
+    VerifyOrExit(aLen >= probingIe->GetMetricsDataLen());
+    probingIe->WriteMetricsDataFrom(aData);
 
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#endif
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-const TimeIe *Frame::GetTimeIe(void) const
-{
-    uint16_t      index        = FindHeaderIeIndex();
-    uint16_t      payloadIndex = FindPayloadIndex();
-    const TimeIe *timeIe       = nullptr;
-
-    VerifyOrExit((index != kInvalidIndex) && (payloadIndex != kInvalidIndex));
-
-    while (index < payloadIndex)
-    {
-        const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
-
-        if ((ie->GetId() == VendorIeHeader::kHeaderIeId) && (ie->GetLength() >= TimeIe::kIeContentSize))
-        {
-            const TimeIe *vendorIe = reinterpret_cast<const TimeIe *>(ie->GetContent());
-
-            if (vendorIe->GetVendorOui() == TimeIe::kVendorOuiNest && vendorIe->GetSubType() == TimeIe::kVendorIeTime)
-            {
-                timeIe = vendorIe;
-                ExitNow();
-            }
-        }
-
-        index += ie->GetSize();
-    }
-
-exit:
-    return timeIe;
-}
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 uint16_t Frame::GetMtu(void) const
@@ -1590,11 +1504,9 @@ Error TxFrame::GenerateWakeupFrame(PanId aPanId, const WakeupRequest &aWakeupReq
     IgnoreError(builder.AppendUint8(secCtl));
     builder.AppendLength(CalculateSecurityHeaderSize(secCtl) - sizeof(secCtl));
 
-    builder.Append<HeaderIe>()->Init(RendezvousTimeIe::kHeaderIeId, sizeof(RendezvousTimeIe));
-    builder.Append<RendezvousTimeIe>();
+    builder.Append<RendezvousTimeIe>()->Init();
 
-    builder.Append<HeaderIe>()->Init(ConnectionIe::kHeaderIeId, sizeof(ConnectionIe) + wakeupIdLength);
-    builder.Append<ConnectionIe>()->Init();
+    builder.Append<ConnectionIe>()->Init(wakeupIdLength);
     builder.AppendLength(wakeupIdLength);
 
     builder.AppendLength(CalculateMicSize(secCtl) + GetFcsSize());
