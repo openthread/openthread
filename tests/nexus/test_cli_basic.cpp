@@ -160,6 +160,44 @@ void TestCliBasic(void)
     }
 
     Log("---------------------------------------------------------------------------------------");
+    Log("Check `dns config` with `def` placeholders");
+
+    // Explicitly set every field, using "def" to request the default value
+    // for the port, response timeout, max tx attempts, and recursion
+    // desired fields, while still setting the service mode and transport
+    // protocol explicitly. "def" lets a field be explicitly requested as
+    // default while later fields are still set explicitly (previously,
+    // leaving a field unspecified also forced every field after it to
+    // remain unspecified).
+    leader.InputCli("dns config fd00::1 def def def def srv_txt_sep udp");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("dns config");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    {
+        bool foundResponseTimeout  = false;
+        bool foundMaxTxAttempts    = false;
+        bool foundRecursionDesired = false;
+        bool foundServiceMode      = false;
+
+        for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+        {
+            Log("- %s", line.GetLine());
+
+            foundResponseTimeout |= line.Matches("ResponseTimeout: 7000 ms");
+            foundMaxTxAttempts |= line.Matches("MaxTxAttempts: 3");
+            foundRecursionDesired |= line.Matches("RecursionDesired: yes");
+            foundServiceMode |= line.Matches("ServiceMode: srv_txt_sep");
+        }
+
+        VerifyOrQuit(foundResponseTimeout);
+        VerifyOrQuit(foundMaxTxAttempts);
+        VerifyOrQuit(foundRecursionDesired);
+        VerifyOrQuit(foundServiceMode);
+    }
+
+    Log("---------------------------------------------------------------------------------------");
     Log("Check behavior with an invalid CLI command");
 
     leader.InputCli("invalidcommand");
