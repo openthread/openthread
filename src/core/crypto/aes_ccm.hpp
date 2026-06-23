@@ -61,8 +61,10 @@ namespace Crypto {
 class AesCcm
 {
 public:
-    static constexpr uint8_t kMinTagLength = 4;                  ///< Minimum tag length (in bytes).
-    static constexpr uint8_t kMaxTagLength = AesEcb::kBlockSize; ///< Maximum tag length (in bytes).
+    static constexpr uint8_t kMinTagLength   = 4;                  ///< Minimum tag length (in bytes).
+    static constexpr uint8_t kMaxTagLength   = AesEcb::kBlockSize; ///< Maximum tag length (in bytes).
+    static constexpr uint8_t kMinNonceLength = 7;                  ///< Minimum nonce length (in bytes).
+    static constexpr uint8_t kMaxNonceLength = 13;                 ///< Maximum nonce length (in bytes).
 
     /**
      * Initializes the AES-CCM object.
