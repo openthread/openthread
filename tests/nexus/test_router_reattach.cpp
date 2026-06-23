@@ -62,6 +62,7 @@ void TestRouterReattach(void)
     // Step 1: Start Leader
     Log("Step 1: Starting Leader");
     nodes[0]->Get<Mle::Mle>().SetRouterUpgradeThreshold(32);
+    nodes[0]->Get<Mle::Mle>().SetLeaderUpgradeThreshold(32);
     nodes[0]->Get<Mle::Mle>().SetRouterDowngradeThreshold(32);
     nodes[0]->Form();
     nexus.AdvanceTime(kFormNetworkTime);

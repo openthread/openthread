@@ -76,6 +76,8 @@ void TestBrUpgradeRouterRole(void)
     Log("Set the router upgrade threshold to 2 on all nodes.");
 
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(2);
+    leader.Get<Mle::Mle>().SetLeaderUpgradeThreshold(2);
+
     router.Get<Mle::Mle>().SetRouterUpgradeThreshold(2);
     br1.Get<Mle::Mle>().SetRouterUpgradeThreshold(2);
     br2.Get<Mle::Mle>().SetRouterUpgradeThreshold(2);

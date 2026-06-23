@@ -80,6 +80,7 @@ void TestSrpServerRebootPort(void)
 
     Log("0. Start the server & client devices.");
     client.Get<Mle::Mle>().SetRouterUpgradeThreshold(2);
+    client.Get<Mle::Mle>().SetLeaderUpgradeThreshold(2);
     server.Get<Mle::Mle>().SetRouterUpgradeThreshold(2);
 
     client.Form();

@@ -394,10 +394,16 @@ void otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
 uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 
 /**
- * Set the ROUTER_UPGRADE_THRESHOLD parameter used in the Leader role.
+ * Sets the ROUTER_UPGRADE_THRESHOLD parameter.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
  * this API will render a production application non-compliant with the Thread Specification.
+ *
+ * This API historically set a single threshold value that was used for both local role transitions (deciding when
+ * the device itself should upgrade to a router) and by the leader (deciding whether to allow other devices to
+ * upgrade). These behaviors have now been separated into distinct router and leader thresholds. To preserve backward
+ * compatibility with existing applications and test scripts, this function continues to configure both thresholds
+ * (both the local router upgrade threshold and the leader upgrade threshold).
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.

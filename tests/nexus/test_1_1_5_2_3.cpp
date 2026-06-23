@@ -89,7 +89,9 @@ void Test5_2_3(void)
     SuccessOrQuit(Instance::SetGlobalLogLevel(kLogLevelNote));
 
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(kMaxRouters);
+    leader.Get<Mle::Mle>().SetLeaderUpgradeThreshold(kMaxRouters);
     leader.Get<Mle::Mle>().SetRouterDowngradeThreshold(kMaxRouters);
+
     for (uint8_t i = 0; i < kMaxRouters; i++)
     {
         routers[i]->Get<Mle::Mle>().SetRouterUpgradeThreshold(kMaxRouters);

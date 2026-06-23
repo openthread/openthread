@@ -50,6 +50,7 @@ void TestReedAddressSolicitRejected(void)
 
     // Leader sets RouterUpgradeThreshold to 1 to reject further routers
     leader.Get<Mle::Mle>().SetRouterUpgradeThreshold(1);
+    leader.Get<Mle::Mle>().SetLeaderUpgradeThreshold(1);
 
     Log("Step 1: Form network and join REED");
     AllowLinkBetween(leader, reed);

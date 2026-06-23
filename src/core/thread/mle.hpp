@@ -987,9 +987,32 @@ public:
     /**
      * Sets the ROUTER_UPGRADE_THRESHOLD value.
      *
+     * This threshold is used by the device to decide whether to upgrade from a child (REED) to a router role. It is
+     * not used when the device is acting as the Leader to evaluate upgrade requests from other devices.
+     *
      * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
      */
     void SetRouterUpgradeThreshold(uint8_t aThreshold) { mRoleTransitioner.SetUpgradeThreshold(aThreshold); }
+
+    /**
+     * Returns the leader upgrade threshold value.
+     *
+     * This threshold is used only when the device is operating as the Leader to decide whether to accept or reject
+     * an Address Solicit request from a router-eligible end device (REED) wishing to upgrade to a router.
+     *
+     * @returns The leader upgrade threshold value.
+     */
+    uint8_t GetLeaderUpgradeThreshold(void) const { return mLeaderUpgradeThreshold; }
+
+    /**
+     * Sets the leader upgrade threshold value.
+     *
+     * This threshold is used only when the device is operating as the Leader to decide whether to accept or reject
+     * an Address Solicit request from a router-eligible end device (REED) wishing to upgrade to a router.
+     *
+     * @param[in]  aThreshold  The leader upgrade threshold value.
+     */
+    void SetLeaderUpgradeThreshold(uint8_t aThreshold) { mLeaderUpgradeThreshold = aThreshold; }
 
     /**
      * Returns the ROUTER_DOWNGRADE_THRESHOLD value.
@@ -2604,6 +2627,7 @@ private:
     uint8_t  mPreviousPartitionIdTimeout;
     uint8_t  mChildRouterLinks;
     uint8_t  mAlternateRloc16Timeout;
+    uint8_t  mLeaderUpgradeThreshold;
     int8_t   mParentPriority;
     uint32_t mPreviousPartitionIdRouter;
     uint32_t mPreviousPartitionId;

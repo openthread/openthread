@@ -152,6 +152,7 @@ uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance)
 void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold)
 {
     AsCoreType(aInstance).Get<Mle::Mle>().SetRouterUpgradeThreshold(aThreshold);
+    AsCoreType(aInstance).Get<Mle::Mle>().SetLeaderUpgradeThreshold(aThreshold);
 }
 
 uint8_t otThreadGetChildRouterLinks(otInstance *aInstance)
