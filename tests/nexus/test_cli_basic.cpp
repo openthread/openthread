@@ -160,6 +160,80 @@ void TestCliBasic(void)
     }
 
     Log("---------------------------------------------------------------------------------------");
+    Log("Check `dns config` with `def` placeholders");
+
+    // Explicitly set every field, using "def" to request the default value
+    // for the port, response timeout, max tx attempts, and recursion
+    // desired fields, while still setting the service mode and transport
+    // protocol explicitly. "def" lets a field be explicitly requested as
+    // default while later fields are still set explicitly (previously,
+    // leaving a field unspecified also forced every field after it to
+    // remain unspecified).
+    leader.InputCli("dns config def def def def def def def");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("dns config fd00::1 def def def def srv_txt_sep udp");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    leader.InputCli("dns config");
+    VerifyOrQuit(leader.IsCliOutputSuccess());
+
+    {
+        bool foundResponseTimeout  = false;
+        bool foundMaxTxAttempts    = false;
+        bool foundRecursionDesired = false;
+        bool foundServiceMode      = false;
+
+        for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+        {
+            Log("- %s", line.GetLine());
+
+            foundResponseTimeout |= line.Matches("ResponseTimeout: 7000 ms");
+            foundMaxTxAttempts |= line.Matches("MaxTxAttempts: 3");
+            foundRecursionDesired |= line.Matches("RecursionDesired: yes");
+            foundServiceMode |= line.Matches("ServiceMode: srv_txt_sep");
+        }
+
+        VerifyOrQuit(foundResponseTimeout);
+        VerifyOrQuit(foundMaxTxAttempts);
+        VerifyOrQuit(foundRecursionDesired);
+        VerifyOrQuit(foundServiceMode);
+    }
+
+    Log("---------------------------------------------------------------------------------------");
+    Log("Check `dns resolve` accepts `def` for the DNS server IP");
+
+    // Before this, the DNS server IP was one of the parameters that could
+    // not be replaced with "def" - specifying it always required a real
+    // (parsable) IPv6 (or synthesized IPv4) address. `def` now selects the
+    // server address from the current default config (`dns config`), same
+    // as it already did for every other parameter, while the port is still
+    // set explicitly.
+    leader.InputCli("dns resolve example.com def 53");
+
+    // The request is asynchronous (`OT_ERROR_PENDING`), so no output line
+    // is produced yet. If `def` were rejected as an invalid IPv6 address
+    // (the bug being fixed here), a synchronous "Error 7: InvalidArgs" line
+    // would have appeared immediately instead.
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 0);
+
+    // Let the query run its course. There is no real DNS server reachable
+    // in this topology, so it times out after exhausting all (3) tx
+    // attempts, each waiting the full response timeout (7000 ms) - the
+    // point here is only that the request was accepted, dispatched, and
+    // ran to completion (rather than being rejected as invalid at parse
+    // time, or hanging indefinitely on a malformed server address).
+    nexus.AdvanceTime(25 * Time::kOneSecondInMsec);
+
+    for (const Node::CliOutputLine &line : leader.GetCliOutputLines())
+    {
+        Log("- %s", line.GetLine());
+    }
+
+    VerifyOrQuit(leader.GetCliOutputLines().GetLength() == 1);
+    VerifyOrQuit(leader.GetCliOutputLines()[0].EndsWith("Error 28: ResponseTimeout"));
+
+    Log("---------------------------------------------------------------------------------------");
     Log("Check behavior with an invalid CLI command");
 
     leader.InputCli("invalidcommand");
