@@ -1711,7 +1711,7 @@ TransportProtocol: tcp
 Done
 ```
 
-We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config. Note that specifying a zero value for a boolean argument will mean _disabled_ and cannot be used to imply default behavior.
 
 ```bash
 > dns config fd00::2
