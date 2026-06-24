@@ -64,6 +64,8 @@
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
+#include "utils/time_exceeded_detector.hpp"
+
 namespace ot {
 
 /**
