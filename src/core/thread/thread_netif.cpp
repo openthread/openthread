@@ -99,6 +99,7 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MONITOR_AUTO_START_ENABLE
     IgnoreError(Get<Utils::ChannelMonitor>().Stop());
 #endif
+    Get<Mac::Mac>().SetEnabled(false);
     Get<Notifier>().Signal(kEventThreadNetifStateChanged);
 
 exit:

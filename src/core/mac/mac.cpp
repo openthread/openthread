@@ -514,6 +514,7 @@ void Mac::UpdateIdleMode(void)
 {
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
 
+    VerifyOrExit(IsEnabled());
     VerifyOrExit(mOperation == kOperationIdle);
 
     if (!mRxOnWhenIdle)
