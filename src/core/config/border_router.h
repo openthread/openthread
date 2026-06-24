@@ -88,6 +88,36 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+ *
+ * Define as 1 to enable coalescing of Network Data changes on the Leader.
+ *
+ * When enabled, the Leader defers propagation of Network Data updates
+ * by a short settling period (@sa OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_DELAY).
+ * Rapid successive changes (e.g., during network formation) are batched
+ * into a single propagation event, reducing multicast traffic on the mesh.
+ *
+ * When disabled (default), each Network Data change is propagated immediately
+ * as per the baseline Thread specification behavior.
+ */
+#ifndef OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE
+#define OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_DELAY
+ *
+ * Specifies the settling delay in milliseconds for Network Data coalescing
+ * on the Leader. The timer restarts on each new change, so propagation
+ * occurs after this duration of no new changes.
+ *
+ * Only used when OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_ENABLE is 1.
+ */
+#ifndef OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_DELAY
+#define OPENTHREAD_CONFIG_LEADER_NETDATA_COALESCE_DELAY 1000
+#endif
+
+/**
  * @}
  */
 
