@@ -28,7 +28,7 @@
 #
 # This script downloads and installs a specific version of clang-format and clang-tidy.
 
-set -e
+set -e -o pipefail
 
 LLVM_VERSION="19.1.7"
 ARCH=$(uname -m)
