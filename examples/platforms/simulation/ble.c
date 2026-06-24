@@ -226,15 +226,19 @@ void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const f
 
     otEXPECT(sFd != -1);
 
-    // Deliver a pending disconnection (requested earlier via otPlatBleGapDisconnect)
+    // Deliver a pending disconnection (requested earlier via otPlatBleGapDisconnect).
     if (sIsDisconnecting)
     {
-        sIsConnected = false;
-        otPlatBleGapOnDisconnected(aInstance, 0);
-        sIsDisconnecting = false;
-    }
+        // Drain any remaining data and drop it: prevent stale data from triggering a new connection later on.
+        while (recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), MSG_DONTWAIT, NULL, NULL) > 0)
+        {
+        }
 
-    if (FD_ISSET(sFd, aReadFdSet))
+        sIsConnected     = false;
+        sIsDisconnecting = false;
+        otPlatBleGapOnDisconnected(aInstance, 0);
+    }
+    else if (FD_ISSET(sFd, aReadFdSet))
     {
         socklen_t len = sizeof(sSockaddr);
         ssize_t   rval;
