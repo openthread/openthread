@@ -737,6 +737,7 @@ const char *Message::CodeToString(void) const
         {kCodePreconditionFailed, "PreconditionFailed"},
         {kCodeRequestTooLarge, "RequestTooLarge"},
         {kCodeUnsupportedFormat, "UnsupportedFormat"},
+        {kCodeTooManyRequests, "TooManyRequests"},
         {kCodeInternalError, "InternalError"},
         {kCodeNotImplemented, "NotImplemented"},
         {kCodeBadGateway, "BadGateway"},
