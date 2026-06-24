@@ -121,6 +121,7 @@ enum Code : uint8_t
     kCodePreconditionFailed = OT_COAP_CODE_PRECONDITION_FAILED, ///< Precondition Failed
     kCodeRequestTooLarge    = OT_COAP_CODE_REQUEST_TOO_LARGE,   ///< Request Entity Too Large
     kCodeUnsupportedFormat  = OT_COAP_CODE_UNSUPPORTED_FORMAT,  ///< Unsupported Content-Format
+    kCodeTooManyRequests    = OT_COAP_CODE_TOO_MANY_REQUESTS,   ///< RFC8516 Too Many Requests
 
     // Server Error Codes:
 
