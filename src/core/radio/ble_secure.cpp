@@ -57,6 +57,7 @@ BleSecure::BleSecure(Instance &aInstance)
     , mTransmitTask(aInstance)
     , mBleState(kStopped)
     , mIsBleAdvRequested(false)
+    , mTlsConnected(false)
     , mMtuSize(kInitialMtuSize)
 {
 }
@@ -124,6 +125,7 @@ void BleSecure::Stop(void)
 
     mTls.Close();
     Get<MeshCoP::TcatAgent>().Stop();
+    mTlsConnected = false;
 
     mTransmitQueue.DequeueAndFreeAll();
 
@@ -173,11 +175,11 @@ exit:
 
 void BleSecure::Disconnect(void)
 {
-    const bool wasConnected = mTls.IsConnected();
-    mTls.Disconnect(); // always call, to include cases like where a TLS handshake is ongoing (not connected yet).
-    if (wasConnected)
+    mTls.Disconnect(); // always call: to include cases where a TLS handshake is ongoing (not completed yet).
+    if (mTlsConnected)
     {
         mConnectCallback.InvokeIfSet(&GetInstance(), false, mBleState == kConnected);
+        mTlsConnected = false;
     }
 
     if (mBleState == kConnected)
@@ -426,6 +428,7 @@ void BleSecure::HandleBleDisconnected(uint16_t aConnectionId)
     OT_UNUSED_VARIABLE(aConnectionId);
 
     mTls.Disconnect(); // idempotent; tears down TLS if still active, no-op otherwise
+    mTlsConnected = false;
 
     if (mBleState == kClosing || mBleState == kConnected)
     {
@@ -482,6 +485,7 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
             ExitNow();
         }
 
+        mTlsConnected = true;
         mConnectCallback.InvokeIfSet(&GetInstance(), true, true);
     }
     else /* any kDisconnected... event */
@@ -492,7 +496,7 @@ void BleSecure::HandleTlsConnectEvent(MeshCoP::Tls::ConnectEvent aEvent)
         mSendMessage = nullptr;
         Get<MeshCoP::TcatAgent>().Disconnected();
 
-        Disconnect(); // TLS session ends, so the BLE link must end also (if not already).
+        Disconnect(); // invoke callback and close BLE link (if not already closed).
     }
 
 exit:

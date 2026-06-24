@@ -388,6 +388,7 @@ private:
     uint8_t                   mPacketBuffer[kPacketBufferSize];
     BleState                  mBleState;
     bool                      mIsBleAdvRequested;
+    bool                      mTlsConnected;
     uint16_t                  mMtuSize;
 };
 
