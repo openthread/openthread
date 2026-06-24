@@ -42,11 +42,14 @@ fi
 LLVM_PACKAGE="LLVM-${LLVM_VERSION}-Linux-X64"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_PACKAGE}.tar.xz"
 INSTALL_DIR="/opt/llvm-${LLVM_VERSION}"
+INSTALL_DIR_tmp="$INSTALL_DIR.tmp"
 
-sudo mkdir -p "${INSTALL_DIR}"
+sudo mkdir -p "${INSTALL_DIR_tmp}"
+trap 'sudo rm -rf "${INSTALL_DIR_tmp}"' EXIT
 
 echo "Downloading LLVM from '${LLVM_URL}' into '${INSTALL_DIR}' ..."
-wget -O - "${LLVM_URL}" | sudo tar -f - -C "${INSTALL_DIR}" --strip-components=1 -xJ
+wget -O - "${LLVM_URL}" | sudo tar -f - -C "${INSTALL_DIR_tmp}" --strip-components=1 -xJ
+sudo mv "${INSTALL_DIR_tmp}" "${INSTALL_DIR}"
 
 echo "Creating symlinks in /usr/local/bin..."
 sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
