@@ -46,7 +46,7 @@ INSTALL_DIR="/opt/llvm-${LLVM_VERSION}"
 sudo mkdir -p "${INSTALL_DIR}"
 
 echo "Downloading LLVM from '${LLVM_URL}' into '${INSTALL_DIR}' ..."
-wget -O - "${LLVM_URL}" | sudo tar -C "${INSTALL_DIR}" --strip-components=1 -xJ
+wget -O - "${LLVM_URL}" | sudo tar -f - -C "${INSTALL_DIR}" --strip-components=1 -xJ
 
 echo "Creating symlinks in /usr/local/bin..."
 sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
